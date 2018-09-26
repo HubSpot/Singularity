@@ -59,14 +59,25 @@ public class SingularityHistoryModule extends AbstractModule {
     bind(SingularityDeployHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryPersister.class).in(Scopes.SINGLETON);
 
+    // Setup database support
     if (configuration.isPresent()) {
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
-      bind(HistoryJDBI.class).toProvider(HistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
-
       bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
+    }
+  }
+
+  private void bindSpecificDatabase() {
+    if (isPostgres(configuration)) {
+      bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      // Currently many unit tests use h2
+    } else if (isMySQL(configuration) || isH2(configuration)) {
+      bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+    } else {
+      throw new IllegalStateException("Unknown driver class present " + configuration.get().getDriverClass());
     }
   }
 
@@ -131,18 +142,51 @@ public class SingularityHistoryModule extends AbstractModule {
     }
   }
 
-  static class HistoryJDBIProvider implements Provider<HistoryJDBI> {
+  static class MySQLHistoryJDBIProvider implements Provider<HistoryJDBI> {
     private final DBI dbi;
 
     @Inject
-    public HistoryJDBIProvider(DBI dbi) {
+    public MySQLHistoryJDBIProvider(DBI dbi) {
       this.dbi = dbi;
     }
 
     @Override
-    public HistoryJDBI get() {
-      return dbi.onDemand(HistoryJDBI.class);
+    public MySQLHistoryJDBI get() {
+      return dbi.onDemand(MySQLHistoryJDBI.class);
     }
 
+  }
+
+  static class PostgresHistoryJDBIProvider implements Provider<HistoryJDBI> {
+    private final DBI dbi;
+
+    @Inject
+    public PostgresHistoryJDBIProvider(DBI dbi) {
+      this.dbi = dbi;
+    }
+
+    @Override
+    public PostgresHistoryJDBI get() {
+      return dbi.onDemand(PostgresHistoryJDBI.class);
+    }
+
+  }
+
+  // Convenience methods for determining which database is configured
+  static boolean isH2(Optional<DataSourceFactory> dataSourceFactoryOptional) {
+    return driverConfigured(dataSourceFactoryOptional, "org.h2.Driver");
+  }
+
+  static boolean isMySQL(Optional<DataSourceFactory> dataSourceFactoryOptional) {
+    return driverConfigured(dataSourceFactoryOptional, "com.mysql.jdbc.Driver");
+  }
+
+  static boolean isPostgres(Optional<DataSourceFactory> dataSourceFactoryOptional) {
+          return driverConfigured(dataSourceFactoryOptional, "org.postgresql.Driver");
+  }
+
+  private static boolean driverConfigured(Optional<DataSourceFactory> dataSourceFactoryOptional, String jdbcDriverclass) {
+    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
+            jdbcDriverclass.equals(dataSourceFactoryOptional.get().getDriverClass());
   }
 }
