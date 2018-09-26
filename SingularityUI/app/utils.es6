@@ -16,6 +16,8 @@ const Utils = {
 
   DEFAULT_SLAVES_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true, 'expiring': true},
 
+  OPENABLE_EXTENSIONS: ['svg', 'txt', 'jpg', 'jpeg', 'gif', 'png', 'pdf', 'html'],
+
   isIn(needle, haystack) {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
   },
