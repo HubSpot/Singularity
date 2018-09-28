@@ -20,7 +20,7 @@ export const FetchRequestsInState = buildApiAction(
       propertyString += propertyFilter.join(propertyJoin);
     }
     if (_.contains(['pending', 'cleanup'], state)) {
-      return {url: `/requests/queued/${state}${propertyString}`, renderNotFoundIf404};
+      return {url: `/requests/queued/${state}`, renderNotFoundIf404}; // no property filter for these, different format
     } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
       return {url: `/requests${propertyString}`, renderNotFoundIf404};
     }

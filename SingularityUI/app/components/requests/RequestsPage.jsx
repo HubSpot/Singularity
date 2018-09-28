@@ -122,6 +122,8 @@ class RequestsPage extends Component {
           ref="table"
           data={displayRequests}
           keyGetter={(request) => (request.request ? request.request.id : request.requestId)}
+          rowChunkSize={20}
+          paginated={true}
         >
           {this.getColumns()}
         </UITable>
