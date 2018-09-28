@@ -12,7 +12,7 @@
 
   <properties>
     <nodeVersion>v8.9.3</nodeVersion>
-    <npmVersion>5.1.1</npmVersion>
+    <npmVersion>5.5.1</npmVersion>
   </properties>
 
   <profiles>
