@@ -24,7 +24,8 @@ function isActive(navbarPath, fragment) {
       fragment === 'racks' ||
       fragment === 'slaves' ||
       fragment === 'webhooks' ||
-      fragment === 'task-search'
+      fragment === 'task-search' ||
+      fragment === 'disabled-actions'
     );
   }
   if (navbarPath === '/') {

@@ -31,12 +31,12 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 
 public class SingularityS3Uploader extends SingularityUploader {
   private final AmazonS3 s3Client;

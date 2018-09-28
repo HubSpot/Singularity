@@ -74,6 +74,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
+  private long checkMesosMasterHeartbeatEverySeconds = 20;
+
+  private long maxMissedMesosMasterHeartbeats = 3;
+
   private int maxConcurrentUsageCollections = 15;
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
@@ -330,11 +334,6 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
-  @JsonProperty("disasterDetection")
-  @NotNull
-  @Valid
-  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
-
   @Min(0)
   @Max(1)
   private double defaultTaskPriorityLevel = 0.3;
@@ -348,6 +347,11 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
+
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
 
   private boolean rebalanceRacksOnScaleDown = false;
 
@@ -1344,14 +1348,6 @@ public class SingularityConfiguration extends Configuration {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
-  public DisasterDetectionConfiguration getDisasterDetection() {
-    return disasterDetection;
-  }
-
-  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
-    this.disasterDetection = disasterDetection;
-  }
-
   public double getDefaultTaskPriorityLevel() {
     return defaultTaskPriorityLevel;
   }
@@ -1384,6 +1380,14 @@ public class SingularityConfiguration extends Configuration {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
   }
 
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
+  }
+
   public boolean isRebalanceRacksOnScaleDown() {
     return rebalanceRacksOnScaleDown;
   }
@@ -1407,6 +1411,22 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public long getCheckMesosMasterHeartbeatEverySeconds() {
+    return checkMesosMasterHeartbeatEverySeconds;
+  }
+
+  public void setCheckMesosMasterHeartbeatEverySeconds(long checkMesosMasterHeartbeatEverySeconds) {
+    this.checkMesosMasterHeartbeatEverySeconds = checkMesosMasterHeartbeatEverySeconds;
+  }
+
+  public long getMaxMissedMesosMasterHeartbeats() {
+    return maxMissedMesosMasterHeartbeats;
+  }
+
+  public void setMaxMissedMesosMasterHeartbeats(long maxMissedMesosMasterHeartbeats) {
+    this.maxMissedMesosMasterHeartbeats = maxMissedMesosMasterHeartbeats;
   }
 
   public int getMaxConcurrentUsageCollections() {

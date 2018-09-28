@@ -19,7 +19,6 @@ after:
       commands:
         - /bin/bash custom-build-config/publish-ui.sh
 
-
 stepActivation:
   publish:
     branches: [hs_staging, hs_qa, hs_stable, master, build-on-blazar]

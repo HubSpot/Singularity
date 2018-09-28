@@ -721,9 +721,18 @@ public class SingularityClient {
    *
    */
   public Collection<SingularityRequestParent> getSingularityRequests() {
+    return getSingularityRequests(false);
+  }
+
+  public Collection<SingularityRequestParent> getSingularityRequests(boolean includeFullRequestData) {
     final Function<String, String> requestUri = (host) -> String.format(REQUESTS_FORMAT, getApiBase(host));
 
-    return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
+    return getCollectionWithParams(
+        requestUri,
+        "[ACTIVE, PAUSED, COOLDOWN] requests",
+        Optional.of(ImmutableMap.of("includeFullRequestData", includeFullRequestData)),
+        REQUESTS_COLLECTION
+    );
   }
 
   /**

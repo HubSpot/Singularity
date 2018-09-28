@@ -131,6 +131,7 @@ public class MesosTaskStatisticsObject {
     return timestamp;
   }
 
+
   @Override
   public String toString() {
     return "MesosTaskStatisticsObject{" +
