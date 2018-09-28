@@ -74,6 +74,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
+  private long checkMesosMasterHeartbeatEverySeconds = 20;
+
+  private long maxMissedMesosMasterHeartbeats = 3;
+
   private int maxConcurrentUsageCollections = 15;
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
@@ -1407,6 +1411,22 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public long getCheckMesosMasterHeartbeatEverySeconds() {
+    return checkMesosMasterHeartbeatEverySeconds;
+  }
+
+  public void setCheckMesosMasterHeartbeatEverySeconds(long checkMesosMasterHeartbeatEverySeconds) {
+    this.checkMesosMasterHeartbeatEverySeconds = checkMesosMasterHeartbeatEverySeconds;
+  }
+
+  public long getMaxMissedMesosMasterHeartbeats() {
+    return maxMissedMesosMasterHeartbeats;
+  }
+
+  public void setMaxMissedMesosMasterHeartbeats(long maxMissedMesosMasterHeartbeats) {
+    this.maxMissedMesosMasterHeartbeats = maxMissedMesosMasterHeartbeats;
   }
 
   public int getMaxConcurrentUsageCollections() {
