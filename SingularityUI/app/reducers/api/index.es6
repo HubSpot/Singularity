@@ -40,6 +40,7 @@ import {
 
 import {
   FetchRequests,
+  FetchRequestIds,
   FetchRequest,
   SaveRequest,
   RemoveRequest,
@@ -115,6 +116,7 @@ const decommissionRack = buildApiActionReducer(DecommissionRack, []);
 const removeRack = buildApiActionReducer(RemoveRack, []);
 const reactivateRack = buildApiActionReducer(ReactivateRack, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
+const requestIds = buildApiActionReducer(FetchRequestIds, [])
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
@@ -178,6 +180,7 @@ export default combineReducers({
   unpauseRequest,
   exitRequestCooldown,
   requests,
+  requestIds,
   requestsInState,
   requestHistory,
   requestArgHistory,

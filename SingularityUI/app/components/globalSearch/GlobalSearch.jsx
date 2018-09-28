@@ -9,7 +9,7 @@ import { push } from 'react-router-redux';
 
 import { Typeahead } from 'react-typeahead';
 import key from 'keymaster';
-import filterSelector from '../../selectors/requests/filterSelector';
+import idSelector from '../../selectors/requests/idSelector';
 
 class GlobalSearch extends React.Component {
 
@@ -71,18 +71,10 @@ class GlobalSearch extends React.Component {
   }
 
   searchOptions(inputValue, options) {
-    const searched = filterSelector({
-      requestsInState: options,
+    const searched = idSelector({
+      requests: options,
       filter: {
-        state: 'all',
-        searchFilter: inputValue,
-        subFilter: [
-          'SERVICE',
-          'WORKER',
-          'SCHEDULED',
-          'ON_DEMAND',
-          'RUN_ONCE'
-        ]
+        searchFilter: inputValue
       }
     });
 
@@ -138,8 +130,8 @@ class GlobalSearch extends React.Component {
               }}
               placeholder="Search all requests"
               onOptionSelected={this.optionSelected}
-              searchOptions={this.searchOptions}
               displayOption={this.renderOption}
+              searchOptions={this.searchOptions}
               formInputOption={this.getValueFromOption}
               inputDisplayOption={this.getValueFromOption}
             />
@@ -152,7 +144,7 @@ class GlobalSearch extends React.Component {
 }
 
 export default connect((state) => ({
-  requests: state.api.requests.data,
+  requests: state.api.requestIds.data,
   visible: state.ui.globalSearch.visible
 }), {
   getRequests: FetchRequestIds.trigger,
