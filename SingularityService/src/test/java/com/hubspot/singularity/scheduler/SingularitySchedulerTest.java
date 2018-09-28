@@ -2331,25 +2331,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     long now = System.currentTimeMillis();
 
     requestManager.saveHistory(new SingularityRequestHistory(now, Optional.<String>absent(), RequestHistoryType.UPDATED,
-      request.toBuilder()
-        .setSkipHealthchecks(Optional.of(true))
-        .setInstances(Optional.of(2))
-        .build(),
-      Optional.<String>absent()));
+        request.toBuilder()
+            .setSkipHealthchecks(Optional.of(true))
+            .setInstances(Optional.of(2))
+            .build(),
+        Optional.<String>absent()));
 
-    firstDeploy = initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")), System.currentTimeMillis());
+    firstDeploy =
+        initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")), System.currentTimeMillis());
 
     SingularityTask taskOne = launchTask(request, firstDeploy, now + 1000, now + 2000, 1, TaskState.TASK_RUNNING);
 
-    finishDeploy(new SingularityDeployMarker(requestId, firstDeployId, now + 2000, Optional.<String> absent(), Optional.<String> absent()), firstDeploy);
+    finishDeploy(new SingularityDeployMarker(requestId, firstDeployId, now + 2000, Optional.<String>absent(), Optional.<String>absent()), firstDeploy);
 
     SingularityRequest updatedRequest = request.toBuilder()
-      .setSkipHealthchecks(Optional.<Boolean>absent())
-      .setInstances(Optional.of(2))
-      .build();
+        .setSkipHealthchecks(Optional.<Boolean>absent())
+        .setInstances(Optional.of(2))
+        .build();
 
     requestManager.saveHistory(new SingularityRequestHistory(now + 3000, Optional.<String>absent(), RequestHistoryType.UPDATED,
-      updatedRequest, Optional.<String>absent()));
+        updatedRequest, Optional.<String>absent()));
 
     SingularityTask newTaskTwoWithCheck = prepTask(updatedRequest, firstDeploy, now + 4000, 2);
     taskManager.createTaskAndDeletePendingTask(newTaskTwoWithCheck);

@@ -110,4 +110,4 @@ const refresh = () => (dispatch) =>
     dispatch(FetchUtilization.trigger())
   ]);
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, true, true));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh));

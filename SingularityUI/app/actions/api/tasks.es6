@@ -19,6 +19,12 @@ export const FetchTasksInState = buildApiAction(
         propertyString = '';
     }
 
+    if (propertyString.includes('?')) {
+      propertyString = propertyString + '&useWebCache=true'
+    } else {
+      propertyString = '?useWebCache=true'
+    }
+
     return {
       url: `/tasks/${stateToFetch}${propertyString}`,
       renderNotFoundIf404
@@ -29,7 +35,7 @@ export const FetchTasksInState = buildApiAction(
 export const FetchScheduledTasksForRequest = buildApiAction(
   'FETCH_SCHEDULED_TASKS_FOR_REQUEST',
   (requestId) => ({
-    url: `/tasks/scheduled/request/${requestId}`
+    url: `/tasks/scheduled/request/${requestId}?useWebCache=true`
   }),
   (requestId) => requestId
 );
@@ -37,7 +43,7 @@ export const FetchScheduledTasksForRequest = buildApiAction(
 export const FetchTask = buildApiAction(
   'FETCH_TASK',
   (taskId) => ({
-    url: `/tasks/task/${taskId}`,
+    url: `/tasks/task/${taskId}?useWebCache=true`,
   })
 );
 
@@ -52,7 +58,7 @@ export const KillTask = buildJsonApiAction(
 
 export const FetchTaskCleanups = buildApiAction(
   'FETCH_TASK_CLEANUPS',
-  {url: '/tasks/cleaning'}
+  {url: '/tasks/cleaning?useWebCache=true'}
 );
 
 export const FetchTaskStatistics = buildApiAction(

@@ -462,7 +462,7 @@ public class SingularityDeploy {
   }
 
   @Deprecated
-  @Schema(nullable = true, description = "Labels for all tasks associated with this deploy")
+  @Schema(nullable = true, description = "(Deprecated) Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
   }

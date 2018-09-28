@@ -112,9 +112,17 @@ public class SingularityValidator {
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
   private final SlaveManager slaveManager;
+  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
+  public SingularityValidator(
+      SingularityConfiguration configuration,
+      DeployHistoryHelper deployHistoryHelper,
+      PriorityManager priorityManager,
+      DisasterManager disasterManager,
+      SlaveManager slaveManager,
+      UIConfiguration uiConfiguration
+  ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.maxUserIdSize = configuration.getMaxUserIdSize();
@@ -157,6 +165,7 @@ public class SingularityValidator {
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
+    this.singularityConfiguration = configuration;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
@@ -779,8 +788,7 @@ public class SingularityValidator {
 
     final double taskPriorityLevel = priorityManager.getTaskPriorityLevelForRequest(request);
 
-    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)",
-      request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)", request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
   }
 
   public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
