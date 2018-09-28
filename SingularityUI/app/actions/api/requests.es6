@@ -12,13 +12,19 @@ export const FetchRequestIds = buildApiAction(
 
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
-  (state = 'all', renderNotFoundIf404 = true) => {
-    if (_.contains(['pending', 'cleanup'], state)) {
-      return {url: `/requests/queued/${state}`, renderNotFoundIf404};
-    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
-      return {url: '/requests', renderNotFoundIf404};
+  (state = 'all', renderNotFoundIf404 = true, propertyFilter = null) => {
+    let propertyString = '';
+    const propertyJoin = '&property=';
+    if (propertyFilter != null) {
+      propertyString = '?property=';
+      propertyString += propertyFilter.join(propertyJoin);
     }
-    return {url: `/requests/${state}`, renderNotFoundIf404};
+    if (_.contains(['pending', 'cleanup'], state)) {
+      return {url: `/requests/queued/${state}${propertyString}`, renderNotFoundIf404};
+    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
+      return {url: `/requests${propertyString}`, renderNotFoundIf404};
+    }
+    return {url: `/requests/${state}${propertyString}`, renderNotFoundIf404};
   }
 );
 
