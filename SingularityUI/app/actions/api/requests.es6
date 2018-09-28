@@ -5,26 +5,26 @@ export const FetchRequests = buildApiAction(
   {url: '/requests?useWebCache=true'}
 );
 
-export const FetchUserRelevantRequests = buildApiAction(
-  'FETCH_USER_RELEVANT_REQUESTS',
-  (requestTypes = []) => {
-    let params = 'filterRelevantForUser=true&includeFullRequestData=true&limit=50'
-    _.each(requestTypes, (requestType) => {
-      params = params + `&requestType=${requestType}`
-    });
-    return {url: `/requests?${params}`}
-  }
+export const FetchRequestIds = buildApiAction(
+  'FETCH_REQUESTS',
+  {url: '/requests/active/ids?useWebCache=true'}
 );
 
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
-  (state, renderNotFoundIf404) => {
-    if (_.contains(['pending', 'cleanup'], state)) {
-      return {url: `/requests/queued/${state}`, renderNotFoundIf404};
-    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
-      return {url: '/requests?useWebCache=true', renderNotFoundIf404};
+  (state = 'all', renderNotFoundIf404 = true, propertyFilter = null) => {
+    let propertyString = '';
+    const propertyJoin = '&property=';
+    if (propertyFilter != null) {
+      propertyString = '?property=';
+      propertyString += propertyFilter.join(propertyJoin);
     }
-    return {url: `/requests/${state}?useWebCache=true`, renderNotFoundIf404};
+    if (_.contains(['pending', 'cleanup'], state)) {
+      return {url: `/requests/queued/${state}`, renderNotFoundIf404}; // no property filter for these, different format
+    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
+      return {url: `/requests${propertyString}`, renderNotFoundIf404};
+    }
+    return {url: `/requests/${state}${propertyString}`, renderNotFoundIf404};
   }
 );
 

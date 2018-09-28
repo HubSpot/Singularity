@@ -76,7 +76,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 #### Deployment ####
 
- - [API](Docs/reference/apidocs/api-index.md)
+ - [API](Docs/reference/api.html)
  - [Configuration](Docs/reference/configuration.md)
  - [Examples](Docs/getting-started/basic-examples.md)
  - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)

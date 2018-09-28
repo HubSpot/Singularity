@@ -27,6 +27,8 @@ import Loader from '../common/Loader';
 
 class RequestsPage extends Component {
 
+  static propertyFilter = ['state', 'request.id', 'request.requestType', 'request.instances', 'request.group', 'request.bounceAfterScale', 'requestDeployState.activeDeploy.deployId', 'requestDeployState.activeDeploy.user', 'requestDeployState.activeDeploy.timestamp', 'requestDeployState.activeDeploy.loadBalancerOptions']
+
   static propTypes = {
     requestsInState: PropTypes.array,
     fetchFilter: PropTypes.func,
@@ -120,6 +122,8 @@ class RequestsPage extends Component {
           ref="table"
           data={displayRequests}
           keyGetter={(request) => (request.request ? request.request.id : request.requestId)}
+          rowChunkSize={20}
+          paginated={true}
         >
           {this.getColumns()}
         </UITable>
@@ -172,9 +176,9 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
   return {
-    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state === 'cleaning' ? 'cleanup' : state, true)),
+    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state === 'cleaning' ? 'cleanup' : state, true, RequestsPage.propertyFilter)),
     removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
     unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
     runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
@@ -188,4 +192,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all'), true, false));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all', RequestsPage.propertyFilter), true, false));
