@@ -1,6 +1,6 @@
 ## Deploy Defaults
 
-The majority of fields on the [`SingularityDeployRequest`](apidocs/models.md#model-SingularityDeployRequest) and [`SingularityDeploy`](apidocs/models.md#model-SingularityDeploy) objects are optional. However, many of these values have request level or system-wide defaults to fall back on when not set. The list below contains a list of deploy properties, relevant `SingularityRequest` or `SingularityConfiguration` fields, and their defaults. Config fields are in the `SingularityConfiguration` unless otherwise specified
+The majority of fields on the [`SingularityDeployRequest`](api.html) and [`SingularityDeploy`](api.html) objects are optional. However, many of these values have request level or system-wide defaults to fall back on when not set. The list below contains a list of deploy properties, relevant `SingularityRequest` or `SingularityConfiguration` fields, and their defaults. Config fields are in the `SingularityConfiguration` unless otherwise specified
 
 #### SingularityDeployRequest
 
