@@ -5,6 +5,11 @@ export const FetchRequests = buildApiAction(
   {url: '/requests'}
 );
 
+export const FetchRequestIds = buildApiAction(
+  'FETCH_REQUESTS',
+  {url: '/requests/active/ids?useWebCache=true'}
+);
+
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
   (state = 'all', renderNotFoundIf404 = true) => {

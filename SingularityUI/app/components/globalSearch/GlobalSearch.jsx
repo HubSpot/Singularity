@@ -2,9 +2,8 @@ import React from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import { FetchRequests } from '../../actions/api/requests';
+import { FetchRequestIds } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
-import { refresh } from '../../actions/ui/requestDetail';
 import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
@@ -111,10 +110,8 @@ class GlobalSearch extends React.Component {
   }
 
   render() {
-    const options = _.map(this.props.requests, (requestParent) => ({
-      request: requestParent.request,
-      id: requestParent.request.id,
-      requestDeployState: requestParent.requestDeployState
+    const options = _.map(this.props.requests, (id) => ({
+      id: id,
     }));
 
     const globalSearchClasses = classNames('global-search', {
@@ -158,8 +155,8 @@ export default connect((state) => ({
   requests: state.api.requests.data,
   visible: state.ui.globalSearch.visible
 }), {
-  getRequests: FetchRequests.trigger,
+  getRequests: FetchRequestIds.trigger,
   setVisibility: SetVisibility,
   push,
-  refresh
+  refresh: null
 })(withRouter(GlobalSearch));

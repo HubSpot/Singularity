@@ -639,12 +639,12 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
-  @Path("/active/ids")
+  @Path("/ids")
   @Operation(summary = "Retrieve the list of active request ids")
   public List<String> getActiveRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+    return filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
         .stream()
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
