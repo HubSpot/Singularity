@@ -1,13 +1,12 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
 import fuzzy from 'fuzzy';
-import Utils from '../../utils';
+import Utils from '../utils';
 
 const getRequests = (state) => state.requests;
 const getFilter = (state) => state.filter;
 
 export default createSelector([getRequests, getFilter], (requests, filter) => {
-  console.log(filter)
   let filteredRequests = requests;
   const getId = (parent) => parent.id || '';
   if (Utils.isGlobFilter(filter.searchFilter)) {
