@@ -21,6 +21,7 @@ import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
 
 import filterSelector from '../../selectors/requests/filterSelector';
+import idSelector from '../../selectors/idSelector';
 
 import Utils from '../../utils';
 import Loader from '../common/Loader';
@@ -109,7 +110,16 @@ class RequestsPage extends Component {
   }
 
   render() {
-    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter, requestUtilizations: this.props.requestUtilizations});
+    let displayRequests = []
+    if (this.props.requestsInState.length) {
+      displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter, requestUtilizations: this.props.requestUtilizations});
+    } else if (this.props.requestIds.length) {
+      const options = _.map(this.props.requestIds, (id) => ({
+        id: id,
+        request: {id: id}
+      }));
+      displayRequests = idSelector({options: options, filter: this.props.filter});
+    }
 
     let table;
     if (this.state.loading) {
@@ -171,6 +181,7 @@ function mapStateToProps(state, ownProps) {
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     requestUtilizations: state.api.requestUtilizations.data,
+    requestIds: state.api.requestIds.data,
     groups: userGroups,
     filter
   };

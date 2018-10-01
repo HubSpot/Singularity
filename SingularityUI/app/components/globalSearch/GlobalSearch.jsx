@@ -4,12 +4,14 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { FetchRequestIds } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
+import { refresh } from '../../actions/ui/requestDetail';
+import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
 import { Typeahead } from 'react-typeahead';
 import key from 'keymaster';
-import idSelector from '../../selectors/requests/idSelector';
+import idSelector from '../../selectors/idSelector';
 
 class GlobalSearch extends React.Component {
 
@@ -72,7 +74,7 @@ class GlobalSearch extends React.Component {
 
   searchOptions(inputValue, options) {
     const searched = idSelector({
-      requests: options,
+      options: options,
       filter: {
         searchFilter: inputValue
       }
@@ -150,5 +152,5 @@ export default connect((state) => ({
   getRequests: FetchRequestIds.trigger,
   setVisibility: SetVisibility,
   push,
-  refresh: null
+  refresh
 })(withRouter(GlobalSearch));
