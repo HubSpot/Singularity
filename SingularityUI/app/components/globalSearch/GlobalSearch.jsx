@@ -5,7 +5,6 @@ import { withRouter } from 'react-router';
 import { FetchRequestIds } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
 import { refresh } from '../../actions/ui/requestDetail';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
 
