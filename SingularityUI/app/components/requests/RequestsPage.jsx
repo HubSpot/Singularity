@@ -14,7 +14,7 @@ import {
 } from '../../actions/api/requests';
 import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
-import { refresh } from '../../actions/ui/requests';
+import { refresh, initialize } from '../../actions/ui/requests';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -57,6 +57,10 @@ class RequestsPage extends Component {
     this.state = {
       loading: false
     };
+  }
+
+  componentWillMount() {
+    this.props.fetchFilter();
   }
 
   handleFilterChange(filter) {
@@ -113,8 +117,8 @@ class RequestsPage extends Component {
     let displayRequests = []
     if (this.props.requestsInState.length) {
       displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter, requestUtilizations: this.props.requestUtilizations});
-    } else if (this.props.requestIds.length) {
-      const options = _.map(this.props.requestIds, (id) => ({
+    } else if (this.props.requestIds.data.length) {
+      const options = _.map(this.props.requestIds.data, (id) => ({
         id: id,
         request: {id: id}
       }));
@@ -181,7 +185,7 @@ function mapStateToProps(state, ownProps) {
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     requestUtilizations: state.api.requestUtilizations.data,
-    requestIds: state.api.requestIds.data,
+    requestIds: state.api.requestIds,
     groups: userGroups,
     filter
   };
@@ -203,4 +207,4 @@ function mapDispatchToProps(dispatch, ownProps) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all', RequestsPage.propertyFilter), true, false));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all', RequestsPage.propertyFilter), true, false, (props) => initialize(props.requestIds)));

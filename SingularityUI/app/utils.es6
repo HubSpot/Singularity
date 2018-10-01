@@ -547,7 +547,6 @@ const Utils = {
       return null;
     }
   }
-
 };
 
 export default Utils;
