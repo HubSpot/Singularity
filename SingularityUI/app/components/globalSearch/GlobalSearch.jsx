@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 
 import { Typeahead } from 'react-typeahead';
 import key from 'keymaster';
-import idSelector from '../../selectors/requests/idSelector';
+import idSelector from '../../selectors/idSelector';
 
 class GlobalSearch extends React.Component {
 
