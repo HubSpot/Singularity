@@ -9,9 +9,9 @@ export const refresh = (state, propertyFilter) => (dispatch) => {
 }
 
 export const initialize = (requestIds) => (dispatch) => {
-  if (requestIds.isFetching) {
+  if (requestIds.isFetching || requestIds.data.length) {
     return Promise.resolve();
   } else {
-    return FetchRequestIds.trigger();
+    return dispatch(FetchRequestIds.trigger());
   }
 }

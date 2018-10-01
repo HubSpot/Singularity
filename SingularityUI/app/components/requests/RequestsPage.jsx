@@ -148,7 +148,7 @@ class RequestsPage extends Component {
       <div className="tabbed-page">
         <RequestFilters
           filter={this.props.filter}
-          onFilterChange={(filter) => this.handleFilterChange(filter)}
+          onFilterChange={(filter) => Utils.debounce(() => this.handleFilterChange(filter), 200, true)}
           displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
           groups={this.props.groups}
         >
