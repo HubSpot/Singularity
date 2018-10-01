@@ -120,9 +120,10 @@ class RequestsPage extends Component {
     } else if (this.props.requestIds.data.length) {
       const options = _.map(this.props.requestIds.data, (id) => ({
         id: id,
+        starred: _.contains(Utils.maybe(this.props.user, ['data', 'settings', 'starredRequestIds'], []), id) ? 1 : 0,
         request: {id: id}
       }));
-      displayRequests = idSelector({options: options, filter: this.props.filter});
+      displayRequests = idSelector({options: options, filter: this.props.filter}).sort((a, b) => b.starred - a.starred);
     }
 
     let table;
@@ -187,6 +188,7 @@ function mapStateToProps(state, ownProps) {
     requestUtilizations: state.api.requestUtilizations.data,
     requestIds: state.api.requestIds,
     groups: userGroups,
+    user: state.api.user,
     filter
   };
 }
