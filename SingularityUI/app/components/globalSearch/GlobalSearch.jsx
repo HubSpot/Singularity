@@ -73,7 +73,7 @@ class GlobalSearch extends React.Component {
 
   searchOptions(inputValue, options) {
     const searched = idSelector({
-      requests: options,
+      options: options,
       filter: {
         searchFilter: inputValue
       }
