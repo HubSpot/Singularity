@@ -189,8 +189,6 @@ public class RequestResource extends AbstractRequestResource {
 
         if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
           rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
-          // Why not remove cleaned tasks from remainingActiveTasks here like in SingualrityScheduler?
-          // Why does scheduler do straight up user, and this does user.getemail?
         }
         if (request.getSlaveAttributeMinimums().isPresent()) {
           Set<SingularityTaskId> cleanedTasks = rebalancingHelper.rebalanceAttributeDistribution(request, user.getEmail(), remainingActiveTasks);
