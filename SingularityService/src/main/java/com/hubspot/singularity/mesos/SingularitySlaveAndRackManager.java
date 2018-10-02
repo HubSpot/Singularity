@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -115,6 +117,8 @@ public class SingularitySlaveAndRackManager {
 
     if (!isSlaveAttributesMatch(offerHolder, taskRequest, isPreemptibleTask)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+    } else if (!areSlaveAttributeMinimumsFeasible(offerHolder, taskRequest, activeTaskIdsForRequest)) {
+      return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
     final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
@@ -183,7 +187,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, leaderCache);
+      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave);
 
       if (!isRackOk) {
         return SlaveMatchState.RACK_SATURATED;
@@ -277,6 +281,47 @@ public class SingularitySlaveAndRackManager {
     return true;
   }
 
+  private boolean areSlaveAttributeMinimumsFeasible(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
+    if (!taskRequest.getRequest().getSlaveAttributeMinimums().isPresent()) {
+      return true;
+    }
+    Map<String, String> offerAttributes = slaveManager.getSlave(offerHolder.getSlaveId()).get().getAttributes();
+
+    Integer numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
+    Integer numActiveInstances = activeTaskIdsForRequest.size();
+
+    for (Entry<String, Map<String, Integer>> keyEntry : taskRequest.getRequest().getSlaveAttributeMinimums().get().entrySet()) {
+      String attrKey = keyEntry.getKey();
+      for (Entry<String, Integer> valueEntry : keyEntry.getValue().entrySet()) {
+        Integer percentInstancesWithAttr = valueEntry.getValue();
+        Integer minInstancesWithAttr = Math.max(1,  (int) ((percentInstancesWithAttr / 100.0) * numDesiredInstances));
+
+        if (offerAttributes.containsKey(attrKey) && offerAttributes.get(attrKey).equals(valueEntry.getKey())) {
+          // Accepting this offer would add an instance of the needed attribute, so it's okay.
+          continue;
+        }
+
+        // Would accepting this offer prevent meeting the necessary attribute in the future?
+        long numInstancesWithAttr = getNumInstancesWithAttribute(activeTaskIdsForRequest, attrKey, valueEntry.getKey());
+        long numInstancesWithoutAttr = numActiveInstances - numInstancesWithAttr + 1;
+
+        long maxPotentialInstancesWithAttr = numDesiredInstances - numInstancesWithoutAttr;
+        if (maxPotentialInstancesWithAttr < minInstancesWithAttr) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private long getNumInstancesWithAttribute(List<SingularityTaskId> taskIds, String attrKey, String attrValue) {
+    return taskIds.stream()
+        .map(id -> leaderCache.getSlave(taskManager.getTask(id).get().getMesosTask().getSlaveId().getValue()).get().getAttributes().get(attrKey))
+        .filter(Objects::nonNull)
+        .filter(x -> x.equals(attrValue))
+        .count();
+  }
+
   private boolean isAllowBounceToSameHost(SingularityRequest request) {
     if (request.getAllowBounceToSameHost().isPresent()) {
       return request.getAllowBounceToSameHost().get();
@@ -285,7 +330,7 @@ public class SingularitySlaveAndRackManager {
     }
   }
 
-  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularityLeaderCache leaderCache) {
+  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave) {
     int racksAccountedFor = countPerRack.elementSet().size();
     double numPerRack = numDesiredInstances / (double) rackManager.getNumActive();
     if (racksAccountedFor < rackManager.getNumActive()) {

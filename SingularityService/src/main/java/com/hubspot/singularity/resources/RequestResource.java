@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,9 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -85,6 +84,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -107,19 +107,22 @@ public class RequestResource extends AbstractRequestResource {
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
+  private final RebalancingHelper rebalancingHelper;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
+                         RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
                          SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
                          RackManager rackManager, SingularityConfiguration configuration) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.rebalancingHelper = rebalancingHelper;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
@@ -186,22 +189,12 @@ public class RequestResource extends AbstractRequestResource {
 
         if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-            List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
-            int numActiveRacks = rackManager.getNumActive();
-            double perRack = request.getInstancesSafe() / (double) numActiveRacks;
-
-            Multiset<String> countPerRack = HashMultiset.create();
-            for (SingularityTaskId taskId : remainingActiveTasks) {
-              countPerRack.add(taskId.getSanitizedRackId());
-              LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
-              if (countPerRack.count(taskId.getSanitizedRackId()) > 1 && countPerRack.count(taskId.getSanitizedRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
-                extraCleanedTasks.add(taskId);
-                LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
-                taskManager.createTaskCleanup(new SingularityTaskCleanup(user.getEmail(), TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(), taskId, Optional.<String>absent(), Optional.<String>absent(), Optional
-                    .absent()));
-              }
-            }
+            rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
           }
+        }
+        if (request.getSlaveAttributeMinimums().isPresent()) {
+          Set<SingularityTaskId> cleanedTasks = rebalancingHelper.rebalanceAttributeDistribution(request, user.getEmail(), remainingActiveTasks);
+          remainingActiveTasks.removeAll(cleanedTasks);
         }
       }
     }

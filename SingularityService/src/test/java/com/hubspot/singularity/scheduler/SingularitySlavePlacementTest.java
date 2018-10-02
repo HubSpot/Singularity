@@ -4,24 +4,30 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.HEAD;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 
 public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
 
@@ -368,5 +374,113 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     saveAndSchedule(newRequest.toBuilder().setInstances(Optional.of(2)));
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+  }
+
+  @Rule
+  public Timeout globalTimeout = Timeout.seconds(6000);
+
+  @Test
+  public void testSlaveAttributeMinimumsAreNotForciblyViolated() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
+
+    // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+  }
+
+  @Test
+  public void testSlaveAttributeMinimumsCanBeExceeded() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
+
+    // Ensure we can go over the minimum if there are enough resources available
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    Assert.assertEquals(10, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+  }
+
+  @Test
+  public void testSlaveAttributesAreRedistributedOnScaleDown() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
+
+    // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
+    sms.resourceOffers(Arrays.asList(createOffer(3, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(7, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    System.out.println(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).stream().map(SingularityTaskIdHolder::getTaskId).collect(Collectors.toList()));
+    System.out.println(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).stream().map(SingularityTaskIdHolder::getTaskId).collect(Collectors.toList()));
+
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+
+    Map<SingularityTaskId, SingularityTask> allTasks = taskManager.getActiveTasks().stream().collect(Collectors.toMap(SingularityTask::getTaskId, Function.identity()));
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(9), Optional.absent(), Optional.absent(),
+        Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+
+    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    Assert.assertEquals(1, taskManager.getCleanupTasks().stream().filter(s -> s.getCleanupType() == TaskCleanupType.SCALING_DOWN).count());
+    Assert.assertEquals(1, taskManager.getCleanupTasks().stream().filter(s -> s.getCleanupType() == TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES).count());
+
+    scheduler.drainPendingQueue();
+
+    sms.resourceOffers(Arrays.asList(createOffer(10, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+
+    Assert.assertEquals(11, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(8, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
   }
 }
