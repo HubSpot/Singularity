@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.21.0-SNAPSHOT</version>
+  <version>0.22.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <developers>
