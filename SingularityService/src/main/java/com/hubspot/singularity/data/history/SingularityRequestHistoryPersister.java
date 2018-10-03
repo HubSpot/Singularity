@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
@@ -23,6 +24,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister.SingularityRequestHistoryParent;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityRequestHistoryPersister extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
@@ -31,16 +33,19 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityRequestHistoryPersister(SingularityConfiguration configuration,
                                             RequestManager requestManager,
                                             HistoryManager historyManager,
+                                            SingularitySchedulerLock lock,
                                             @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
     super(configuration, persisterLock);
 
     this.requestManager = requestManager;
     this.historyManager = historyManager;
+    this.lock = lock;
   }
 
   public static class SingularityRequestHistoryParent implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
@@ -114,7 +119,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
       final List<SingularityRequestHistoryParent> requestHistoryParents = new ArrayList();
 
-      int numHistoryTransferred = 0;
+      AtomicInteger numHistoryTransferred = new AtomicInteger();
 
       for (String requestId : requestManager.getRequestIdsWithHistory()) {
         requestHistoryParents.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
@@ -122,11 +127,13 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
       Collections.sort(requestHistoryParents, Collections.reverseOrder());  // createdAt descending
 
-      int i = 0;
+      AtomicInteger i = new AtomicInteger();
       for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
-        if (moveToHistoryOrCheckForPurge(requestHistoryParent, i++)) {
-          numHistoryTransferred += requestHistoryParent.history.size();
-        }
+        lock.runWithRequestLock(() -> {
+          if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.incrementAndGet())) {
+            numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
+          }
+        }, requestHistoryParent.requestId, "request history purger");
       }
 
       LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestHistoryParents.size(), JavaUtils.duration(start));
