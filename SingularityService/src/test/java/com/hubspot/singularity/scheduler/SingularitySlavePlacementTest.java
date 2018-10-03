@@ -27,7 +27,10 @@ import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 
-public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
+import net.jcip.annotations.NotThreadSafe;
+
+@NotThreadSafe
+public class  SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
 
   public SingularitySlavePlacementTest() {
     super(false);
