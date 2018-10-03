@@ -130,7 +130,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
       AtomicInteger i = new AtomicInteger();
       for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
         lock.runWithRequestLock(() -> {
-          if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.incrementAndGet())) {
+          if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
             numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
           }
         }, requestHistoryParent.requestId, "request history purger");
