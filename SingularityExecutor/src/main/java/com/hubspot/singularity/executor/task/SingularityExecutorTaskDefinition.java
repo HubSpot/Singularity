@@ -24,8 +24,18 @@ public class SingularityExecutorTaskDefinition {
   private final String signatureVerifyOut;
 
   @JsonCreator
-  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") SingularityTaskExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorPid") String executorPid,
-      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("serviceLogOutExtension") String serviceLogOutExtension, @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile, @JsonProperty("signatureVerifyOut") String signatureVerifyOut) {
+  public SingularityExecutorTaskDefinition(
+      @JsonProperty("taskId") String taskId,
+      @JsonProperty("executorData") SingularityTaskExecutorData executorData,
+      @JsonProperty("taskDirectory") String taskDirectory,
+      @JsonProperty("executorPid") String executorPid,
+      @JsonProperty("serviceLogOut") String serviceLogOut,
+      @JsonProperty("serviceLogOutExtension") String serviceLogOutExtension,
+      @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog,
+      @JsonProperty("taskAppDirectory") String taskAppDirectory,
+      @JsonProperty("executorBashOut") String executorBashOut,
+      @JsonProperty("logrotateStateFilePath") String logrotateStateFile,
+      @JsonProperty("signatureVerifyOut") String signatureVerifyOut) {
     this.executorData = executorData;
     this.taskId = taskId;
     this.taskDirectoryPath = Paths.get(taskDirectory);
@@ -132,6 +142,10 @@ public class SingularityExecutorTaskDefinition {
 
   public String getSignatureVerifyOut() {
     return signatureVerifyOut;
+  }
+
+  public Optional<String> getHealthCheckResultFilePath() {
+    return executorData.getHealthCheckResultFilePath();
   }
 
   @JsonIgnore

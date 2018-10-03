@@ -11,6 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.EscapeNewLinesAndQuotesHelper;
 import com.hubspot.singularity.executor.handlebars.IfHasNewLinesOrBackticksHelper;
@@ -38,6 +39,7 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(new SingularityServiceModule());
   }
 
   @Provides

@@ -77,6 +77,11 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityService</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityS3Base</artifactId>
     </dependency>
 

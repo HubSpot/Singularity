@@ -1,9 +1,11 @@
 package com.hubspot.singularity.executor;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -21,6 +23,11 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.rholder.retry.RetryException;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -33,8 +40,15 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskExecutorData;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -66,6 +80,10 @@ public class SingularityExecutorMonitor {
   private final SingularityExecutorProcessKiller processKiller;
   private final SingularityExecutorThreadChecker threadChecker;
 
+  private final RequestManager requestManager;
+  private final DeployManager deployManager;
+  private final TaskManager taskManager;
+
   private final Map<String, SingularityExecutorTask> tasks;
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
@@ -74,7 +92,8 @@ public class SingularityExecutorMonitor {
 
   @Inject
   public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
-      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
+      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration,
+      RequestManager requestManager, DeployManager deployManager, TaskManager taskManager) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
@@ -82,6 +101,10 @@ public class SingularityExecutorMonitor {
     this.exitChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorExitChecker-%d").build());
     this.threadChecker = threadChecker;
     this.threadChecker.start(this);
+
+    this.requestManager = requestManager;
+    this.deployManager = deployManager;
+    this.taskManager = taskManager;
 
     this.tasks = Maps.newConcurrentMap();
     this.processBuildingTasks = Maps.newConcurrentMap();
@@ -328,6 +351,52 @@ public class SingularityExecutorMonitor {
           wasKilled = task.wasKilled();
 
           if (!wasKilled) {
+
+            SingularityTaskId taskId = SingularityTaskId.valueOf(task.getTaskDefinition().getTaskId());
+            Optional<SingularityRequestWithState> request = requestManager.getRequest(taskId.getRequestId());
+
+            HealthcheckOptions options = deployManager.getDeploy(taskId.getRequestId(), taskId.getDeployId()).get().getHealthcheck().get();
+
+            Integer healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
+
+            Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
+            if (expectedHealthCheckResultFilePath.isPresent()) {
+              long healthCheckStart = System.currentTimeMillis();
+              try {
+                Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
+                    .retryIfResult(path -> !new File(path).exists())
+                    .withWaitStrategy(WaitStrategies.fixedWait(1L, TimeUnit.SECONDS))
+                    .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
+                    .build();
+
+                retryer.call(() -> expectedHealthCheckResultFilePath.get());
+                long healthCheckEnd = System.currentTimeMillis();
+
+                taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(
+                    Optional.of(200),
+                    Optional.of(healthCheckEnd - healthCheckStart),
+                    healthCheckEnd,
+                    Optional.of("Health check success"),
+                    Optional.absent(),
+                    taskId,
+                    Optional.of(true)));
+
+              } catch (ExecutionException | RetryException e) {
+                finishTask(task, TaskState.TASK_KILLED, "Task timed out on health checks.", Optional.<String> absent());
+
+                long healthCheckEnd = System.currentTimeMillis();
+                taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(
+                    Optional.of(408),
+                    Optional.of(healthCheckEnd - healthCheckStart),
+                    healthCheckEnd,
+                    Optional.absent(),
+                    Optional.of("Task timed out on health checks."),
+                    taskId,
+                    Optional.of(true)));
+                return;
+              }
+            }
+
             processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
             startCgroupWatcher(task);
           }
