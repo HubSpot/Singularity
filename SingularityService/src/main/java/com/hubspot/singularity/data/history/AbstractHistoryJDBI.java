@@ -18,7 +18,7 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 public abstract class AbstractHistoryJDBI implements HistoryJDBI {
     protected static final Logger LOG = LoggerFactory.getLogger(HistoryJDBI.class);
 
-    private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
+    private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory USE INDEX (startedAt)";
     private static final String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT COUNT(*) FROM taskHistory";
 
     protected void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
