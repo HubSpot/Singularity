@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.skife.jdbi.v2.Query;
 import org.slf4j.Logger;
@@ -95,14 +94,6 @@ public abstract class AbstractHistoryJDBI implements HistoryJDBI {
 
         final Map<String, Object> binds = new HashMap<>();
         final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
-
-        if (requestId.isPresent()
-            && (startedAfter.isPresent() || startedBefore.isPresent())
-            && Stream.of(deployId, runId, host, lastTaskStatus, updatedBefore, updatedAfter).noneMatch(Optional::isPresent)) {
-            // We're filtering only on (requestId, startedAt), so hint that index to the optimizer.
-            // NB: `startedAt` is the name of the index on the fields (requestId, startedAt).
-            sqlBuilder.append(" USE INDEX (startedAt) ");
-        }
 
         applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
