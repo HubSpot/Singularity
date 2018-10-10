@@ -97,7 +97,7 @@ public abstract class AbstractHistoryJDBI implements HistoryJDBI {
 
         applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
-        sqlBuilder.append(" ORDER BY startedAt ");
+        sqlBuilder.append(" ORDER BY startedAt+0 ");
         sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
 
         if (!requestId.isPresent()) {
