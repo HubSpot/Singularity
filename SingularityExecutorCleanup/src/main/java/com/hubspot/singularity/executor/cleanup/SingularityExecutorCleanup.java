@@ -281,7 +281,7 @@ public class SingularityExecutorCleanup {
       if (lastUpdate.isPresent()) {
         if (lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.HOURS.toMillis(2)) {
           LOG.info("Task {} is done for > 2 hours, removing logrotate files");
-          taskCleanup.removeLogrotateFiles();
+          taskCleanup.cleanUpLogs();
         }
         if (lastUpdate.get().getTaskState().isFailed()) {
           final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
