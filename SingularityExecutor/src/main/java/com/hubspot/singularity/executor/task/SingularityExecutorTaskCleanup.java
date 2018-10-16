@@ -82,6 +82,10 @@ public class SingularityExecutorTaskCleanup {
     }
   }
 
+  public void removeLogrotateFiles() {
+    taskLogManager.removeLogrotateFile();
+  }
+
   private TaskCleanupResult finishTaskCleanup(boolean dockerCleanSuccess) {
     boolean cleanTaskDefinitionFile = cleanTaskDefinitionFile();
 
