@@ -72,11 +72,11 @@
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <horizon.version>0.0.25</horizon.version>
     <jukito.version>1.5</jukito.version>
-    <mesos.docker.tag>1.1.1</mesos.docker.tag>
+    <mesos.docker.tag>1.6.1</mesos.docker.tag>
     <mesos.version>1.6.1</mesos.version>
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
-    <singularitybase.image.revision>1</singularitybase.image.revision>
+    <singularitybase.image.revision>2</singularitybase.image.revision>
   </properties>
 
   <dependencyManagement>
