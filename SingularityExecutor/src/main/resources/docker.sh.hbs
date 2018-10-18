@@ -6,10 +6,6 @@
 
 set -e
 
-# MESOS-8322 changed this directory to 0750, chown owner since we can switch user either in mesos or the executor
-# otherwise, which switching user in the executor only, the non-root user can no longer traverse the sandbox
-chown {{{ user }}} $MESOS_SANDBOX
-
 STOP_TIME={{{ stopTimeout }}} # Max time to wait for container to stop before killing
 
 CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
