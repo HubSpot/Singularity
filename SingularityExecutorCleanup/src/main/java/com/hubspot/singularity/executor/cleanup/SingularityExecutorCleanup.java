@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -270,22 +271,28 @@ public class SingularityExecutorCleanup {
 
     boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 
+    if (taskDefinition.shouldLogrotateLogFile()) {
+      checkForUncompressedLogrotatedFile(taskDefinition);
+    }
+
     if (taskHistory.isPresent()) {
       final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
 
-      if (lastUpdate.isPresent() && lastUpdate.get().getTaskState().isFailed()) {
-        final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
+      if (lastUpdate.isPresent()) {
+        if (lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
+          LOG.info("Task {} is done for > 15 minutes, removing logrotate files");
+          taskCleanup.cleanUpLogs();
+        }
+        if (lastUpdate.get().getTaskState().isFailed()) {
+          final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
 
-        if (delta < cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()) {
-          LOG.info("Not cleaning up task app directory of {} because only {} has elapsed since it failed (will cleanup after {})", taskDefinition.getTaskId(),
-              JavaUtils.durationFromMillis(delta), JavaUtils.durationFromMillis(cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()));
-          cleanupTaskAppDirectory = false;
+          if (delta < cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()) {
+            LOG.info("Not cleaning up task app directory of {} because only {} has elapsed since it failed (will cleanup after {})", taskDefinition.getTaskId(),
+                JavaUtils.durationFromMillis(delta), JavaUtils.durationFromMillis(cleanupConfiguration.getCleanupAppDirectoryOfFailedTasksAfterMillis()));
+            cleanupTaskAppDirectory = false;
+          }
         }
       }
-    }
-
-    if (taskDefinition.shouldLogrotateLogFile()) {
-      checkForUncompressedLogrotatedFile(taskDefinition);
     }
 
     boolean isDocker = (taskHistory.isPresent()
