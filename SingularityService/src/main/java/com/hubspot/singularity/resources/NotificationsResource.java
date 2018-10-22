@@ -55,7 +55,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       @RequestBody(required = true, description = "The email address to unsubscribe") String email,
       @Context HttpServletRequest requestContext) {
     maybeProxyToLeader(requestContext, Void.class, email, () -> {
-      notificationsManager.addToBlacklist(email);
+      notificationsManager.addToBlacklist(getFormattedEmail(email));
       return null; });
   }
 
@@ -67,7 +67,11 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       @RequestBody(required = true, description = "The email address to re-subscribe") String email,
       @Context HttpServletRequest requestContext) {
     maybeProxyToLeader(requestContext, Void.class, email, () -> {
-      notificationsManager.removeFromBlacklist(email);
+      notificationsManager.removeFromBlacklist(getFormattedEmail(email));
       return null; });
+  }
+
+  private String getFormattedEmail(String email) {
+    return email.replaceAll("^\"|\"$", "");
   }
 }
