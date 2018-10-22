@@ -441,7 +441,7 @@ public class SingularityClient {
     return executeRequest(hostToUri, type, body, Method.PUT, Optional.absent());
   }
 
-  private <T> Optional<T> post(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Class<T>> clazz) {
+  private <T> Optional<T> post(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Class<T>> clazz, Optional<Map<String, Object>> queryParams) {
     try {
       HttpResponse response = executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
 
@@ -461,6 +461,10 @@ public class SingularityClient {
 
   private HttpResponse post(Function<String, String> hostToUri, String type, Optional<?> body) {
     return executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
+  }
+
+  private HttpResponse post(Function<String, String> hostToUri, String type, Optional<?> body, Map<String, Object> queryParams) {
+    return executeRequest(hostToUri, type, body, Method.POST, Optional.of(queryParams));
   }
 
   private HttpResponse executeRequest(Function<String, String> hostToUri, String type, Optional<?> body, Method method, Optional<Map<String, Object>> queryParams) {
@@ -621,9 +625,20 @@ public class SingularityClient {
   }
 
   public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
+    return runSingularityRequest(requestId, runNowRequest, false);
+  }
+
+  /**
+   *
+   * @param requestId
+   * @param runNowRequest
+   * @param minimalReturn - if `true` will return a SingularityPendingRequestParent that is _not_ hydrated with extra task + deploy information
+   * @return
+   */
+  public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest, boolean minimalReturn) {
     final Function<String, String> requestUri = (host) -> String.format(REQUEST_RUN_FORMAT, getApiBase(host), requestId);
 
-    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest, ImmutableMap.of("minimal", String.valueOf(minimalReturn)));
 
     return response.getAs(SingularityPendingRequestParent.class);
   }
