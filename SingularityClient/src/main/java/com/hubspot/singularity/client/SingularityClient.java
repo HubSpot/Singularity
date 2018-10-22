@@ -441,7 +441,7 @@ public class SingularityClient {
     return executeRequest(hostToUri, type, body, Method.PUT, Optional.absent());
   }
 
-  private <T> Optional<T> post(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Class<T>> clazz, Optional<Map<String, Object>> queryParams) {
+  private <T> Optional<T> post(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
       HttpResponse response = executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
 
