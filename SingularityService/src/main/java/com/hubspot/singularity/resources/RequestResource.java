@@ -423,7 +423,7 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
     if (minimalReturn) {
-      return SingularityPendingRequestParent.minimalFromRequestParent(requestWithState, pendingRequest);
+      return SingularityPendingRequestParent.minimalFromRequestWithState(requestWithState, pendingRequest);
     } else {
       return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
     }

@@ -19,7 +19,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
         singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getLastHistory(), singularityRequestParent.getMostRecentTask());
   }
 
-  public static SingularityPendingRequestParent minimalFromRequestParent(SingularityRequestWithState requestWithState, SingularityPendingRequest pendingRequest) {
+  public static SingularityPendingRequestParent minimalFromRequestWithState(SingularityRequestWithState requestWithState, SingularityPendingRequest pendingRequest) {
     return new SingularityPendingRequestParent(requestWithState.getRequest(), requestWithState.getState(), Optional.absent(), Optional.absent(),
         Optional.absent(), Optional.absent(), pendingRequest, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(),
         Optional.absent(), Optional.absent());
