@@ -11,12 +11,14 @@ public class LogrotateCronTemplateContext {
     private final String logrotateCommand;
     private final String logrotateStateFile;
     private final String logrotateConfig;
+    private final String outputRedirect;
 
     public LogrotateCronTemplateContext(SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, SingularityExecutorLogrotateFrequency logrotateFrequency) {
         this.logrotateCommand = configuration.getLogrotateCommand();
         this.logrotateStateFile = taskDefinition.getLogrotateStateFilePath().toString();
         this.logrotateConfig = Paths.get(configuration.getLogrotateHourlyConfDirectory()).resolve(taskDefinition.getTaskId()).toString();
         this.cronSchedule = logrotateFrequency.getCronSchedule().get();
+        this.outputRedirect = configuration.isIgnoreLogrotateOutput() ? "> /dev/null 2>&1" : "";
     }
 
     public String getLogrotateCommand() {
@@ -33,5 +35,9 @@ public class LogrotateCronTemplateContext {
 
     public String getCronSchedule() {
         return cronSchedule;
+    }
+
+    public String getOutputRedirect() {
+        return outputRedirect;
     }
 }

@@ -126,6 +126,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String logrotateExtrasDateformat = "%Y%m%d";
 
+  @JsonProperty
+  private boolean ignoreLogrotateOutput = false;
+
   @NotNull
   @JsonProperty
   private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
@@ -361,6 +364,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public String getLogrotateExtrasDateformat() {
     return logrotateExtrasDateformat;
+  }
+
+  public boolean isIgnoreLogrotateOutput() {
+    return ignoreLogrotateOutput;
+  }
+
+  public void setIgnoreLogrotateOutput(boolean ignoreLogrotateOutput) {
+    this.ignoreLogrotateOutput = ignoreLogrotateOutput;
   }
 
   public int getTailLogLinesToSave() {
