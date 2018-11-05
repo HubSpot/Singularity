@@ -26,7 +26,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     Process process = startProcess(processBuilder);
 
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
-S
+
     return process.waitFor();
   }
 
