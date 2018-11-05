@@ -128,17 +128,17 @@
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-protobuf-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-util</artifactId>
     </dependency>
 
