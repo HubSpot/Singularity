@@ -235,6 +235,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   private String extraDockerScriptContent = "";
 
+  private Optional<Long> maxServiceLogSizeMb = Optional.absent();
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -695,6 +697,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setExtraDockerScriptContent(String extraDockerScriptContent) {
     this.extraDockerScriptContent = extraDockerScriptContent;
+  }
+
+  public Optional<Long> getMaxServiceLogSizeMb() {
+    return maxServiceLogSizeMb;
+  }
+
+  public void setMaxServiceLogSizeMb(Optional<Long> maxServiceLogSizeMb) {
+    this.maxServiceLogSizeMb = maxServiceLogSizeMb;
   }
 
   @Override
