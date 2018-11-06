@@ -231,7 +231,7 @@ public class SingularityMesosSchedulerClient {
 
       // toSerialised handles the fact that we can add calls on different threads.
       publisher = p.toSerialized();
-      return publisher;
+      return publisher.onBackpressureBuffer();
     });
 
     MesosClient<Call, Event> client = clientBuilder.build();
