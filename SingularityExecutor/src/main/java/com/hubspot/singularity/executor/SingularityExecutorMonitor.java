@@ -1,11 +1,9 @@
 package com.hubspot.singularity.executor;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -23,11 +21,6 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.rholder.retry.RetryException;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
-import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -40,10 +33,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityTaskExecutorData;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -337,32 +328,6 @@ public class SingularityExecutorMonitor {
           wasKilled = task.wasKilled();
 
           if (!wasKilled) {
-
-            SingularityTaskId taskId = SingularityTaskId.valueOf(task.getTaskDefinition().getTaskId());
-
-            Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
-//                deployManager.getDeploy(taskId.getRequestId(), taskId.getDeployId()).get().getHealthcheck().get();
-
-            Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
-            if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
-              try {
-                Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getHealthcheckMaxRetries());
-
-                Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
-                    .retryIfResult(path -> !new File(path).exists())
-                    .withWaitStrategy(WaitStrategies.fixedWait(1L, TimeUnit.SECONDS))
-                    .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
-                    .build();
-
-                retryer.call(() -> expectedHealthCheckResultFilePath.get());
-                sendStatusUpdate(task, TaskState.TASK_RUNNING, "Health check passed.");
-              } catch (ExecutionException | RetryException e) {
-                finishTask(task, TaskState.TASK_KILLED, "Task timed out on health checks.", Optional.<String> absent());
-                sendStatusUpdate(task, TaskState.TASK_FAILED, "Task timed out on health checks.");
-                return;
-              }
-            }
-
             processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
             startCgroupWatcher(task);
           }
