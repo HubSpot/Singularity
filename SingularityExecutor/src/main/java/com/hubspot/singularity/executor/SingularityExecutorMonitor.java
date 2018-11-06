@@ -42,13 +42,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskExecutorData;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -80,10 +75,6 @@ public class SingularityExecutorMonitor {
   private final SingularityExecutorProcessKiller processKiller;
   private final SingularityExecutorThreadChecker threadChecker;
 
-  private final RequestManager requestManager;
-  private final DeployManager deployManager;
-  private final TaskManager taskManager;
-
   private final Map<String, SingularityExecutorTask> tasks;
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
@@ -92,8 +83,7 @@ public class SingularityExecutorMonitor {
 
   @Inject
   public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
-      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration,
-      RequestManager requestManager, DeployManager deployManager, TaskManager taskManager) {
+      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
@@ -101,10 +91,6 @@ public class SingularityExecutorMonitor {
     this.exitChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorExitChecker-%d").build());
     this.threadChecker = threadChecker;
     this.threadChecker.start(this);
-
-    this.requestManager = requestManager;
-    this.deployManager = deployManager;
-    this.taskManager = taskManager;
 
     this.tasks = Maps.newConcurrentMap();
     this.processBuildingTasks = Maps.newConcurrentMap();
@@ -353,16 +339,15 @@ public class SingularityExecutorMonitor {
           if (!wasKilled) {
 
             SingularityTaskId taskId = SingularityTaskId.valueOf(task.getTaskDefinition().getTaskId());
-            Optional<SingularityRequestWithState> request = requestManager.getRequest(taskId.getRequestId());
 
-            HealthcheckOptions options = deployManager.getDeploy(taskId.getRequestId(), taskId.getDeployId()).get().getHealthcheck().get();
-
-            Integer healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
+            Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
+//                deployManager.getDeploy(taskId.getRequestId(), taskId.getDeployId()).get().getHealthcheck().get();
 
             Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
-            if (expectedHealthCheckResultFilePath.isPresent()) {
-              long healthCheckStart = System.currentTimeMillis();
+            if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
               try {
+                Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getHealthcheckMaxRetries());
+
                 Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
                     .retryIfResult(path -> !new File(path).exists())
                     .withWaitStrategy(WaitStrategies.fixedWait(1L, TimeUnit.SECONDS))
@@ -370,29 +355,10 @@ public class SingularityExecutorMonitor {
                     .build();
 
                 retryer.call(() -> expectedHealthCheckResultFilePath.get());
-                long healthCheckEnd = System.currentTimeMillis();
-
-                taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(
-                    Optional.of(200),
-                    Optional.of(healthCheckEnd - healthCheckStart),
-                    healthCheckEnd,
-                    Optional.of("Health check success"),
-                    Optional.absent(),
-                    taskId,
-                    Optional.of(true)));
-
+                sendStatusUpdate(task, TaskState.TASK_RUNNING, "Health check passed.");
               } catch (ExecutionException | RetryException e) {
                 finishTask(task, TaskState.TASK_KILLED, "Task timed out on health checks.", Optional.<String> absent());
-
-                long healthCheckEnd = System.currentTimeMillis();
-                taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(
-                    Optional.of(408),
-                    Optional.of(healthCheckEnd - healthCheckStart),
-                    healthCheckEnd,
-                    Optional.absent(),
-                    Optional.of("Task timed out on health checks."),
-                    taskId,
-                    Optional.of(true)));
+                sendStatusUpdate(task, TaskState.TASK_FAILED, "Task timed out on health checks.");
                 return;
               }
             }

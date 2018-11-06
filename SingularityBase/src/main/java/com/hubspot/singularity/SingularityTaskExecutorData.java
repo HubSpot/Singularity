@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -24,6 +25,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
   private final Optional<Long> applyS3StorageClassAfterBytes;
   private final Optional<Integer> cpuHardLimit;
   private final Optional<String> healthCheckResultFilePath;
+  private final Optional<HealthcheckOptions> healthcheckOptions;
 
   public SingularityTaskExecutorData(
       ExecutorData executorData,
@@ -36,7 +38,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
       Optional<String> s3StorageClass,
       Optional<Long> applyS3StorageClassAfterBytes,
       Optional<Integer> cpuHardLimit,
-      Optional<String> healthCheckResultFilePath) {
+      Optional<String> healthCheckResultFilePath,
+      Optional<HealthcheckOptions> healthCheckOptions) {
     this(executorData.getCmd(),
         executorData.getEmbeddedArtifacts(),
         executorData.getExternalArtifacts(),
@@ -63,7 +66,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
         s3StorageClass,
         applyS3StorageClassAfterBytes,
         cpuHardLimit,
-        healthCheckResultFilePath);
+        healthCheckResultFilePath,
+        healthCheckOptions);
   }
 
   @JsonCreator
@@ -93,7 +97,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
                                      @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
                                      @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
-                                     @JsonProperty("healthCheckResultFilePath") Optional<String> healthCheckResultFilePath) {
+                                     @JsonProperty("healthCheckResultFilePath") Optional<String> healthCheckResultFilePath,
+                                     @JsonProperty("healthcheckOptions") Optional<HealthcheckOptions> healthcheckOptions) {
     super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
         sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
@@ -106,6 +111,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.cpuHardLimit = cpuHardLimit;
     this.healthCheckResultFilePath = healthCheckResultFilePath;
+    this.healthcheckOptions = healthcheckOptions;
   }
 
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
@@ -146,6 +152,10 @@ public class SingularityTaskExecutorData extends ExecutorData {
 
   public Optional<String> getHealthCheckResultFilePath() {
     return healthCheckResultFilePath;
+  }
+
+  public Optional<HealthcheckOptions> getHealthCheckOptions() {
+    return healthcheckOptions;
   }
 
   @Override

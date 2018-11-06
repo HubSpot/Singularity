@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 
 public class SingularityExecutorTaskDefinition {
@@ -146,6 +147,10 @@ public class SingularityExecutorTaskDefinition {
 
   public Optional<String> getHealthCheckResultFilePath() {
     return executorData.getHealthCheckResultFilePath();
+  }
+
+  public Optional<HealthcheckOptions> getHealthCheckOptions() {
+    return executorData.getHealthCheckOptions();
   }
 
   @JsonIgnore
