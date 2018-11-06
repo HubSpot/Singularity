@@ -12,7 +12,6 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.s3uploader.SingularityS3UploaderRunner</basepom.shaded.main-class>
-    <dep.protobuf.version>3.5.1</dep.protobuf.version>
   </properties>
 
   <dependencies>
