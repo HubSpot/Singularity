@@ -18,6 +18,7 @@ public class SingularityState {
   private final int cooldownRequests;
   private final int scheduledTasks;
   private final int lateTasks;
+  private final List<SingularityPendingTask> listLateTasks;
   private final int futureTasks;
   private final int cleaningTasks;
   private final int lbCleanupTasks;
@@ -85,6 +86,7 @@ public class SingularityState {
                           @JsonProperty("oldestDeployStep") long oldestDeployStep,
                           @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
                           @JsonProperty("lateTasks") int lateTasks,
+                          @JsonProperty("listLateTasks") List<SingularityPendingTask> listLateTasks,
                           @JsonProperty("futureTasks") int futureTasks,
                           @JsonProperty("maxTaskLag") long maxTaskLag,
                           @JsonProperty("generatedAt") long generatedAt,
@@ -119,6 +121,7 @@ public class SingularityState {
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
+    this.listLateTasks = listLateTasks;
     this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
     this.maxTaskLag = maxTaskLag;
@@ -274,6 +277,11 @@ public class SingularityState {
   @Schema(description = "The count of tasks that have not been launched in time")
   public int getLateTasks() {
     return lateTasks;
+  }
+
+  @Schema(description = "The list of all late tasks that have not been launched in time")
+  public List<SingularityPendingTask> getListLateTasks() {
+    return listLateTasks;
   }
 
   @Schema(description = "The count of pending tasks that will be launched at a future time")
