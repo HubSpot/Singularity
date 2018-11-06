@@ -9,12 +9,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTaskId;
@@ -41,8 +46,11 @@ public class SingularityExecutorTaskLogManager {
   private final Logger log;
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorLogrotateFrequency logrotateFrequency;
+  private final ScheduledExecutorService logCheckExecutor;
 
-  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
+  private Future<?> logCheckFuture = null;
+
+  public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper, boolean startServiceLogChecker) {
     this.log = log;
     this.taskDefinition = taskDefinition;
     this.templateManager = templateManager;
@@ -50,6 +58,11 @@ public class SingularityExecutorTaskLogManager {
     this.baseConfiguration = baseConfiguration;
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.logrotateFrequency = taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency());
+    if (startServiceLogChecker) {
+      this.logCheckExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("service-log-checker-%d").build());
+    } else {
+      logCheckExecutor = null;
+    }
   }
 
   public void setup() {
@@ -57,6 +70,42 @@ public class SingularityExecutorTaskLogManager {
     writeLogrotateFile();
     writeTailMetadata(false);
     writeS3MetadataFileForRotatedFiles(false);
+    startLogChecker();
+  }
+
+  private void startLogChecker() {
+    try {
+      if (logCheckExecutor != null) {
+        logCheckFuture = logCheckExecutor.scheduleAtFixedRate(this::checkServiceLogSize, 5, 5, TimeUnit.MINUTES);
+      }
+    } catch (Throwable t) {
+      log.warn("Could not start service log checker", t);
+    }
+  }
+
+  private void stopLogChecker() {
+    try {
+      if (logCheckFuture != null) {
+        logCheckFuture.cancel(true);
+      }
+      if (logCheckExecutor != null) {
+        logCheckExecutor.shutdown();
+      }
+    } catch (Throwable t) {
+      log.warn("Coud not properly shut down log checker", t);
+    }
+  }
+
+  private void checkServiceLogSize() {
+    try {
+      long fileBytes = taskDefinition.getServiceLogOutPath().toFile().length();
+      long fileMb = fileBytes / 1024 / 1024;
+      if (configuration.getMaxServiceLogSizeMb().isPresent() && fileMb > configuration.getMaxServiceLogSizeMb().get()) {
+        manualLogrotate();
+      }
+    } catch (Throwable t) {
+      log.warn("Could not run file size check on service log", t);
+    }
   }
 
   @SuppressFBWarnings
@@ -141,6 +190,7 @@ public class SingularityExecutorTaskLogManager {
 
   @SuppressFBWarnings
   public boolean teardown() {
+    stopLogChecker();
     boolean writeTailMetadataSuccess = writeTailMetadata(true);
 
     ensureServiceOutExists();
