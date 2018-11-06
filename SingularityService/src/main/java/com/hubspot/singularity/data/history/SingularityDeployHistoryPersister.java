@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityDeployHistoryPersister extends SingularityHistoryPersister<SingularityDeployHistory> {
@@ -30,16 +31,19 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityDeployHistoryPersister(SingularityConfiguration configuration,
                                            DeployManager deployManager,
                                            HistoryManager historyManager,
+                                           SingularitySchedulerLock lock,
                                            @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
     super(configuration, persisterLock);
 
     this.deployManager = deployManager;
     this.historyManager = historyManager;
+    this.lock = lock;
   }
 
   @Override
@@ -60,19 +64,21 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
       int numTransferred = 0;
 
       for (SingularityDeployKey deployKey : allDeployIds) {
-        SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
+        lock.runWithRequestLock(() -> {
+          SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
 
-        if (!shouldTransferDeploy(deployState, deployKey)) {
-          continue;
-        }
+          if (!shouldTransferDeploy(deployState, deployKey)) {
+            return;
+          }
 
-        Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
+          Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
 
-        if (deployHistory.isPresent()) {
-          deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
-        } else {
-          LOG.info("Deploy history for key {} not found", deployKey);
-        }
+          if (deployHistory.isPresent()) {
+            deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
+          } else {
+            LOG.info("Deploy history for key {} not found", deployKey);
+          }
+        }, deployKey.getRequestId(), "deploy history persister");
       }
 
       for (Collection<SingularityDeployHistory> deployHistoryForRequest : deployHistoryByRequestId.asMap().values()) {
