@@ -76,6 +76,7 @@ public class SingularityExecutorTaskLogManager {
   private void startLogChecker() {
     try {
       if (logCheckExecutor != null) {
+        log.info("Starting service log checker to rotate logs over {} MB", configuration.getMaxServiceLogSizeMb());
         logCheckFuture = logCheckExecutor.scheduleAtFixedRate(this::checkServiceLogSize, 5, 5, TimeUnit.MINUTES);
       }
     } catch (Throwable t) {
@@ -100,6 +101,7 @@ public class SingularityExecutorTaskLogManager {
     try {
       long fileBytes = taskDefinition.getServiceLogOutPath().toFile().length();
       long fileMb = fileBytes / 1024 / 1024;
+      log.debug("service log is currently {} MB (limit before logrotate: {} MB)", fileMb, configuration.getMaxServiceLogSizeMb());
       if (configuration.getMaxServiceLogSizeMb().isPresent() && fileMb > configuration.getMaxServiceLogSizeMb().get()) {
         manualLogrotate();
       }
