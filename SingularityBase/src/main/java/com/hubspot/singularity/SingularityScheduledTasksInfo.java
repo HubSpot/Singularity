@@ -8,16 +8,16 @@ public class SingularityScheduledTasksInfo {
   private final int numFutureTasks;
   private final long maxTaskLag;
   private final long timestamp;
-  private final List<SingularityPendingTask> lateTasks;
+  private final List<SingularityPendingTaskId> lateTasks;
 
-  private SingularityScheduledTasksInfo(List<SingularityPendingTask> lateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
+  private SingularityScheduledTasksInfo(List<SingularityPendingTaskId> lateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
     this.lateTasks = lateTasks;
     this.numFutureTasks = numFutureTasks;
     this.maxTaskLag = maxTaskLag;
     this.timestamp = timestamp;
   }
 
-  public List<SingularityPendingTask> getLateTasks() {
+  public List<SingularityPendingTaskId> getLateTasks() {
     return lateTasks;
   }
 
@@ -40,13 +40,13 @@ public class SingularityScheduledTasksInfo {
 
     int numFutureTasks = 0;
     long maxTaskLag = 0;
-    List<SingularityPendingTask> lateTasks = new ArrayList<>();
+    List<SingularityPendingTaskId> lateTasks = new ArrayList<>();
 
     for (SingularityPendingTask pendingTask : pendingTasks) {
       long delta = now - pendingTask.getPendingTaskId().getNextRunAt();
 
       if (delta > millisDeltaForLateTasks) {
-        lateTasks.add(pendingTask);
+        lateTasks.add(pendingTask.getPendingTaskId());
       } else {
         numFutureTasks++;
       }

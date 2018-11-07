@@ -18,7 +18,7 @@ public class SingularityState {
   private final int cooldownRequests;
   private final int scheduledTasks;
   private final int lateTasks;
-  private final List<SingularityPendingTask> listLateTasks;
+  private final List<SingularityPendingTaskId> listLateTasks;
   private final int futureTasks;
   private final int cleaningTasks;
   private final int lbCleanupTasks;
@@ -86,7 +86,7 @@ public class SingularityState {
                           @JsonProperty("oldestDeployStep") long oldestDeployStep,
                           @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
                           @JsonProperty("lateTasks") int lateTasks,
-                          @JsonProperty("listLateTasks") List<SingularityPendingTask> listLateTasks,
+                          @JsonProperty("listLateTasks") List<SingularityPendingTaskId> listLateTasks,
                           @JsonProperty("futureTasks") int futureTasks,
                           @JsonProperty("maxTaskLag") long maxTaskLag,
                           @JsonProperty("generatedAt") long generatedAt,
@@ -280,7 +280,7 @@ public class SingularityState {
   }
 
   @Schema(description = "The list of all late tasks that have not been launched in time")
-  public List<SingularityPendingTask> getListLateTasks() {
+  public List<SingularityPendingTaskId> getListLateTasks() {
     return listLateTasks;
   }
 
