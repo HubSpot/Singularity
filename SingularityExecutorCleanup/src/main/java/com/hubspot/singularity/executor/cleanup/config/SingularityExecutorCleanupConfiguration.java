@@ -11,6 +11,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -70,6 +71,12 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @NotNull
   private String defaultS3Bucket = "";
+
+  @NotNull
+  private Optional<String> healthCheckResultFilePath = Optional.absent();
+
+  @NotNull
+  private Optional<HealthcheckOptions> healthCheckOptions = Optional.absent();
 
   /**
    * S3 Key format for finding logs. Should be the same as
@@ -168,6 +175,22 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   public void setCompressionType(CompressionType compressionType) {
     this.compressionType = compressionType;
+  }
+
+  public Optional<String> getHealthCheckResultFilePath() {
+    return healthCheckResultFilePath;
+  }
+
+  public void setHealthCheckResultFilePath(Optional<String> healthCheckResultFilePath) {
+    this.healthCheckResultFilePath = healthCheckResultFilePath;
+  }
+
+  public Optional<HealthcheckOptions> getHealthCheckOptions() {
+    return healthCheckOptions;
+  }
+
+  public void setHealthCheckOptions(Optional<HealthcheckOptions> healthCheckOptions) {
+    this.healthCheckOptions = healthCheckOptions;
   }
 
   public String getDefaultServiceLog() {
