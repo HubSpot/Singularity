@@ -42,7 +42,7 @@ The following fields inform defaults or behavior of the UI (which can be served 
 | `bounceExpirationMinutes` | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | `int` |
 | `healthcheckIntervalSeconds` | 5 | Default amount of time to wait in between attempting task healthchecks | `int` |
 | `healthcheckTimeoutSeconds` | 5 | Default amount of time to wait for healthchecks to return before considering them failed | `int` | 
-| `healthcheckMaxRetries` | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | `int` |
+| `defaultHealthcheckMaxRetries` | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | `int` |
 | `startupTimeoutSeconds` | 45 | If a healthchecked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | `int` |
 | `commonHostnameSuffixToOmit` | null | If specified, will remove this hostname suffix from all taskIds | string |
 | `warnIfScheduledJobIsRunningPastNextRunPct` | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | `int` |

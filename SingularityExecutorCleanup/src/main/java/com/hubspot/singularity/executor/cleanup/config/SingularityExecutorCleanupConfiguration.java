@@ -73,9 +73,6 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   private String defaultS3Bucket = "";
 
   @NotNull
-  private Optional<String> healthCheckResultFilePath = Optional.absent();
-
-  @NotNull
   private Optional<HealthcheckOptions> healthCheckOptions = Optional.absent();
 
   /**
@@ -175,14 +172,6 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   public void setCompressionType(CompressionType compressionType) {
     this.compressionType = compressionType;
-  }
-
-  public Optional<String> getHealthCheckResultFilePath() {
-    return healthCheckResultFilePath;
-  }
-
-  public void setHealthCheckResultFilePath(Optional<String> healthCheckResultFilePath) {
-    this.healthCheckResultFilePath = healthCheckResultFilePath;
   }
 
   public Optional<HealthcheckOptions> getHealthCheckOptions() {

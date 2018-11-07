@@ -64,15 +64,15 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
     if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
       try {
-        Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getHealthcheckMaxRetries());
+        Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
 
-        Retryer<String> retryer = RetryerBuilder.<String>newBuilder()
-            .retryIfResult(path -> !new File(path).exists())
+        Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+            .retryIfResult(bool -> !bool)
             .withWaitStrategy(WaitStrategies.fixedWait(1L, TimeUnit.SECONDS))
             .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
             .build();
 
-        retryer.call(() -> expectedHealthCheckResultFilePath.get());
+        retryer.call(() -> new File(expectedHealthCheckResultFilePath.get()).exists());
 
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
 

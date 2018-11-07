@@ -89,7 +89,6 @@ public class SingularityDeploy {
   private final Optional<Long> healthcheckMaxTotalTimeoutSeconds;
 
   private final Optional<HealthcheckOptions> healthcheck;
-  private final Optional<String> healthCheckResultFilePath;
   private final Optional<Boolean> skipHealthchecksOnDeploy;
   private final Optional<Long> deployHealthTimeoutSeconds;
   private final Optional<Long> considerHealthyAfterRunningForSeconds;
@@ -144,7 +143,6 @@ public class SingularityDeploy {
                            @JsonProperty("healthcheckMaxRetries") Optional<Integer> healthcheckMaxRetries,
                            @JsonProperty("healthcheckMaxTotalTimeoutSeconds") Optional<Long> healthcheckMaxTotalTimeoutSeconds,
                            @JsonProperty("healthcheck") Optional<HealthcheckOptions> healthcheck,
-                           @JsonProperty("healthCheckResultFilePath") Optional<String> healthCheckResultFilePath,
                            @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
                            @JsonProperty("loadBalancerGroups") Optional<Set<String>> loadBalancerGroups,
                            @JsonProperty("loadBalancerPortIndex") Optional<Integer> loadBalancerPortIndex,
@@ -212,7 +210,6 @@ public class SingularityDeploy {
     } else {
       this.healthcheck = healthcheck;
     }
-    this.healthCheckResultFilePath = healthCheckResultFilePath;
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
 
@@ -261,7 +258,6 @@ public class SingularityDeploy {
     .setHealthcheckMaxRetries(healthcheckMaxRetries)
     .setHealthcheckMaxTotalTimeoutSeconds(healthcheckMaxTotalTimeoutSeconds)
     .setHealthcheck(healthcheck)
-    .setHealthCheckResultFilePath(healthCheckResultFilePath)
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
@@ -506,11 +502,6 @@ public class SingularityDeploy {
   @Schema(description = "HTTP Healthcheck settings")
   public Optional<HealthcheckOptions> getHealthcheck() {
     return healthcheck;
-  }
-
-  @Schema(description = "File path to check for non-web healthchecks")
-  public Optional<String> getHealthCheckResultFilePath() {
-    return healthCheckResultFilePath;
   }
 
   @Schema(nullable = true, description = "deploy this many instances at a time")

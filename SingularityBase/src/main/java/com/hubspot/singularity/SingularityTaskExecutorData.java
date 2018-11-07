@@ -24,7 +24,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
   private final Optional<Integer> cpuHardLimit;
-  private final Optional<String> healthCheckResultFilePath;
   private final Optional<HealthcheckOptions> healthcheckOptions;
 
   public SingularityTaskExecutorData(
@@ -38,7 +37,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
       Optional<String> s3StorageClass,
       Optional<Long> applyS3StorageClassAfterBytes,
       Optional<Integer> cpuHardLimit,
-      Optional<String> healthCheckResultFilePath,
       Optional<HealthcheckOptions> healthCheckOptions) {
     this(executorData.getCmd(),
         executorData.getEmbeddedArtifacts(),
@@ -66,7 +64,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
         s3StorageClass,
         applyS3StorageClassAfterBytes,
         cpuHardLimit,
-        healthCheckResultFilePath,
         healthCheckOptions);
   }
 
@@ -97,7 +94,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
                                      @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
                                      @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
-                                     @JsonProperty("healthCheckResultFilePath") Optional<String> healthCheckResultFilePath,
                                      @JsonProperty("healthcheckOptions") Optional<HealthcheckOptions> healthcheckOptions) {
     super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
         sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
@@ -110,7 +106,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.cpuHardLimit = cpuHardLimit;
-    this.healthCheckResultFilePath = healthCheckResultFilePath;
     this.healthcheckOptions = healthcheckOptions;
   }
 
@@ -150,10 +145,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
     return cpuHardLimit;
   }
 
-  public Optional<String> getHealthCheckResultFilePath() {
-    return healthCheckResultFilePath;
-  }
-
   public Optional<HealthcheckOptions> getHealthCheckOptions() {
     return healthcheckOptions;
   }
@@ -170,7 +161,6 @@ public class SingularityTaskExecutorData extends ExecutorData {
         ", s3StorageClass=" + s3StorageClass +
         ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
         ", cpuHardLimit=" + cpuHardLimit +
-        ", healthCheckResultFilePath='" + healthCheckResultFilePath + '\'' +
         "} " + super.toString();
   }
 }

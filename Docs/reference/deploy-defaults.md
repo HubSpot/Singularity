@@ -20,7 +20,7 @@ The majority of fields on the [`SingularityDeployRequest`](api.html) and [`Singu
 | `considerHealthyAfterRunningForSeconds` | `considerTaskHealthyAfterRunningForSeconds` | 5 |
 | `loadBalancerPortIndex` | | 0 |
 | `skipHealthchecksOnDeploy` | `SingularityRequest.skipHealthchecks` | `false` |
-| `healthcheckMaxRetries` | `healthcheckMaxRetries` | 0 |
+| `defaultHealthcheckMaxRetries` | `defaultHealthcheckMaxRetries` | 0 |
 | `healthcheckMaxTotalTimeoutSeconds` | `healthcheckMaxTotalTimeoutSeconds` | No Timeout |
 | `deployInstanceCountPerStep` | | All Instances |
 | `deployStepWaitTimeMs` | | 0 |
