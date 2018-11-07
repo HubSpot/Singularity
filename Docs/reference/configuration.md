@@ -54,7 +54,7 @@ These are settings that are more likely to be altered.
 | healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | int |
 | healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | int | 
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long |
-| defaultHealthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
+| healthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
 | startupDelaySeconds | | By default, wait this long before starting any healthchecks on a task | int |
 | startupTimeoutSeconds | 45 | If a healthchecked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
 | startupIntervalSeconds | 2 | In the startup period (before a valid http response has been received) wait this long between healthcheck attempts | int |
