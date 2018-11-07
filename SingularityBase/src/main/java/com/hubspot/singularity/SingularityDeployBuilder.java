@@ -84,6 +84,8 @@ public class SingularityDeployBuilder {
 
   private Optional<HealthcheckOptions> healthcheck;
 
+  private Optional<String> healthCheckResultFilePath;
+
   private Optional<Long> deployHealthTimeoutSeconds;
 
   private Optional<Long> considerHealthyAfterRunningForSeconds;
@@ -135,6 +137,7 @@ public class SingularityDeployBuilder {
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
     this.healthcheck = Optional.absent();
+    this.healthCheckResultFilePath = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
     this.healthcheckMaxTotalTimeoutSeconds = Optional.absent();
     this.healthcheckMaxRetries = Optional.absent();
@@ -159,7 +162,7 @@ public class SingularityDeployBuilder {
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
       env, taskEnv, runImmediately, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
+      healthcheckMaxTotalTimeoutSeconds, healthcheck, healthCheckResultFilePath, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
 
@@ -519,6 +522,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setHealthcheck(Optional<HealthcheckOptions> healthcheck) {
     this.healthcheck = healthcheck;
+    return this;
+  }
+
+  public Optional<String> getHealthCheckResultFilePath() {
+    return healthCheckResultFilePath;
+  }
+
+  public SingularityDeployBuilder setHealthCheckResultFilePath(Optional<String> healthCheckResultFilePath) {
+    this.healthCheckResultFilePath = healthCheckResultFilePath;
     return this;
   }
 
