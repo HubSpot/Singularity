@@ -216,7 +216,7 @@ public class SingularityExecutorCleanup {
             oldDefinition.getExecutorData().getS3StorageClass(),
             oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
             oldDefinition.getExecutorData().getCpuHardLimit(),
-            oldDefinition.getExecutorData().getHealthCheckOptions().isPresent() ? oldDefinition.getExecutorData().getHealthCheckOptions() : cleanupConfiguration.getHealthCheckOptions()
+            Optional.absent()
         ),
         oldDefinition.getTaskDirectory(),
         oldDefinition.getExecutorPid(),

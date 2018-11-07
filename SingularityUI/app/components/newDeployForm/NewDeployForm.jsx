@@ -108,7 +108,7 @@ class NewDeployForm extends Component {
       healthcheckStartupIntervalSeconds: PropTypes.string,
       healthcheckTimeoutSeconds: PropTypes.string,
       healthcheckIntervalSeconds: PropTypes.string,
-      defaultHealthcheckMaxRetries: PropTypes.string,
+      healthcheckMaxRetries: PropTypes.string,
       failureStatusCodes: PropTypes.arrayOf(PropTypes.string),
       deployHealthTimeoutSeconds: PropTypes.string,
       skipHealthchecksOnDeploy: PropTypes.bool,
@@ -1384,7 +1384,7 @@ class NewDeployForm extends Component {
         feedback={this.formFieldFeedback(INDEXED_FIELDS.intervalSeconds, this.props.form.intervalSeconds)}
       />
     );
-    const defaultHealthcheckMaxRetries = (
+    const healthcheckMaxRetries = (
       <TextFormGroup
         id="healthcheck-max-retries"
         onChange={event => this.updateField('maxRetries', event.target.value)}
@@ -1590,7 +1590,7 @@ class NewDeployForm extends Component {
               </div>
               <div className="row">
                 <div className="col-md-6">
-                  {defaultHealthcheckMaxRetries}
+                  {healthcheckMaxRetries}
                 </div>
                 <div className="col-md-6">
                   {failureStatusCodes}
