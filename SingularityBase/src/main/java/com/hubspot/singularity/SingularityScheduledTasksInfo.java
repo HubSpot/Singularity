@@ -21,7 +21,9 @@ public class SingularityScheduledTasksInfo {
     return lateTasks;
   }
 
-  public int getNumLateTasks() { return getLateTasks().size(); }
+  public int getNumLateTasks() {
+    return getLateTasks().size();
+  }
 
   public int getNumFutureTasks() {
     return numFutureTasks;
