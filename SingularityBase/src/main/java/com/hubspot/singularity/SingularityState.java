@@ -364,6 +364,7 @@ public class SingularityState {
         ", cooldownRequests=" + cooldownRequests +
         ", scheduledTasks=" + scheduledTasks +
         ", lateTasks=" + lateTasks +
+        ", listLateTasks=" + listLateTasks +
         ", futureTasks=" + futureTasks +
         ", cleaningTasks=" + cleaningTasks +
         ", lbCleanupTasks=" + lbCleanupTasks +
