@@ -15,7 +15,6 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.SafeProcessManager;
@@ -60,11 +59,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   }
 
   private void runHealthCheck() {
-
-    SingularityTaskId taskId = SingularityTaskId.valueOf(task.getTaskDefinition().getTaskId());
-
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
-    //                deployManager.getDeploy(taskId.getRequestId(), taskId.getDeployId()).get().getHealthcheck().get();
 
     Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
     if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
