@@ -146,7 +146,10 @@ public class SingularityExecutorTaskDefinition {
   }
 
   public Optional<String> getHealthCheckResultFilePath() {
-    return executorData.getHealthCheckResultFilePath();
+    if (executorData.getHealthCheckOptions().isPresent()) {
+      return executorData.getHealthCheckOptions().get().getHealthcheckResultFilePath();
+    }
+    return Optional.absent();
   }
 
   public Optional<HealthcheckOptions> getHealthCheckOptions() {

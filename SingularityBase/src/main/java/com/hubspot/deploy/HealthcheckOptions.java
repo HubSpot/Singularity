@@ -128,7 +128,7 @@ public class HealthcheckOptions {
   }
 
   @Schema(description = "File path that indicates successful non-web health checks.")
-  public Optional<String> getHealthcheckResultFilePathh() {
+  public Optional<String> getHealthcheckResultFilePath() {
     return healthcheckResultFilePath;
   }
 
