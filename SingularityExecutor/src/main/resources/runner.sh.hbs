@@ -6,8 +6,8 @@
 
 export MESOS_TASK_ID=$TASK_ID
 
-# MESOS-8322 changed this directory to 0750, chown owner since we can switch user either in mesos or the executor
-# otherwise, which switching user in the executor only, the non-root user can no longer traverse the sandbox
+# MESOS-8322 changed this directory to 0750, chown owner since we can switch user either in mesos or the executor.
+# Otherwise, when switching user in the executor only, the non-root user can no longer traverse the sandbox
 chown {{{ user }}} $MESOS_SANDBOX
 
 {{#if cfsQuota }}

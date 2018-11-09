@@ -384,11 +384,16 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Auth SingularityUser user,
         @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
+        @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
-    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest));
+    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
   }
 
   public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
+    return scheduleImmediately(user, requestId, runNowRequest, false);
+  }
+
+  public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest, boolean minimalReturn) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
@@ -408,7 +413,11 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
-    return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
+    if (minimalReturn) {
+      return SingularityPendingRequestParent.minimalFromRequestWithState(requestWithState, pendingRequest);
+    } else {
+      return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
+    }
   }
 
   @GET
