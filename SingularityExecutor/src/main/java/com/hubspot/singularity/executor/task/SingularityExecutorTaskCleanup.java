@@ -82,6 +82,10 @@ public class SingularityExecutorTaskCleanup {
     }
   }
 
+  public void cleanUpLogs() {
+    taskLogManager.teardown();
+  }
+
   private TaskCleanupResult finishTaskCleanup(boolean dockerCleanSuccess) {
     boolean cleanTaskDefinitionFile = cleanTaskDefinitionFile();
 

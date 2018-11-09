@@ -78,7 +78,10 @@ export const FetchTaskSearchParams = buildApiAction(
     } else {
       url = `/history/tasks?count=${count}&page=${page}&${Utils.queryParams(args)}`;
     }
-    return { url };
+    return {
+      url,
+      catchStatusCodes: [404, 500]
+    };
   });
 
 export const FetchRequestRunHistory = buildApiAction(

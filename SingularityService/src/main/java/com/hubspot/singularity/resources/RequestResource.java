@@ -187,8 +187,11 @@ public class RequestResource extends AbstractRequestResource {
           }
         });
 
-        if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-          rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
+
+        if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
+          if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
+            rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
+          }
         }
         if (request.getSlaveAttributeMinimums().isPresent()) {
           Set<SingularityTaskId> cleanedTasks = rebalancingHelper.rebalanceAttributeDistribution(request, user.getEmail(), remainingActiveTasks);
@@ -383,11 +386,16 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Auth SingularityUser user,
         @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
+        @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
-    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest));
+    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
   }
 
   public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
+    return scheduleImmediately(user, requestId, runNowRequest, false);
+  }
+
+  public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest, boolean minimalReturn) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
@@ -408,7 +416,11 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
-    return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
+    if (minimalReturn) {
+      return SingularityPendingRequestParent.minimalFromRequestWithState(requestWithState, pendingRequest);
+    } else {
+      return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
+    }
   }
 
   @GET
@@ -627,6 +639,18 @@ public class RequestResource extends AbstractRequestResource {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
+  }
+
+  @GET
+  @Path("/ids")
+  @Operation(summary = "Retrieve the list of active request ids")
+  public List<String> getActiveRequests(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+    return filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+        .stream()
+        .map((r) -> r.getRequest().getId())
+        .collect(Collectors.toList());
   }
 
 

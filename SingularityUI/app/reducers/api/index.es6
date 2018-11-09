@@ -40,7 +40,7 @@ import {
 
 import {
   FetchRequests,
-  FetchUserRelevantRequests,
+  FetchRequestIds,
   FetchRequest,
   SaveRequest,
   RemoveRequest,
@@ -116,9 +116,9 @@ const decommissionRack = buildApiActionReducer(DecommissionRack, []);
 const removeRack = buildApiActionReducer(RemoveRack, []);
 const reactivateRack = buildApiActionReducer(ReactivateRack, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
+const requestIds = buildApiActionReducer(FetchRequestIds, [])
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
-const userRelevantRequests = buildApiActionReducer(FetchUserRelevantRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
 const requestArgHistory = buildKeyedApiActionReducer(FetchRequestArgHistory, []);
@@ -150,7 +150,7 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 const utilization = buildApiActionReducer(FetchUtilization, {});
 const requestUtilizations = buildApiActionReducer(FetchRequestUtilizations, []);
-const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilization, []);
+const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilization, {});
 
 export default combineReducers({
   user,
@@ -180,7 +180,7 @@ export default combineReducers({
   unpauseRequest,
   exitRequestCooldown,
   requests,
-  userRelevantRequests,
+  requestIds,
   requestsInState,
   requestHistory,
   requestArgHistory,
