@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -121,7 +122,7 @@ public class SingularityState {
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
-    this.listLateTasks = listLateTasks;
+    this.listLateTasks = listLateTasks == null ? Collections.emptyList() : listLateTasks;
     this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
     this.maxTaskLag = maxTaskLag;
