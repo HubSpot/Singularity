@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -18,6 +19,7 @@ public class SingularityState {
   private final int cooldownRequests;
   private final int scheduledTasks;
   private final int lateTasks;
+  private final List<SingularityPendingTaskId> listLateTasks;
   private final int futureTasks;
   private final int cleaningTasks;
   private final int lbCleanupTasks;
@@ -85,6 +87,7 @@ public class SingularityState {
                           @JsonProperty("oldestDeployStep") long oldestDeployStep,
                           @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
                           @JsonProperty("lateTasks") int lateTasks,
+                          @JsonProperty("listLateTasks") List<SingularityPendingTaskId> listLateTasks,
                           @JsonProperty("futureTasks") int futureTasks,
                           @JsonProperty("maxTaskLag") long maxTaskLag,
                           @JsonProperty("generatedAt") long generatedAt,
@@ -119,6 +122,7 @@ public class SingularityState {
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
+    this.listLateTasks = listLateTasks == null ? Collections.emptyList() : listLateTasks;
     this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
     this.maxTaskLag = maxTaskLag;
@@ -276,6 +280,11 @@ public class SingularityState {
     return lateTasks;
   }
 
+  @Schema(description = "The list of all late tasks that have not been launched in time")
+  public List<SingularityPendingTaskId> getListLateTasks() {
+    return listLateTasks;
+  }
+
   @Schema(description = "The count of pending tasks that will be launched at a future time")
   public int getFutureTasks() {
     return futureTasks;
@@ -356,6 +365,7 @@ public class SingularityState {
         ", cooldownRequests=" + cooldownRequests +
         ", scheduledTasks=" + scheduledTasks +
         ", lateTasks=" + lateTasks +
+        ", listLateTasks=" + listLateTasks +
         ", futureTasks=" + futureTasks +
         ", cleaningTasks=" + cleaningTasks +
         ", lbCleanupTasks=" + lbCleanupTasks +
