@@ -228,7 +228,7 @@ const Utils = {
     return splits.slice(0, splits.length - 5).join('-');
   },
 
-  getListOfRequestsUniqueFromListOfTasks(listOfTasks) {
+  getListOfUniqueRequestsFromListOfTasks(listOfTasks) {
     const res = [];
     for (const TaskId in listOfTasks) {
       requestId = TaskId.requestId;
