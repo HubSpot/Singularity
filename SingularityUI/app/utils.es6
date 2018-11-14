@@ -228,6 +228,17 @@ const Utils = {
     return splits.slice(0, splits.length - 5).join('-');
   },
 
+  getListOfRequestsUniqueFromListOfTasks(listOfTasks) {
+    const res = [];
+    for (const TaskId in listOfTasks) {
+      requestId = TaskId.requestId;
+      if (!res.contains(requestId)){
+        res.push(requestId);
+      }
+    }
+    return res;
+  },
+
   getInstanceNoFromTaskId(taskId) {
     const splits = taskId.split('-')
     return splits[splits.length-3];
