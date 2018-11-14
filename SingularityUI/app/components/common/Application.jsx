@@ -41,7 +41,7 @@ class Application extends Component {
         onClickClose: this.dismissTaskLagNotification,
         message: `
           Singularity is experiencing some delays. The team has already been
-          notified. (Number of distinct late requests: ${lateRequests.length})
+          notified.
         `,
       });
     }

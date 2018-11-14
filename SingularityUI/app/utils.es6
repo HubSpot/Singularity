@@ -229,14 +229,8 @@ const Utils = {
   },
 
   getListOfUniqueRequestsFromListOfTasks(listOfTasks) {
-    const res = [];
-    for (const TaskId in listOfTasks) {
-      requestId = TaskId.requestId;
-      if (!res.contains(requestId)){
-        res.push(requestId);
-      }
-    }
-    return res;
+    const requestIds = listOfTasks.map(taskId => taskId.requestId)
+    return _.uniq(requestIds);
   },
 
   getInstanceNoFromTaskId(taskId) {
