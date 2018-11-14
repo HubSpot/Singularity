@@ -34,7 +34,7 @@ class Application extends Component {
 
   notifyLateRequests(listLateTasks) {
     const { canShowTaskLagNotification: canNotify } = this.state;
-    const lateRequests = Utils.getListOfRequestsFromListOfTasks(listLateTasks)
+    const lateRequests = Utils.getListOfUniqueRequestsFromListOfTasks(listLateTasks)
     const shouldNotify = lateRequests.length >= MAX_LATE_REQUESTS;
     if (canNotify && shouldNotify) {
       Messenger().error({
