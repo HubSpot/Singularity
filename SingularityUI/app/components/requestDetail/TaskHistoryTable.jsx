@@ -5,6 +5,7 @@ import { Row, Col, Button, Glyphicon, ButtonToolbar, ButtonGroup } from 'react-b
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { Link } from 'react-router';
+import { withRouter } from 'react-router';
 
 import Utils from '../../utils';
 import Loader from '../common/Loader';
@@ -30,7 +31,7 @@ class TaskHistoryTable extends Component {
     super(props);
     this.state = {
       loading: true,
-      tableChunkSize: 5
+      tableChunkSize: props.initialTaskCount
     };
   }
 
@@ -48,6 +49,8 @@ class TaskHistoryTable extends Component {
       tableChunkSize: count,
       loading: true
     })
+    const { router, location } = this.props
+    router.replace({ ...location, query: {...location.query, taskHistoryCount: count }})
     this.props.fetchTaskHistoryForRequest(this.props.requestId, count, 1).then(() => {
       this.setState({
         loading: false
@@ -78,9 +81,9 @@ class TaskHistoryTable extends Component {
     const showButtons = (
       <ButtonToolbar>
         <ButtonGroup bsSize="small" className="pull-right">
-          <Button disabled={this.state.tableChunkSize == 5} onClick={() => this.handleTableSizeToggle(5)} >Show 5</Button>
           <Button disabled={this.state.tableChunkSize == 10} onClick={() => this.handleTableSizeToggle(10)} >Show 10</Button>
           <Button disabled={this.state.tableChunkSize == 20} onClick={() => this.handleTableSizeToggle(20)} >Show 20</Button>
+          <Button disabled={this.state.tableChunkSize == 50} onClick={() => this.handleTableSizeToggle(50)} >Show 50</Button>
         </ButtonGroup>
       </ButtonToolbar>
     )
@@ -223,7 +226,7 @@ const mapStateToProps = (state, ownProps) => ({
   )
 });
 
-export default connect(
+export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(TaskHistoryTable);
+)(TaskHistoryTable));
