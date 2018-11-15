@@ -21,6 +21,10 @@ class Application extends Component {
     );
   }
 
+  componentDidMount() {
+    this.notifyLateRequests(this.props.listLateTasks);
+  }
+
   componentWillUnmount() {
     clearTimeout(this.reenableTaskLagNotificationTimeoutId);
   }
@@ -48,7 +52,6 @@ class Application extends Component {
   }
 
   render() {
-    this.notifyLateRequests(this.props.listLateTasks);
     return (
       <div>
         <Title routes={this.props.routes} params={this.props.params} />
