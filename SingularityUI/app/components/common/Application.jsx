@@ -21,7 +21,7 @@ class Application extends Component {
     );
   }
 
-  componentDidMount() {
+  componentDidUpdate() {
     this.notifyLateRequests(this.props.listLateTasks);
   }
 
