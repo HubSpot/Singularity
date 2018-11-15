@@ -8,7 +8,7 @@ import {
 import { FetchTaskCleanups, FetchScheduledTasksForRequest } from '../api/tasks';
 import { FetchRequestUtilization } from '../api/utilization';
 
-export const refresh = (requestId, location) => (dispatch, getState) => {
+export const refresh = (requestId, taskHistoryPage = 1, taskHistoryPageSize = 10) => (dispatch, getState) => {
   const requiredPromises = Promise.all([
     dispatch(FetchRequest.trigger(requestId)),
     dispatch(FetchRequestHistory.trigger(requestId, 5, 1))
@@ -17,9 +17,8 @@ export const refresh = (requestId, location) => (dispatch, getState) => {
   dispatch(FetchActiveTasksForRequest.trigger(requestId));
   dispatch(FetchTaskCleanups.trigger());
 
-  const { taskHistoryPage, taskHistoryCount } = location.query;
-  if (taskHistoryPage == null || taskHistoryPage == 1) {
-    dispatch(FetchTaskHistoryForRequest.trigger(requestId, taskHistoryCount == null ? 10 : taskHistoryCount, taskHistoryPage == null ? 1 : taskHistoryPage));
+  if (taskHistoryPage == 1) {
+    dispatch(FetchTaskHistoryForRequest.trigger(requestId, taskHistoryPageSize, taskHistoryPage));
   }
 
   dispatch(FetchDeploysForRequest.trigger(requestId, 5, 1));

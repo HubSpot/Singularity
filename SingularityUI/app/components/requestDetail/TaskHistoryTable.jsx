@@ -31,7 +31,7 @@ class TaskHistoryTable extends Component {
     super(props);
     this.state = {
       loading: true,
-      tableChunkSize: props.initialTaskCount
+      tableChunkSize: props.initialPageSize
     };
   }
 
@@ -50,7 +50,7 @@ class TaskHistoryTable extends Component {
       loading: true
     })
     const { router, location } = this.props
-    router.replace({ ...location, query: {...location.query, taskHistoryCount: count }})
+    router.replace({ ...location, query: {...location.query, taskHistoryPageSize: count }})
     this.props.fetchTaskHistoryForRequest(this.props.requestId, count, 1).then(() => {
       this.setState({
         loading: false
