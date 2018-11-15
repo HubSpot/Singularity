@@ -19,7 +19,6 @@ export const refresh = (requestId, location) => (dispatch, getState) => {
 
   const { taskHistoryPage, taskHistoryCount } = location.query;
   if (taskHistoryPage == null || taskHistoryPage == 1) {
-  console.log(taskHistoryPage)
     dispatch(FetchTaskHistoryForRequest.trigger(requestId, taskHistoryCount == null ? 10 : taskHistoryCount, taskHistoryPage == null ? 1 : taskHistoryPage));
   }
 
