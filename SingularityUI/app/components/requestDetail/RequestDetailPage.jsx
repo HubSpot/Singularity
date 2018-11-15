@@ -118,4 +118,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), true)));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId, props.location), true)));
