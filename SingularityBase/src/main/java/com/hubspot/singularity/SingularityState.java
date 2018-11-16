@@ -20,6 +20,9 @@ public class SingularityState {
   private final int scheduledTasks;
   private final int lateTasks;
   private final List<SingularityPendingTaskId> listLateTasks;
+  private final int onDemandLateTasks;
+  private final List<SingularityPendingTaskId> onDemandListLateTasks;
+
   private final int futureTasks;
   private final int cleaningTasks;
   private final int lbCleanupTasks;
@@ -88,6 +91,8 @@ public class SingularityState {
                           @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
                           @JsonProperty("lateTasks") int lateTasks,
                           @JsonProperty("listLateTasks") List<SingularityPendingTaskId> listLateTasks,
+                          @JsonProperty("onDemandLateTasks") int onDemandLateTasks,
+                          @JsonProperty("onDemandListLateTasks") List<SingularityPendingTaskId> onDemandListLateTasks,
                           @JsonProperty("futureTasks") int futureTasks,
                           @JsonProperty("maxTaskLag") long maxTaskLag,
                           @JsonProperty("generatedAt") long generatedAt,
@@ -123,6 +128,8 @@ public class SingularityState {
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
     this.listLateTasks = listLateTasks == null ? Collections.emptyList() : listLateTasks;
+    this.onDemandLateTasks = onDemandLateTasks;
+    this.onDemandListLateTasks = onDemandListLateTasks == null ? Collections.emptyList() : onDemandListLateTasks;
     this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
     this.maxTaskLag = maxTaskLag;
@@ -275,14 +282,24 @@ public class SingularityState {
     return cleaningRequests;
   }
 
-  @Schema(description = "The count of tasks that have not been launched in time")
+  @Schema(description = "The count of tasks that have not been launched in time, excluding the on-demand tasks")
   public int getLateTasks() {
     return lateTasks;
   }
 
-  @Schema(description = "The list of all late tasks that have not been launched in time")
+  @Schema(description = "The list of all late tasks that have not been launched in time, excluding the on-demand tasks")
   public List<SingularityPendingTaskId> getListLateTasks() {
     return listLateTasks;
+  }
+
+  @Schema(description = "The count of on-demand tasks that have not been launched in time")
+  public int getOnDemandLateTasks() {
+    return onDemandLateTasks;
+  }
+
+  @Schema(description = "The list of all on-demand late tasks that have not been launched in time")
+  public List<SingularityPendingTaskId> getOnDemandListLateTasks() {
+    return onDemandListLateTasks;
   }
 
   @Schema(description = "The count of pending tasks that will be launched at a future time")
