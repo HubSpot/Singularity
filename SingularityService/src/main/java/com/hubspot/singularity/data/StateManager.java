@@ -294,7 +294,7 @@ public class StateManager extends CuratorManager {
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
     final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
-        .collect(Collectors.partitioningBy(lateTask -> requestManager.getRequest(lateTask.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND)));
+        .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask));
     final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
     final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
 
@@ -303,6 +303,13 @@ public class StateManager extends CuratorManager {
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
         statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
+  }
+
+  private boolean requestTypeIsOnDemand(SingularityPendingTaskId taskId) {
+    if (requestManager.getRequest(taskId.getRequestId()).isPresent()) {
+      return requestManager.getRequest(taskId.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND);
+    }
+    return false;
   }
 
   private Map<String, Long> getNumTasks(List<SingularityRequestWithState> requests) {
