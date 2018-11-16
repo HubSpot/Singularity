@@ -294,7 +294,7 @@ public class StateManager extends CuratorManager {
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
     final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
-        .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask));
+        .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
     final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
     final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
 
