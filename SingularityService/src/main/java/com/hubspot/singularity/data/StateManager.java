@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.utils.ZKPaths;
@@ -26,6 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityHostState;
@@ -292,8 +294,12 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
+    final ImmutablePair<List<SingularityPendingTaskId>, List<SingularityPendingTaskId>> allLateTasks = filterOnDemandRequests(scheduledTasksInfo.getLateTasks());
+    final List<SingularityPendingTaskId> onDemandLateTasks = allLateTasks.getLeft();
+    final List<SingularityPendingTaskId> lateTasks = allLateTasks.getRight();
+
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getNumLateTasks(), scheduledTasksInfo.getLateTasks(),
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
         statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
@@ -320,6 +326,22 @@ public class StateManager extends CuratorManager {
     }
 
     return numTasks.toCountMap();
+  }
+
+  private ImmutablePair<List<SingularityPendingTaskId>, List<SingularityPendingTaskId>> filterOnDemandRequests (List<SingularityPendingTaskId> lateTasks) {
+    List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
+    List<SingularityPendingTaskId> nonOnDemandLateTasks = new ArrayList<>();
+
+    List<String> requestIds = lateTasks.stream().map(lateTask -> lateTask.getRequestId()).collect(Collectors.toList());
+    List<RequestType> requestTypes = requestManager.getRequests(requestIds).stream().map(s -> s.getRequest().getRequestType()).collect(Collectors.toList());
+    for (int i = 0; i < lateTasks.size(); i++) {
+      if (requestTypes.get(i).equals(RequestType.ON_DEMAND)){
+        onDemandLateTasks.add(lateTasks.get(i));
+      } else {
+        nonOnDemandLateTasks.add(lateTasks.get(i));
+      }
+    }
+    return new ImmutablePair<>(onDemandLateTasks, nonOnDemandLateTasks);
   }
 
   private void updatePossiblyUnderProvisionedAndOverProvisionedIds(SingularityRequestWithState requestWithState, Map<String, Long> numInstances, List<String> overProvisionedRequestIds, Set<String> possiblyUnderProvisionedRequestIds) {
