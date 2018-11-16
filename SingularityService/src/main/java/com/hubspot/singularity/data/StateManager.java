@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.utils.ZKPaths;
@@ -294,9 +293,10 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
-    final ImmutablePair<List<SingularityPendingTaskId>, List<SingularityPendingTaskId>> allLateTasks = filterOnDemandRequests(scheduledTasksInfo.getLateTasks());
-    final List<SingularityPendingTaskId> onDemandLateTasks = allLateTasks.getLeft();
-    final List<SingularityPendingTaskId> lateTasks = allLateTasks.getRight();
+    final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
+        .collect(Collectors.partitioningBy(lateTask -> requestManager.getRequest(lateTask.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND)));
+    final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
+    final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
@@ -326,22 +326,6 @@ public class StateManager extends CuratorManager {
     }
 
     return numTasks.toCountMap();
-  }
-
-  private ImmutablePair<List<SingularityPendingTaskId>, List<SingularityPendingTaskId>> filterOnDemandRequests (List<SingularityPendingTaskId> lateTasks) {
-    List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
-    List<SingularityPendingTaskId> nonOnDemandLateTasks = new ArrayList<>();
-
-    List<String> requestIds = lateTasks.stream().map(lateTask -> lateTask.getRequestId()).collect(Collectors.toList());
-    List<RequestType> requestTypes = requestManager.getRequests(requestIds).stream().map(s -> s.getRequest().getRequestType()).collect(Collectors.toList());
-    for (int i = 0; i < lateTasks.size(); i++) {
-      if (requestTypes.get(i).equals(RequestType.ON_DEMAND)){
-        onDemandLateTasks.add(lateTasks.get(i));
-      } else {
-        nonOnDemandLateTasks.add(lateTasks.get(i));
-      }
-    }
-    return new ImmutablePair<>(onDemandLateTasks, nonOnDemandLateTasks);
   }
 
   private void updatePossiblyUnderProvisionedAndOverProvisionedIds(SingularityRequestWithState requestWithState, Map<String, Long> numInstances, List<String> overProvisionedRequestIds, Set<String> possiblyUnderProvisionedRequestIds) {
