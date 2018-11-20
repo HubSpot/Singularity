@@ -681,7 +681,7 @@ public class SingularityScheduler {
         Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(taskId.getRequestId());
 
         if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equals(taskId.getDeployId())) {
-          requestManager.deleteExpiringObject(SingularityExpiringBounce.class, taskId.getRequestId());
+          requestManager.removeExpiringBounce(taskId.getRequestId());
         }
         requestManager.markBounceComplete(taskId.getRequestId());
       }

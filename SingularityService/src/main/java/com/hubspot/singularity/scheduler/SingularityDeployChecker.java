@@ -332,6 +332,7 @@ public class SingularityDeployChecker {
       if (request.isDeployable() && !request.isOneOff()) {
         // remove the lock on bounces in case we deployed during a bounce
         requestManager.markBounceComplete(request.getId());
+        requestManager.removeExpiringBounce(request.getId());
       }
       if (requestWithState.getState() == RequestState.FINISHED) {
         // A FINISHED request is moved to ACTIVE state so we can reevaluate the schedule
