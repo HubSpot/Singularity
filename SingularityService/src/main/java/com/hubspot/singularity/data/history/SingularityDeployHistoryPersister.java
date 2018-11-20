@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
@@ -31,19 +32,19 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
-  private final SingularitySchedulerLock lock;
+  private final SingularitySchedulerLock schedulerLock;
 
   @Inject
   public SingularityDeployHistoryPersister(SingularityConfiguration configuration,
                                            DeployManager deployManager,
                                            HistoryManager historyManager,
-                                           SingularitySchedulerLock lock,
+                                           SingularitySchedulerLock schedulerLock,
                                            @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
     super(configuration, persisterLock);
 
+    this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
-    this.lock = lock;
   }
 
   @Override
@@ -60,36 +61,36 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
       final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
       final TreeMultimap<String, SingularityDeployHistory> deployHistoryByRequestId = TreeMultimap.create();
 
-      int numTotal = 0;
-      int numTransferred = 0;
+      final LongAdder numTotal = new LongAdder();
+      final LongAdder numTransferred = new LongAdder();
 
       for (SingularityDeployKey deployKey : allDeployIds) {
-        lock.runWithRequestLock(() -> {
-          SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
+        SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
 
-          if (!shouldTransferDeploy(deployState, deployKey)) {
-            return;
-          }
+        if (!shouldTransferDeploy(deployState, deployKey)) {
+          continue;
+        }
 
-          Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
+        Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
 
-          if (deployHistory.isPresent()) {
-            deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
-          } else {
-            LOG.info("Deploy history for key {} not found", deployKey);
-          }
-        }, deployKey.getRequestId(), "deploy history persister");
+        if (deployHistory.isPresent()) {
+          deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
+        } else {
+          LOG.info("Deploy history for key {} not found", deployKey);
+        }
       }
 
-      for (Collection<SingularityDeployHistory> deployHistoryForRequest : deployHistoryByRequestId.asMap().values()) {
-        int i = 0;
-        for (SingularityDeployHistory deployHistory : deployHistoryForRequest) {
-          if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
-            numTransferred++;
-          }
+      for (Map.Entry<String, Collection<SingularityDeployHistory>> deployHistoryForRequest : deployHistoryByRequestId.asMap().entrySet()) {
+        schedulerLock.runWithRequestLock(() -> {
+          int i = 0;
+          for (SingularityDeployHistory deployHistory : deployHistoryForRequest.getValue()) {
+            if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
+              numTransferred.increment();
+            }
 
-          numTotal++;
-        }
+            numTotal.increment();
+          }
+        }, deployHistoryForRequest.getKey(), getClass().getSimpleName());
       }
 
       LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
