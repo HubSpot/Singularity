@@ -460,7 +460,7 @@ public class SingularityCleaner {
       if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equalsIgnoreCase(requestCleanup.getDeployId().get())) {
         LOG.info("No running tasks for request {}. Marking bounce {} complete and starting new tasks", expiringBounce.get().getRequestId(), expiringBounce.get());
 
-        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, requestCleanup.getRequestId());
+        requestManager.removeExpiringBounce(requestCleanup.getRequestId());
       }
       requestManager.markBounceComplete(requestCleanup.getRequestId());
     }
