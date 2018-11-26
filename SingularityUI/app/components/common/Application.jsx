@@ -7,7 +7,7 @@ import Title from './Title';
 import Utils from '../../utils';
 
 const DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS = 1000 * 60 * 60;
-const MAX_TASK_LAG_NOTIFICATION_THRESHOLD_IN_MS = 1000 * 60 * 3;
+const MAX_LATE_REQUESTS = 10;
 
 class Application extends Component {
   constructor(props) {
@@ -17,8 +17,12 @@ class Application extends Component {
     };
     _.bindAll(this,
       'dismissTaskLagNotification',
-      'notifyLag',
+      'notifyLateRequests',
     );
+  }
+
+  componentDidUpdate() {
+    this.notifyLateRequests(this.props.listLateTasks);
   }
 
   componentWillUnmount() {
@@ -32,23 +36,22 @@ class Application extends Component {
     }, DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS);
   }
 
-  notifyLag(maxTaskLag) {
+  notifyLateRequests(listLateTasks) {
     const { canShowTaskLagNotification: canNotify } = this.state;
-    const shouldNotify = maxTaskLag >= MAX_TASK_LAG_NOTIFICATION_THRESHOLD_IN_MS;
+    const lateRequests = Utils.getListOfUniqueRequestsFromListOfTasks(listLateTasks)
+    const shouldNotify = lateRequests.length >= MAX_LATE_REQUESTS;
     if (canNotify && shouldNotify) {
       Messenger().error({
         onClickClose: this.dismissTaskLagNotification,
         message: `
           Singularity is experiencing some delays. The team has already been
-          notified. (Max task lag: ${Utils.duration(maxTaskLag)})
+          notified.
         `,
       });
     }
   }
 
   render() {
-    this.notifyLag(this.props.maxTaskLag);
-
     return (
       <div>
         <Title routes={this.props.routes} params={this.props.params} />
@@ -64,14 +67,14 @@ Application.propTypes = {
   children: PropTypes.object,
   history: PropTypes.object.isRequired,
   location: PropTypes.object.isRequired,
-  maxTaskLag: PropTypes.number,
+  listLateTasks: PropTypes.arrayOf(PropTypes.object),
   params: PropTypes.object.isRequired,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 const mapStateToProps = (state) => {
   return {
-    maxTaskLag: state.api.status.data.maxTaskLag
+    listLateTasks: state.api.status.data.listLateTasks,
   };
 };
 

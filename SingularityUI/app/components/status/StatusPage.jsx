@@ -12,8 +12,7 @@ import Utils from '../../utils';
 
 const StatusPage = (props) => {
   const renderPercentage = (number, total) => number > 0 && `(${Math.round(number / total * 100)}%)`;
-
-  const renderTaskLag = (status) => status.maxTaskLag > 0 && (<h4>Max Task Lag: {Utils.duration(status.maxTaskLag)}</h4>);
+  const renderLateRequests = (status) => Utils.getListOfUniqueRequestsFromListOfTasks(status.listLateTasks).length > 10 && (<h4>Number of delayed requests: {(Utils.getListOfUniqueRequestsFromListOfTasks(status.listLateTasks).length)}</h4>);
 
   const requestDetail = (status) => {
     const totalRequests = status.activeRequests + status.pausedRequests + status.cooldownRequests + status.pendingRequests + status.cleaningRequests;
@@ -183,7 +182,7 @@ const StatusPage = (props) => {
               </div>
               <div className="col-md-9 col-sm-9">
                 <StatusList data={getTasksData(status)} />
-                {renderTaskLag(status)}
+                {renderLateRequests(status)}
               </div>
           </div>
         </div>

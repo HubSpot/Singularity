@@ -74,7 +74,7 @@ public class SingularityExecutorTask {
 
     this.taskDefinition = taskDefinition;
 
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper, executorConfiguration.getMaxServiceLogSizeMb().isPresent());
     this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerUtils);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerUtils, objectMapper);
     this.artifactVerifier = new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration, s3Configuration);

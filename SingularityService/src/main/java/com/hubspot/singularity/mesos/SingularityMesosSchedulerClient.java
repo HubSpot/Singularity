@@ -37,13 +37,13 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.resources.ui.UiResource;
-import com.mesosphere.mesos.rx.java.AwaitableSubscription;
-import com.mesosphere.mesos.rx.java.MesosClient;
-import com.mesosphere.mesos.rx.java.MesosClientBuilder;
-import com.mesosphere.mesos.rx.java.SinkOperation;
-import com.mesosphere.mesos.rx.java.SinkOperations;
-import com.mesosphere.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
-import com.mesosphere.mesos.rx.java.util.UserAgentEntries;
+import com.hubspot.mesos.rx.java.AwaitableSubscription;
+import com.hubspot.mesos.rx.java.MesosClient;
+import com.hubspot.mesos.rx.java.MesosClientBuilder;
+import com.hubspot.mesos.rx.java.SinkOperation;
+import com.hubspot.mesos.rx.java.SinkOperations;
+import com.hubspot.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
+import com.hubspot.mesos.rx.java.util.UserAgentEntries;
 
 import rx.BackpressureOverflow;
 import rx.Observable;
@@ -152,6 +152,7 @@ public class SingularityMesosSchedulerClient {
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos()
         .mesosUri(mesosMasterURI)
         .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"))
+        .onSendEventBackpressureBuffer()
         .onBackpressureBuffer(
             scheduler.getEventBufferSize(),
             () -> {
@@ -230,7 +231,7 @@ public class SingularityMesosSchedulerClient {
 
       // toSerialised handles the fact that we can add calls on different threads.
       publisher = p.toSerialized();
-      return publisher;
+      return publisher.onBackpressureBuffer();
     });
 
     MesosClient<Call, Event> client = clientBuilder.build();

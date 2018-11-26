@@ -123,6 +123,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String logrotateExtrasDateformat = "%Y%m%d";
 
+  @JsonProperty
+  private boolean ignoreLogrotateOutput = false;
+
   @NotNull
   @JsonProperty
   private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
@@ -234,6 +237,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private String extraScriptContent = "";
 
   private String extraDockerScriptContent = "";
+
+  private Optional<Long> maxServiceLogSizeMb = Optional.absent();
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -361,6 +366,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public String getLogrotateExtrasDateformat() {
     return logrotateExtrasDateformat;
+  }
+
+  public boolean isIgnoreLogrotateOutput() {
+    return ignoreLogrotateOutput;
+  }
+
+  public void setIgnoreLogrotateOutput(boolean ignoreLogrotateOutput) {
+    this.ignoreLogrotateOutput = ignoreLogrotateOutput;
   }
 
   public int getTailLogLinesToSave() {
@@ -689,12 +702,21 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.extraDockerScriptContent = extraDockerScriptContent;
   }
 
+
   public int getDefaultHealthcheckMaxRetries() {
     return defaultHealthcheckMaxRetries;
   }
 
   public void setDefaultHealthcheckMaxRetries(int defaultHealthcheckMaxRetries) {
     this.defaultHealthcheckMaxRetries = defaultHealthcheckMaxRetries;
+
+  public Optional<Long> getMaxServiceLogSizeMb() {
+    return maxServiceLogSizeMb;
+  }
+
+  public void setMaxServiceLogSizeMb(Optional<Long> maxServiceLogSizeMb) {
+    this.maxServiceLogSizeMb = maxServiceLogSizeMb;
+
   }
 
   @Override

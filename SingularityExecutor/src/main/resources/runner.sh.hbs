@@ -4,7 +4,11 @@
 # Task ID: {{{ taskId }}}
 #
 
-export MESOS_TASK_ID={{{bashEscaped taskId}}}  # I can't believe Mesos doesn't expose this.
+export MESOS_TASK_ID=$TASK_ID
+
+# MESOS-8322 changed this directory to 0750, chown owner since we can switch user either in mesos or the executor.
+# Otherwise, when switching user in the executor only, the non-root user can no longer traverse the sandbox
+chown {{{ user }}} $MESOS_SANDBOX
 
 {{#if cfsQuota }}
 # Outputs the path of the deepest cgroup the current process is in.
