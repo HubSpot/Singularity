@@ -17,7 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Describes health check behavior for tasks associated with a deploy")
 public class HealthcheckOptions {
   @NotNull
-  private final String uri;
+  private final Optional<String> uri;
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;
   private final Optional<HealthcheckProtocol> protocol;
@@ -45,6 +45,31 @@ public class HealthcheckOptions {
                             @JsonProperty("maxRetries") Optional<Integer> maxRetries,
                             @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
                             @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath) {
+    this.uri = Optional.of(uri);
+    this.portIndex = portIndex;
+    this.portNumber = portNumber;
+    this.protocol = protocol;
+    this.startupTimeoutSeconds = startupTimeoutSeconds;
+    this.startupDelaySeconds = startupDelaySeconds;
+    this.startupIntervalSeconds = startupIntervalSeconds;
+    this.intervalSeconds = intervalSeconds;
+    this.responseTimeoutSeconds = responseTimeoutSeconds;
+    this.maxRetries = maxRetries;
+    this.failureStatusCodes = failureStatusCodes;
+    this.healthcheckResultFilePath = healthcheckResultFilePath;
+  }
+
+  public HealthcheckOptions(Optional<String> uri,
+                            Optional<Integer> portIndex,
+                            Optional<Long> portNumber,
+                            Optional<HealthcheckProtocol> protocol,Optional<Integer> startupTimeoutSeconds,
+                            Optional<Integer> startupDelaySeconds,
+                            Optional<Integer> startupIntervalSeconds,
+                            Optional<Integer> intervalSeconds,
+                            Optional<Integer> responseTimeoutSeconds,
+                            Optional<Integer> maxRetries,
+                            Optional<List<Integer>> failureStatusCodes,
+                            Optional<String> healthcheckResultFilePath) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -78,7 +103,7 @@ public class HealthcheckOptions {
   }
 
   @Schema(required = true, description = "Healthcheck uri to hit")
-  public String getUri() {
+  public Optional<String> getUri() {
     return uri;
   }
 
