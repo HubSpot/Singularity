@@ -709,6 +709,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setDefaultHealthcheckMaxRetries(int defaultHealthcheckMaxRetries) {
     this.defaultHealthcheckMaxRetries = defaultHealthcheckMaxRetries;
+  }
 
   public Optional<Long> getMaxServiceLogSizeMb() {
     return maxServiceLogSizeMb;
