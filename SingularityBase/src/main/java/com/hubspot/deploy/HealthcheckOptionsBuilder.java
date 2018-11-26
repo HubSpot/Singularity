@@ -23,6 +23,7 @@ public class HealthcheckOptionsBuilder {
   private Optional<Integer> responseTimeoutSeconds;
   private Optional<Integer> maxRetries;
   private Optional<List<Integer>> failureStatusCodes;
+  private Optional<String> healthcheckResultFilePath;
 
   public HealthcheckOptionsBuilder(String uri) {
     this.uri = uri;
@@ -37,6 +38,7 @@ public class HealthcheckOptionsBuilder {
     this.responseTimeoutSeconds = Optional.absent();
     this.maxRetries = Optional.absent();
     this.failureStatusCodes = Optional.absent();
+    this.healthcheckResultFilePath = Optional.absent();
   }
 
   public String getUri() {
@@ -147,8 +149,17 @@ public class HealthcheckOptionsBuilder {
     return this;
   }
 
+  public Optional<String> getHealthcheckResultFilePath() {
+    return healthcheckResultFilePath;
+  }
+
+  public HealthcheckOptionsBuilder setHealthcheckResultFilePath(Optional<String> healthcheckResultFilePath) {
+    this.healthcheckResultFilePath= healthcheckResultFilePath;
+    return this;
+  }
+
   public HealthcheckOptions build() {
-    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -171,12 +182,13 @@ public class HealthcheckOptionsBuilder {
         Objects.equals(intervalSeconds, that.intervalSeconds) &&
         Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
         Objects.equals(maxRetries, that.maxRetries) &&
-        Objects.equals(failureStatusCodes, that.failureStatusCodes);
+        Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
+        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+	  return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -194,6 +206,7 @@ public class HealthcheckOptionsBuilder {
         ", responseTimeoutSeconds=" + responseTimeoutSeconds +
         ", maxRetries=" + maxRetries +
         ", failureStatusCodes=" + failureStatusCodes +
+        ", healthcheckResultFilePath=" + healthcheckResultFilePath +
         '}';
   }
 }

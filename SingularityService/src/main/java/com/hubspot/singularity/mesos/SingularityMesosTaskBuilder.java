@@ -545,7 +545,7 @@ class SingularityMesosTaskBuilder {
 
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task));
+          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task), task.getDeploy().getHealthcheck());
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
