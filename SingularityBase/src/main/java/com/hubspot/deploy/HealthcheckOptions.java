@@ -49,6 +49,7 @@ public class HealthcheckOptions {
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
+    this.method = method;
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     this.startupDelaySeconds = startupDelaySeconds;
     this.startupIntervalSeconds = startupIntervalSeconds;
@@ -62,7 +63,9 @@ public class HealthcheckOptions {
   public HealthcheckOptions(Optional<String> uri,
                             Optional<Integer> portIndex,
                             Optional<Long> portNumber,
-                            Optional<HealthcheckProtocol> protocol,Optional<Integer> startupTimeoutSeconds,
+                            Optional<HealthcheckProtocol> protocol,
+                            Optional<HealthcheckMethod> method,
+                            Optional<Integer> startupTimeoutSeconds,
                             Optional<Integer> startupDelaySeconds,
                             Optional<Integer> startupIntervalSeconds,
                             Optional<Integer> intervalSeconds,
