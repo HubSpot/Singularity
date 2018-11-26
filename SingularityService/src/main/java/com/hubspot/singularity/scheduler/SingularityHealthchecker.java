@@ -221,12 +221,14 @@ public class SingularityHealthchecker {
     Optional<Long> healthcheckPort = options.getPortNumber().or(MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), options.getPortIndex().or(0)));
 
     if (!healthcheckPort.isPresent() || healthcheckPort.get() < 1L) {
-      LOG.warn("Couldn't find a port for health check for task {}", task);
       return Optional.absent();
     }
 
-    String uri = task.getTaskRequest().getDeploy().getHealthcheck().get().getUri();
+    if (!task.getTaskRequest().getDeploy().getHealthcheck().get().getUri().isPresent()) {
+      return Optional.absent();
+    }
 
+    String uri = task.getTaskRequest().getDeploy().getHealthcheck().get().getUri().get();
     if (uri.startsWith("/")) {
       uri = uri.substring(1);
     }

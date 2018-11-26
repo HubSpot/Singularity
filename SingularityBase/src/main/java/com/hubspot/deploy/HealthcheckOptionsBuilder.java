@@ -10,7 +10,7 @@ import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
   @NotNull
-  private String uri;
+  private Optional<String> uri;
   private Optional<Integer> portIndex;
   private Optional<Long> portNumber;
   private Optional<HealthcheckProtocol> protocol;
@@ -24,6 +24,21 @@ public class HealthcheckOptionsBuilder {
   private Optional<String> healthcheckResultFilePath;
 
   public HealthcheckOptionsBuilder(String uri) {
+    this.uri = Optional.of(uri);
+    this.portIndex = Optional.absent();
+    this.portNumber = Optional.absent();
+    this.protocol = Optional.absent();
+    this.startupTimeoutSeconds = Optional.absent();
+    this.startupDelaySeconds = Optional.absent();
+    this.startupIntervalSeconds = Optional.absent();
+    this.intervalSeconds = Optional.absent();
+    this.responseTimeoutSeconds = Optional.absent();
+    this.maxRetries = Optional.absent();
+    this.failureStatusCodes = Optional.absent();
+    this.healthcheckResultFilePath = Optional.absent();
+  }
+
+  public HealthcheckOptionsBuilder(Optional<String> uri) {
     this.uri = uri;
     this.portIndex = Optional.absent();
     this.portNumber = Optional.absent();
@@ -38,12 +53,12 @@ public class HealthcheckOptionsBuilder {
     this.healthcheckResultFilePath = Optional.absent();
   }
 
-  public String getUri() {
+  public Optional<String> getUri() {
     return uri;
   }
 
   public HealthcheckOptionsBuilder setUri(String uri) {
-    this.uri = uri;
+    this.uri = Optional.of(uri);
     return this;
   }
 
