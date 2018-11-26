@@ -32,7 +32,7 @@ public class HealthcheckOptions {
   private final Optional<String> healthcheckResultFilePath;
 
   @JsonCreator
-  public HealthcheckOptions(@JsonProperty("uri") String uri,
+  public HealthcheckOptions(@JsonProperty("uri") Optional<String> uri,
                             @JsonProperty("portIndex") Optional<Integer> portIndex,
                             @JsonProperty("portNumber") Optional<Long> portNumber,
                             @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
@@ -45,7 +45,7 @@ public class HealthcheckOptions {
                             @JsonProperty("maxRetries") Optional<Integer> maxRetries,
                             @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
                             @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath) {
-    this.uri = Optional.of(uri);
+    this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
@@ -60,7 +60,7 @@ public class HealthcheckOptions {
     this.healthcheckResultFilePath = healthcheckResultFilePath;
   }
 
-  public HealthcheckOptions(Optional<String> uri,
+  public HealthcheckOptions(String uri,
                             Optional<Integer> portIndex,
                             Optional<Long> portNumber,
                             Optional<HealthcheckProtocol> protocol,
@@ -73,7 +73,7 @@ public class HealthcheckOptions {
                             Optional<Integer> maxRetries,
                             Optional<List<Integer>> failureStatusCodes,
                             Optional<String> healthcheckResultFilePath) {
-    this.uri = uri;
+    this.uri = Optional.of(uri);
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
