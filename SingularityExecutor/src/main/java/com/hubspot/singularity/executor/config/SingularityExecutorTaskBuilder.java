@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -30,6 +31,7 @@ import ch.qos.logback.classic.Logger;
 
 @Singleton
 public class SingularityExecutorTaskBuilder {
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityExecutorTaskBuilder.class);
 
   private final ObjectMapper jsonObjectMapper;
 
@@ -72,7 +74,9 @@ public class SingularityExecutorTaskBuilder {
   }
 
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
+    LOG.info("Building task {}", taskId);
     SingularityTaskExecutorData taskExecutorData = readExecutorData(jsonObjectMapper, taskInfo);
+    LOG.info("Executor data as read from protos: {}", taskExecutorData);
 
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, taskExecutorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
         taskExecutorData.getServiceLog(), Files.getFileExtension(taskExecutorData.getServiceLog()), taskExecutorData.getServiceFinishedTailLog(), executorConfiguration.getTaskAppDirectory(),
