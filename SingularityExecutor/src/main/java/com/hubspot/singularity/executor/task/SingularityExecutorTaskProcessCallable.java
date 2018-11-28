@@ -43,6 +43,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
 
   @Override
   public Integer call() throws Exception {
+    LOG.info("Process being started");
     Process process = startProcess(processBuilder);
 
     runHealthCheck();
