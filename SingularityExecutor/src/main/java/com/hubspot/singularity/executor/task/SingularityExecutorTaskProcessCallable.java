@@ -74,6 +74,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
       task.getLog().info("Expected result file abs path: {}", new File(expectedHealthcheckResultFilePath.get()).getAbsolutePath());
     }
     task.getLog().info("Curdir: {}", new File(".").getAbsolutePath());
+    task.getLog().info("files: {}", new File(".").listFiles());
 
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
       try {
@@ -85,7 +86,10 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
             .build();
 
-        retryer.call(() -> new File(expectedHealthcheckResultFilePath.get()).exists());
+        retryer.call(() -> {
+          task.getLog().info("files: {}", new File(".").listFiles());
+          return new File(expectedHealthcheckResultFilePath.get()).exists();
+        });
 
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
 
