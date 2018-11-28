@@ -63,7 +63,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   }
 
   private void runHealthCheck() {
-    LOG.info("Running health check...");
+    LOG.info("Running health check for {}", task);
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
     LOG.info("HC options: {}", maybeOptions);
 
