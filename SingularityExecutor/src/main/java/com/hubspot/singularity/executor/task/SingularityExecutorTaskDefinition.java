@@ -145,15 +145,15 @@ public class SingularityExecutorTaskDefinition {
     return signatureVerifyOut;
   }
 
-  public Optional<String> getHealthCheckResultFilePath() {
-    if (executorData.getHealthCheckOptions().isPresent()) {
-      return executorData.getHealthCheckOptions().get().getHealthcheckResultFilePath();
+  public Optional<String> getHealthcheckResultFilePath() {
+    if (executorData.getHealthcheckOptions().isPresent()) {
+      return executorData.getHealthcheckOptions().get().getHealthcheckResultFilePath();
     }
     return Optional.absent();
   }
 
-  public Optional<HealthcheckOptions> getHealthCheckOptions() {
-    return executorData.getHealthCheckOptions();
+  public Optional<HealthcheckOptions> getHealthcheckOptions() {
+    return executorData.getHealthcheckOptions();
   }
 
   @JsonIgnore

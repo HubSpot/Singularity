@@ -37,7 +37,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
       Optional<String> s3StorageClass,
       Optional<Long> applyS3StorageClassAfterBytes,
       Optional<Integer> cpuHardLimit,
-      Optional<HealthcheckOptions> healthCheckOptions) {
+      Optional<HealthcheckOptions> healthcheckOptions) {
     this(executorData.getCmd(),
         executorData.getEmbeddedArtifacts(),
         executorData.getExternalArtifacts(),
@@ -64,7 +64,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
         s3StorageClass,
         applyS3StorageClassAfterBytes,
         cpuHardLimit,
-        healthCheckOptions);
+        healthcheckOptions);
   }
 
   @JsonCreator
@@ -145,7 +145,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
     return cpuHardLimit;
   }
 
-  public Optional<HealthcheckOptions> getHealthCheckOptions() {
+  public Optional<HealthcheckOptions> getHealthcheckOptions() {
     return healthcheckOptions;
   }
 
