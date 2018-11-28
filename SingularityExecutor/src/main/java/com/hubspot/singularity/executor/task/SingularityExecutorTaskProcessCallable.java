@@ -74,7 +74,9 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
       task.getLog().info("Expected result file abs path: {}", new File(expectedHealthcheckResultFilePath.get()).getAbsolutePath());
     }
     task.getLog().info("Curdir: {}", new File(".").getAbsolutePath());
-    task.getLog().info("files: {}", new File(".").listFiles());
+    task.getLog().info("Files: {}", new File(".").listFiles());
+    task.getLog().info("All Files: {}", new File(".").list());
+
 
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
       try {
