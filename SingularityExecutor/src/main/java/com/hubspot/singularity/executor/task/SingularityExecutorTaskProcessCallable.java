@@ -46,7 +46,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     LOG.info("Process being started");
     Process process = startProcess(processBuilder);
 
-    runHealthCheck();
+    runHealthcheck();
 
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
 
@@ -62,14 +62,14 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     return "SingularityExecutorTaskProcessCallable [task=" + task + "]";
   }
 
-  private void runHealthCheck() {
+  private void runHealthcheck() {
     LOG.info("Running health check for {}", task.getTaskDefinition());
-    Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
+    Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
     LOG.info("HC options: {}", maybeOptions);
 
-    Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
-    LOG.info("Expected result file path: {}", expectedHealthCheckResultFilePath);
-    if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
+    Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
+    LOG.info("Expected result file path: {}", expectedHealthcheckResultFilePath);
+    if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
       try {
         Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
 
@@ -79,7 +79,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
             .build();
 
-        retryer.call(() -> new File(expectedHealthCheckResultFilePath.get()).exists());
+        retryer.call(() -> new File(expectedHealthcheckResultFilePath.get()).exists());
 
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
 
