@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
@@ -20,6 +22,7 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.SafeProcessManager;
 
 public class SingularityExecutorTaskProcessCallable extends SafeProcessManager implements Callable<Integer> {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorTaskProcessCallable.class);
 
   private final ProcessBuilder processBuilder;
   private final ExecutorUtils executorUtils;
@@ -59,9 +62,12 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   }
 
   private void runHealthCheck() {
+    LOG.info("Running health check...");
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthCheckOptions();
+    LOG.info("HC options: {}", maybeOptions);
 
     Optional<String> expectedHealthCheckResultFilePath = task.getTaskDefinition().getHealthCheckResultFilePath();
+    LOG.info("Expected result file path: {}", expectedHealthCheckResultFilePath);
     if (maybeOptions.isPresent() && expectedHealthCheckResultFilePath.isPresent()) {
       try {
         Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
