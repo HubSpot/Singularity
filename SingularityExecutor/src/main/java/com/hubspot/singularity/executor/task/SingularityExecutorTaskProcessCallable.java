@@ -63,12 +63,18 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   }
 
   private void runHealthcheck() {
-    LOG.info("Running health check for {}", task.getTaskDefinition());
+    task.getLog().info("Running health check for {}", task.getTaskDefinition());
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
-    LOG.info("HC options: {}", maybeOptions);
+    task.getLog().info("HC options: {}", maybeOptions);
 
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
-    LOG.info("Expected result file path: {}", expectedHealthcheckResultFilePath);
+    task.getLog().info("Expected result file path: {}", expectedHealthcheckResultFilePath);
+
+    if (expectedHealthcheckResultFilePath.isPresent()) {
+      task.getLog().info("Expected result file abs path: {}", new File(expectedHealthcheckResultFilePath.get()).getAbsolutePath());
+    }
+    task.getLog().info("Curdir: {}", new File(".").getAbsolutePath());
+
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
       try {
         Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
