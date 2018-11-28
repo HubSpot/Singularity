@@ -161,6 +161,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
         ", s3StorageClass=" + s3StorageClass +
         ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
         ", cpuHardLimit=" + cpuHardLimit +
+        ", healthcheckOptions=" + healthcheckOptions +
         "} " + super.toString();
   }
 }
