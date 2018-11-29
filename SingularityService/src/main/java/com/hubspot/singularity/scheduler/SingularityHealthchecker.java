@@ -255,7 +255,9 @@ public class SingularityHealthchecker {
     if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
       return false;
     }
-    if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+    if (!task.getTaskRequest().getRequest().isLongRunning()
+        || !task.getTaskRequest().getDeploy().getHealthcheck().isPresent()
+        || task.getTaskRequest().getDeploy().getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
       return false;
     }
 
