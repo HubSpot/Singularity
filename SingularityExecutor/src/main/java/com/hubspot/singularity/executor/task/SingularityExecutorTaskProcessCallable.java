@@ -71,15 +71,15 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
     task.getLog().info("Expected result file path: {}", expectedHealthcheckResultFilePath);
 
-    if (expectedHealthcheckResultFilePath.isPresent()) {
-      task.getLog().info("Expected result file abs path: {}", new File(expectedHealthcheckResultFilePath.get()).getAbsolutePath());
-    }
-    task.getLog().info("Curdir: {}", new File(".").getAbsolutePath());
-    task.getLog().info("Files: {}", new File(".").listFiles());
-    task.getLog().info("All Files: {}", new File(".").list());
-
+    String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
+    task.getLog().info("Curdir: {}", new File(taskAppDirectory).getAbsolutePath());
+    task.getLog().info("Files: {}", new File(taskAppDirectory).listFiles());
+    task.getLog().info("All Files: {}", new File(taskAppDirectory).list());
 
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
+      File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
+      task.getLog().info("Full healthcheck path: {}", fullHealthcheckPath);
+
       try {
         Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
 
@@ -90,8 +90,8 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .build();
 
         retryer.call(() -> {
-          task.getLog().info("files: {}", new File(task.getTaskDefinition().getTaskAppDirectory()).listFiles());
-          return Paths.get(task.getTaskDefinition().getTaskAppDirectory(), expectedHealthcheckResultFilePath.get()).toFile().exists();
+          task.getLog().info("files: {}", new File(taskAppDirectory).list());
+          return fullHealthcheckPath.exists();
         });
 
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
