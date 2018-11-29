@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -89,8 +90,8 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .build();
 
         retryer.call(() -> {
-          task.getLog().info("files: {}", new File(".").listFiles());
-          return new File(expectedHealthcheckResultFilePath.get()).exists();
+          task.getLog().info("files: {}", new File(task.getTaskDefinition().getTaskAppDirectory()).listFiles());
+          return Paths.get(task.getTaskDefinition().getTaskAppDirectory(), expectedHealthcheckResultFilePath.get()).toFile().exists();
         });
 
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
