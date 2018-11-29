@@ -6,6 +6,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
+import com.hubspot.singularity.helpers.RebalancingHelper;
 
 public class SingularityResourceModule extends AbstractModule {
   private final UIConfiguration uiConfiguration;
@@ -41,6 +42,8 @@ public class SingularityResourceModule extends AbstractModule {
     bind(InactiveSlaveResource.class);
     bind(TaskTrackerResource.class);
     bind(NotificationsResource.class);
+
+    bind(RebalancingHelper.class).in(Scopes.SINGLETON);
 
     install(new SingularityServiceUIModule(uiConfiguration));
   }

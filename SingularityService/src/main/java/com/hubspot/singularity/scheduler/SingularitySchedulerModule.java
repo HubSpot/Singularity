@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 
@@ -46,6 +47,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityLeaderCacheCoordinator.class).in(Scopes.SINGLETON);
     bind(SingularityAutoScaleSpreadAllPoller.class).in(Scopes.SINGLETON);
     bind(SingularityMesosHeartbeatChecker.class).in(Scopes.SINGLETON);
+    bind(RebalancingHelper.class).in(Scopes.SINGLETON);
   }
 
 }
