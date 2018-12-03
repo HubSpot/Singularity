@@ -233,6 +233,11 @@ public class SingularityDeployHealthHelper {
   }
 
   public DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Optional<SingularityTaskHealthcheckResult> healthcheckResult, SingularityTaskId taskId) {
+    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
+      if (taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING).isPresent()) {
+        return DeployHealth.HEALTHY;
+      }
+    }
     if (!healthcheckResult.isPresent()) {
       LOG.debug("No healthcheck present for {}", taskId);
       return DeployHealth.WAITING;
