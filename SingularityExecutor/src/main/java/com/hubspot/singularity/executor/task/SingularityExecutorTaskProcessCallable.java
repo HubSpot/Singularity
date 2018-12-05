@@ -95,6 +95,8 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
       } catch (ExecutionException | RetryException e) {
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks (health check file not found)."), task.getLog());
       }
+    } else {
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
     }
   }
 }
