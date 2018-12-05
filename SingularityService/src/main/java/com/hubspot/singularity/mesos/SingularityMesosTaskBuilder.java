@@ -43,6 +43,7 @@ import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorDataBuilder;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityAppcImage;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -543,9 +544,10 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setUser(task.getPendingTask().getRunAsUserOverride());
       }
 
+      Optional<HealthcheckOptions> healthcheckOptions = task.getRequest().getSkipHealthchecks().or(false) ? Optional.absent() : task.getDeploy().getHealthcheck();
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task), task.getDeploy().getHealthcheck());
+          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task), healthcheckOptions);
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));

@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -31,7 +30,6 @@ import ch.qos.logback.classic.Logger;
 
 @Singleton
 public class SingularityExecutorTaskBuilder {
-  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityExecutorTaskBuilder.class);
 
   private final ObjectMapper jsonObjectMapper;
 
@@ -74,31 +72,7 @@ public class SingularityExecutorTaskBuilder {
   }
 
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
-    LOG.info("Building task {}", taskId);
-    /*
-    Executor data as read from protos: SingularityTaskExecutorData{s3UploaderAdditionalFiles=[SingularityS3UploaderFile{filename='access.log', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(access/%group/%requestId/%Y/%m/%d/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(logs), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=false}, SingularityS3UploaderFile{filename='grpc-access.log', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(grpc-access/%group/%requestId/%Y/%m/%d/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(logs), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=false}, SingularityS3UploaderFile{filename='service.log', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(service/%group/%requestId/%Y/%m/%d/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(logs), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=false}, SingularityS3UploaderFile{filename='*', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(extra/%group/%requestId/%Y/%m/%d/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(s3uploads), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=false}, SingularityS3UploaderFile{filename='*.hprof*', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(heap/%group/%requestId/%Y/%m/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(logs), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=false}, SingularityS3UploaderFile{filename='*.gz', s3UploaderBucket=Optional.absent(), s3UploaderKeyPattern=Optional.of(thread_dumps/%group/%requestId/%Y/%m/%taskId_%index-%s-%filename), s3UploaderFilenameHint=Optional.absent(), directory=Optional.of(logs/thread_dumps), s3StorageClass=Optional.absent(), applyS3StorageClassAfterBytes=Optional.absent(), checkSubdirectories=true}]
-    , defaultS3Bucket='hubspot-application-logs-test', s3UploaderKeyPattern='service/%group/%requestId/%Y/%m/%d/%taskId_%index-%s-%filename', serviceLog='service.log',
-    serviceFinishedTailLog='tail_of_finished_service.log', requestGroup=Optional.absent(), s3StorageClass=Optional.of(STANDARD_IA), applyS3StorageClassAfterBytes=Optional.of(75000),
-     cpuHardLimit=Optional.of(2),
-      healthcheckOptions=Optional.of(
-      HealthcheckOptions{
-        uri='Optional.absent()',
-        portIndex=Optional.absent(),
-        portNumber=Optional.absent(),
-        protocol=Optional.absent(),
-        method=Optional.absent(),
-        startupTimeoutSeconds=Optional.absent(),
-        startupDelaySeconds=Optional.absent(),
-        startupIntervalSeconds=Optional.absent(),
-        intervalSeconds=Optional.absent(),
-        responseTimeoutSeconds=Optional.absent(),
-        maxRetries=Optional.absent(),
-        failureStatusCodes=Optional.absent(),
-        healthcheckResultFilePath=Optional.of(./healthy)})}
-        ExecutorData{cmd='bash -c 'touch ./healthy'', embeddedArtifacts=[], externalArtifacts=[], s3Artifacts=[], successfulExitCodes=[], runningSentinel=Optional.absent(), user=Optional.of(root), extraCmdLineArgs=[], loggingTag=Optional.absent(), loggingExtraFields={}, sigKillProcessesAfterMillis=Optional.of(120000), maxTaskThreads=Optional.absent(), preserveTaskSandboxAfterFinish=Optional.absent(), maxOpenFiles=Optional.absent(), skipLogrotateAndCompress=Optional.absent(), s3ArtifactSignatures=Optional.absent(), logrotateFrequency=Optional.absent()}
-     */
     SingularityTaskExecutorData taskExecutorData = readExecutorData(jsonObjectMapper, taskInfo);
-    LOG.info("Executor data as read from protos: {}", taskExecutorData);
 
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, taskExecutorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
         taskExecutorData.getServiceLog(), Files.getFileExtension(taskExecutorData.getServiceLog()), taskExecutorData.getServiceFinishedTailLog(), executorConfiguration.getTaskAppDirectory(),
