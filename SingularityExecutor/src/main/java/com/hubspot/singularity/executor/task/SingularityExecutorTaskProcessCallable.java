@@ -62,21 +62,14 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   }
 
   private void runHealthcheck() {
-    task.getLog().info("Running health check for {}", task.getTaskDefinition());
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
-    task.getLog().info("HC options: {}", maybeOptions);
-
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
-    task.getLog().info("Expected result file path: {}", expectedHealthcheckResultFilePath);
 
     String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
-    task.getLog().info("Curdir: {}", new File(taskAppDirectory).getAbsolutePath());
-    task.getLog().info("Files: {}", new File(taskAppDirectory).listFiles());
-    task.getLog().info("All Files: {}", new File(taskAppDirectory).list());
 
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
+      LOG.debug("Checking for healthcheck file {}", expectedHealthcheckResultFilePath.get());
       File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
-      task.getLog().info("Full healthcheck path: {}", fullHealthcheckPath);
 
       try {
         Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
@@ -87,10 +80,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
             .build();
 
-        retryer.call(() -> {
-          task.getLog().info("files: {}", new File(taskAppDirectory).list());
-          return fullHealthcheckPath.exists();
-        });
+        retryer.call(() -> fullHealthcheckPath.exists());
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
       } catch (ExecutionException | RetryException e) {
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks (health check file not found)."), task.getLog());
