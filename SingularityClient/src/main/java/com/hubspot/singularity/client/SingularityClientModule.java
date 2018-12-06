@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
@@ -62,6 +64,8 @@ public class SingularityClientModule extends AbstractModule {
   @Override
   protected void configure() {
     ObjectMapper objectMapper = JavaUtils.newObjectMapper();
+    objectMapper.registerModule(new GuavaModule());
+    objectMapper.registerModule(new Jdk8Module());
 
     HttpClient httpClient = new NingHttpClient(httpConfig.or(HttpConfig.newBuilder().setObjectMapper(objectMapper).build()));
     bind(HttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(httpClient);
