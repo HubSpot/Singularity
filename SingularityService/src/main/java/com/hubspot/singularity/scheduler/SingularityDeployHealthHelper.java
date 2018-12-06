@@ -236,11 +236,13 @@ public class SingularityDeployHealthHelper {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     if (task.isPresent()) {
       if (!task.get().getTaskRequest().getRequest().getSkipHealthchecks().or(false)) {
+        LOG.debug("Healthcheck skipped for {}", taskId);
         return DeployHealth.HEALTHY;
       }
     }
     if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
       if (taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING).isPresent()) {
+        LOG.debug("Task {} has non-web healthcheck and is in running state, marking healthy.", taskId);
         return DeployHealth.HEALTHY;
       }
     }
