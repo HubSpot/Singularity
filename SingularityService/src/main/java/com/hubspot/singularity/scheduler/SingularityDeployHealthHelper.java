@@ -245,7 +245,7 @@ public class SingularityDeployHealthHelper {
     if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
 
       LOG.debug("ihstory update: {}", taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING));
-      
+
       if (taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING).isPresent()) {
         LOG.debug("Task {} has non-web healthcheck and is in running state, marking healthy.", taskId);
         return DeployHealth.HEALTHY;
