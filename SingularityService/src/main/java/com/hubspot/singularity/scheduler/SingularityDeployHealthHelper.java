@@ -235,7 +235,7 @@ public class SingularityDeployHealthHelper {
   public DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Optional<SingularityTaskHealthcheckResult> healthcheckResult, SingularityTaskId taskId) {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     if (task.isPresent()) {
-      if (!task.get().getTaskRequest().getRequest().getSkipHealthchecks().or(false)) {
+      if (task.get().getTaskRequest().getRequest().getSkipHealthchecks().or(false)) {
         LOG.debug("Healthcheck skipped for {}", taskId);
         return DeployHealth.HEALTHY;
       }
