@@ -142,10 +142,6 @@ public class SingularityDeployHealthHelper {
   }
 
   private boolean isRunningTaskHealthy(final Optional<SingularityDeploy> deploy, Collection<SingularityTaskHistoryUpdate> updates, SingularityTaskId taskId) {
-    if (deploy.isPresent() && deploy.get().getHealthcheck().isPresent() && deploy.get().getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
-      return true;
-    }
-
     long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
     if (deploy.isPresent()) {
       runningThreshold = deploy.get().getConsiderHealthyAfterRunningForSeconds().or(runningThreshold);
@@ -244,12 +240,7 @@ public class SingularityDeployHealthHelper {
         return DeployHealth.HEALTHY;
       }
     }
-    LOG.debug("deploy healthhcheck: {}", deploy.getHealthcheck());
-
     if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
-
-      LOG.debug("ihstory update: {}", taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING));
-
       if (taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING).isPresent()) {
         LOG.debug("Task {} has non-web healthcheck and is in running state, marking healthy.", taskId);
         return DeployHealth.HEALTHY;
