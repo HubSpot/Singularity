@@ -76,6 +76,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkMesosMasterHeartbeatEverySeconds = 20;
 
+  private long checkUpstreamsEverySeconds = 600;
+
   private long maxMissedMesosMasterHeartbeats = 3;
 
   private int maxConcurrentUsageCollections = 15;
@@ -427,6 +429,8 @@ public class SingularityConfiguration extends Configuration {
   public long getCheckWebhooksEveryMillis() {
     return checkWebhooksEveryMillis;
   }
+
+  public long getCheckUpstreamsEverySeconds() { return checkUpstreamsEverySeconds; }
 
   public long getCleanupEverySeconds() {
     return cleanupEverySeconds;
