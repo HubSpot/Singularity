@@ -430,7 +430,9 @@ public class SingularityConfiguration extends Configuration {
     return checkWebhooksEveryMillis;
   }
 
-  public long getCheckUpstreamsEverySeconds() { return checkUpstreamsEverySeconds; }
+  public long getCheckUpstreamsEverySeconds() {
+    return checkUpstreamsEverySeconds;
+  }
 
   public long getCleanupEverySeconds() {
     return cleanupEverySeconds;
@@ -910,6 +912,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckWebhooksEveryMillis(long checkWebhooksEveryMillis) {
     this.checkWebhooksEveryMillis = checkWebhooksEveryMillis;
+  }
+
+  public void setCheckUpstreamsEverySeconds(long checkUpstreamsEverySeconds) {
+    this.checkUpstreamsEverySeconds = checkUpstreamsEverySeconds;
   }
 
   public void setCleanupEverySeconds(long cleanupEverySeconds) {
