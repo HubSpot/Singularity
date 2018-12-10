@@ -1,10 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -47,6 +50,11 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   @Override
   public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath) {
     return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.DELETE);
+  }
+
+  @Override
+  public Collection<UpstreamInfo> getUpstreams() {
+    return Collections.emptyList();
   }
 
 }
