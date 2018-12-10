@@ -1,16 +1,19 @@
 package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -20,6 +23,7 @@ import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonResponse;
 import com.hubspot.baragon.models.BaragonService;
+import com.hubspot.baragon.models.BaragonServiceState;
 import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
@@ -66,6 +70,34 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
     this.taskLabelForLoadBalancerUpstreamGroup = configuration.getTaskLabelForLoadBalancerUpstreamGroup();
     this.mesosProtosUtils = mesosProtosUtils;
+  }
+
+  private String getLoadBalancerStateUri (){
+    return loadBalancerUri.replace("request", "state");
+  }
+
+  private Collection<BaragonServiceState> getBaragonServiceStates () {
+    final String loadBalancerStateUri = getLoadBalancerStateUri();
+    final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
+    final Request request = requestBuilder.build();
+    try {
+      ListenableFuture<Response> future = httpClient.executeRequest(request);
+      Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
+      if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
+        LOG.info(String.format("Response status code %s", response.getStatusCode()));
+      }
+      return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<List<BaragonServiceState>>() {});
+    } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+      e.printStackTrace();
+      return Collections.emptyList();
+    }
+  }
+
+  public Collection<UpstreamInfo> getUpstreams () {
+    Collection<BaragonServiceState> baragonServiceStates = getBaragonServiceStates();
+    return baragonServiceStates.stream()
+        .flatMap(bbs -> bbs.getUpstreams().stream())
+        .collect(Collectors.toList());
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {

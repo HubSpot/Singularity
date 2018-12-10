@@ -1,8 +1,10 @@
 package com.hubspot.singularity.hooks;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -18,4 +20,6 @@ public interface LoadBalancerClient {
   SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
 
   SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath);
+
+  Collection<UpstreamInfo> getUpstreams();
 }
