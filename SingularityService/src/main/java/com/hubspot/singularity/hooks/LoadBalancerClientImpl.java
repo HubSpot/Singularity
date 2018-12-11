@@ -72,32 +72,16 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.mesosProtosUtils = mesosProtosUtils;
   }
 
-  public String getLoadBalancerUri() {
-    return loadBalancerUri;
-  }
-
-  public Optional<Map<String, String>> getLoadBalancerQueryParams() {
-    return loadBalancerQueryParams;
-  }
-
-  public long getLoadBalancerTimeoutMillis() {
-    return loadBalancerTimeoutMillis;
-  }
-
-  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
-    return taskLabelForLoadBalancerUpstreamGroup;
-  }
-
-  public MesosProtosUtils getMesosProtosUtils() {
-    return mesosProtosUtils;
-  }
-
-  private String getLoadBalancerStateUri (){
+  private String getStateUriFromRequestUri (){
     return loadBalancerUri.replace("request", "state");
   }
 
-  private Collection<BaragonServiceState> getBaragonServiceStates () {
-    final String loadBalancerStateUri = getLoadBalancerStateUri();
+  private String getLoadBalancerStateUri (String requestId){
+    return String.format(OPERATION_URI, getStateUriFromRequestUri(), requestId);
+  }
+
+  private Collection<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest (String requestId) {
+    final String loadBalancerStateUri = getLoadBalancerStateUri(requestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
     try {
@@ -113,8 +97,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
   }
 
-  public Collection<UpstreamInfo> getUpstreams () {
-    Collection<BaragonServiceState> baragonServiceStates = getBaragonServiceStates();
+  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest (String requestId) {
+    Collection<BaragonServiceState> baragonServiceStates = getBaragonServiceStateForLoadBalancerRequest(requestId);
     return baragonServiceStates.stream()
         .flatMap(bbs -> bbs.getUpstreams().stream())
         .collect(Collectors.toList());
@@ -238,7 +222,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
-  private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
+  public List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {

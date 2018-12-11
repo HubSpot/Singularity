@@ -27,6 +27,6 @@ public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     LOG.info("Checking upstreams");
-    upstreamChecker.checkUpstreams();
+    upstreamChecker.syncUpstreams();
   }
 }

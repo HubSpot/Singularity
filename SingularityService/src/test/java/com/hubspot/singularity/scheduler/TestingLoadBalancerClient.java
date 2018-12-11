@@ -53,7 +53,12 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public Collection<UpstreamInfo> getUpstreams() {
+  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String requestId) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
     return Collections.emptyList();
   }
 
