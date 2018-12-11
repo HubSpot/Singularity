@@ -72,6 +72,26 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.mesosProtosUtils = mesosProtosUtils;
   }
 
+  public String getLoadBalancerUri() {
+    return loadBalancerUri;
+  }
+
+  public Optional<Map<String, String>> getLoadBalancerQueryParams() {
+    return loadBalancerQueryParams;
+  }
+
+  public long getLoadBalancerTimeoutMillis() {
+    return loadBalancerTimeoutMillis;
+  }
+
+  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
+    return taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public MesosProtosUtils getMesosProtosUtils() {
+    return mesosProtosUtils;
+  }
+
   private String getLoadBalancerStateUri (){
     return loadBalancerUri.replace("request", "state");
   }
