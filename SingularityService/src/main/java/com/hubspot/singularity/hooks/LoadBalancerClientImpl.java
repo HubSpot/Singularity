@@ -80,7 +80,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), requestId);
   }
 
-  private Collection<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest (String requestId) {
+  private Optional<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest (String requestId) {
     final String loadBalancerStateUri = getLoadBalancerStateUri(requestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
@@ -90,18 +90,20 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
         LOG.info(String.format("Response status code %s", response.getStatusCode()));
       }
-      return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<List<BaragonServiceState>>() {});
+      return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
     } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
       e.printStackTrace();
-      return Collections.emptyList();
+      return Optional.absent();
     }
   }
 
   public Collection<UpstreamInfo> getBaragonUpstreamsForRequest (String requestId) {
-    Collection<BaragonServiceState> baragonServiceStates = getBaragonServiceStateForLoadBalancerRequest(requestId);
-    return baragonServiceStates.stream()
-        .flatMap(bbs -> bbs.getUpstreams().stream())
-        .collect(Collectors.toList());
+    Optional<BaragonServiceState> maybeBaragonServiceState = getBaragonServiceStateForLoadBalancerRequest(requestId);
+    if (maybeBaragonServiceState.isPresent()){
+      BaragonServiceState baragonServiceState = getBaragonServiceStateForLoadBalancerRequest(requestId).get();
+      return baragonServiceState.getUpstreams();
+    }
+    return Collections.emptyList();
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
