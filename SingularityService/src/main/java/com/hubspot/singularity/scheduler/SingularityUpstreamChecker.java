@@ -12,6 +12,7 @@ import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.data.RequestManager;
@@ -47,8 +48,7 @@ public class SingularityUpstreamChecker {
     return lbClient.tasksToUpstreams(getActiveSingularityTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
-  private void syncUpstreamsForService(SingularityRequest request, Optional<String> loadBalancerUpstreamGroup) {
-    String requestId = request.getId();
+  private void syncUpstreamsForService(String requestId, Optional<String> loadBalancerUpstreamGroup) {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasks(requestId, loadBalancerUpstreamGroup);
     upstreamsInBaragonForRequest.removeAll(upstreamsInSingularityForRequest);
@@ -60,6 +60,15 @@ public class SingularityUpstreamChecker {
 
   public void syncUpstreams() {
     // TODO: check through the active requests and run the method above
+    for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
+      SingularityRequest request = singularityRequestWithState.getRequest();
+      if (request.isLoadBalanced()) {
+        //TODO: lock on the requestId
+        String requestId = singularityRequestWithState.getRequest().getId();
+//        Optional<String> loadBalancerUpstreamGroup = request. TODO: get the loadBalancerUpstreamGroup
+        syncUpstreamsForService(requestId,Optional.absent());
+      }
+    }
 
   }
 }
