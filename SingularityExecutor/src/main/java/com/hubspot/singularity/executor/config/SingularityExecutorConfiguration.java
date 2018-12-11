@@ -230,7 +230,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private boolean useFileAttributes = false;
 
   @JsonProperty
-  private int defaultHealthcheckMaxRetries = 30;
+  private int defaultHealthcheckMaxRetries = 6;
 
   private int defaultCfsPeriod = 100000;
 
