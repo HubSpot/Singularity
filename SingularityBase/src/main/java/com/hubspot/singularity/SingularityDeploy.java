@@ -206,7 +206,8 @@ public class SingularityDeploy {
         healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>absent(),
         healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>absent(),
         healthcheckMaxRetries,
-        Optional.<List<Integer>>absent()));
+        Optional.<List<Integer>>absent(),
+        Optional.absent()));
     } else {
       this.healthcheck = healthcheck;
     }

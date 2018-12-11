@@ -45,8 +45,21 @@ public class SingularityExecutorTask {
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration, ObjectMapper objectMapper) {
+  public SingularityExecutorTask(
+      ExecutorDriver driver,
+      ExecutorUtils executorUtils,
+      SingularityRunnerBaseConfiguration baseConfiguration,
+      SingularityExecutorConfiguration executorConfiguration,
+      SingularityExecutorTaskDefinition taskDefinition,
+      String executorPid,
+      SingularityExecutorArtifactFetcher artifactFetcher,
+      Protos.TaskInfo taskInfo,
+      TemplateManager templateManager,
+      Logger log,
+      JsonObjectFileHelper jsonObjectFileHelper,
+      DockerUtils dockerUtils,
+      SingularityS3Configuration s3Configuration,
+      ObjectMapper objectMapper) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;

@@ -320,15 +320,18 @@ public class SingularityValidator {
     }
 
     if (deploy.getHealthcheck().isPresent()) {
-      checkBadRequest(!Strings.isNullOrEmpty(deploy.getHealthcheck().get().getUri()), "Must specify a uri when specifying health check parameters");
+      HealthcheckOptions healthcheckOptions = deploy.getHealthcheck().get();
+      boolean hasUri = healthcheckOptions.getUri().isPresent() && !Strings.isNullOrEmpty(healthcheckOptions.getUri().get());
+      boolean hasHealthCheckResultFilePath = healthcheckOptions.getHealthcheckResultFilePath().isPresent();
+      checkBadRequest(hasUri || hasHealthCheckResultFilePath, "Must specify a uri or a healthcheck result file pathh when specifying health check parameters");
 
-      if (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0) {
-        checkBadRequest(deploy.getHealthcheck().get().getPortNumber().isPresent(),
+      if (hasUri && (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0)) {
+        checkBadRequest(healthcheckOptions.getPortNumber().isPresent(),
             "Either an explicit port number, or port resources and port index must be specified to run healthchecks against a uri");
       }
 
       if (maxTotalHealthcheckTimeoutSeconds.isPresent()) {
-        HealthcheckOptions options = deploy.getHealthcheck().get();
+        HealthcheckOptions options = healthcheckOptions;
         int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
         int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
         int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
@@ -339,8 +342,8 @@ public class SingularityValidator {
             String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
       }
 
-      if (deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
-        int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
+      if (healthcheckOptions.getStartupDelaySeconds().isPresent()) {
+        int startUpDelay = healthcheckOptions.getStartupDelaySeconds().get();
 
         checkBadRequest(startUpDelay < defaultKillHealthcheckAfterSeconds,
             String.format("Health check startup delay time must be less than max health check run time %s (was %s)", defaultKillHealthcheckAfterSeconds, startUpDelay));

@@ -229,6 +229,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean useFileAttributes = false;
 
+  @JsonProperty
+  private int defaultHealthcheckMaxRetries = 6;
+
   private int defaultCfsPeriod = 100000;
 
   private String extraScriptContent = "";
@@ -699,12 +702,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.extraDockerScriptContent = extraDockerScriptContent;
   }
 
+
+  public int getDefaultHealthcheckMaxRetries() {
+    return defaultHealthcheckMaxRetries;
+  }
+
+  public void setDefaultHealthcheckMaxRetries(int defaultHealthcheckMaxRetries) {
+    this.defaultHealthcheckMaxRetries = defaultHealthcheckMaxRetries;
+  }
+
   public Optional<Long> getMaxServiceLogSizeMb() {
     return maxServiceLogSizeMb;
   }
 
   public void setMaxServiceLogSizeMb(Optional<Long> maxServiceLogSizeMb) {
     this.maxServiceLogSizeMb = maxServiceLogSizeMb;
+
   }
 
   @Override
@@ -762,6 +775,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
         ", defaultCfsPeriod=" + defaultCfsPeriod +
+        ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
         "} " + super.toString();
   }
 }
