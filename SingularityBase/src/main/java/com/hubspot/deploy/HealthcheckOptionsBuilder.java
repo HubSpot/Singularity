@@ -26,18 +26,7 @@ public class HealthcheckOptionsBuilder {
   private Optional<String> healthcheckResultFilePath;
 
   public HealthcheckOptionsBuilder(String uri) {
-    this.uri = Optional.of(uri);
-    this.portIndex = Optional.absent();
-    this.portNumber = Optional.absent();
-    this.protocol = Optional.absent();
-    this.startupTimeoutSeconds = Optional.absent();
-    this.startupDelaySeconds = Optional.absent();
-    this.startupIntervalSeconds = Optional.absent();
-    this.intervalSeconds = Optional.absent();
-    this.responseTimeoutSeconds = Optional.absent();
-    this.maxRetries = Optional.absent();
-    this.failureStatusCodes = Optional.absent();
-    this.healthcheckResultFilePath = Optional.absent();
+    this(Optional.of(uri));
   }
 
   public HealthcheckOptionsBuilder(Optional<String> uri) {

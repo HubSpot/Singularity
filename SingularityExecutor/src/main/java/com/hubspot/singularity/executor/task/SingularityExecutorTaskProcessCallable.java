@@ -65,10 +65,9 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
 
-    String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
-
     if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
       LOG.debug("Checking for healthcheck file {}", expectedHealthcheckResultFilePath.get());
+      String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
       File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
 
       try {
