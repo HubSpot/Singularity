@@ -59,16 +59,14 @@ public class SingularityUpstreamChecker {
   }
 
   public void syncUpstreams() {
-    // TODO: check through the active requests and run the method above
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
       SingularityRequest request = singularityRequestWithState.getRequest();
       if (request.isLoadBalanced()) {
         //TODO: lock on the requestId
         String requestId = singularityRequestWithState.getRequest().getId();
-//        Optional<String> loadBalancerUpstreamGroup = request. TODO: get the loadBalancerUpstreamGroup
-        syncUpstreamsForService(requestId,Optional.absent());
+        Optional<String> loadBalancerUpstreamGroup = Optional.absent(); // TODO: get the loadBalancerUpstreamGroup
+        syncUpstreamsForService(requestId,loadBalancerUpstreamGroup);
       }
     }
-
   }
 }
