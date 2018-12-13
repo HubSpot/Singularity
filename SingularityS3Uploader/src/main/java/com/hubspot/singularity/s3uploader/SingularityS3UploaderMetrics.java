@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
+import static com.hubspot.singularity.s3uploader.config.SingularityS3UploaderModule.METRICS_OBJECT_MAPPER;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 
 @Singleton
@@ -47,7 +50,7 @@ public class SingularityS3UploaderMetrics {
   private long startUploadsAt;
 
   @Inject
-  public SingularityS3UploaderMetrics(MetricRegistry registry, ObjectMapper mapper, SingularityS3UploaderConfiguration uploaderConfiguration) {
+  public SingularityS3UploaderMetrics(MetricRegistry registry, @Named(METRICS_OBJECT_MAPPER) ObjectMapper mapper, SingularityS3UploaderConfiguration uploaderConfiguration) {
     this.fileReporterExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("metrics-file-reporter").build());
     this.registry = registry;
     this.mapper = mapper;
