@@ -96,13 +96,12 @@ public class SingularityS3DownloaderMetrics {
 
   private void startFileReporter() {
     fileReporterExecutor.scheduleAtFixedRate(() -> {
-      try {
-        File metricsFile = new File(downloaderConfiguration.getMetricsFilePath());
-        Writer metricsFileWriter = new FileWriter(metricsFile, false);
 
+      File metricsFile = new File(downloaderConfiguration.getMetricsFilePath());
+
+      try (Writer metricsFileWriter = new FileWriter(metricsFile, false)) {
         metricsFileWriter.write(mapper.writeValueAsString(registry.getMetrics()));
         metricsFileWriter.flush();
-        metricsFileWriter.close();
       } catch (IOException e) {
         LOG.error("Unable to write metrics to file", e);
       }
