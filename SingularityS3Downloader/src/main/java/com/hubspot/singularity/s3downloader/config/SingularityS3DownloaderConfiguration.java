@@ -30,7 +30,7 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
 
   @NotNull
   @JsonProperty
-  private String metricsFilePath = "/var/run/singularity";
+  private String metricsFilePath = "/var/run/singularity/s3downloader-metrics.out";
 
   public SingularityS3DownloaderConfiguration() {
     super(Optional.of("singularity-s3downloader.log"));
