@@ -101,10 +101,10 @@ public class SingularityS3UploaderMetrics {
 
     this.filesystemEventsMeter = registry.meter(name("filesystem", "events"));
 
+    startJmxReporter();
+
     if (uploaderConfiguration.getMetricsFilePath().isPresent()) {
       startFileReporter();
-    } else {
-      startJmxReporter();
     }
   }
 
