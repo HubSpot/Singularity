@@ -67,8 +67,11 @@ public class SingularityS3DownloaderMetrics {
       }
     });
 
-    startJmxReporter();
-    startFileReporter();
+    if (downloaderConfiguration.getMetricsFilePath().isPresent()) {
+      startFileReporter();
+    } else {
+      startJmxReporter();
+    }
   }
 
   public Meter getClientErrorsMeter() {
@@ -99,7 +102,7 @@ public class SingularityS3DownloaderMetrics {
   private void startFileReporter() {
     fileReporterExecutor.scheduleAtFixedRate(() -> {
 
-      File metricsFile = new File(downloaderConfiguration.getMetricsFilePath());
+      File metricsFile = new File(downloaderConfiguration.getMetricsFilePath().get());
 
       try (Writer metricsFileWriter = new FileWriter(metricsFile, false)) {
         metricsFileWriter.write(mapper.writeValueAsString(registry.getMetrics()));
