@@ -90,6 +90,12 @@
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
     </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-json</artifactId>
+    </dependency>
+
   </dependencies>
 </project>
 <!-- Local Variables:     -->

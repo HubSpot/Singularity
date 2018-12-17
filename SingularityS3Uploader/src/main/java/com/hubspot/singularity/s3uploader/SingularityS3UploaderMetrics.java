@@ -101,8 +101,11 @@ public class SingularityS3UploaderMetrics {
 
     this.filesystemEventsMeter = registry.meter(name("filesystem", "events"));
 
-    startJmxReporter();
-    startFileReporter();
+    if (uploaderConfiguration.getMetricsFilePath().isPresent()) {
+      startFileReporter();
+    } else {
+      startJmxReporter();
+    }
   }
 
   private String name(String... names) {
@@ -129,7 +132,7 @@ public class SingularityS3UploaderMetrics {
 
   private void startFileReporter() {
     fileReporterExecutor.scheduleAtFixedRate(() -> {
-      File metricsFile = new File(uploaderConfiguration.getMetricsFilePath());
+      File metricsFile = new File(uploaderConfiguration.getMetricsFilePath().get());
 
       try (Writer metricsFileWriter = new FileWriter(metricsFile, false)) {
         metricsFileWriter.write(mapper.writeValueAsString(registry.getMetrics()));

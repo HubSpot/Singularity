@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3downloader;
 
+import static com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule.METRICS_OBJECT_MAPPER;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,7 +45,7 @@ public class SingularityS3DownloaderMetrics {
 
   @Inject
   public SingularityS3DownloaderMetrics(MetricRegistry registry,
-                                        ObjectMapper mapper,
+                                        @Named(METRICS_OBJECT_MAPPER) ObjectMapper mapper,
                                         @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) final ThreadPoolExecutor asyncDownloadService,
                                         SingularityS3DownloaderConfiguration downloaderConfiguration) {
     this.fileReporterExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("metrics-file-reporter").build());
@@ -65,8 +67,11 @@ public class SingularityS3DownloaderMetrics {
       }
     });
 
-    startJmxReporter();
-    startFileReporter();
+    if (downloaderConfiguration.getMetricsFilePath().isPresent()) {
+      startFileReporter();
+    } else {
+      startJmxReporter();
+    }
   }
 
   public Meter getClientErrorsMeter() {
@@ -97,7 +102,7 @@ public class SingularityS3DownloaderMetrics {
   private void startFileReporter() {
     fileReporterExecutor.scheduleAtFixedRate(() -> {
 
-      File metricsFile = new File(downloaderConfiguration.getMetricsFilePath());
+      File metricsFile = new File(downloaderConfiguration.getMetricsFilePath().get());
 
       try (Writer metricsFileWriter = new FileWriter(metricsFile, false)) {
         metricsFileWriter.write(mapper.writeValueAsString(registry.getMetrics()));
