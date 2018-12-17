@@ -67,10 +67,10 @@ public class SingularityS3DownloaderMetrics {
       }
     });
 
+    startJmxReporter();
+
     if (downloaderConfiguration.getMetricsFilePath().isPresent()) {
       startFileReporter();
-    } else {
-      startJmxReporter();
     }
   }
 
