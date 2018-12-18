@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -42,35 +44,29 @@ public class SingularityUpstreamChecker {
     this.deployManager = deployManager;
   }
 
-  private List<SingularityTask> getActiveSingularityTasksForRequest(String requestId) {
-    List<SingularityTask> activeSingularityTasksForRequest = new ArrayList<>();
-    for (SingularityTaskId taskId: taskManager.getActiveTaskIdsForRequest(requestId)){
-      Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
-      if (maybeTask.isPresent()) {
-        activeSingularityTasksForRequest.add(maybeTask.get());
-      }
-    }
-    return activeSingularityTasksForRequest;
+  private List<SingularityTask> getActiveTasksForRequest(String requestId) {
+    final Map<SingularityTaskId, SingularityTask> activeTasksForRequest = taskManager.getTasks(taskManager.getActiveTaskIdsForRequest(requestId));
+    return new ArrayList<>(activeTasksForRequest.values());
   }
 
-  private Collection<UpstreamInfo> getUpstreamsFromActiveTasks(String requestId, Optional<String> loadBalancerUpstreamGroup) {
-    return lbClient.getUpstreamsForTasks(getActiveSingularityTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
+  private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForRequest(String requestId, Optional<String> loadBalancerUpstreamGroup) {
+    return lbClient.getUpstreamsForTasks(getActiveTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest request, String requestId, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
-    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasks(requestId, loadBalancerUpstreamGroup);
+    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(requestId, loadBalancerUpstreamGroup);
     upstreamsInBaragonForRequest.removeAll(upstreamsInSingularityForRequest);
-    LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
-    return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), new ArrayList<>(upstreamsInBaragonForRequest), deploy, request);
+    final List<UpstreamInfo> extraUpstreams = new ArrayList<>(upstreamsInBaragonForRequest);
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
+    return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, request);
   }
 
   public void syncUpstreams() {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
       SingularityRequest request = singularityRequestWithState.getRequest();
       if (request.isLoadBalanced()) {
-        //TODO: lock on the requestId
-        String requestId = singularityRequestWithState.getRequest().getId();
+        String requestId = singularityRequestWithState.getRequest().getId(); //TODO: lock on the requestId
         String deployId = deployManager.getInUseDeployId(requestId).get(); //TODO: handle when it's absent
         SingularityDeploy deploy = deployManager.getDeploy(requestId, deployId).get();
         Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup(); // TODO: handle when absent
