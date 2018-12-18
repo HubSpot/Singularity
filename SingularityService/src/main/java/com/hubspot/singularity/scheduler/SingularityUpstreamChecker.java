@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
@@ -25,12 +26,14 @@ public class SingularityUpstreamChecker {
   private final LoadBalancerClientImpl lbClient;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
+  private final DeployManager deployManager;
 
   @Inject
-  public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient, TaskManager taskManager, RequestManager requestManager) {
+  public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager) {
     this.lbClient = lbClient;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
+    this.deployManager = deployManager;
   }
 
   private List<SingularityTask> getActiveSingularityTasksForRequest (String requestId) {
@@ -51,10 +54,11 @@ public class SingularityUpstreamChecker {
   private void syncUpstreamsForService(String requestId, Optional<String> loadBalancerUpstreamGroup) {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasks(requestId, loadBalancerUpstreamGroup);
-    upstreamsInBaragonForRequest.removeAll(upstreamsInSingularityForRequest);
+    upstreamsInSingularityForRequest.removeAll(upstreamsInBaragonForRequest);
     LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
     for (UpstreamInfo upstream: upstreamsInBaragonForRequest){
       //TODO: remove the upstream from Baragon
+
     }
   }
 
@@ -64,7 +68,8 @@ public class SingularityUpstreamChecker {
       if (request.isLoadBalanced()) {
         //TODO: lock on the requestId
         String requestId = singularityRequestWithState.getRequest().getId();
-        Optional<String> loadBalancerUpstreamGroup = Optional.absent(); // TODO: get the loadBalancerUpstreamGroup
+        String deployId = deployManager.getInUseDeployId(requestId).get(); //TODO: handle when it's absent
+        Optional<String> loadBalancerUpstreamGroup = deployManager.getDeploy(requestId, deployId).get().getLoadBalancerUpstreamGroup(); // TODO: handle when absent
         syncUpstreamsForService(requestId,loadBalancerUpstreamGroup);
       }
     }
