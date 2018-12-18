@@ -56,8 +56,8 @@ public class SingularityUpstreamChecker {
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasks(requestId, loadBalancerUpstreamGroup);
     upstreamsInSingularityForRequest.removeAll(upstreamsInBaragonForRequest);
     LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
-    for (UpstreamInfo upstream: upstreamsInBaragonForRequest){
-      //TODO: remove the upstream from Baragon
+    for (UpstreamInfo upstream: upstreamsInSingularityForRequest){ // these are the upstreams in Singularity, but not in Baragon
+      //TODO: remove the upstream from Singularity
 
     }
   }
