@@ -3,7 +3,6 @@ package com.hubspot.singularity.s3downloader.config;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -27,10 +26,6 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
   @Min(1)
   @JsonProperty
   private int numDownloaderThreads = 5;
-
-  @NotNull
-  @JsonProperty
-  private Optional<String> metricsFilePath = Optional.absent();
 
   public SingularityS3DownloaderConfiguration() {
     super(Optional.of("singularity-s3downloader.log"));
@@ -68,17 +63,9 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
     this.numDownloaderThreads = numDownloaderThreads;
   }
 
-  public Optional<String> getMetricsFilePath() {
-    return metricsFilePath;
-  }
-
-  public void setMetricsFilePath(Optional<String> metricsFilePath) {
-    this.metricsFilePath = metricsFilePath;
-  }
-
   @Override
   public String toString() {
     return "SingularityS3DownloaderConfiguration [httpServerTimeout=" + httpServerTimeout + ", numEnqueueThreads=" + numEnqueueThreads + ", millisToWaitForReEnqueue=" + millisToWaitForReEnqueue
-        + ", numDownloaderThreads=" + numDownloaderThreads + ", metricsFilePath=" + metricsFilePath + "]";
+        + ", numDownloaderThreads=" + numDownloaderThreads + "]";
   }
 }
