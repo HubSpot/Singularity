@@ -67,6 +67,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean s3UseV2Signing = false;
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> metricsFilePath = Optional.absent();
+
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
   }
@@ -165,6 +169,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setS3UseV2Signing(boolean s3UseV2Signing) {
     this.s3UseV2Signing = s3UseV2Signing;
+  }
+
+  public Optional<String> getMetricsFilePath() {
+    return metricsFilePath;
+  }
+
+  public void setMetricsFilePath(Optional<String> metricsFilePath) {
+    this.metricsFilePath = metricsFilePath;
   }
 
   @Override

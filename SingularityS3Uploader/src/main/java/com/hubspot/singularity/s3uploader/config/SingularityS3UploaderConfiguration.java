@@ -76,10 +76,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private List<SingularityS3UploaderContentHeaders> s3ContentHeaders = new ArrayList<>();
 
-  @NotNull
-  @JsonProperty
-  private Optional<String> metricsFilePath = Optional.absent();
-
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
   }
@@ -196,14 +192,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3ContentHeaders = s3ContentHeaders;
   }
 
-  public Optional<String> getMetricsFilePath() {
-    return metricsFilePath;
-  }
-
-  public void setMetricsFilePath(Optional<String> metricsFilePath) {
-    this.metricsFilePath = metricsFilePath;
-  }
-
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration{" +
@@ -221,7 +209,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
         ", checkOpenFilesViaFuser=" + checkOpenFilesViaFuser +
         ", s3BucketCredentials=" + s3BucketCredentials +
         ", s3ContentHeaders=" + s3ContentHeaders +
-        ", metricsFilePath=" + metricsFilePath +
         "} " + super.toString();
   }
 }
