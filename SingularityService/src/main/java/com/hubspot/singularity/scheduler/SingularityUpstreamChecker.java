@@ -53,6 +53,12 @@ public class SingularityUpstreamChecker {
     return lbClient.getUpstreamsForTasks(getActiveTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
+  private boolean isEqual(UpstreamInfo upstreamInfo1, UpstreamInfo upstreamInfo2){
+    return (upstreamInfo1.getUpstream().equals(upstreamInfo2.getUpstream()))
+        && (upstreamInfo1.getGroup().equals(upstreamInfo2.getGroup()))
+        && (upstreamInfo1.getRackId().equals(upstreamInfo2.getRackId()));
+  }
+
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest request, String requestId, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(requestId, loadBalancerUpstreamGroup);
