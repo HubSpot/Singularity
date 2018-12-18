@@ -1,6 +1,6 @@
 package com.hubspot.singularity.s3downloader;
 
-import static com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule.METRICS_OBJECT_MAPPER;
+import static com.hubspot.singularity.s3.base.SingularityS3BaseModule.METRICS_OBJECT_MAPPER;
 
 import java.io.File;
 import java.io.FileWriter;
