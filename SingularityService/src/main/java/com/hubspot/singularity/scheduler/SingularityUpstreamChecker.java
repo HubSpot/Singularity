@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.zookeeper.Op;
+
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonService;
@@ -53,17 +55,28 @@ public class SingularityUpstreamChecker {
     return lbClient.getUpstreamsForTasks(getActiveTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
-  private boolean isEqual(UpstreamInfo upstreamInfo1, UpstreamInfo upstreamInfo2){
-    return (upstreamInfo1.getUpstream().equals(upstreamInfo2.getUpstream()))
-        && (upstreamInfo1.getGroup().equals(upstreamInfo2.getGroup()))
-        && (upstreamInfo1.getRackId().equals(upstreamInfo2.getRackId()));
+  private boolean isEqual(UpstreamInfo upstream1, UpstreamInfo upstream2){
+    return (upstream1.getUpstream().equals(upstream2.getUpstream()))
+        && (upstream1.getGroup().equals(upstream2.getGroup()))
+        && (upstream1.getRackId().equals(upstream2.getRackId()));
+  }
+
+  private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
+    return upstreams.stream().filter(candidate -> isEqual(candidate, upstream)).collect(Collectors.toList());
+  }
+
+  private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
+    for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForRequest) {
+      Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
+      upstreamsInBaragonForRequest.removeAll(matches);
+    }
+    return new ArrayList<>(upstreamsInBaragonForRequest);
   }
 
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest request, String requestId, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(requestId, loadBalancerUpstreamGroup);
-    upstreamsInBaragonForRequest.removeAll(upstreamsInSingularityForRequest);
-    final List<UpstreamInfo> extraUpstreams = new ArrayList<>(upstreamsInBaragonForRequest);
+    final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
     return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, request);
   }
