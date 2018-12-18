@@ -62,4 +62,13 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
     return Collections.emptyList();
   }
 
+  @Override
+  public SingularityLoadBalancerUpdate makeAndSendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId,
+                                                                 List<UpstreamInfo> addUpstreams,
+                                                                 List<UpstreamInfo> removeUpstreams,
+                                                                 SingularityDeploy deploy,
+                                                                 SingularityRequest request) {
+    return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE); //TODO: confirm this
+  }
+
 }
