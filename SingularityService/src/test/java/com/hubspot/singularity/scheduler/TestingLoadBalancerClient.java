@@ -58,7 +58,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
+  public List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
     return Collections.emptyList();
   }
 

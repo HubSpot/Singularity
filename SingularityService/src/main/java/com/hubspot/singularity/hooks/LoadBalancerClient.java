@@ -27,7 +27,7 @@ public interface LoadBalancerClient {
    * @param requestId
    * @return
    */
-  Collection<UpstreamInfo> getBaragonUpstreamsForRequest (String requestId);
+  Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String requestId);
 
   /**
    * @param tasks
@@ -35,7 +35,7 @@ public interface LoadBalancerClient {
    * @param loadBalancerUpstreamGroup
    * @return
    */
-  List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup);
+  List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup);
 
   /**
    * @param loadBalancerRequestId

@@ -42,7 +42,7 @@ public class SingularityUpstreamChecker {
     this.deployManager = deployManager;
   }
 
-  private List<SingularityTask> getActiveSingularityTasksForRequest (String requestId) {
+  private List<SingularityTask> getActiveSingularityTasksForRequest(String requestId) {
     List<SingularityTask> activeSingularityTasksForRequest = new ArrayList<>();
     for (SingularityTaskId taskId: taskManager.getActiveTaskIdsForRequest(requestId)){
       Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
@@ -54,7 +54,7 @@ public class SingularityUpstreamChecker {
   }
 
   private Collection<UpstreamInfo> getUpstreamsFromActiveTasks(String requestId, Optional<String> loadBalancerUpstreamGroup) {
-    return lbClient.tasksToUpstreams(getActiveSingularityTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
+    return lbClient.getUpstreamsForTasks(getActiveSingularityTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest request, String requestId, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
