@@ -55,16 +55,17 @@ public class SingularityUpstreamChecker {
     return lbClient.getUpstreamsForTasks(getActiveTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
   }
 
-  private boolean isEqual(UpstreamInfo upstream1, UpstreamInfo upstream2){
+  private boolean isEqualUpstreamGroupRackId(UpstreamInfo upstream1, UpstreamInfo upstream2){
     return (upstream1.getUpstream().equals(upstream2.getUpstream()))
         && (upstream1.getGroup().equals(upstream2.getGroup()))
         && (upstream1.getRackId().equals(upstream2.getRackId()));
   }
 
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
-    return upstreams.stream().filter(candidate -> isEqual(candidate, upstream)).collect(Collectors.toList());
+    return upstreams.stream().filter(candidate -> isEqualUpstreamGroupRackId(candidate, upstream)).collect(Collectors.toList());
   }
 
+  // TODO: confirm if there can only be one match, or it's fine to collect a list of matches as is right now
   private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
     for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForRequest) {
       Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
@@ -86,10 +87,16 @@ public class SingularityUpstreamChecker {
       SingularityRequest request = singularityRequestWithState.getRequest();
       if (request.isLoadBalanced()) {
         String requestId = singularityRequestWithState.getRequest().getId(); //TODO: lock on the requestId
-        String deployId = deployManager.getInUseDeployId(requestId).get(); //TODO: handle when it's absent
-        SingularityDeploy deploy = deployManager.getDeploy(requestId, deployId).get();
-        Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup(); // TODO: handle when absent
-        syncUpstreamsForService(request, requestId, deploy, loadBalancerUpstreamGroup);
+        Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
+        if (maybeDeployId.isPresent()) {
+          String deployId = maybeDeployId.get();
+          Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(requestId, deployId);
+          if (maybeDeploy.isPresent()) {
+            SingularityDeploy deploy = maybeDeploy.get();
+            Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
+            syncUpstreamsForService(request, requestId, deploy, loadBalancerUpstreamGroup);
+          }
+        }
       }
     }
   }
