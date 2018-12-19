@@ -8,25 +8,32 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 
 @Singleton
 public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamPoller.class);
 
   private final SingularityUpstreamChecker upstreamChecker;
+  private final DisasterManager disasterManager;
 
   @Inject
-  SingularityUpstreamPoller(SingularityConfiguration configuration, SingularityUpstreamChecker upstreamChecker) {
+  SingularityUpstreamPoller(SingularityConfiguration configuration, SingularityUpstreamChecker upstreamChecker, DisasterManager disasterManager) {
     super(configuration.getCheckUpstreamsEverySeconds(), TimeUnit.SECONDS, true);
 
     this.upstreamChecker = upstreamChecker;
-
+    this.disasterManager = disasterManager;
   }
 
   @Override
   public void runActionOnPoll() {
-    LOG.info("Checking upstreams");
-    upstreamChecker.syncUpstreams();
+    if (!disasterManager.isDisabled(SingularityAction.RUN_UPSTREAM_POLLER)) {
+      LOG.info("Checking upstreams");
+      upstreamChecker.syncUpstreams();
+    } else {
+      LOG.warn("Upstream poller is currently disabled");
+    }
   }
 }
