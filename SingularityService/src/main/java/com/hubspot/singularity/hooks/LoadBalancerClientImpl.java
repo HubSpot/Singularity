@@ -76,12 +76,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return loadBalancerUri.replace("request", "state");
   }
 
-  private String getLoadBalancerStateUri(String requestId){
-    return String.format(OPERATION_URI, getStateUriFromRequestUri(), requestId);
+  private String getLoadBalancerStateUri(String loadBalancerRequestId){
+    return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest(String requestId) {
-    final String loadBalancerStateUri = getLoadBalancerStateUri(requestId);
+  private Optional<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest(String loadBalancerRequestId) {
+    final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
     try {
@@ -97,8 +97,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
   }
 
-  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String requestId) {
-    Optional<BaragonServiceState> maybeBaragonServiceState = getBaragonServiceStateForLoadBalancerRequest(requestId);
+  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String loadBalancerRequestId) {
+    Optional<BaragonServiceState> maybeBaragonServiceState = getBaragonServiceStateForLoadBalancerRequest(loadBalancerRequestId);
     if (maybeBaragonServiceState.isPresent()){
       BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
       return baragonServiceState.getUpstreams();

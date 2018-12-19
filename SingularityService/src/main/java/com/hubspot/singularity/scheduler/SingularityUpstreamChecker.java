@@ -68,33 +68,36 @@ public class SingularityUpstreamChecker {
   // TODO: confirm if there can only be one match, or it's fine to collect a list of matches as is right now
   private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
     for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForRequest) {
-      Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
+      final Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
       upstreamsInBaragonForRequest.removeAll(matches);
     }
     return new ArrayList<>(upstreamsInBaragonForRequest);
   }
 
-  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest request, String requestId, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
-    Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(requestId);
-    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(requestId, loadBalancerUpstreamGroup);
+  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
+    final String singularityRequestId = singularityRequest.getId();
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(singularityRequestId, LoadBalancerRequestType.REMOVE, Optional.absent());
+    Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(loadBalancerRequestId.toString());
+    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequestId, loadBalancerUpstreamGroup);
     final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(requestId, LoadBalancerRequestType.REMOVE, Optional.absent());
-    return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, request);
+
+    return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
   }
 
   public void syncUpstreams() {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
-      SingularityRequest request = singularityRequestWithState.getRequest();
-      if (request.isLoadBalanced()) {
-        String requestId = singularityRequestWithState.getRequest().getId(); //TODO: lock on the requestId
-        Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
+      final SingularityRequest singularityRequest= singularityRequestWithState.getRequest();
+      if (singularityRequest.isLoadBalanced()) {
+        final String singularityRequestId = singularityRequest.getId(); //TODO: lock on the requestId
+        final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
         if (maybeDeployId.isPresent()) {
-          String deployId = maybeDeployId.get();
-          Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(requestId, deployId);
+          final String deployId = maybeDeployId.get();
+          final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, deployId);
           if (maybeDeploy.isPresent()) {
-            SingularityDeploy deploy = maybeDeploy.get();
-            Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
-            syncUpstreamsForService(request, requestId, deploy, loadBalancerUpstreamGroup);
+            final SingularityDeploy deploy = maybeDeploy.get();
+            final Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
+            syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
+            // TODO: confirm that the request succeeded
           }
         }
       }
