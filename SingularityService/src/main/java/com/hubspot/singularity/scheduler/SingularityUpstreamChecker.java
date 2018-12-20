@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -14,11 +13,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.zookeeper.Op;
-
 import com.google.common.base.Optional;
-import com.hubspot.baragon.models.BaragonRequest;
-import com.hubspot.baragon.models.BaragonService;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -28,9 +23,11 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 
 @Singleton
@@ -40,18 +37,29 @@ public class SingularityUpstreamChecker {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
+  private final RequestHelper requestHelper;
 
   @Inject
-  public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager) {
+  public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient,
+                                    TaskManager taskManager,
+                                    RequestManager requestManager,
+                                    DeployManager deployManager,
+                                    RequestHelper requestHelper) {
     this.lbClient = lbClient;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.deployManager = deployManager;
+    this.requestHelper = requestHelper;
   }
 
   private List<SingularityTask> getActiveTasksForRequest(String requestId) {
-    final Map<SingularityTaskId, SingularityTask> activeTasksForRequest = taskManager.getTasks(taskManager.getActiveTaskIdsForRequest(requestId));
-    return new ArrayList<>(activeTasksForRequest.values());
+    final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(requestId);
+    if (taskIdsByStatusForRequest.isPresent()) {
+      final List<SingularityTaskId> activeHealthyTaskIdsForRequest = taskIdsByStatusForRequest.get().getHealthy();
+      final Map<SingularityTaskId, SingularityTask> activeTasksForRequest = taskManager.getTasks(activeHealthyTaskIdsForRequest);
+      return new ArrayList<>(activeTasksForRequest.values());
+    }
+    return new ArrayList<>();
   }
 
   private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForRequest(String requestId, Optional<String> loadBalancerUpstreamGroup) {
