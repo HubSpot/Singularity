@@ -48,6 +48,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityAutoScaleSpreadAllPoller.class).in(Scopes.SINGLETON);
     bind(SingularityMesosHeartbeatChecker.class).in(Scopes.SINGLETON);
     bind(RebalancingHelper.class).in(Scopes.SINGLETON);
+    bind(SingularityUpstreamPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityUpstreamChecker.class).in(Scopes.SINGLETON);
   }
-
 }
