@@ -33,6 +33,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 
 @Singleton
@@ -44,18 +45,21 @@ public class SingularityUpstreamChecker {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final RequestHelper requestHelper;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient,
                                     TaskManager taskManager,
                                     RequestManager requestManager,
                                     DeployManager deployManager,
-                                    RequestHelper requestHelper) {
+                                    RequestHelper requestHelper,
+                                    SingularitySchedulerLock lock) {
     this.lbClient = lbClient;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.requestHelper = requestHelper;
+    this.lock = lock;
   }
 
   private List<SingularityTask> getActiveTasksForRequest(String requestId) {
@@ -104,41 +108,50 @@ public class SingularityUpstreamChecker {
     return deployManager.getPendingDeploys().size() == 0;
   }
 
-  public void syncUpstreams() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
-      final SingularityRequest singularityRequest = singularityRequestWithState.getRequest();
-      if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
-        final String singularityRequestId = singularityRequest.getId(); //TODO: lock on the requestId
-        final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
-        if (maybeDeployId.isPresent()) {
-          final String deployId = maybeDeployId.get();
-          final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, deployId);
-          if (maybeDeploy.isPresent()) {
-            final SingularityDeploy deploy = maybeDeploy.get();
-            final Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
-            final SingularityLoadBalancerUpdate syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
+  public void doSyncUpstreamForService(SingularityRequest singularityRequest) {
+    if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
+      final String singularityRequestId = singularityRequest.getId(); //TODO: lock on the requestId
+      final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
+      if (maybeDeployId.isPresent()) {
+        final String deployId = maybeDeployId.get();
+        final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, deployId);
+        if (maybeDeploy.isPresent()) {
+          final SingularityDeploy deploy = maybeDeploy.get();
+          final Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
+          final SingularityLoadBalancerUpdate syncUpstreamsUpdate;
+          try {
+            syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
             final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
             final BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
             switch (syncUpstreamsState) { //TODO: discuss what to do when the state is not SUCCESS, apart from logging
-                case SUCCESS:
-                  LOG.info("syncing upstreams for singularity request {} is successful. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case CANCELED:
-                  LOG.info("syncing upstreams for singularity request {} is canceled. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case FAILED:
-                  LOG.info("syncing upstreams for singularity request {} failed. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case INVALID_REQUEST_NOOP:
-                  LOG.info("syncing upstreams state for singularity request {} is invalid_request_noop. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case CANCELING:
-                  LOG.info("syncing upstreams for singularity request {} is canceling. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case UNKNOWN:
-                  LOG.info("syncing upstreams for singularity request {} is unknown. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                case WAITING:
-                  LOG.info("syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                  break;
-              }
+              case SUCCESS:
+                LOG.info("Syncing upstreams for singularity request {} is successful. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case CANCELED:
+                LOG.info("Syncing upstreams for singularity request {} is canceled. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case FAILED:
+                LOG.info("Syncing upstreams for singularity request {} failed. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case INVALID_REQUEST_NOOP:
+                LOG.info("Syncing upstreams state for singularity request {} is invalid_request_noop. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case CANCELING:
+                LOG.info("Syncing upstreams for singularity request {} is canceling. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case UNKNOWN:
+                LOG.info("Syncing upstreams for singularity request {} is unknown. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              case WAITING:
+                LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+                break;
+            }
+          } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
           }
         }
       }
+    }
+  }
+
+  public void syncUpstreams() {
+    for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
+      final SingularityRequest singularityRequest = singularityRequestWithState.getRequest();
+      lock.runWithRequestLock(() -> doSyncUpstreamForService(singularityRequest), singularityRequest.getId(), getClass().getSimpleName());
     }
   }
 }
