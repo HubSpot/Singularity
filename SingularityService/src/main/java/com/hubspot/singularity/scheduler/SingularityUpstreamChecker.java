@@ -32,7 +32,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 
@@ -40,7 +40,7 @@ import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 public class SingularityUpstreamChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamChecker.class);
-  private final LoadBalancerClientImpl lbClient;
+  private final LoadBalancerClient lbClient;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
@@ -48,7 +48,7 @@ public class SingularityUpstreamChecker {
   private final SingularitySchedulerLock lock;
 
   @Inject
-  public SingularityUpstreamChecker(LoadBalancerClientImpl lbClient,
+  public SingularityUpstreamChecker(LoadBalancerClient lbClient,
                                     TaskManager taskManager,
                                     RequestManager requestManager,
                                     DeployManager deployManager,
