@@ -1,8 +1,11 @@
 package com.hubspot.singularity.hooks;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.UpstreamInfo;
@@ -22,7 +25,7 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath);
 
-  Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId);
+  Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId) throws InterruptedException, ExecutionException, TimeoutException, IOException;
 
   List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup);
 

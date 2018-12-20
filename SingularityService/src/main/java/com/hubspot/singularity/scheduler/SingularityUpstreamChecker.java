@@ -1,11 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -74,16 +77,16 @@ public class SingularityUpstreamChecker {
     return new ArrayList<>(upstreamsInBaragonForRequest);
   }
 
-  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
+  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) throws InterruptedException, ExecutionException, TimeoutException, IOException {
     final String singularityRequestId = singularityRequest.getId();
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(singularityRequestId, LoadBalancerRequestType.REMOVE, Optional.absent());
-    Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getBaragonUpstreamsForRequest(loadBalancerRequestId.toString());
+    Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getLoadBalancerUpstreamsForRequest(loadBalancerRequestId.toString());
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequestId, loadBalancerUpstreamGroup);
     final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
-    return lbClient.makeAndSendBaragonRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
+    return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
   }
 
-  public void syncUpstreams() {
+  public void syncUpstreams() throws InterruptedException, ExecutionException, TimeoutException, IOException {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
       final SingularityRequest singularityRequest= singularityRequestWithState.getRequest();
       if (singularityRequest.isLoadBalanced()) {

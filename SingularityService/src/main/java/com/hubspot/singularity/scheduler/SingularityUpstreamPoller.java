@@ -1,6 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,7 +34,12 @@ public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     if (!disasterManager.isDisabled(SingularityAction.RUN_UPSTREAM_POLLER)) {
       LOG.info("Checking upstreams");
-      upstreamChecker.syncUpstreams();
+      try {
+        upstreamChecker.syncUpstreams();
+      } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+        e.printStackTrace();
+        //TODO: action to take when exception thrown
+      }
     } else {
       LOG.warn("Upstream poller is currently disabled");
     }
