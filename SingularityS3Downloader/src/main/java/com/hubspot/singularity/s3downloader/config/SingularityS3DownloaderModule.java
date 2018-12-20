@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.s3.base.ArtifactManager;
+import com.hubspot.singularity.s3.base.SingularityS3BaseModule;
 import com.hubspot.singularity.s3downloader.server.SingularityS3DownloaderServer;
 
 public class SingularityS3DownloaderModule extends AbstractModule {
@@ -20,6 +21,8 @@ public class SingularityS3DownloaderModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(new SingularityS3BaseModule());
+
     bind(SingularityDriver.class).to(SingularityS3DownloaderServer.class);
     bind(ArtifactManager.class).toProvider(ArtifactManagerProvider.class);
   }
@@ -37,5 +40,4 @@ public class SingularityS3DownloaderModule extends AbstractModule {
   public ScheduledThreadPoolExecutor getEnqueueService(SingularityS3DownloaderConfiguration configuration) {
     return (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(configuration.getNumEnqueueThreads(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("EnqueueDownloadThread-%d").build());
   }
-
 }
