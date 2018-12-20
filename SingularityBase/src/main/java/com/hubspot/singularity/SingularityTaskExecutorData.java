@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -23,9 +24,20 @@ public class SingularityTaskExecutorData extends ExecutorData {
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
   private final Optional<Integer> cpuHardLimit;
+  private final Optional<HealthcheckOptions> healthcheckOptions;
 
-  public SingularityTaskExecutorData(ExecutorData executorData, List<SingularityS3UploaderFile> s3UploaderAdditionalFiles, String defaultS3Bucket, String s3UploaderKeyPattern,
-       String serviceLog, String serviceFinishedTailLog, Optional<String> requestGroup, Optional<String> s3StorageClass, Optional<Long> applyS3StorageClassAfterBytes, Optional<Integer> cpuHardLimit) {
+  public SingularityTaskExecutorData(
+      ExecutorData executorData,
+      List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+      String defaultS3Bucket,
+      String s3UploaderKeyPattern,
+      String serviceLog,
+      String serviceFinishedTailLog,
+      Optional<String> requestGroup,
+      Optional<String> s3StorageClass,
+      Optional<Long> applyS3StorageClassAfterBytes,
+      Optional<Integer> cpuHardLimit,
+      Optional<HealthcheckOptions> healthcheckOptions) {
     this(executorData.getCmd(),
         executorData.getEmbeddedArtifacts(),
         executorData.getExternalArtifacts(),
@@ -51,7 +63,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
         requestGroup,
         s3StorageClass,
         applyS3StorageClassAfterBytes,
-        cpuHardLimit);
+        cpuHardLimit,
+        healthcheckOptions);
   }
 
   @JsonCreator
@@ -80,7 +93,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("requestGroup")  Optional<String> requestGroup,
                                      @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
                                      @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
-                                     @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit) {
+                                     @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
+                                     @JsonProperty("healthcheckOptions") Optional<HealthcheckOptions> healthcheckOptions) {
     super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
         sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
@@ -92,6 +106,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.cpuHardLimit = cpuHardLimit;
+    this.healthcheckOptions = healthcheckOptions;
   }
 
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
@@ -130,6 +145,10 @@ public class SingularityTaskExecutorData extends ExecutorData {
     return cpuHardLimit;
   }
 
+  public Optional<HealthcheckOptions> getHealthcheckOptions() {
+    return healthcheckOptions;
+  }
+
   @Override
   public String toString() {
     return "SingularityTaskExecutorData{" +
@@ -142,6 +161,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
         ", s3StorageClass=" + s3StorageClass +
         ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
         ", cpuHardLimit=" + cpuHardLimit +
+        ", healthcheckOptions=" + healthcheckOptions +
         "} " + super.toString();
   }
 }

@@ -10,7 +10,7 @@ import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
   @NotNull
-  private String uri;
+  private Optional<String> uri;
   private Optional<Integer> portIndex;
   private Optional<Long> portNumber;
   private Optional<HealthcheckProtocol> protocol;
@@ -21,8 +21,13 @@ public class HealthcheckOptionsBuilder {
   private Optional<Integer> responseTimeoutSeconds;
   private Optional<Integer> maxRetries;
   private Optional<List<Integer>> failureStatusCodes;
+  private Optional<String> healthcheckResultFilePath;
 
   public HealthcheckOptionsBuilder(String uri) {
+    this(Optional.of(uri));
+  }
+
+  public HealthcheckOptionsBuilder(Optional<String> uri) {
     this.uri = uri;
     this.portIndex = Optional.absent();
     this.portNumber = Optional.absent();
@@ -34,14 +39,15 @@ public class HealthcheckOptionsBuilder {
     this.responseTimeoutSeconds = Optional.absent();
     this.maxRetries = Optional.absent();
     this.failureStatusCodes = Optional.absent();
+    this.healthcheckResultFilePath = Optional.absent();
   }
 
-  public String getUri() {
+  public Optional<String> getUri() {
     return uri;
   }
 
   public HealthcheckOptionsBuilder setUri(String uri) {
-    this.uri = uri;
+    this.uri = Optional.of(uri);
     return this;
   }
 
@@ -135,8 +141,17 @@ public class HealthcheckOptionsBuilder {
     return this;
   }
 
+  public Optional<String> getHealthcheckResultFilePath() {
+    return healthcheckResultFilePath;
+  }
+
+  public HealthcheckOptionsBuilder setHealthcheckResultFilePath(Optional<String> healthcheckResultFilePath) {
+    this.healthcheckResultFilePath= healthcheckResultFilePath;
+    return this;
+  }
+
   public HealthcheckOptions build() {
-    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -158,12 +173,13 @@ public class HealthcheckOptionsBuilder {
         Objects.equals(intervalSeconds, that.intervalSeconds) &&
         Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
         Objects.equals(maxRetries, that.maxRetries) &&
-        Objects.equals(failureStatusCodes, that.failureStatusCodes);
+        Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
+        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -180,6 +196,7 @@ public class HealthcheckOptionsBuilder {
         ", responseTimeoutSeconds=" + responseTimeoutSeconds +
         ", maxRetries=" + maxRetries +
         ", failureStatusCodes=" + failureStatusCodes +
+        ", healthcheckResultFilePath=" + healthcheckResultFilePath +
         '}';
   }
 }

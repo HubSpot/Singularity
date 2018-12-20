@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Describes health check behavior for tasks associated with a deploy")
 public class HealthcheckOptions {
   @NotNull
-  private final String uri;
+  private final Optional<String> uri;
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;
   private final Optional<HealthcheckProtocol> protocol;
@@ -27,9 +27,10 @@ public class HealthcheckOptions {
   private final Optional<Integer> responseTimeoutSeconds;
   private final Optional<Integer> maxRetries;
   private final Optional<List<Integer>> failureStatusCodes;
+  private final Optional<String> healthcheckResultFilePath;
 
   @JsonCreator
-  public HealthcheckOptions(@JsonProperty("uri") String uri,
+  public HealthcheckOptions(@JsonProperty("uri") Optional<String> uri,
                             @JsonProperty("portIndex") Optional<Integer> portIndex,
                             @JsonProperty("portNumber") Optional<Long> portNumber,
                             @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
@@ -39,7 +40,8 @@ public class HealthcheckOptions {
                             @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds,
                             @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds,
                             @JsonProperty("maxRetries") Optional<Integer> maxRetries,
-                            @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes) {
+                            @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
+                            @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -51,6 +53,32 @@ public class HealthcheckOptions {
     this.responseTimeoutSeconds = responseTimeoutSeconds;
     this.maxRetries = maxRetries;
     this.failureStatusCodes = failureStatusCodes;
+    this.healthcheckResultFilePath = healthcheckResultFilePath;
+  }
+
+  public HealthcheckOptions(String uri,
+                            Optional<Integer> portIndex,
+                            Optional<Long> portNumber,
+                            Optional<HealthcheckProtocol> protocol,Optional<Integer> startupTimeoutSeconds,
+                            Optional<Integer> startupDelaySeconds,
+                            Optional<Integer> startupIntervalSeconds,
+                            Optional<Integer> intervalSeconds,
+                            Optional<Integer> responseTimeoutSeconds,
+                            Optional<Integer> maxRetries,
+                            Optional<List<Integer>> failureStatusCodes,
+                            Optional<String> healthcheckResultFilePath) {
+    this.uri = Optional.of(uri);
+    this.portIndex = portIndex;
+    this.portNumber = portNumber;
+    this.protocol = protocol;
+    this.startupTimeoutSeconds = startupTimeoutSeconds;
+    this.startupDelaySeconds = startupDelaySeconds;
+    this.startupIntervalSeconds = startupIntervalSeconds;
+    this.intervalSeconds = intervalSeconds;
+    this.responseTimeoutSeconds = responseTimeoutSeconds;
+    this.maxRetries = maxRetries;
+    this.failureStatusCodes = failureStatusCodes;
+    this.healthcheckResultFilePath = healthcheckResultFilePath;
   }
 
   @JsonIgnore
@@ -65,11 +93,12 @@ public class HealthcheckOptions {
       .setIntervalSeconds(intervalSeconds)
       .setResponseTimeoutSeconds(responseTimeoutSeconds)
       .setMaxRetries(maxRetries)
-      .setFailureStatusCodes(failureStatusCodes);
+      .setFailureStatusCodes(failureStatusCodes)
+      .setHealthcheckResultFilePath(healthcheckResultFilePath);
   }
 
   @Schema(required = true, description = "Healthcheck uri to hit")
-  public String getUri() {
+  public Optional<String> getUri() {
     return uri;
   }
 
@@ -123,6 +152,11 @@ public class HealthcheckOptions {
     return failureStatusCodes;
   }
 
+  @Schema(description = "File path that indicates successful non-web health checks.")
+  public Optional<String> getHealthcheckResultFilePath() {
+    return healthcheckResultFilePath;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -142,12 +176,13 @@ public class HealthcheckOptions {
         Objects.equals(intervalSeconds, that.intervalSeconds) &&
         Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
         Objects.equals(maxRetries, that.maxRetries) &&
-        Objects.equals(failureStatusCodes, that.failureStatusCodes);
+        Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
+        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -164,6 +199,7 @@ public class HealthcheckOptions {
         ", responseTimeoutSeconds=" + responseTimeoutSeconds +
         ", maxRetries=" + maxRetries +
         ", failureStatusCodes=" + failureStatusCodes +
+        ", healthcheckResultFilePath=" + healthcheckResultFilePath +
         '}';
   }
 }
