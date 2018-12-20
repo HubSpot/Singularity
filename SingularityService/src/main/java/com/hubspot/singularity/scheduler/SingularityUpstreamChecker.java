@@ -73,10 +73,10 @@ public class SingularityUpstreamChecker {
   }
 
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
+    // We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
     return upstreams.stream().filter(candidate -> isEqualUpstreamGroupRackId(candidate, upstream)).collect(Collectors.toList());
   }
 
-  // TODO: confirm if there can only be one match, or it's fine to collect a list of matches as is right now
   private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
     for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForRequest) {
       final Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
