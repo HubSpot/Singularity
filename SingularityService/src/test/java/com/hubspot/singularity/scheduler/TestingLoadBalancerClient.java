@@ -53,7 +53,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String requestId) {
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId) {
     return Collections.emptyList();
   }
 
@@ -63,7 +63,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityLoadBalancerUpdate makeAndSendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId,
+  public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId,
                                                                  List<UpstreamInfo> addUpstreams,
                                                                  List<UpstreamInfo> removeUpstreams,
                                                                  SingularityDeploy deploy,

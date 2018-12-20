@@ -22,9 +22,9 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath);
 
-  Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String requestId);
+  Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId);
 
   List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup);
 
-  SingularityLoadBalancerUpdate makeAndSendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, List<UpstreamInfo> addUpstreams, List<UpstreamInfo> removeUpstreams, SingularityDeploy deploy, SingularityRequest request);
+  SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId, List<UpstreamInfo> addUpstreams, List<UpstreamInfo> removeUpstreams, SingularityDeploy deploy, SingularityRequest request);
 }

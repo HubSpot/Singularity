@@ -80,7 +80,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getBaragonServiceStateForLoadBalancerRequest(String loadBalancerRequestId) {
+  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(String loadBalancerRequestId) {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
@@ -97,8 +97,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
   }
 
-  public Collection<UpstreamInfo> getBaragonUpstreamsForRequest(String loadBalancerRequestId) {
-    Optional<BaragonServiceState> maybeBaragonServiceState = getBaragonServiceStateForLoadBalancerRequest(loadBalancerRequestId);
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String loadBalancerRequestId) {
+    Optional<BaragonServiceState> maybeBaragonServiceState = getLoadBalancerServiceStateForLoadBalancerRequest(loadBalancerRequestId);
     if (maybeBaragonServiceState.isPresent()){
       BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
       return baragonServiceState.getUpstreams();
@@ -161,7 +161,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   }
 
-  private SingularityLoadBalancerUpdate sendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, BaragonRequest loadBalancerRequest, LoadBalancerMethod method) {
+  private SingularityLoadBalancerUpdate sendLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId, BaragonRequest loadBalancerRequest, LoadBalancerMethod method) {
     try {
       LOG.trace("Preparing to send request {}", loadBalancerRequest);
 
@@ -214,11 +214,11 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> addUpstreams = getUpstreamsForTasks(add, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
     final List<UpstreamInfo> removeUpstreams = getUpstreamsForTasks(remove, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
 
-    return makeAndSendBaragonRequest(loadBalancerRequestId, addUpstreams, removeUpstreams, deploy, request);
+    return makeAndSendLoadBalancerRequest(loadBalancerRequestId, addUpstreams, removeUpstreams, deploy, request);
   }
 
   @Override
-  public SingularityLoadBalancerUpdate makeAndSendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, List<UpstreamInfo> addUpstreams, List<UpstreamInfo> removeUpstreams,
+  public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId, List<UpstreamInfo> addUpstreams, List<UpstreamInfo> removeUpstreams,
                                                                  SingularityDeploy deploy, SingularityRequest request) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
     final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
@@ -226,7 +226,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
         deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
         deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
-    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
+    return sendLoadBalancerRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
   public List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
@@ -275,6 +275,6 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final BaragonService lbService = new BaragonService(requestId, Collections.<String> emptyList(), serviceBasePath, loadBalancerGroups, Collections.<String, Object>emptyMap());
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Optional.<String>absent(), Optional.of(RequestAction.DELETE));
 
-    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
+    return sendLoadBalancerRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
   }
 }
