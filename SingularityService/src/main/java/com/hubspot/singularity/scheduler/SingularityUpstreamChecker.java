@@ -94,10 +94,14 @@ public class SingularityUpstreamChecker {
     return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
   }
 
+  private boolean noPendingDeploy() {
+    return deployManager.getPendingDeploys().size() == 0;
+  }
+
   public void syncUpstreams() throws InterruptedException, ExecutionException, TimeoutException, IOException {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
-      final SingularityRequest singularityRequest= singularityRequestWithState.getRequest();
-      if (singularityRequest.isLoadBalanced()) {
+      final SingularityRequest singularityRequest = singularityRequestWithState.getRequest();
+      if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
         final String singularityRequestId = singularityRequest.getId(); //TODO: lock on the requestId
         final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
         if (maybeDeployId.isPresent()) {
