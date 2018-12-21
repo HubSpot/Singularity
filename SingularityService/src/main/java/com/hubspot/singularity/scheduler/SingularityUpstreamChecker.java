@@ -1,13 +1,10 @@
 package com.hubspot.singularity.scheduler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -35,7 +32,6 @@ import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
-
 @Singleton
 public class SingularityUpstreamChecker {
 
@@ -62,7 +58,7 @@ public class SingularityUpstreamChecker {
     this.lock = lock;
   }
 
-  private List<SingularityTask> getActiveTasksForRequest(String requestId) throws Exception {
+  private List<SingularityTask> getActiveHealthyTasksForRequest(String requestId) throws Exception {
     final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(requestId);
     if (taskIdsByStatusForRequest.isPresent()) {
       final List<SingularityTaskId> activeHealthyTaskIdsForRequest = taskIdsByStatusForRequest.get().getHealthy();
@@ -73,8 +69,8 @@ public class SingularityUpstreamChecker {
     throw new Exception("TaskId not found.");
   }
 
-  private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForRequest(String requestId, Optional<String> loadBalancerUpstreamGroup) throws Exception {
-    return lbClient.getUpstreamsForTasks(getActiveTasksForRequest(requestId), requestId, loadBalancerUpstreamGroup);
+  private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForRequest(String singularityRequestId, Optional<String> loadBalancerUpstreamGroup) throws Exception {
+    return lbClient.getUpstreamsForTasks(getActiveHealthyTasksForRequest(singularityRequestId), singularityRequestId, loadBalancerUpstreamGroup);
   }
 
   private boolean isEqualUpstreamGroupRackId(UpstreamInfo upstream1, UpstreamInfo upstream2){
@@ -83,8 +79,13 @@ public class SingularityUpstreamChecker {
         && (upstream1.getRackId().equals(upstream2.getRackId()));
   }
 
+  /**
+   * @param upstream
+   * @param upstreams
+   * @return a collection of upstreams in the upstreams param that match with the upstream param on upstream, group and rackId
+   * We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
+   */
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
-    // We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
     return upstreams.stream().filter(candidate -> isEqualUpstreamGroupRackId(candidate, upstream)).collect(Collectors.toList());
   }
 
@@ -102,6 +103,7 @@ public class SingularityUpstreamChecker {
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getLoadBalancerUpstreamsForRequest(loadBalancerRequestId.toString());
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequestId, loadBalancerUpstreamGroup);
     final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
+    LOG.info("Making and sending load balancer request to remove {} extra upstreams.", extraUpstreams.size());
     return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
   }
 
@@ -111,7 +113,8 @@ public class SingularityUpstreamChecker {
 
   public void doSyncUpstreamForService(SingularityRequest singularityRequest) {
     if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
-      final String singularityRequestId = singularityRequest.getId(); //TODO: lock on the requestId
+      final String singularityRequestId = singularityRequest.getId();
+      LOG.info("Doing syncing of upstreams for service: {}.", singularityRequestId);
       final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
       if (maybeDeployId.isPresent()) {
         final String deployId = maybeDeployId.get();
@@ -124,7 +127,7 @@ public class SingularityUpstreamChecker {
             syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
             final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
             final BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-            switch (syncUpstreamsState) { //TODO: discuss what to do when the state is not SUCCESS, apart from logging
+            switch (syncUpstreamsState) {
               case SUCCESS:
                 LOG.info("Syncing upstreams for singularity request {} is successful. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
               case CANCELED:
