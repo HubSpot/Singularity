@@ -105,6 +105,7 @@ public class SingularityUpstreamChecker {
     Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequestId, loadBalancerUpstreamGroup);
     final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
     LOG.info("Making and sending load balancer request to remove {} extra upstreams.", extraUpstreams.size());
+    LOG.info("Upstreams removed are: {}", Arrays.toString(extraUpstreams.toArray()));
     return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
   }
 
