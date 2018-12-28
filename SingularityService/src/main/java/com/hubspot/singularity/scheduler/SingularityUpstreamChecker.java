@@ -126,8 +126,12 @@ public class SingularityUpstreamChecker {
           try {
             syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
             final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
-            final BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-            switch (syncUpstreamsState) {
+            BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
+            while (syncUpstreamsState.equals(BaragonRequestState.WAITING)) { // continue polling until it's no longer WAITING
+              LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+              syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
+            }
+            switch (syncUpstreamsState) { // the state is no longer WAITING
               case SUCCESS:
                 LOG.info("Syncing upstreams for singularity request {} is successful. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
               case CANCELED:
@@ -140,8 +144,6 @@ public class SingularityUpstreamChecker {
                 LOG.error("Syncing upstreams for singularity request {} is canceling. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
               case UNKNOWN:
                 LOG.error("Syncing upstreams for singularity request {} is unknown. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case WAITING:
-                LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
                 break;
             }
           } catch (Exception e) {
