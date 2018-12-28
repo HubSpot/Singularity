@@ -141,6 +141,8 @@ public class SingularityUpstreamChecker {
     BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
     while (syncUpstreamsState == BaragonRequestState.WAITING) { // continue polling until it's no longer WAITING
       LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+      final long previousTime = System.currentTimeMillis();
+      while ((System.currentTimeMillis() - previousTime) < 1000); // delay for 1 second before polling for state again
       syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
     }
     if (syncUpstreamsState == BaragonRequestState.SUCCESS){
