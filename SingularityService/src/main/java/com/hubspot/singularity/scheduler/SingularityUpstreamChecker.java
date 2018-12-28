@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -126,31 +127,25 @@ public class SingularityUpstreamChecker {
           try {
             syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
             final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
-            BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-            while (syncUpstreamsState.equals(BaragonRequestState.WAITING)) { // continue polling until it's no longer WAITING
-              LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-            }
-            switch (syncUpstreamsState) { // the state is no longer WAITING
-              case SUCCESS:
-                LOG.info("Syncing upstreams for singularity request {} is successful. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case CANCELED:
-                LOG.error("Syncing upstreams for singularity request {} is canceled. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case FAILED:
-                LOG.error("Syncing upstreams for singularity request {} failed. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case INVALID_REQUEST_NOOP:
-                LOG.error("Syncing upstreams state for singularity request {} is invalid_request_noop. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case CANCELING:
-                LOG.error("Syncing upstreams for singularity request {} is canceling. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-              case UNKNOWN:
-                LOG.error("Syncing upstreams for singularity request {} is unknown. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-                break;
-            }
+            checkSyncUpstreamsState(loadBalancerRequestId, singularityRequestId);
           } catch (Exception e) {
             LOG.error("message", e);
           }
         }
       }
+    }
+  }
+
+  public void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
+    BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
+    while (syncUpstreamsState.equals(BaragonRequestState.WAITING)) { // continue polling until it's no longer WAITING
+      LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
+      syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
+    }
+    if (syncUpstreamsState.equals(BaragonRequestState.SUCCESS)){
+      LOG.info("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
+    } else {
+      LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
     }
   }
 
