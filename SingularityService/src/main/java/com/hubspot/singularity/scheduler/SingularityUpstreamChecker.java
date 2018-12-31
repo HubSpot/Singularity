@@ -152,9 +152,9 @@ public class SingularityUpstreamChecker {
     try {
       BaragonRequestState syncUpstreamsState = syncingRetryer.call(() -> lbClient.getState(loadBalancerRequestId).getLoadBalancerState());
       if (syncUpstreamsState == BaragonRequestState.SUCCESS){
-        LOG.info("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
+        LOG.info("Syncing upstreams for singularity request {} is {}.", singularityRequestId, lbClient.getState(loadBalancerRequestId).toString());
       } else {
-        LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
+        LOG.error("Syncing upstreams for singularity request {} is {}.", singularityRequestId, lbClient.getState(loadBalancerRequestId).toString());
       }
     } catch (Exception e) {
       LOG.error("Could not check sync upstream state for singularity request {}. ", singularityRequestId, e);
