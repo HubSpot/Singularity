@@ -41,6 +41,8 @@ import com.github.rholder.retry.WaitStrategies;
 public class SingularityUpstreamChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamChecker.class);
+  private static final Predicate<BaragonRequestState> IS_WAITING_STATE = baragonRequestState -> baragonRequestState == BaragonRequestState.WAITING;
+
   private final LoadBalancerClient lbClient;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -141,13 +143,11 @@ public class SingularityUpstreamChecker {
     }
   }
 
-  private Predicate<BaragonRequestState> baragonRequestStateIsWaiting = baragonRequestState -> baragonRequestState == BaragonRequestState.WAITING;
-
   public void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
     Retryer<BaragonRequestState> syncingRetryer = RetryerBuilder.<BaragonRequestState>newBuilder()
         .retryIfException()
         .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
-        .retryIfResult(baragonRequestStateIsWaiting)
+        .retryIfResult(IS_WAITING_STATE)
         .build();
     try {
       BaragonRequestState syncUpstreamsState = syncingRetryer.call(() -> lbClient.getState(loadBalancerRequestId).getLoadBalancerState());
