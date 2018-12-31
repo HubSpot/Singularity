@@ -119,7 +119,7 @@ public class SingularityUpstreamChecker {
     return deployManager.getPendingDeploys().size() == 0;
   }
 
-  public void doSyncUpstreamForService(SingularityRequest singularityRequest) {
+  private void doSyncUpstreamsForService(SingularityRequest singularityRequest) {
     if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
       final String singularityRequestId = singularityRequest.getId();
       LOG.info("Doing syncing of upstreams for service: {}.", singularityRequestId);
@@ -136,14 +136,14 @@ public class SingularityUpstreamChecker {
             final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
             checkSyncUpstreamsState(loadBalancerRequestId, singularityRequestId);
           } catch (Exception e) {
-            LOG.error("message", e);
+            LOG.error("Could not sync upstreams for service. singularityRequestId: {}, deployId: {}.", singularityRequestId, deployId, e);
           }
         }
       }
     }
   }
 
-  public void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
+  private void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
     Retryer<BaragonRequestState> syncingRetryer = RetryerBuilder.<BaragonRequestState>newBuilder()
         .retryIfException()
         .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
@@ -157,14 +157,14 @@ public class SingularityUpstreamChecker {
         LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
       }
     } catch (Exception e) {
-      LOG.error("Could not sync state for singularity request {}. ", singularityRequestId, e);
+      LOG.error("Could not check sync upstream state for singularity request {}. ", singularityRequestId, e);
     }
   }
 
   public void syncUpstreams() {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
       final SingularityRequest singularityRequest = singularityRequestWithState.getRequest();
-      lock.runWithRequestLock(() -> doSyncUpstreamForService(singularityRequest), singularityRequest.getId(), getClass().getSimpleName());
+      lock.runWithRequestLock(() -> doSyncUpstreamsForService(singularityRequest), singularityRequest.getId(), getClass().getSimpleName());
     }
   }
 }
