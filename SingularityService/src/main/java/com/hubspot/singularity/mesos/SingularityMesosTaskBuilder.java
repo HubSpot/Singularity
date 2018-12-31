@@ -536,6 +536,7 @@ class SingularityMesosTaskBuilder {
         uploaderAdditionalFiles.addAll(configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles());
       }
       uploaderAdditionalFiles.addAll(task.getPendingTask().getS3UploaderAdditionalFiles());
+      uploaderAdditionalFiles.addAll(task.getDeploy().getS3UploaderAdditionalFiles());
 
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
