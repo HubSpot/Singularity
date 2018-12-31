@@ -157,7 +157,7 @@ public class SingularityUpstreamChecker {
         LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
       }
     } catch (Exception e) {
-      LOG.error("message", e);
+      LOG.error("Could not sync state for singularity request {}. ", singularityRequestId, e);
     }
   }
 
