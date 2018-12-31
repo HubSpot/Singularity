@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -13,8 +14,9 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import com.github.rholder.retry.Retryer;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -32,6 +34,8 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.WaitStrategies;
 
 @Singleton
 public class SingularityUpstreamChecker {
@@ -137,21 +141,23 @@ public class SingularityUpstreamChecker {
     }
   }
 
+  private Predicate<BaragonRequestState> baragonRequestStateIsWaiting = baragonRequestState -> baragonRequestState == BaragonRequestState.WAITING;
+
   public void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
-    BaragonRequestState syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-    while (syncUpstreamsState == BaragonRequestState.WAITING) { // continue polling until it's no longer WAITING
-      LOG.info("Syncing upstreams for singularity request {} is waiting. Load balancer request id is {}.", singularityRequestId, loadBalancerRequestId.toString());
-      final long previousTime = System.currentTimeMillis();
-      while ((System.currentTimeMillis() - previousTime) < 1000) {
-        // do nothing
-        // delay for 1 second before polling for state again
+    Retryer<BaragonRequestState> syncingRetryer = RetryerBuilder.<BaragonRequestState>newBuilder()
+        .retryIfException()
+        .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
+        .retryIfResult(baragonRequestStateIsWaiting)
+        .build();
+    try {
+      BaragonRequestState syncUpstreamsState = syncingRetryer.call(() -> lbClient.getState(loadBalancerRequestId).getLoadBalancerState());
+      if (syncUpstreamsState == BaragonRequestState.SUCCESS){
+        LOG.info("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
+      } else {
+        LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
       }
-      syncUpstreamsState = lbClient.getState(loadBalancerRequestId).getLoadBalancerState();
-    }
-    if (syncUpstreamsState == BaragonRequestState.SUCCESS){
-      LOG.info("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
-    } else {
-      LOG.error("Syncing upstreams for singularity request {} is {}. Load balancer request id is {}.", singularityRequestId, syncUpstreamsState.name(), loadBalancerRequestId.toString());
+    } catch (Exception e) {
+      LOG.error("message", e);
     }
   }
 
