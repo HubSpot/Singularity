@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.cleanup;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -30,6 +31,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -89,10 +91,30 @@ public class SingularityExecutorCleanup {
     this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
-    if (cleanupConfiguration.getSingularityClientCredentials().isPresent()) {
-      singularityClientProvider.setCredentials(cleanupConfiguration.getSingularityClientCredentials().get());
+
+    Optional<SingularityClientCredentials> maybeCredentials = getClientCredentials(cleanupConfiguration, jsonObjectFileHelper);
+    if (maybeCredentials.isPresent()) {
+      singularityClientProvider.setCredentials(maybeCredentials.get());
     }
     this.singularityClient = singularityClientProvider.setSsl(cleanupConfiguration.isSingularityUseSsl()).get();
+  }
+
+  private static Optional<SingularityClientCredentials> getClientCredentials(SingularityExecutorCleanupConfiguration cleanupConfiguration, JsonObjectFileHelper jsonObjectFileHelper) {
+    try {
+      if (cleanupConfiguration.getSingularityClientCredentialsPath().isPresent()) {
+        Optional<SingularityClientCredentials> maybeCredentials = jsonObjectFileHelper.read(new File(cleanupConfiguration.getSingularityClientCredentialsPath().get()).toPath(), LOG, SingularityClientCredentials.class);
+        if (maybeCredentials.isPresent()) {
+          return maybeCredentials;
+        }
+      }
+      if (cleanupConfiguration.getSingularityClientCredentials().isPresent()) {
+        return cleanupConfiguration.getSingularityClientCredentials();
+      }
+
+      return Optional.absent();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   public SingularityExecutorCleanupStatistics clean() {
