@@ -45,6 +45,8 @@ public class SingularityHeaderPassthroughAuthenticator implements SingularityAut
       throw WebExceptions.unauthorized("(HeaderPassthrough) Could not determine username from header");
     }
 
+    LOG.trace("(HeaderPassthrough) Found user {}", maybeUsername.get());
+
     return authDatastore.getUser(maybeUsername.get());
   }
 }
