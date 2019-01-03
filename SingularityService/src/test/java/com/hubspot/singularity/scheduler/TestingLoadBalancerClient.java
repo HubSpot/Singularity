@@ -68,7 +68,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
                                                                  List<UpstreamInfo> removeUpstreams,
                                                                  SingularityDeploy deploy,
                                                                  SingularityRequest request) {
-    return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE); //TODO: confirm this
+    return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE);
   }
 
 }

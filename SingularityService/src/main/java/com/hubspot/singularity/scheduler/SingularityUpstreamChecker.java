@@ -41,7 +41,7 @@ import com.github.rholder.retry.WaitStrategies;
 public class SingularityUpstreamChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamChecker.class);
-  private static final Predicate<BaragonRequestState> IS_WAITING_STATE = baragonRequestState -> baragonRequestState == BaragonRequestState.WAITING;
+  private static final Predicate<SingularityLoadBalancerUpdate> IS_WAITING_STATE = singularityLoadBalancerUpdate -> singularityLoadBalancerUpdate.getLoadBalancerState() == BaragonRequestState.WAITING;
 
   private final LoadBalancerClient lbClient;
   private final TaskManager taskManager;
@@ -144,17 +144,17 @@ public class SingularityUpstreamChecker {
   }
 
   private void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
-    Retryer<BaragonRequestState> syncingRetryer = RetryerBuilder.<BaragonRequestState>newBuilder()
+    Retryer<SingularityLoadBalancerUpdate> syncingRetryer = RetryerBuilder.<SingularityLoadBalancerUpdate>newBuilder()
         .retryIfException()
         .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
         .retryIfResult(IS_WAITING_STATE)
         .build();
     try {
-      BaragonRequestState syncUpstreamsState = syncingRetryer.call(() -> lbClient.getState(loadBalancerRequestId).getLoadBalancerState());
-      if (syncUpstreamsState == BaragonRequestState.SUCCESS){
-        LOG.info("Syncing upstreams for singularity request {} is {}.", singularityRequestId, lbClient.getState(loadBalancerRequestId).toString());
+      SingularityLoadBalancerUpdate syncUpstreamsState = syncingRetryer.call(() -> lbClient.getState(loadBalancerRequestId));
+      if (syncUpstreamsState.getLoadBalancerState() == BaragonRequestState.SUCCESS){
+        LOG.info("Syncing upstreams for singularity request {} is {}.", singularityRequestId, syncUpstreamsState.toString());
       } else {
-        LOG.error("Syncing upstreams for singularity request {} is {}.", singularityRequestId, lbClient.getState(loadBalancerRequestId).toString());
+        LOG.error("Syncing upstreams for singularity request {} is {}.", singularityRequestId, syncUpstreamsState.toString());
       }
     } catch (Exception e) {
       LOG.error("Could not check sync upstream state for singularity request {}. ", singularityRequestId, e);
