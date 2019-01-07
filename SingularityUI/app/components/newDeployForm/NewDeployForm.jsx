@@ -549,7 +549,7 @@ class NewDeployForm extends Component {
         id = "is-shell"
         label="Shell"
         checked = {this.props.form.shell}
-        onChange = {(newValue) => this.updateField('skipHealthchecksOnDeploy', newValue)}
+        onChange = {(newValue) => this.updateField('shell', newValue)}
       />
     );
 
