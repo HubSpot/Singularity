@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
@@ -35,8 +36,8 @@ public class SingularityGCSUploader extends SingularityUploader {
 
   public SingularityGCSUploader(S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
                                 SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier,
-                                JsonObjectFileHelper jsonHelper) {
-    super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier);
+                                Lock checkFileOpenLock, JsonObjectFileHelper jsonHelper) {
+    super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier, checkFileOpenLock);
     this.storage = StorageOptions.newBuilder()
         .setCredentials(loadCredentials(uploadMetadata, jsonHelper))
         .build()

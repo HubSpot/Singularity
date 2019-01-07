@@ -32,7 +32,6 @@ module.exports = function(options) {
         'react',
         'jquery',
         'underscore',
-        'select2',
         'moment',
         'messenger',
         'bootstrap-sass',

@@ -214,6 +214,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     cacheCoordinator.activateLeaderCache();
     sms.setSubscribed();
     migrationRunner.checkMigrations();
+    configuration.getMesosConfiguration().setFrameworkId("singularity");
   }
 
   protected Offer createOffer(double cpus, double memory, double disk) {
@@ -701,8 +702,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
-    requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
-    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
+    SingularityRequest build = bldr.build();
+    requestManager.activate(build, RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(build.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
     scheduler.drainPendingQueue();
   }
 
@@ -746,7 +748,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
-    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
+    return new MesosTaskMonitorObject(null, null, "singularity", id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
 }

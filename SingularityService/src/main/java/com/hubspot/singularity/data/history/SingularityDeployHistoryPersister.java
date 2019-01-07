@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
@@ -22,6 +23,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityDeployHistoryPersister extends SingularityHistoryPersister<SingularityDeployHistory> {
@@ -30,14 +32,17 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
+  private final SingularitySchedulerLock schedulerLock;
 
   @Inject
   public SingularityDeployHistoryPersister(SingularityConfiguration configuration,
                                            DeployManager deployManager,
                                            HistoryManager historyManager,
+                                           SingularitySchedulerLock schedulerLock,
                                            @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
     super(configuration, persisterLock);
 
+    this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
@@ -56,8 +61,8 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
       final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
       final TreeMultimap<String, SingularityDeployHistory> deployHistoryByRequestId = TreeMultimap.create();
 
-      int numTotal = 0;
-      int numTransferred = 0;
+      final LongAdder numTotal = new LongAdder();
+      final LongAdder numTransferred = new LongAdder();
 
       for (SingularityDeployKey deployKey : allDeployIds) {
         SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
@@ -75,15 +80,17 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
         }
       }
 
-      for (Collection<SingularityDeployHistory> deployHistoryForRequest : deployHistoryByRequestId.asMap().values()) {
-        int i = 0;
-        for (SingularityDeployHistory deployHistory : deployHistoryForRequest) {
-          if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
-            numTransferred++;
-          }
+      for (Map.Entry<String, Collection<SingularityDeployHistory>> deployHistoryForRequest : deployHistoryByRequestId.asMap().entrySet()) {
+        schedulerLock.runWithRequestLock(() -> {
+          int i = 0;
+          for (SingularityDeployHistory deployHistory : deployHistoryForRequest.getValue()) {
+            if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
+              numTransferred.increment();
+            }
 
-          numTotal++;
-        }
+            numTotal.increment();
+          }
+        }, deployHistoryForRequest.getKey(), getClass().getSimpleName());
       }
 
       LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));

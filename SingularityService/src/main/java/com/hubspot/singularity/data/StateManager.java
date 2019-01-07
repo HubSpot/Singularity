@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityHostState;
@@ -66,6 +67,7 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
   private final PriorityManager priorityManager;
   private final AtomicLong statusUpdateDeltaAvg;
+  private final AtomicLong lastHeartbeatTime;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework,
@@ -82,7 +84,8 @@ public class StateManager extends CuratorManager {
                       SingularityAuthDatastore authDatastore,
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
-                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                      @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -97,6 +100,7 @@ public class StateManager extends CuratorManager {
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
     this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
   public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
@@ -289,11 +293,23 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
+    final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
+        .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
+    final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
+    final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
+
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getNumLateTasks(),
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
-        statusUpdateDeltaAvg.get());
+        statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
+  }
+
+  private boolean requestTypeIsOnDemand(SingularityPendingTaskId taskId) {
+    if (requestManager.getRequest(taskId.getRequestId()).isPresent()) {
+      return requestManager.getRequest(taskId.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND);
+    }
+    return false;
   }
 
   private Map<String, Long> getNumTasks(List<SingularityRequestWithState> requests) {

@@ -107,7 +107,7 @@ These settings are less likely to be changed, but were included in the configura
 | checkSchedulerEverySeconds | 5 | Runs scheduler checks (processes decommissions and pending queue) on this interval (these tasks also run when an offer is received) | long | 
 | checkWebhooksEveryMillis | 10000 (10 seconds) | Will check for and send new queued webhooks on this interval | long | 
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
-| persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
+| persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into the database, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
 | checkJobsEveryMillis | 600000 (10 mins) | Check for jobs running longer than the expected time on this interval | long |
 | checkExpiringUserActionEveryMillis | 45000 | Check for expiring actions that should be expired on this interval | long |
@@ -130,7 +130,7 @@ These settings are less likely to be changed, but were included in the configura
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | closeWaitSeconds | 5 | Will wait at least this many seconds when shutting down thread pools | long | 
-| compressLargeDataObjects | true | Will compress larger objects inside of ZooKeeper and MySQL | boolean |
+| compressLargeDataObjects | true | Will compress larger objects inside of ZooKeeper and the database | boolean |
 | maxHealthcheckResponseBodyBytes | 8192 | Number of bytes to save from healthcheck responses (displayed in UI) | int | 
 | maxQueuedUpdatesPerWebhook | 50 | Max number of updates to queue for a given webhook url, after which some webhooks will not be delivered | int | 
 | zookeeperAsyncTimeout | 5000 | Milliseconds for ZooKeeper timeout. Calls to ZooKeeper which take over this timeout will cause the operations to fail and Singularity to abort | long | 

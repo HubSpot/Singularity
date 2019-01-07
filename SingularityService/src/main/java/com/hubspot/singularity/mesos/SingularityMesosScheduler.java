@@ -172,6 +172,8 @@ public abstract class SingularityMesosScheduler {
 
   public abstract Optional<Long> getLastOfferTimestamp();
 
+  public abstract Optional<Double> getHeartbeatIntervalSeconds();
+
   /*
    * for testing only
    */

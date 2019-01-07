@@ -129,13 +129,28 @@ function TaskFileBrowser (props) {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(file) => !file.isDirectory && (
-            <OverlayTrigger placement="left" overlay={<ToolTip id={`downloadFile${file.name}`}>Download {file.name}</ToolTip>}>
-              <a href={file.downloadLink}>
-                <Glyphicon glyph="download-alt" />
-              </a>
-            </OverlayTrigger>
-          )}
+          cellData={(file) => {
+            const download = !file.isDirectory && (
+              <OverlayTrigger placement="left" overlay={<ToolTip id={`downloadFile${file.name}`}>Download {file.name}</ToolTip>}>
+                <a href={file.downloadLink}>
+                  <Glyphicon glyph="download-alt" />
+                </a>
+              </OverlayTrigger>
+            );
+            const open = !file.isDirectory && file.openLink && (
+              <OverlayTrigger placement="left" overlay={<ToolTip id={`openFile${file.name}`}>Open {file.name}</ToolTip>}>
+                <a href={file.openLink}>
+                  <Glyphicon glyph="open-file" />
+                </a>
+              </OverlayTrigger>
+            )
+            return (
+              <div>
+                {open}
+                {download}
+              </div>
+            );
+          }}
         />
       </UITable>
     </div>

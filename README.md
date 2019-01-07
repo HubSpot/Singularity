@@ -59,6 +59,7 @@ Then simply run `docker-compose up` and it will start containers for...
  - [ZooKeeper](https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html) 
  - Java 7+
  - [MySQL](http://dev.mysql.com/usingmysql/get_started.html) (optional)
+ - PostgreSQL (optional)
 
 ##### Contact #####
 
@@ -75,7 +76,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 #### Deployment ####
 
- - [API](Docs/reference/apidocs/api-index.md)
+ - [API](Docs/reference/api.html)
  - [Configuration](Docs/reference/configuration.md)
  - [Examples](Docs/getting-started/basic-examples.md)
  - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)

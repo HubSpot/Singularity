@@ -4,9 +4,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -24,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -48,6 +51,7 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.MetadataManager;
+import com.hubspot.singularity.data.NotificationsManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -80,6 +84,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private final MailTemplateHelpers mailTemplateHelpers;
 
   private final DisasterManager disasterManager;
+  private final NotificationsManager notificationsManager;
 
   private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
@@ -92,6 +97,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       SingularityExceptionNotifier exceptionNotifier,
       MailTemplateHelpers mailTemplateHelpers,
       DisasterManager disasterManager,
+      NotificationsManager notificationsManager,
       @Named(SingularityMainModule.TASK_TEMPLATE) JadeTemplate taskTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
@@ -116,6 +122,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.disastersTemplate = disastersTemplate;
     this.replacementTasksFailingTemplate = replacementTasksFailingTemplate;
     this.disasterManager = disasterManager;
+    this.notificationsManager = notificationsManager;
 
     this.mailPreparerExecutorService = JavaUtils.newFixedTimingOutThreadPool(smtpConfiguration.getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d");
   }
@@ -714,8 +721,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
       body = Jade4J.render(rateLimitedTemplate, getRateLimitTemplateProperties(request, emailType));
     }
 
-    final List<String> toList = Lists.newArrayList();
-    final List<String> ccList = Lists.newArrayList();
+    final Set<String> toList = new HashSet<>();
+    final Set<String> ccList = new HashSet<>();
 
     // Decide where to send this email.
     if (destination.contains(SingularityEmailDestination.OWNERS) && request.getOwners().isPresent() && !request.getOwners().get().isEmpty()) {
@@ -743,6 +750,10 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
-    smtpSender.queueMail(toList, ccList, subject, body);
+    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlacklist());
+    toList.removeAll(emailBlacklist);
+    ccList.removeAll(emailBlacklist);
+
+    smtpSender.queueMail(Lists.newArrayList(toList), Lists.newArrayList(ccList), subject, body);
   }
 }

@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.21.0-SNAPSHOT</version>
+    <version>0.22.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -14,6 +14,17 @@
     <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
   </properties>
 
+  <dependencyManagement>
+    <!-- TODO: Push up to hubspot basepom? -->
+    <dependencies>
+      <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.2.4</version>
+      <scope>runtime</scope>
+    </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
 
     <dependency>
@@ -117,17 +128,17 @@
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-protobuf-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-util</artifactId>
     </dependency>
 
@@ -408,11 +419,21 @@
       <artifactId>mysql-connector-java</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>stringtemplate</artifactId>
       <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
     </dependency>
 
     <!-- for jade -->

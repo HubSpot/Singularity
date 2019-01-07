@@ -112,6 +112,7 @@ public class SingularityMainModule implements Module {
 
   public static final String STATUS_UPDATE_DELTA_30S_AVERAGE = "singularity.status.update.delta.minute.average";
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
+  public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME = "singularity.last.mesos.master.heartbeat.time";
 
   private final SingularityConfiguration configuration;
 
@@ -407,5 +408,12 @@ public class SingularityMainModule implements Module {
   @Named(STATUS_UPDATE_DELTAS)
   public ConcurrentHashMap<Long, Long> provideUpdateDeltasMap() {
     return new ConcurrentHashMap<>();
+  }
+
+  @Provides
+  @Singleton
+  @Named(LAST_MESOS_MASTER_HEARTBEAT_TIME)
+  public AtomicLong provideLastHeartbeatTime() {
+    return new AtomicLong(0);
   }
 }

@@ -6,7 +6,7 @@ zk:
     ZK_ID: 1
 
 master:
-  image: mesosphere/mesos-master:1.1.1
+  image: mesosphere/mesos-master:1.6.1-rc2
   net: host
   environment:
     MESOS_ZK: zk://localhost:2181/mesos
@@ -18,7 +18,7 @@ master:
     MESOS_ROLES: "OPS"
 
 slave:
-  image: hubspot/singularityexecutorslave:0.21.0-SNAPSHOT
+  image: hubspot/singularityexecutorslave:0.22.0-SNAPSHOT
   command: mesos-slave
   net: host
   environment:
@@ -31,12 +31,13 @@ slave:
     MESOS_ATTRIBUTES: "example:value;myNumber:1"
     MESOS_ISOLATION: cgroups/cpu,cgroups/mem
     MESOS_WORK_DIR: /var/lib/mesos/agent
+    MESOS_SYSTEMD_ENABLE_SUPPORT: "false"
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.21.0-SNAPSHOT
+  image: hubspot/singularityservice:0.22.0-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST
@@ -47,7 +48,7 @@ scheduler:
     - SINGULARITY_MESOS_MASTER=${DOCKER_IP}:5050
 
 baragonservice:
-  image: hubspot/baragonservice:0.6.1
+  image: hubspot/baragonservice:0.6.2
   net: host
   environment:
     - DOCKER_HOST
@@ -55,7 +56,7 @@ baragonservice:
     - BARAGON_UI_BASE=/baragon/v2
 
 baragonagent:
-  image: hubspot/baragonagent:0.6.1
+  image: hubspot/baragonagent:0.6.2
   net: host
   environment:
     NGINX_PORT: 80

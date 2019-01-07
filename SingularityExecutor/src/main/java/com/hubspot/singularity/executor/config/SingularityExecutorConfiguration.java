@@ -123,6 +123,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String logrotateExtrasDateformat = "%Y%m%d";
 
+  @JsonProperty
+  private boolean ignoreLogrotateOutput = false;
+
   @NotNull
   @JsonProperty
   private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
@@ -226,7 +229,16 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean useFileAttributes = false;
 
+  @JsonProperty
+  private int defaultHealthcheckMaxRetries = 6;
+
   private int defaultCfsPeriod = 100000;
+
+  private String extraScriptContent = "";
+
+  private String extraDockerScriptContent = "";
+
+  private Optional<Long> maxServiceLogSizeMb = Optional.absent();
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -354,6 +366,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public String getLogrotateExtrasDateformat() {
     return logrotateExtrasDateformat;
+  }
+
+  public boolean isIgnoreLogrotateOutput() {
+    return ignoreLogrotateOutput;
+  }
+
+  public void setIgnoreLogrotateOutput(boolean ignoreLogrotateOutput) {
+    this.ignoreLogrotateOutput = ignoreLogrotateOutput;
   }
 
   public int getTailLogLinesToSave() {
@@ -666,6 +686,40 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return this;
   }
 
+  public String getExtraScriptContent() {
+    return extraScriptContent;
+  }
+
+  public void setExtraScriptContent(String extraScriptContent) {
+    this.extraScriptContent = extraScriptContent;
+  }
+
+  public String getExtraDockerScriptContent() {
+    return extraDockerScriptContent;
+  }
+
+  public void setExtraDockerScriptContent(String extraDockerScriptContent) {
+    this.extraDockerScriptContent = extraDockerScriptContent;
+  }
+
+
+  public int getDefaultHealthcheckMaxRetries() {
+    return defaultHealthcheckMaxRetries;
+  }
+
+  public void setDefaultHealthcheckMaxRetries(int defaultHealthcheckMaxRetries) {
+    this.defaultHealthcheckMaxRetries = defaultHealthcheckMaxRetries;
+  }
+
+  public Optional<Long> getMaxServiceLogSizeMb() {
+    return maxServiceLogSizeMb;
+  }
+
+  public void setMaxServiceLogSizeMb(Optional<Long> maxServiceLogSizeMb) {
+    this.maxServiceLogSizeMb = maxServiceLogSizeMb;
+
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
@@ -721,6 +775,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
         ", defaultCfsPeriod=" + defaultCfsPeriod +
+        ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
         "} " + super.toString();
   }
 }

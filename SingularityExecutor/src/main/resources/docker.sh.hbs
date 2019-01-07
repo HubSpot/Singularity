@@ -12,10 +12,8 @@ CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
 
 CURRENT_DIR=`pwd`
 
-user={{#shellQuote  runContext.user}}{{/shellQuote}}
-
 function check_contianer_running {
-  status=`sudo -E -H -u "$user" docker inspect -f \{{.State.Running}} $1`
+  status=`docker inspect -f \{{.State.Running}} $1`
   if [ "$status" = "false" ] ; then
     echo "container is no longer running..."
     running=0
@@ -34,11 +32,11 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  echo "Stopping via sudo -E -H -u "$user" docker stop -t $STOP_TIME $1"
-  sudo -E -H -u "$user" docker stop -t $STOP_TIME "$1"
-  exit_code=`sudo -E -H -u "$user" docker wait "$cid"`
+  echo "Stopping via docker stop -t $STOP_TIME $1"
+  docker stop -t $STOP_TIME "$1"
+  exit_code=`docker wait "$cid"`
   echo "Attempting to remove container"
-  sudo -E -H -u "$user" docker rm $1
+  docker rm $1
   exit "$exit_code"
 }
 
@@ -97,7 +95,6 @@ echo "{{{name}}}=${{{name}}}" >> docker.env
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
   echo "Creating log directory ({{{ runContext.logDir }}})..."
   mkdir -p {{{ runContext.logDir }}}
-  sudo chown -R "$user" {{{ runContext.logDir }}}
 fi
 
 # load artifact's profile.d
@@ -156,22 +153,21 @@ DOCKER_OPTIONS+=(--privileged)
 DOCKER_OPTIONS+=({{this}})
 {{/each}}
 
-echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by $user"
 mkdir -p {{{ runContext.taskAppDirectory }}}
-sudo chown -R "$user" {{{ runContext.taskAppDirectory }}}
 
 {{#if runContext.useFileAttributes}}
 touch {{{ runContext.logFile }}}
-sudo chown "$user" {{{ runContext.logFile }}}
 setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile }}}
 {{/if}}
 
+{{{ runContext.extraScriptContent }}}
+
 # Start up the container
 env_args=({{#each envContext.env}}{{#ifHasNewLinesOrBackticks value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLinesOrBackticks}}{{/each}})
-cmd=(sudo -E -H -u "$user" docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
+cmd=(docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
 echo -e "Creating container with: ${cmd[*]}"
 cid="$("${cmd[@]}")"
-sudo -E -H -u "$user" docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
@@ -185,5 +181,5 @@ while true; do
   fi
 done
 
-exit_code=`sudo -E -H -u "$user" docker wait "$cid"`
+exit_code=`docker wait "$cid"`
 exit "$exit_code"

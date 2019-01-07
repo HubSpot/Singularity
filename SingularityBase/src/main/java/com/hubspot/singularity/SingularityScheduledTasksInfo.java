@@ -1,23 +1,28 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SingularityScheduledTasksInfo {
 
-  private final int numLateTasks;
   private final int numFutureTasks;
   private final long maxTaskLag;
   private final long timestamp;
+  private final List<SingularityPendingTaskId> lateTasks;
 
-  private SingularityScheduledTasksInfo(int numLateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
-    this.numLateTasks = numLateTasks;
+  private SingularityScheduledTasksInfo(List<SingularityPendingTaskId> lateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
+    this.lateTasks = lateTasks;
     this.numFutureTasks = numFutureTasks;
     this.maxTaskLag = maxTaskLag;
     this.timestamp = timestamp;
   }
 
+  public List<SingularityPendingTaskId> getLateTasks() {
+    return lateTasks;
+  }
+
   public int getNumLateTasks() {
-    return numLateTasks;
+    return getLateTasks().size();
   }
 
   public int getNumFutureTasks() {
@@ -35,15 +40,15 @@ public class SingularityScheduledTasksInfo {
   public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTask> pendingTasks, long millisDeltaForLateTasks) {
     final long now = System.currentTimeMillis();
 
-    int numLateTasks = 0;
     int numFutureTasks = 0;
     long maxTaskLag = 0;
+    List<SingularityPendingTaskId> lateTasks = new ArrayList<>();
 
     for (SingularityPendingTask pendingTask : pendingTasks) {
       long delta = now - pendingTask.getPendingTaskId().getNextRunAt();
 
       if (delta > millisDeltaForLateTasks) {
-        numLateTasks++;
+        lateTasks.add(pendingTask.getPendingTaskId());
       } else {
         numFutureTasks++;
       }
@@ -53,6 +58,6 @@ public class SingularityScheduledTasksInfo {
       }
     }
 
-    return new SingularityScheduledTasksInfo(numLateTasks, numFutureTasks, maxTaskLag, now);
+    return new SingularityScheduledTasksInfo(lateTasks, numFutureTasks, maxTaskLag, now);
   }
 }
