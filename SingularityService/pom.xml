@@ -14,17 +14,6 @@
     <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
   </properties>
 
-  <dependencyManagement>
-    <!-- TODO: Push up to hubspot basepom? -->
-    <dependencies>
-      <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>42.2.4</version>
-      <scope>runtime</scope>
-    </dependency>
-    </dependencies>
-  </dependencyManagement>
   <dependencies>
 
     <dependency>
@@ -419,11 +408,6 @@
       <artifactId>mysql-connector-java</artifactId>
       <scope>runtime</scope>
     </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <scope>runtime</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.antlr</groupId>
@@ -497,6 +481,30 @@
 
   <profiles>
     <profile>
+      <id>postgresql</id>
+      <properties>
+        <singularitybase.db.driver>postgres</singularitybase.db.driver>
+      </properties>
+      <dependencyManagement>
+        <!-- TODO: Push up to hubspot basepom? -->
+        <dependencies>
+          <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>42.2.4</version>
+          <scope>runtime</scope>
+        </dependency>
+        </dependencies>
+      </dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
       <id>build-docker-image</id>
       <activation>
         <property>
@@ -546,7 +554,7 @@
                             <outputDirectory>/</outputDirectory>
                           </file>
                           <file>
-                            <source>${project.basedir}/../mysql/migrations.sql</source>
+                            <source>${project.basedir}/../${singularitybase.db.driver}/migrations.sql</source>
                             <destName>migrations.sql</destName>
                             <outputDirectory>/etc/singularity</outputDirectory>
                           </file>
