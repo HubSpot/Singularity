@@ -428,7 +428,6 @@ class NewDeployForm extends Component {
       this.copyFieldsToObject(deployObject, FIELDS.healthChecker, (fieldId) => this.getValueOrDefault(fieldId));
     }
     deployObject.requestId = this.props.request.request.id;
-    deployObject.shell = true;
     this.props.save({deploy: deployObject});
   }
 
@@ -544,6 +543,14 @@ class NewDeployForm extends Component {
         couldHaveFeedback={true}
       />
     );
+    const shell = (
+      <CheckboxFormGroup
+        id = "is-shell"
+        label="Shell"
+        checked = {this.props.form.shell}
+        onChange = {(newValue) => this.updateField('shell', newValue)}
+      />
+    );
 
     return (
       <div>
@@ -551,6 +558,7 @@ class NewDeployForm extends Component {
           <h4>Default Executor Settings</h4>
           {command}
           {cmdLineArguments}
+          {shell}
           {this.renderMesosArtifacts()}
 
           <div id="mesos-artifact-button-row" className="row">
