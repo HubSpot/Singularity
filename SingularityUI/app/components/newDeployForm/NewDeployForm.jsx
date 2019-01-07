@@ -428,7 +428,6 @@ class NewDeployForm extends Component {
       this.copyFieldsToObject(deployObject, FIELDS.healthChecker, (fieldId) => this.getValueOrDefault(fieldId));
     }
     deployObject.requestId = this.props.request.request.id;
-    deployObject.shell = true;
     this.props.save({deploy: deployObject});
   }
 
