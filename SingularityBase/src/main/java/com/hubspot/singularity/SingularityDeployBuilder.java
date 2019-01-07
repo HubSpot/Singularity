@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,6 +105,7 @@ public class SingularityDeployBuilder {
   private Optional<Integer> maxTaskRetries;
   private Optional<Boolean> shell;
   private Optional<String> user;
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -154,13 +156,14 @@ public class SingularityDeployBuilder {
     this.maxTaskRetries = Optional.absent();
     this.shell = Optional.absent();
     this.user = Optional.absent();
+    this.s3UploaderAdditionalFiles = Collections.emptyList();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
       env, taskEnv, runImmediately, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user, s3UploaderAdditionalFiles);
   }
 
   public String getRequestId() {
@@ -594,6 +597,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public SingularityDeployBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -644,6 +656,7 @@ public class SingularityDeployBuilder {
         ", maxTaskRetries=" + maxTaskRetries +
         ", shell=" + shell +
         ", user=" + user +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         '}';
   }
 }
