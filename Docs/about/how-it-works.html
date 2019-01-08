@@ -51,7 +51,7 @@
         data-chapter-title="How It Works"
         data-filepath="Docs/about/how-it-works.md"
         data-basepath="../.."
-        data-revision="Fri Sep 28 2018 10:04:01 GMT-0400 (EDT)"
+        data-revision="Tue Jan 08 2019 11:41:52 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -581,17 +581,33 @@
             
         </li>
     
-        <li class="chapter " data-level="6.8" >
+        <li class="chapter " data-level="6.8" data-path="Docs/reference/api.html">
             
-            <span><b>6.8.</b> &lt;a href=&quot;./Docs/reference/api.html&quot;&gt;API Reference&lt;/a&gt;</span>
+                
+                    <a href="../../Docs/reference/api.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.</b>
+                        
+                        API Reference
+                    </a>
             
             
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="6.8.1" >
+        <li class="chapter " data-level="6.8.1" data-path="Docs/reference/openapi.html">
             
-            <span><b>6.8.1.</b> &lt;a href=&quot;./Docs/reference/openapi.json&quot;&gt;OpenAPI JSON&lt;/a&gt;</span>
+                
+                    <a href="../../Docs/reference/openapi.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.1.</b>
+                        
+                        OpenAPI JSON
+                    </a>
             
             
         </li>
@@ -644,7 +660,7 @@
 <p><img src="../images/HubSpot_PaaS.png" alt="HubSpot PaaS"></p>
 <p>Singularity is an essential part of the HubSpot Platform and is ideal for deploying micro-services. It is optimized to manage thousands of concurrently running processes in hundreds of servers.</p>
 <h2 id="how-it-works">How it Works</h2>
-<p>Singularity is an <a href="http://mesos.apache.org/documentation/latest/mesos-frameworks/" target="_blank"><strong>Apache Mesos framework</strong></a>. It runs as a <em>task scheduler</em> on top of <strong>Mesos Clusters</strong> taking advantage of Apache Mesos&apos; scalability, fault-tolerance, and resource isolation. <a href="http://mesos.apache.org/documentation/latest/mesos-architecture/" target="_blank">Apache Mesos</a> is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, <em>Mesos applications</em> that use the Mesos APIs to schedule tasks in a cluster are called <a href="http://mesos.apache.org/documentation/latest/app-framework-development-guide/" target="_blank"><em>frameworks</em></a>.</p>
+<p>Singularity is an <a href="http://mesos.apache.org/documentation/latest/frameworks/" target="_blank"><strong>Apache Mesos framework</strong></a>. It runs as a <em>task scheduler</em> on top of <strong>Mesos Clusters</strong> taking advantage of Apache Mesos&apos; scalability, fault-tolerance, and resource isolation. <a href="http://mesos.apache.org/documentation/latest/architecture/" target="_blank">Apache Mesos</a> is a cluster manager that simplifies the complexity of running different types of applications on a shared pool of servers. In Mesos terminology, <em>Mesos applications</em> that use the Mesos APIs to schedule tasks in a cluster are called <a href="http://mesos.apache.org/documentation/latest/app-framework-development-guide/" target="_blank"><em>frameworks</em></a>.</p>
 <p><img src="../images/Mesos_Frameworks.png" alt="Mesos Frameworks"></p>
 <p>There are different types of frameworks and most frameworks concentrate on a specific type of task (e.g. long-running vs scheduled cron-type jobs) or supporting a specific domain and relevant technology (e.g. data processing with hadoop jobs vs data processing with spark). </p>
 <p>Singularity tries to be more generic by combining <strong>long-running tasks</strong> and <strong>job scheduling</strong> functionality in one framework to support many of the common process types that developers need to deploy every day to build modern web applications and services. While Mesos allows multiple frameworks to run in parallel, it greatly simplifies the PaaS architecture by having a consistent and uniform set of abstractions and APIs for handling deployments across the organization. Additionally, it reduces the amount of framework boilerplate that must be supported - as all Mesos frameworks must keep state, handle failures, and properly interact with the Mesos APIs. These are the main reasons HubSpot engineers initiated the development of a new framework. As of this moment, Singularity supports the following process types:</p>

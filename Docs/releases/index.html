@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Fri Sep 28 2018 10:04:01 GMT-0400 (EDT)"
+        data-revision="Tue Jan 08 2019 11:41:52 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -581,17 +581,33 @@
             
         </li>
     
-        <li class="chapter " data-level="6.8" >
+        <li class="chapter " data-level="6.8" data-path="Docs/reference/api.html">
             
-            <span><b>6.8.</b> &lt;a href=&quot;./Docs/reference/api.html&quot;&gt;API Reference&lt;/a&gt;</span>
+                
+                    <a href="../../Docs/reference/api.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.</b>
+                        
+                        API Reference
+                    </a>
             
             
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="6.8.1" >
+        <li class="chapter " data-level="6.8.1" data-path="Docs/reference/openapi.html">
             
-            <span><b>6.8.1.</b> &lt;a href=&quot;./Docs/reference/openapi.json&quot;&gt;OpenAPI JSON&lt;/a&gt;</span>
+                
+                    <a href="../../Docs/reference/openapi.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.1.</b>
+                        
+                        OpenAPI JSON
+                    </a>
             
             
         </li>
@@ -641,6 +657,7 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-0220">Changes in 0.22.0</a></li>
 <li><a href="#changes-in-0210">Changes in 0.21.0</a></li>
 <li><a href="#changes-in-0201">Changes in 0.20.1</a></li>
 <li><a href="#changes-in-0200">Changes in 0.20.0</a></li>
@@ -680,6 +697,51 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-0220">Changes in <code>0.22.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/39?closed=1" target="_blank">0.22.0 milestone</a> to see new features / bugfixes in detail. <code>0.22.0</code> represents an <a href="https://github.com/HubSpot/Singularity/pull/1867" target="_blank">upgrade to mesos <code>1.6.1</code></a>. This also includes an upgrade to protobuf 3 and a move to a separate fork of mesos-rxjava. Instuctions for upgrading mesos can be found <a href="http://mesos.apache.org/documentation/latest/upgrades/" target="_blank">here</a>. In internal testing we found communications between old mesos master/upgraded scheduler and vice versa were both backwards compatible back to mesos <code>1.1.0</code>.</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1873" target="_blank">1873</a> - Non-http health checks</li>
+</ul>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1893" target="_blank">1893</a> - Use a profile to build for postgresql</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1894" target="_blank">1894</a> - Add trace logging for header passthrough authenticator</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1895" target="_blank">1895</a> - Add option to specify executor cleanup creds in file</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1885" target="_blank">1885</a> - Add guava/jdk8 modules to default SingularityClient object mapper</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1887" target="_blank">1887</a> - Remove all switch user bits from docker wrapper</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1880" target="_blank">1880</a> - Improve ExtendedTaskState readability</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1888" target="_blank">1888</a> - Report uploader/downloader metrics by writing to a file.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1891" target="_blank">1891</a> - Add ability to set uploader additional files at deploy level</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1849" target="_blank">1849</a> - Slave attribute minimums</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1876" target="_blank">1876</a> - Better alerting for task lag</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1877" target="_blank">1877</a> - Update alert banner to only show when there&apos;s a widespread issue for task lag</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1878" target="_blank">1878</a> - Add support for inactive task history filtered by deploy ID</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1875" target="_blank">1875</a> - Ability to rotate at a max service log size</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1854" target="_blank">1854</a> - Ability to open sandbox files from SingularityUI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1867" target="_blank">1867</a> - Upgrade to mesos 1.6.1 and fork of mesos-rxjava</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1869" target="_blank">1869</a> - Faster run now enqueue</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1860" target="_blank">1860</a> - Make SingularityUI snappier</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1882" target="_blank">1882</a> - Be sure to remove expiring bounces when a bounce completes</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1847" target="_blank">1847</a> - Ability to set &apos;shell&apos; in deploy ui</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1883" target="_blank">1883</a> - Acquire a request-level lock when persisting deploy history.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1879" target="_blank">1879</a> - Make task history paging less flaky</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1881" target="_blank">1881</a> - Don&apos;t count pending tasks limited by instance count in task lag </li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1874" target="_blank">1874</a> - Additional updates for backpressure handling</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1853" target="_blank">1853</a> - Failover when we miss Mesos Master heartbeats.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1868" target="_blank">1868</a> - Email unsubscription bugfix</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1866" target="_blank">1866</a> - Clean up logrotate files sooner</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1871" target="_blank">1871</a> - Add ability to ignore logrotate hourly output</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1863" target="_blank">1863</a> - Grab the request lock when persisting request/deploy history</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1884" target="_blank">1884</a> - Fix broken docs link</li>
+</ul>
+<hr>
 <h2 id="changes-in-0210">Changes in <code>0.21.0</code></h2>
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.21.0+is%3Aclosed" target="_blank">0.21.0 milestone</a> to see new features / bugfixes in detail.</p>
 <h3 id="new-features">New Features</h3>
