@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -105,10 +104,9 @@ public class SingularityUpstreamChecker {
   }
 
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) throws Exception {
-    final String singularityRequestId = singularityRequest.getId();
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(singularityRequestId, LoadBalancerRequestType.REMOVE, Optional.absent());
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
     Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getLoadBalancerUpstreamsForRequest(loadBalancerRequestId.toString());
-    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequestId, loadBalancerUpstreamGroup);
+    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
     final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
     LOG.info("Making and sending load balancer request to remove {} extra upstreams. The upstreams removed are: {}.", extraUpstreams.size(), extraUpstreams);
     return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
