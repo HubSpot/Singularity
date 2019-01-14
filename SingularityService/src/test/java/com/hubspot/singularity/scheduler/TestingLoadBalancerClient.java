@@ -53,7 +53,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId) {
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId requestId) {
     return Collections.emptyList();
   }
 

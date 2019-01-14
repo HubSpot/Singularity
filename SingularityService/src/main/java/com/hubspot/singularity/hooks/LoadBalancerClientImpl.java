@@ -76,11 +76,11 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return loadBalancerUri.replace("request", "state");
   }
 
-  private String getLoadBalancerStateUri(String loadBalancerRequestId){
+  private String getLoadBalancerStateUri(LoadBalancerRequestId loadBalancerRequestId){
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(String loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
@@ -93,7 +93,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
   }
 
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
     Optional<BaragonServiceState> maybeBaragonServiceState = getLoadBalancerServiceStateForLoadBalancerRequest(loadBalancerRequestId);
     if (maybeBaragonServiceState.isPresent()){
       BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
