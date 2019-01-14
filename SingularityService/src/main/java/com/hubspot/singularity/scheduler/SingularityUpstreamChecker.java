@@ -22,6 +22,7 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
@@ -103,13 +104,19 @@ public class SingularityUpstreamChecker {
     return new ArrayList<>(upstreamsInBaragonForRequest);
   }
 
-  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) throws Exception {
+  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup){
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
-    Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getLoadBalancerUpstreamsForRequest(loadBalancerRequestId.toString());
-    Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
-    final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
-    LOG.info("Making and sending load balancer request to remove {} extra upstreams. The upstreams removed are: {}.", extraUpstreams.size(), extraUpstreams);
-    return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
+    final long start = System.currentTimeMillis();
+    try {
+      Collection<UpstreamInfo> upstreamsInBaragonForRequest = lbClient.getLoadBalancerUpstreamsForLoadBalancerRequest(loadBalancerRequestId);
+      Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
+      final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInBaragonForRequest, upstreamsInSingularityForRequest);
+      LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
+      return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
+    } catch (Exception e) {
+      LOG.error("Could not sync for service {}. Load balancer request {} threw error {}", singularityRequest.getId(), loadBalancerRequestId, e);
+      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(String.format("Exception %s - %s", e.getClass().getSimpleName(), e.getMessage())), start, LoadBalancerMethod.CHECK_STATE, Optional.absent());
+    }
   }
 
   private boolean noPendingDeploy() {
@@ -127,14 +134,8 @@ public class SingularityUpstreamChecker {
         if (maybeDeploy.isPresent()) {
           final SingularityDeploy deploy = maybeDeploy.get();
           final Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
-          final SingularityLoadBalancerUpdate syncUpstreamsUpdate;
-          try {
-            syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
-            final LoadBalancerRequestId loadBalancerRequestId = syncUpstreamsUpdate.getLoadBalancerRequestId();
-            checkSyncUpstreamsState(loadBalancerRequestId, singularityRequestId);
-          } catch (Exception e) {
-            LOG.error("Could not sync upstreams for service. singularityRequestId: {}, deployId: {}.", singularityRequestId, deployId, e);
-          }
+          final SingularityLoadBalancerUpdate syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
+          checkSyncUpstreamsState(syncUpstreamsUpdate.getLoadBalancerRequestId(), singularityRequestId);
         }
       }
     }

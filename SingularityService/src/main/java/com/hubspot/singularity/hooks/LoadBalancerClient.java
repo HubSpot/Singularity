@@ -25,7 +25,7 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath);
 
-  Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String requestId) throws InterruptedException, ExecutionException, TimeoutException, IOException;
+  Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId requestId) throws InterruptedException, ExecutionException, TimeoutException, IOException;
 
   List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup);
 

@@ -76,24 +76,25 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return loadBalancerUri.replace("request", "state");
   }
 
-  private String getLoadBalancerStateUri(String loadBalancerRequestId){
+  private String getLoadBalancerStateUri(LoadBalancerRequestId loadBalancerRequestId){
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(String loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
+    if (loadBalancerQueryParams.isPresent()) {
+      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
+    }
     final Request request = requestBuilder.build();
-
+    LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
     ListenableFuture<Response> future = httpClient.executeRequest(request);
     Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
-    if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
-      LOG.info(String.format("Response status code %s", response.getStatusCode()));
-    }
+    LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
     return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
   }
 
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForRequest(String loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
     Optional<BaragonServiceState> maybeBaragonServiceState = getLoadBalancerServiceStateForLoadBalancerRequest(loadBalancerRequestId);
     if (maybeBaragonServiceState.isPresent()){
       BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
