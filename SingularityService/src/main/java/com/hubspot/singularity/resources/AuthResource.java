@@ -77,7 +77,7 @@ public class AuthResource {
   }
 
   @GET
-  @Path("/{requestId}/auth-check}")
+  @Path("/{requestId}/auth-check")
   @Operation(
       summary = "Check if the specified user is authorized for a request",
       responses = {
