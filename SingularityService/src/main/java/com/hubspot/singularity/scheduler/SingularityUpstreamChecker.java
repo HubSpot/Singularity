@@ -86,12 +86,6 @@ public class SingularityUpstreamChecker {
     return lbClient.getUpstreamsForTasks(getActiveHealthyTasksForRequest(singularityRequestId), singularityRequestId, loadBalancerUpstreamGroup);
   }
 
-  private boolean isEqualUpstreamGroupRackId(UpstreamInfo upstream1, UpstreamInfo upstream2){
-    return (upstream1.getUpstream().equals(upstream2.getUpstream()))
-        && (upstream1.getGroup().equals(upstream2.getGroup()))
-        && (upstream1.getRackId().equals(upstream2.getRackId()));
-  }
-
   /**
    * @param upstream
    * @param upstreams
@@ -99,7 +93,7 @@ public class SingularityUpstreamChecker {
    * We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
    */
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
-    return upstreams.stream().filter(candidate -> isEqualUpstreamGroupRackId(candidate, upstream)).collect(Collectors.toList());
+    return upstreams.stream().filter(candidate -> UpstreamInfo.upstreamAndGroupMatches(candidate, upstream)).collect(Collectors.toList());
   }
 
   private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
