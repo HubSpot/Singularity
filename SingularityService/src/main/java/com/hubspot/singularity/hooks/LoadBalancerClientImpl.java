@@ -80,28 +80,52 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+  public class SingularityCheckingUpstreamsUpdate {
+    private final BaragonRequestState baragonRequestState;
+    private final Optional<BaragonServiceState> baragonServiceState;
+    private final LoadBalancerRequestId loadBalancerRequestId;
+
+    public SingularityCheckingUpstreamsUpdate (BaragonRequestState baragonRequestState,Optional<BaragonServiceState> baragonServiceState, LoadBalancerRequestId loadBalancerRequestId) {
+      this.baragonRequestState = baragonRequestState;
+      this.baragonServiceState = baragonServiceState;
+      this.loadBalancerRequestId = loadBalancerRequestId;
+    }
+
+    public BaragonRequestState getBaragonRequestState() {
+      return baragonRequestState;
+    }
+
+    public Optional<BaragonServiceState> getBaragonServiceState() {
+      return baragonServiceState;
+    }
+
+    public LoadBalancerRequestId getLoadBalancerRequestId() {
+      return loadBalancerRequestId;
+    }
+
+    @Override
+    public String toString() {
+      return "SingularityCheckingUpstreamsUpdate{" +
+          "baragonRequestState=" + baragonRequestState +
+          ", baragonServiceState=" + baragonServiceState +
+          ", loadBalancerRequestId=" + loadBalancerRequestId +
+          '}';
+    }
+  }
+
+  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
-    if (loadBalancerQueryParams.isPresent()) {
-      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-    }
     final Request request = requestBuilder.build();
     LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
     ListenableFuture<Response> future = httpClient.executeRequest(request);
     Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
     LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
-    return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
+    BaragonResponse lbResponse = readResponse(response);
+    Optional<BaragonServiceState> maybeBaragonServiceState = objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
+    return new SingularityCheckingUpstreamsUpdate(lbResponse.getLoadBalancerState(), maybeBaragonServiceState, loadBalancerRequestId);
   }
 
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    Optional<BaragonServiceState> maybeBaragonServiceState = getLoadBalancerServiceStateForLoadBalancerRequest(loadBalancerRequestId);
-    if (maybeBaragonServiceState.isPresent()){
-      BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
-      return baragonServiceState.getUpstreams();
-    }
-    return Collections.emptyList();
-  }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
     return String.format(OPERATION_URI, loadBalancerUri, loadBalancerRequestId);
