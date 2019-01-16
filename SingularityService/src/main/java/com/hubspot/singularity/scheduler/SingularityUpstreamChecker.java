@@ -1,14 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -86,59 +83,62 @@ public class SingularityUpstreamChecker {
   }
 
   /**
-   * @param upstream
-   * @param upstreams
-   * @return a collection of upstreams in the upstreams param that match with the upstream param on upstream, group and rackId
-   * We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
+   * @return a collection of upstreams in the upstreams param that match with the upstream param on upstream and group.
+   * We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case.
    */
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
     return upstreams.stream().filter(candidate -> UpstreamInfo.upstreamAndGroupMatches(candidate, upstream)).collect(Collectors.toList());
   }
 
-  private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
-    for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForRequest) {
-      final Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInBaragonForRequest);
-      upstreamsInBaragonForRequest.removeAll(matches);
+  private List<UpstreamInfo> getExtraUpstreamsInLoadBalancer(Collection<UpstreamInfo> upstreamsInLoadBalancerForService, Collection<UpstreamInfo> upstreamsInSingularityForService) {
+    for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForService) {
+      final Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInLoadBalancerForService);
+      upstreamsInLoadBalancerForService.removeAll(matches);
     }
-    return new ArrayList<>(upstreamsInBaragonForRequest);
+    return new ArrayList<>(upstreamsInLoadBalancerForService);
   }
 
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(SingularityCheckingUpstreamsUpdate singularityCheckingUpstreamsUpdate) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  private Collection<UpstreamInfo> getLoadBalancerUpstreamsForServiceHelper(SingularityCheckingUpstreamsUpdate singularityCheckingUpstreamsUpdate) {
     if (singularityCheckingUpstreamsUpdate.getBaragonServiceState().isPresent()){
-      LOG.info("Baragon service state for service {} was present", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
-      BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
+      LOG.info("Baragon service state for service {} is present.", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
+      final BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
       return baragonServiceState.getUpstreams();
     }
-    LOG.info("Baragon service state for service {} was absent", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
+    LOG.info("Baragon service state for service {} is absent.", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
     return Collections.emptyList();
   }
 
-  private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (String singularityRequestId) {
-    LOG.info("Sent request to fetch upstream for service {}.", singularityRequestId);
+  private Collection<UpstreamInfo> getLoadBalancerUpstreamsForService(String singularityRequestId) {
+    LOG.info("Sending request to get load balancer upstreams for service {}.", singularityRequestId);
     try {
-      SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId);
-      LOG.info("Getting LB upstreams for singularity request {} is {}.", singularityRequestId, checkUpstreamsState.toString());
-      return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
+      final SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId);
+      LOG.info("Succeeded getting load balancer upstreams for singularity request {}. State is {}.", singularityRequestId, checkUpstreamsState.toString());
+      return getLoadBalancerUpstreamsForServiceHelper(checkUpstreamsState);
     } catch (Exception e) {
-      LOG.error("Could not get LB upstreams for singularity request {}. ", singularityRequestId, e);
+      LOG.error("Failed getting load balancer upstreams for singularity request {}. ", singularityRequestId, e);
     }
     return Collections.emptyList();
   }
 
-  private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup){
+  private Optional<SingularityLoadBalancerUpdate> syncUpstreamsForServiceHelper(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
+    LOG.info("Sending load balancer request to sync upstreams for service {}.", singularityRequest.getId());
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
     final long start = System.currentTimeMillis();
     try {
-      Collection<UpstreamInfo> upstreamsInLoadBalancerForRequest = getUpstreamsInLoadBalancer(singularityRequest.getId());
+      Collection<UpstreamInfo> upstreamsInLoadBalancerForRequest = getLoadBalancerUpstreamsForService(singularityRequest.getId());
       LOG.info("Upstreams in load balancer for service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForRequest);
       Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
       LOG.info("Upstreams in singularity for service {} are {}.", singularityRequest.getId(), upstreamsInSingularityForRequest);
-      final List<UpstreamInfo> extraUpstreams = getExtraUpstreams(upstreamsInLoadBalancerForRequest, upstreamsInSingularityForRequest);
-      LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
-      return lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest);
+      final List<UpstreamInfo> extraUpstreams = getExtraUpstreamsInLoadBalancer(upstreamsInLoadBalancerForRequest, upstreamsInSingularityForRequest);
+      if (extraUpstreams.size() > 0){
+        LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
+        return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
+      }
+      LOG.info("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
+      return Optional.absent();
     } catch (Exception e) {
       LOG.error("Could not sync for service {}. Load balancer request {} threw error: ", singularityRequest.getId(), loadBalancerRequestId, e);
-      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(String.format("Exception %s - %s", e.getClass().getSimpleName(), e.getMessage())), start, LoadBalancerMethod.CHECK_STATE, Optional.absent());
+      return Optional.of(new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(String.format("Exception %s - %s", e.getClass().getSimpleName(), e.getMessage())), start, LoadBalancerMethod.CHECK_STATE, Optional.absent()));
     }
   }
 
@@ -146,25 +146,26 @@ public class SingularityUpstreamChecker {
     return deployManager.getPendingDeploys().size() == 0;
   }
 
-  private void doSyncUpstreamsForService(SingularityRequest singularityRequest) {
+  private void syncUpstreamsForService(SingularityRequest singularityRequest) {
     if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
       final String singularityRequestId = singularityRequest.getId();
-      LOG.info("Doing syncing of upstreams for service: {}.", singularityRequestId);
+      LOG.info("Starting syncing of upstreams for service: {}.", singularityRequestId);
       final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
       if (maybeDeployId.isPresent()) {
         final String deployId = maybeDeployId.get();
         final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, deployId);
         if (maybeDeploy.isPresent()) {
-          final SingularityDeploy deploy = maybeDeploy.get();
-          final Optional<String> loadBalancerUpstreamGroup = deploy.getLoadBalancerUpstreamGroup();
-          final SingularityLoadBalancerUpdate syncUpstreamsUpdate = syncUpstreamsForService(singularityRequest, deploy, loadBalancerUpstreamGroup);
-          checkSyncUpstreamsState(syncUpstreamsUpdate.getLoadBalancerRequestId(), singularityRequestId);
+          final Optional<SingularityLoadBalancerUpdate> maybeSyncUpstreamsUpdate = syncUpstreamsForServiceHelper(singularityRequest, maybeDeploy.get(), maybeDeploy.get().getLoadBalancerUpstreamGroup());
+          if (maybeSyncUpstreamsUpdate.isPresent()) {
+            checkSyncUpstreamsState(maybeSyncUpstreamsUpdate.get().getLoadBalancerRequestId(), singularityRequestId);
+          }
         }
       }
     }
   }
 
   private void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
+    LOG.info("Checking load balancer request to sync upstreams for service {} using a retryer until the request state is no longer waiting.", singularityRequestId);
     Retryer<SingularityLoadBalancerUpdate> syncingRetryer = RetryerBuilder.<SingularityLoadBalancerUpdate>newBuilder()
         .retryIfException()
         .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
@@ -185,7 +186,7 @@ public class SingularityUpstreamChecker {
   public void syncUpstreams() {
     for (SingularityRequestWithState singularityRequestWithState: requestManager.getActiveRequests()){
       final SingularityRequest singularityRequest = singularityRequestWithState.getRequest();
-      lock.runWithRequestLock(() -> doSyncUpstreamsForService(singularityRequest), singularityRequest.getId(), getClass().getSimpleName());
+      lock.runWithRequestLock(() -> syncUpstreamsForService(singularityRequest), singularityRequest.getId(), getClass().getSimpleName());
     }
   }
 }
