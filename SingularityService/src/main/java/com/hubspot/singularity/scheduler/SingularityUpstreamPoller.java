@@ -28,10 +28,10 @@ public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     if (!disasterManager.isDisabled(SingularityAction.RUN_UPSTREAM_POLLER)) {
-      LOG.info("Checking upstreams");
+      LOG.info("Running SingularityUpstreamPoller");
       upstreamChecker.syncUpstreams();
     } else {
-      LOG.warn("Upstream poller is currently disabled");
+      LOG.warn("SingularityUpstreamPoller is currently disabled");
     }
   }
 }
