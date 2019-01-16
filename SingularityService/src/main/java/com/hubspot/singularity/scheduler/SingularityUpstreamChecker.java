@@ -47,7 +47,6 @@ public class SingularityUpstreamChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamChecker.class);
   private static final Predicate<SingularityLoadBalancerUpdate> IS_WAITING_STATE = singularityLoadBalancerUpdate -> singularityLoadBalancerUpdate.getLoadBalancerState() == BaragonRequestState.WAITING;
-  private static final Predicate<SingularityCheckingUpstreamsUpdate> CHECKING_IS_WAITING_STATE = singularityCheckingUpstreamsUpdate -> singularityCheckingUpstreamsUpdate.getBaragonRequestState() == BaragonRequestState.WAITING;
 
   private final LoadBalancerClient lbClient;
   private final TaskManager taskManager;
@@ -115,17 +114,15 @@ public class SingularityUpstreamChecker {
   }
 
   private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (String singularityRequestId) {
-    LOG.info("Sent request to fetch upstream for service ", singularityRequestId);
+    LOG.info("Sent request to fetch upstream for service {}.", singularityRequestId);
     try {
       SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId);
       LOG.info("Getting LB upstreams for singularity request {} is {}.", singularityRequestId, checkUpstreamsState.toString());
-      if (checkUpstreamsState.getBaragonRequestState() == BaragonRequestState.SUCCESS){
-        return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
-      }
+      return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
     } catch (Exception e) {
       LOG.error("Could not get LB upstreams for singularity request {}. ", singularityRequestId, e);
     }
-    return Collections.emptyList(); //TODO: confirm
+    return Collections.emptyList();
   }
 
   private SingularityLoadBalancerUpdate syncUpstreamsForService(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup){

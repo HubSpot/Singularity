@@ -87,10 +87,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     ListenableFuture<Response> future = httpClient.executeRequest(request);
     Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
     LOG.trace("LB {} request {} returned with code {}", request.getMethod(), singularityRequestId, response.getStatusCode());
-    BaragonResponse lbResponse = readResponse(response);
-    Optional<BaragonServiceState> maybeBaragonServiceState = objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
-
-    return new SingularityCheckingUpstreamsUpdate(lbResponse.getLoadBalancerState(), maybeBaragonServiceState, singularityRequestId);
+    Optional<BaragonServiceState> maybeBaragonServiceState = Optional.fromNullable(objectMapper.readValue(response.getResponseBodyAsBytes(), BaragonServiceState.class));
+    return new SingularityCheckingUpstreamsUpdate(maybeBaragonServiceState, singularityRequestId);
   }
 
 

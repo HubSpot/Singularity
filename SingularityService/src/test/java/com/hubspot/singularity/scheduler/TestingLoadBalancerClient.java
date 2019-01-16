@@ -57,7 +57,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
 
   @Override
   public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(String singularityRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return new SingularityCheckingUpstreamsUpdate(requestState, Optional.absent(), singularityRequestId);
+    return new SingularityCheckingUpstreamsUpdate(Optional.absent(), singularityRequestId);
   }
 
   @Override
