@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.github.rholder.retry.Retryer;
@@ -23,7 +21,6 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
@@ -67,7 +64,13 @@ public class SingularityUpstreamChecker {
     this.lock = lock;
   }
 
-  private List<SingularityTask> getActiveHealthyTasksForRequest(String requestId) throws Exception {
+  private class TaskIdNotFoundException extends Exception {
+    private TaskIdNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  private List<SingularityTask> getActiveHealthyTasksForService(String requestId) throws TaskIdNotFoundException {
     final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(requestId);
     if (taskIdsByStatusForRequest.isPresent()) {
       final List<SingularityTaskId> activeHealthyTaskIdsForRequest = taskIdsByStatusForRequest.get().getHealthy();
@@ -75,11 +78,12 @@ public class SingularityUpstreamChecker {
       return new ArrayList<>(activeTasksForRequest.values());
     }
     LOG.error("TaskId not found for requestId: {}.", requestId);
-    throw new Exception("TaskId not found.");
+    throw new TaskIdNotFoundException("TaskId not found");
   }
 
-  private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForRequest(String singularityRequestId, Optional<String> loadBalancerUpstreamGroup) throws Exception {
-    return lbClient.getUpstreamsForTasks(getActiveHealthyTasksForRequest(singularityRequestId), singularityRequestId, loadBalancerUpstreamGroup);
+  private Collection<UpstreamInfo> getUpstreamsFromActiveTasksForService(String singularityRequestId, Optional<String> loadBalancerUpstreamGroup) throws TaskIdNotFoundException {
+    final List<SingularityTask> activeHealthyTasksForService = getActiveHealthyTasksForService(singularityRequestId);
+    return lbClient.getUpstreamsForTasks(activeHealthyTasksForService, singularityRequestId, loadBalancerUpstreamGroup);
   }
 
   /**
@@ -121,25 +125,24 @@ public class SingularityUpstreamChecker {
   }
 
   private Optional<SingularityLoadBalancerUpdate> syncUpstreamsForServiceHelper(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
-    LOG.trace("Sending load balancer request to sync upstreams for service {}.", singularityRequest.getId());
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
-    final long start = System.currentTimeMillis();
     try {
+      LOG.trace("Sending load balancer request to sync upstreams for service {}.", singularityRequest.getId());
+      final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
       Collection<UpstreamInfo> upstreamsInLoadBalancerForRequest = getLoadBalancerUpstreamsForService(singularityRequest.getId());
       LOG.trace("Upstreams in load balancer for service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForRequest);
-      Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
+      Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForService(singularityRequest.getId(), loadBalancerUpstreamGroup);
       LOG.trace("Upstreams in singularity for service {} are {}.", singularityRequest.getId(), upstreamsInSingularityForRequest);
       final List<UpstreamInfo> extraUpstreams = getExtraUpstreamsInLoadBalancer(upstreamsInLoadBalancerForRequest, upstreamsInSingularityForRequest);
-      if (extraUpstreams.size() > 0){
-        LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
-        return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
+      if (extraUpstreams.size() == 0) {
+        LOG.trace("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
+        return Optional.absent();
       }
-      LOG.trace("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
+      LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
+      return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
+    } catch (TaskIdNotFoundException e) {
       return Optional.absent();
-    } catch (Exception e) {
-      LOG.error("Could not sync for service {}. Load balancer request {} threw error: ", singularityRequest.getId(), loadBalancerRequestId, e);
-      return Optional.of(new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(String.format("Exception %s - %s", e.getClass().getSimpleName(), e.getMessage())), start, LoadBalancerMethod.CHECK_STATE, Optional.absent()));
     }
+
   }
 
   private boolean noPendingDeploy() {
