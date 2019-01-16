@@ -17,7 +17,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl.SingularityCheckingUpstreamsUpdate;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 
 public class TestingLoadBalancerClient implements LoadBalancerClient {
 
@@ -57,7 +57,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
 
   @Override
   public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return null; //TODO: handle this
+    return new SingularityCheckingUpstreamsUpdate(requestState, Optional.absent(), loadBalancerRequestId);
   }
 
 

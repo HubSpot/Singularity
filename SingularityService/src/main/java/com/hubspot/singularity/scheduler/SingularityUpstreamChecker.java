@@ -37,7 +37,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl.SingularityCheckingUpstreamsUpdate;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.WaitStrategies;

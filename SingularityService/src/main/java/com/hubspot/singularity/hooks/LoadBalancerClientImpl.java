@@ -1,7 +1,6 @@
 package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +27,7 @@ import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
@@ -80,38 +79,6 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  public class SingularityCheckingUpstreamsUpdate {
-    private final BaragonRequestState baragonRequestState;
-    private final Optional<BaragonServiceState> baragonServiceState;
-    private final LoadBalancerRequestId loadBalancerRequestId;
-
-    public SingularityCheckingUpstreamsUpdate (BaragonRequestState baragonRequestState,Optional<BaragonServiceState> baragonServiceState, LoadBalancerRequestId loadBalancerRequestId) {
-      this.baragonRequestState = baragonRequestState;
-      this.baragonServiceState = baragonServiceState;
-      this.loadBalancerRequestId = loadBalancerRequestId;
-    }
-
-    public BaragonRequestState getBaragonRequestState() {
-      return baragonRequestState;
-    }
-
-    public Optional<BaragonServiceState> getBaragonServiceState() {
-      return baragonServiceState;
-    }
-
-    public LoadBalancerRequestId getLoadBalancerRequestId() {
-      return loadBalancerRequestId;
-    }
-
-    @Override
-    public String toString() {
-      return "SingularityCheckingUpstreamsUpdate{" +
-          "baragonRequestState=" + baragonRequestState +
-          ", baragonServiceState=" + baragonServiceState +
-          ", loadBalancerRequestId=" + loadBalancerRequestId +
-          '}';
-    }
-  }
 
   public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
