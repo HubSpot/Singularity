@@ -56,10 +56,9 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return new SingularityCheckingUpstreamsUpdate(requestState, Optional.absent(), loadBalancerRequestId);
+  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(String singularityRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    return new SingularityCheckingUpstreamsUpdate(requestState, Optional.absent(), singularityRequestId);
   }
-
 
   @Override
   public List<UpstreamInfo> getUpstreamsForTasks(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
