@@ -1,11 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -17,6 +20,7 @@ import com.github.rholder.retry.Retryer;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.baragon.models.BaragonServiceState;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -33,6 +37,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.WaitStrategies;
@@ -42,6 +47,7 @@ public class SingularityUpstreamChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUpstreamChecker.class);
   private static final Predicate<SingularityLoadBalancerUpdate> IS_WAITING_STATE = singularityLoadBalancerUpdate -> singularityLoadBalancerUpdate.getLoadBalancerState() == BaragonRequestState.WAITING;
+  private static final Predicate<SingularityCheckingUpstreamsUpdate> CHECKING_IS_WAITING_STATE = singularityCheckingUpstreamsUpdate -> singularityCheckingUpstreamsUpdate.getBaragonRequestState() == BaragonRequestState.WAITING;
 
   private final LoadBalancerClient lbClient;
   private final TaskManager taskManager;
@@ -80,12 +86,6 @@ public class SingularityUpstreamChecker {
     return lbClient.getUpstreamsForTasks(getActiveHealthyTasksForRequest(singularityRequestId), singularityRequestId, loadBalancerUpstreamGroup);
   }
 
-  private boolean isEqualUpstreamGroupRackId(UpstreamInfo upstream1, UpstreamInfo upstream2){
-    return (upstream1.getUpstream().equals(upstream2.getUpstream()))
-        && (upstream1.getGroup().equals(upstream2.getGroup()))
-        && (upstream1.getRackId().equals(upstream2.getRackId()));
-  }
-
   /**
    * @param upstream
    * @param upstreams
@@ -93,7 +93,7 @@ public class SingularityUpstreamChecker {
    * We expect that the collection will have a maximum of one match, but we will keep it as a collection just in case
    */
   private Collection<UpstreamInfo> getEqualUpstreams(UpstreamInfo upstream, Collection<UpstreamInfo> upstreams) {
-    return upstreams.stream().filter(candidate -> isEqualUpstreamGroupRackId(candidate, upstream)).collect(Collectors.toList());
+    return upstreams.stream().filter(candidate -> UpstreamInfo.upstreamAndGroupMatches(candidate, upstream)).collect(Collectors.toList());
   }
 
   private List<UpstreamInfo> getExtraUpstreams(Collection<UpstreamInfo> upstreamsInBaragonForRequest, Collection<UpstreamInfo> upstreamsInSingularityForRequest) {
@@ -104,24 +104,30 @@ public class SingularityUpstreamChecker {
     return new ArrayList<>(upstreamsInBaragonForRequest);
   }
 
+  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(SingularityCheckingUpstreamsUpdate singularityCheckingUpstreamsUpdate) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    if (singularityCheckingUpstreamsUpdate.getBaragonServiceState().isPresent()){
+      LOG.info("Baragon service state for LB request {} was present", singularityCheckingUpstreamsUpdate.getLoadBalancerRequestId());
+      BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
+      return baragonServiceState.getUpstreams();
+    }
+    LOG.info("Baragon service state for LB request {} was absent", singularityCheckingUpstreamsUpdate.getLoadBalancerRequestId());
+    return Collections.emptyList();
+  }
+
   private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (SingularityRequest singularityRequest, SingularityDeploy deploy) {
     final LoadBalancerRequestId checkUpstreamsId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
-    SingularityLoadBalancerUpdate checkUpstreamsState = lbClient.enqueue(checkUpstreamsId, singularityRequest, deploy, Collections.emptyList(), Collections.emptyList());
+    SingularityLoadBalancerUpdate singularityLoadBalancerUpdate = lbClient.enqueue(checkUpstreamsId, singularityRequest, deploy, Collections.emptyList(), Collections.emptyList());
+    LOG.info("Sent LB request {} to fetch upstreams", singularityLoadBalancerUpdate.getLoadBalancerRequestId());
     try {
-      if (checkUpstreamsState.getLoadBalancerState() == BaragonRequestState.WAITING) {
-        Retryer<SingularityLoadBalancerUpdate> getLoadBalancerUpstreamsRetryer = RetryerBuilder.<SingularityLoadBalancerUpdate>newBuilder()
-            .retryIfException()
-            .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
-            .retryIfResult(IS_WAITING_STATE)
-            .build();
-        checkUpstreamsState = getLoadBalancerUpstreamsRetryer.call(() -> lbClient.getState(checkUpstreamsId));
-      }
-
-      if (checkUpstreamsState.getLoadBalancerState() == BaragonRequestState.SUCCESS){
-        LOG.info("Getting LB upstreams for singularity request {} through LB request {} is {}.", singularityRequest.getId(), checkUpstreamsId, checkUpstreamsState.toString());
-        return lbClient.getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsId);
-      } else {
-        LOG.error("Getting LB upstreams for singularity request {} throught LB request {} is {}.", singularityRequest.getId(), checkUpstreamsId, checkUpstreamsState.toString());
+      Retryer<SingularityCheckingUpstreamsUpdate> getLoadBalancerUpstreamsRetryer = RetryerBuilder.<SingularityCheckingUpstreamsUpdate>newBuilder()
+          .retryIfException()
+          .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
+          .retryIfResult(CHECKING_IS_WAITING_STATE)
+          .build();
+      SingularityCheckingUpstreamsUpdate checkUpstreamsState = getLoadBalancerUpstreamsRetryer.call(() -> lbClient.getLoadBalancerServiceStateForLoadBalancerRequest(checkUpstreamsId));
+      LOG.info("Getting LB upstreams for singularity request {} through LB request {} is: {}.", singularityRequest.getId(), checkUpstreamsId, checkUpstreamsState.toString());
+      if (checkUpstreamsState.getBaragonRequestState() == BaragonRequestState.SUCCESS){
+        return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
       }
     } catch (Exception e) {
       LOG.error("Could not get LB upstreams for singularity request {} through LB request {}. ", singularityRequest.getId(), checkUpstreamsId, e);

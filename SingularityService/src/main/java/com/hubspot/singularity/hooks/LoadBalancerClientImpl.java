@@ -1,7 +1,6 @@
 package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +27,7 @@ import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
@@ -80,28 +79,20 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
   }
 
-  private Optional<BaragonServiceState> getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+
+  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
-    if (loadBalancerQueryParams.isPresent()) {
-      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-    }
     final Request request = requestBuilder.build();
     LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
     ListenableFuture<Response> future = httpClient.executeRequest(request);
     Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
     LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
-    return objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
+    BaragonResponse lbResponse = readResponse(response);
+    Optional<BaragonServiceState> maybeBaragonServiceState = objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
+    return new SingularityCheckingUpstreamsUpdate(lbResponse.getLoadBalancerState(), maybeBaragonServiceState, loadBalancerRequestId);
   }
 
-  public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    Optional<BaragonServiceState> maybeBaragonServiceState = getLoadBalancerServiceStateForLoadBalancerRequest(loadBalancerRequestId);
-    if (maybeBaragonServiceState.isPresent()){
-      BaragonServiceState baragonServiceState = maybeBaragonServiceState.get();
-      return baragonServiceState.getUpstreams();
-    }
-    return Collections.emptyList();
-  }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
     return String.format(OPERATION_URI, loadBalancerUri, loadBalancerRequestId);
