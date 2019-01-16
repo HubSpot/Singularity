@@ -106,31 +106,29 @@ public class SingularityUpstreamChecker {
 
   public Collection<UpstreamInfo> getLoadBalancerUpstreamsForLoadBalancerRequest(SingularityCheckingUpstreamsUpdate singularityCheckingUpstreamsUpdate) throws InterruptedException, ExecutionException, TimeoutException, IOException {
     if (singularityCheckingUpstreamsUpdate.getBaragonServiceState().isPresent()){
-      LOG.info("Baragon service state for LB request {} was present", singularityCheckingUpstreamsUpdate.getLoadBalancerRequestId());
+      LOG.info("Baragon service state for service {} was present", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
       BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
       return baragonServiceState.getUpstreams();
     }
-    LOG.info("Baragon service state for LB request {} was absent", singularityCheckingUpstreamsUpdate.getLoadBalancerRequestId());
+    LOG.info("Baragon service state for service {} was absent", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
     return Collections.emptyList();
   }
 
-  private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (SingularityRequest singularityRequest, SingularityDeploy deploy) {
-    final LoadBalancerRequestId checkUpstreamsId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
-    SingularityLoadBalancerUpdate singularityLoadBalancerUpdate = lbClient.enqueue(checkUpstreamsId, singularityRequest, deploy, Collections.emptyList(), Collections.emptyList());
-    LOG.info("Sent LB request {} to fetch upstreams", singularityLoadBalancerUpdate.getLoadBalancerRequestId());
+  private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (String singularityRequestId) {
+    LOG.info("Sent request to fetch upstream for service ", singularityRequestId);
     try {
       Retryer<SingularityCheckingUpstreamsUpdate> getLoadBalancerUpstreamsRetryer = RetryerBuilder.<SingularityCheckingUpstreamsUpdate>newBuilder()
           .retryIfException()
           .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
           .retryIfResult(CHECKING_IS_WAITING_STATE)
           .build();
-      SingularityCheckingUpstreamsUpdate checkUpstreamsState = getLoadBalancerUpstreamsRetryer.call(() -> lbClient.getLoadBalancerServiceStateForLoadBalancerRequest(checkUpstreamsId));
-      LOG.info("Getting LB upstreams for singularity request {} through LB request {} is: {}.", singularityRequest.getId(), checkUpstreamsId, checkUpstreamsState.toString());
+      SingularityCheckingUpstreamsUpdate checkUpstreamsState = getLoadBalancerUpstreamsRetryer.call(() -> lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId));
+      LOG.info("Getting LB upstreams for singularity request {} is {}.", singularityRequestId, checkUpstreamsState.toString());
       if (checkUpstreamsState.getBaragonRequestState() == BaragonRequestState.SUCCESS){
         return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
       }
     } catch (Exception e) {
-      LOG.error("Could not get LB upstreams for singularity request {} through LB request {}. ", singularityRequest.getId(), checkUpstreamsId, e);
+      LOG.error("Could not get LB upstreams for singularity request {}. ", singularityRequestId, e);
     }
     return Collections.emptyList(); //TODO: confirm
   }
@@ -139,7 +137,7 @@ public class SingularityUpstreamChecker {
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
     final long start = System.currentTimeMillis();
     try {
-      Collection<UpstreamInfo> upstreamsInLoadBalancerForRequest = getUpstreamsInLoadBalancer(singularityRequest, deploy);
+      Collection<UpstreamInfo> upstreamsInLoadBalancerForRequest = getUpstreamsInLoadBalancer(singularityRequest.getId());
       LOG.info("Upstreams in load balancer for service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForRequest);
       Collection<UpstreamInfo> upstreamsInSingularityForRequest = getUpstreamsFromActiveTasksForRequest(singularityRequest.getId(), loadBalancerUpstreamGroup);
       LOG.info("Upstreams in singularity for service {} are {}.", singularityRequest.getId(), upstreamsInSingularityForRequest);

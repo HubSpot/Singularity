@@ -75,22 +75,22 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     return loadBalancerUri.replace("request", "state");
   }
 
-  private String getLoadBalancerStateUri(LoadBalancerRequestId loadBalancerRequestId){
-    return String.format(OPERATION_URI, getStateUriFromRequestUri(), loadBalancerRequestId);
+  private String getLoadBalancerStateUri(String singularityRequestId){
+    return String.format(OPERATION_URI, getStateUriFromRequestUri(), singularityRequestId);
   }
 
-
-  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForLoadBalancerRequest(LoadBalancerRequestId loadBalancerRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    final String loadBalancerStateUri = getLoadBalancerStateUri(loadBalancerRequestId);
+  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(String singularityRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    final String loadBalancerStateUri = getLoadBalancerStateUri(singularityRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(loadBalancerStateUri);
     final Request request = requestBuilder.build();
-    LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
+    LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), singularityRequestId, request.getUrl());
     ListenableFuture<Response> future = httpClient.executeRequest(request);
     Response response = future.get(loadBalancerTimeoutMillis, TimeUnit.MILLISECONDS);
-    LOG.trace("LB {} request {} returned with code {}", request.getMethod(), loadBalancerRequestId, response.getStatusCode());
+    LOG.trace("LB {} request {} returned with code {}", request.getMethod(), singularityRequestId, response.getStatusCode());
     BaragonResponse lbResponse = readResponse(response);
     Optional<BaragonServiceState> maybeBaragonServiceState = objectMapper.readValue(response.getResponseBodyAsBytes(), new TypeReference<BaragonServiceState>() {});
-    return new SingularityCheckingUpstreamsUpdate(lbResponse.getLoadBalancerState(), maybeBaragonServiceState, loadBalancerRequestId);
+
+    return new SingularityCheckingUpstreamsUpdate(lbResponse.getLoadBalancerState(), maybeBaragonServiceState, singularityRequestId);
   }
 
 
