@@ -64,7 +64,7 @@ public class SingularityUpstreamChecker {
     this.lock = lock;
   }
 
-  private class TaskIdNotFoundException extends Exception {
+  private static class TaskIdNotFoundException extends Exception {
     private TaskIdNotFoundException(String message) {
       super(message);
     }
@@ -77,7 +77,6 @@ public class SingularityUpstreamChecker {
       final Map<SingularityTaskId, SingularityTask> activeTasksForRequest = taskManager.getTasks(activeHealthyTaskIdsForRequest);
       return new ArrayList<>(activeTasksForRequest.values());
     }
-    LOG.error("TaskId not found for requestId: {}.", requestId);
     throw new TaskIdNotFoundException("TaskId not found");
   }
 
@@ -140,9 +139,9 @@ public class SingularityUpstreamChecker {
       LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
       return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
     } catch (TaskIdNotFoundException e) {
+      LOG.error("TaskId not found for requestId: {}.", singularityRequest.getId());
       return Optional.absent();
     }
-
   }
 
   private boolean noPendingDeploy() {
