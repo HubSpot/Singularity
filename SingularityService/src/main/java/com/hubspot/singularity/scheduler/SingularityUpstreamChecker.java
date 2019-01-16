@@ -117,12 +117,7 @@ public class SingularityUpstreamChecker {
   private Collection<UpstreamInfo> getUpstreamsInLoadBalancer (String singularityRequestId) {
     LOG.info("Sent request to fetch upstream for service ", singularityRequestId);
     try {
-      Retryer<SingularityCheckingUpstreamsUpdate> getLoadBalancerUpstreamsRetryer = RetryerBuilder.<SingularityCheckingUpstreamsUpdate>newBuilder()
-          .retryIfException()
-          .withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
-          .retryIfResult(CHECKING_IS_WAITING_STATE)
-          .build();
-      SingularityCheckingUpstreamsUpdate checkUpstreamsState = getLoadBalancerUpstreamsRetryer.call(() -> lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId));
+      SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId);
       LOG.info("Getting LB upstreams for singularity request {} is {}.", singularityRequestId, checkUpstreamsState.toString());
       if (checkUpstreamsState.getBaragonRequestState() == BaragonRequestState.SUCCESS){
         return getLoadBalancerUpstreamsForLoadBalancerRequest(checkUpstreamsState);
