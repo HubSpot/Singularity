@@ -105,7 +105,10 @@ public class SingularityUpstreamChecker {
     if (singularityCheckingUpstreamsUpdate.getBaragonServiceState().isPresent()){
       LOG.trace("Baragon service state for service {} is present.", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
       final BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
-      return baragonServiceState.getUpstreams().stream().filter(upstream -> upstream.getGroup() == loadBalancerUpstreamGroup.or("default")).collect(Collectors.toList());
+      return baragonServiceState.getUpstreams()
+          .stream()
+          .filter(upstream -> upstream.getGroup().equals(loadBalancerUpstreamGroup.or("default")))
+          .collect(Collectors.toList());
     }
     LOG.trace("Baragon service state for service {} is absent.", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
     return Collections.emptyList();
