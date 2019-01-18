@@ -23,7 +23,7 @@ public class SingularityCheckingUpstreamsUpdate {
   @Override
   public String toString() {
     return "SingularityCheckingUpstreamsUpdate{" +
-        ", baragonServiceState=" + baragonServiceState +
+        " baragonServiceState=" + baragonServiceState +
         ", singularityRequestId=" + singularityRequestId +
         '}';
   }
