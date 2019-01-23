@@ -26,6 +26,11 @@ public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
   }
 
   @Override
+  protected boolean abortsOnError() {
+    return false;
+  }
+
+  @Override
   public void runActionOnPoll() {
     if (!disasterManager.isDisabled(SingularityAction.RUN_UPSTREAM_POLLER)) {
       LOG.info("Running SingularityUpstreamPoller");
