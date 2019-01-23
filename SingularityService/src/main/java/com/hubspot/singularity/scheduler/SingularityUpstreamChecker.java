@@ -114,14 +114,15 @@ public class SingularityUpstreamChecker {
     return Collections.emptyList();
   }
 
-  private Collection<UpstreamInfo> getLoadBalancerUpstreamsForService(String singularityRequestId, Optional<String> loadBalancerUpstreamGroup) {
+  private Collection<UpstreamInfo> getLoadBalancerUpstreamsForService(String singularityRequestId, Optional<String> loadBalancerServiceIdOverride, Optional<String> loadBalancerUpstreamGroup) {
+    final String loadBalancerServiceId = loadBalancerServiceIdOverride.or(singularityRequestId);
     try {
-      LOG.info("Sending request to get load balancer upstreams for service {}.", singularityRequestId);
-      final SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(singularityRequestId);
-      LOG.trace("Succeeded getting load balancer upstreams for singularity request {}. State is {}.", singularityRequestId, checkUpstreamsState.toString());
+      LOG.info("Sending request to get load balancer upstreams for service {} with loadBalancerServiceId {}.", singularityRequestId, loadBalancerServiceId);
+      final SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(loadBalancerServiceId);
+      LOG.trace("Succeeded getting load balancer upstreams for singularity request {} with loadBalancerServiceId {}. State is {}.", singularityRequestId, loadBalancerServiceId, checkUpstreamsState.toString());
       return getLoadBalancerUpstreamsForServiceHelper(checkUpstreamsState, loadBalancerUpstreamGroup);
     } catch (Exception e) {
-      LOG.error("Failed getting load balancer upstreams for singularity request {}. ", singularityRequestId, e);
+      LOG.error("Failed getting load balancer upstreams for singularity request {} with loadBalancerServiceId {}. ", singularityRequestId, loadBalancerServiceId, e);
     }
     return Collections.emptyList();
   }
@@ -129,16 +130,16 @@ public class SingularityUpstreamChecker {
   private Optional<SingularityLoadBalancerUpdate> syncUpstreamsForServiceHelper(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
     try {
       LOG.trace("Sending load balancer request to sync upstreams for service {}.", singularityRequest.getId());
-      final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
-      Collection<UpstreamInfo> upstreamsInLoadBalancerForService = getLoadBalancerUpstreamsForService(singularityRequest.getId(), loadBalancerUpstreamGroup);
-      LOG.trace("Upstreams in load balancer for service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForService);
+      Collection<UpstreamInfo> upstreamsInLoadBalancerForService = getLoadBalancerUpstreamsForService(singularityRequest.getId(), deploy.getLoadBalancerServiceIdOverride(), loadBalancerUpstreamGroup);
+      LOG.trace("Upstreams in load balancer for singularity service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForService);
       Collection<UpstreamInfo> upstreamsInSingularityForService = getUpstreamsFromActiveTasksForService(singularityRequest.getId(), loadBalancerUpstreamGroup);
       LOG.trace("Upstreams in singularity for service {} are {}.", singularityRequest.getId(), upstreamsInSingularityForService);
       final List<UpstreamInfo> extraUpstreams = getExtraUpstreamsInLoadBalancer(upstreamsInLoadBalancerForService, upstreamsInSingularityForService);
-      if (extraUpstreams.size() == 0) {
+      if (extraUpstreams.isEmpty()) {
         LOG.trace("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
         return Optional.absent();
       }
+      final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
       LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
       return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
     } catch (TaskIdNotFoundException e) {
