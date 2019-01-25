@@ -154,7 +154,7 @@ public class SingularityUpstreamChecker {
     final String singularityRequestId = singularityRequest.getId();
     LOG.debug("Starting syncing of upstreams for service: {}.", singularityRequestId);
     if (!singularityRequest.isLoadBalanced()) {
-      LOG.debug("Singularity service {} is not load balanced. Terminating syncing.");
+      LOG.debug("Singularity service {} is not load balanced. Terminating syncing.", singularityRequestId);
       return;
     }
     final Optional<String> maybeDeployId = deployManager.getActiveDeployId(singularityRequestId);
