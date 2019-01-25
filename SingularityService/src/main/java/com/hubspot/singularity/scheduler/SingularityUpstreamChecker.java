@@ -73,7 +73,8 @@ public class SingularityUpstreamChecker {
   private List<SingularityTask> getActiveHealthyAndCleaningTasksForService(String requestId) throws TaskIdNotFoundException {
     final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(requestId);
     if (taskIdsByStatusForRequest.isPresent()) {
-      List<SingularityTaskId> activeHealthyAndCleaningTaskIdsForRequest = taskIdsByStatusForRequest.get().getHealthy();
+      List<SingularityTaskId> activeHealthyAndCleaningTaskIdsForRequest = new ArrayList<>();
+      activeHealthyAndCleaningTaskIdsForRequest.addAll(taskIdsByStatusForRequest.get().getHealthy());
       activeHealthyAndCleaningTaskIdsForRequest.addAll(taskIdsByStatusForRequest.get().getCleaning());
       final Map<SingularityTaskId, SingularityTask> activeHealthyAndCleaningTasksForRequest = taskManager.getTasks(activeHealthyAndCleaningTaskIdsForRequest);
       return new ArrayList<>(activeHealthyAndCleaningTasksForRequest.values());
@@ -149,26 +150,29 @@ public class SingularityUpstreamChecker {
     }
   }
 
-  private boolean noPendingDeploy() {
-    return deployManager.getPendingDeploys().size() == 0;
-  }
-
   private void syncUpstreamsForService(SingularityRequest singularityRequest) {
-    if (singularityRequest.isLoadBalanced() && noPendingDeploy()) {
-      final String singularityRequestId = singularityRequest.getId();
-      LOG.debug("Starting syncing of upstreams for service: {}.", singularityRequestId);
-      final Optional<String> maybeDeployId = deployManager.getInUseDeployId(singularityRequestId);
-      if (maybeDeployId.isPresent()) {
-        final String deployId = maybeDeployId.get();
-        final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, deployId);
-        if (maybeDeploy.isPresent()) {
-          final Optional<SingularityLoadBalancerUpdate> maybeSyncUpstreamsUpdate = syncUpstreamsForServiceHelper(singularityRequest, maybeDeploy.get(), maybeDeploy.get().getLoadBalancerUpstreamGroup());
-          if (maybeSyncUpstreamsUpdate.isPresent()) {
-            checkSyncUpstreamsState(maybeSyncUpstreamsUpdate.get().getLoadBalancerRequestId(), singularityRequestId);
-          }
-        }
-      }
+    final String singularityRequestId = singularityRequest.getId();
+    LOG.debug("Starting syncing of upstreams for service: {}.", singularityRequestId);
+    if (!singularityRequest.isLoadBalanced()) {
+      LOG.debug("Singularity service {} is not load balanced. Terminating syncing.");
+      return;
     }
+    final Optional<String> maybeDeployId = deployManager.getActiveDeployId(singularityRequestId);
+    if (!maybeDeployId.isPresent()) {
+      LOG.debug("Active deploy for service {} is absent. Terminating syncing.", singularityRequestId);
+      return;
+    }
+    final Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(singularityRequestId, maybeDeployId.get());
+    if (!maybeDeploy.isPresent()) {
+      LOG.debug("Deploy for service {} with deployId {} is absent. Terminating syncing.", singularityRequestId, maybeDeployId.get());
+      return;
+    }
+    final Optional<SingularityLoadBalancerUpdate> maybeSyncUpstreamsUpdate = syncUpstreamsForServiceHelper(singularityRequest, maybeDeploy.get(), maybeDeploy.get().getLoadBalancerUpstreamGroup());
+    if (!maybeSyncUpstreamsUpdate.isPresent()) {
+      LOG.debug("Update of syncing of upstreams for service {} and deploy {} is absent. Terminating syncing.", singularityRequestId, maybeDeployId.get());
+      return;
+    }
+    checkSyncUpstreamsState(maybeSyncUpstreamsUpdate.get().getLoadBalancerRequestId(), singularityRequestId);
   }
 
   private void checkSyncUpstreamsState(LoadBalancerRequestId loadBalancerRequestId, String singularityRequestId) {
