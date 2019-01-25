@@ -22,7 +22,6 @@ import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -74,7 +73,8 @@ public class SingularityUpstreamChecker {
   private List<SingularityTask> getActiveHealthyAndCleaningTasksForService(String requestId) throws TaskIdNotFoundException {
     final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(requestId);
     if (taskIdsByStatusForRequest.isPresent()) {
-      List<SingularityTaskId> activeHealthyAndCleaningTaskIdsForRequest = taskIdsByStatusForRequest.get().getHealthy();
+      List<SingularityTaskId> activeHealthyAndCleaningTaskIdsForRequest = new ArrayList<>();
+      activeHealthyAndCleaningTaskIdsForRequest.addAll(taskIdsByStatusForRequest.get().getHealthy());
       activeHealthyAndCleaningTaskIdsForRequest.addAll(taskIdsByStatusForRequest.get().getCleaning());
       final Map<SingularityTaskId, SingularityTask> activeHealthyAndCleaningTasksForRequest = taskManager.getTasks(activeHealthyAndCleaningTaskIdsForRequest);
       return new ArrayList<>(activeHealthyAndCleaningTasksForRequest.values());
