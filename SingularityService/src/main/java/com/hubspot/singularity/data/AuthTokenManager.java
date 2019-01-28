@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityTokenResponse;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -37,11 +38,11 @@ public class AuthTokenManager extends CuratorManager {
     this.userTranscoder = userTranscoder;
   }
 
-  public String generateToken(SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  public SingularityTokenResponse generateToken(SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
     String newToken = UUID.randomUUID().toString();
     String hashed = generateTokenHash(newToken);
     saveToken(hashed, userData);
-    return newToken;
+    return new SingularityTokenResponse(newToken, userData);
   }
 
   private void saveToken(String hashed, SingularityUser userData) {
