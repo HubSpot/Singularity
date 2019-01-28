@@ -49,6 +49,19 @@ public class AuthTokenManager extends CuratorManager {
     save(getTokenPath(hashed), userData, userTranscoder);
   }
 
+  private void deleteToken(String hashed) {
+    delete(getTokenPath(hashed));
+  }
+
+  public void clearTokensForUser(String user) {
+    for (String hashed : getChildren(TOKEN_ROOT)) {
+      Optional<SingularityUser> maybeUser = getData(getTokenPath(hashed), userTranscoder);
+      if (maybeUser.isPresent() && maybeUser.get().getName().equals(user)) {
+        deleteToken(hashed);
+      }
+    }
+  }
+
   public SingularityUser getUserIfValidToken(String token) {
     for (String hashed : getChildren(TOKEN_ROOT)) {
       try {

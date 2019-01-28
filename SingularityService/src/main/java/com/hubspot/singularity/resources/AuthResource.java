@@ -3,6 +3,7 @@ package com.hubspot.singularity.resources;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -112,5 +113,18 @@ public class AuthResource {
   public SingularityTokenResponse generateToken(@Parameter(hidden = true) @Auth SingularityUser user, SingularityUser userForToken) throws NoSuchAlgorithmException, InvalidKeySpecException {
     authorizationHelper.checkAdminAuthorization(user);
     return authTokenManager.generateToken(userForToken);
+  }
+
+  @DELETE
+  @Path("/token/{user}")
+  @Operation(
+      summary = "Clear tokens for a user",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "tokens cleared successfully")
+      }
+  )
+  public SingularityTokenResponse generateToken(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("user") String userName) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    authorizationHelper.checkAdminAuthorization(user);
+    return authTokenManager.clearTokensForUser(userName);
   }
 }
