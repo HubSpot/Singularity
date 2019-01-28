@@ -123,8 +123,8 @@ public class AuthResource {
           @ApiResponse(responseCode = "200", description = "tokens cleared successfully")
       }
   )
-  public SingularityTokenResponse generateToken(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("user") String userName) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  public Response generateToken(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("user") String userName) throws NoSuchAlgorithmException, InvalidKeySpecException {
     authorizationHelper.checkAdminAuthorization(user);
-    return authTokenManager.clearTokensForUser(userName);
+    return Response.ok().build();
   }
 }
