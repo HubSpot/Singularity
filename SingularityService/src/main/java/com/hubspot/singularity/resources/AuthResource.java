@@ -1,7 +1,12 @@
 package com.hubspot.singularity.resources;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -12,12 +17,14 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityTokenResponse;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserHolder;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AuthTokenManager;
 import com.hubspot.singularity.data.UserManager;
 
 import io.dropwizard.auth.Auth;
@@ -37,16 +44,19 @@ public class AuthResource {
   private final SingularityConfiguration configuration;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final SingularityAuthDatastore authDatastore;
+  private final AuthTokenManager authTokenManager;
 
   @Inject
   public AuthResource(UserManager userManager,
                       SingularityConfiguration configuration,
                       SingularityAuthorizationHelper authorizationHelper,
-                      SingularityAuthDatastore authDatastore) {
+                      SingularityAuthDatastore authDatastore,
+                      AuthTokenManager authTokenManager) {
     this.userManager = userManager;
     this.configuration = configuration;
     this.authorizationHelper = authorizationHelper;
     this.authDatastore = authDatastore;
+    this.authTokenManager = authTokenManager;
   }
 
   @GET
@@ -89,6 +99,32 @@ public class AuthResource {
       @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
       @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));
+    return Response.ok().build();
+  }
+
+  @POST
+  @Path("/token")
+  @Operation(
+      summary = "Generate a new auth token for the provided user data, can only be done by an admin",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "the user data and generated token")
+      }
+  )
+  public SingularityTokenResponse generateToken(@Parameter(hidden = true) @Auth SingularityUser user, SingularityUser userForToken) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    authorizationHelper.checkAdminAuthorization(user);
+    return authTokenManager.generateToken(userForToken);
+  }
+
+  @DELETE
+  @Path("/token/{user}")
+  @Operation(
+      summary = "Clear tokens for a user",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "tokens cleared successfully")
+      }
+  )
+  public Response generateToken(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("user") String userName) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    authorizationHelper.checkAdminAuthorization(user);
     return Response.ok().build();
   }
 }
