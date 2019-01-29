@@ -125,6 +125,7 @@ public class AuthResource {
   )
   public Response generateToken(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("user") String userName) throws NoSuchAlgorithmException, InvalidKeySpecException {
     authorizationHelper.checkAdminAuthorization(user);
+    authTokenManager.clearTokensForUser(userName);
     return Response.ok().build();
   }
 }
