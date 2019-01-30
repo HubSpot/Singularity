@@ -10,11 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Request to create a new long lived auth token")
 public class SingularityTokenRequest {
   private final Optional<String> token;
-  private final SingularityUser user;
+  private final Optional<SingularityUser> user;
 
   @JsonCreator
   public SingularityTokenRequest(@JsonProperty("token") Optional<String> token,
-                                 SingularityUser user) {
+                                 @JsonProperty("user") Optional<SingularityUser> user) {
     this.token = token;
     this.user = user;
   }
@@ -24,8 +24,8 @@ public class SingularityTokenRequest {
     return token;
   }
 
-  @Schema(description = "User data associated with the token", required = true)
-  public SingularityUser getUser() {
+  @Schema(description = "User data associated with the token, will be the current logged in user if not provided", required = true)
+  public Optional<SingularityUser> getUser() {
     return user;
   }
 

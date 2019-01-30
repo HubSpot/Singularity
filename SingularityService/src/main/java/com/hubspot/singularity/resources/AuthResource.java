@@ -106,18 +106,24 @@ public class AuthResource {
   @POST
   @Path("/token")
   @Operation(
-      summary = "Generate a new auth token for the provided user data, can only be done by an admin",
+      summary = "Generate a new auth token for the provided user data, or for current authed user if no user provided in post body. Only one token can be active for a user at a time",
       responses = {
           @ApiResponse(responseCode = "200", description = "the user data and generated token")
       }
   )
   public SingularityTokenResponse generateToken(@Parameter(hidden = true) @Auth SingularityUser user,
                                                 SingularityTokenRequest tokenRequest) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    authorizationHelper.checkAdminAuthorization(user);
-    if (tokenRequest.getToken().isPresent()) {
-      return authTokenManager.saveToken(tokenRequest.getToken().get(), tokenRequest.getUser());
+    if (tokenRequest.getUser().isPresent()) {
+      authorizationHelper.checkAdminAuthorization(user);
     } else {
-      return authTokenManager.generateToken(tokenRequest.getUser());
+      authorizationHelper.checkUserInRequiredGroups(user);
+    }
+    SingularityUser userData = tokenRequest.getUser().or(user);
+    authTokenManager.clearTokensForUser(userData.getName());
+    if (tokenRequest.getToken().isPresent()) {
+      return authTokenManager.saveToken(tokenRequest.getToken().get(), userData);
+    } else {
+      return authTokenManager.generateToken(userData);
     }
   }
 
