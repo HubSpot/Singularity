@@ -40,12 +40,16 @@ public class AuthTokenManager extends CuratorManager {
 
   public SingularityTokenResponse generateToken(SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
     String newToken = UUID.randomUUID().toString();
+    return saveToken(newToken, userData);
+  }
+
+  public SingularityTokenResponse saveToken(String newToken, SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
     String hashed = generateTokenHash(newToken);
-    saveToken(hashed, userData);
+    writeToken(hashed, userData);
     return new SingularityTokenResponse(newToken, userData);
   }
 
-  private void saveToken(String hashed, SingularityUser userData) {
+  private void writeToken(String hashed, SingularityUser userData) {
     save(getTokenPath(hashed), userData, userTranscoder);
   }
 

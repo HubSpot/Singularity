@@ -1,29 +1,31 @@
 package com.hubspot.singularity;
 
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Response containing the generated long lived auth token and associated user data")
-public class SingularityTokenResponse {
-  private final String token;
-  private final SingularityUser user;
+@Schema(description = "Request to create a new long lived auth token")
+public class SingularityTokenRequest {
+  private final Optional<String> token;
+  private final Optional<SingularityUser> user;
 
   @JsonCreator
-  public SingularityTokenResponse(@JsonProperty("token") String token,
-                                  @JsonProperty("user") SingularityUser user) {
+  public SingularityTokenRequest(@JsonProperty("token") Optional<String> token,
+                                 @JsonProperty("user") Optional<SingularityUser> user) {
     this.token = token;
     this.user = user;
   }
 
-  @Schema(description = "The generated/saved token", required = true)
-  public String getToken() {
+  @Schema(description = "Optional token, will be auto-genearted if not specified", required = false)
+  public Optional<String> getToken() {
     return token;
   }
 
-  @Schema(description = "User data associated with the token", required = true)
-  public SingularityUser getUser() {
+  @Schema(description = "User data associated with the token, will be the current logged in user if not provided", required = true)
+  public Optional<SingularityUser> getUser() {
     return user;
   }
 
@@ -36,7 +38,7 @@ public class SingularityTokenResponse {
       return false;
     }
 
-    SingularityTokenResponse that = (SingularityTokenResponse) o;
+    SingularityTokenRequest that = (SingularityTokenRequest) o;
 
     if (token != null ? !token.equals(that.token) : that.token != null) {
       return false;
@@ -53,8 +55,8 @@ public class SingularityTokenResponse {
 
   @Override
   public String toString() {
-    return "SingularityTokenResponse{" +
-        "token='" + token + '\'' +
+    return "SingularityTokenRequest{" +
+        "token=" + token +
         ", user=" + user +
         '}';
   }
