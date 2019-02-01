@@ -142,7 +142,7 @@ public abstract class SingularityUploader {
       return Collections.emptyList();
     }
 
-    try (Stream<Path> paths = Files.walk(directory)) {
+    try (Stream<Path> paths = Files.walk(directory, 1)) {
       paths.forEach((file) -> {
         try {
           handleFile(file, isFinished, toUpload);
@@ -159,7 +159,7 @@ public abstract class SingularityUploader {
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.trace("{} was a directory, checking files in directory", path);
-        try (Stream<Path> paths = Files.walk(path)) {
+        try (Stream<Path> paths = Files.walk(path, 1)) {
           paths.forEach((file) -> {
             try {
               found.getAndAdd(handleFile(file, isFinished, toUpload).get());

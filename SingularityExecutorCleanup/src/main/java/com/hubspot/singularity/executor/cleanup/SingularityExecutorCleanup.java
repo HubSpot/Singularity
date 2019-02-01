@@ -164,7 +164,7 @@ public class SingularityExecutorCleanup {
     }
 
     try {
-      try (Stream<Path> paths = Files.walk(directory)) {
+      try (Stream<Path> paths = Files.walk(directory, 1)) {
         paths.forEach((file) -> {
           if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
             LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
