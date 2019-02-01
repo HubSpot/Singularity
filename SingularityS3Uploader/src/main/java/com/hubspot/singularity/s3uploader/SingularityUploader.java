@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,13 +142,15 @@ public abstract class SingularityUploader {
       return Collections.emptyList();
     }
 
-    Files.walk(directory).forEach((file) -> {
-      try {
-        handleFile(file, isFinished, toUpload);
-      } catch (IOException ioe) {
-        throw new RuntimeException(ioe);
-      }
-    });
+    try (Stream<Path> paths = Files.walk(directory)) {
+      paths.forEach((file) -> {
+        try {
+          handleFile(file, isFinished, toUpload);
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
+    }
     return toUpload;
   }
 
@@ -156,13 +159,15 @@ public abstract class SingularityUploader {
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.trace("{} was a directory, checking files in directory", path);
-        Files.walk(path).forEach((file) -> {
-          try {
-            found.getAndAdd(handleFile(file, isFinished, toUpload).get());
-          } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-          }
-        });
+        try (Stream<Path> paths = Files.walk(path)) {
+          paths.forEach((file) -> {
+            try {
+              found.getAndAdd(handleFile(file, isFinished, toUpload).get());
+            } catch (IOException ioe) {
+              throw new RuntimeException(ioe);
+            }
+          });
+        }
 
       } else {
         LOG.trace("{} was a directory, skipping", path);

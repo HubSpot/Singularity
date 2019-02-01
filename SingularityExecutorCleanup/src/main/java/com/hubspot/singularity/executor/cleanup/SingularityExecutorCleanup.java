@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,69 +164,71 @@ public class SingularityExecutorCleanup {
     }
 
     try {
-      Files.walk(directory).forEach((file) -> {
-        if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
-          LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
-          statisticsBldr.incrInvalidTasks();
-          return;
-        }
-
-        statisticsBldr.incrTotalTaskFiles();
-
-        try {
-          Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
-
-          if (!maybeTaskDefinition.isPresent()) {
+      try (Stream<Path> paths = Files.walk(directory)) {
+        paths.forEach((file) -> {
+          if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
+            LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
             statisticsBldr.incrInvalidTasks();
             return;
           }
 
-          SingularityExecutorTaskDefinition taskDefinition = withDefaults(maybeTaskDefinition.get());
-
-          final String taskId = taskDefinition.getTaskId();
-
-          LOG.info("{} - Starting possible cleanup", taskId);
-
-          if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
-            statisticsBldr.incrRunningTasksIgnored();
-            return;
-          }
-
-          Optional<SingularityTaskHistory> taskHistory = null;
+          statisticsBldr.incrTotalTaskFiles();
 
           try {
-            taskHistory = singularityClient.getHistoryForTask(taskId);
-          } catch (SingularityClientException sce) {
-            LOG.error("{} - Failed fetching history", taskId, sce);
-            exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
-            statisticsBldr.incrErrorTasks();
-            return;
-          }
+            Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
-          TaskCleanupResult result = cleanTask(taskDefinition, taskHistory);
+            if (!maybeTaskDefinition.isPresent()) {
+              statisticsBldr.incrInvalidTasks();
+              return;
+            }
 
-          LOG.info("{} - {}", taskId, result);
+            SingularityExecutorTaskDefinition taskDefinition = withDefaults(maybeTaskDefinition.get());
 
-          switch (result) {
-            case ERROR:
+            final String taskId = taskDefinition.getTaskId();
+
+            LOG.info("{} - Starting possible cleanup", taskId);
+
+            if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
+              statisticsBldr.incrRunningTasksIgnored();
+              return;
+            }
+
+            Optional<SingularityTaskHistory> taskHistory = null;
+
+            try {
+              taskHistory = singularityClient.getHistoryForTask(taskId);
+            } catch (SingularityClientException sce) {
+              LOG.error("{} - Failed fetching history", taskId, sce);
+              exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
               statisticsBldr.incrErrorTasks();
-              break;
-            case SUCCESS:
-              statisticsBldr.incrSuccessfullyCleanedTasks();
-              break;
-            case WAITING:
-              statisticsBldr.incrWaitingTasks();
-              break;
-            default:
-              break;
-          }
+              return;
+            }
 
-        } catch (IOException ioe) {
-          LOG.error("Couldn't read file {}", file, ioe);
-          exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
-          statisticsBldr.incrIoErrorTasks();
-        }
-      });
+            TaskCleanupResult result = cleanTask(taskDefinition, taskHistory);
+
+            LOG.info("{} - {}", taskId, result);
+
+            switch (result) {
+              case ERROR:
+                statisticsBldr.incrErrorTasks();
+                break;
+              case SUCCESS:
+                statisticsBldr.incrSuccessfullyCleanedTasks();
+                break;
+              case WAITING:
+                statisticsBldr.incrWaitingTasks();
+                break;
+              default:
+                break;
+            }
+
+          } catch (IOException ioe) {
+            LOG.error("Couldn't read file {}", file, ioe);
+            exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
+            statisticsBldr.incrIoErrorTasks();
+          }
+        });
+      }
     } catch (IOException ioe) {
       LOG.error("Couldn't read files", ioe);
       exceptionNotifier.notify(String.format("Error reading files (%s)", ioe.getMessage()), ioe, Collections.emptyMap());

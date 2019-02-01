@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,19 +122,21 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     AtomicInteger foundFiles = new AtomicInteger();
 
-    Files.walk(Paths.get(baseConfiguration.getS3UploaderMetadataDirectory())).forEach((file) -> {
-      if (!isS3MetadataFile(file)) {
-        return;
-      }
-
-      try {
-        if (handleNewOrModifiedS3Metadata(file)) {
-          foundFiles.incrementAndGet();
+    try (Stream<Path> paths = Files.walk(Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), 1)) {
+      paths.forEach((file) -> {
+        if (!isS3MetadataFile(file)) {
+          return;
         }
-      } catch (IOException ioe) {
-        throw new RuntimeException(ioe);
-      }
-    });
+
+        try {
+          if (handleNewOrModifiedS3Metadata(file)) {
+            foundFiles.incrementAndGet();
+          }
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
+    }
 
     LOG.info("Found {} file(s) in {}", foundFiles, JavaUtils.duration(start));
   }
