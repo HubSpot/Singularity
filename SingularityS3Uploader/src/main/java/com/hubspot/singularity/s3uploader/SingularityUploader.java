@@ -144,6 +144,9 @@ public abstract class SingularityUploader {
 
     try (Stream<Path> paths = Files.walk(directory, 1)) {
       paths.forEach((file) -> {
+        if (file.equals(directory)) {
+          return;
+        }
         try {
           handleFile(file, isFinished, toUpload);
         } catch (IOException ioe) {
@@ -161,6 +164,9 @@ public abstract class SingularityUploader {
         LOG.trace("{} was a directory, checking files in directory", path);
         try (Stream<Path> paths = Files.walk(path, 1)) {
           paths.forEach((file) -> {
+            if (file.equals(path)) {
+              return; // Files.walk includes an element that is the starting path itself, skip this
+            }
             try {
               found.getAndAdd(handleFile(file, isFinished, toUpload).get());
             } catch (IOException ioe) {
