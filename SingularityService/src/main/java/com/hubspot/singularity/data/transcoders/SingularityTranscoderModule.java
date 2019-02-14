@@ -50,6 +50,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -100,6 +101,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityRequestGroup.class);
     bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
+    bindTranscoder(binder).asJson(SingularityUser.class);
     bindTranscoder(binder).asJson(SingularitySlaveUsage.class);
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
     bindTranscoder(binder).asJson(SingularityClusterUtilization.class);
