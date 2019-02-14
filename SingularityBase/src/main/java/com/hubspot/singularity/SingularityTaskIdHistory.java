@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "A task id and latest state for a task")
@@ -19,6 +20,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final Optional<ExtendedTaskState> lastTaskState;
   private final Optional<String> runId;
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   public static SingularityTaskIdHistory fromTaskIdAndTaskAndUpdates(SingularityTaskId taskId, SingularityTask task, List<SingularityTaskHistoryUpdate> updates) {
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();

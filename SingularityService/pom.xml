@@ -262,6 +262,11 @@
     </dependency>
 
     <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
     </dependency>
@@ -415,11 +420,6 @@
       <scope>runtime</scope>
     </dependency>
 
-    <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
-    </dependency>
-
     <!-- for jade -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -489,11 +489,11 @@
         <!-- TODO: Push up to hubspot basepom? -->
         <dependencies>
           <dependency>
-          <groupId>org.postgresql</groupId>
-          <artifactId>postgresql</artifactId>
-          <version>42.2.4</version>
-          <scope>runtime</scope>
-        </dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.4</version>
+            <scope>runtime</scope>
+          </dependency>
         </dependencies>
       </dependencyManagement>
       <dependencies>

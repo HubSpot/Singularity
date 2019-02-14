@@ -95,6 +95,7 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.PerRequestConfig;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -421,6 +422,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
           @ApiResponse(responseCode = "200", description = "Returns the cleanup created to trigger a task kill")
       }
   )
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityTaskCleanup killTask(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Id of the task to kill") @PathParam("taskId") String taskId,
