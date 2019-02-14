@@ -295,8 +295,16 @@ public class StateManager extends CuratorManager {
 
     final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
         .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
-    final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
+    final List<SingularityPendingTaskId> maybeOnDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
     final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
+
+    List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
+    for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
+      String requestId = requestManager.getRequest(maybeOnDemandLateTask.getRequestId()).get().getRequest().getId();
+      if (taskManager.getActiveTaskIdsForRequest(requestId).size() < maybeOnDemandLateTask.getInstanceNo()) {
+        onDemandLateTasks.add(maybeOnDemandLateTask);
+      }
+    }
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
