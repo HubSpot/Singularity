@@ -144,7 +144,7 @@ public class SingularityAbort implements ConnectionStateListener {
       body = "(no stack trace)";
     }
 
-    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, body);
+    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.of(), message, body);
   }
 
   private void flushLogs() {

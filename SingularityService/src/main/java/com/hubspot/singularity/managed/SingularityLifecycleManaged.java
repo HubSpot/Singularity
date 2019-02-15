@@ -11,12 +11,12 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityAsyncHttpClient;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.lifecycle.Managed;
 
@@ -31,7 +31,7 @@ public class SingularityLifecycleManaged implements Managed {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLifecycleManaged.class);
 
   private final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory;
-  private final SingularityAsyncHttpClient asyncHttpClient;
+  private final AsyncHttpClient asyncHttpClient;
   private final SingularityLeaderController leaderController;
   private final SingularityLeaderLatch leaderLatch;
   private final SingularityMesosExecutorInfoSupport executorInfoSupport;
@@ -43,7 +43,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   @Inject
   public SingularityLifecycleManaged(SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
-                                     SingularityAsyncHttpClient asyncHttpClient,
+                                     AsyncHttpClient asyncHttpClient,
                                      CuratorFramework curatorFramework,
                                      SingularityLeaderController leaderController,
                                      SingularityLeaderLatch leaderLatch,
