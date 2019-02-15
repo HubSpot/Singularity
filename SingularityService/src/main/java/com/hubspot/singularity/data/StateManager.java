@@ -296,8 +296,9 @@ public class StateManager extends CuratorManager {
     final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
         .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
     final List<SingularityPendingTaskId> maybeOnDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
-    final List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(maybeOnDemandLateTasks);
     final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
+
+    final List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(maybeOnDemandLateTasks);
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
@@ -316,10 +317,9 @@ public class StateManager extends CuratorManager {
   private List<SingularityPendingTaskId> getOnDemandLateTasks (List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
     List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
     for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
-      String requestId = requestManager.getRequest(maybeOnDemandLateTask.getRequestId()).get().getRequest().getId();
-      Optional<Integer> maybeInstancesLimit = requestManager.getRequest(maybeOnDemandLateTask.getRequestId()).get().getRequest().getInstances();
+      final Optional<Integer> maybeInstancesLimit = requestManager.getRequest(maybeOnDemandLateTask.getRequestId()).get().getRequest().getInstances();
       if (maybeInstancesLimit.isPresent()) {
-        if (taskManager.getActiveTaskIdsForRequest(requestId).size() < maybeInstancesLimit.get()) {
+        if (taskManager.getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId()).size() < maybeInstancesLimit.get()) {
           onDemandLateTasks.add(maybeOnDemandLateTask);
         }
       }
