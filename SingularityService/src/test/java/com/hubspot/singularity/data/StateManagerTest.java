@@ -85,7 +85,7 @@ public class StateManagerTest extends SingularitySchedulerTestBase{
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build(), singularityUser);
     initFirstDeploy();
 
-    configuration.setDeltaAfterWhichTasksAreLateMillis(TimeUnit.MILLISECONDS.toMillis(10));
+    configuration.setDeltaAfterWhichTasksAreLateMillis(0);
 
     requestResource.scheduleImmediately(
         singularityUser,
