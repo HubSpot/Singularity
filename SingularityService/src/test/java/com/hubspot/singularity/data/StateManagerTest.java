@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,6 +12,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -73,5 +76,49 @@ public class StateManagerTest extends SingularitySchedulerTestBase{
     SingularityState state = stateManager.getState(true, false);
     Assert.assertEquals(0, state.getOverProvisionedRequests());
     Assert.assertEquals(0, state.getUnderProvisionedRequests());
+  }
+
+  @Test
+  public void itDoesntCountInstancesOverLimitInOnDemandLateTasks() {
+    initOnDemandRequest();
+    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build(), singularityUser);
+    initFirstDeploy();
+
+    configuration.setDeltaAfterWhichTasksAreLateMillis(0);
+
+    requestResource.scheduleImmediately(
+        singularityUser,
+        request.getId(),
+        new SingularityRunNowRequestBuilder()
+            .setRunAt(System.currentTimeMillis())
+            .build()
+    );
+    scheduler.drainPendingQueue();
+
+    SingularityState state = stateManager.getState(true, false);
+    System.out.println(state);
+
+    Assert.assertEquals(0, state.getActiveTasks());
+    Assert.assertEquals(1, state.getScheduledTasks());
+
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    state = stateManager.getState(true, false);
+    System.out.println(state);
+
+    Assert.assertEquals(1, state.getActiveTasks());
+    Assert.assertEquals(1, state.getScheduledTasks());
+    Assert.assertEquals(1, state.getOnDemandLateTasks());
+    Assert.assertEquals(0, state.getLateTasks());
+
+    launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+    state = stateManager.getState(true, false);
+    System.out.println(state);
+    Assert.assertEquals(2, state.getActiveTasks());
+    Assert.assertEquals(1, state.getScheduledTasks());
+    Assert.assertEquals(0, state.getOnDemandLateTasks());
+    Assert.assertEquals(0, state.getLateTasks());
+
+    configuration.setDeltaAfterWhichTasksAreLateMillis(TimeUnit.SECONDS.toMillis(30));
   }
 }

@@ -295,8 +295,10 @@ public class StateManager extends CuratorManager {
 
     final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
         .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
-    final List<SingularityPendingTaskId> onDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
+    final List<SingularityPendingTaskId> maybeOnDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
     final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
+
+    final List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(maybeOnDemandLateTasks);
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
@@ -310,6 +312,22 @@ public class StateManager extends CuratorManager {
       return requestManager.getRequest(taskId.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND);
     }
     return false;
+  }
+
+  private List<SingularityPendingTaskId> getOnDemandLateTasks (List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
+    List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
+    for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(maybeOnDemandLateTask.getRequestId());
+      if (maybeRequest.isPresent()) {
+        final Optional<Integer> maybeInstancesLimit = maybeRequest.get().getRequest().getInstances();
+        if (maybeInstancesLimit.isPresent()) {
+          if (taskManager.getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId()).size() < maybeInstancesLimit.get()) {
+            onDemandLateTasks.add(maybeOnDemandLateTask);
+          }
+        }
+      }
+    }
+    return onDemandLateTasks;
   }
 
   private Map<String, Long> getNumTasks(List<SingularityRequestWithState> requests) {
