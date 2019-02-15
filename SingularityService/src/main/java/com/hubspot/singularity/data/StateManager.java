@@ -317,10 +317,13 @@ public class StateManager extends CuratorManager {
   private List<SingularityPendingTaskId> getOnDemandLateTasks (List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
     List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
     for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
-      final Optional<Integer> maybeInstancesLimit = requestManager.getRequest(maybeOnDemandLateTask.getRequestId()).get().getRequest().getInstances();
-      if (maybeInstancesLimit.isPresent()) {
-        if (taskManager.getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId()).size() < maybeInstancesLimit.get()) {
-          onDemandLateTasks.add(maybeOnDemandLateTask);
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(maybeOnDemandLateTask.getRequestId());
+      if (maybeRequest.isPresent()) {
+        final Optional<Integer> maybeInstancesLimit = maybeRequest.get().getRequest().getInstances();
+        if (maybeInstancesLimit.isPresent()) {
+          if (taskManager.getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId()).size() < maybeInstancesLimit.get()) {
+            onDemandLateTasks.add(maybeOnDemandLateTask);
+          }
         }
       }
     }
