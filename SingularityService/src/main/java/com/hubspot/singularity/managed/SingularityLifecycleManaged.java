@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
@@ -33,7 +33,7 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory;
   private final AsyncHttpClient asyncHttpClient;
   private final SingularityLeaderController leaderController;
-  private final SingularityLeaderLatch leaderLatch;
+  private final LeaderLatch leaderLatch;
   private final SingularityMesosExecutorInfoSupport executorInfoSupport;
   private final SingularityGraphiteReporter graphiteReporter;
 
@@ -46,7 +46,7 @@ public class SingularityLifecycleManaged implements Managed {
                                      AsyncHttpClient asyncHttpClient,
                                      CuratorFramework curatorFramework,
                                      SingularityLeaderController leaderController,
-                                     SingularityLeaderLatch leaderLatch,
+                                     LeaderLatch leaderLatch,
                                      SingularityMesosExecutorInfoSupport executorInfoSupport,
                                      SingularityGraphiteReporter graphiteReporter) {
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
