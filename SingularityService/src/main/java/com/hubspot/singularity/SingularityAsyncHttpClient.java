@@ -5,9 +5,7 @@ import javax.inject.Inject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 
-import io.dropwizard.lifecycle.Managed;
-
-public class SingularityAsyncHttpClient extends AsyncHttpClient implements Managed {
+public class SingularityAsyncHttpClient extends AsyncHttpClient {
 
   public SingularityAsyncHttpClient(AsyncHttpClientConfig clientConfig) {
     super(clientConfig);
@@ -15,13 +13,4 @@ public class SingularityAsyncHttpClient extends AsyncHttpClient implements Manag
 
   @Inject
   public SingularityAsyncHttpClient() {}
-
-  @Override
-  public void start() {}
-
-  @Override
-  public void stop() {
-    close();
-  }
-
 }

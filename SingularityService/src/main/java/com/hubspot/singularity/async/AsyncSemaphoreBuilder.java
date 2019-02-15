@@ -2,19 +2,23 @@ package com.hubspot.singularity.async;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public class AsyncSemaphoreBuilder {
   private final PermitSource permitSource;
+  private final ScheduledExecutorService flushingExecutor;
 
   private int queueSize = -1;
   private Supplier<Integer> queueRejectionThreshold = () -> -1;
   private Supplier<Exception> timeoutExceptionSupplier = TimeoutException::new;
   private boolean flushQueuePeriodically = false;
 
-  AsyncSemaphoreBuilder(PermitSource permitSource) {
+
+  AsyncSemaphoreBuilder(PermitSource permitSource, ScheduledExecutorService flushingExecutor) {
     this.permitSource = permitSource;
+    this.flushingExecutor = flushingExecutor;
   }
 
   /**
@@ -63,7 +67,8 @@ public class AsyncSemaphoreBuilder {
         queueSize == -1 ? new ConcurrentLinkedQueue<>() : new ArrayBlockingQueue<>(queueSize),
         queueRejectionThreshold,
         timeoutExceptionSupplier,
-        flushQueuePeriodically
+        flushQueuePeriodically,
+        flushingExecutor
     );
   }
 }

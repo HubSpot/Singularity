@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -132,7 +134,15 @@ public class SingularityAbort implements ConnectionStateListener {
       return;
     }
 
-    final String body = throwable.isPresent() ? throwable.get().toString() : "(no stack trace)";
+    final String body;
+    if (throwable.isPresent()) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      throwable.get().printStackTrace(pw);
+      body = throwable.get().getMessage() + "\n" + sw.toString();
+    } else {
+      body = "(no stack trace)";
+    }
 
     smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, body);
   }

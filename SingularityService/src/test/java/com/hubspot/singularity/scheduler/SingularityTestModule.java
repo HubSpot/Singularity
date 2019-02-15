@@ -209,7 +209,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
 
-    mainBinder.install(new SingularityEventModule(configuration));
+    mainBinder.install(new SingularityEventModule());
 
     // Auth module bits
     mainBinder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);

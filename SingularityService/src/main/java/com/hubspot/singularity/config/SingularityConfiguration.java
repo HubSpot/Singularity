@@ -290,7 +290,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int coreThreadpoolSize = 8;
 
-  private long threadpoolShutdownDelayInSeconds = 1;
+  private long threadpoolShutdownDelayInSeconds = 10;
 
   private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 

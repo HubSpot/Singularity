@@ -14,10 +14,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-import io.dropwizard.lifecycle.Managed;
-
 @Singleton
-public class SingularityManagedScheduledExecutorServiceFactory implements Managed {
+public class SingularityManagedScheduledExecutorServiceFactory {
 
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ScheduledExecutorService> executorPools = new ArrayList<>();
@@ -29,19 +27,17 @@ public class SingularityManagedScheduledExecutorServiceFactory implements Manage
     this.timeoutInMillis = TimeUnit.SECONDS.toMillis(configuration.getThreadpoolShutdownDelayInSeconds());
   }
 
-  public synchronized ScheduledExecutorService get(String name) {
+  public ScheduledExecutorService get(String name) {
+    return get(name, 1);
+  }
+
+  public synchronized ScheduledExecutorService get(String name, int poolSize) {
     checkState(!stopped.get(), "already stopped");
-    ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build());
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build());
     executorPools.add(service);
     return service;
   }
 
-  @Override
-  public void start() throws Exception {
-    // Ignored
-  }
-
-  @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
       for (ScheduledExecutorService service : executorPools) {
