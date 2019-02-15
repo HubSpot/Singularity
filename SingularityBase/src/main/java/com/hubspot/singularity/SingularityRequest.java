@@ -200,7 +200,7 @@ public class SingularityRequest {
     return scheduleTimeZone;
   }
 
-  @Schema(nullable = true, description = "A count limit of tasks to run for on-demand requests")
+  @Schema(nullable = true, description = "A count of tasks to run for long-running requests or the limit on the number of concurrent tasks for on-demand requests")
   public Optional<Integer> getInstances() {
     return instances;
   }
