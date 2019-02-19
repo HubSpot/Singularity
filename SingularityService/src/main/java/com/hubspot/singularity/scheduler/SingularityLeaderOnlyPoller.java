@@ -22,9 +22,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-import io.dropwizard.lifecycle.Managed;
-
-public abstract class SingularityLeaderOnlyPoller implements Managed {
+public abstract class SingularityLeaderOnlyPoller {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
 
@@ -67,7 +65,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this.statusUpdateDelta30sAverage = checkNotNull(statusUpdateDelta30sAverage, "statusUpdateDeltaAverage is null");
   }
 
-  @Override
   public void start() {
     if (!isEnabled()) {
       LOG.info("{} is not enabled, not starting.", getClass().getSimpleName());
@@ -133,7 +130,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   public abstract void runActionOnPoll();
 
-  @Override
   public void stop() {
   }
 }

@@ -2,6 +2,7 @@ package com.hubspot.singularity.managed;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -14,8 +15,10 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
+import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.lifecycle.Managed;
@@ -36,6 +39,8 @@ public class SingularityLifecycleManaged implements Managed {
   private final LeaderLatch leaderLatch;
   private final SingularityMesosExecutorInfoSupport executorInfoSupport;
   private final SingularityGraphiteReporter graphiteReporter;
+  private final ExecutorIdGenerator executorIdGenerator;
+  private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
 
   private final CuratorFramework curatorFramework;
   private final AtomicBoolean started = new AtomicBoolean(false);
@@ -48,7 +53,9 @@ public class SingularityLifecycleManaged implements Managed {
                                      SingularityLeaderController leaderController,
                                      LeaderLatch leaderLatch,
                                      SingularityMesosExecutorInfoSupport executorInfoSupport,
-                                     SingularityGraphiteReporter graphiteReporter) {
+                                     SingularityGraphiteReporter graphiteReporter,
+                                     ExecutorIdGenerator executorIdGenerator,
+                                     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     this.asyncHttpClient = asyncHttpClient;
     this.curatorFramework = curatorFramework;
@@ -56,6 +63,8 @@ public class SingularityLifecycleManaged implements Managed {
     this.leaderLatch = leaderLatch;
     this.executorInfoSupport = executorInfoSupport;
     this.graphiteReporter = graphiteReporter;
+    this.executorIdGenerator = executorIdGenerator;
+    this.leaderOnlyPollers = leaderOnlyPollers;
   }
 
   @Override
@@ -65,6 +74,8 @@ public class SingularityLifecycleManaged implements Managed {
       leaderLatch.start();
       leaderController.start(); // start the state poller
       graphiteReporter.start();
+      executorIdGenerator.start();
+      leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
     } else {
       LOG.info("Already started, will not call again");
     }
@@ -106,6 +117,7 @@ public class SingularityLifecycleManaged implements Managed {
   private void stopExecutorsAndPollers() {
     try {
       LOG.info("Stopping pollers");
+      leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop); // mostly no-op, custom stop actions per poller
       scheduledExecutorServiceFactory.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
