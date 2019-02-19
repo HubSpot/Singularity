@@ -164,6 +164,7 @@ public class SingularityMainModule implements Module {
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
 
     binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityManagedCachedThreadPoolFactory.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporter.class).in(Scopes.SINGLETON);
 

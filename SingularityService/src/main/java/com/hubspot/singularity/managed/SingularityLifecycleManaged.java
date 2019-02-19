@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
@@ -33,6 +34,7 @@ import io.dropwizard.lifecycle.Managed;
 public class SingularityLifecycleManaged implements Managed {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLifecycleManaged.class);
 
+  private final SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory;
   private final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory;
   private final AsyncHttpClient asyncHttpClient;
   private final SingularityLeaderController leaderController;
@@ -47,7 +49,8 @@ public class SingularityLifecycleManaged implements Managed {
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   @Inject
-  public SingularityLifecycleManaged(SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
+  public SingularityLifecycleManaged(SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                     SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
                                      AsyncHttpClient asyncHttpClient,
                                      CuratorFramework curatorFramework,
                                      SingularityLeaderController leaderController,
@@ -56,6 +59,7 @@ public class SingularityLifecycleManaged implements Managed {
                                      SingularityGraphiteReporter graphiteReporter,
                                      ExecutorIdGenerator executorIdGenerator,
                                      Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
+    this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     this.asyncHttpClient = asyncHttpClient;
     this.curatorFramework = curatorFramework;
@@ -116,9 +120,10 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopExecutorsAndPollers() {
     try {
-      LOG.info("Stopping pollers");
+      LOG.info("Stopping pollers and executors");
       leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop); // mostly no-op, custom stop actions per poller
       scheduledExecutorServiceFactory.stop();
+      cachedThreadPoolFactory.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
     }
