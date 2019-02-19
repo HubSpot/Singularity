@@ -64,12 +64,12 @@ public class SingularityAbort implements ConnectionStateListener {
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
     if (newState == ConnectionState.LOST) {
       LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION, Optional.<Throwable>absent());
+      abort(AbortReason.LOST_ZK_CONNECTION, Optional.absent());
     }
   }
 
   public enum AbortReason {
-    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR, LOST_MESOS_CONNECTION;
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, ERROR_IN_LEADER_ONLY_POLLER, TEST_ABORT, MESOS_ERROR, LOST_MESOS_CONNECTION;
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {

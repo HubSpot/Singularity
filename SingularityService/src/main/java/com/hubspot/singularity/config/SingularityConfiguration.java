@@ -76,7 +76,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkMesosMasterHeartbeatEverySeconds = 20;
 
-  private long maxMissedMesosMasterHeartbeats = 3;
+  private long maxMissedMesosMasterHeartbeats = 5;
 
   private int maxConcurrentUsageCollections = 15;
 

@@ -84,6 +84,11 @@ public class SingularityLeaderController implements LeaderLatchListener {
     } catch (Throwable t) {
       LOG.error("While starting driver", t);
       exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
+      try {
+        scheduler.notifyStopping();
+      } catch (Throwable th) {
+        LOG.warn("While stopping scheduler due to bad initial start({})", th.getMessage());
+      }
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
