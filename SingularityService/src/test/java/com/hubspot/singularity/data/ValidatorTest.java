@@ -123,7 +123,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
 
-    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 1, 0);
   }
 
   @Test(expected = WebApplicationException.class)
