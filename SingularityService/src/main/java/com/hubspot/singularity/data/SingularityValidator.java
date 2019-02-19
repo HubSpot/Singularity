@@ -417,20 +417,20 @@ public class SingularityValidator {
                                                       Optional<String> userEmail,
                                                       SingularityRequest request,
                                                       Optional<SingularityRunNowRequest> maybeRunNowRequest,
-                                                      List<SingularityTaskId> activeTasks,
-                                                      List<SingularityPendingTaskId> pendingTasks) {
+                                                      Integer activeTasks,
+                                                      Integer pendingTasks) {
     SingularityRunNowRequest runNowRequest = fillRunNowRequest(maybeRunNowRequest);
     PendingType pendingType;
     if (request.isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-      checkConflict(activeTasks.isEmpty(), "Cannot request immediate run of a scheduled job which is currently running (%s)", activeTasks);
+      checkConflict(activeTasks > 0, "Cannot request immediate run of a scheduled job which is currently running (%s)", activeTasks);
     } else if (request.isOneOff()) {
       pendingType = PendingType.ONEOFF;
       if (request.getInstances().isPresent()) {
         checkRateLimited(
-            activeTasks.size() + pendingTasks.size() < request.getInstances().get(),
+            activeTasks + pendingTasks < request.getInstances().get(),
             "No more than %s tasks allowed to run concurrently for request %s (%s active, %s pending)",
-            request.getInstances().get(), request, activeTasks.size(), pendingTasks.size());
+            request.getInstances().get(), request, activeTasks, pendingTasks);
       }
     } else {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
