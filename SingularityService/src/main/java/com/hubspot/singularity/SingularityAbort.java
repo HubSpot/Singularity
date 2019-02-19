@@ -9,7 +9,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.eclipse.jetty.server.Server;
@@ -26,6 +25,7 @@ import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
@@ -76,22 +76,16 @@ public class SingularityAbort implements ConnectionStateListener {
     if (!aborting.getAndSet(true)) {
       try {
         sendAbortNotification(abortReason, throwable);
-        if (abortReason != AbortReason.LOST_LEADERSHIP && abortReason != AbortReason.LOST_ZK_CONNECTION) {
-          attemptLeaderLatchClose();
+        SingularityLifecycleManaged lifecycle = injector.getInstance(SingularityLifecycleManaged.class);
+        try {
+          lifecycle.stop();
+        } catch (Throwable t) {
+          LOG.error("While shutting down", t);
         }
-
         flushLogs();
       } finally {
         exit();
       }
-    }
-  }
-
-  private void attemptLeaderLatchClose() {
-    try {
-      injector.getInstance(LeaderLatch.class).close();
-    } catch (Exception e) {
-      LOG.error("While attempting to close leader latch", e);
     }
   }
 

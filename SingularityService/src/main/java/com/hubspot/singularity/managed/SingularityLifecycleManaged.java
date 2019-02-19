@@ -68,13 +68,61 @@ public class SingularityLifecycleManaged implements Managed {
 
   @Override
   public void stop() throws Exception {
-    scheduledExecutorServiceFactory.stop(); //shut down pollers
-    leaderController.stop(); // stop the state poller
-    executorInfoSupport.stop(); // stop directory fetcher
-    asyncHttpClient.close(); // Shut off most http client usages
-    leaderLatch.close();
+    stopExecutorsAndPollers();
+    stopStatePoller();
+    stopDirectoryFetcher();
+    stopHttpClients();
+    stopLeaderLatch();
     stopCurator();
-    graphiteReporter.stop();
+    stopGraphiteReporter();
+  }
+
+  private void stopDirectoryFetcher() {
+    try {
+      executorInfoSupport.stop();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop task directory fetcher ({})}", t.getMessage());
+    }
+  }
+
+  private void stopHttpClients() {
+    try {
+      asyncHttpClient.close();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop http clients ({})}", t.getMessage());
+    }
+  }
+
+  private void stopExecutorsAndPollers() {
+    try {
+      scheduledExecutorServiceFactory.stop();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
+    }
+  }
+
+  private void stopStatePoller() {
+    try {
+      leaderController.stop();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop state poller ({})}", t.getMessage());
+    }
+  }
+
+  private void stopGraphiteReporter() {
+    try {
+      graphiteReporter.stop();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop graphite reporter ({})}", t.getMessage());
+    }
+  }
+
+  private void stopLeaderLatch() {
+    try {
+      leaderLatch.close();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop leader latch ({})}", t.getMessage());
+    }
   }
 
   private void startCurator() {
