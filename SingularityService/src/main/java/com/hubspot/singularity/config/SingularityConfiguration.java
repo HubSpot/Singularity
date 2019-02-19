@@ -386,6 +386,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean reCheckMetricsForLargeNewTaskCount = false;
 
+  private boolean proxyRunNowToLeader = true;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1642,5 +1644,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReCheckMetricsForLargeNewTaskCount(boolean reCheckMetricsForLargeNewTaskCount) {
     this.reCheckMetricsForLargeNewTaskCount = reCheckMetricsForLargeNewTaskCount;
+  }
+
+  public boolean isProxyRunNowToLeader() {
+    return proxyRunNowToLeader;
+  }
+
+  public void setProxyRunNowToLeader(boolean proxyRunNowToLeader) {
+    this.proxyRunNowToLeader = proxyRunNowToLeader;
   }
 }

@@ -390,7 +390,11 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
         @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
-    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
+    if (configuration.isProxyRunNowToLeader()) {
+      return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
+    } else {
+      return scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false));
+    }
   }
 
   public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
@@ -405,14 +409,25 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
+    // Check these to avoid unnecessary calls to taskManager
+    Integer activeTasks = null;
+    Integer pendingTasks = null;
+
+    boolean isOneoffWithInstances = requestWithState.getRequest().isOneOff() && requestWithState.getRequest().getInstances().isPresent();
+    if (requestWithState.getRequest().isScheduled() || isOneoffWithInstances) {
+      activeTasks = taskManager.getActiveTaskIdsForRequest(requestId).size();
+    }
+    if (isOneoffWithInstances) {
+      pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId).size();
+    }
 
     final SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
         getAndCheckDeployId(requestId),
         user.getEmail(),
         requestWithState.getRequest(),
         maybeRunNowRequest,
-        taskManager.getActiveTaskIdsForRequest(requestId),
-        taskManager.getPendingTaskIdsForRequest(requestId));
+        activeTasks,
+        pendingTasks);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
