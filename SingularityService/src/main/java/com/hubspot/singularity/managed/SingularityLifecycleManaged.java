@@ -38,8 +38,8 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityGraphiteReporter graphiteReporter;
 
   private final CuratorFramework curatorFramework;
-  private final AtomicBoolean started = new AtomicBoolean();
-  private final AtomicBoolean stopped = new AtomicBoolean();
+  private final AtomicBoolean started = new AtomicBoolean(false);
+  private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   @Inject
   public SingularityLifecycleManaged(SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
@@ -60,21 +60,29 @@ public class SingularityLifecycleManaged implements Managed {
 
   @Override
   public void start() throws Exception {
-    startCurator();
-    leaderLatch.start();
-    leaderController.start(); // start the state poller
-    graphiteReporter.start();
+    if (!started.getAndSet(true)) {
+      startCurator();
+      leaderLatch.start();
+      leaderController.start(); // start the state poller
+      graphiteReporter.start();
+    } else {
+      LOG.info("Already started, will not call again");
+    }
   }
 
   @Override
   public void stop() throws Exception {
-    stopExecutorsAndPollers();
-    stopStatePoller();
-    stopDirectoryFetcher();
-    stopHttpClients();
-    stopLeaderLatch();
-    stopCurator();
-    stopGraphiteReporter();
+    if (!stopped.getAndSet(true)) {
+      stopExecutorsAndPollers();
+      stopStatePoller();
+      stopDirectoryFetcher();
+      stopHttpClients();
+      stopLeaderLatch();
+      stopCurator();
+      stopGraphiteReporter();
+    } else {
+      LOG.info("Already stopped");
+    }
   }
 
   private void stopDirectoryFetcher() {
@@ -126,24 +134,24 @@ public class SingularityLifecycleManaged implements Managed {
   }
 
   private void startCurator() {
-    if (!started.getAndSet(true)) {
-      curatorFramework.start();
+    curatorFramework.start();
 
-      final long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
-      try {
-        checkState(curatorFramework.getZookeeperClient().blockUntilConnectedOrTimedOut(), "did not connect to zookeeper");
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-
-      LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
+    try {
+      checkState(curatorFramework.getZookeeperClient().blockUntilConnectedOrTimedOut(), "did not connect to zookeeper");
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
+
+    LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
   }
 
   private void stopCurator() {
-    if (started.get() && !stopped.getAndSet(true)) {
+    try {
       curatorFramework.close();
+    } catch (Throwable t) {
+      LOG.warn("Could not close curator ({})", t.getMessage());
     }
   }
 }
