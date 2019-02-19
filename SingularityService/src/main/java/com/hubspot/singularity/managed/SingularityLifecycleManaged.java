@@ -87,6 +87,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopDirectoryFetcher() {
     try {
+      LOG.info("Stopping directory fetcher");
       executorInfoSupport.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop task directory fetcher ({})}", t.getMessage());
@@ -95,6 +96,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopHttpClients() {
     try {
+      LOG.info("Stopping http clients");
       asyncHttpClient.close();
     } catch (Throwable t) {
       LOG.warn("Could not stop http clients ({})}", t.getMessage());
@@ -103,6 +105,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopExecutorsAndPollers() {
     try {
+      LOG.info("Stopping pollers");
       scheduledExecutorServiceFactory.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
@@ -111,6 +114,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopStatePoller() {
     try {
+      LOG.info("Stopping state poller");
       leaderController.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop state poller ({})}", t.getMessage());
@@ -119,6 +123,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopGraphiteReporter() {
     try {
+      LOG.info("Stopping graphite reporter");
       graphiteReporter.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop graphite reporter ({})}", t.getMessage());
@@ -127,6 +132,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopLeaderLatch() {
     try {
+      LOG.info("Stopping leader latch");
       leaderLatch.close();
     } catch (Throwable t) {
       LOG.warn("Could not stop leader latch ({})}", t.getMessage());
@@ -149,6 +155,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopCurator() {
     try {
+      LOG.info("Stopping curator");
       curatorFramework.close();
     } catch (Throwable t) {
       LOG.warn("Could not close curator ({})", t.getMessage());
