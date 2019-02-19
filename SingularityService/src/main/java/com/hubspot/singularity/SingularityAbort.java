@@ -112,7 +112,11 @@ public class SingularityAbort implements ConnectionStateListener {
 
     sendAbortMail(message, throwable);
 
-    exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
+    if (throwable.isPresent()) {
+      exceptionNotifier.notify(message, throwable.get(), ImmutableMap.of("abortReason", abortReason.name()));
+    } else {
+      exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
+    }
   }
 
   private void sendAbortMail(final String message, final Optional<Throwable> throwable) {
