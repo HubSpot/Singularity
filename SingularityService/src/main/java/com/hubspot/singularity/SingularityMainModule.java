@@ -6,7 +6,9 @@ import static com.google.inject.name.Names.named;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,6 +31,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.ProvisionException;
@@ -63,6 +67,7 @@ import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
+import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -405,5 +410,18 @@ public class SingularityMainModule implements Module {
   @Named(LAST_MESOS_MASTER_HEARTBEAT_TIME)
   public AtomicLong provideLastHeartbeatTime() {
     return new AtomicLong(0);
+  }
+
+  @Provides
+  @Singleton
+  public Set<SingularityLeaderOnlyPoller> provideLeaderOnlyPollers(Injector injector) {
+    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers = new HashSet<>();
+    for (Key<?> key : injector.getAllBindings().keySet()) {
+      if (SingularityLeaderOnlyPoller.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+        SingularityLeaderOnlyPoller poller = (SingularityLeaderOnlyPoller) injector.getInstance(key);
+        leaderOnlyPollers.add(poller);
+      }
+    }
+    return leaderOnlyPollers;
   }
 }
