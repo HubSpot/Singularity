@@ -42,7 +42,6 @@ public class SingularityLeaderController implements LeaderLatchListener {
   private final OfferCache offerCache;
 
   private volatile boolean master;
-  private volatile boolean testMode;
 
   @Inject
   public SingularityLeaderController(StateManager stateManager,
@@ -64,7 +63,6 @@ public class SingularityLeaderController implements LeaderLatchListener {
     this.offerCache = offerCache;
 
     this.master = false;
-    this.testMode = false;
   }
 
   public void start() {
@@ -75,13 +73,17 @@ public class SingularityLeaderController implements LeaderLatchListener {
     statePoller.finish();
   }
 
+  protected boolean isTestMode() {
+    return false;
+  }
+
   @Override
   public void isLeader() {
     LOG.info("We are now the leader! Current state {}", scheduler.getState());
 
     master = true;
    try {
-     if (!testMode) {
+     if (!isTestMode()) {
        scheduler.start();
        statePoller.wake();
      }
@@ -109,17 +111,13 @@ public class SingularityLeaderController implements LeaderLatchListener {
     return scheduler.getLastOfferTimestamp();
   }
 
-  public void setTestMode(boolean testMode) {
-    this.testMode = testMode;
-  }
-
   @Override
   public void notLeader() {
     LOG.info("We are not the leader! Current state {}", scheduler.getState());
 
     master = false;
 
-    if (scheduler.isRunning()) {
+    if (scheduler.isRunning() && !isTestMode()) {
       try {
         scheduler.notifyStopping();
         statePoller.wake();
