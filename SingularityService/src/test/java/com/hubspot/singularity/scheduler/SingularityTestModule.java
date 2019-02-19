@@ -36,6 +36,7 @@ import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTestAuthenticator;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -186,6 +187,8 @@ public class SingularityTestModule implements Module {
                 throw new OutOfScopeException("testing");
               }
             });
+
+            binder.bind(SingularityLeaderController.class).to(SingularityTestLeaderController.class).in(Scopes.SINGLETON);
           }
         }));
 

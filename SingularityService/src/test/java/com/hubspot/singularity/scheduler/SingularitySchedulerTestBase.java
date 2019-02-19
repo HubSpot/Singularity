@@ -177,9 +177,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityLeaderCacheCoordinator cacheCoordinator;
 
   @Inject
-  protected SingularityLeaderController leaderController;
-
-  @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
   protected String serverId;
 
@@ -215,7 +212,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Before
   public final void setupDriver() throws Exception {
-    leaderController.setTestMode(true);
     cacheCoordinator.activateLeaderCache();
     sms.setSubscribed();
     migrationRunner.checkMigrations();
