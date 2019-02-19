@@ -423,7 +423,7 @@ public class SingularityValidator {
     PendingType pendingType;
     if (request.isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-      checkConflict(activeTasks > 0, "Cannot request immediate run of a scheduled job which is currently running (%s)", activeTasks);
+      checkConflict(activeTasks == 0, "Cannot request immediate run of a scheduled job which is currently running (%s)", activeTasks);
     } else if (request.isOneOff()) {
       pendingType = PendingType.ONEOFF;
       if (request.getInstances().isPresent()) {
