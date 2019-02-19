@@ -42,6 +42,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
   private final OfferCache offerCache;
 
   private volatile boolean master;
+  private volatile boolean testMode;
 
   @Inject
   public SingularityLeaderController(StateManager stateManager,
@@ -63,6 +64,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
     this.offerCache = offerCache;
 
     this.master = false;
+    this.testMode = false;
   }
 
   public void start() {
@@ -79,8 +81,10 @@ public class SingularityLeaderController implements LeaderLatchListener {
 
     master = true;
    try {
-      scheduler.start();
-      statePoller.wake();
+     if (!testMode) {
+       scheduler.start();
+       statePoller.wake();
+     }
     } catch (Throwable t) {
       LOG.error("While starting driver", t);
       exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
@@ -103,6 +107,10 @@ public class SingularityLeaderController implements LeaderLatchListener {
 
   public Optional<Long> getLastOfferTimestamp() {
     return scheduler.getLastOfferTimestamp();
+  }
+
+  public void setTestMode(boolean testMode) {
+    this.testMode = testMode;
   }
 
   @Override

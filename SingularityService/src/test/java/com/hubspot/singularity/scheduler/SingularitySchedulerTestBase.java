@@ -44,6 +44,7 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
+import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -176,6 +177,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityLeaderCacheCoordinator cacheCoordinator;
 
   @Inject
+  protected SingularityLeaderController leaderController;
+
+  @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
   protected String serverId;
 
@@ -211,6 +215,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Before
   public final void setupDriver() throws Exception {
+    leaderController.setTestMode(true);
     cacheCoordinator.activateLeaderCache();
     sms.setSubscribed();
     migrationRunner.checkMigrations();
