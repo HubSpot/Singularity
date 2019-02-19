@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
@@ -39,6 +37,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -78,11 +77,11 @@ public class SingularityDeployChecker {
   private final LoadBalancerClient lbClient;
   private final SingularitySchedulerLock lock;
 
-  private final ExecutorService deployCheckerExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("deploy-checker-%d").build());
+  private final ExecutorService deployCheckerExecutor;
 
   @Inject
   public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, LoadBalancerClient lbClient, RequestManager requestManager, TaskManager taskManager,
-                                  SingularityConfiguration configuration, SingularitySchedulerLock lock) {
+                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
     this.configuration = configuration;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -90,6 +89,7 @@ public class SingularityDeployChecker {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
     this.lock = lock;
+    this.deployCheckerExecutor = cachedThreadPoolFactory.get("deploy-checker");
   }
 
   public int checkDeploys() {

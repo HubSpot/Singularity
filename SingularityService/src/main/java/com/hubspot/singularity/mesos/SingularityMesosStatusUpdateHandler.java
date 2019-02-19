@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.TaskState;
@@ -16,7 +15,6 @@ import com.codahale.metrics.Meter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -26,6 +24,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -75,7 +74,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final Meter lostTasksMeter;
   private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
-  private final ExecutorService statusUpdatesExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("status-updates-%d").build());
+  private final ExecutorService statusUpdatesExecutor;
   private final AsyncSemaphore<Boolean> statusUpdatesSemaphore;
 
   @Inject
@@ -95,6 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityLeaderCache leaderCache,
                                              MesosProtosUtils mesosProtosUtils,
                                              SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+                                             SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
                                              @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
@@ -116,6 +116,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
+    this.statusUpdatesExecutor = cachedThreadPoolFactory.get("status-updates");
     this.statusUpdatesSemaphore = AsyncSemaphore
         .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(), executorServiceFactory.get("status-update-semaphore", 5))
         .withQueueSize(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize())
