@@ -273,6 +273,15 @@ public class DeployManager extends CuratorAsyncManager {
     return Optional.of(deployState.get().getActiveDeploy().or(deployState.get().getPendingDeploy()).get().getDeployId());
   }
 
+  public Optional<String> getActiveDeployId(String requestId) {
+    Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
+
+    if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(deployState.get().getActiveDeploy().get().getDeployId());
+  }
+
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployState(requestId);
