@@ -5,7 +5,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -20,16 +19,15 @@ import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 
 public class ValidatorTest extends SingularityTestBaseNoDb {
@@ -112,10 +110,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .setInstances(Optional.of(1))
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
-    List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 1, 0);
   }
 
   @Test(expected = WebApplicationException.class)
@@ -126,10 +122,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .setInstances(Optional.of(1))
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
-    List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
   }
 
   @Test(expected = WebApplicationException.class)
@@ -139,10 +133,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
-    List<SingularityTaskId> activeTasks = Collections.emptyList();
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
   }
 
   @Test(expected = WebApplicationException.class)
@@ -152,10 +144,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest(tooLongId()));
-    List<SingularityTaskId> activeTasks = Collections.emptyList();
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
   }
 
   @Test
@@ -165,10 +155,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest("runId"));
-    List<SingularityTaskId> activeTasks = Collections.emptyList();
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
 
     Assert.assertEquals("runId", pendingRequest.getRunId().get());
   }
@@ -180,10 +168,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
-    List<SingularityTaskId> activeTasks = Collections.emptyList();
-    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
-    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, 0, 0);
 
     Assert.assertTrue(pendingRequest.getRunId().isPresent());
   }
