@@ -122,8 +122,8 @@ public class SingularityLifecycleManaged implements Managed {
     try {
       LOG.info("Stopping pollers and executors");
       leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop); // mostly no-op, custom stop actions per poller
-      scheduledExecutorServiceFactory.stop();
       cachedThreadPoolFactory.stop();
+      scheduledExecutorServiceFactory.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
     }
