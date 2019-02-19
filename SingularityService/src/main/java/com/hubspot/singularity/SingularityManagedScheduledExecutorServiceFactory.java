@@ -28,21 +28,31 @@ public class SingularityManagedScheduledExecutorServiceFactory {
   }
 
   public ScheduledExecutorService get(String name) {
-    return get(name, 1);
+    return get(name, 1, false);
   }
 
-  public synchronized ScheduledExecutorService get(String name, int poolSize) {
+  public ScheduledExecutorService get(String name, boolean isLeaderOnlyPoller) {
+    return get(name, 1, isLeaderOnlyPoller);
+  }
+
+  public ScheduledExecutorService get(String name, int poolSize) {
+    return get(name, poolSize, false);
+  }
+
+  public synchronized ScheduledExecutorService get(String name, int poolSize, boolean isLeaderOnlyPoller) {
     checkState(!stopped.get(), "already stopped");
     ScheduledExecutorService service = Executors.newScheduledThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build());
-    executorPools.add(service);
+    if (isLeaderOnlyPoller) {
+      executorPools.add(0, service);
+    } else {
+      executorPools.add(service);
+    }
     return service;
   }
 
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      for (ScheduledExecutorService service : executorPools) {
-        service.shutdown();
-      }
+      executorPools.forEach(ScheduledExecutorService::shutdown);
 
       long timeoutLeftInMillis = timeoutInMillis;
 
