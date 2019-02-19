@@ -89,6 +89,7 @@ import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -300,6 +301,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/bounce")
   @Operation(summary = "Trigger a bounce for a request")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent bounce(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to bounce") @PathParam("requestId") String requestId,
@@ -445,6 +447,7 @@ public class RequestResource extends AbstractRequestResource {
           @ApiResponse(responseCode = "409", description = "Request is already paused or being cleaned"),
       }
   )
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent pause(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to pause") @PathParam("requestId") String requestId,
@@ -518,6 +521,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/unpause")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent unpauseNoBody(@Parameter(hidden = true) @Auth SingularityUser user,
                                                 @PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
@@ -568,6 +572,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/exit-cooldown")
   @Operation(summary = "Immediately exits cooldown, scheduling new tasks immediately")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent exitCooldown(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,

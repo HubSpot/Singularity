@@ -78,7 +78,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUpstreamsEverySeconds = 600;
 
-  private long maxMissedMesosMasterHeartbeats = 3;
+  private long maxMissedMesosMasterHeartbeats = 5;
 
   private int maxConcurrentUsageCollections = 15;
 
@@ -292,7 +292,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int coreThreadpoolSize = 8;
 
-  private long threadpoolShutdownDelayInSeconds = 1;
+  private long threadpoolShutdownDelayInSeconds = 10;
 
   private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 

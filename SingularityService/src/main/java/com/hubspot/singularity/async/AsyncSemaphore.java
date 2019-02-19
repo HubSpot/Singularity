@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -14,7 +13,6 @@ import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -40,16 +38,14 @@ public class AsyncSemaphore<T> {
   private final com.google.common.base.Supplier<Integer> queueRejectionThreshold;
   private final Supplier<Exception> timeoutExceptionSupplier;
   private final PermitSource permitSource;
-  private final ScheduledExecutorService flushingExecutor = Executors.newScheduledThreadPool(5,
-      new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-semaphore-flush-pool- %d").build());;
 
   /**
    * Create an AsyncSemaphore with the given limit.
    *
    * @param concurrentRequestLimit - A supplier saying how many concurrent requests are allowed
    */
-  public static AsyncSemaphoreBuilder newBuilder(Supplier<Integer> concurrentRequestLimit) {
-    return new AsyncSemaphoreBuilder(new PermitSource(concurrentRequestLimit));
+  public static AsyncSemaphoreBuilder newBuilder(Supplier<Integer> concurrentRequestLimit, ScheduledExecutorService flushingExecutor) {
+    return new AsyncSemaphoreBuilder(new PermitSource(concurrentRequestLimit), flushingExecutor);
   }
 
   /**
@@ -57,15 +53,16 @@ public class AsyncSemaphore<T> {
    *
    * @param permitSource - A source for the permits used by the semaphore
    */
-  public static AsyncSemaphoreBuilder newBuilder(PermitSource permitSource) {
-    return new AsyncSemaphoreBuilder(permitSource);
+  public static AsyncSemaphoreBuilder newBuilder(PermitSource permitSource, ScheduledExecutorService flushingExecutor) {
+    return new AsyncSemaphoreBuilder(permitSource, flushingExecutor);
   }
 
   AsyncSemaphore(PermitSource permitSource,
                  Queue<DelayedExecution<T>> requestQueue,
                  Supplier<Integer> queueRejectionThreshold,
                  Supplier<Exception> timeoutExceptionSupplier,
-                 boolean flushQueuePeriodically) {
+                 boolean flushQueuePeriodically,
+                 ScheduledExecutorService flushingExecutor) {
     this.permitSource = permitSource;
     this.requestQueue = requestQueue;
     this.queueRejectionThreshold = Suppliers.memoizeWithExpiration(queueRejectionThreshold::get, 1, TimeUnit.MINUTES);

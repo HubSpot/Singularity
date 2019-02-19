@@ -123,7 +123,7 @@ public class TestResource {
   public void abort() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
-    abort.abort(AbortReason.TEST_ABORT, Optional.<Throwable>absent());
+    abort.abort(AbortReason.TEST_ABORT, Optional.of(new RuntimeException("for a stack trace")));
   }
 
   @POST

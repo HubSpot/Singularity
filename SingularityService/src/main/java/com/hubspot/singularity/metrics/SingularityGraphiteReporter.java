@@ -25,12 +25,9 @@ import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.GraphiteConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
-import io.dropwizard.lifecycle.Managed;
-
 @Singleton
-public class SingularityGraphiteReporterManaged implements Managed {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityGraphiteReporterManaged.class);
+public class SingularityGraphiteReporter {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityGraphiteReporter.class);
 
   private final GraphiteConfiguration graphiteConfiguration;
   private final MetricRegistry registry;
@@ -39,7 +36,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
   private final String hostname;
 
   @Inject
-  public SingularityGraphiteReporterManaged(SingularityConfiguration configuration, MetricRegistry registry, @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname) {
+  public SingularityGraphiteReporter(SingularityConfiguration configuration, MetricRegistry registry, @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname) {
     this.graphiteConfiguration = configuration.getGraphiteConfiguration();
     this.registry = registry;
     this.hostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
@@ -63,8 +60,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
     return builder.build();
   }
 
-  @Override
-  public void start() throws Exception {
+  public void start() {
     if (!graphiteConfiguration.isEnabled()) {
       LOG.info("Not reporting data points to graphite.");
       return;
@@ -102,7 +98,6 @@ public class SingularityGraphiteReporterManaged implements Managed {
     reporter.start(graphiteConfiguration.getPeriodSeconds(), TimeUnit.SECONDS);
   }
 
-  @Override
   public void stop() throws Exception {
     if (graphite != null) {
       LOG.info("Closing GraphiteSender");

@@ -20,6 +20,8 @@ import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityClientModule extends AbstractModule {
 
   public static final String HTTP_CLIENT_NAME = "singularity.http.client";
@@ -48,10 +50,12 @@ public class SingularityClientModule extends AbstractModule {
     this(null, httpConfig);
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityClientModule() {
     this(null, null);
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityClientModule(List<String> hosts) {
     this(hosts, null);
   }

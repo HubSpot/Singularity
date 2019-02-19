@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -58,7 +59,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          UsageManager usageManager,
                          RequestManager requestManager,
                          DeployManager deployManager,
-                         TaskManager taskManager) {
+                         TaskManager taskManager,
+                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
@@ -68,7 +70,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
 
-    this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections).build();
+    this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections, executorServiceFactory.get("usage-semaphore", 5)).build();
     this.usageExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("usage-collection-%d").build());
     this.requestLocks = new ConcurrentHashMap<>();
   }

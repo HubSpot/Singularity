@@ -42,6 +42,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.SingularityUser;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
@@ -159,10 +161,12 @@ public final class JavaUtils {
     return ImmutableList.copyOf(list);
   }
 
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getFirst(Iterable<T> iterable) {
     return Optional.fromNullable(Iterables.getFirst(iterable, null));
   }
 
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getLast(Iterable<T> iterable) {
     return Optional.fromNullable(Iterables.getLast(iterable, null));
   }

@@ -5,34 +5,12 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>18.2</version>
+    <version>25.1</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
   <version>0.23.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-
-  <developers>
-    <developer>
-      <name>Whitney Sorenson</name>
-      <email>wsorenson@gmail.com</email>
-    </developer>
-    <developer>
-      <name>Tom Petr</name>
-      <email>tpetr@hubspot.com</email>
-    </developer>
-    <developer>
-      <name>Stephen Salinas</name>
-      <email>ssalinas@hubspot.com</email>
-    </developer>
-  </developers>
-
-  <scm>
-    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
-    <url>git@github.com:HubSpot/Singularity.git</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <modules>
     <module>SingularityService</module>
@@ -51,33 +29,51 @@
   </modules>
 
   <properties>
-    <aws.sdk.version>1.11.285</aws.sdk.version>
-    <baragon.version>0.6.1</baragon.version>
+    <aws.sdk.version>1.11.497</aws.sdk.version>
+    <baragon.version>0.7.0</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
     <basepom.release.profiles>oss-release</basepom.release.profiles>
+    <dep.classmate.version>1.3.1</dep.classmate.version>
     <dep.commons-lang3.version>3.7</dep.commons-lang3.version>
-    <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
-    <dep.guava.version>20.0</dep.guava.version>
-    <dep.jackson-databind.version>2.9.4</dep.jackson-databind.version>
-    <dep.jackson.version>2.9.4</dep.jackson.version>
-    <dep.javassist.version>3.21.0-GA</dep.javassist.version>
+    <dep.curator.version>2.12.0</dep.curator.version>
+    <dep.dropwizard-metrics.version>4.0.2</dep.dropwizard-metrics.version>
+    <dep.findbugs.jsr.version>3.0.2</dep.findbugs.jsr.version>
+    <dep.google.cloud.version>1.15.0</dep.google.cloud.version>
+    <dep.google.http-client.version>1.24.1</dep.google.http-client.version>
+    <dep.guava.version>24.0-jre</dep.guava.version>
+    <dep.hibernate-validator.version>5.4.2.Final</dep.hibernate-validator.version>
+    <dep.hk2.version>2.5.0-b32</dep.hk2.version>
+    <dep.httpclient.version>4.5.5</dep.httpclient.version>
+    <dep.httpcore.version>4.4.9</dep.httpcore.version>
+    <dep.jackson-databind.version>2.9.6</dep.jackson-databind.version>
+    <dep.jackson.version>2.9.6</dep.jackson.version>
+    <dep.javassist.version>3.22.0-GA</dep.javassist.version>
+    <dep.jboss-logging.version>3.3.0.Final</dep.jboss-logging.version>
+    <dep.jdbi.version>2.78</dep.jdbi.version>
+    <dep.jersey2.version>2.25.1</dep.jersey2.version>
+    <dep.jetty.version>9.4.11.v20180605</dep.jetty.version>
+    <dep.joda.version>2.9.9</dep.joda.version>
+    <dep.liquibase.version>3.6.1</dep.liquibase.version>
+    <dep.logback.version>1.2.3</dep.logback.version>
     <dep.mesos.rxjava.version>0.1.0</dep.mesos.rxjava.version>
-    <dep.rxJava.version>1.3.8</dep.rxJava.version>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
     <dep.netty.version>4.1.22.Final</dep.netty.version>
     <dep.protobuf-java.version>3.5.1</dep.protobuf-java.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
+    <dep.rxJava.version>1.3.8</dep.rxJava.version>
+    <dep.slf4j.version>1.7.25</dep.slf4j.version>
     <dep.swagger.version>2.0.0</dep.swagger.version>
-
-    <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
-    <horizon.version>0.0.25</horizon.version>
+    <dep.zookeeper.version>3.4.8</dep.zookeeper.version>
+    <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
+    <dropwizard.version>1.3.7</dropwizard.version>
+    <horizon.version>0.1.1</horizon.version>
     <jukito.version>1.5</jukito.version>
     <mesos.docker.tag>1.6.1</mesos.docker.tag>
     <mesos.version>1.6.1</mesos.version>
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
-    <singularitybase.image.revision>2</singularitybase.image.revision>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>
+    <singularitybase.image.revision>2</singularitybase.image.revision>
   </properties>
 
   <dependencyManagement>
@@ -131,22 +127,33 @@
 
       <dependency>
         <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-core</artifactId>
+        <version>${dep.google.cloud.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>1.15.0</version>
+        <version>${dep.google.cloud.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${dep.findbugs.jsr.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
-        <version>1.23.0</version>
+        <version>${dep.google.http-client.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-jackson2</artifactId>
-        <version>1.23.0</version>
+        <version>${dep.google.http-client.version}</version>
       </dependency>
-
 
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -308,6 +315,12 @@
       </dependency>
 
       <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-jmx</artifactId>
+        <version>${dep.dropwizard-metrics.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>io.reactivex</groupId>
         <artifactId>rxjava</artifactId>
         <version>${dep.rxJava.version}</version>
@@ -350,6 +363,12 @@
       </dependency>
 
       <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>activation</artifactId>
+        <version>1.1</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.directory.api</groupId>
         <artifactId>api-all</artifactId>
         <version>1.0.0-M28</version>
@@ -380,12 +399,6 @@
       </dependency>
 
       <dependency>
-        <groupId>javax.activation</groupId>
-        <artifactId>activation</artifactId>
-        <version>1.1</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.jayway.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>1.7.0</version>
@@ -403,7 +416,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.13.2</version>
           <configuration>
-            <images />
+            <images></images>
             <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
           <executions>
@@ -454,7 +467,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -499,6 +512,28 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <developers>
+    <developer>
+      <name>Whitney Sorenson</name>
+      <email>wsorenson@gmail.com</email>
+    </developer>
+    <developer>
+      <name>Tom Petr</name>
+      <email>tpetr@hubspot.com</email>
+    </developer>
+    <developer>
+      <name>Stephen Salinas</name>
+      <email>ssalinas@hubspot.com</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
+    <url>git@github.com:HubSpot/Singularity.git</url>
+    <tag>HEAD</tag>
+  </scm>
 </project>
 <!-- Local Variables: -->
 <!-- mode: nxml -->

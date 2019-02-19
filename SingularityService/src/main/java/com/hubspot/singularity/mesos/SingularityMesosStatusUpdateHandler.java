@@ -26,6 +26,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -93,6 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityConfiguration configuration,
                                              SingularityLeaderCache leaderCache,
                                              MesosProtosUtils mesosProtosUtils,
+                                             SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
                                              @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
@@ -115,7 +117,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
     this.statusUpdatesSemaphore = AsyncSemaphore
-        .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit())
+        .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(), executorServiceFactory.get("status-update-semaphore", 5))
         .withQueueSize(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize())
         .build();
   }

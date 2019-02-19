@@ -19,14 +19,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
@@ -70,7 +69,7 @@ public class SingularityHealthchecker {
   private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
+  public SingularityHealthchecker(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                                   AsyncHttpClient http, OkHttpClient http2, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
                                   TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager,
                                   MesosProtosUtils mesosProtosUtils) {
@@ -84,7 +83,7 @@ public class SingularityHealthchecker {
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
 
-    this.executorService = executorService;
+    this.executorService = executorServiceFactory.get("health-checker", configuration.getHealthcheckStartThreads());
     this.disasterManager = disasterManager;
     this.mesosProtosUtils = mesosProtosUtils;
   }
