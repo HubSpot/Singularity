@@ -88,10 +88,11 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      stopExecutorsAndPollers();
-      stopStatePoller();
+      stopNewPolls();
       stopDirectoryFetcher();
       stopHttpClients();
+      stopStatePollerAndMesosConnection();
+      stopExecutors();
       stopLeaderLatch();
       stopCurator();
       stopGraphiteReporter();
@@ -118,10 +119,14 @@ public class SingularityLifecycleManaged implements Managed {
     }
   }
 
-  private void stopExecutorsAndPollers() {
+  private void stopNewPolls() {
+    LOG.info("Marking leader only pollers for shutdown");
+    leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop);
+  }
+
+  private void stopExecutors() {
     try {
       LOG.info("Stopping pollers and executors");
-      leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop); // mostly no-op, custom stop actions per poller
       cachedThreadPoolFactory.stop();
       scheduledExecutorServiceFactory.stop();
     } catch (Throwable t) {
@@ -129,7 +134,7 @@ public class SingularityLifecycleManaged implements Managed {
     }
   }
 
-  private void stopStatePoller() {
+  private void stopStatePollerAndMesosConnection() {
     try {
       LOG.info("Stopping state poller");
       leaderController.stop();
