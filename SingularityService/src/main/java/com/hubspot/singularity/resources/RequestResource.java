@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -86,6 +87,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
@@ -113,13 +115,14 @@ public class RequestResource extends AbstractRequestResource {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final SingularityConfiguration configuration;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
                          RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
                          SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
-                         RackManager rackManager, SingularityConfiguration configuration) {
+                         RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
@@ -128,6 +131,7 @@ public class RequestResource extends AbstractRequestResource {
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.configuration = configuration;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -390,11 +394,22 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
         @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
+    long start = System.currentTimeMillis();
+    SingularityPendingRequestParent response;
     if (configuration.isProxyRunNowToLeader()) {
-      return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
+      response = maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
     } else {
-      return scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false));
+      response = scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false));
     }
+    long duration = System.currentTimeMillis() - start;
+    LOG.trace("Enqueue for {} took {}ms", requestId, duration);
+    if (duration > 15000) {
+      exceptionNotifier.notify(
+          String.format("Slow enqueue for %s", requestId),
+          ImmutableMap.of("leader", Boolean.toString(isLeader()), "duration", Long.toString(duration))
+      );
+    }
+    return response;
   }
 
   public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
