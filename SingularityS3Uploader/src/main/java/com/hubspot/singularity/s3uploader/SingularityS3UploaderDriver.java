@@ -22,9 +22,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,16 +120,22 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final long start = System.currentTimeMillis();
     LOG.info("Scanning for metadata files (*{}) in {}", baseConfiguration.getS3UploaderMetadataSuffix(), baseConfiguration.getS3UploaderMetadataDirectory());
 
-    int foundFiles = 0;
+    AtomicInteger foundFiles = new AtomicInteger();
 
-    for (Path file : JavaUtils.iterable(Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()))) {
-      if (!isS3MetadataFile(file)) {
-        continue;
-      }
+    try (Stream<Path> paths = Files.walk(Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), 1)) {
+      paths.forEach((file) -> {
+        if (!isS3MetadataFile(file)) {
+          return;
+        }
 
-      if (handleNewOrModifiedS3Metadata(file)) {
-        foundFiles++;
-      }
+        try {
+          if (handleNewOrModifiedS3Metadata(file)) {
+            foundFiles.incrementAndGet();
+          }
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
     }
 
     LOG.info("Found {} file(s) in {}", foundFiles, JavaUtils.duration(start));
