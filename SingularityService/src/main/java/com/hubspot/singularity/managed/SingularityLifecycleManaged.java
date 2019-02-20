@@ -88,13 +88,13 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      stopNewPolls();
-      stopDirectoryFetcher();
-      stopHttpClients();
-      stopStatePollerAndMesosConnection();
-      stopExecutors();
-      stopLeaderLatch();
-      stopCurator();
+      stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
+      stopDirectoryFetcher(); // use http client, stop this before client
+      stopStatePollerAndMesosConnection(); // Marks teh scheduler as stopped
+      stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
+      stopExecutors(); // Shuts down the executors for pollers and async semaphores
+      stopLeaderLatch(); // let go of leadership
+      stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
       LOG.info("Already stopped");
