@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -108,9 +109,13 @@ public class SingularityHealthchecker {
       return;
     }
 
-    ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, getDelaySeconds(task.getTaskId(), options, inStartup, isFirstCheck), inStartup);
-
-    ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
+    ScheduledFuture<?> existing = null;
+    try {
+      ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, getDelaySeconds(task.getTaskId(), options, inStartup, isFirstCheck), inStartup);
+      existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
 
     if (existing != null) {
       boolean canceledExisting = existing.cancel(false);

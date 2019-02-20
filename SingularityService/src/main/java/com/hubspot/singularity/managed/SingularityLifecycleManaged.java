@@ -88,12 +88,13 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      stopExecutorsAndPollers();
-      stopStatePoller();
-      stopDirectoryFetcher();
-      stopHttpClients();
-      stopLeaderLatch();
-      stopCurator();
+      stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
+      stopDirectoryFetcher(); // use http client, stop this before client
+      stopStatePollerAndMesosConnection(); // Marks the scheduler as stopped
+      stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
+      stopExecutors(); // Shuts down the executors for pollers and async semaphores
+      stopLeaderLatch(); // let go of leadership
+      stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
       LOG.info("Already stopped");
@@ -118,18 +119,22 @@ public class SingularityLifecycleManaged implements Managed {
     }
   }
 
-  private void stopExecutorsAndPollers() {
+  private void stopNewPolls() {
+    LOG.info("Marking leader only pollers for shutdown");
+    leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop);
+  }
+
+  private void stopExecutors() {
     try {
       LOG.info("Stopping pollers and executors");
-      leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::stop); // mostly no-op, custom stop actions per poller
-      scheduledExecutorServiceFactory.stop();
       cachedThreadPoolFactory.stop();
+      scheduledExecutorServiceFactory.stop();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
     }
   }
 
-  private void stopStatePoller() {
+  private void stopStatePollerAndMesosConnection() {
     try {
       LOG.info("Stopping state poller");
       leaderController.stop();

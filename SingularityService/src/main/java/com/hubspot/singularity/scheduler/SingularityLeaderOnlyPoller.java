@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -29,6 +30,7 @@ public abstract class SingularityLeaderOnlyPoller {
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
   private final boolean delayWhenLargeStatusUpdateDelta;
+  private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   private ScheduledExecutorService executorService;
   private LeaderLatch leaderLatch;
@@ -66,6 +68,10 @@ public abstract class SingularityLeaderOnlyPoller {
   }
 
   public void start() {
+    if (stopped.get()) {
+      LOG.warn("Stopped, will not run {} poller", getClass().getSimpleName());
+      return;
+    }
     if (!isEnabled()) {
       LOG.info("{} is not enabled, not starting.", getClass().getSimpleName());
       return;
@@ -95,6 +101,11 @@ public abstract class SingularityLeaderOnlyPoller {
     if (!leadership || !schedulerRunning || !isEnabled()) {
       LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {}, enabled: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership,
           schedulerRunning, isEnabled());
+      return;
+    }
+
+    if (stopped.get()) {
+      LOG.info("Singularity shutting down, will not run {} poller", getClass().getSimpleName());
       return;
     }
 
@@ -131,5 +142,6 @@ public abstract class SingularityLeaderOnlyPoller {
   public abstract void runActionOnPoll();
 
   public void stop() {
+    stopped.set(true);
   }
 }

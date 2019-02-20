@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -171,9 +172,12 @@ public class SingularityNewTaskChecker {
       return;
     }
 
-    Future<?> future = executorService.submit(getTaskCheck(task, healthchecker));
-
-    taskIdToCheck.put(taskId, future);
+    try {
+      Future<?> future = executorService.submit(getTaskCheck(task, healthchecker));
+      taskIdToCheck.put(taskId, future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
   }
 
   public enum CancelState {
@@ -241,9 +245,12 @@ public class SingularityNewTaskChecker {
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds, SingularityHealthchecker healthchecker) {
     LOG.trace("Enqueuing a new task check for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
-    ScheduledFuture<?> future = executorService.schedule(getTaskCheck(task, healthchecker), delaySeconds, TimeUnit.SECONDS);
-
-    taskIdToCheck.put(task.getTaskId().getId(), future);
+    try {
+      ScheduledFuture<?> future = executorService.schedule(getTaskCheck(task, healthchecker), delaySeconds, TimeUnit.SECONDS);
+      taskIdToCheck.put(task.getTaskId().getId(), future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
   }
 
   public enum CheckTaskState {

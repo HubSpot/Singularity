@@ -206,8 +206,13 @@ public class SingularityLeaderController implements LeaderLatchListener {
         } catch (InterruptedException e) {
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
-          LOG.error("Caught exception while saving state", t);
-          exceptionNotifier.notify(String.format("Caught exception while saving state (%s)", t.getMessage()), t);
+          // Can get wrapped in a runtime exception, check cause as well
+          if (t.getCause() != null && t.getCause() instanceof InterruptedException) {
+            LOG.trace("Caught interrupted exception, running the loop");
+          } else {
+            LOG.error("Caught exception while saving state", t);
+            exceptionNotifier.notify(String.format("Caught exception while saving state (%s)", t.getMessage()), t);
+          }
         }
         finally {
           lock.unlock();
