@@ -28,7 +28,6 @@ import io.dropwizard.lifecycle.Managed;
  * All scheduler-related startup/shutdown behavior, other managed classes not represented here:
  * SingularitySmtpSender/SmtpMailer
  * SingularityExceptionNotifierManaged
- * ExecutorIdGenerator
  */
 @Singleton
 public class SingularityLifecycleManaged implements Managed {
