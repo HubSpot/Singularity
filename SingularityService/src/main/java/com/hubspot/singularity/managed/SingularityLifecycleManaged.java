@@ -90,7 +90,7 @@ public class SingularityLifecycleManaged implements Managed {
     if (!stopped.getAndSet(true)) {
       stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
       stopDirectoryFetcher(); // use http client, stop this before client
-      stopStatePollerAndMesosConnection(); // Marks teh scheduler as stopped
+      stopStatePollerAndMesosConnection(); // Marks the scheduler as stopped
       stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
       stopExecutors(); // Shuts down the executors for pollers and async semaphores
       stopLeaderLatch(); // let go of leadership
