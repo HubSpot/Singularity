@@ -33,6 +33,10 @@ public class AbstractLeaderAwareResource {
     this.objectMapper = objectMapper;
   }
 
+  protected boolean isLeader() {
+    return leaderLatch.hasLeadership();
+  }
+
   protected <T, Q> T maybeProxyToLeader(HttpServletRequest request, Class<T> clazz, Q body, Supplier<T> runnable) {
     if (leaderLatch.hasLeadership()) {
       return runnable.get();
