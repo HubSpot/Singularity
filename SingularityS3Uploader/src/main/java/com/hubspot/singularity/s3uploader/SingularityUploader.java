@@ -14,7 +14,9 @@ import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,21 +142,39 @@ public abstract class SingularityUploader {
       return Collections.emptyList();
     }
 
-    for (Path file : JavaUtils.iterable(directory)) {
-      handleFile(file, isFinished, toUpload);
+    try (Stream<Path> paths = Files.walk(directory, 1)) {
+      paths.forEach((file) -> {
+        if (file.equals(directory)) {
+          return;
+        }
+        try {
+          handleFile(file, isFinished, toUpload);
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
     }
-
     return toUpload;
   }
 
-  private int handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
-    int found = 0;
+  private AtomicInteger handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
+    AtomicInteger found = new AtomicInteger();
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.trace("{} was a directory, checking files in directory", path);
-        for (Path file : JavaUtils.iterable(path)) {
-          found += handleFile(file, isFinished, toUpload);
+        try (Stream<Path> paths = Files.walk(path, 1)) {
+          paths.forEach((file) -> {
+            if (file.equals(path)) {
+              return; // Files.walk includes an element that is the starting path itself, skip this
+            }
+            try {
+              found.getAndAdd(handleFile(file, isFinished, toUpload).get());
+            } catch (IOException ioe) {
+              throw new RuntimeException(ioe);
+            }
+          });
         }
+
       } else {
         LOG.trace("{} was a directory, skipping", path);
       }
@@ -175,7 +195,7 @@ public abstract class SingularityUploader {
       return found;
     }
 
-    found++;
+    found.incrementAndGet();
 
     toUpload.add(path);
 
