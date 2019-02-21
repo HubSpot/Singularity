@@ -425,8 +425,8 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     // Check these to avoid unnecessary calls to taskManager
-    Integer activeTasks = null;
-    Integer pendingTasks = null;
+    int activeTasks = 0;
+    int pendingTasks = 0;
 
     boolean isOneoffWithInstances = requestWithState.getRequest().isOneOff() && requestWithState.getRequest().getInstances().isPresent();
     if (requestWithState.getRequest().isScheduled() || isOneoffWithInstances) {
