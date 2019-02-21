@@ -383,6 +383,8 @@ public class SingularityState {
         ", scheduledTasks=" + scheduledTasks +
         ", lateTasks=" + lateTasks +
         ", listLateTasks=" + listLateTasks +
+        ", onDemandLateTasks=" + onDemandLateTasks +
+        ", onDemandListLateTasks=" + onDemandListLateTasks +
         ", futureTasks=" + futureTasks +
         ", cleaningTasks=" + cleaningTasks +
         ", lbCleanupTasks=" + lbCleanupTasks +
