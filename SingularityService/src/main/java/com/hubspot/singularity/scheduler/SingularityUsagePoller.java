@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,11 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -58,7 +58,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          UsageManager usageManager,
                          RequestManager requestManager,
                          DeployManager deployManager,
-                         TaskManager taskManager) {
+                         TaskManager taskManager,
+                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+                         SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
@@ -68,8 +70,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
 
-    this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections).build();
-    this.usageExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("usage-collection-%d").build());
+    this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections, executorServiceFactory.get("usage-semaphore", 5)).build();
+    this.usageExecutor = cachedThreadPoolFactory.get("usage-collection");
     this.requestLocks = new ConcurrentHashMap<>();
   }
 

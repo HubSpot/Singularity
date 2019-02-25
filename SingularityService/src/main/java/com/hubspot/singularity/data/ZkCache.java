@@ -9,6 +9,8 @@ import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class ZkCache<T> {
 
   private final Cache<String, T> cache;
@@ -33,6 +35,7 @@ public class ZkCache<T> {
       }});
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   public Optional<T> get(String path) {
     T fromCache = cache.getIfPresent(path);
 

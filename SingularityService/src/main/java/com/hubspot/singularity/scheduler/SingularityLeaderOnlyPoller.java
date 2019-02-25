@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -22,15 +23,14 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-import io.dropwizard.lifecycle.Managed;
-
-public abstract class SingularityLeaderOnlyPoller implements Managed {
+public abstract class SingularityLeaderOnlyPoller {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
 
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
   private final boolean delayWhenLargeStatusUpdateDelta;
+  private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   private ScheduledExecutorService executorService;
   private LeaderLatch leaderLatch;
@@ -67,8 +67,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     this.statusUpdateDelta30sAverage = checkNotNull(statusUpdateDelta30sAverage, "statusUpdateDeltaAverage is null");
   }
 
-  @Override
   public void start() {
+    if (stopped.get()) {
+      LOG.warn("Stopped, will not run {} poller", getClass().getSimpleName());
+      return;
+    }
     if (!isEnabled()) {
       LOG.info("{} is not enabled, not starting.", getClass().getSimpleName());
       return;
@@ -101,6 +104,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       return;
     }
 
+    if (stopped.get()) {
+      LOG.info("Singularity shutting down, will not run {} poller", getClass().getSimpleName());
+      return;
+    }
+
     if (delayWhenLargeStatusUpdateDelta && statusUpdateDelta30sAverage.get() > delayPollersWhenDeltaOverMs) {
       LOG.info("Delaying run of {} until status updates have caught up", getClass().getSimpleName());
       return;
@@ -116,7 +124,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
       exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
       if (abortsOnError()) {
-        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+        abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
       }
     } finally {
       LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
@@ -133,7 +141,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   public abstract void runActionOnPoll();
 
-  @Override
   public void stop() {
+    stopped.set(true);
   }
 }

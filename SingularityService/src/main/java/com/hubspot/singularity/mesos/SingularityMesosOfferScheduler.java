@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -24,13 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -97,7 +97,9 @@ public class SingularityMesosOfferScheduler {
                                         SingularityUsageHelper usageHelper,
                                         UsageManager usageManager,
                                         DeployManager deployManager,
-                                        SingularitySchedulerLock lock) {
+                                        SingularitySchedulerLock lock,
+                                        SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+                                        SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -128,8 +130,8 @@ public class SingularityMesosOfferScheduler {
       this.normalizedDiskWeight = diskWeight;
     }
 
-    this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit).setFlushQueuePeriodically(true).build();
-    this.offerScoringExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("offer-scoring-%d").build());
+    this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit, executorServiceFactory.get("offer-scoring-semaphore", 5)).setFlushQueuePeriodically(true).build();
+    this.offerScoringExecutor = cachedThreadPoolFactory.get("offer-scoring");
   }
 
   public Collection<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {

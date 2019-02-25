@@ -24,11 +24,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
-import io.dropwizard.lifecycle.Managed;
-
 @Singleton
-public class SingularityMesosExecutorInfoSupport implements Managed {
-
+public class SingularityMesosExecutorInfoSupport {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosExecutorInfoSupport.class);
 
   private final MesosClient mesosClient;
@@ -44,11 +41,6 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
     this.logLookupExecutorService = JavaUtils.newFixedTimingOutThreadPool(configuration.getLogFetchMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityDirectoryFetcher-%d");
   }
 
-  @Override
-  public void start() {
-  }
-
-  @Override
   public void stop() {
     MoreExecutors.shutdownAndAwaitTermination(logLookupExecutorService, 1, TimeUnit.SECONDS);
   }

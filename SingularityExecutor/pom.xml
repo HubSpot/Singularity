@@ -140,7 +140,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <!-- turn off Werror, because Antlr annotation processor logs a warning with JDK 7 -->
-          <compilerArguments combine.self="override" />
+          <compilerArguments combine.self="override"></compilerArguments>
         </configuration>
       </plugin>
     </plugins>

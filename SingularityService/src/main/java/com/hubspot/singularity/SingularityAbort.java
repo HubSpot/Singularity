@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -7,7 +9,6 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.eclipse.jetty.server.Server;
@@ -24,6 +25,7 @@ import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
@@ -62,34 +64,28 @@ public class SingularityAbort implements ConnectionStateListener {
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
     if (newState == ConnectionState.LOST) {
       LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION, Optional.<Throwable>absent());
+      abort(AbortReason.LOST_ZK_CONNECTION, Optional.absent());
     }
   }
 
   public enum AbortReason {
-    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR, LOST_MESOS_CONNECTION;
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, ERROR_IN_LEADER_ONLY_POLLER, TEST_ABORT, MESOS_ERROR, LOST_MESOS_CONNECTION;
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
         sendAbortNotification(abortReason, throwable);
-        if (abortReason != AbortReason.LOST_LEADERSHIP && abortReason != AbortReason.LOST_ZK_CONNECTION) {
-          attemptLeaderLatchClose();
+        SingularityLifecycleManaged lifecycle = injector.getInstance(SingularityLifecycleManaged.class);
+        try {
+          lifecycle.stop();
+        } catch (Throwable t) {
+          LOG.error("While shutting down", t);
         }
-
         flushLogs();
       } finally {
         exit();
       }
-    }
-  }
-
-  private void attemptLeaderLatchClose() {
-    try {
-      injector.getInstance(LeaderLatch.class).close();
-    } catch (Exception e) {
-      LOG.error("While attempting to close leader latch", e);
     }
   }
 
@@ -116,7 +112,11 @@ public class SingularityAbort implements ConnectionStateListener {
 
     sendAbortMail(message, throwable);
 
-    exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
+    if (throwable.isPresent()) {
+      exceptionNotifier.notify(message, throwable.get(), ImmutableMap.of("abortReason", abortReason.name()));
+    } else {
+      exceptionNotifier.notify(message, ImmutableMap.of("abortReason", abortReason.name()));
+    }
   }
 
   private void sendAbortMail(final String message, final Optional<Throwable> throwable) {
@@ -132,9 +132,17 @@ public class SingularityAbort implements ConnectionStateListener {
       return;
     }
 
-    final String body = throwable.isPresent() ? throwable.get().toString() : "(no stack trace)";
+    final String body;
+    if (throwable.isPresent()) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      throwable.get().printStackTrace(pw);
+      body = throwable.get().getMessage() + "\n" + sw.toString();
+    } else {
+      body = "(no stack trace)";
+    }
 
-    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.<String> of(), message, body);
+    smtpSender.queueMail(maybeSmtpConfiguration.get().getAdmins(), ImmutableList.of(), message, body);
   }
 
   private void flushLogs() {
