@@ -6,10 +6,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.github.rholder.retry.AttemptTimeLimiters;
+import com.github.rholder.retry.AttemptTimeLimiter;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;
@@ -116,10 +119,34 @@ public class DockerUtils {
 
   private <T> T callWithRetriesAndTimeout(Callable<T> callable, Optional<Integer> retryCount) throws Exception {
     RetryerBuilder<T> retryerBuilder = RetryerBuilder.<T>newBuilder()
-      .withAttemptTimeLimiter(AttemptTimeLimiters.<T>fixedTimeLimit(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS, executor));
+      .withAttemptTimeLimiter(new FixedTimeLimit(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS, executor));
     if (retryCount.isPresent()) {
       retryerBuilder.withStopStrategy(StopStrategies.stopAfterAttempt(retryCount.get()));
     }
     return retryerBuilder.build().call(callable);
+  }
+
+  private static final class FixedTimeLimit<V> implements AttemptTimeLimiter<V> {
+
+    private final TimeLimiter timeLimiter;
+    private final long duration;
+    private final TimeUnit timeUnit;
+
+    public FixedTimeLimit(long duration, TimeUnit timeUnit, ExecutorService executorService) {
+      this(SimpleTimeLimiter.create(executorService), duration, timeUnit);
+    }
+
+    private FixedTimeLimit(TimeLimiter timeLimiter, long duration, TimeUnit timeUnit) {
+      Preconditions.checkNotNull(timeLimiter);
+      Preconditions.checkNotNull(timeUnit);
+      this.timeLimiter = timeLimiter;
+      this.duration = duration;
+      this.timeUnit = timeUnit;
+    }
+
+    @Override
+    public V call(Callable<V> callable) throws Exception {
+      return timeLimiter.callWithTimeout(callable, duration, timeUnit);
+    }
   }
 }
