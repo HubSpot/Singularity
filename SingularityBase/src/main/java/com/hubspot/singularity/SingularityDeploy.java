@@ -4,6 +4,7 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
 import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,7 @@ public class SingularityDeploy {
   private final Optional<Integer> maxTaskRetries;
   private final Optional<Boolean> shell;
   private final Optional<String> user;
+  private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -160,7 +162,8 @@ public class SingularityDeploy {
                            @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
                            @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
                            @JsonProperty("shell") Optional<Boolean> shell,
-                           @JsonProperty("user") Optional<String> user) {
+                           @JsonProperty("user") Optional<String> user,
+                           @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
     this.requestId = requestId;
     this.command = command;
     this.arguments = arguments;
@@ -206,7 +209,8 @@ public class SingularityDeploy {
         healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>absent(),
         healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>absent(),
         healthcheckMaxRetries,
-        Optional.<List<Integer>>absent()));
+        Optional.<List<Integer>>absent(),
+        Optional.absent()));
     } else {
       this.healthcheck = healthcheck;
     }
@@ -229,6 +233,7 @@ public class SingularityDeploy {
     this.maxTaskRetries = maxTaskRetries;
     this.shell = shell;
     this.user = user;
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles == null ? Collections.emptyList() : s3UploaderAdditionalFiles;
   }
 
   private static Map<Integer, List<SingularityMesosTaskLabel>> parseMesosTaskLabelsFromMap(Map<Integer, Map<String, String>> taskLabels) {
@@ -285,7 +290,8 @@ public class SingularityDeploy {
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
     .setMaxTaskRetries(maxTaskRetries)
     .setShell(shell)
-    .setUser(user);
+    .setUser(user)
+    .setS3UploaderAdditionalFiles(s3UploaderAdditionalFiles);
   }
 
   @Schema(nullable = true, description = "Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks)")
@@ -534,6 +540,11 @@ public class SingularityDeploy {
     return user;
   }
 
+  @Schema(description = "Specify additional sandbox files to upload to S3 for this deploy")
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -585,6 +596,7 @@ public class SingularityDeploy {
         ", maxTaskRetries=" + maxTaskRetries +
         ", shell=" + shell +
         ", user=" + user +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         '}';
   }
 }

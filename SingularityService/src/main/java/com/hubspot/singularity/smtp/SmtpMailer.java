@@ -737,10 +737,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
-    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlacklist());
-    toList.removeAll(emailBlacklist);
-    ccList.removeAll(emailBlacklist);
-
     if (actionTaker.isPresent() && !Strings.isNullOrEmpty(actionTaker.get())) {
       if (destination.contains(SingularityEmailDestination.ACTION_TAKER)) {
         toList.add(actionTaker.get());
@@ -753,6 +749,10 @@ public class SmtpMailer implements SingularityMailer, Managed {
         }
       }
     }
+
+    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlacklist());
+    toList.removeAll(emailBlacklist);
+    ccList.removeAll(emailBlacklist);
 
     smtpSender.queueMail(Lists.newArrayList(toList), Lists.newArrayList(ccList), subject, body);
   }

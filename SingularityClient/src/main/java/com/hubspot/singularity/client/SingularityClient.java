@@ -463,6 +463,10 @@ public class SingularityClient {
     return executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
   }
 
+  private HttpResponse post(Function<String, String> hostToUri, String type, Optional<?> body, Map<String, Object> queryParams) {
+    return executeRequest(hostToUri, type, body, Method.POST, Optional.of(queryParams));
+  }
+
   private HttpResponse executeRequest(Function<String, String> hostToUri, String type, Optional<?> body, Method method, Optional<Map<String, Object>> queryParams) {
     final long start = System.currentTimeMillis();
 
@@ -621,9 +625,20 @@ public class SingularityClient {
   }
 
   public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
+    return runSingularityRequest(requestId, runNowRequest, false);
+  }
+
+  /**
+   *
+   * @param requestId
+   * @param runNowRequest
+   * @param minimalReturn - if `true` will return a SingularityPendingRequestParent that is _not_ hydrated with extra task + deploy information
+   * @return
+   */
+  public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest, boolean minimalReturn) {
     final Function<String, String> requestUri = (host) -> String.format(REQUEST_RUN_FORMAT, getApiBase(host), requestId);
 
-    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest, ImmutableMap.of("minimal", String.valueOf(minimalReturn)));
 
     return response.getAs(SingularityPendingRequestParent.class);
   }
@@ -1064,6 +1079,12 @@ public class SingularityClient {
     return getInactiveTaskHistoryForRequest(requestId, 100, 1);
   }
 
+  public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, String deployId) {
+    return getInactiveTaskHistoryForRequest(requestId, 100, 1, Optional.absent(), Optional.of(deployId),
+        Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(),
+        Optional.absent());
+  }
+
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page) {
     return getInactiveTaskHistoryForRequest(requestId, count, page, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
   }
@@ -1079,6 +1100,21 @@ public class SingularityClient {
 
     return getCollectionWithParams(requestUri, type, Optional.of(params), TASKID_HISTORY_COLLECTION);
   }
+
+  public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page,
+     Optional<String> host, Optional<String> deployId, Optional<String> runId,
+     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter,
+     Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection) {
+    final Function<String, String> requestUri = (singularityHost) -> String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getApiBase(singularityHost), requestId);
+
+    final String type = String.format("inactive (failed, killed, lost) task history for request %s", requestId);
+
+    Map<String, Object> params = taskSearchParams(Optional.of(requestId), deployId, runId, host, lastTaskStatus,
+        startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+
+    return getCollectionWithParams(requestUri, type, Optional.of(params), TASKID_HISTORY_COLLECTION);
+  }
+
 
   public Optional<SingularityDeployHistory> getHistoryForRequestDeploy(String requestId, String deployId) {
     final Function<String, String> requestUri = (host) -> String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getApiBase(host), requestId, deployId);

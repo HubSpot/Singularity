@@ -1,10 +1,10 @@
 ## Historical Data
 
-Singularity can optionally persist all task and deployment historical information into a MySQL database. This is useful because Mesos does not necessarily keep state forever, nor does it provide a deploy-focused interface for viewing that state. The Singularity API and web application will return historical information from both ZooKeeper and MySQL. Singularity will periodically dump stale state into MySQL.
+Singularity can optionally persist all task and deployment historical information into a MySQL or PostgreSQL database. This is useful because Mesos does not necessarily keep state forever, nor does it provide a deploy-focused interface for viewing that state. The Singularity API and web application will return historical information from both ZooKeeper and the database. Singularity will periodically dump stale state into the databaw.
 
 ### Configuration
 
-The `database` section of the Singularity configuration file must be populated in order for Singularity to persist task and deploy history information. Here's an example:
+The `database` section of the Singularity configuration file must be populated in order for Singularity to persist task and deploy history information. Here's an example using MySQL:
 
 ```
 database:
@@ -13,6 +13,9 @@ database:
   password: PASSWORD
   url: jdbc:mysql://HOSTNAME:3306/DB_NAME
 ```
+
+A PostgreSQL configuration would be similar, but use a driverClass of `org.postgresql.Driver` and an appropriate
+url - for example `jdbc:postgresql://HOSTNAME:5432/DB_NAME`
 
 ### Schema Changes
 
@@ -26,6 +29,8 @@ INFO  [2013-12-23 18:41:33,620] liquibase: Reading from singularity.DATABASECHAN
 INFO  [2013-12-23 18:41:33,668] liquibase: Reading from singularity.DATABASECHANGELOG
 1 change sets have not been applied to root@localhost@jdbc:mysql://localhost:3306/singularity
 ```
+
+**Note**: The appropriate migrations.sql differs depending on database flavor and is provided in the `postgres` or `mysql` directory of the Singularity distribution.
 
 To apply pending migrations, run the `db migrate` task:
 

@@ -13,7 +13,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 ### Features
 
  - [Native Docker Support](Docs/reference/container-options.md)
- - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
+ - [JSON REST API and Java Client](Docs/reference/apidocs/api.html)
  - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/about/ui.md)
  - Rich load balancer integration with [Baragon](https://github.com/HubSpot/Baragon)
  - [Deployments, automatic rollbacks, and healthchecks](Docs/about/how-it-works.md#deploys)
@@ -53,6 +53,7 @@ Then simply run `docker-compose up` and it will start containers for...
  - [ZooKeeper](https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html) 
  - Java 8+
  - [MySQL](http://dev.mysql.com/usingmysql/get_started.html) (optional)
+ - PostgreSQL (optional)
 
 ##### Contact
 
@@ -69,7 +70,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 #### Deployment
 
- - [API](Docs/reference/apidocs/api-index.md)
+ - [API](Docs/reference/api.html)
  - [Configuration](Docs/reference/configuration.md)
  - [Examples](Docs/getting-started/basic-examples.md)
  - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)

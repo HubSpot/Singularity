@@ -14,9 +14,9 @@ More info on how to manually set up a Zookeeper cluster lives [here](https://zoo
 
 For testing or local development purposes, a single-node cluster running on your local machine is fine. If using the [docker testing/development setup](../development/developing-with-docker.md), this will already be present.
 
-### 2. Set up MySQL (optional)
+### 2. Set up MySQL or PostgreSQL (optional)
 
-Singularity can be configured to move stale data from Zookeeper to MySQL after a configurable amount of time, which helps reduce strain on the cluster. If you're running Singularity in Production environment, MySQL is encouraged. See the [database reference](../reference/database.md) for help configuring the database.
+Singularity can be configured to move stale data from Zookeeper to a database after a configurable amount of time, which helps reduce strain on the cluster. If you're running Singularity in Production environment, enabling database support is encouraged. See the [database reference](../reference/database.md) for help configuring the database.
 
 ### 3. Set up a Mesos cluster
 
@@ -93,9 +93,9 @@ ui:
 
 Full configuration documentation lives here: [configuration.md](../reference/configuration.md)
 
-### 6. Run MySQL migrations (if necessary)
+### 6. Run database migrations (if necessary)
 
-If you're operating Singularity with MySQL, you first need to run a liquibase migration to create all appropriate tables: (this snippet assumes your Singularity configuration YAML exists as `singularity_config.yaml`)
+If you're operating Singularity with a database, you first need to run a liquibase migration to create all appropriate tables: (this snippet assumes your Singularity configuration YAML exists as `singularity_config.yaml`)
 
 `java -jar SingularityService/target/SingularityService-*-shaded.jar db migrate singularity_config.yaml --migrations mysql/migrations.sql`
 

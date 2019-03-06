@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,7 +48,7 @@ public class SingularityLeaderCache {
   private Map<String, SingularitySlave> slaves;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
-  private Map<String, RequestUtilization> requestUtilizations;
+  private ConcurrentMap<String, RequestUtilization> requestUtilizations;
 
   private volatile boolean active;
 
@@ -117,7 +118,7 @@ public class SingularityLeaderCache {
   }
 
   public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
-    this.requestUtilizations = new HashMap<>(requestUtilizations);
+    this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
   }
 
   public boolean active() {

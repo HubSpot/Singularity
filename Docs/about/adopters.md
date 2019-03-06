@@ -8,5 +8,6 @@ These organizations proudly use Singularity:
 - [EverTrue](http://www.evertrue.com/)
 - [Grepsr](http://www.grepsr.com/)
 - [Nitro](http://www.gonitro.com/)
+- [Bdmreco](https://bdmreco.io/)
 
 If you're using Singularity and aren't on this list, feel free to submit a Pull Request.

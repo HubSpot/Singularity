@@ -53,6 +53,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.absent();
 
   @JsonProperty
+  private Optional<String> singularityClientCredentialsPath = Optional.absent();
+
+  @JsonProperty
   private boolean cleanTasksWhenDecommissioned = true;
 
   @NotNull
@@ -154,6 +157,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.singularityClientCredentials = singularityClientCredentials;
   }
 
+  public Optional<String> getSingularityClientCredentialsPath() {
+    return singularityClientCredentialsPath;
+  }
+
+  public void setSingularityClientCredentialsPath(Optional<String> singularityClientCredentialsPath) {
+    this.singularityClientCredentialsPath = singularityClientCredentialsPath;
+  }
+
   public boolean isCleanTasksWhenDecommissioned() {
     return cleanTasksWhenDecommissioned;
   }
@@ -227,6 +238,7 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
         ", singularityContextPath='" + singularityContextPath + '\'' +
         ", runDockerCleanup=" + runDockerCleanup +
         ", singularityClientCredentials=" + singularityClientCredentials +
+        ", singularityClientCredentialsPath=" + singularityClientCredentialsPath +
         ", cleanTasksWhenDecommissioned=" + cleanTasksWhenDecommissioned +
         ", compressionType=" + compressionType +
         ", defaultServiceLog='" + defaultServiceLog + '\'' +

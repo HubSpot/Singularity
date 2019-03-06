@@ -225,6 +225,7 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult pause(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
     markBounceComplete(request.getId());
+    removeExpiringBounce(request.getId());
     return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, timestamp, user, message);
   }
 
@@ -481,6 +482,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   public <T extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>> SingularityDeleteResult deleteExpiringObject(Class<T> clazz, String requestId) {
     return delete(getExpiringPath(clazz, requestId));
+  }
+
+  public SingularityDeleteResult removeExpiringBounce(String requestId) {
+    return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {

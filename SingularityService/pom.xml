@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.21.0-SNAPSHOT</version>
+    <version>0.23.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -117,17 +117,17 @@
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-protobuf-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <groupId>com.hubspot.mesos.rx.java</groupId>
       <artifactId>mesos-rxjava-util</artifactId>
     </dependency>
 
@@ -415,6 +415,11 @@
       <scope>runtime</scope>
     </dependency>
 
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+    </dependency>
+
     <!-- for jade -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -458,6 +463,10 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.rholder</groupId>
+      <artifactId>guava-retrying</artifactId>
+    </dependency>
 
   </dependencies>
 
@@ -475,6 +484,30 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>postgresql</id>
+      <properties>
+        <singularitybase.db.driver>postgres</singularitybase.db.driver>
+      </properties>
+      <dependencyManagement>
+        <!-- TODO: Push up to hubspot basepom? -->
+        <dependencies>
+          <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>42.2.4</version>
+          <scope>runtime</scope>
+        </dependency>
+        </dependencies>
+      </dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
     <profile>
       <id>build-docker-image</id>
       <activation>
@@ -525,7 +558,7 @@
                             <outputDirectory>/</outputDirectory>
                           </file>
                           <file>
-                            <source>${project.basedir}/../mysql/migrations.sql</source>
+                            <source>${project.basedir}/../${singularitybase.db.driver}/migrations.sql</source>
                             <destName>migrations.sql</destName>
                             <outputDirectory>/etc/singularity</outputDirectory>
                           </file>

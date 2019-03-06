@@ -45,8 +45,21 @@ public class SingularityExecutorTask {
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
-  public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration, ObjectMapper objectMapper) {
+  public SingularityExecutorTask(
+      ExecutorDriver driver,
+      ExecutorUtils executorUtils,
+      SingularityRunnerBaseConfiguration baseConfiguration,
+      SingularityExecutorConfiguration executorConfiguration,
+      SingularityExecutorTaskDefinition taskDefinition,
+      String executorPid,
+      SingularityExecutorArtifactFetcher artifactFetcher,
+      Protos.TaskInfo taskInfo,
+      TemplateManager templateManager,
+      Logger log,
+      JsonObjectFileHelper jsonObjectFileHelper,
+      DockerUtils dockerUtils,
+      SingularityS3Configuration s3Configuration,
+      ObjectMapper objectMapper) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -61,7 +74,7 @@ public class SingularityExecutorTask {
 
     this.taskDefinition = taskDefinition;
 
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper, executorConfiguration.getMaxServiceLogSizeMb().isPresent());
     this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerUtils);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerUtils, objectMapper);
     this.artifactVerifier = new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration, s3Configuration);

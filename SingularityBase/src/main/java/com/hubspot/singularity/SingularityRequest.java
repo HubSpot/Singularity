@@ -36,6 +36,7 @@ public class SingularityRequest {
   private final Optional<SlavePlacement> slavePlacement;
   private final Optional<Map<String, String>> requiredSlaveAttributes;
   private final Optional<Map<String, String>> allowedSlaveAttributes;
+  private final Optional<Map<String, Map<String, Integer>>> slaveAttributeMinimums;
   private final Optional<Boolean> loadBalanced;
   private final Optional<String> group;
   private final Optional<String> requiredRole;
@@ -70,6 +71,7 @@ public class SingularityRequest {
                             @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement,
                             @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
                             @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes,
+                            @JsonProperty("slaveAttributeMinimums") Optional<Map<String, Map<String, Integer>>> slaveAttributeMinimums,
                             @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
                             @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule,
                             @JsonProperty("group") Optional<String> group,
@@ -103,6 +105,7 @@ public class SingularityRequest {
     this.slavePlacement = slavePlacement;
     this.requiredSlaveAttributes = requiredSlaveAttributes;
     this.allowedSlaveAttributes = allowedSlaveAttributes;
+    this.slaveAttributeMinimums = slaveAttributeMinimums;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
@@ -144,6 +147,7 @@ public class SingularityRequest {
     .setSlavePlacement(slavePlacement)
     .setRequiredSlaveAttributes(requiredSlaveAttributes)
     .setAllowedSlaveAttributes(allowedSlaveAttributes)
+    .setSlaveAttributeMinimums(slaveAttributeMinimums)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setRequiredRole(requiredRole)
     .setGroup(group)
@@ -254,6 +258,11 @@ public class SingularityRequest {
   @Schema(nullable = true, description = "Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves")
   public Optional<Map<String, String>> getAllowedSlaveAttributes() {
     return allowedSlaveAttributes;
+  }
+
+  @Schema(nullable = true, description = "Require running on at least this percentage of slaves with these attributes")
+  public Optional<Map<String, Map<String, Integer>>> getSlaveAttributeMinimums() {
+    return slaveAttributeMinimums;
   }
 
   @Schema(nullable = true, description = "Do not schedule more than this many tasks using a single offer from a single mesos slave")
@@ -408,6 +417,7 @@ public class SingularityRequest {
         Objects.equals(slavePlacement, that.slavePlacement) &&
         Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
         Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
+        Objects.equals(slaveAttributeMinimums, that.slaveAttributeMinimums) &&
         Objects.equals(loadBalanced, that.loadBalanced) &&
         Objects.equals(group, that.group) &&
         Objects.equals(requiredRole, that.requiredRole) &&
@@ -426,7 +436,14 @@ public class SingularityRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, scheduleTimeZone, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, requiredRole, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule,
+        scheduleType, scheduleTimeZone, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis,
+        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances,
+        skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes,
+        allowedSlaveAttributes, slaveAttributeMinimums, loadBalanced, group, requiredRole,
+        readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides,
+        hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive,
+        taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
   }
 
   @Override
@@ -451,6 +468,7 @@ public class SingularityRequest {
         ", slavePlacement=" + slavePlacement +
         ", requiredSlaveAttributes=" + requiredSlaveAttributes +
         ", allowedSlaveAttributes=" + allowedSlaveAttributes +
+        ", slaveAttributeMinimums=" + slaveAttributeMinimums +
         ", loadBalanced=" + loadBalanced +
         ", group=" + group +
         ", requiredRole=" + requiredRole +

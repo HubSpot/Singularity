@@ -47,7 +47,7 @@ class RequestDetailPage extends Component {
   render() {
     const { deleted, router, location, params } = this.props;
     const { requestId } = params;
-    const { taskHistoryPage } = location.query;
+    const { taskHistoryPage, taskHistoryPageSize } = location.query;
     return (
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
@@ -57,6 +57,8 @@ class RequestDetailPage extends Component {
         {deleted || (
           <TaskHistoryTable
             requestId={requestId}
+            location={this.props.location}
+            initialPageSize={Number(taskHistoryPageSize) || 10}
             onPageChange={num => router.replace({ ...location, query: {...location.query, taskHistoryPage: num }})}
             initialPageNumber={Number(taskHistoryPage) || 1}
           />
@@ -116,4 +118,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), true)));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId, Utils.maybe(props.location, ["query", "taskHistoryPage"]), Utils.maybe(props.location, ["query", "taskHistoryPageSize"])), true)));

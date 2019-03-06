@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.21.0-SNAPSHOT</version>
+    <version>0.23.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityS3Downloader</artifactId>
@@ -90,6 +90,7 @@
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
     </dependency>
+
   </dependencies>
 </project>
 <!-- Local Variables:     -->
