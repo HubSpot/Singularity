@@ -37,13 +37,12 @@ public class SingularityMesosHeartbeatChecker extends SingularityLeaderOnlyPolle
 
   @Override
   public void runActionOnPoll() {
+    if (!mesosScheduler.isRunning()) {
+      LOG.debug("Not checking for a Mesos heartbeat because we haven't subscribed with the Mesos Master yet.");
+      return;
+    }
     if (!mesosScheduler.getHeartbeatIntervalSeconds().isPresent()) {
-      if (mesosScheduler.isRunning()) {
-        LOG.debug("Not checking for a Mesos heartbeat because the Mesos Master didn't advertise a heartbeat interval.");
-      } else {
-        LOG.debug("Not checking for a Mesos heartbeat because we haven't subscribed with the Mesos Master yet.");
-      }
-
+      LOG.debug("Not checking for a Mesos heartbeat because the Mesos Master didn't advertise a heartbeat interval.");
       return;
     }
 

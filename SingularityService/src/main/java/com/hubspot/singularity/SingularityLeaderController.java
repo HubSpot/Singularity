@@ -19,18 +19,16 @@ import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
-import io.dropwizard.lifecycle.Managed;
-
 @Singleton
-public class SingularityLeaderController implements Managed, LeaderLatchListener {
+public class SingularityLeaderController implements LeaderLatchListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
 
@@ -67,14 +65,16 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.master = false;
   }
 
-  @Override
-  public void start() throws Exception {
+  public void start() {
     statePoller.start();
   }
 
-  @Override
-  public void stop() throws Exception {
+  public void stop() {
     statePoller.finish();
+  }
+
+  protected boolean isTestMode() {
+    return false;
   }
 
   @Override
@@ -83,11 +83,18 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
     master = true;
    try {
-      scheduler.start();
-      statePoller.wake();
+     if (!isTestMode()) {
+       scheduler.start();
+       statePoller.wake();
+     }
     } catch (Throwable t) {
       LOG.error("While starting driver", t);
       exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
+      try {
+        scheduler.notifyStopping();
+      } catch (Throwable th) {
+        LOG.warn("While stopping scheduler due to bad initial start({})", th.getMessage());
+      }
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
@@ -110,7 +117,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
     master = false;
 
-    if (scheduler.isRunning()) {
+    if (scheduler.isRunning() && !isTestMode()) {
       try {
         scheduler.notifyStopping();
         statePoller.wake();
@@ -150,7 +157,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       numCachedOffers++;
     }
 
-    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isRunning(),
+    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 
@@ -199,8 +206,13 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         } catch (InterruptedException e) {
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
-          LOG.error("Caught exception while saving state", t);
-          exceptionNotifier.notify(String.format("Caught exception while saving state (%s)", t.getMessage()), t);
+          // Can get wrapped in a runtime exception, check cause as well
+          if (t.getCause() != null && t.getCause() instanceof InterruptedException) {
+            LOG.trace("Caught interrupted exception, running the loop");
+          } else {
+            LOG.error("Caught exception while saving state", t);
+            exceptionNotifier.notify(String.format("Caught exception while saving state (%s)", t.getMessage()), t);
+          }
         }
         finally {
           lock.unlock();

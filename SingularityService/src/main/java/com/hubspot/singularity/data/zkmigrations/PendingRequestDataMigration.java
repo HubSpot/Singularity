@@ -36,7 +36,7 @@ public class PendingRequestDataMigration extends ZkDataMigration {
   @Override
   public void applyMigration() {
     String basePath = "/requests/pending";
-    LOG.warn("Starting migration to re-write pending request paths");
+    LOG.info("Starting migration to re-write pending request paths");
     long start = System.currentTimeMillis();
     int rewrittenPaths = 0;
 

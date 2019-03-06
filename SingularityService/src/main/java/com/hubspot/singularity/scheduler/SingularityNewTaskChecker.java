@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -31,7 +31,7 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -76,7 +76,7 @@ public class SingularityNewTaskChecker {
   private final SingularityMailer mailer;
 
   @Inject
-  public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService, RequestManager requestManager,
+  public SingularityNewTaskChecker(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory, RequestManager requestManager,
                                    SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
                                    SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager, SingularityMailer mailer) {
     this.configuration = configuration;
@@ -87,7 +87,7 @@ public class SingularityNewTaskChecker {
 
     this.taskIdToCheck = Maps.newConcurrentMap();
 
-    this.executorService = executorService;
+    this.executorService = executorServiceFactory.get("new-task-checker", configuration.getCheckNewTasksScheduledThreads());
 
     this.exceptionNotifier = exceptionNotifier;
     this.deployHealthHelper = deployHealthHelper;
@@ -172,9 +172,12 @@ public class SingularityNewTaskChecker {
       return;
     }
 
-    Future<?> future = executorService.submit(getTaskCheck(task, healthchecker));
-
-    taskIdToCheck.put(taskId, future);
+    try {
+      Future<?> future = executorService.submit(getTaskCheck(task, healthchecker));
+      taskIdToCheck.put(taskId, future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
   }
 
   public enum CancelState {
@@ -242,9 +245,12 @@ public class SingularityNewTaskChecker {
   private void enqueueCheckWithDelay(final SingularityTask task, long delaySeconds, SingularityHealthchecker healthchecker) {
     LOG.trace("Enqueuing a new task check for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
-    ScheduledFuture<?> future = executorService.schedule(getTaskCheck(task, healthchecker), delaySeconds, TimeUnit.SECONDS);
-
-    taskIdToCheck.put(task.getTaskId().getId(), future);
+    try {
+      ScheduledFuture<?> future = executorService.schedule(getTaskCheck(task, healthchecker), delaySeconds, TimeUnit.SECONDS);
+      taskIdToCheck.put(task.getTaskId().getId(), future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
   }
 
   public enum CheckTaskState {

@@ -6,10 +6,11 @@ import static com.google.inject.name.Names.named;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -30,6 +31,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.ProvisionException;
@@ -57,12 +60,14 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
-import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
+import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -99,12 +104,6 @@ public class SingularityMainModule implements Module {
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
-
-  public static final String HEALTHCHECK_THREADPOOL_NAME = "_healthcheck_threadpool";
-  public static final Named HEALTHCHECK_THREADPOOL_NAMED = Names.named(HEALTHCHECK_THREADPOOL_NAME);
-
-  public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
-  public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
@@ -165,18 +164,13 @@ public class SingularityMainModule implements Module {
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
 
     binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityManagedCachedThreadPoolFactory.class).in(Scopes.SINGLETON);
 
-    binder.bind(ScheduledExecutorService.class).annotatedWith(HEALTHCHECK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getHealthcheckStartThreads(),
-            configuration.getThreadpoolShutdownDelayInSeconds(),
-            "healthcheck")).in(Scopes.SINGLETON);
-
-    binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
-        configuration.getThreadpoolShutdownDelayInSeconds(),
-        "check-new-task")).in(Scopes.SINGLETON);
-
-    binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityGraphiteReporter.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityLifecycleManaged.class).asEagerSingleton();
 
     if (configuration.isCacheOffers()) {
       binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
@@ -415,5 +409,18 @@ public class SingularityMainModule implements Module {
   @Named(LAST_MESOS_MASTER_HEARTBEAT_TIME)
   public AtomicLong provideLastHeartbeatTime() {
     return new AtomicLong(0);
+  }
+
+  @Provides
+  @Singleton
+  public Set<SingularityLeaderOnlyPoller> provideLeaderOnlyPollers(Injector injector) {
+    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers = new HashSet<>();
+    for (Key<?> key : injector.getAllBindings().keySet()) {
+      if (SingularityLeaderOnlyPoller.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
+        SingularityLeaderOnlyPoller poller = (SingularityLeaderOnlyPoller) injector.getInstance(key);
+        leaderOnlyPollers.add(poller);
+      }
+    }
+    return leaderOnlyPollers;
   }
 }

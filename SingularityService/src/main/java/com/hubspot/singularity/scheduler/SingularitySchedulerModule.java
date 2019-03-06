@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.helpers.RebalancingHelper;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 
@@ -21,8 +20,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularitySlaveReconciliationPoller.class).in(Scopes.SINGLETON);
     bind(SingularityCooldownPoller.class).in(Scopes.SINGLETON);
     bind(SingularityDeployPoller.class).in(Scopes.SINGLETON);
-    bind(SingularityCooldownPoller.class).in(Scopes.SINGLETON);
-    bind(SingularityDeployPoller.class).in(Scopes.SINGLETON);
     bind(SingularitySchedulerPoller.class).in(Scopes.SINGLETON);
     bind(SingularityJobPoller.class).in(Scopes.SINGLETON);
     bind(SingularityTaskShellCommandDispatchPoller.class).in(Scopes.SINGLETON);
@@ -34,7 +31,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityCooldown.class).in(Scopes.SINGLETON);
     bind(SingularityDeployHealthHelper.class).in(Scopes.SINGLETON);
     bind(SingularityCooldown.class).in(Scopes.SINGLETON);
-    bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityTaskReconciliation.class).in(Scopes.SINGLETON);
     bind(SingularityMailPoller.class).in(Scopes.SINGLETON);

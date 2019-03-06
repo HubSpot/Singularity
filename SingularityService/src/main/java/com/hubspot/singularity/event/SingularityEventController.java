@@ -1,12 +1,10 @@
 package com.hubspot.singularity.event;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hubspot.singularity.event.SingularityEventModule.LISTENER_THREADPOOL_NAME;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +16,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityDeployUpdate;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -33,10 +31,11 @@ public class SingularityEventController implements SingularityEventListener {
   private final boolean waitForListeners;
 
   @Inject
-  SingularityEventController(final Set<SingularityEventListener> eventListeners, final SingularityConfiguration configuration,
-      @Named(LISTENER_THREADPOOL_NAME) final ScheduledExecutorService listenerExecutorService) {
+  SingularityEventController(final Set<SingularityEventListener> eventListeners,
+                             final SingularityConfiguration configuration,
+                             final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory) {
     this.eventListeners = ImmutableSet.copyOf(checkNotNull(eventListeners, "eventListeners is null"));
-    this.listenerExecutorService = MoreExecutors.listeningDecorator(checkNotNull(listenerExecutorService, "listenerExecutorService is null"));
+    this.listenerExecutorService = MoreExecutors.listeningDecorator(checkNotNull(scheduledExecutorServiceFactory.get("event-listener", configuration.getListenerThreadpoolSize()), "listenerExecutorService is null"));
     this.waitForListeners = configuration.isWaitForListeners();
   }
 

@@ -35,14 +35,14 @@ public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration
   @Override
   public void applyMigration() {
     String basePath = "/requests/pending";
-    LOG.warn("Starting migration to rewrite one-off pending request paths to include run IDs");
+    LOG.info("Starting migration to rewrite one-off pending request paths to include run IDs");
 
     long start = System.currentTimeMillis();
     int rewrittenPaths = 0;
 
     try {
       if (curator.checkExists().forPath(basePath) == null) {
-        LOG.error("Unable to run migration because pending requests base path doesn't exist!");
+        LOG.info("Unable to run migration because pending requests base path doesn't exist!");
         return;
       }
     } catch (Exception exn) {
