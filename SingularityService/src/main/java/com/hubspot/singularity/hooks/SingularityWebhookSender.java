@@ -19,6 +19,7 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployUpdate;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -47,14 +48,19 @@ public class SingularityWebhookSender {
   private final AsyncSemaphore<Response> webhookSemaphore;
 
   @Inject
-  public SingularityWebhookSender(SingularityConfiguration configuration, AsyncHttpClient http, ObjectMapper objectMapper, TaskHistoryHelper taskHistoryHelper, WebhookManager webhookManager) {
+  public SingularityWebhookSender(SingularityConfiguration configuration,
+                                  AsyncHttpClient http,
+                                  ObjectMapper objectMapper,
+                                  TaskHistoryHelper taskHistoryHelper,
+                                  WebhookManager webhookManager,
+                                  SingularityManagedScheduledExecutorServiceFactory executorServiceFactory) {
     this.configuration = configuration;
     this.http = http;
     this.webhookManager = webhookManager;
     this.taskHistoryHelper = taskHistoryHelper;
     this.objectMapper = objectMapper;
 
-    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks).build();
+    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-semaphore", 5)).build();
   }
 
   public void checkWebhooks() {

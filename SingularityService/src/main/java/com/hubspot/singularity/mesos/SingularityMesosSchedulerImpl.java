@@ -285,6 +285,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void rescind(OfferID offerId) {
+    if (!isRunning()) {
+      LOG.warn("Received rescind when not running for offer {}", offerId.getValue());
+    }
     callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind");
   }
 

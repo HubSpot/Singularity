@@ -13,10 +13,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
-import io.dropwizard.lifecycle.Managed;
-
 @Singleton
-public class ExecutorIdGenerator implements Managed {
+public class ExecutorIdGenerator {
 
   private volatile DistributedAtomicInteger distributedGenerator = null;
   private final char[] alphabet;
@@ -31,13 +29,8 @@ public class ExecutorIdGenerator implements Managed {
     this.alphabet = buildAlphabet();
   }
 
-  @Override
   public void start() {
     this.distributedGenerator = new DistributedAtomicInteger(curator, COUNTER_PATH, new RetryOneTime(1));
-  }
-
-  @Override
-  public void stop() {
   }
 
   public String getNextExecutorId() {

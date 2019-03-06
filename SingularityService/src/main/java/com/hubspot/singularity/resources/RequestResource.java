@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -86,9 +87,11 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -112,13 +115,14 @@ public class RequestResource extends AbstractRequestResource {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final SingularityConfiguration configuration;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
                          RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
                          SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
-                         RackManager rackManager, SingularityConfiguration configuration) {
+                         RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
@@ -127,6 +131,7 @@ public class RequestResource extends AbstractRequestResource {
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.configuration = configuration;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -301,6 +306,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/bounce")
   @Operation(summary = "Trigger a bounce for a request")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent bounce(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to bounce") @PathParam("requestId") String requestId,
@@ -388,7 +394,22 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
         @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
-    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
+    long start = System.currentTimeMillis();
+    SingularityPendingRequestParent response;
+    if (configuration.isProxyRunNowToLeader()) {
+      response = maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false)));
+    } else {
+      response = scheduleImmediately(user, requestId, runNowRequest, Optional.fromNullable(minimalReturn).or(false));
+    }
+    long duration = System.currentTimeMillis() - start;
+    LOG.trace("Enqueue for {} took {}ms", requestId, duration);
+    if (duration > 15000) {
+      exceptionNotifier.notify(
+          String.format("Slow enqueue for %s", requestId),
+          ImmutableMap.of("leader", Boolean.toString(isLeader()), "duration", Long.toString(duration))
+      );
+    }
+    return response;
   }
 
   public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
@@ -403,14 +424,25 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
+    // Check these to avoid unnecessary calls to taskManager
+    int activeTasks = 0;
+    int pendingTasks = 0;
+
+    boolean isOneoffWithInstances = requestWithState.getRequest().isOneOff() && requestWithState.getRequest().getInstances().isPresent();
+    if (requestWithState.getRequest().isScheduled() || isOneoffWithInstances) {
+      activeTasks = taskManager.getActiveTaskIdsForRequest(requestId).size();
+    }
+    if (isOneoffWithInstances) {
+      pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId).size();
+    }
 
     final SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
         getAndCheckDeployId(requestId),
         user.getEmail(),
         requestWithState.getRequest(),
         maybeRunNowRequest,
-        taskManager.getActiveTaskIdsForRequest(requestId),
-        taskManager.getPendingTaskIdsForRequest(requestId));
+        activeTasks,
+        pendingTasks);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -448,6 +480,7 @@ public class RequestResource extends AbstractRequestResource {
           @ApiResponse(responseCode = "409", description = "Request is already paused or being cleaned"),
       }
   )
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent pause(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to pause") @PathParam("requestId") String requestId,
@@ -521,6 +554,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/unpause")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent unpauseNoBody(@Parameter(hidden = true) @Auth SingularityUser user,
                                                 @PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
@@ -571,6 +605,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/exit-cooldown")
   @Operation(summary = "Immediately exits cooldown, scheduling new tasks immediately")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
   public SingularityRequestParent exitCooldown(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,

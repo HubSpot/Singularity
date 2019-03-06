@@ -16,27 +16,21 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.net.HostAndPort;
 
-import io.dropwizard.lifecycle.Managed;
-
-public class SingularityLeaderLatch extends LeaderLatch implements Managed {
+public class SingularityLeaderLatch extends LeaderLatch {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderLatch.class);
 
   private static final String LEADER_PATH = "/leader";
 
   @Inject
-  public SingularityLeaderLatch(@Named(SingularityMainModule.HTTP_HOST_AND_PORT) final HostAndPort httpHostAndPort,
-      final CuratorFramework curatorFramework, final Set<LeaderLatchListener> listeners) throws Exception {
+  public SingularityLeaderLatch(CuratorFramework curatorFramework,
+                                Set<LeaderLatchListener> listeners,
+                                @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort httpHostAndPort) throws Exception {
     super(checkNotNull(curatorFramework, "curatorFramework is null"), LEADER_PATH, httpHostAndPort.toString());
 
     checkNotNull(listeners, "listeners is null");
     for (LeaderLatchListener listener : listeners) {
       addListener(listener);
     }
-  }
-
-  @Override
-  public void stop() throws Exception {
-    close();
   }
 
   @Override

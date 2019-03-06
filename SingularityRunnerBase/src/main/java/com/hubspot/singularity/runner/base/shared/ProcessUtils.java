@@ -17,6 +17,8 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class ProcessUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ProcessUtils.class);
@@ -27,6 +29,7 @@ public class ProcessUtils {
     this(null);
   }
 
+  @SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
   public ProcessUtils(@Nullable Logger log) {
     this.log = Optional.fromNullable(log);
   }

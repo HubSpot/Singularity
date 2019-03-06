@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
     private final Optional<String> extension;
@@ -12,6 +14,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
     private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
 
     @JsonCreator
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
         return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), null);
     }

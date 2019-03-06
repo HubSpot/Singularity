@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -18,15 +19,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
@@ -36,6 +34,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
@@ -62,7 +62,7 @@ public class SingularityHealthchecker {
   private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
+  public SingularityHealthchecker(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                                   AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
                                   TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager,
                                   MesosProtosUtils mesosProtosUtils) {
@@ -75,7 +75,7 @@ public class SingularityHealthchecker {
 
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
 
-    this.executorService = executorService;
+    this.executorService = executorServiceFactory.get("health-checker", configuration.getHealthcheckStartThreads());
     this.disasterManager = disasterManager;
     this.mesosProtosUtils = mesosProtosUtils;
   }
@@ -100,9 +100,13 @@ public class SingularityHealthchecker {
       return;
     }
 
-    ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, getDelaySeconds(task.getTaskId(), options, inStartup, isFirstCheck), inStartup);
-
-    ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
+    ScheduledFuture<?> existing = null;
+    try {
+      ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, getDelaySeconds(task.getTaskId(), options, inStartup, isFirstCheck), inStartup);
+      existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
+    } catch (RejectedExecutionException ree) {
+      LOG.warn("Executor rejected execution, Singularity is shutting down, short circuiting");
+    }
 
     if (existing != null) {
       boolean canceledExisting = existing.cancel(false);

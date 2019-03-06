@@ -42,6 +42,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.SingularityUser;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public final class JavaUtils {
 
   public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
@@ -145,25 +147,6 @@ public final class JavaUtils {
     return t;
   }
 
-  public static Iterable<Path> iterable(final Path directory) {
-    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory);) {
-      Iterator<Path> iterator = dirStream.iterator();
-      return Lists.newArrayList(iterator);
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  public static Path getValidDirectory(String directoryPath, String name) {
-    Preconditions.checkState(!directoryPath.isEmpty(), "Path for %s can't be empty", name);
-
-    Path path = Paths.get(directoryPath);
-
-    Preconditions.checkState(Files.isDirectory(path), "Path %s for %s wasn't a directory", path, name);
-
-    return path;
-  }
-
   public static <K, V> Map<K, V> nonNullImmutable(Map<K, V> map) {
     if (map == null) {
       return Collections.emptyMap();
@@ -178,10 +161,12 @@ public final class JavaUtils {
     return ImmutableList.copyOf(list);
   }
 
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getFirst(Iterable<T> iterable) {
     return Optional.fromNullable(Iterables.getFirst(iterable, null));
   }
 
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getLast(Iterable<T> iterable) {
     return Optional.fromNullable(Iterables.getLast(iterable, null));
   }

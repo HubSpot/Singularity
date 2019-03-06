@@ -34,7 +34,7 @@ public class SingularityDataModule extends AbstractModule {
 
     bind(SingularityWebCache.class).in(Scopes.SINGLETON);
 
-    bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
+    bind(ExecutorIdGenerator.class).asEagerSingleton();
     bind(WebhookManager.class).in(Scopes.SINGLETON);
     bind(DisasterManager.class).in(Scopes.SINGLETON);
     bind(PriorityManager.class).in(Scopes.SINGLETON);
