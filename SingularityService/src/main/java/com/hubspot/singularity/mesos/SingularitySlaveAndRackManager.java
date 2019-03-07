@@ -246,27 +246,24 @@ public class SingularitySlaveAndRackManager {
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
+    final Map<String, String> requiredAttributes = getRequiredAttributes(taskRequest);
+    final Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
+
     if (offer.hasReservedSlaveAttributes()) {
       Map<String, String> reservedSlaveAttributes = offer.getReservedSlaveAttributes();
 
-      if (!taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides().isEmpty()
-          || !taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides().isEmpty()
-          || (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
-          || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
-        Map<String, String> mergedAttributes = new HashMap<>();
-        mergedAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<>()));
-        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<>()));
-        mergedAttributes.putAll(taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides());
-        mergedAttributes.putAll(taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides());
-
-        if (!slaveAndRackHelper.hasRequiredAttributes(mergedAttributes, reservedSlaveAttributes)) {
-          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.emptyMap()));
+      if (!requiredAttributes.isEmpty()) {
+        if (!slaveAndRackHelper.hasRequiredAttributes(requiredAttributes, reservedSlaveAttributes)) {
+          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, requiredAttributes);
           return false;
         }
-      } else {
+      }
+
+      if (requiredAttributes.isEmpty() && allowedAttributes.isEmpty()) {
         LOG.trace("Slaves with attributes {} are reserved for matching tasks. No attributes specified for task {}", reservedSlaveAttributes, taskRequest.getPendingTask().getPendingTaskId().getId());
         return false;
       }
+
     }
 
     if (!configuration.getPreemptibleTasksOnlyMachineAttributes().isEmpty()) {
@@ -277,19 +274,33 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    if (!taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides().isEmpty() || taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()) {
-      Map<String, String> mergedRequiredAttributes = new HashMap<>();
-
-      mergedRequiredAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<>()));
-      mergedRequiredAttributes.putAll(taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides());
-
-      if (!slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), mergedRequiredAttributes)) {
-        LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", mergedRequiredAttributes, offer.getTextAttributes());
+    if (!requiredAttributes.isEmpty()) {
+      if (!slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), requiredAttributes)) {
+        LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", requiredAttributes, offer.getTextAttributes());
         return false;
       }
     }
 
     return true;
+
+  }
+
+  private Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
+    if (!taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides().isEmpty()) {
+      return taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides();
+    } else if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())) {
+      return taskRequest.getRequest().getRequiredSlaveAttributes().get();
+    }
+    return new HashMap<>();
+  }
+
+  private Map<String, String> getAllowedAttributes(SingularityTaskRequest taskRequest) {
+    if (!taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides().isEmpty()) {
+      return taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides();
+    } else if ((taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())){
+      return taskRequest.getRequest().getAllowedSlaveAttributes().get();
+    }
+    return new HashMap<>();
   }
 
   private boolean areSlaveAttributeMinimumsFeasible(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
