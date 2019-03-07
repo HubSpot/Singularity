@@ -625,7 +625,8 @@ public class SingularityScheduler {
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
         System.currentTimeMillis(), Optional.absent(), pendingType, cmdLineArgsList, Optional.absent(), Optional.absent(), Optional.absent(),
-        Optional.absent(), resources, Collections.emptyList(), Optional.absent(), Collections.emptyMap(), Collections.emptyList(), Optional.absent());
+        Optional.absent(), resources, Collections.emptyList(), Optional.absent(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(),
+        Collections.emptyList(), Optional.absent());
 
     requestManager.addToPendingQueue(pendingRequest);
 
@@ -860,6 +861,8 @@ public class SingularityScheduler {
                   pendingRequest.getS3UploaderAdditionalFiles(),
                   pendingRequest.getRunAsUserOverride(),
                   pendingRequest.getEnvOverrides(),
+                  pendingRequest.getRequiredSlaveAttributeOverrides(),
+                  pendingRequest.getAllowedSlaveAttributeOverrides(),
                   pendingRequest.getExtraArtifacts(),
                   pendingRequest.getActionId()));
 

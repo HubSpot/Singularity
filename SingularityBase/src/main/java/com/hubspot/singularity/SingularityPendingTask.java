@@ -29,6 +29,8 @@ public class SingularityPendingTask {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
+  private final Map<String, String> requiredSlaveAttributeOverrides;
+  private final Map<String, String> allowedSlaveAttributeOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
@@ -65,6 +67,8 @@ public class SingularityPendingTask {
                                 @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
                                 @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                 @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
+                                @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
                                 @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                 @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
@@ -88,6 +92,19 @@ public class SingularityPendingTask {
     } else {
       this.envOverrides = Collections.emptyMap();
     }
+
+    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
+      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    } else {
+      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
+      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    } else {
+      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
+    }
+
     if (Objects.nonNull(extraArtifacts)) {
       this.extraArtifacts = extraArtifacts;
     } else {
@@ -168,6 +185,16 @@ public class SingularityPendingTask {
   @Schema(description = "Environment variable overrides for this particular task")
   public Map<String, String> getEnvOverrides() { return envOverrides; }
 
+  @Schema(description = "Required slave attribute overrides for this particular task. These will be applied on top of any requiredSlaveAttributes that are defined at the SingularityRequest level.")
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredSlaveAttributeOverrides;
+  }
+
+  @Schema(description = "Allowed slave attribute overrides for this particular task. These will be applied on top of any allowedSlaveAttributes that are defined at the SingularityRequest level.")
+  public Map<String, String> getAllowedSlaveAttributeOverrides() {
+    return allowedSlaveAttributeOverrides;
+  }
+
   @Schema(description = "A list of additional artifacts to download for this particular task")
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
@@ -191,6 +218,8 @@ public class SingularityPendingTask {
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
+        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
+        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
         ", extraArtifacts" + extraArtifacts +
         ", actionId=" + actionId +
         '}';
