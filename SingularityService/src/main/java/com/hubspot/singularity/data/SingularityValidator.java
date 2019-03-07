@@ -455,6 +455,8 @@ public class SingularityValidator {
         runNowRequest.getS3UploaderAdditionalFiles(),
         runNowRequest.getRunAsUserOverride(),
         runNowRequest.getEnvOverrides(),
+        runNowRequest.getRequiredSlaveAttributeOverrides(),
+        runNowRequest.getAllowedSlaveAttributeOverrides(),
         runNowRequest.getExtraArtifacts(),
         runNowRequest.getRunAt()
     );
@@ -472,6 +474,8 @@ public class SingularityValidator {
           request.getS3UploaderAdditionalFiles(),
           request.getRunAsUserOverride(),
           request.getEnvOverrides(),
+          request.getRequiredSlaveAttributeOverrides(),
+          request.getAllowedSlaveAttributeOverrides(),
           request.getExtraArtifacts(),
           request.getRunAt());
     } else {
