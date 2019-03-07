@@ -258,7 +258,7 @@ public class SingularitySlaveAndRackManager {
 
       if (!mergedAttributes.isEmpty()) {
         if (!slaveAndRackHelper.containsAllAttributes(mergedAttributes, reservedSlaveAttributes)) {
-          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, requiredAttributes);
+          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, mergedAttributes);
           return false;
         }
       } else {
