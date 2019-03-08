@@ -252,22 +252,23 @@ public class SingularitySlaveAndRackManager {
     if (offer.hasReservedSlaveAttributes()) {
       Map<String, String> reservedSlaveAttributes = offer.getReservedSlaveAttributes();
 
-      if (!requiredAttributes.isEmpty()) {
-        if (!slaveAndRackHelper.hasRequiredAttributes(requiredAttributes, reservedSlaveAttributes)) {
-          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, requiredAttributes);
+      Map<String, String> mergedAttributes = new HashMap<>();
+      mergedAttributes.putAll(requiredAttributes);
+      mergedAttributes.putAll(allowedAttributes);
+
+      if (!mergedAttributes.isEmpty()) {
+        if (!slaveAndRackHelper.containsAllAttributes(mergedAttributes, reservedSlaveAttributes)) {
+          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, mergedAttributes);
           return false;
         }
-      }
-
-      if (requiredAttributes.isEmpty() && allowedAttributes.isEmpty()) {
+      } else {
         LOG.trace("Slaves with attributes {} are reserved for matching tasks. No attributes specified for task {}", reservedSlaveAttributes, taskRequest.getPendingTask().getPendingTaskId().getId());
         return false;
       }
-
     }
 
     if (!configuration.getPreemptibleTasksOnlyMachineAttributes().isEmpty()) {
-      if (slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), configuration.getPreemptibleTasksOnlyMachineAttributes())
+      if (slaveAndRackHelper.containsAllAttributes(offer.getTextAttributes(), configuration.getPreemptibleTasksOnlyMachineAttributes())
           && !isPreemptibleTask) {
         LOG.debug("Host {} is reserved for preemptible tasks", offer.getHostname());
         return false;
@@ -275,7 +276,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (!requiredAttributes.isEmpty()) {
-      if (!slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), requiredAttributes)) {
+      if (!slaveAndRackHelper.containsAllAttributes(offer.getTextAttributes(), requiredAttributes)) {
         LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", requiredAttributes, offer.getTextAttributes());
         return false;
       }

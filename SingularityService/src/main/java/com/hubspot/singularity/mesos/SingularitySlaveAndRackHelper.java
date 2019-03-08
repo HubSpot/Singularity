@@ -107,8 +107,8 @@ public class SingularitySlaveAndRackHelper {
     return reservedAttributes;
   }
 
-  public boolean hasRequiredAttributes(Map<String, String> attributes, Map<String, String> requiredAttributes) {
-    for (Map.Entry<String, String> entry : requiredAttributes.entrySet()) {
+  public boolean containsAllAttributes(Map<String, String> attributes, Map<String, String> otherAttributes) {
+    for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
       if (!(attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
         return false;
       }
