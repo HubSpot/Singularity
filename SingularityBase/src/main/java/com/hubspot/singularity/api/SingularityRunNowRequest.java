@@ -26,6 +26,8 @@ public class SingularityRunNowRequest {
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
+  private final Map<String, String> requiredSlaveAttributeOverrides;
+  private final Map<String, String> allowedSlaveAttributeOverrides;
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
@@ -35,7 +37,7 @@ public class SingularityRunNowRequest {
       Optional<List<String>> commandLineArgs,
       Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, Optional.absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, null, null, Optional.absent());
   }
 
   @Deprecated
@@ -45,7 +47,7 @@ public class SingularityRunNowRequest {
                                   Optional<List<String>> commandLineArgs,
                                   Optional<Resources> resources,
                                   Optional<Long> runAt) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, runAt);
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, null, null, runAt);
   }
 
   @JsonCreator
@@ -57,6 +59,8 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
                                   @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                   @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                  @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
+                                  @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
@@ -77,6 +81,18 @@ public class SingularityRunNowRequest {
       this.envOverrides = envOverrides;
     } else {
       this.envOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
+      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    } else {
+      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
+      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    } else {
+      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
     }
 
     if (Objects.nonNull(extraArtifacts)) {
@@ -128,6 +144,16 @@ public class SingularityRunNowRequest {
     return envOverrides;
   }
 
+  @Schema(description = "Override the required slave attributes for launched tasks")
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredSlaveAttributeOverrides;
+  }
+
+  @Schema(description = "Override the allowed slave attributes for launched tasks")
+  public Map<String, String> getAllowedSlaveAttributeOverrides() {
+    return allowedSlaveAttributeOverrides;
+  }
+
   @Schema(description = "Additional artifacts to download for this run")
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
@@ -149,6 +175,8 @@ public class SingularityRunNowRequest {
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
+        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
+        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         '}';
