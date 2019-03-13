@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -67,6 +68,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
 
       for (String requestId : deployManager.getAllRequestDeployStatesByRequestId().keySet()) {
+        LOG.info("Checking deploy histories to persist for request {}", requestId);
         schedulerLock.runWithRequestLock(() -> {
           Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
 
@@ -76,21 +78,23 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
           }
 
           int i = 0;
-          for (SingularityDeployKey deployKey : allDeployIdsByRequest.getOrDefault(requestId, Collections.emptyList())) {
+          List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest.getOrDefault(requestId, Collections.emptyList())
+              .stream()
+              .map((deployKey) -> deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true))
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .sorted(Comparator.comparingLong(SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge).reversed())
+              .collect(Collectors.toList());
 
-            if (!shouldTransferDeploy(deployState.get(), deployKey)) {
-              return;
+          for (SingularityDeployHistory deployHistory : deployHistories) {
+            numTotal.increment();
+            if (!shouldTransferDeploy(deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
+              continue;
             }
 
-            Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
-
-            if (deployHistory.isPresent()) {
-              if (moveToHistoryOrCheckForPurge(deployHistory.get(), i++)) {
-                numTransferred.increment();
-              }
-              numTotal.increment();
-            } else {
-              LOG.info("Deploy history for key {} not found", deployKey);
+            LOG.info("Persisting deploy {} for request {}", deployHistory.getDeployMarker().getDeployId(), requestId);
+            if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
+              numTransferred.increment();
             }
           }
         }, requestId, getClass().getSimpleName());
@@ -112,17 +116,17 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     return configuration.getMaxStaleDeploysPerRequestInZkWhenNoDatabase();
   }
 
-  private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {
+  private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, String deployId) {
     if (deployState == null) {
-      LOG.warn("Missing request deploy state for deployKey {}", deployKey);
+      LOG.warn("Missing request deploy state for request {}. deploy {}", deployState.getRequestId(), deployId);
       return true;
     }
 
-    if (deployState.getActiveDeploy().isPresent() && deployState.getActiveDeploy().get().getDeployId().equals(deployKey.getDeployId())) {
+    if (deployState.getActiveDeploy().isPresent() && deployState.getActiveDeploy().get().getDeployId().equals(deployId)) {
       return false;
     }
 
-    if (deployState.getPendingDeploy().isPresent() && deployState.getPendingDeploy().get().getDeployId().equals(deployKey.getDeployId())) {
+    if (deployState.getPendingDeploy().isPresent() && deployState.getPendingDeploy().get().getDeployId().equals(deployId)) {
       return false;
     }
 
