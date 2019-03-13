@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -129,12 +130,27 @@ public class MailTemplateHelpers {
       // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
       filePath = filePath.replaceAll("\\$MESOS_TASK_ID", MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
 
-      logTails.add(
-          new SingularityMailTaskLog(
-              filePath,
-              getFileName(filePath),
-              getSingularityLogLink(filePath, taskId.getId()),
-              getTaskLogFile(taskId, filePath, task, directory).or("")));
+      SingularityMailTaskLog logTail = null;
+      if (filePath.contains("tail_of_finished_")) {
+        String originalFilePath = filePath.replace("tail_of_finished_", "");
+        SingularityMailTaskLog maybeOriginalTail = new SingularityMailTaskLog(
+            originalFilePath,
+            getFileName(originalFilePath),
+            getSingularityLogLink(originalFilePath, taskId.getId()),
+            getTaskLogFile(taskId, originalFilePath, task, directory).or(""));
+        if (!Strings.isNullOrEmpty(maybeOriginalTail.getLog())) {
+          logTail = maybeOriginalTail;
+        }
+      }
+      if (logTail == null) {
+        logTail = new SingularityMailTaskLog(
+            filePath,
+            getFileName(filePath),
+            getSingularityLogLink(filePath, taskId.getId()),
+            getTaskLogFile(taskId, filePath, task, directory).or(""));
+      }
+
+      logTails.add(logTail);
     }
 
     return logTails;
