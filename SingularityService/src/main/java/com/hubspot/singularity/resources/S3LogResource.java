@@ -387,6 +387,12 @@ public class S3LogResource extends AbstractHistoryResource {
               for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
                 objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
               }
+              while (result.isTruncated() && result.getContinuationToken() != null) {
+                result = s3Client.listObjectsV2(new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix).withContinuationToken(result.getContinuationToken()));
+                for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                  objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                }
+              }
               return objectSummaryHolders;
             }
           }
