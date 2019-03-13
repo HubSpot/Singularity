@@ -1,11 +1,12 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -53,44 +53,47 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     persisterLock.lock();
     try {
       LOG.info("Acquired persister lock");
-      LOG.info("Checking inactive deploys for deploy history persistance");
+      LOG.info("Checking inactive deploys for deploy history persistence");
 
       final long start = System.currentTimeMillis();
-
-      final List<SingularityDeployKey> allDeployIds = deployManager.getAllDeployIds();
-      final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
-      final TreeMultimap<String, SingularityDeployHistory> deployHistoryByRequestId = TreeMultimap.create();
-
       final LongAdder numTotal = new LongAdder();
       final LongAdder numTransferred = new LongAdder();
+      final Map<String, List<SingularityDeployKey>> allDeployIdsByRequest = deployManager.getAllDeployIds()
+          .stream()
+          .collect(Collectors.groupingBy(
+              SingularityDeployKey::getRequestId,
+              Collectors.toList()
+          ));
 
-      for (SingularityDeployKey deployKey : allDeployIds) {
-        SingularityRequestDeployState deployState = byRequestId.get(deployKey.getRequestId());
 
-        if (!shouldTransferDeploy(deployState, deployKey)) {
-          continue;
-        }
-
-        Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
-
-        if (deployHistory.isPresent()) {
-          deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
-        } else {
-          LOG.info("Deploy history for key {} not found", deployKey);
-        }
-      }
-
-      for (Map.Entry<String, Collection<SingularityDeployHistory>> deployHistoryForRequest : deployHistoryByRequestId.asMap().entrySet()) {
+      for (String requestId : deployManager.getAllRequestDeployStatesByRequestId().keySet()) {
         schedulerLock.runWithRequestLock(() -> {
+          Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
+
+          if (!deployState.isPresent()) {
+            LOG.warn("No request deploy state for {}", requestId);
+            return;
+          }
+
           int i = 0;
-          for (SingularityDeployHistory deployHistory : deployHistoryForRequest.getValue()) {
-            if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
-              numTransferred.increment();
+          for (SingularityDeployKey deployKey : allDeployIdsByRequest.getOrDefault(requestId, Collections.emptyList())) {
+
+            if (!shouldTransferDeploy(deployState.get(), deployKey)) {
+              return;
             }
 
-            numTotal.increment();
+            Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
+
+            if (deployHistory.isPresent()) {
+              if (moveToHistoryOrCheckForPurge(deployHistory.get(), i++)) {
+                numTransferred.increment();
+              }
+              numTotal.increment();
+            } else {
+              LOG.info("Deploy history for key {} not found", deployKey);
+            }
           }
-        }, deployHistoryForRequest.getKey(), getClass().getSimpleName());
+        }, requestId, getClass().getSimpleName());
       }
 
       LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
