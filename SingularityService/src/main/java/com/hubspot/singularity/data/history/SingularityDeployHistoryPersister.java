@@ -88,7 +88,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
           for (SingularityDeployHistory deployHistory : deployHistories) {
             numTotal.increment();
-            if (!shouldTransferDeploy(deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
+            if (!shouldTransferDeploy(requestId, deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
               continue;
             }
 
@@ -116,9 +116,9 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     return configuration.getMaxStaleDeploysPerRequestInZkWhenNoDatabase();
   }
 
-  private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, String deployId) {
+  private boolean shouldTransferDeploy(String requestId, SingularityRequestDeployState deployState, String deployId) {
     if (deployState == null) {
-      LOG.warn("Missing request deploy state for request {}. deploy {}", deployState.getRequestId(), deployId);
+      LOG.warn("Missing request deploy state for request {}. deploy {}", requestId, deployId);
       return true;
     }
 
