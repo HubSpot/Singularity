@@ -414,11 +414,12 @@ public class SingularityMesosOfferScheduler {
       estimatedCpusToAdd = getEstimatedCpuUsageForRequest(requestUtilization);
     }
     if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)) {
-      LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}), ignoring offer",
+      LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}, already committed cpus: {}), ignoring offer",
           offerHolder.getHostname(),
           maybeSlaveUsage.get().getSlaveUsage().getSystemLoad5Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal(),
           maybeSlaveUsage.get().getSlaveUsage().getSystemLoad1Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal(),
-          estimatedCpusToAdd);
+          estimatedCpusToAdd,
+          maybeSlaveUsage.get().getEstimatedAddedCpusUsage());
       return 0;
     }
 
