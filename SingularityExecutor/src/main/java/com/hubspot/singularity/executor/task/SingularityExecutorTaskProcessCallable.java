@@ -47,7 +47,10 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     LOG.info("Process being started");
     Process process = startProcess(processBuilder);
 
-    runHealthcheck();
+    if (!runHealthcheck()) {
+      task.getLog().info("Killing task {} that did not pass health checks", task.getTaskId());
+      super.signalKillToProcessIfActive();
+    }
 
     return process.waitFor();
   }
@@ -61,7 +64,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     return "SingularityExecutorTaskProcessCallable [task=" + task + "]";
   }
 
-  private void runHealthcheck() {
+  private boolean runHealthcheck() {
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
 
@@ -80,13 +83,15 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
             .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
             .build();
 
-        retryer.call(() -> fullHealthcheckPath.exists());
+        retryer.call(fullHealthcheckPath::exists);
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
       } catch (ExecutionException | RetryException e) {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks (health check file not found)."), task.getLog());
+        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, "Task timed out on health checks (health check file not found).", task.getLog());
+        return false;
       }
     } else {
       executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
     }
+    return true;
   }
 }
