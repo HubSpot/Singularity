@@ -201,6 +201,10 @@ public class RequestManager extends CuratorAsyncManager {
     return getChildren(NORMAL_PATH_ROOT);
   }
 
+  public long getAllRequestIdsBytes() {
+    return getAllRequestIds().stream().mapToLong(x -> x.getBytes().length).sum();
+  }
+
   public List<String> getRequestIdsWithHistory() {
     return getChildren(HISTORY_PATH_ROOT);
   }
