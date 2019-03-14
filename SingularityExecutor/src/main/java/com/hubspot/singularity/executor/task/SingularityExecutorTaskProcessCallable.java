@@ -73,20 +73,21 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
       String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
       File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
 
-      try {
-        Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
-        Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(5);
+      Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
+      Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(5);
+      long maxDelay = maybeOptions.get().getStartupTimeoutSeconds().or(45) + (retryInterval * healthcheckMaxRetries);
 
+      try {
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
             .retryIfResult(bool -> !bool)
             .withWaitStrategy(WaitStrategies.fixedWait(retryInterval, TimeUnit.SECONDS))
-            .withStopStrategy(StopStrategies.stopAfterAttempt(healthcheckMaxRetries))
+            .withStopStrategy(StopStrategies.stopAfterDelay(maxDelay, TimeUnit.SECONDS))
             .build();
 
         retryer.call(fullHealthcheckPath::exists);
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
       } catch (ExecutionException | RetryException e) {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, "Task timed out on health checks (health check file not found).", task.getLog());
+        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
         return false;
       }
     } else {
