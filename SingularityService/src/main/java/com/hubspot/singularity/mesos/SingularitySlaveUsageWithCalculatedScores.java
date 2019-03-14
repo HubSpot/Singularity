@@ -129,6 +129,10 @@ class SingularitySlaveUsageWithCalculatedScores {
     return diskInUseScore;
   }
 
+  public double getEstimatedAddedCpusUsage() {
+    return estimatedAddedCpusUsage;
+  }
+
   void addEstimatedCpuUsage(double estimatedAddedCpus) {
     this.estimatedAddedCpusUsage += estimatedAddedCpus;
   }
