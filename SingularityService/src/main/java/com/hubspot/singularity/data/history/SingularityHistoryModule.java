@@ -12,6 +12,8 @@ import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -38,7 +40,7 @@ public class SingularityHistoryModule extends AbstractModule {
 
   public SingularityHistoryModule(SingularityConfiguration configuration) {
     try {
-      System.out.println(new ObjectMapper().writeValueAsString(configuration));
+      System.out.println(new ObjectMapper().registerModule(new GuavaModule()).registerModule(new Jdk8Module()).writeValueAsString(configuration));
     } catch (IOException ioe) {
       System.out.println("Could not print config" + ioe.getMessage());
     }
