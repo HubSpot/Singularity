@@ -52,23 +52,15 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
             JsonNode oldVal = to.get(newFieldName);
             JsonNode newVal = from.get(newFieldName);
 
-            System.out.println("Checking field " + newFieldName);
-            System.out.println(String.format("old: %s, new: %s", oldVal, newVal));
             if (oldVal == null || oldVal.isNull()) {
-                System.out.println(String.format("Setting new value beacuse old is null, old: %s, new: %s", oldVal, newVal));
                 to.set(newFieldName, newVal);
             } else if (oldVal.isArray() && newVal.isArray()) {
-                System.out.println("Taking new value for array " + newFieldName);
                 ((ArrayNode) oldVal).removeAll();
                 ((ArrayNode) oldVal).addAll((ArrayNode) newVal);
             } else if (oldVal.isObject() && newVal.isObject()) {
-                System.out.println("Calling merge for key " + newFieldName);
                 merge((ObjectNode) oldVal, (ObjectNode) newVal);
             } else if (!(newVal == null || newVal.isNull())) {
-                System.out.println(String.format("New value is not null, taking new value, old: %s, new: %s", oldVal, newVal));
                 to.set(newFieldName, newVal);
-            } else {
-                System.out.println(String.format("not taking new val, old: %s, new: %s", oldVal, newVal));
             }
         }
     }
