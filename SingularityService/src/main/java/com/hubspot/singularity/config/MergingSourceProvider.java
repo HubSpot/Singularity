@@ -64,6 +64,7 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
                 System.out.println("Calling merge for key " + newFieldName);
                 merge((ObjectNode) oldVal, (ObjectNode) newVal);
             } else if (!(newVal == null || newVal.isNull())) {
+                System.out.println(String.format("New value is not null, taking new value, old: %s, new: %s", oldVal, newVal);
                 to.set(newFieldName, newVal);
             } else {
                 System.out.println(String.format("not taking new val, old: %s, new: %s", oldVal, newVal));
