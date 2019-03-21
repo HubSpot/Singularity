@@ -37,6 +37,11 @@ public class SingularityHistoryModule extends AbstractModule {
   private final Optional<DataSourceFactory> configuration;
 
   public SingularityHistoryModule(SingularityConfiguration configuration) {
+    try {
+      System.out.println(new ObjectMapper().writeValueAsString(configuration));
+    } catch (IOException ioe) {
+      System.out.println("Could not print config" + ioe.getMessage());
+    }
     checkNotNull(configuration, "configuration is null");
     this.configuration = configuration.getDatabaseConfiguration();
   }
@@ -63,11 +68,6 @@ public class SingularityHistoryModule extends AbstractModule {
 
     // Setup database support
     if (configuration.isPresent()) {
-      try {
-        System.out.println(new ObjectMapper().writeValueAsString(configuration));
-      } catch (IOException ioe) {
-        //
-      }
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
