@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -10,6 +11,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -61,6 +63,11 @@ public class SingularityHistoryModule extends AbstractModule {
 
     // Setup database support
     if (configuration.isPresent()) {
+      try {
+        System.out.println(new ObjectMapper().writeValueAsString(configuration));
+      } catch (IOException ioe) {
+        //
+      }
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);

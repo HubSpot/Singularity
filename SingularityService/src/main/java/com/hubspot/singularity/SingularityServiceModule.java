@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import java.io.IOException;
-
 import com.google.common.base.Strings;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
@@ -27,11 +25,6 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
 
   @Override
   public void configure(Binder binder) {
-    try {
-      System.out.println(getBootstrap().getObjectMapper().writeValueAsString(getConfiguration()));
-    } catch (IOException ioe) {
-      //
-    }
     binder.install(new MetricsInstrumentationModule(getBootstrap().getMetricRegistry()));
 
     binder.install(new SingularityMainModule(getConfiguration()));
