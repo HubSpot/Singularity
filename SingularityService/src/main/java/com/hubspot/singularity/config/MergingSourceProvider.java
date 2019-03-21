@@ -53,6 +53,7 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
             JsonNode newVal = from.get(newFieldName);
 
             System.out.println("Checking field " + newFieldName);
+            System.out.println(String.format("old: %s, new: %s", oldVal, newVal));
             if (oldVal == null || oldVal.isNull()) {
                 System.out.println(String.format("Setting new value beacuse old is null, old: %s, new: %s", oldVal, newVal));
                 to.set(newFieldName, newVal);
