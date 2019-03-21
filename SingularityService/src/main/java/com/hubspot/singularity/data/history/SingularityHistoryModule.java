@@ -38,11 +38,6 @@ public class SingularityHistoryModule extends AbstractModule {
   private final Optional<DataSourceFactory> configuration;
 
   public SingularityHistoryModule(SingularityConfiguration configuration) {
-    try {
-      System.out.println(new ObjectMapper().registerModule(new GuavaModule()).writeValueAsString(configuration));
-    } catch (IOException ioe) {
-      System.out.println("Could not print config" + ioe.getMessage());
-    }
     checkNotNull(configuration, "configuration is null");
     this.configuration = configuration.getDatabaseConfiguration();
   }
@@ -138,6 +133,11 @@ public class SingularityHistoryModule extends AbstractModule {
     @Override
     public DBI get() {
       try {
+        try {
+          System.out.println(new ObjectMapper().registerModule(new GuavaModule()).writeValueAsString(dataSourceFactory));
+        } catch (IOException ioe) {
+          System.out.println("Could not print config" + ioe.getMessage());
+        }
         DBI dbi = dbiFactory.build(environment, dataSourceFactory, "db");
         for (ResultSetMapper<?> resultSetMapper : resultSetMappers) {
           dbi.registerMapper(resultSetMapper);
