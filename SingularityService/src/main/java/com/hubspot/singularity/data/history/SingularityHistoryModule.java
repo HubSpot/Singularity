@@ -2,7 +2,6 @@ package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -11,8 +10,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -133,11 +130,6 @@ public class SingularityHistoryModule extends AbstractModule {
     @Override
     public DBI get() {
       try {
-        try {
-          System.out.println(new ObjectMapper().registerModule(new GuavaModule()).writeValueAsString(dataSourceFactory));
-        } catch (IOException ioe) {
-          System.out.println("Could not print config" + ioe.getMessage());
-        }
         DBI dbi = dbiFactory.build(environment, dataSourceFactory, "db");
         for (ResultSetMapper<?> resultSetMapper : resultSetMappers) {
           dbi.registerMapper(resultSetMapper);
