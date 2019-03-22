@@ -461,7 +461,7 @@ public class SingularityScheduler {
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest, maybePendingDeploy);
 
-    LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}, pending deploy: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest,
+    LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}, pending deploy: {}", numMissingInstances, request.getId(), matchingTaskIds.size() < 20 ? matchingTaskIds : matchingTaskIds.size(), pendingRequest,
       maybePendingDeploy);
 
     if (numMissingInstances > 0) {
