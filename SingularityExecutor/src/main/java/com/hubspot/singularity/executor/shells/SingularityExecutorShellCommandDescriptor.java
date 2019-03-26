@@ -27,6 +27,9 @@ public class SingularityExecutorShellCommandDescriptor {
   @JsonProperty
   private boolean skipCommandPrefix = false;
 
+  @JsonProperty
+  private boolean skipCommandPrefixDockerOnly = false;
+
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
   }
@@ -57,5 +60,13 @@ public class SingularityExecutorShellCommandDescriptor {
 
   public void setSkipCommandPrefix(boolean skipCommandPrefix) {
     this.skipCommandPrefix = skipCommandPrefix;
+  }
+
+  public boolean isSkipCommandPrefixDockerOnly() {
+    return skipCommandPrefixDockerOnly;
+  }
+
+  public void setSkipCommandPrefixDockerOnly(boolean skipCommandPrefixDockerOnly) {
+    this.skipCommandPrefixDockerOnly = skipCommandPrefixDockerOnly;
   }
 }
