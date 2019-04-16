@@ -32,6 +32,11 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String QUEUES_PATH = ROOT_PATH + "/queues";
   private static final String ACTIVE_PATH = ROOT_PATH + "/active";
 
+  private static final String SNS_RETRY_ROOT = ROOT_PATH + "/snsretry";
+  private static final String SNS_TASK_RETRY = SNS_RETRY_ROOT + "/task";
+  private static final String SNS_REQUEST_RETRY = SNS_RETRY_ROOT + "/request";
+  private static final String SNS_DEPLOY_RETRY = SNS_RETRY_ROOT + "/deploy";
+
   private final Transcoder<SingularityWebhook> webhookTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
@@ -176,5 +181,33 @@ public class WebhookManager extends CuratorAsyncManager {
 
       save(enqueuePath, deployUpdate, deployWebhookTranscoder);
     }
+  }
+
+  // Methods for use with sns poller
+  public void saveTaskUpdateForRetry(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_TASK_RETRY, getTaskHistoryUpdateId(taskHistoryUpdate));
+    save(updatePath, taskHistoryUpdate, taskHistoryUpdateTranscoder);
+  }
+
+  public List<SingularityTaskHistoryUpdate> getTaskUpdatesToRetry() {
+    return getAsyncChildren(SNS_TASK_RETRY, taskHistoryUpdateTranscoder);
+  }
+
+  public void saveDeployUpdateForRetry(SingularityDeployUpdate deployUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_DEPLOY_RETRY, getDeployUpdateId(deployUpdate));
+    save(updatePath, deployUpdate, deployWebhookTranscoder);
+  }
+
+  public List<SingularityDeployUpdate> getDeployUpdatesToRetry() {
+    return getAsyncChildren(SNS_DEPLOY_RETRY, deployWebhookTranscoder);
+  }
+
+  public void saveRequestUpdateForRetry(SingularityRequestHistory requestHistory) {
+    String updatePath = ZKPaths.makePath(SNS_REQUEST_RETRY, getRequestHistoryUpdateId(requestHistory));
+    save(updatePath, requestHistory, requestHistoryTranscoder);
+  }
+
+  public List<SingularityRequestHistory> getRequestUpdatesToRetry() {
+    return getAsyncChildren(SNS_REQUEST_RETRY, requestHistoryTranscoder);
   }
 }

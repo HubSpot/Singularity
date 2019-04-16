@@ -31,6 +31,7 @@ import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookQueueConfiguration;
+import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
@@ -40,8 +41,9 @@ public class SnsWebhookQueue implements SingularityEventListener {
   private final WebhookQueueConfiguration webhookConf;
   private final ObjectMapper objectMapper;
   private final AmazonSNS snsClient;
-  private final AsyncSemaphore<PublishResult> publishSemaphore;
+  private final AsyncSemaphore<Void> publishSemaphore;
   private final ExecutorService publishExecutor;
+  private final WebhookManager webhookManager;
 
   private final Map<WebhookType, String> typeToArn;
 
@@ -49,7 +51,8 @@ public class SnsWebhookQueue implements SingularityEventListener {
   public SnsWebhookQueue(ObjectMapper objectMapper,
                          SingularityConfiguration configuration,
                          SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                         SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory) {
+                         SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory,
+                         WebhookManager webhookManager) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
     if (webhookConf.getAwsAccessKey().isPresent() && webhookConf.getAwsSecretKey().isPresent()) {
@@ -64,6 +67,7 @@ public class SnsWebhookQueue implements SingularityEventListener {
     } else {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();
     }
+    this.webhookManager = webhookManager;
     this.publishSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-publish-semaphore", 1)).build();
     this.publishExecutor = managedCachedThreadPoolFactory.get("webhook-publish");
     this.typeToArn = new ConcurrentHashMap<>();
@@ -72,37 +76,43 @@ public class SnsWebhookQueue implements SingularityEventListener {
   @Override
   public void requestHistoryEvent(SingularityRequestHistory requestUpdate) {
     publish(WebhookType.REQUEST, requestUpdate)
-        .whenComplete((result, throwable) -> {
-          if (throwable != null) {
-            LOG.error("Could not submit update {}", requestUpdate, throwable);
-          } else if (result != null) {
-            LOG.trace("Sent update {} with messageId {}", requestUpdate, result.getMessageId());
+        .exceptionally((t) -> {
+          LOG.warn("Could not publish event, will retry ({})", t.getMessage());
+          try {
+            webhookManager.saveRequestUpdateForRetry(requestUpdate);
+          } catch (Throwable t2) {
+            LOG.error("Could not save update to zk for retry, dropping", t2);
           }
+          return null;
         });
   }
 
   @Override
   public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
     publish(WebhookType.TASK, taskUpdate)
-        .whenComplete((result, throwable) -> {
-          if (throwable != null) {
-            LOG.error("Could not submit update {}", taskUpdate, throwable);
-          } else if (result != null) {
-            LOG.trace("Sent update {} with messageId {}", taskUpdate, result.getMessageId());
+        .exceptionally((t) -> {
+          LOG.warn("Could not publish event, will retry ({})", t.getMessage());
+          try {
+            webhookManager.saveTaskUpdateForRetry(taskUpdate);
+          } catch (Throwable t2) {
+            LOG.error("Could not save update to zk for retry, dropping", t2);
           }
+          return null;
         });
   }
 
   @Override
   public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     publish(WebhookType.DEPLOY, deployUpdate)
-      .whenComplete((result, throwable) -> {
-        if (throwable != null) {
-          LOG.error("Could not submit update {}", deployUpdate, throwable);
-        } else if (result != null) {
-          LOG.trace("Sent update {} with messageId {}", deployUpdate, result.getMessageId());
-        }
-      });
+        .exceptionally((t) -> {
+          LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+          try {
+            webhookManager.saveDeployUpdateForRetry(deployUpdate);
+          } catch (Throwable t2) {
+            LOG.error("Could not save update to zk for retry, dropping", t2);
+          }
+          return null;
+        });
   }
 
   private String getOrCreateSnsTopic(WebhookType type) {
@@ -113,23 +123,25 @@ public class SnsWebhookQueue implements SingularityEventListener {
     });
   }
 
-  private <T> CompletableFuture<PublishResult> publish(WebhookType type, T content) {
+  private <T> CompletableFuture<Void> publish(WebhookType type, T content) {
     try {
       return publishSemaphore.call(() ->
-        CompletableFuture.supplyAsync(() -> {
+        CompletableFuture.runAsync(() -> {
           try {
             PublishRequest publishRequest = new PublishRequest(
                 getOrCreateSnsTopic(type),
                 objectMapper.writeValueAsString(content)
             );
-            return snsClient.publish(publishRequest);
+            PublishResult result = snsClient.publish(publishRequest);
+            LOG.trace("Sent update {} with messageId {}", content, result.getMessageId());
           } catch (IOException ioe) {
             throw new RuntimeException(ioe);
           }
         }, publishExecutor));
     } catch (Throwable t) {
-      LOG.error("Could not submit webhook for publish, dropping", t);
-      return CompletableFuture.completedFuture(null);
+      CompletableFuture<Void> f = new CompletableFuture<>();
+      f.completeExceptionally(t);
+      return f;
     }
   }
 }

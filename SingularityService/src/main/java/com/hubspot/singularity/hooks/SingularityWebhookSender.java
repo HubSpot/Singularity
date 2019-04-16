@@ -36,7 +36,7 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Response;
 
 @Singleton
-public class SingularityWebhookSender {
+public class SingularityWebhookSender extends AbstractWebhookChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookSender.class);
 
