@@ -12,12 +12,14 @@ import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 public class SingularityWebhookPoller extends SingularityLeaderOnlyPoller {
 
   private final SingularityWebhookSender webhookSender;
+  private final boolean enabled;
 
   @Inject
   public SingularityWebhookPoller(SingularityWebhookSender webhookSender, SingularityConfiguration configuration) {
     super(configuration.getCheckWebhooksEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.webhookSender = webhookSender;
+    this.enabled = configuration.getWebhookQueueConfiguration().getQueueType() == WebhookQueueType.ZOOKEEPER;
   }
 
   @Override
@@ -30,5 +32,7 @@ public class SingularityWebhookPoller extends SingularityLeaderOnlyPoller {
     return false;
   }
 
-
+  protected boolean isEnabled() {
+    return enabled;
+  }
 }
