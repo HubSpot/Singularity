@@ -5,7 +5,7 @@ import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.hubspot.singularity.config.WebhookQueueConfiguration;
-import com.hubspot.singularity.data.SnsWebhookQueue;
+import com.hubspot.singularity.hooks.SnsWebhookQueue;
 import com.hubspot.singularity.data.ZkWebhookQueue;
 import com.hubspot.singularity.hooks.WebhookQueueType;
 

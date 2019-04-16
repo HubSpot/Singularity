@@ -61,7 +61,7 @@ public class SingularityWebhookSender {
     this.taskHistoryHelper = taskHistoryHelper;
     this.objectMapper = objectMapper;
 
-    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-semaphore", 5)).build();
+    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-semaphore", 1)).build();
   }
 
   public void checkWebhooks() {
