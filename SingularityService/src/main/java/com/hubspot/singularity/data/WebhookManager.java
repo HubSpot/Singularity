@@ -189,6 +189,11 @@ public class WebhookManager extends CuratorAsyncManager {
     save(updatePath, taskHistoryUpdate, taskHistoryUpdateTranscoder);
   }
 
+  public void deleteTaskUpdateForRetry(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_TASK_RETRY, getTaskHistoryUpdateId(taskHistoryUpdate));
+    delete(updatePath);
+  }
+
   public List<SingularityTaskHistoryUpdate> getTaskUpdatesToRetry() {
     return getAsyncChildren(SNS_TASK_RETRY, taskHistoryUpdateTranscoder);
   }
@@ -198,6 +203,11 @@ public class WebhookManager extends CuratorAsyncManager {
     save(updatePath, deployUpdate, deployWebhookTranscoder);
   }
 
+  public void deleteDeployUpdateForRetry(SingularityDeployUpdate deployUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_DEPLOY_RETRY, getDeployUpdateId(deployUpdate));
+    delete(updatePath);
+  }
+
   public List<SingularityDeployUpdate> getDeployUpdatesToRetry() {
     return getAsyncChildren(SNS_DEPLOY_RETRY, deployWebhookTranscoder);
   }
@@ -205,6 +215,11 @@ public class WebhookManager extends CuratorAsyncManager {
   public void saveRequestUpdateForRetry(SingularityRequestHistory requestHistory) {
     String updatePath = ZKPaths.makePath(SNS_REQUEST_RETRY, getRequestHistoryUpdateId(requestHistory));
     save(updatePath, requestHistory, requestHistoryTranscoder);
+  }
+
+  public void deleteRequestUpdateForRetry(SingularityRequestHistory requestHistory) {
+    String updatePath = ZKPaths.makePath(SNS_REQUEST_RETRY, getRequestHistoryUpdateId(requestHistory));
+    delete(updatePath);
   }
 
   public List<SingularityRequestHistory> getRequestUpdatesToRetry() {

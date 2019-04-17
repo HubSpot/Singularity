@@ -3,10 +3,10 @@ package com.hubspot.singularity.data;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.SingularityTaskWebhook;
+import com.hubspot.singularity.event.SingularityEventSender;
 
-public class ZkWebhookQueue implements SingularityEventListener {
+public class ZkWebhookQueue implements SingularityEventSender {
   private final WebhookManager webhookManager;
 
   @Inject
@@ -20,8 +20,8 @@ public class ZkWebhookQueue implements SingularityEventListener {
   }
 
   @Override
-  public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
-    webhookManager.saveTaskHistoryUpdateEvent(taskUpdate);
+  public void taskWebhookEvent(SingularityTaskWebhook taskWebhook) {
+    webhookManager.saveTaskHistoryUpdateEvent(taskWebhook.getTaskUpdate());
   }
 
   @Override

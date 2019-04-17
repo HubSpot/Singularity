@@ -23,7 +23,7 @@ public class SingularityEventModule implements Module {
 
   @Override
   public void configure(final Binder binder) {
-    Multibinder<SingularityEventListener> eventListeners = Multibinder.newSetBinder(binder, SingularityEventListener.class);
+    Multibinder<SingularityEventSender> eventListeners = Multibinder.newSetBinder(binder, SingularityEventSender.class);
     if (webhookQueueConfiguration.getQueueType() == WebhookQueueType.SNS) {
       LOG.info("Binding sns webhook managed");
       eventListeners.addBinding().to(SnsWebhookQueue.class).in(Scopes.SINGLETON);

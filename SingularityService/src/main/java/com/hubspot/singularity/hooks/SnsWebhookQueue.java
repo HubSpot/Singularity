@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.SingularityTaskWebhook;
+import com.hubspot.singularity.event.SingularityEventSender;
 
 @Singleton
-public class SnsWebhookQueue implements SingularityEventListener {
+public class SnsWebhookQueue implements SingularityEventSender {
   private final SnsWebhookManager snsWebhookManager;
 
   @Inject
@@ -22,8 +22,8 @@ public class SnsWebhookQueue implements SingularityEventListener {
   }
 
   @Override
-  public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
-    snsWebhookManager.taskHistoryUpdateEvent(taskUpdate);
+  public void taskWebhookEvent(SingularityTaskWebhook taskWebhook) {
+    snsWebhookManager.taskWebhook(taskWebhook);
   }
 
   @Override
