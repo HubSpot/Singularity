@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -19,21 +20,27 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 @Singleton
 public class SingularityEventController implements SingularityEventListener {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityEventController.class);
 
-  private final Set<SingularityEventListener> eventListeners;
+  private final TaskHistoryHelper taskHistoryHelper;
+  private final Set<SingularityEventSender> eventListeners;
   private final ListeningExecutorService listenerExecutorService;
   private final boolean waitForListeners;
 
   @Inject
-  SingularityEventController(final Set<SingularityEventListener> eventListeners,
+  SingularityEventController(final TaskHistoryHelper taskHistoryHelper,
+                             final Set<SingularityEventSender> eventListeners,
                              final SingularityConfiguration configuration,
                              final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory) {
+    this.taskHistoryHelper = taskHistoryHelper;
     this.eventListeners = ImmutableSet.copyOf(checkNotNull(eventListeners, "eventListeners is null"));
     this.listenerExecutorService = MoreExecutors.listeningDecorator(checkNotNull(scheduledExecutorServiceFactory.get("event-listener", configuration.getListenerThreadpoolSize()), "listenerExecutorService is null"));
     this.waitForListeners = configuration.isWaitForListeners();
@@ -43,7 +50,7 @@ public class SingularityEventController implements SingularityEventListener {
   public void requestHistoryEvent(final SingularityRequestHistory singularityRequestHistory) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {
@@ -60,11 +67,15 @@ public class SingularityEventController implements SingularityEventListener {
   public void taskHistoryUpdateEvent(final SingularityTaskHistoryUpdate singularityTaskHistoryUpdate) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {
-          eventListener.taskHistoryUpdateEvent(singularityTaskHistoryUpdate);
+          Optional<SingularityTask> task = taskHistoryHelper.getTask(singularityTaskHistoryUpdate.getTaskId());
+          if (task.isPresent()) {
+            SingularityTaskWebhook taskWebhook = new SingularityTaskWebhook(task.get(), singularityTaskHistoryUpdate);
+            eventListener.taskWebhookEvent(taskWebhook);
+          }
           return null;
         }
       }));
@@ -78,7 +89,7 @@ public class SingularityEventController implements SingularityEventListener {
   public void deployHistoryEvent(final SingularityDeployUpdate singularityDeployUpdate) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {
