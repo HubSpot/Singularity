@@ -35,7 +35,7 @@ import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
-public class SnsWebhookQueue implements SingularityEventListener {
+public class SnsWebhookQueue extends AbstractWebhookChecker implements SingularityEventListener {
   private static final Logger LOG = LoggerFactory.getLogger(SnsWebhookQueue.class);
 
   private final WebhookQueueConfiguration webhookConf;
@@ -113,6 +113,18 @@ public class SnsWebhookQueue implements SingularityEventListener {
           }
           return null;
         });
+  }
+
+  public void checkWebhooks() {
+    for (SingularityTaskHistoryUpdate taskHistoryUpdate : webhookManager.getTaskUpdatesToRetry()) {
+      taskHistoryUpdateEvent(taskHistoryUpdate);
+    }
+    for (SingularityDeployUpdate deployUpdate : webhookManager.getDeployUpdatesToRetry()) {
+      deployHistoryEvent(deployUpdate);
+    }
+    for (SingularityRequestHistory requestHistory : webhookManager.getRequestUpdatesToRetry()) {
+      requestHistoryEvent(requestHistory);
+    }
   }
 
   private String getOrCreateSnsTopic(WebhookType type) {
