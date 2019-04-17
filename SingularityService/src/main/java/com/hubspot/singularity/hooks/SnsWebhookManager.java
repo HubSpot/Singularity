@@ -115,9 +115,16 @@ public class SnsWebhookManager {
 
   private String getOrCreateSnsTopic(WebhookType type) {
     return typeToArn.computeIfAbsent(type, (t) -> {
-      CreateTopicRequest createTopicRequest = new CreateTopicRequest(webhookConf.getSnsTopics().get(type));
-      CreateTopicResult createTopicResult = snsClient.createTopic(createTopicRequest);
-      return createTopicResult.getTopicArn();
+      String topic = webhookConf.getSnsTopics().get(type);
+      try {
+        LOG.info("Attempting to create sns topic {}", topic);
+        CreateTopicRequest createTopicRequest = new CreateTopicRequest(topic);
+        CreateTopicResult createTopicResult = snsClient.createTopic(createTopicRequest);
+        return createTopicResult.getTopicArn();
+      } catch (Throwable th) {
+        LOG.error("Could not create sns topic {}", topic, th);
+        throw th;
+      }
     });
   }
 
