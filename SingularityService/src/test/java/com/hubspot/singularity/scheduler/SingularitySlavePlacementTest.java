@@ -16,12 +16,10 @@ import org.junit.rules.Timeout;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
@@ -51,8 +49,6 @@ public class  SingularitySlavePlacementTest extends SingularitySchedulerTestBase
 
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
-
-    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent(), Optional.<String>absent()));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
 
