@@ -62,6 +62,7 @@ public class SnsWebhookManager {
               new ClientConfiguration()
                   .withMaxConnections(configuration.getMaxConcurrentWebhooks())
           )
+          .withRegion(webhookConf.getAwsRegion().or("us-east-1"))
           .build();
     } else {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();
