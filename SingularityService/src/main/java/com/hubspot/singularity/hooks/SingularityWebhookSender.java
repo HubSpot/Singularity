@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -35,7 +36,7 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Response;
 
 @Singleton
-public class SingularityWebhookSender {
+public class SingularityWebhookSender extends AbstractWebhookChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookSender.class);
 
@@ -60,16 +61,11 @@ public class SingularityWebhookSender {
     this.taskHistoryHelper = taskHistoryHelper;
     this.objectMapper = objectMapper;
 
-    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-semaphore", 5)).build();
+    this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-semaphore", 1)).build();
   }
 
   public void checkWebhooks() {
     final long start = System.currentTimeMillis();
-
-    final List<SingularityWebhook> webhooks = webhookManager.getActiveWebhooks();
-    if (webhooks.isEmpty()) {
-      return;
-    }
 
     int taskUpdates = 0;
     int requestUpdates = 0;
@@ -77,19 +73,21 @@ public class SingularityWebhookSender {
 
     List<CompletableFuture<Response>> webhookFutures = new ArrayList<>();
 
-    for (SingularityWebhook webhook : webhooks) {
-      switch (webhook.getType()) {
-        case TASK:
-          taskUpdates += checkTaskUpdates(webhook, webhookFutures);
-          break;
-        case REQUEST:
-          requestUpdates += checkRequestUpdates(webhook, webhookFutures);
-          break;
-        case DEPLOY:
-          deployUpdates += checkDeployUpdates(webhook, webhookFutures);
-          break;
-        default:
-          break;
+    for (WebhookType type : WebhookType.values()) {
+      for (SingularityWebhook webhook : webhookManager.getActiveWebhooksByType(type)) {
+        switch (webhook.getType()) {
+          case TASK:
+            taskUpdates += checkTaskUpdates(webhook, webhookFutures);
+            break;
+          case REQUEST:
+            requestUpdates += checkRequestUpdates(webhook, webhookFutures);
+            break;
+          case DEPLOY:
+            deployUpdates += checkDeployUpdates(webhook, webhookFutures);
+            break;
+          default:
+            break;
+        }
       }
     }
 
@@ -99,7 +97,7 @@ public class SingularityWebhookSender {
           return null;
         });
 
-    LOG.info("Sent {} task, {} request, and {} deploy updates for {} webhooks in {}", taskUpdates, requestUpdates, deployUpdates, webhooks.size(), JavaUtils.duration(start));
+    LOG.info("Sent {} task, {} request, and {} deploy updates in {}", taskUpdates, requestUpdates, deployUpdates, JavaUtils.duration(start));
   }
 
   private boolean shouldDeleteUpdateOnFailure(int numUpdates, long updateTimestamp) {

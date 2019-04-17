@@ -2,13 +2,15 @@ package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -22,19 +24,25 @@ import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.event.SingularityEventListener;
 
 @Singleton
-public class WebhookManager extends CuratorAsyncManager implements SingularityEventListener {
+public class WebhookManager extends CuratorAsyncManager {
 
   private static final String ROOT_PATH = "/hooks";
   private static final String QUEUES_PATH = ROOT_PATH + "/queues";
   private static final String ACTIVE_PATH = ROOT_PATH + "/active";
 
+  private static final String SNS_RETRY_ROOT = ROOT_PATH + "/snsretry";
+  private static final String SNS_TASK_RETRY = SNS_RETRY_ROOT + "/task";
+  private static final String SNS_REQUEST_RETRY = SNS_RETRY_ROOT + "/request";
+  private static final String SNS_DEPLOY_RETRY = SNS_RETRY_ROOT + "/deploy";
+
   private final Transcoder<SingularityWebhook> webhookTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
+
+  private final Cache<WebhookType, List<SingularityWebhook>> activeWebhooksCache;
 
   @Inject
   public WebhookManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularityWebhook> webhookTranscoder,
@@ -45,21 +53,28 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.deployWebhookTranscoder = deployWebhookTranscoder;
+
+    this.activeWebhooksCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(60, TimeUnit.SECONDS)
+        .build();
   }
 
-  public List<SingularityWebhook> getActiveWebhooks() {
+  public List<SingularityWebhook> getActiveWebhooksUncached() {
     return getAsyncChildren(ACTIVE_PATH, webhookTranscoder);
   }
 
   public Iterable<SingularityWebhook> getActiveWebhooksByType(final WebhookType type) {
-    return Iterables.filter(getActiveWebhooks(), new Predicate<SingularityWebhook>() {
-
-      @Override
-      public boolean apply(SingularityWebhook input) {
-        return input.getType() == type;
-      }
-
-    });
+    List<SingularityWebhook> maybeCached = activeWebhooksCache.getIfPresent(type);
+    if (maybeCached != null) {
+      return maybeCached;
+    } else {
+      List<SingularityWebhook> webhooks = getActiveWebhooksUncached();
+      List<SingularityWebhook> forType = webhooks.stream()
+          .filter((w) -> w.getType() == type)
+          .collect(Collectors.toList());
+      activeWebhooksCache.put(type, forType);
+      return forType;
+    }
   }
 
   private String getTaskHistoryUpdateId(SingularityTaskHistoryUpdate taskUpdate) {
@@ -138,16 +153,13 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
 
   public List<SingularityWebhookSummary> getWebhooksWithQueueSize() {
     List<SingularityWebhookSummary> webhooks = new ArrayList<>();
-    for (SingularityWebhook webhook : getActiveWebhooks()) {
+    for (SingularityWebhook webhook : getActiveWebhooksUncached()) {
       webhooks.add(new SingularityWebhookSummary(webhook, getNumChildren(getEnqueuePathForWebhook(webhook.getId(), webhook.getType()))));
     }
     return webhooks;
   }
 
-  // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not
-  // immediately make some webhooks)
-  @Override
-  public void requestHistoryEvent(SingularityRequestHistory requestUpdate) {
+  void saveRequestHistoryEvent(SingularityRequestHistory requestUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.REQUEST)) {
       final String enqueuePath = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);
 
@@ -155,8 +167,7 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
     }
   }
 
-  @Override
-  public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
+  void saveTaskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.TASK)) {
       final String enqueuePath = getEnqueuePathForTaskUpdate(webhook.getId(), taskUpdate);
 
@@ -164,8 +175,7 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
     }
   }
 
-  @Override
-  public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
+  void saveDeployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.DEPLOY)) {
       final String enqueuePath = getEnqueuePathForDeployUpdate(webhook.getId(), deployUpdate);
 
@@ -173,4 +183,31 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
     }
   }
 
+  // Methods for use with sns poller
+  public void saveTaskUpdateForRetry(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_TASK_RETRY, getTaskHistoryUpdateId(taskHistoryUpdate));
+    save(updatePath, taskHistoryUpdate, taskHistoryUpdateTranscoder);
+  }
+
+  public List<SingularityTaskHistoryUpdate> getTaskUpdatesToRetry() {
+    return getAsyncChildren(SNS_TASK_RETRY, taskHistoryUpdateTranscoder);
+  }
+
+  public void saveDeployUpdateForRetry(SingularityDeployUpdate deployUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_DEPLOY_RETRY, getDeployUpdateId(deployUpdate));
+    save(updatePath, deployUpdate, deployWebhookTranscoder);
+  }
+
+  public List<SingularityDeployUpdate> getDeployUpdatesToRetry() {
+    return getAsyncChildren(SNS_DEPLOY_RETRY, deployWebhookTranscoder);
+  }
+
+  public void saveRequestUpdateForRetry(SingularityRequestHistory requestHistory) {
+    String updatePath = ZKPaths.makePath(SNS_REQUEST_RETRY, getRequestHistoryUpdateId(requestHistory));
+    save(updatePath, requestHistory, requestHistoryTranscoder);
+  }
+
+  public List<SingularityRequestHistory> getRequestUpdatesToRetry() {
+    return getAsyncChildren(SNS_REQUEST_RETRY, requestHistoryTranscoder);
+  }
 }

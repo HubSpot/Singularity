@@ -319,6 +319,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
 
+  @JsonProperty("webhookQueue")
+  @Valid
+ private WebhookQueueConfiguration webhookQueueConfiguration = new WebhookQueueConfiguration();
+
   private int maxConcurrentWebhooks = 100;
 
   @JsonProperty("auth")
@@ -1250,6 +1254,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
+  }
+
+  public WebhookQueueConfiguration getWebhookQueueConfiguration() {
+    return webhookQueueConfiguration;
+  }
+
+  public void setWebhookQueueConfiguration(WebhookQueueConfiguration webhookQueueConfiguration) {
+    this.webhookQueueConfiguration = webhookQueueConfiguration;
   }
 
   public int getMaxConcurrentWebhooks() {
