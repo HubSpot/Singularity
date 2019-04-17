@@ -249,6 +249,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
+  private int maxPendingImmediatePersists = 200;
+
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
 
   @JsonProperty("s3")
@@ -1128,6 +1130,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setPersistHistoryEverySeconds(long persistHistoryEverySeconds) {
     this.persistHistoryEverySeconds = persistHistoryEverySeconds;
+  }
+
+  public int getMaxPendingImmediatePersists() {
+    return maxPendingImmediatePersists;
+  }
+
+  public void setMaxPendingImmediatePersists(int maxPendingImmediatePersists) {
+    this.maxPendingImmediatePersists = maxPendingImmediatePersists;
   }
 
   public void setS3Configuration(S3Configuration s3Configuration) {

@@ -74,6 +74,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.data.history.ImmediateHistoryPersister;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.helpers.RebalancingHelper;
@@ -97,12 +98,12 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
   private final SingularityLeaderCache leaderCache;
   private final SingularitySchedulerLock lock;
-
+  private final ImmediateHistoryPersister immediateHistoryPersister;
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
-                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
+                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, ImmediateHistoryPersister immediateHistoryPersister) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -115,6 +116,7 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
     this.leaderCache = leaderCache;
     this.lock = lock;
+    this.immediateHistoryPersister = immediateHistoryPersister;
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -694,6 +696,8 @@ public class SingularityScheduler {
     }
 
     updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult);
+
+    immediateHistoryPersister.persistTaskAsync(taskId);
   }
 
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, Optional<SingularityTask> task, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
