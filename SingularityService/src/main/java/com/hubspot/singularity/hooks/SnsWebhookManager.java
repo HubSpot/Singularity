@@ -20,18 +20,22 @@ import com.amazonaws.services.sns.model.CreateTopicResult;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookQueueConfiguration;
 import com.hubspot.singularity.data.WebhookManager;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 @Singleton
 public class SnsWebhookManager {
@@ -43,17 +47,20 @@ public class SnsWebhookManager {
   private final AsyncSemaphore<Void> publishSemaphore;
   private final ExecutorService publishExecutor;
   private final WebhookManager webhookManager;
+  private final TaskHistoryHelper taskHistoryHelper;
 
   private final Map<WebhookType, String> typeToArn;
 
   @Inject
   public SnsWebhookManager(ObjectMapper objectMapper,
-                         SingularityConfiguration configuration,
-                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                         SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory,
-                         WebhookManager webhookManager) {
+                           SingularityConfiguration configuration,
+                           SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+                           SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory,
+                           TaskHistoryHelper taskHistoryHelper,
+                           WebhookManager webhookManager) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
+    this.taskHistoryHelper = taskHistoryHelper;
     if (webhookConf.getAwsAccessKey().isPresent() && webhookConf.getAwsSecretKey().isPresent()) {
       this.snsClient = AmazonSNSClient.builder()
           .withCredentials(new AWSStaticCredentialsProvider(
@@ -87,16 +94,32 @@ public class SnsWebhookManager {
   }
 
   public void taskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
-    publish(WebhookType.TASK, taskUpdate)
-        .exceptionally((t) -> {
-          LOG.warn("Could not publish event, will retry ({})", t.getMessage());
+    publishSemaphore.call(() ->
+        CompletableFuture.runAsync(() -> {
           try {
-            webhookManager.saveTaskUpdateForRetry(taskUpdate);
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
+            Optional<SingularityTask> task = taskHistoryHelper.getTask(taskUpdate.getTaskId());
+            if (task.isPresent()) {
+              SingularityTaskWebhook taskWebhook = new SingularityTaskWebhook(task.get(), taskUpdate);
+              PublishRequest publishRequest = new PublishRequest(
+                  getOrCreateSnsTopic(WebhookType.TASK),
+                  objectMapper.writeValueAsString(taskWebhook)
+              );
+              PublishResult result = snsClient.publish(publishRequest);
+              LOG.trace("Sent update {} with messageId {}", taskWebhook, result.getMessageId());
+            }
+          } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
           }
-          return null;
-        });
+        }, publishExecutor)
+    ).exceptionally((t) -> {
+      LOG.warn("Could not publish event, will retry ({})", t.getMessage());
+      try {
+        webhookManager.saveTaskUpdateForRetry(taskUpdate);
+      } catch (Throwable t2) {
+        LOG.error("Could not save update to zk for retry, dropping", t2);
+      }
+      return null;
+    });
   }
 
   public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
