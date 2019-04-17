@@ -61,7 +61,7 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
-import com.hubspot.singularity.hooks.SnsWebhookRetryer;
+import com.hubspot.singularity.hooks.SnsWebhookQueue;
 import com.hubspot.singularity.hooks.WebhookQueueType;
 import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.mesos.OfferCache;
@@ -152,7 +152,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     if (configuration.getWebhookQueueConfiguration().getQueueType() == WebhookQueueType.SNS) {
-      binder.bind(AbstractWebhookChecker.class).to(SnsWebhookRetryer.class).in(Scopes.SINGLETON);
+      binder.bind(AbstractWebhookChecker.class).to(SnsWebhookQueue.class).in(Scopes.SINGLETON);
     } else {
       binder.bind(AbstractWebhookChecker.class).to(SingularityWebhookSender.class).in(Scopes.SINGLETON);
     }
