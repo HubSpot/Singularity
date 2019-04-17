@@ -1,9 +1,9 @@
 package com.hubspot.singularity.config;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.hooks.WebhookQueueType;
@@ -20,10 +20,13 @@ public class WebhookQueueConfiguration {
   );
 
   @JsonProperty
-  private Optional<String> awsAccessKey;
+  private Optional<String> awsAccessKey = Optional.absent();
 
   @JsonProperty
-  private Optional<String> awsSecretKey;
+  private Optional<String> awsSecretKey = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> awsRegion = Optional.absent();
 
   public WebhookQueueType getQueueType() {
     return queueType;
@@ -55,5 +58,13 @@ public class WebhookQueueConfiguration {
 
   public void setAwsSecretKey(Optional<String> awsSecretKey) {
     this.awsSecretKey = awsSecretKey;
+  }
+
+  public Optional<String> getAwsRegion() {
+    return awsRegion;
+  }
+
+  public void setAwsRegion(Optional<String> awsRegion) {
+    this.awsRegion = awsRegion;
   }
 }
