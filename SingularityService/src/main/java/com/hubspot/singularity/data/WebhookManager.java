@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.Cache;
@@ -27,6 +29,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 
 @Singleton
 public class WebhookManager extends CuratorAsyncManager {
+  private static final Logger LOG = LoggerFactory.getLogger(WebhookManager.class);
 
   private static final String ROOT_PATH = "/hooks";
   private static final String QUEUES_PATH = ROOT_PATH + "/queues";
@@ -43,6 +46,8 @@ public class WebhookManager extends CuratorAsyncManager {
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
 
   private final Cache<WebhookType, List<SingularityWebhook>> activeWebhooksCache;
+  private final Cache<String, Integer> childNodeCountCache;
+  private final int maxChildNodes;
 
   @Inject
   public WebhookManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularityWebhook> webhookTranscoder,
@@ -57,6 +62,10 @@ public class WebhookManager extends CuratorAsyncManager {
     this.activeWebhooksCache = CacheBuilder.newBuilder()
         .expireAfterWrite(60, TimeUnit.SECONDS)
         .build();
+    this.childNodeCountCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(5, TimeUnit.SECONDS)
+        .build();
+    this.maxChildNodes = configuration.getWebhookQueueConfiguration().getMaxZkQueuedWebhooksPerParentNode();
   }
 
   public List<SingularityWebhook> getActiveWebhooksUncached() {
@@ -161,30 +170,47 @@ public class WebhookManager extends CuratorAsyncManager {
 
   void saveRequestHistoryEvent(SingularityRequestHistory requestUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.REQUEST)) {
+      String parentPath = getEnqueuePathForWebhook(webhook.getId(), WebhookType.REQUEST);
+      if (!isChildNodeCountSafe(parentPath)) {
+        LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+        return;
+      }
       final String enqueuePath = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);
-
       save(enqueuePath, requestUpdate, requestHistoryTranscoder);
     }
   }
 
   void saveTaskHistoryUpdateEvent(SingularityTaskHistoryUpdate taskUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.TASK)) {
+      String parentPath = getEnqueuePathForWebhook(webhook.getId(), WebhookType.TASK);
+      if (!isChildNodeCountSafe(parentPath)) {
+        LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+        return;
+      }
       final String enqueuePath = getEnqueuePathForTaskUpdate(webhook.getId(), taskUpdate);
-
       save(enqueuePath, taskUpdate, taskHistoryUpdateTranscoder);
     }
   }
 
   void saveDeployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.DEPLOY)) {
+      String parentPath = getEnqueuePathForWebhook(webhook.getId(), WebhookType.DEPLOY);
+      if (!isChildNodeCountSafe(parentPath)) {
+        LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+        return;
+      }
       final String enqueuePath = getEnqueuePathForDeployUpdate(webhook.getId(), deployUpdate);
-
       save(enqueuePath, deployUpdate, deployWebhookTranscoder);
     }
   }
 
   // Methods for use with sns poller
   public void saveTaskUpdateForRetry(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    String parentPath = ZKPaths.makePath(SNS_TASK_RETRY_ROOT, taskHistoryUpdate.getTaskId().getRequestId());
+    if (!isChildNodeCountSafe(parentPath)) {
+      LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+      return;
+    }
     String updatePath = ZKPaths.makePath(SNS_TASK_RETRY_ROOT, taskHistoryUpdate.getTaskId().getRequestId(), getTaskHistoryUpdateId(taskHistoryUpdate));
     save(updatePath, taskHistoryUpdate, taskHistoryUpdateTranscoder);
   }
@@ -206,6 +232,10 @@ public class WebhookManager extends CuratorAsyncManager {
   }
 
   public void saveDeployUpdateForRetry(SingularityDeployUpdate deployUpdate) {
+    if (!isChildNodeCountSafe(SNS_DEPLOY_RETRY)) {
+      LOG.warn("Too many queued webhooks for path {}, dropping", SNS_DEPLOY_RETRY);
+      return;
+    }
     String updatePath = ZKPaths.makePath(SNS_DEPLOY_RETRY, getDeployUpdateId(deployUpdate));
     save(updatePath, deployUpdate, deployWebhookTranscoder);
   }
@@ -220,6 +250,10 @@ public class WebhookManager extends CuratorAsyncManager {
   }
 
   public void saveRequestUpdateForRetry(SingularityRequestHistory requestHistory) {
+    if (!isChildNodeCountSafe(SNS_REQUEST_RETRY)) {
+      LOG.warn("Too many queued webhooks for path {}, dropping", SNS_REQUEST_RETRY);
+      return;
+    }
     String updatePath = ZKPaths.makePath(SNS_REQUEST_RETRY, getRequestHistoryUpdateId(requestHistory));
     save(updatePath, requestHistory, requestHistoryTranscoder);
   }
@@ -231,5 +265,15 @@ public class WebhookManager extends CuratorAsyncManager {
 
   public List<SingularityRequestHistory> getRequestUpdatesToRetry() {
     return getAsyncChildren(SNS_REQUEST_RETRY, requestHistoryTranscoder);
+  }
+
+  private boolean isChildNodeCountSafe(String path) {
+    Integer maybeCached = childNodeCountCache.getIfPresent(path);
+    if (maybeCached != null){
+      return maybeCached < maxChildNodes;
+    }
+    int count = getNumChildren(path);
+    childNodeCountCache.put(path, count);
+    return count < maxChildNodes;
   }
 }
