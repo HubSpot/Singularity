@@ -36,6 +36,9 @@ public class WebhookQueueConfiguration {
 
   private int snsTotalTimeout = 5000;
 
+  // Protection for zookeeper so large list children calls will not take it down
+  private int maxZkQueuedWebhooksPerParentNode = 3000;
+
   public WebhookQueueType getQueueType() {
     return queueType;
   }
@@ -106,5 +109,13 @@ public class WebhookQueueConfiguration {
 
   public void setSnsTotalTimeout(int snsTotalTimeout) {
     this.snsTotalTimeout = snsTotalTimeout;
+  }
+
+  public int getMaxZkQueuedWebhooksPerParentNode() {
+    return maxZkQueuedWebhooksPerParentNode;
+  }
+
+  public void setMaxZkQueuedWebhooksPerParentNode(int maxZkQueuedWebhooksPerParentNode) {
+    this.maxZkQueuedWebhooksPerParentNode = maxZkQueuedWebhooksPerParentNode;
   }
 }
