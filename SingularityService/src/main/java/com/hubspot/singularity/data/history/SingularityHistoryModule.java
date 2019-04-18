@@ -58,6 +58,7 @@ public class SingularityHistoryModule extends AbstractModule {
     bind(SingularityRequestHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityDeployHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryPersister.class).in(Scopes.SINGLETON);
+    bind(ImmediateHistoryPersister.class).in(Scopes.SINGLETON);
 
     // Setup database support
     if (configuration.isPresent()) {
