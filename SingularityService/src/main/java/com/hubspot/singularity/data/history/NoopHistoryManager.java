@@ -22,6 +22,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public boolean isNoOp() {
+    return true;
+  }
+
+  @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
     throw new UnsupportedOperationException("NoopHistoryManager can not save");
   }

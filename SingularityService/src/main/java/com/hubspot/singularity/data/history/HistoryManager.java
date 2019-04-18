@@ -52,4 +52,5 @@ public interface HistoryManager {
 
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount);
 
+  boolean isNoOp();
 }
