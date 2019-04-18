@@ -21,12 +21,18 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
 
 public abstract class BlendedHistoryHelper<T, Q> {
-
   private static final Logger LOG = LoggerFactory.getLogger(BlendedHistoryHelper.class);
+
+  protected final boolean sqlEnabled;
+
+  public BlendedHistoryHelper(boolean sqlEnabled) {
+    this.sqlEnabled = sqlEnabled;
+  }
+
   protected abstract List<T> getFromZk(Q id);
   protected abstract List<T> getFromHistory(Q id, int historyStart, int numFromHistory);
 
-  protected abstract Optional<Integer> getTotalCount(Q id);
+  protected abstract Optional<Integer> getTotalCount(Q id, boolean canSkipZk);
 
   public List<SingularityTaskIdHistory> getTaskHistoriesFor(TaskManager taskManager, Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
@@ -54,12 +60,21 @@ public abstract class BlendedHistoryHelper<T, Q> {
     throw new IllegalStateException("Comparator requested for query which doesn't implement it");
   }
 
-  public Optional<Integer> getBlendedHistoryCount(Q id) {
-    return getTotalCount(id);
+  public Optional<Integer> getBlendedHistoryCount(Q id, boolean canSkipZk) {
+    return getTotalCount(id, canSkipZk);
   }
 
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {
-    final List<T> fromZk = getFromZk(id);
+    return getBlendedHistory(id, limitStart, limitCount, false);
+  }
+
+  public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount, boolean canSkipZk) {
+    final List<T> fromZk;
+    if (sqlEnabled && canSkipZk) {
+      fromZk = new ArrayList<>();
+    } else {
+      fromZk = getFromZk(id);
+    }
 
     List<T> returned = null;
 

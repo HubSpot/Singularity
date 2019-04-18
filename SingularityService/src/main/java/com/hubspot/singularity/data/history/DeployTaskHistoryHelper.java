@@ -10,6 +10,7 @@ import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
@@ -19,7 +20,8 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
   private final HistoryManager historyManager;
 
   @Inject
-  public DeployTaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager) {
+  public DeployTaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, SingularityConfiguration configuration) {
+    super(configuration.getDatabaseConfiguration().isPresent());
     this.taskManager = taskManager;
     this.historyManager = historyManager;
   }
@@ -37,8 +39,13 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
   }
 
   @Override
-  protected Optional<Integer> getTotalCount(SingularityDeployKey deployKey) {
-    final int numFromZk = taskManager.getInactiveTaskIdsForDeploy(deployKey.getRequestId(), deployKey.getDeployId()).size();
+  protected Optional<Integer> getTotalCount(SingularityDeployKey deployKey, boolean canSkipZk) {
+    final int numFromZk;
+    if (sqlEnabled && canSkipZk) {
+      numFromZk = 0;
+    } else {
+      numFromZk = taskManager.getInactiveTaskIdsForDeploy(deployKey.getRequestId(), deployKey.getDeployId()).size();
+    }
     final int numFromHistory = historyManager.getTaskIdHistoryCount(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String>absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
       Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
     return Optional.of(numFromZk + numFromHistory);
