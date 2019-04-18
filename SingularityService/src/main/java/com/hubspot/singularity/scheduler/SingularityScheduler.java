@@ -714,6 +714,7 @@ public class SingularityScheduler {
       persisterSemaphore.call(() ->
           CompletableFuture.runAsync(() ->
                   lock.runWithRequestLock(() -> {
+                        LOG.debug("Running immediate persist of task {}", taskId);
                         Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(taskId);
                         if (taskHistory.isPresent()) {
                           historyManager.saveTaskHistory(taskHistory.get());

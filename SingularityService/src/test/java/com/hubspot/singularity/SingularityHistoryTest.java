@@ -130,7 +130,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void historyUpdaterTest() {
+  public void historyUpdaterTest()  {
     initRequest();
     initFirstDeploy();
 

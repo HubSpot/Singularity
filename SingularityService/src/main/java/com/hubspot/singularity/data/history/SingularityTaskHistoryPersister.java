@@ -28,6 +28,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityTaskHistoryPersister extends SingularityHistoryPersister<SingularityTaskId> {
@@ -38,16 +39,18 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityTaskHistoryPersister(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager,
-      DeployManager deployManager, HistoryManager historyManager, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+                                         DeployManager deployManager, HistoryManager historyManager, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock, SingularitySchedulerLock lock) {
     super(configuration, persisterLock);
 
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
+    this.lock = lock;
   }
 
   @Override
