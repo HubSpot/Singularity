@@ -39,11 +39,6 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public boolean isNoOp() {
-    return false;
-  }
-
-  @Override
   @Timed
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {

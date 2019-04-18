@@ -263,7 +263,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public void saveHistory(SingularityRequestHistory history) {
-    if (!historyManager.isNoOp()) {
+    if (configuration.getDatabaseConfiguration().isPresent()) { // Only run this if the persist will actually do something
       try {
         historyManager.saveRequestHistoryUpdate(history);
       } catch (Throwable t) {
