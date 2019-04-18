@@ -247,7 +247,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
 
-  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   private int maxPendingImmediatePersists = 200;
 
