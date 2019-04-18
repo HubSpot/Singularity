@@ -28,6 +28,14 @@ public class WebhookQueueConfiguration {
   @JsonProperty
   private Optional<String> awsRegion = Optional.absent();
 
+  private int snsRequestTimeout = 3000;
+
+  private int snsSocketTimeout = 3000;
+
+  private int snsConnectTimeout = 2000;
+
+  private int snsTotalTimeout = 5000;
+
   public WebhookQueueType getQueueType() {
     return queueType;
   }
@@ -66,5 +74,37 @@ public class WebhookQueueConfiguration {
 
   public void setAwsRegion(Optional<String> awsRegion) {
     this.awsRegion = awsRegion;
+  }
+
+  public int getSnsRequestTimeout() {
+    return snsRequestTimeout;
+  }
+
+  public void setSnsRequestTimeout(int snsRequestTimeout) {
+    this.snsRequestTimeout = snsRequestTimeout;
+  }
+
+  public int getSnsSocketTimeout() {
+    return snsSocketTimeout;
+  }
+
+  public void setSnsSocketTimeout(int snsSocketTimeout) {
+    this.snsSocketTimeout = snsSocketTimeout;
+  }
+
+  public int getSnsConnectTimeout() {
+    return snsConnectTimeout;
+  }
+
+  public void setSnsConnectTimeout(int snsConnectTimeout) {
+    this.snsConnectTimeout = snsConnectTimeout;
+  }
+
+  public int getSnsTotalTimeout() {
+    return snsTotalTimeout;
+  }
+
+  public void setSnsTotalTimeout(int snsTotalTimeout) {
+    this.snsTotalTimeout = snsTotalTimeout;
   }
 }

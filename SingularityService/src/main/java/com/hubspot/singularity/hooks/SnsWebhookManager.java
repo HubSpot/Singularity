@@ -61,6 +61,10 @@ public class SnsWebhookManager {
           )).withClientConfiguration(
               new ClientConfiguration()
                   .withMaxConnections(configuration.getMaxConcurrentWebhooks())
+              .withConnectionTimeout(webhookConf.getSnsConnectTimeout())
+              .withRequestTimeout(webhookConf.getSnsRequestTimeout())
+              .withSocketTimeout(webhookConf.getSnsSocketTimeout())
+              .withClientExecutionTimeout(webhookConf.getSnsTotalTimeout())
           )
           .withRegion(webhookConf.getAwsRegion().or("us-east-1"))
           .build();
