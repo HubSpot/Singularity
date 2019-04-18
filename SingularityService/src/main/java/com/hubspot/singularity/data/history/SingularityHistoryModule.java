@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.history;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -23,6 +24,9 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.db.DataSourceFactory;
@@ -30,13 +34,17 @@ import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.setup.Environment;
 
 public class SingularityHistoryModule extends AbstractModule {
-  public static final String PERSISTER_LOCK = "hsitory.persister.lock";
+  public static final String PERSISTER_LOCK = "history.persister.lock";
+  public static final String PERSISTER_SEMAPHORE = "history.persister.semaphore";
+  public static final String PERSISTER_EXECUTOR = "history.persister.executor";
 
   private final Optional<DataSourceFactory> configuration;
+  private final SingularityConfiguration singularityConfiguration;
 
   public SingularityHistoryModule(SingularityConfiguration configuration) {
     checkNotNull(configuration, "configuration is null");
     this.configuration = configuration.getDatabaseConfiguration();
+    this.singularityConfiguration = configuration;
   }
 
   @Override
@@ -58,7 +66,6 @@ public class SingularityHistoryModule extends AbstractModule {
     bind(SingularityRequestHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityDeployHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryPersister.class).in(Scopes.SINGLETON);
-    bind(ImmediateHistoryPersister.class).in(Scopes.SINGLETON);
 
     // Setup database support
     if (configuration.isPresent()) {
@@ -107,6 +114,20 @@ public class SingularityHistoryModule extends AbstractModule {
         }
       }
     });
+  }
+
+  @Provides
+  @Singleton
+  @Named(PERSISTER_SEMAPHORE)
+  public AsyncSemaphore<Void> providePersisterSemaphore(SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory) {
+    return AsyncSemaphore.newBuilder(singularityConfiguration::getMaxPendingImmediatePersists, scheduledExecutorServiceFactory.get("immediate-persist-sempahore", 1)).build();
+  }
+
+  @Provides
+  @Singleton
+  @Named(PERSISTER_EXECUTOR)
+  public ExecutorService providePersisterSemaphore(SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
+    return cachedThreadPoolFactory.get("immediate-history-persist");
   }
 
   static class DBIProvider implements Provider<DBI> {

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
@@ -31,6 +34,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployFailureReason;
+import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -52,11 +56,13 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.ImmediateHistoryPersister;
+import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -75,11 +81,15 @@ public class SingularityDeployChecker {
   private final SingularityConfiguration configuration;
   private final LoadBalancerClient lbClient;
   private final SingularitySchedulerLock lock;
-  private final ImmediateHistoryPersister immediateHistoryPersister;
+  private final HistoryManager historyManager;
+  private final AsyncSemaphore<Void> persisterSemaphore;
+  private final ExecutorService persisterExecutor;
 
   @Inject
   public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, LoadBalancerClient lbClient, RequestManager requestManager, TaskManager taskManager,
-                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, ImmediateHistoryPersister immediateHistoryPersister) {
+                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, HistoryManager historyManager,
+                                  @Named(SingularityHistoryModule.PERSISTER_SEMAPHORE) AsyncSemaphore<Void> persisterSemaphore,
+                                  @Named(SingularityHistoryModule.PERSISTER_EXECUTOR) ExecutorService persisterExecutor) {
     this.configuration = configuration;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -87,7 +97,9 @@ public class SingularityDeployChecker {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
     this.lock = lock;
-    this.immediateHistoryPersister = immediateHistoryPersister;
+    this.historyManager = historyManager;
+    this.persisterSemaphore = persisterSemaphore;
+    this.persisterExecutor = persisterExecutor;
   }
 
   public int checkDeploys() {
@@ -401,10 +413,26 @@ public class SingularityDeployChecker {
 
     removePendingDeploy(pendingDeploy);
 
-    if (deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent()) {
-      immediateHistoryPersister.persistDeployAsync(request.getId(), previousActiveDeploy.get().getActiveDeploy().get().getDeployId());
-    } else if (deployResult.getDeployState().isDeployFinished()) {
-      immediateHistoryPersister.persistDeployAsync(request.getId(), pendingDeploy.getDeployMarker().getDeployId());
+    if (configuration.getDatabaseConfiguration().isPresent()) {
+      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
+          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
+          pendingDeploy.getDeployMarker().getDeployId();
+      persisterSemaphore.call(() ->
+          CompletableFuture.runAsync(() ->
+                  lock.runWithRequestLock(() -> {
+                        Optional<SingularityDeployHistory> maybeDeployHistory = deployManager.getDeployHistory(request.getId(), deployIdToPersist, true);
+                        if (maybeDeployHistory.isPresent()) {
+                          historyManager.saveDeployHistory(maybeDeployHistory.get());
+                          deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(maybeDeployHistory.get().getDeployMarker()));
+                        }
+                      },
+                      request.getId(),
+                      "immediate-task-history-persist"),
+              persisterExecutor)
+      ).exceptionally((t) -> {
+        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
+        return null;
+      });
     }
   }
 
