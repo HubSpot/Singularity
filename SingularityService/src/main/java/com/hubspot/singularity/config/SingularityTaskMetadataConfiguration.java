@@ -6,8 +6,6 @@ import com.google.common.base.Optional;
 
 public class SingularityTaskMetadataConfiguration {
 
-  private long taskPersistAfterFinishBufferMillis = 0;
-
   private long waitToSendTaskCompletedMailBufferMillis = 0;
 
   private Optional<List<String>> allowedMetadataTypes = Optional.absent();
@@ -17,14 +15,6 @@ public class SingularityTaskMetadataConfiguration {
   private long maxMetadataMessageLength = 10000;
 
   private long maxMetadataTitleLength = 2000;
-
-  public long getTaskPersistAfterFinishBufferMillis() {
-    return taskPersistAfterFinishBufferMillis;
-  }
-
-  public void setTaskPersistAfterFinishBufferMillis(long taskPersistAfterFinishBufferMillis) {
-    this.taskPersistAfterFinishBufferMillis = taskPersistAfterFinishBufferMillis;
-  }
 
   public long getWaitToSendTaskCompletedMailBufferMillis() {
     return waitToSendTaskCompletedMailBufferMillis;
