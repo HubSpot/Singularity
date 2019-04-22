@@ -24,8 +24,6 @@ public class NamespaceActiveTasksMigration extends ZkDataMigration {
   public void applyMigration() {
     try {
       if (curatorFramework.checkExists().forPath(ACTIVE_TASKS_ROOT) != null) {
-        curatorFramework.delete().deletingChildrenIfNeeded().forPath(ACTIVE_TASKS_ROOT);
-
         List<String> currentActive = curatorFramework.getChildren().forPath(ACTIVE_STATUSES_ROOT);
         for (String taskIdString : currentActive) {
           SingularityTaskId taskId = SingularityTaskId.valueOf(taskIdString);
@@ -39,6 +37,8 @@ public class NamespaceActiveTasksMigration extends ZkDataMigration {
           }
           curatorFramework.delete().forPath(oldPath);
         }
+
+        curatorFramework.delete().deletingChildrenIfNeeded().forPath(ACTIVE_TASKS_ROOT);
       }
     } catch (Throwable t) {
       throw new RuntimeException(t);
