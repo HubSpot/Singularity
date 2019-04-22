@@ -1166,10 +1166,6 @@ public class TaskManager extends CuratorAsyncManager {
     return countBytes(getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT));
   }
 
-  public long getActiveTaskIdBytes() {
-    return countBytes(getChildren(ACTIVE_PATH_ROOT));
-  }
-
   public long getTaskHistoryIdBytes() {
     return countBytes(getChildren(HISTORY_PATH_ROOT));
   }

@@ -55,7 +55,6 @@ public class MetricsResource {
     return ImmutableMap.of(
         "allRequestIds", requestManager.getAllRequestIdsBytes(),
         "taskStatuses", taskManager.getTaskStatusBytes(),
-        "activeTaskIds", taskManager.getActiveTaskIdBytes(),
         "taskHistoryIds", taskManager.getTaskHistoryIdBytes()
     );
   }
