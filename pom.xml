@@ -71,6 +71,7 @@
     <jukito.version>1.5</jukito.version>
     <mesos.docker.tag>1.6.1</mesos.docker.tag>
     <mesos.version>1.6.1</mesos.version>
+    <ning.async.version>1.9.38</ning.async.version>
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>

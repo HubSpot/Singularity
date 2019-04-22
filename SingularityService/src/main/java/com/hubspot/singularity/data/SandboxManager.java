@@ -22,7 +22,6 @@ import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.Response;
 
 @Singleton
@@ -52,13 +51,10 @@ public class SandboxManager {
 
   public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
     try {
-      PerRequestConfig timeoutConfig = new PerRequestConfig();
-      timeoutConfig.setRequestTimeoutInMs((int) configuration.getSandboxHttpTimeoutMillis());
-
       Response response = asyncHttpClient
           .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
-          .setPerRequestConfig(timeoutConfig)
-          .addQueryParameter("path", fullPath)
+          .setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis())
+          .addQueryParam("path", fullPath)
           .execute()
           .get();
 
@@ -88,18 +84,16 @@ public class SandboxManager {
   public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
-          .addQueryParameter("path", fullPath);
+          .addQueryParam("path", fullPath);
 
-      PerRequestConfig timeoutConfig = new PerRequestConfig();
-      timeoutConfig.setRequestTimeoutInMs((int) configuration.getSandboxHttpTimeoutMillis());
-      builder.setPerRequestConfig(timeoutConfig);
+      builder.setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis());
 
       if (offset.isPresent()) {
-        builder.addQueryParameter("offset", offset.get().toString());
+        builder.addQueryParam("offset", offset.get().toString());
       }
 
       if (length.isPresent()) {
-        builder.addQueryParameter("length", length.get().toString());
+        builder.addQueryParam("length", length.get().toString());
       }
 
       final Response response = builder.execute().get();

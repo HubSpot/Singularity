@@ -433,8 +433,9 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
-      Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+      Awaitility.await("healthcheck present").atMost(6, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
+      Optional<SingularityTaskHealthcheckResult> result = taskManager.getLastHealthcheck(firstTask.getTaskId());
       Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {
       unsetConfigurationForNoDelay();

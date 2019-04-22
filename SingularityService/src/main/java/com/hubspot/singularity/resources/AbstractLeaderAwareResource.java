@@ -89,7 +89,7 @@ public class AbstractLeaderAwareResource {
     try {
       LOG.trace("Sending request to leader: {}", httpRequest);
       response = httpClient.executeRequest(httpRequest).get();
-    } catch (IOException|ExecutionException|InterruptedException e) {
+    } catch (ExecutionException|InterruptedException e) {
       LOG.error("Could not proxy request {} to leader", e);
       throw new WebApplicationException(e, 500);
     }
@@ -120,7 +120,7 @@ public class AbstractLeaderAwareResource {
     if (parameterNames != null) {
       while (parameterNames.hasMoreElements()) {
         String parameterName = parameterNames.nextElement();
-        requestBuilder.addQueryParameter(parameterName, request.getParameter(parameterName));
+        requestBuilder.addQueryParam(parameterName, request.getParameter(parameterName));
         LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
       }
     }

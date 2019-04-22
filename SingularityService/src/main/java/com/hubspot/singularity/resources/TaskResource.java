@@ -92,7 +92,6 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
-import com.ning.http.client.PerRequestConfig;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.auth.Auth;
@@ -663,14 +662,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
         httpPrefix, slaveHostname, httpPort);
 
     try {
-      PerRequestConfig unlimitedTimeout = new PerRequestConfig();
-      unlimitedTimeout.setRequestTimeoutInMs(-1);
-
       NingOutputToJaxRsStreamingOutputWrapper streamingOutputNingHandler = new NingOutputToJaxRsStreamingOutputWrapper(
           httpClient
               .prepareGet(url)
-              .addQueryParameter("path", fileFullPath)
-              .setPerRequestConfig(unlimitedTimeout)
+              .addQueryParam("path", fileFullPath)
+              .setRequestTimeout(-1)
       );
 
       // Strip file path down to just a file name if we can

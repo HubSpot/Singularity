@@ -38,7 +38,6 @@ import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
 @Singleton
@@ -291,21 +290,18 @@ public class SingularityHealthchecker {
       task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
 
     try {
-      PerRequestConfig prc = new PerRequestConfig();
-      prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
-
       RequestBuilder builder = new RequestBuilder("GET");
       builder.setFollowRedirects(true);
       builder.setUrl(uri.get());
-      builder.setPerRequestConfig(prc);
+      builder.setRequestTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
       LOG.trace("Issuing a healthcheck ({}) for task {} with timeout {}s", uri.get(), task.getTaskId(), timeoutSeconds);
 
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
-      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
+      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri.get(), task.getTaskId(), t);
       exceptionNotifier.notify(String.format("Error preparing healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
-      saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
+      saveFailure(handler, String.format("Healthcheck (%s) failed due to exception: %s", uri.get(), t.getMessage()));
     }
   }
 

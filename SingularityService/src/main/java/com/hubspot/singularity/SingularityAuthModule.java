@@ -29,8 +29,8 @@ public class SingularityAuthModule extends DropwizardAwareModule<SingularityConf
       if (clazz == SingularityAuthenticatorClass.WEBHOOK) {
         AuthConfiguration authConfiguration = getConfiguration().getAuthConfiguration();
         AsyncHttpClientConfig clientConfig = new AsyncHttpClientConfig.Builder()
-            .setConnectionTimeoutInMs(authConfiguration.getWebhookAuthConnectTimeoutMs())
-            .setRequestTimeoutInMs(authConfiguration.getWebhookAuthRequestTimeoutMs())
+            .setConnectTimeout(authConfiguration.getWebhookAuthConnectTimeoutMs())
+            .setRequestTimeout(authConfiguration.getWebhookAuthRequestTimeoutMs())
             .setMaxRequestRetry(authConfiguration.getWebhookAuthRetries())
             .build();
         SingularityAsyncHttpClient webhookAsyncHttpClient = new SingularityAsyncHttpClient(clientConfig);
