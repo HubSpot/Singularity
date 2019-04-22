@@ -1,6 +1,5 @@
 package com.hubspot.singularity.hooks;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -207,13 +206,13 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     try {
       handler.setCompletableFuture(webhookFuture);
       postRequest.execute(handler);
-    } catch (IOException e) {
-      LOG.warn("Couldn't execute webhook to {}", uri, e);
+    } catch (Throwable t) {
+      LOG.warn("Couldn't execute webhook to {}", uri, t);
 
       if (handler.shouldDeleteUpdateDueToQueueAboveCapacity()) {
         handler.deleteWebhookUpdate();
       }
-      webhookFuture.completeExceptionally(e);
+      webhookFuture.completeExceptionally(t);
     }
     return webhookFuture;
   }

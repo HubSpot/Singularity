@@ -41,7 +41,6 @@ import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
 import okhttp3.Call;
@@ -331,13 +330,14 @@ public class SingularityHealthchecker {
   }
 
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
     final Optional<String> uri = getHealthcheckUri(task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
 
     if (!uri.isPresent()) {
       saveFailure(handler, "Invalid healthcheck uri or ports not present");
       return;
     }
+    handler.setHealthcehckUri(uri.get());
 
     final Integer timeoutSeconds;
     final String method;
@@ -373,20 +373,17 @@ public class SingularityHealthchecker {
                     .build()
             ).enqueue(wrappedHttp2Handler(handler));
       } else {
-        PerRequestConfig prc = new PerRequestConfig();
-        prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
-
-        RequestBuilder builder = new RequestBuilder(method);
+        RequestBuilder builder = new RequestBuilder("GET");
         builder.setFollowRedirects(true);
         builder.setUrl(uri.get());
-        builder.setPerRequestConfig(prc);
+        builder.setRequestTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
         http.prepareRequest(builder.build()).execute(wrappedHttp1Handler(handler));
       }
     } catch (Throwable t) {
-      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
+      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri.get(), task.getTaskId(), t);
       exceptionNotifier.notify(String.format("Error preparing healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
-      saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
+      saveFailure(handler, String.format("Healthcheck (%s) failed due to exception: %s", uri.get(), t.getMessage()));
     }
   }
 

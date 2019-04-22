@@ -1535,12 +1535,12 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     taskManager.deleteTaskHistory(taskOne.getTaskId());
 
-    Assert.assertTrue(taskManager.isActiveTask(taskOne.getTaskId().getId()));
+    Assert.assertTrue(taskManager.isActiveTask(taskOne.getTaskId()));
 
     statusUpdate(taskOne, TaskState.TASK_RUNNING);
     statusUpdate(taskOne, TaskState.TASK_FAILED);
 
-    Assert.assertTrue(!taskManager.isActiveTask(taskOne.getTaskId().getId()));
+    Assert.assertTrue(!taskManager.isActiveTask(taskOne.getTaskId()));
 
     Assert.assertEquals(2, taskManager.getTaskHistoryUpdates(taskOne.getTaskId()).size());
   }

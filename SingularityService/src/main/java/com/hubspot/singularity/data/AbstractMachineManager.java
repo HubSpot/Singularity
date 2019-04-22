@@ -52,8 +52,15 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public List<T> getObjects() {
-    return getObjects(getRoot());
+    List<T> fromCache = getObjectsFromLeaderCache();
+    if (fromCache != null) {
+      return fromCache;
+    } else {
+      return getObjectsNoCache(getRoot());
+    }
   }
+
+  protected abstract List<T> getObjectsFromLeaderCache();
 
   public List<String> getObjectIds() {
     return getChildren(getRoot());
@@ -113,13 +120,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getData(getObjectPath(objectId), transcoder);
   }
 
-  protected List<T> getObjects(String root) {
+  protected List<T> getObjectsNoCache(String root) {
     return getAsyncChildren(root, transcoder);
   }
 
-  public SingularityDeleteResult removed(String objectId) {
-    return delete(getObjectPath(objectId));
-  }
+  protected abstract void deleteFromLeaderCache(String objectId);
 
   public enum StateChangeResult {
     FAILURE_NOT_FOUND, FAILURE_ALREADY_AT_STATE, FAILURE_ILLEGAL_TRANSITION, SUCCESS;
@@ -208,14 +213,17 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public SingularityDeleteResult deleteObject(String objectId) {
+    deleteFromLeaderCache(objectId);
     return delete(getObjectPath(objectId));
   }
 
   public void saveObject(T object) {
     saveHistoryUpdate(object.getCurrentState());
-
     save(getObjectPath(object.getId()), object, transcoder);
+    saveObjectToLeaderCache(object);
   }
+
+  protected abstract void saveObjectToLeaderCache(T object);
 
   private String getExpiringPath(String machineId) {
     return ZKPaths.makePath(getRoot(), EXPIRING_PATH, machineId);

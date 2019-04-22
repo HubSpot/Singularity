@@ -25,6 +25,7 @@ public class SingularityHealthcheckAsyncHandler {
   private final SingularityTask task;
   private final TaskManager taskManager;
   private final List<Integer> failureStatusCodes;
+  private String healthcheckUri = ""; // For logging purposes only
 
   public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker,
       SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityTask task) {
@@ -40,6 +41,10 @@ public class SingularityHealthcheckAsyncHandler {
     startTime = System.currentTimeMillis();
   }
 
+  public void setHealthcehckUri(String healthcheckUri) {
+    this.healthcheckUri = healthcheckUri;
+  }
+
   public void onCompleted(Optional<Integer> statusCode, Optional<String> responseBodyExcerpt) {
     saveResult(statusCode, responseBodyExcerpt, Optional.<String> absent(), Optional.<Throwable>absent());
   }
@@ -47,7 +52,7 @@ public class SingularityHealthcheckAsyncHandler {
   public void onFailed(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())), Optional.of(t));
+    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck (%s) failed due to exception: %s", healthcheckUri, t.getMessage())), Optional.of(t));
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {
@@ -62,7 +67,7 @@ public class SingularityHealthcheckAsyncHandler {
       taskManager.saveHealthcheckResult(result);
 
       if (result.isFailed()) {
-        if (!taskManager.isActiveTask(task.getTaskId().getId())) {
+        if (!taskManager.isActiveTask(task.getTaskId())) {
           LOG.trace("Task {} is not active, not re-enqueueing healthcheck", task.getTaskId());
           return;
         }

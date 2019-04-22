@@ -92,7 +92,7 @@ public class TaskTrackerResource {
       }
     }
     // Check if it's pending
-    for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId)) {
+    for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId, false)) {
       if (pendingTask.getRunId().isPresent() && pendingTask.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
             Optional.absent(),

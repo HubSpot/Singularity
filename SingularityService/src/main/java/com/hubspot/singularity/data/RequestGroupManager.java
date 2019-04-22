@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -34,10 +35,6 @@ public class RequestGroupManager extends CuratorAsyncManager {
     return ZKPaths.makePath(REQUEST_GROUP_ROOT, requestGroupId);
   }
 
-  public List<String> getRequestGroupIds() {
-    return getChildren(REQUEST_GROUP_ROOT);
-  }
-
   public List<SingularityRequestGroup> getRequestGroups(boolean useWebCache) {
     if (useWebCache && webCache.useCachedRequestGroups()) {
       return webCache.getRequestGroups();
@@ -59,5 +56,24 @@ public class RequestGroupManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteRequestGroup(String requestGroupId) {
     return delete(getRequestGroupPath(requestGroupId));
+  }
+
+  public void removeFromAllGroups(String requestId) {
+    getRequestGroups(false).stream()
+        .filter((g) -> g.getRequestIds().contains(requestId))
+        .forEach((g) -> {
+          List<String> ids = new ArrayList<>();
+          ids.addAll(g.getRequestIds());
+          ids.remove(requestId);
+          if (ids.isEmpty()) {
+            deleteRequestGroup(g.getId());
+          } else {
+            saveRequestGroup(new SingularityRequestGroup(
+                g.getId(),
+                ids,
+                g.getMetadata()
+            ));
+          }
+        });
   }
 }

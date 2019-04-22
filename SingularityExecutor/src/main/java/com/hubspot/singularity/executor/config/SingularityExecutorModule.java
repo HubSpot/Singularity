@@ -45,8 +45,8 @@ public class SingularityExecutorModule extends AbstractModule {
   @Named(LOCAL_DOWNLOAD_HTTP_CLIENT)
   public AsyncHttpClient providesHttpClient(SingularityExecutorConfiguration configuration) {
     AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
-    configBldr.setRequestTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
-    configBldr.setIdleConnectionTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
+    configBldr.setRequestTimeout((int) configuration.getLocalDownloadServiceTimeoutMillis());
+    configBldr.setPooledConnectionIdleTimeout((int) configuration.getLocalDownloadServiceTimeoutMillis());
     configBldr.addRequestFilter(new ThrottleRequestFilter(configuration.getLocalDownloadServiceMaxConnections()));
 
     return new AsyncHttpClient(configBldr.build());
