@@ -76,7 +76,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       taskManager.saveHealthcheckResult(result);
 
       if (result.isFailed()) {
-        if (!taskManager.isActiveTask(task.getTaskId().getId())) {
+        if (!taskManager.isActiveTask(task.getTaskId())) {
           LOG.trace("Task {} is not active, not re-enqueueing healthcheck", task.getTaskId());
           return;
         }

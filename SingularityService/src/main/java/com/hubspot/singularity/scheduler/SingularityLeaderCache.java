@@ -174,13 +174,13 @@ public class SingularityLeaderCache {
     pendingTaskIdToPendingTask.put(pendingTask.getPendingTaskId(), pendingTask);
   }
 
-  public void deleteActiveTaskId(String taskId) {
+  public void deleteActiveTaskId(SingularityTaskId taskId) {
     if (!active) {
       LOG.warn("deleteActiveTask {}, but not active", taskId);
       return;
     }
 
-    activeTaskIds.remove(SingularityTaskId.valueOf(taskId));
+    activeTaskIds.remove(taskId);
   }
 
   public List<SingularityTaskId> exists(List<SingularityTaskId> taskIds) {
@@ -234,8 +234,8 @@ public class SingularityLeaderCache {
     return pendingTaskIdToPendingTask.size();
   }
 
-  public boolean isActiveTask(String taskId) {
-    return activeTaskIds.contains(SingularityTaskId.valueOf(taskId));
+  public boolean isActiveTask(SingularityTaskId taskId) {
+    return activeTaskIds.contains(taskId);
   }
 
   public void putActiveTask(SingularityTask task) {

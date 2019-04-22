@@ -58,7 +58,7 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
     for (SingularityTaskShellCommandRequest shellRequest : shellRequests) {
       Optional<SingularityTask> task = taskManager.getTask(shellRequest.getTaskId());
 
-      if (!task.isPresent() || !taskManager.isActiveTask(shellRequest.getTaskId().getId())) {
+      if (!task.isPresent() || !taskManager.isActiveTask(shellRequest.getTaskId())) {
         LOG.info("Skipping shell request {} because {} didn't exist or isn't active", shellRequest, shellRequest.getTaskId());
         continue;
       }

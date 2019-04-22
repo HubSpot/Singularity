@@ -69,7 +69,6 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String TASKS_ROOT = "/tasks";
 
-  private static final String ACTIVE_PATH_ROOT = TASKS_ROOT + "/active";
   private static final String LAST_ACTIVE_TASK_STATUSES_PATH_ROOT = TASKS_ROOT + "/statuses";
   private static final String PENDING_PATH_ROOT = TASKS_ROOT + "/scheduled";
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
@@ -158,7 +157,7 @@ public class TaskManager extends CuratorAsyncManager {
   // since we can't use creatingParentsIfNeeded in transactions
   public void createRequiredParents() {
     create(HISTORY_PATH_ROOT);
-    create(ACTIVE_PATH_ROOT);
+    create(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT);
   }
 
   private String getLastHealthcheckPath(SingularityTaskId taskId) {
@@ -182,7 +181,11 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private String getLastActiveTaskStatusPath(SingularityTaskId taskId) {
-    return ZKPaths.makePath(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskId.getId());
+    return ZKPaths.makePath(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskId.getRequestId(), taskId.getId());
+  }
+
+  private String getLastActiveTaskParent(String requestId) {
+    return ZKPaths.makePath(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, requestId);
   }
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
@@ -253,12 +256,12 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getRequestPath(taskId.getRequestId()), taskId.getId());
   }
 
-  private String getActivePath(String taskId) {
-    return ZKPaths.makePath(ACTIVE_PATH_ROOT, taskId);
+  private String getPendingPath(SingularityPendingTaskId pendingTaskId) {
+    return ZKPaths.makePath(PENDING_PATH_ROOT, pendingTaskId.getRequestId(), pendingTaskId.getId());
   }
 
-  private String getPendingPath(SingularityPendingTaskId pendingTaskId) {
-    return ZKPaths.makePath(PENDING_PATH_ROOT, pendingTaskId.getId());
+  private String getPendingForRequestPath(String requestId) {
+    return ZKPaths.makePath(PENDING_PATH_ROOT, requestId);
   }
 
   private String getPendingTasksToDeletePath(SingularityPendingTaskId pendingTaskId) { return ZKPaths.makePath(PENDING_TASKS_TO_DELETE_PATH_ROOT, pendingTaskId.getId()); }
@@ -287,14 +290,22 @@ public class TaskManager extends CuratorAsyncManager {
     if (leaderCache.active()) {
       return leaderCache.getNumActiveTasks();
     }
-    return getNumChildren(ACTIVE_PATH_ROOT);
+    int total = 0;
+    for (String requestId : getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT)) {
+      total += getNumChildren(getLastActiveTaskParent(requestId));
+    }
+    return total;
   }
 
   public int getNumScheduledTasks() {
     if (leaderCache.active()) {
       return leaderCache.getNumPendingTasks();
     }
-    return getNumChildren(PENDING_PATH_ROOT);
+    int total = 0;
+    for (String requestId : getChildren(PENDING_PATH_ROOT)) {
+      total += getNumChildren(getPendingForRequestPath(requestId));
+    }
+    return total;
   }
 
   public void saveLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType, SingularityLoadBalancerUpdate lbUpdate) {
@@ -370,7 +381,14 @@ public class TaskManager extends CuratorAsyncManager {
     if (leaderCache.active()) {
       return leaderCache.getActiveTaskIdsAsStrings();
     }
-    return getChildren(ACTIVE_PATH_ROOT);
+
+    List<String> results = new ArrayList<>();
+
+    for (String requestId : getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT)) {
+      results.addAll(getChildren(getLastActiveTaskParent(requestId)));
+    }
+
+    return results;
   }
 
   public List<SingularityTaskId> getActiveTaskIds() {
@@ -386,7 +404,7 @@ public class TaskManager extends CuratorAsyncManager {
       return webCache.getActiveTaskIds();
     }
 
-    return getTaskIds(ACTIVE_PATH_ROOT);
+    return getAsyncNestedChildIdsAsList(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskIdTranscoder);
   }
 
   public List<SingularityTaskId> getCleanupTaskIds() {
@@ -609,12 +627,12 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getUpdatePath(taskId, state));
   }
 
-  public boolean isActiveTask(String taskId) {
+  public boolean isActiveTask(SingularityTaskId taskId) {
     if (leaderCache.active()) {
       return leaderCache.isActiveTask(taskId);
     }
 
-    return exists(getActivePath(taskId));
+    return exists(getLastActiveTaskStatusPath(taskId));
   }
 
   public SingularityCreateResult markUnhealthyKill(SingularityTaskId taskId) {
@@ -669,7 +687,7 @@ public class TaskManager extends CuratorAsyncManager {
     final List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (SingularityTaskId taskId : taskIds) {
-      paths.add(getActivePath(taskId.getId()));
+      paths.add(getLastActiveTaskStatusPath(taskId));
     }
 
     return exists("filterActiveTaskIds", paths, taskIdTranscoder);
@@ -695,7 +713,7 @@ public class TaskManager extends CuratorAsyncManager {
     final Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
 
     for (SingularityTaskId taskId : taskIds) {
-      pathsMap.put(getActivePath(taskId.getId()), taskId);
+      pathsMap.put(getLastActiveTaskStatusPath(taskId), taskId);
     }
 
     return notExists("filterInactiveTaskIds", pathsMap);
@@ -830,14 +848,14 @@ public class TaskManager extends CuratorAsyncManager {
   public void activateLeaderCache() {
     leaderCache.cachePendingTasks(fetchPendingTasks());
     leaderCache.cachePendingTasksToDelete(getPendingTasksMarkedForDeletion());
-    leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
+    leaderCache.cacheActiveTaskIds(getActiveTaskIds(false));
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
     leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
     leaderCache.cacheTaskHistoryUpdates(getAllTaskHistoryUpdates());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
-    return getAsyncChildren(PENDING_PATH_ROOT, pendingTaskTranscoder);
+    return getAsyncNestedChildrenAsList(PENDING_PATH_ROOT, getChildren(PENDING_PATH_ROOT), pendingTaskTranscoder);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
@@ -853,22 +871,26 @@ public class TaskManager extends CuratorAsyncManager {
       return webCache.getPendingTaskIds();
     }
 
-    return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+    return getAsyncNestedChildIdsAsList(PENDING_PATH_ROOT, PENDING_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
-    List<SingularityPendingTaskId> pendingTaskIds = getPendingTaskIds();
-    return pendingTaskIds.stream()
-        .filter(pendingTaskId -> pendingTaskId.getRequestId().equals(requestId))
-        .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
+    return getChildrenAsIds(getPendingForRequestPath(requestId), pendingTaskIdTranscoder);
   }
 
-  public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId) {
-    return getAsync(
-        PENDING_PATH_ROOT,
-        getPendingTaskIdsForRequest(requestId).stream().map(this::getPendingPath).collect(Collectors.toList()),
-        pendingTaskTranscoder
-    );
+  public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId, boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTasks().stream()
+          .filter((p) -> p.getPendingTaskId().getRequestId().equals(requestId))
+          .collect(Collectors.toList());
+    }
+
+    if (useWebCache && webCache.useCachedPendingTasks()) {
+      return webCache.getPendingTasks().stream()
+          .filter((p) -> p.getPendingTaskId().getRequestId().equals(requestId))
+          .collect(Collectors.toList());
+    }
+    return getAsyncChildren(getPendingForRequestPath(requestId), pendingTaskTranscoder);
   }
 
   public List<SingularityPendingTask> getPendingTasks() {
@@ -935,7 +957,7 @@ public class TaskManager extends CuratorAsyncManager {
 
       CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(path, taskTranscoder.toBytes(task)).and();
 
-      transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
+      transaction.create().forPath(getLastActiveTaskStatusPath(task.getTaskId())).and().commit();
 
       leaderCache.putActiveTask(task);
       taskCache.set(path, task);
@@ -991,6 +1013,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   @Timed
   public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
+    leaderCache.deleteActiveTaskId(taskId);
     return delete(getLastActiveTaskStatusPath(taskId));
   }
 
@@ -1081,11 +1104,6 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return result;
-  }
-
-  public void deleteActiveTask(String taskId) {
-    leaderCache.deleteActiveTaskId(taskId);
-    delete(getActivePath(taskId));
   }
 
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {

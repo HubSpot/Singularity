@@ -34,7 +34,7 @@ import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -340,7 +340,7 @@ public class SingularityCleaner {
 
   private void processRequestCleanup(long start, AtomicInteger numTasksKilled, AtomicInteger numScheduledTasksRemoved, SingularityRequestCleanup requestCleanup) {
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestCleanup.getRequestId());
-    final List<SingularityPendingTask> pendingTasks = taskManager.getPendingTasksForRequest(requestCleanup.getRequestId());
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestCleanup.getRequestId());
     final String requestId = requestCleanup.getRequestId();
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
 
@@ -403,9 +403,9 @@ public class SingularityCleaner {
     }
 
     if (killScheduledTasks) {
-      for (SingularityPendingTask matchingTask : Iterables.filter(pendingTasks, SingularityPendingTask.matchingRequest(requestId))) {
-        LOG.debug("Deleting scheduled task {} due to {}", matchingTask, requestCleanup);
-        taskManager.deletePendingTask(matchingTask.getPendingTaskId());
+      for (SingularityPendingTaskId matchingTaskId : pendingTaskIds) {
+        LOG.debug("Deleting scheduled task {} due to {}", matchingTaskId, requestCleanup);
+        taskManager.deletePendingTask(matchingTaskId);
         numScheduledTasksRemoved.getAndIncrement();
       }
     }
@@ -538,7 +538,7 @@ public class SingularityCleaner {
   }
 
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
-    return taskManager.isActiveTask(cleanupTask.getTaskId().getId());
+    return taskManager.isActiveTask(cleanupTask.getTaskId());
   }
 
   private void checkKilledTaskIdRecords() {
@@ -560,7 +560,7 @@ public class SingularityCleaner {
         .forEach((killedTaskIdRecordsForRequest) -> {
           lock.runWithRequestLock(() -> {
             for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecordsForRequest.getValue()) {
-              if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId().getId())) {
+              if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId())) {
                 SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
 
                 LOG.debug("Deleting obsolete {} - {}", killedTaskIdRecord, deleteResult);
@@ -903,7 +903,7 @@ public class SingularityCleaner {
       return false;
     }
     for (String taskId : cleanup.getActiveTaskIds()) {
-      if (taskManager.isActiveTask(taskId)) {
+      if (taskManager.isActiveTask(SingularityTaskId.valueOf(taskId))) {
         LOG.trace("Request still has active tasks, will wait for lb request cleanup");
         return false;
       }
