@@ -473,7 +473,11 @@
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-test</artifactId>
-        <version>${dep.curator.version}</version>
+        <!--
+        Hardcode this to an older version because we're still on ZooKeeper client 3.4.x
+        https://issues.apache.org/jira/browse/CURATOR-428?focusedCommentId=16106765&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-16106765
+        -->
+        <version>2.13.0</version>
         <exclusions>
           <exclusion>
             <groupId>com.google.guava</groupId>
