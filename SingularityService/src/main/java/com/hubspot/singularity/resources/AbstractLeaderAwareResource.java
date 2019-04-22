@@ -94,6 +94,11 @@ public class AbstractLeaderAwareResource {
       throw new WebApplicationException(e, 500);
     }
 
+    // void responses
+    if (clazz.isAssignableFrom(Response.class)) {
+      return (T) response;
+    }
+
     try {
       if (response.getStatusCode() > 399) {
         throw new WebApplicationException(response.getResponseBody(Charsets.UTF_8.toString()), response.getStatusCode());
