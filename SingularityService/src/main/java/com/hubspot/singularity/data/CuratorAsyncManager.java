@@ -354,6 +354,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     for (String child : getChildren(parentPath)) {
       allPaths.add(ZKPaths.makePath(parentPath, child));
     }
+    LOG.info("All paths {}", allPaths);
 
     final List<T> results = new ArrayList<>();
     final CountDownLatch latch = new CountDownLatch(allPaths.size());

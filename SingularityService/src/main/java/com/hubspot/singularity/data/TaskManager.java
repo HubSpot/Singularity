@@ -13,6 +13,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -475,10 +476,6 @@ public class TaskManager extends CuratorAsyncManager {
     return activeTasks;
   }
 
-  public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
-    return getAsyncChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskStatusTranscoder);
-  }
-
   @Timed
   public Optional<SingularityTaskStatusHolder> getLastActiveTaskStatus(SingularityTaskId taskId) {
     return getData(getLastActiveTaskStatusPath(taskId), taskStatusTranscoder);
@@ -535,10 +532,6 @@ public class TaskManager extends CuratorAsyncManager {
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
     return getTaskHistoryUpdates(getAllTaskIds());
-  }
-
-  public int getNumHealthchecks(SingularityTaskId taskId) {
-    return getNumChildren(getHealthcheckParentPath(taskId));
   }
 
   public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
@@ -949,15 +942,29 @@ public class TaskManager extends CuratorAsyncManager {
       msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.<String>absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.absent(), now, serverId, Optional.of(task.getAgentId().getValue())));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.absent()));
+
+    SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(task.getTaskId(), Optional.absent(), now, serverId, Optional.of(task.getAgentId().getValue()));
+
+    String taskStatusParent = getLastActiveTaskParent(task.getTaskId().getRequestId());
+    if (!exists(taskStatusParent)) {
+      try {
+        curator.create().forPath(taskStatusParent);
+      } catch (NodeExistsException nee) {
+        LOG.debug("Node {} already existed", taskStatusParent);
+      }
+    }
 
     try {
       final String path = getTaskPath(task.getTaskId());
 
-      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(path, taskTranscoder.toBytes(task)).and();
+      CuratorTransactionFinal transaction = curator.inTransaction().create()
+          .forPath(path, taskTranscoder.toBytes(task))
+          .and();
 
-      transaction.create().forPath(getLastActiveTaskStatusPath(task.getTaskId())).and().commit();
+      transaction.create()
+          .forPath(getLastActiveTaskStatusPath(task.getTaskId()), taskStatusTranscoder.toBytes(taskStatusHolder))
+          .and().commit();
 
       leaderCache.putActiveTask(task);
       taskCache.set(path, task);
