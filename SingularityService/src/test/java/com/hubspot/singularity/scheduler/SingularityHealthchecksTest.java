@@ -416,7 +416,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).setStartupDelaySeconds(Optional.of(0)).build();
+      HealthcheckOptions options = new HealthcheckOptionsBuilder("/uri").setPortIndex(Optional.of(1)).setStartupDelaySeconds(Optional.of(0)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100"))
           .setHealthcheck(Optional.of(options)), Optional.of(new Resources(1, 64, 3, 0)));
 

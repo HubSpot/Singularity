@@ -28,6 +28,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final TaskManager taskManager;
   private final int maxHealthcheckResponseBodyBytes;
   private final List<Integer> failureStatusCodes;
+  private String healthcheckUri = ""; // For logging purposes only
 
   public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker,
       SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityTask task) {
@@ -42,6 +43,10 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       configuration.getHealthcheckFailureStatusCodes();
 
     startTime = System.currentTimeMillis();
+  }
+
+  public void setHealthcehckUri(String healthcheckUri) {
+    this.healthcheckUri = healthcheckUri;
   }
 
   @Override
@@ -59,9 +64,9 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
 
   @Override
   public void onThrowable(Throwable t) {
-    LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
+    LOG.trace("Exception while making health check for task {} ({})", task.getTaskId(), healthcheckUri, t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())), Optional.of(t));
+    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck (%s) failed due to exception: %s", healthcheckUri, t.getMessage())), Optional.of(t));
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {

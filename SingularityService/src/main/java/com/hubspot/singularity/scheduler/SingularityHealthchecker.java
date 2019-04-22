@@ -278,13 +278,14 @@ public class SingularityHealthchecker {
   }
 
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
     final Optional<String> uri = getHealthcheckUri(task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
 
     if (!uri.isPresent()) {
       saveFailure(handler, "Invalid healthcheck uri or ports not present");
       return;
     }
+    handler.setHealthcehckUri(uri.get());
 
     final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
       task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
