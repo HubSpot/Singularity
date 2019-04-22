@@ -37,7 +37,7 @@ public class CleanOldNodesMigration extends ZkDataMigration {
       for (SingularityRequestGroup requestGroup : requestGroupManager.getRequestGroups(false)) {
         List<String> ids = requestGroup.getRequestIds()
             .stream()
-            .filter((id) -> allIds.contains(id))
+            .filter(allIds::contains)
             .collect(Collectors.toList());
         if (ids.isEmpty()) {
           requestGroupManager.deleteRequestGroup(requestGroup.getId());
