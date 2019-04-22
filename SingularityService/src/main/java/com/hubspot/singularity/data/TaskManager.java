@@ -1161,4 +1161,20 @@ public class TaskManager extends CuratorAsyncManager {
   public SingularityDeleteResult deleteRequestId(String requestId) {
     return delete(getRequestPath(requestId));
   }
+
+  public long getTaskStatusBytes() {
+    return countBytes(getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT));
+  }
+
+  public long getActiveTaskIdBytes() {
+    return countBytes(getChildren(ACTIVE_PATH_ROOT));
+  }
+
+  public long getTaskHistoryIdBytes() {
+    return countBytes(getChildren(HISTORY_PATH_ROOT));
+  }
+
+  private long countBytes(List<String> list) {
+    return list.stream().mapToLong(x -> x.getBytes().length).sum();
+  }
 }
