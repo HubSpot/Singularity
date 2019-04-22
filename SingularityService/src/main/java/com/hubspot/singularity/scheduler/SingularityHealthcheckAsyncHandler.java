@@ -13,10 +13,8 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.Response;
 
-public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<Response> {
+public class SingularityHealthcheckAsyncHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -26,7 +24,6 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTask task;
   private final TaskManager taskManager;
-  private final int maxHealthcheckResponseBodyBytes;
   private final List<Integer> failureStatusCodes;
   private String healthcheckUri = ""; // For logging purposes only
 
@@ -37,7 +34,6 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.newTaskChecker = newTaskChecker;
     this.healthchecker = healthchecker;
     this.task = task;
-    this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
     this.failureStatusCodes = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
       task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()) :
       configuration.getHealthcheckFailureStatusCodes();
@@ -49,22 +45,12 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.healthcheckUri = healthcheckUri;
   }
 
-  @Override
-  public Response onCompleted(Response response) throws Exception {
-    Optional<String> responseBody = Optional.absent();
-
-    if (response.hasResponseBody()) {
-      responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
-    }
-
-    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent(), Optional.<Throwable>absent());
-
-    return response;
+  public void onCompleted(Optional<Integer> statusCode, Optional<String> responseBodyExcerpt) {
+    saveResult(statusCode, responseBodyExcerpt, Optional.<String> absent(), Optional.<Throwable>absent());
   }
 
-  @Override
-  public void onThrowable(Throwable t) {
-    LOG.trace("Exception while making health check for task {} ({})", task.getTaskId(), healthcheckUri, t);
+  public void onFailed(Throwable t) {
+    LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
     saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck (%s) failed due to exception: %s", healthcheckUri, t.getMessage())), Optional.of(t));
   }
