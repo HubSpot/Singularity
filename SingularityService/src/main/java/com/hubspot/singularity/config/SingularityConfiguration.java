@@ -146,6 +146,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
+  private int maxMachineHistoryEntries = 10;
+
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
@@ -692,6 +694,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
     this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  }
+
+  public int getMaxMachineHistoryEntries() {
+    return maxMachineHistoryEntries;
+  }
+
+  public void setMaxMachineHistoryEntries(int maxMachineHistoryEntries) {
+    this.maxMachineHistoryEntries = maxMachineHistoryEntries;
   }
 
   public int getListenerThreadpoolSize() {

@@ -57,6 +57,7 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
     refereshSlavesAndRacks();
     checkDeadSlaves();
     inactiveSlaveManager.cleanInactiveSlavesList(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(configuration.getCleanInactiveHostListEveryHours()));
+    clearOldSlaveHistory();
   }
 
   private void refereshSlavesAndRacks() {
@@ -101,6 +102,12 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
 
 
     LOG.debug("Checked {} dead slaves, deleted {} in {}", deadSlaves.size(), deleted, JavaUtils.duration(start));
+  }
+
+  private void clearOldSlaveHistory() {
+    for (SingularitySlave singularitySlave : slaveManager.getObjects()) {
+      slaveManager.clearOldHistory(singularitySlave.getId());
+    }
   }
 
 }
