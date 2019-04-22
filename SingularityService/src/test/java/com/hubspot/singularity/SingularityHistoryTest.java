@@ -232,6 +232,14 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask task = launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(3), 1, TaskState.TASK_RUNNING);
 
     statusUpdate(task, TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2)));
+    // Make sure the async immediate persist had time to run
+    lock.runWithRequestLock(() -> {
+      try {
+      Thread.sleep(500);
+      } catch (InterruptedException ie) {
+        // keep moving
+      }
+    }, requestId, "wait for task persist to finish");
 
     Assert.assertEquals(0, taskManager.getAllTaskIds().size());
   }

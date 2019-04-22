@@ -59,6 +59,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
       final long start = System.currentTimeMillis();
       final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
+      allTaskIds.sort(SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
 
       AtomicInteger numTotal = new AtomicInteger();
       AtomicInteger numTransferred = new AtomicInteger();
@@ -74,7 +75,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
               .filter((t) -> t.getRequestId().equals(requestId))
               .filter((t) -> !(activeForRequest.contains(t) || lbCleaningTaskIds.contains(t) || isPartOfPendingDeploy(pendingDeploys, t)))
               .forEach((t) -> {
-                if (moveToHistoryOrCheckForPurge(t, transferred.incrementAndGet())) {
+                if (moveToHistoryOrCheckForPurge(t, transferred.getAndIncrement())) {
                   numTransferred.getAndIncrement();
                 }
 
