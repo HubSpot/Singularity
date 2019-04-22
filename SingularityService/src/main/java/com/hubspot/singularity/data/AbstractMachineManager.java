@@ -120,6 +120,17 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public Optional<T> getObject(String objectId) {
+    Optional<T> maybeCached = getObjectFromLeaderCache(objectId);
+    if(!maybeCached.isPresent()) {
+      return getObjectNoCache(objectId);
+    } else {
+      return maybeCached;
+    }
+  }
+
+  protected abstract Optional<T> getObjectFromLeaderCache(String objectId);
+
+  public Optional<T> getObjectNoCache(String objectId) {
     return getData(getObjectPath(objectId), transcoder);
   }
 
