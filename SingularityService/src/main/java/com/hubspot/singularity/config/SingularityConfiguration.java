@@ -247,7 +247,9 @@ public class SingularityConfiguration extends Configuration {
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
 
-  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+
+  private int maxPendingImmediatePersists = 200;
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
 
@@ -293,8 +295,6 @@ public class SingularityConfiguration extends Configuration {
   private int coreThreadpoolSize = 8;
 
   private long threadpoolShutdownDelayInSeconds = 10;
-
-  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 
   @Valid
   @JsonProperty("customExecutor")
@@ -1134,6 +1134,14 @@ public class SingularityConfiguration extends Configuration {
     this.persistHistoryEverySeconds = persistHistoryEverySeconds;
   }
 
+  public int getMaxPendingImmediatePersists() {
+    return maxPendingImmediatePersists;
+  }
+
+  public void setMaxPendingImmediatePersists(int maxPendingImmediatePersists) {
+    this.maxPendingImmediatePersists = maxPendingImmediatePersists;
+  }
+
   public void setS3Configuration(S3Configuration s3Configuration) {
     this.s3Configuration = s3Configuration;
   }
@@ -1229,14 +1237,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheTasksForMillis(long cacheTasksForMillis) {
     this.cacheTasksForMillis = cacheTasksForMillis;
-  }
-
-  public long getTaskPersistAfterStartupBufferMillis() {
-    return taskPersistAfterStartupBufferMillis;
-  }
-
-  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
-    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
   public LDAPConfiguration getLdapConfiguration() {

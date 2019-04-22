@@ -1,10 +1,9 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
@@ -13,10 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -25,10 +21,10 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityTaskHistoryPersister extends SingularityHistoryPersister<SingularityTaskId> {
@@ -38,19 +34,20 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
-  private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
-  private final SingularityExceptionNotifier exceptionNotifier;
+  private final RequestManager requestManager;
+  private final SingularitySchedulerLock lock;
 
   @Inject
-  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager,
-      DeployManager deployManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager,
+                                         DeployManager deployManager, HistoryManager historyManager, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+                                         RequestManager requestManager, SingularitySchedulerLock lock) {
     super(configuration, persisterLock);
 
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
-    this.taskMetadataConfiguration = taskMetadataConfiguration;
-    this.exceptionNotifier = exceptionNotifier;
+    this.requestManager = requestManager;
+    this.lock = lock;
   }
 
   @Override
@@ -61,43 +58,32 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
       LOG.info("Checking inactive task ids for task history persistence");
 
       final long start = System.currentTimeMillis();
-
       final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
+      allTaskIds.sort(SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
 
-      final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
-      final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
-      final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+      AtomicInteger numTotal = new AtomicInteger();
+      AtomicInteger numTransferred = new AtomicInteger();
 
-      int numTotal = 0;
-      int numTransferred = 0;
+      for (String requestId : requestManager.getAllRequestIds()) {
+        lock.runWithRequestLock(() -> {
+          List<SingularityTaskId> activeForRequest = taskManager.getActiveTaskIdsForRequest(requestId);
+          Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
+          List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
 
-      final Multimap<String, SingularityTaskId> eligibleTaskIdByRequestId = TreeMultimap.create(Ordering.natural(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
+          AtomicInteger transferred = new AtomicInteger();
+          allTaskIds.stream()
+              .filter((t) -> t.getRequestId().equals(requestId))
+              .filter((t) -> !(activeForRequest.contains(t) || lbCleaningTaskIds.contains(t) || isPartOfPendingDeploy(pendingDeploys, t)))
+              .forEach((t) -> {
+                if (moveToHistoryOrCheckForPurge(t, transferred.getAndIncrement())) {
+                  numTransferred.getAndIncrement();
+                }
 
-      for (SingularityTaskId taskId : allTaskIds) {
-        if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId)) {
-          continue;
-        }
+                numTotal.getAndIncrement();
+              });
 
-        eligibleTaskIdByRequestId.put(taskId.getRequestId(), taskId);
-      }
 
-      for (Map.Entry<String, Collection<SingularityTaskId>> entry : eligibleTaskIdByRequestId.asMap().entrySet()) {
-        int i = 0;
-        for (SingularityTaskId taskId : entry.getValue()) {
-          final long age = start - taskId.getStartedAt();
-
-          if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
-            LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
-                JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
-            continue;
-          }
-
-          if (moveToHistoryOrCheckForPurge(taskId, i++)) {
-            numTransferred++;
-          }
-
-          numTotal++;
-        }
+        }, requestId, "task history persister");
       }
 
       LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
@@ -131,24 +117,11 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
-      if (!taskHistory.get().getTaskUpdates().isEmpty()) {
-        final long lastUpdateAt = taskHistory.get().getLastTaskUpdate().get().getTimestamp();
-
-        final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdateAt;
-
-        if (timeSinceLastUpdate < taskMetadataConfiguration.getTaskPersistAfterFinishBufferMillis()) {
-          LOG.debug("Not persisting {} yet - lastUpdate only happened {} ago, buffer {}", JavaUtils.durationFromMillis(timeSinceLastUpdate),
-              JavaUtils.durationFromMillis(taskMetadataConfiguration.getTaskPersistAfterFinishBufferMillis()));
-          return false;
-        }
-      }
-
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
       } catch (Throwable t) {
         LOG.warn("Failed to persist task into History for task {}", object, t);
-        exceptionNotifier.notify("Failed to persist task history", t);
         return false;
       }
     } else {

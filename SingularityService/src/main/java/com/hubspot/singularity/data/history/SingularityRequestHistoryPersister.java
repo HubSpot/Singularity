@@ -69,6 +69,10 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
       createTime = newestTimestamp;
     }
 
+    public String getRequestId() {
+      return requestId;
+    }
+
     @Override
     public long getCreateTimestampForCalculatingHistoryAge() {
       return createTime;
