@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
   private final Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder;
+  private final int maxHistoryEntries;
 
   public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
       Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder, Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder) {
@@ -39,6 +41,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
     this.expiringMachineStateTranscoder = expiringMachineStateTranscoder;
+    this.maxHistoryEntries = configuration.getMaxMachineHistoryEntries();
   }
 
   protected abstract String getRoot();
@@ -206,6 +209,16 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     final String historyChildPath = String.format("%s-%s", historyUpdate.getState().name(), historyUpdate.getTimestamp());
 
     return ZKPaths.makePath(getHistoryPath(historyUpdate.getObjectId()), historyChildPath);
+  }
+
+  public void clearOldHistory(String machineId) {
+    List<SingularityMachineStateHistoryUpdate> histories = getHistory(machineId);
+    histories.sort(Comparator.comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp));
+    histories.stream()
+        .skip(maxHistoryEntries)
+        .forEach((history) -> {
+          delete(getHistoryUpdatePath(history));
+        });
   }
 
   private SingularityCreateResult saveHistoryUpdate(SingularityMachineStateHistoryUpdate historyUpdate) {
