@@ -855,7 +855,12 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
-    return getAsyncNestedChildrenAsList(PENDING_PATH_ROOT, getChildren(PENDING_PATH_ROOT), pendingTaskTranscoder);
+    return getAsyncNestedChildrenAsList(
+        PENDING_PATH_ROOT,
+        getChildren(PENDING_PATH_ROOT).stream()
+            .map((p) -> ZKPaths.makePath(PENDING_PATH_ROOT, p))
+            .collect(Collectors.toList()),
+        pendingTaskTranscoder);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
