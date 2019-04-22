@@ -3,6 +3,8 @@ package com.hubspot.singularity.data;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
@@ -17,6 +19,7 @@ import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class RackManager extends AbstractMachineManager<SingularityRack> {
+  private static final Logger LOG = LoggerFactory.getLogger(RackManager.class);
 
   private static final String RACK_ROOT = "/racks";
   private final SingularityLeaderCache leaderCache;
@@ -43,27 +46,38 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
     leaderCache.cacheRacks(getObjectsNoCache(getRoot()));
   }
 
-  public Optional<SingularityRack> getRack(String rackName) {
+  @Override
+  public Optional<SingularityRack> getObjectFromLeaderCache(String rackId) {
     if (leaderCache.active()) {
-      return leaderCache.getRack(rackName);
+      return leaderCache.getRack(rackId);
     }
 
-    return getObject(rackName);
+    return Optional.absent(); // fallback to zk
   }
 
   @Override
   public List<SingularityRack> getObjectsFromLeaderCache() {
-    return leaderCache.getRacks();
+    if (leaderCache.active()) {
+      return leaderCache.getRacks();
+    }
+    return null; // fallback to zk
   }
 
   @Override
-  public void saveObjectToLeaderCache(SingularityRack rack) {
-    leaderCache.putRack(rack);
+  public void saveObjectToLeaderCache(SingularityRack rackId) {
+    if (leaderCache.active()) {
+      leaderCache.putRack(rackId);
+    } else {
+      LOG.info("Asked to save slaves to leader cache when not active");
+    }
   }
 
   @Override
   public void deleteFromLeaderCache(String rackId) {
-    leaderCache.removeRack(rackId);
+    if (leaderCache.active()) {
+      leaderCache.removeRack(rackId);
+    } else {
+      LOG.info("Asked to remove slave from leader cache when not active");
+    }
   }
-
 }
