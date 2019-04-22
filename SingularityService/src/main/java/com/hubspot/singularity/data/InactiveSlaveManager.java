@@ -4,8 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.data.Stat;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -39,5 +41,14 @@ public class InactiveSlaveManager extends CuratorManager {
 
   private String pathOf(String host) {
     return String.format("%s/%s", ROOT_PATH, host);
+  }
+
+  public void cleanInactiveSlavesList(long thresholdTime) {
+    for (String host : getInactiveSlaves()) {
+      Optional<Stat> stat = checkExists(pathOf(host));
+      if (stat.isPresent() && stat.get().getMtime() < thresholdTime) {
+        delete(pathOf(host));
+      }
+    }
   }
 }

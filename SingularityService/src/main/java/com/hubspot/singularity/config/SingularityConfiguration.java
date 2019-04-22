@@ -251,6 +251,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
 
+  private long cleanInactiveHostListEveryHours = 24;
+
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
@@ -1217,6 +1219,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
     this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
+  }
+
+  public long getCleanInactiveHostListEveryHours() {
+    return cleanInactiveHostListEveryHours;
+  }
+
+  public void setCleanInactiveHostListEveryHours(long cleanInactiveHostListEveryHours) {
+    this.cleanInactiveHostListEveryHours = cleanInactiveHostListEveryHours;
   }
 
   public long getCacheTasksForMillis() {
