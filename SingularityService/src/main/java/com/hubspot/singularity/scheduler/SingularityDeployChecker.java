@@ -134,7 +134,6 @@ public class SingularityDeployChecker {
     final Optional<SingularityDeploy> deploy = Optional.fromNullable(deployKeyToDeploy.get(deployKey));
 
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
-    final Optional<SingularityRequestDeployState> currentActiveDeploy = deployManager.getRequestDeployState(deployKey.getRequestId());
     if (!(maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.FINISHED)
         && !(configuration.isAllowDeployOfPausedRequests() && maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.PAUSED)
         && !SingularityRequestWithState.isActive(maybeRequestWithState)) {
@@ -144,7 +143,7 @@ public class SingularityDeployChecker {
         cancelLoadBalancer(pendingDeploy, SingularityDeployFailure.deployRemoved());
       }
 
-      failPendingDeployDueToState(pendingDeploy, maybeRequestWithState, deploy, currentActiveDeploy);
+      failPendingDeployDueToState(pendingDeploy, maybeRequestWithState, deploy);
       return;
     }
 
@@ -188,7 +187,7 @@ public class SingularityDeployChecker {
         if (!(request.getRequestType() == RequestType.RUN_ONCE)) {
           deleteObsoletePendingTasks(pendingDeploy);
         }
-        finishDeploy(requestWithState, deploy, pendingDeploy, allOtherMatchingTasks, deployResult, currentActiveDeploy);
+        finishDeploy(requestWithState, deploy, pendingDeploy, allOtherMatchingTasks, deployResult);
         return;
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
@@ -202,7 +201,7 @@ public class SingularityDeployChecker {
 
     // success case is handled, handle failure cases:
     saveNewDeployState(pendingDeployMarker, Optional.<SingularityDeployMarker> absent());
-    finishDeploy(requestWithState, deploy, pendingDeploy, deployMatchingTasks, deployResult, currentActiveDeploy);
+    finishDeploy(requestWithState, deploy, pendingDeploy, deployMatchingTasks, deployResult);
   }
 
   private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
@@ -277,7 +276,7 @@ public class SingularityDeployChecker {
   }
 
   private void finishDeploy(SingularityRequestWithState requestWithState, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy, Iterable<SingularityTaskId> tasksToKill,
-    SingularityDeployResult deployResult, Optional<SingularityRequestDeployState> previousActiveDeploy) {
+    SingularityDeployResult deployResult) {
     SingularityRequest request = requestWithState.getRequest();
 
     if (!request.isOneOff() && !(request.getRequestType() == RequestType.RUN_ONCE)) {
@@ -415,9 +414,6 @@ public class SingularityDeployChecker {
     removePendingDeploy(pendingDeploy);
 
     if (configuration.getDatabaseConfiguration().isPresent()) {
-      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
-          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
-          pendingDeploy.getDeployMarker().getDeployId();
       persisterSemaphore.call(() ->
           CompletableFuture.runAsync(() ->
                   lock.runWithRequestLock(() -> {
@@ -448,7 +444,7 @@ public class SingularityDeployChecker {
                       "immediate-task-history-persist"),
               persisterExecutor)
       ).exceptionally((t) -> {
-        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
+        LOG.error("Could not immediately persist deploy for request {}, poller will retry", request.getId(), t);
         return null;
       });
     }
@@ -483,7 +479,7 @@ public class SingularityDeployChecker {
     deployManager.deletePendingDeploy(pendingDeploy.getDeployMarker().getRequestId());
   }
 
-  private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, Optional<SingularityRequestWithState> maybeRequestWithState, Optional<SingularityDeploy> deploy, Optional<SingularityRequestDeployState> currentActiveDeploy) {
+  private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, Optional<SingularityRequestWithState> maybeRequestWithState, Optional<SingularityDeploy> deploy) {
     SingularityDeployResult deployResult = new SingularityDeployResult(DeployState.FAILED, Optional.of(String.format("Request in state %s is not deployable", SingularityRequestWithState.getRequestState(maybeRequestWithState))), Optional.<SingularityLoadBalancerUpdate>absent());
     if (!maybeRequestWithState.isPresent()) {
       deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
@@ -492,7 +488,7 @@ public class SingularityDeployChecker {
     }
 
     saveNewDeployState(pendingDeploy.getDeployMarker(), Optional.<SingularityDeployMarker> absent());
-    finishDeploy(maybeRequestWithState.get(), deploy, pendingDeploy, Collections.<SingularityTaskId>emptyList(), deployResult, currentActiveDeploy);
+    finishDeploy(maybeRequestWithState.get(), deploy, pendingDeploy, Collections.<SingularityTaskId>emptyList(), deployResult);
   }
 
   private long getAllowedMillis(SingularityDeploy deploy) {
