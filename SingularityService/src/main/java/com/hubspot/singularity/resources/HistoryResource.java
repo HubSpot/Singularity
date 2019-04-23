@@ -340,7 +340,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, true);
+    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, false);
   }
 
   @GET
@@ -353,7 +353,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId, true);
+    final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId, false);
     final int limitCount = getLimitCount(count);
     final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
