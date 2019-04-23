@@ -414,27 +414,27 @@ public class SingularityDeployChecker {
 
     removePendingDeploy(pendingDeploy);
 
-    if (configuration.getDatabaseConfiguration().isPresent()) {
-      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
-          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
-          pendingDeploy.getDeployMarker().getDeployId();
-      persisterSemaphore.call(() ->
-          CompletableFuture.runAsync(() ->
-                  lock.runWithRequestLock(() -> {
-                        Optional<SingularityDeployHistory> maybeDeployHistory = deployManager.getDeployHistory(request.getId(), deployIdToPersist, true);
-                        if (maybeDeployHistory.isPresent()) {
-                          historyManager.saveDeployHistory(maybeDeployHistory.get());
-                          deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(maybeDeployHistory.get().getDeployMarker()));
-                        }
-                      },
-                      request.getId(),
-                      "immediate-task-history-persist"),
-              persisterExecutor)
-      ).exceptionally((t) -> {
-        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
-        return null;
-      });
-    }
+//    if (configuration.getDatabaseConfiguration().isPresent()) {
+//      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
+//          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
+//          pendingDeploy.getDeployMarker().getDeployId();
+//      persisterSemaphore.call(() ->
+//          CompletableFuture.runAsync(() ->
+//                  lock.runWithRequestLock(() -> {
+//                        Optional<SingularityDeployHistory> maybeDeployHistory = deployManager.getDeployHistory(request.getId(), deployIdToPersist, true);
+//                        if (maybeDeployHistory.isPresent()) {
+//                          historyManager.saveDeployHistory(maybeDeployHistory.get());
+//                          deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(maybeDeployHistory.get().getDeployMarker()));
+//                        }
+//                      },
+//                      request.getId(),
+//                      "immediate-task-history-persist"),
+//              persisterExecutor)
+//      ).exceptionally((t) -> {
+//        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
+//        return null;
+//      });
+//    }
   }
 
   private PendingType canceledOr(DeployState deployState, PendingType pendingType) {
