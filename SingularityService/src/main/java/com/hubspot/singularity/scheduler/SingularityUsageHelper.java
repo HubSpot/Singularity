@@ -41,7 +41,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton

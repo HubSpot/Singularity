@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {

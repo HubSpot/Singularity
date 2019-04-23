@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 
 public class SingularityUsageCleanerPoller extends SingularityLeaderOnlyPoller {
 

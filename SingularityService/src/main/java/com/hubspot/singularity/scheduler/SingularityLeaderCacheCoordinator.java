@@ -7,7 +7,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 
 @Singleton
 public class SingularityLeaderCacheCoordinator {

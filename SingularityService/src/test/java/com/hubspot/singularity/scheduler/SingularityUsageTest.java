@@ -23,7 +23,7 @@ import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
