@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -414,27 +415,61 @@ public class SingularityDeployChecker {
 
     removePendingDeploy(pendingDeploy);
 
-//    if (configuration.getDatabaseConfiguration().isPresent()) {
-//      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
-//          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
-//          pendingDeploy.getDeployMarker().getDeployId();
-//      persisterSemaphore.call(() ->
-//          CompletableFuture.runAsync(() ->
-//                  lock.runWithRequestLock(() -> {
-//                        Optional<SingularityDeployHistory> maybeDeployHistory = deployManager.getDeployHistory(request.getId(), deployIdToPersist, true);
-//                        if (maybeDeployHistory.isPresent()) {
-//                          historyManager.saveDeployHistory(maybeDeployHistory.get());
-//                          deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(maybeDeployHistory.get().getDeployMarker()));
-//                        }
-//                      },
-//                      request.getId(),
-//                      "immediate-task-history-persist"),
-//              persisterExecutor)
-//      ).exceptionally((t) -> {
-//        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
-//        return null;
-//      });
-//    }
+    if (configuration.getDatabaseConfiguration().isPresent()) {
+      String deployIdToPersist = deployResult.getDeployState() == DeployState.SUCCEEDED && previousActiveDeploy.isPresent() && previousActiveDeploy.get().getActiveDeploy().isPresent() ?
+          previousActiveDeploy.get().getActiveDeploy().get().getDeployId() :
+          pendingDeploy.getDeployMarker().getDeployId();
+      persisterSemaphore.call(() ->
+          CompletableFuture.runAsync(() ->
+                  lock.runWithRequestLock(() -> {
+                    String requestId = request.getId();
+                        Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
+
+                        if (!deployState.isPresent()) {
+                          LOG.warn("No request deploy state for {}", requestId);
+                          return;
+                        }
+
+                        List<SingularityDeployHistory> deployHistories = deployManager.getDeployIdsFor(request.getId())
+                            .stream()
+                            .map((deployKey) -> deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .sorted(Comparator.comparingLong(SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge).reversed())
+                            .collect(Collectors.toList());
+                        for (SingularityDeployHistory deployHistory : deployHistories) {
+                          if (shouldTransferDeploy(requestId, deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
+                            LOG.info("Immediately persisting deploy {} for request {}", deployHistory.getDeployMarker().getDeployId(), requestId);
+                            historyManager.saveDeployHistory(deployHistory);
+                            deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()));
+                          }
+                        }
+                      },
+                      request.getId(),
+                      "immediate-task-history-persist"),
+              persisterExecutor)
+      ).exceptionally((t) -> {
+        LOG.error("Could not immediately persist deploy {} for request {}, poller will retry", deployIdToPersist, request.getId(), t);
+        return null;
+      });
+    }
+  }
+
+  private boolean shouldTransferDeploy(String requestId, SingularityRequestDeployState deployState, String deployId) {
+    if (deployState == null) {
+      LOG.warn("Missing request deploy state for request {}. deploy {}", requestId, deployId);
+      return true;
+    }
+
+    if (deployState.getActiveDeploy().isPresent() && deployState.getActiveDeploy().get().getDeployId().equals(deployId)) {
+      return false;
+    }
+
+    if (deployState.getPendingDeploy().isPresent() && deployState.getPendingDeploy().get().getDeployId().equals(deployId)) {
+      return false;
+    }
+
+    return true;
   }
 
   private PendingType canceledOr(DeployState deployState, PendingType pendingType) {
