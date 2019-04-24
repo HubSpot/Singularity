@@ -19,7 +19,6 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.ning.http.client.AsyncHttpClient;
 
@@ -28,17 +27,15 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   protected final RequestManager requestManager;
   protected final DeployManager deployManager;
   protected final RequestHelper requestHelper;
-  private final RequestHistoryHelper requestHistoryHelper;
   protected final SingularityValidator validator;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
   public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
-                                 AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper, RequestHistoryHelper requestHistoryHelper) {
+                                 AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.requestHelper = requestHelper;
-    this.requestHistoryHelper = requestHistoryHelper;
     this.validator = validator;
     this.authorizationHelper = authorizationHelper;
   }
@@ -78,9 +75,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
     return new SingularityRequestParent(newRequestData.or(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
         requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
-        requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getTaskIdsByStatusForRequest(requestId), requestHistoryHelper.getLastHistory(requestId),
-        //requestHelper.getMostRecentTask(requestWithState.getRequest()));
-        Optional.absent());
+        requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getTaskIdsByStatusForRequest(requestId));
   }
 
   protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {

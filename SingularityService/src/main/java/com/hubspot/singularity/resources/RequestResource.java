@@ -79,7 +79,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
@@ -121,9 +120,9 @@ public class RequestResource extends AbstractRequestResource {
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
                          RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper,
                          RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
-    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
+    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.rebalancingHelper = rebalancingHelper;
@@ -797,6 +796,21 @@ public class RequestResource extends AbstractRequestResource {
 
   public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
     return fillEntireRequest(fetchRequestWithState(requestId, false, user));
+  }
+
+  @GET
+  @Path("/request/{requestId}/simple")
+  @Operation(
+      summary = "Retrieve a specific Request by ID without additional deploy/task information",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestWithState getRequestSimple(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
   }
 
   @DELETE

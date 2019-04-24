@@ -35,7 +35,6 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -60,7 +59,6 @@ public class RequestManager extends CuratorAsyncManager {
 
   private final SingularityWebCache webCache;
   private final SingularityLeaderCache leaderCache;
-  private final HistoryManager historyManager;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -90,7 +88,7 @@ public class RequestManager extends CuratorAsyncManager {
                         Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
                         Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
                         Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-                        SingularityWebCache webCache, SingularityLeaderCache leaderCache, HistoryManager historyManager) {
+                        SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -108,7 +106,6 @@ public class RequestManager extends CuratorAsyncManager {
 
     this.leaderCache = leaderCache;
     this.webCache = webCache;
-    this.historyManager = historyManager;
   }
 
   private String getRequestPath(String requestId) {
@@ -267,16 +264,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public void saveHistory(SingularityRequestHistory history) {
-    if (configuration.getDatabaseConfiguration().isPresent()) { // Only run this if the persist will actually do something
-      try {
-        historyManager.saveRequestHistoryUpdate(history);
-      } catch (Throwable t) {
-        LOG.warn("Could not save request history to mysql, saving to zk ({})", t.getMessage());
-        saveHistoryToZk(history);
-      }
-    } else {
-      saveHistoryToZk(history);
-    }
+    saveHistoryToZk(history);
   }
 
   private SingularityCreateResult saveHistoryToZk(SingularityRequestHistory history) {
