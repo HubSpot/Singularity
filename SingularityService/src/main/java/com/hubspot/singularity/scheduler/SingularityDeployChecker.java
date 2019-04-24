@@ -83,14 +83,10 @@ public class SingularityDeployChecker {
   private final LoadBalancerClient lbClient;
   private final SingularitySchedulerLock lock;
   private final HistoryManager historyManager;
-  private final AsyncSemaphore<Void> persisterSemaphore;
-  private final ExecutorService persisterExecutor;
 
   @Inject
   public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, LoadBalancerClient lbClient, RequestManager requestManager, TaskManager taskManager,
-                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, HistoryManager historyManager,
-                                  @Named(SingularityHistoryModule.PERSISTER_SEMAPHORE) AsyncSemaphore<Void> persisterSemaphore,
-                                  @Named(SingularityHistoryModule.PERSISTER_EXECUTOR) ExecutorService persisterExecutor) {
+                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, HistoryManager historyManager) {
     this.configuration = configuration;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -99,8 +95,6 @@ public class SingularityDeployChecker {
     this.taskManager = taskManager;
     this.lock = lock;
     this.historyManager = historyManager;
-    this.persisterSemaphore = persisterSemaphore;
-    this.persisterExecutor = persisterExecutor;
   }
 
   public int checkDeploys() {
@@ -413,42 +407,6 @@ public class SingularityDeployChecker {
     }
 
     removePendingDeploy(pendingDeploy);
-
-    if (configuration.getDatabaseConfiguration().isPresent()) {
-      persisterSemaphore.call(() ->
-          CompletableFuture.runAsync(() ->
-                  lock.runWithRequestLock(() -> {
-                    String requestId = request.getId();
-                        Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
-
-                        if (!deployState.isPresent()) {
-                          LOG.warn("No request deploy state for {}", requestId);
-                          return;
-                        }
-
-                        List<SingularityDeployHistory> deployHistories = deployManager.getDeployIdsFor(request.getId())
-                            .stream()
-                            .map((deployKey) -> deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true))
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .sorted(Comparator.comparingLong(SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge).reversed())
-                            .collect(Collectors.toList());
-                        for (SingularityDeployHistory deployHistory : deployHistories) {
-                          if (shouldTransferDeploy(requestId, deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
-                            LOG.info("Immediately persisting deploy {} for request {}", deployHistory.getDeployMarker().getDeployId(), requestId);
-                            historyManager.saveDeployHistory(deployHistory);
-                            deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()));
-                          }
-                        }
-                      },
-                      request.getId(),
-                      "immediate-task-history-persist"),
-              persisterExecutor)
-      ).exceptionally((t) -> {
-        LOG.error("Could not immediately persist deploy for request {}, poller will retry", request.getId(), t);
-        return null;
-      });
-    }
   }
 
   private boolean shouldTransferDeploy(String requestId, SingularityRequestDeployState deployState, String deployId) {
