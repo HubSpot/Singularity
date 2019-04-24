@@ -65,6 +65,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularityShellCommand;
@@ -167,6 +168,7 @@ public class SingularityClient {
   private static final String REQUEST_GROUP_FORMAT = REQUEST_GROUPS_FORMAT + "/group/%s";
 
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
+  private static final String REQUEST_GET_SIMPLE_FORMAT = REQUESTS_FORMAT + "/request/%s/simple";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_BY_RUN_ID_FORMAT = REQUEST_GET_FORMAT + "/run/%s";
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
@@ -508,6 +510,12 @@ public class SingularityClient {
         return httpClient.execute(request.build());
       });
     } catch (ExecutionException | RetryException exn) {
+      if (exn instanceof RetryException) {
+        RetryException retryExn = (RetryException) exn;
+        LOG.error("Failed request to Singularity", retryExn.getLastFailedAttempt().getExceptionCause());
+      } else {
+        LOG.error("Failed request to Singularity", exn);
+      }
       throw new SingularityClientException("Failed request to Singularity", exn);
     }
   }
@@ -574,6 +582,13 @@ public class SingularityClient {
     final Function<String, String> singularityApiRequestUri = (host) -> String.format(REQUEST_GET_FORMAT, getApiBase(host), requestId);
 
     return getSingle(singularityApiRequestUri, "request", requestId, SingularityRequestParent.class);
+  }
+
+  // Fetch only the request + state, no additional deploy/task data
+  public Optional<SingularityRequestWithState> getSingularityRequestSimple(String requestId) {
+    final Function<String, String> singularityApiRequestUri = (host) -> String.format(REQUEST_GET_SIMPLE_FORMAT, getApiBase(host), requestId);
+
+    return getSingle(singularityApiRequestUri, "request-simple", requestId, SingularityRequestWithState.class);
   }
 
   public Optional<SingularityTaskId> getTaskByRunIdForRequest(String requestId, String runId) {

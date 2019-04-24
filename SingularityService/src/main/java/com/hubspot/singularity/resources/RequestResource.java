@@ -801,6 +801,21 @@ public class RequestResource extends AbstractRequestResource {
     return fillEntireRequest(fetchRequestWithState(requestId, false, user));
   }
 
+  @GET
+  @Path("/request/{requestId}/simple")
+  @Operation(
+      summary = "Retrieve a specific Request by ID without additional deploy/task information",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestWithState getRequestSimple(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
+  }
+
   @DELETE
   @Path("/request/{requestId}")
   @Consumes({ MediaType.APPLICATION_JSON })
