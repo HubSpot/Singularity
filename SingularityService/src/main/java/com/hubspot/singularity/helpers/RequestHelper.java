@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -198,7 +197,6 @@ public class RequestHelper {
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit,
                                                                      List<RequestType> requestTypeFilters) {
-    final Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
     final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requests.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toList()));
     final Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory;
 
@@ -244,8 +242,7 @@ public class RequestHelper {
             lastActionTime = getLastActionTimeForRequest(
                 request.getRequest(),
                 requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.absent()),
-                Optional.fromNullable(deployStates.get(request.getRequest().getId())),
-                mostRecentTasks.computeIfAbsent(request.getRequest().getId(), (id) -> getMostRecentTask(request.getRequest()))
+                Optional.fromNullable(deployStates.get(request.getRequest().getId()))
             );
           } else {
             // To save on zk calls, if not returning all data, use the most recent deploy timestamps
@@ -280,13 +277,11 @@ public class RequestHelper {
                 Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
                 Optional.absent(), Optional.absent(), Optional.absent(), // full deploy data not provided
                 maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(),
-                maybeTaskIdsByStatus.join(),
-                requestIdToLastHistory.getOrDefault(requestWithState.getRequest().getId(), Optional.absent()),
-                mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())));
+                maybeTaskIdsByStatus.join());
           } else {
             return new SingularityRequestParent(
                 requestWithState.getRequest(), requestWithState.getState(), Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
-                Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+                Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
           }
         })
         .collect(Collectors.toList());
@@ -375,7 +370,7 @@ public class RequestHelper {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
   }
 
-  private long getLastActionTimeForRequest(SingularityRequest request, Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState, Optional<SingularityTaskIdHistory> mostRecentTask) {
+  private long getLastActionTimeForRequest(SingularityRequest request, Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
     long lastUpdate = 0;
     if (lastHistory.isPresent()) {
       lastUpdate = lastHistory.get().getCreatedAt();
@@ -387,10 +382,6 @@ public class RequestHelper {
       if (deployState.get().getPendingDeploy().isPresent()) {
         lastUpdate = Math.max(lastUpdate, deployState.get().getPendingDeploy().get().getTimestamp());
       }
-    }
-    // Only consider most recent task time for non-long-running
-    if (mostRecentTask.isPresent() && !request.getRequestType().isLongRunning()) {
-      lastUpdate = Math.max(lastUpdate, mostRecentTask.get().getUpdatedAt());
     }
     return lastUpdate;
   }
