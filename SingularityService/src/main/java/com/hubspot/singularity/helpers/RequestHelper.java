@@ -31,10 +31,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskHistoryQuery;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
@@ -300,28 +297,6 @@ public class RequestHelper {
     }
 
     return getTaskIdsByStatusForRequest(requestWithState.get());
-  }
-
-  public Optional<SingularityTaskIdHistory> getMostRecentTask(SingularityRequest request) {
-    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(request.getId());
-    if (!activeTaskIds.isEmpty()) {
-      SingularityTaskId lastTaskId = activeTaskIds.get(0);
-      List<SingularityTaskHistoryUpdate> historyUpdates = taskManager.getTaskHistoryUpdates(lastTaskId);
-      if (!historyUpdates.isEmpty()) {
-        SingularityTaskHistoryUpdate lastUpdate = historyUpdates.get(historyUpdates.size() - 1);
-        return Optional.of(new SingularityTaskIdHistory(
-            lastTaskId,
-            lastUpdate.getTimestamp(),
-            Optional.of(lastUpdate.getTaskState()),
-            Optional.absent() // runId not currently provided here, grabbing the full task data for this is a more expensive call
-        ));
-      }
-    }
-    List<SingularityTaskIdHistory> maybeRecentTasks = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(request.getId()), 0 , 1);
-    if (!maybeRecentTasks.isEmpty()) {
-      return Optional.of(maybeRecentTasks.get(0));
-    }
-    return Optional.absent();
   }
 
   private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
