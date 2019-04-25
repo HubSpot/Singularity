@@ -30,6 +30,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
   @Inject
   public TaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, RequestManager requestManager, SingularityConfiguration configuration) {
+    super(configuration.getDatabaseConfiguration().isPresent());
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.requestManager = requestManager;
@@ -129,8 +130,13 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   @Override
-  protected Optional<Integer> getTotalCount(SingularityTaskHistoryQuery query) {
-    final int numFromZk = Collections2.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()).size();
+  protected Optional<Integer> getTotalCount(SingularityTaskHistoryQuery query, boolean canSkipZk) {
+    final int numFromZk;
+    if (sqlEnabled && canSkipZk) {
+      numFromZk = 0;
+    } else {
+      numFromZk = Collections2.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()).size();
+    }
     final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
         query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter());
 

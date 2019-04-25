@@ -40,10 +40,8 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -173,7 +171,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
-    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
+    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, true);
   }
 
   @GET
@@ -189,10 +187,10 @@ public class HistoryResource extends AbstractHistoryResource {
 
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
 
-    Optional<Integer> dataCount = deployTaskHistoryHelper.getBlendedHistoryCount(key);
+    Optional<Integer> dataCount = deployTaskHistoryHelper.getBlendedHistoryCount(key, true);
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-    final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
+    final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, true);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -225,7 +223,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter,
-        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, true);
   }
 
   @GET
@@ -251,7 +249,7 @@ public class HistoryResource extends AbstractHistoryResource {
       authorizationHelper.checkAdminAuthorization(user);
     }
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection));
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), true);
     final int limitCount = getLimitCount(count);
     final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
@@ -282,7 +280,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter,
-        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, true);
   }
 
   @GET
@@ -304,7 +302,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection));
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), true);
     final int limitCount = getLimitCount(count);
     final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
@@ -342,7 +340,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
+    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, false);
   }
 
   @GET
@@ -355,7 +353,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId);
+    final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId, false);
     final int limitCount = getLimitCount(count);
     final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
@@ -376,7 +374,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
+    return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, true);
   }
 
   @GET
@@ -389,10 +387,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(requestId);
+    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(requestId, true);
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-    final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
+    final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, true);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -427,7 +425,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
       Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
-      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount);
+      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount, true);
     Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
