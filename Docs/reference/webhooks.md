@@ -4,6 +4,23 @@ Singularity provides webhooks for changes to the three core types of objects in 
 
 Webhooks are managed via the [API](api.html) and a separate webhook should be added separately in order to receive updates about all three object types.
 
+### SNS Topic Updates
+
+By default, Singularity will use it's own internal queue of webhooks backed by zookeeper. If you would like to save load on zookeeper or have more flexibility in the consumption of task/deploy/request updates, you can instead configure Singularity to produce messages to SNS. In the configuration yaml, you can specify:
+
+```yaml
+webhookQueue:
+  queueType: SNS
+  awsAccessKey: {my key}
+  awsSecretKey: {my secret}
+  snsTopics:
+    TASK: singularity-task-updates
+    DEPLOY: singularity-deploy-updates
+    REQUEST: singularity-request-updates
+```
+
+This will cause Singularity to create these topics if they do not exist, and publish messages to SNS rather than sending its own webhooks. The content of these messages still follows the same format outlined below.
+
 ### Adding a Webhook
 
 In order to create a new Webhook, post the json for the [SingularityWebhook](api.html) to the [webhook endpoint](api.html).

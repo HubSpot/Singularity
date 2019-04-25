@@ -19,19 +19,19 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class SingularityEventController implements SingularityEventListener {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityEventController.class);
 
-  private final Set<SingularityEventListener> eventListeners;
+  private final Set<SingularityEventSender> eventListeners;
   private final ListeningExecutorService listenerExecutorService;
   private final boolean waitForListeners;
 
   @Inject
-  SingularityEventController(final Set<SingularityEventListener> eventListeners,
+  SingularityEventController(final Set<SingularityEventSender> eventListeners,
                              final SingularityConfiguration configuration,
                              final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory) {
     this.eventListeners = ImmutableSet.copyOf(checkNotNull(eventListeners, "eventListeners is null"));
@@ -43,7 +43,7 @@ public class SingularityEventController implements SingularityEventListener {
   public void requestHistoryEvent(final SingularityRequestHistory singularityRequestHistory) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {
@@ -57,14 +57,14 @@ public class SingularityEventController implements SingularityEventListener {
   }
 
   @Override
-  public void taskHistoryUpdateEvent(final SingularityTaskHistoryUpdate singularityTaskHistoryUpdate) {
+  public void taskHistoryUpdateEvent(final SingularityTaskWebhook singularityTaskWebhook) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {
-          eventListener.taskHistoryUpdateEvent(singularityTaskHistoryUpdate);
+          eventListener.taskWebhookEvent(singularityTaskWebhook);
           return null;
         }
       }));
@@ -78,7 +78,7 @@ public class SingularityEventController implements SingularityEventListener {
   public void deployHistoryEvent(final SingularityDeployUpdate singularityDeployUpdate) {
     ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
 
-    for (final SingularityEventListener eventListener : eventListeners) {
+    for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(listenerExecutorService.submit(new Callable<Void>() {
         @Override
         public Void call() {

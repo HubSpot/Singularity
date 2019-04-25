@@ -56,6 +56,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -583,7 +584,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   @Timed
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate, boolean overwriteExisting) {
-    singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
+    Optional<SingularityTask> task = getTask(taskHistoryUpdate.getTaskId());
+    if (task.isPresent()) {
+      singularityEventListener.taskHistoryUpdateEvent(new SingularityTaskWebhook(task.get(), taskHistoryUpdate));
+    }
 
     if (overwriteExisting) {
       Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
@@ -612,7 +616,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityTaskHistoryUpdate> previousStateUpdate) {
     if (previousStateUpdate.isPresent()) {
-      singularityEventListener.taskHistoryUpdateEvent(previousStateUpdate.get());
+      Optional<SingularityTask> task = getTask(previousStateUpdate.get().getTaskId());
+      if (task.isPresent()) {
+        singularityEventListener.taskHistoryUpdateEvent(new SingularityTaskWebhook(task.get(), previousStateUpdate.get()));
+      }
     }
     if (leaderCache.active()) {
       leaderCache.deleteTaskHistoryUpdate(taskId, state);

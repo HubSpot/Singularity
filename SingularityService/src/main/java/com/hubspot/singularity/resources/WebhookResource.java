@@ -57,7 +57,7 @@ public class WebhookResource {
   @Operation(summary = "Retrieve a list of active webhooks.")
   public List<SingularityWebhook> getActiveWebhooks(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
-    return webhookManager.getActiveWebhooks();
+    return webhookManager.getActiveWebhooksUncached();
   }
 
   @GET

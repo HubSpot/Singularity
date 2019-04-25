@@ -4,10 +4,10 @@ import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
 
-public interface SingularityEventListener {
+public interface SingularityEventSender {
   void requestHistoryEvent(SingularityRequestHistory singularityRequestHistory);
 
-  void taskHistoryUpdateEvent(SingularityTaskWebhook singularityTaskWebhook);
+  void taskWebhookEvent(SingularityTaskWebhook taskWebhook);
 
   void deployHistoryEvent(SingularityDeployUpdate singularityDeployUpdate);
 }
