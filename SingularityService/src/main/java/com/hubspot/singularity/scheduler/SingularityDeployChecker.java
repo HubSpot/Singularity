@@ -611,13 +611,13 @@ public class SingularityDeployChecker {
       return checkCanMoveToNextDeployStep(request, deploy, pendingDeploy, updatePendingDeployRequest);
     }
 
-    final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(request, deploy, deployActiveTasks, true);
+    if (request.getRequestType().equals(RequestType.WORKER) && deployHealth.equals(DeployHealth.UNHEALTHY)) {
+      return failUnhealthyDeploy(request, pendingDeploy, deploy, deployActiveTasks);
+    }
 
+    final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
     if (deployActiveTasks.size() < deployProgress.getTargetActiveInstances()) {
-      if (deployHealth.equals(DeployHealth.UNHEALTHY)) {
-        return failUnhealthyDeploy(request, pendingDeploy, deploy, deployActiveTasks);
-      }
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
       return checkOverdue(request, deploy, pendingDeploy, deployActiveTasks, isDeployOverdue);
     }
