@@ -88,7 +88,7 @@ public class SingularitySlaveAndRackManager {
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
-    final MachineState currentSlaveState = slaveManager.getSlave(slaveId).get().getCurrentState().getState();
+    final MachineState currentSlaveState = slaveManager.getObject(slaveId).get().getCurrentState().getState();
 
     if (currentSlaveState == MachineState.FROZEN) {
       return SlaveMatchState.SLAVE_FROZEN;
@@ -98,7 +98,7 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
-    final MachineState currentRackState = rackManager.getRack(rackId).get().getCurrentState().getState();
+    final MachineState currentRackState = rackManager.getObject(rackId).get().getCurrentState().getState();
 
     if (currentRackState == MachineState.FROZEN) {
       return SlaveMatchState.RACK_FROZEN;
@@ -308,7 +308,7 @@ public class SingularitySlaveAndRackManager {
     if (!taskRequest.getRequest().getSlaveAttributeMinimums().isPresent()) {
       return true;
     }
-    Map<String, String> offerAttributes = slaveManager.getSlave(offerHolder.getSlaveId()).get().getAttributes();
+    Map<String, String> offerAttributes = slaveManager.getObject(offerHolder.getSlaveId()).get().getAttributes();
 
     Integer numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     Integer numActiveInstances = activeTaskIdsForRequest.size();
@@ -537,7 +537,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
-    Optional<SingularitySlave> slave = slaveManager.getSlave(slaveId);
+    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (!slave.isPresent()) {
       final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);

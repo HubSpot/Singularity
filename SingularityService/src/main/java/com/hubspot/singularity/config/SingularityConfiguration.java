@@ -146,6 +146,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
+  private int maxMachineHistoryEntries = 10;
+
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
@@ -247,9 +249,13 @@ public class SingularityConfiguration extends Configuration {
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
 
-  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+
+  private int maxPendingImmediatePersists = 200;
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
+  private long cleanInactiveHostListEveryHours = 24;
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
@@ -294,8 +300,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long threadpoolShutdownDelayInSeconds = 10;
 
-  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
-
   @Valid
   @JsonProperty("customExecutor")
   @NotNull
@@ -318,6 +322,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("webhookAuth")
   @Valid
   private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
+
+  @JsonProperty("webhookQueue")
+  @Valid
+ private WebhookQueueConfiguration webhookQueueConfiguration = new WebhookQueueConfiguration();
 
   private int maxConcurrentWebhooks = 100;
 
@@ -686,6 +694,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
     this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  }
+
+  public int getMaxMachineHistoryEntries() {
+    return maxMachineHistoryEntries;
+  }
+
+  public void setMaxMachineHistoryEntries(int maxMachineHistoryEntries) {
+    this.maxMachineHistoryEntries = maxMachineHistoryEntries;
   }
 
   public int getListenerThreadpoolSize() {
@@ -1130,6 +1146,14 @@ public class SingularityConfiguration extends Configuration {
     this.persistHistoryEverySeconds = persistHistoryEverySeconds;
   }
 
+  public int getMaxPendingImmediatePersists() {
+    return maxPendingImmediatePersists;
+  }
+
+  public void setMaxPendingImmediatePersists(int maxPendingImmediatePersists) {
+    this.maxPendingImmediatePersists = maxPendingImmediatePersists;
+  }
+
   public void setS3Configuration(S3Configuration s3Configuration) {
     this.s3Configuration = s3Configuration;
   }
@@ -1219,20 +1243,20 @@ public class SingularityConfiguration extends Configuration {
     this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
+  public long getCleanInactiveHostListEveryHours() {
+    return cleanInactiveHostListEveryHours;
+  }
+
+  public void setCleanInactiveHostListEveryHours(long cleanInactiveHostListEveryHours) {
+    this.cleanInactiveHostListEveryHours = cleanInactiveHostListEveryHours;
+  }
+
   public long getCacheTasksForMillis() {
     return cacheTasksForMillis;
   }
 
   public void setCacheTasksForMillis(long cacheTasksForMillis) {
     this.cacheTasksForMillis = cacheTasksForMillis;
-  }
-
-  public long getTaskPersistAfterStartupBufferMillis() {
-    return taskPersistAfterStartupBufferMillis;
-  }
-
-  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
-    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
   public LDAPConfiguration getLdapConfiguration() {
@@ -1250,6 +1274,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
+  }
+
+  public WebhookQueueConfiguration getWebhookQueueConfiguration() {
+    return webhookQueueConfiguration;
+  }
+
+  public void setWebhookQueueConfiguration(WebhookQueueConfiguration webhookQueueConfiguration) {
+    this.webhookQueueConfiguration = webhookQueueConfiguration;
   }
 
   public int getMaxConcurrentWebhooks() {

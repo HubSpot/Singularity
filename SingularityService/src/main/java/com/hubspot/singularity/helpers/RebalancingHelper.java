@@ -70,7 +70,7 @@ public class RebalancingHelper {
     Map<String, Map<String, Set<SingularityTaskId>>> attributeTaskMap = new HashMap<>();
 
     for (SingularityTaskId taskId : remainingActiveTasks) {
-      SingularitySlave slave = slaveManager.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
+      SingularitySlave slave = slaveManager.getObject(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
       for (Entry<String, String> entry : slave.getAttributes().entrySet()) {
         attributeTaskMap
             .computeIfAbsent(entry.getKey(), key -> new HashMap<>())

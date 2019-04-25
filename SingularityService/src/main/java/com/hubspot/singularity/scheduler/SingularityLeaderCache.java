@@ -179,13 +179,13 @@ public class SingularityLeaderCache {
     pendingTaskIdToPendingTask.put(pendingTask.getPendingTaskId(), pendingTask);
   }
 
-  public void deleteActiveTaskId(String taskId) {
+  public void deleteActiveTaskId(SingularityTaskId taskId) {
     if (!active) {
       LOG.warn("deleteActiveTask {}, but not active", taskId);
       return;
     }
 
-    activeTaskIds.remove(SingularityTaskId.valueOf(taskId));
+    activeTaskIds.remove(taskId);
   }
 
   public List<SingularityTaskId> exists(List<SingularityTaskId> taskIds) {
@@ -239,8 +239,8 @@ public class SingularityLeaderCache {
     return pendingTaskIdToPendingTask.size();
   }
 
-  public boolean isActiveTask(String taskId) {
-    return activeTaskIds.contains(SingularityTaskId.valueOf(taskId));
+  public boolean isActiveTask(SingularityTaskId taskId) {
+    return activeTaskIds.contains(taskId);
   }
 
   public void putActiveTask(SingularityTask task) {
@@ -414,8 +414,8 @@ public class SingularityLeaderCache {
     historyUpdates.remove(taskId);
   }
 
-  public Collection<SingularitySlave> getSlaves() {
-    return slaves.values();
+  public List<SingularitySlave> getSlaves() {
+    return new ArrayList<>(slaves.values());
   }
 
   public Optional<SingularitySlave> getSlave(String slaveId) {
@@ -430,12 +430,20 @@ public class SingularityLeaderCache {
     slaves.put(slave.getId(), slave);
   }
 
-  public Collection<SingularityRack> getRacks() {
-    return racks.values();
+  public void removeSlave(String slaveId) {
+    if (!active) {
+      LOG.warn("remove slave {}, but not active", slaveId);
+      return;
+    }
+    slaves.remove(slaveId);
   }
 
-  public Optional<SingularityRack> getRack(String rackName) {
-    return Optional.fromNullable(racks.get(rackName));
+  public List<SingularityRack> getRacks() {
+    return new ArrayList<>(racks.values());
+  }
+
+  public Optional<SingularityRack> getRack(String rackId) {
+    return Optional.fromNullable(racks.get(rackId));
   }
 
   public void putRack(SingularityRack rack) {
@@ -444,6 +452,14 @@ public class SingularityLeaderCache {
     }
 
     racks.put(rack.getId(), rack);
+  }
+
+  public void removeRack(String rackId) {
+    if (!active) {
+      LOG.warn("remove rack {}, but not active", rackId);
+      return;
+    }
+    racks.remove(rackId);
   }
 
   public void putRequestUtilization(RequestUtilization requestUtilization) {

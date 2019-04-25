@@ -104,7 +104,7 @@ public class SingularityTestModule implements Module {
     rootLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level", "WARN")));
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "TRACE")));
+    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")));
 
     this.ts = new TestingServer();
   }
@@ -212,7 +212,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
 
-    mainBinder.install(new SingularityEventModule());
+    mainBinder.install(new SingularityEventModule(configuration.getWebhookQueueConfiguration()));
 
     // Auth module bits
     mainBinder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);

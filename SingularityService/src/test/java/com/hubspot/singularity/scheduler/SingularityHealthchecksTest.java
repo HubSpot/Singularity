@@ -416,7 +416,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).setStartupDelaySeconds(Optional.of(0)).build();
+      HealthcheckOptions options = new HealthcheckOptionsBuilder("/uri").setPortIndex(Optional.of(1)).setStartupDelaySeconds(Optional.of(0)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100"))
           .setHealthcheck(Optional.of(options)), Optional.of(new Resources(1, 64, 3, 0)));
 
@@ -433,8 +433,9 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
-      Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+      Awaitility.await("healthcheck present").atMost(6, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
+      Optional<SingularityTaskHealthcheckResult> result = taskManager.getLastHealthcheck(firstTask.getTaskId());
       Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {
       unsetConfigurationForNoDelay();

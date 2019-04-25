@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 
 @Singleton
@@ -18,7 +19,8 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
   private final HistoryManager historyManager;
 
   @Inject
-  public RequestHistoryHelper(RequestManager requestManager, HistoryManager historyManager) {
+  public RequestHistoryHelper(RequestManager requestManager, HistoryManager historyManager, SingularityConfiguration configuration) {
+    super(configuration.getDatabaseConfiguration().isPresent());
     this.requestManager = requestManager;
     this.historyManager = historyManager;
   }
@@ -58,8 +60,13 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
   }
 
   @Override
-  protected Optional<Integer> getTotalCount(String requestId) {
-    int numFromZk = requestManager.getRequestHistory(requestId).size();
+  protected Optional<Integer> getTotalCount(String requestId, boolean canSkipZk) {
+    int numFromZk;
+    if (sqlEnabled && canSkipZk) {
+      numFromZk = 0;
+    } else {
+      numFromZk = requestManager.getRequestHistory(requestId).size();
+    }
     int numFromHistory = historyManager.getRequestHistoryCount(requestId);
 
     return Optional.of(numFromZk + numFromHistory);

@@ -49,7 +49,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   protected abstract SingularityDeleteResult purgeFromZk(T object);
 
-  protected boolean moveToHistoryOrCheckForPurge(T object, int index) {
+  public boolean moveToHistoryOrCheckForPurge(T object, int index) {
     final long start = System.currentTimeMillis();
 
     if (moveToHistoryOrCheckForPurgeAndShouldDelete(object, index)) {

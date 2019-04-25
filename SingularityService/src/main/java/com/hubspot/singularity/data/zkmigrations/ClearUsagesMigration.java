@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class ClearSlaveUsagesMigration extends ZkDataMigration {
+public class ClearUsagesMigration extends ZkDataMigration {
 
   private final CuratorFramework curator;
 
   @Inject
-  public ClearSlaveUsagesMigration(CuratorFramework curator) {
-    super(15); // TODO check this when merging
+  public ClearUsagesMigration(CuratorFramework curator) {
+    super(15);
     this.curator = curator;
   }
 

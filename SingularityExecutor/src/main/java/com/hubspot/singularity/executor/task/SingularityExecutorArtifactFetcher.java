@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor.task;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -172,8 +171,8 @@ public class SingularityExecutorArtifactFetcher {
           ListenableFuture<Response> future = localDownloadHttpClient.executeRequest(postRequestBldr.build());
 
           futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
-        } catch (IOException ioe) {
-          throw Throwables.propagate(ioe);
+        } catch (Throwable t) {
+          throw new RuntimeException(t);
         }
       }
 
