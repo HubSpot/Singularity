@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -58,7 +59,7 @@ public class UsageResource {
   @GET
   @Path("/slaves")
   @Operation(summary = "Retrieve a list of slave resource usage models with slave ids")
-  public List<SingularitySlaveUsageWithId> getSlavesWithUsage(@Parameter(hidden = true) @Auth SingularityUser user) {
+  public Collection<SingularitySlaveUsageWithId> getSlavesWithUsage(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return usageManager.getAllCurrentSlaveUsage();
   }

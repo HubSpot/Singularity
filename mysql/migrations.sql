@@ -124,3 +124,15 @@ ALTER TABLE `taskHistory`
 ALTER TABLE `taskHistory`
   DROP KEY `startedAt2`,
   ADD KEY `startedAt3` (`startedAt`)
+
+--changeset ssalinas:17 dbms:mysql
+CREATE TABLE `taskUsage` (
+  `taskId` varchar(200) NOT NULL DEFAULT '',
+  `requestId` varchar(100) NOT NULL,
+  `memoryTotalBytes` BIGINT UNSIGNED NOT NULL,
+  `cpusUsed` DOUBLE UNSIGNED NOT NULL,
+  `cpusTotal` DOUBLE UNSIGNED NOT NULL,
+  `diskTotalBytes` BIGINT UNSIGNED NOT NULL,
+  `timestamp` timestamp NOT NULL,
+
+

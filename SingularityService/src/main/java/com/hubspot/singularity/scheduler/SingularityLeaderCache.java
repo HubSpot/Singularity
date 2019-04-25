@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,6 +27,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -48,7 +48,8 @@ public class SingularityLeaderCache {
   private Map<String, SingularitySlave> slaves;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
-  private ConcurrentMap<String, RequestUtilization> requestUtilizations;
+  private Map<String, RequestUtilization> requestUtilizations;
+  private Map<String, SingularitySlaveUsageWithId> slaveUsages;
 
   private volatile boolean active;
 
@@ -119,6 +120,10 @@ public class SingularityLeaderCache {
 
   public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
     this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
+  }
+
+  public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
+    this.slaveUsages = new ConcurrentHashMap<>(slaveUsages);
   }
 
   public boolean active() {
@@ -459,5 +464,25 @@ public class SingularityLeaderCache {
 
   public Map<String, RequestUtilization> getRequestUtilizations() {
     return new HashMap<>(requestUtilizations);
+  }
+
+  public void putSlaveUsage(SingularitySlaveUsageWithId slaveUsage) {
+    if (!active) {
+      LOG.warn("putSlaveUsage {}, but not active", slaveUsage);
+    }
+
+    slaveUsages.put(slaveUsage.getSlaveId(), slaveUsage);
+  }
+
+  public void removeSlaveUsage(String slaveId) {
+    if (!active) {
+      LOG.warn("removeSlaveUsage {}, but not active", slaveId);
+      return;
+    }
+    slaveUsages.remove(slaveId);
+  }
+
+  public Map<String, SingularitySlaveUsageWithId> getSlaveUsages() {
+    return new HashMap<>(slaveUsages);
   }
 }

@@ -33,11 +33,11 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCurrentUsage;
+import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -102,10 +102,10 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
     bindTranscoder(binder).asJson(SingularityUser.class);
-    bindTranscoder(binder).asJson(SingularitySlaveUsage.class);
+    bindTranscoder(binder).asJson(SingularitySlaveUsageWithId.class);
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
     bindTranscoder(binder).asJson(SingularityClusterUtilization.class);
-    bindTranscoder(binder).asJson(SingularityTaskCurrentUsage.class);
+    bindTranscoder(binder).asJson(SingularityTaskCurrentUsageWithId.class);
     bindTranscoder(binder).asJson(RequestUtilization.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
