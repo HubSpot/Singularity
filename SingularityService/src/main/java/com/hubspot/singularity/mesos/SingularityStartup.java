@@ -73,14 +73,16 @@ class SingularityStartup {
     this.taskReconciliation = taskReconciliation;
   }
 
+  public void checkMigrations() {
+    zkDataMigrationRunner.checkMigrations();
+  }
+
   public void startup(MasterInfo masterInfo) {
     final long start = System.currentTimeMillis();
 
     final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));
 
     LOG.info("Starting up... fetching state data from: " + uri);
-
-    zkDataMigrationRunner.checkMigrations();
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 

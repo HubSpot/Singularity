@@ -146,6 +146,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
+  private int maxMachineHistoryEntries = 10;
+
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
@@ -250,6 +252,8 @@ public class SingularityConfiguration extends Configuration {
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
+  private long cleanInactiveHostListEveryHours = 24;
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
@@ -686,6 +690,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
     this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  }
+
+  public int getMaxMachineHistoryEntries() {
+    return maxMachineHistoryEntries;
+  }
+
+  public void setMaxMachineHistoryEntries(int maxMachineHistoryEntries) {
+    this.maxMachineHistoryEntries = maxMachineHistoryEntries;
   }
 
   public int getListenerThreadpoolSize() {
@@ -1217,6 +1229,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
     this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
+  }
+
+  public long getCleanInactiveHostListEveryHours() {
+    return cleanInactiveHostListEveryHours;
+  }
+
+  public void setCleanInactiveHostListEveryHours(long cleanInactiveHostListEveryHours) {
+    this.cleanInactiveHostListEveryHours = cleanInactiveHostListEveryHours;
   }
 
   public long getCacheTasksForMillis() {

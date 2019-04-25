@@ -153,6 +153,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
       }
 
+      // Should be called before activation of leader cache or cache could be left empty
+      startup.checkMigrations();
+
       leaderCacheCoordinator.activateLeaderCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();
       masterInfo.set(newMasterInfo);

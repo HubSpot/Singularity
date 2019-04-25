@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -93,7 +92,6 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
-import com.ning.http.client.PerRequestConfig;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.auth.Auth;
@@ -256,7 +254,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityPendingTask.matchingRequest(requestId)));
+    final List<SingularityPendingTask> tasks = Lists.newArrayList(taskManager.getPendingTasksForRequest(requestId, true));
 
     return taskRequestManager.getTaskRequests(tasks);
   }
@@ -345,7 +343,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
-    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
+    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskIdObj), "No active task with id %s", taskId);
 
     if (task.isPresent()) {
       authorizationHelper.checkForAuthorizationByRequestId(task.get().getTaskId().getRequestId(), user, scope);
@@ -593,7 +591,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
-    if (!taskManager.isActiveTask(taskId)) {
+    if (!taskManager.isActiveTask(taskIdObj)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
@@ -664,14 +662,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
         httpPrefix, slaveHostname, httpPort);
 
     try {
-      PerRequestConfig unlimitedTimeout = new PerRequestConfig();
-      unlimitedTimeout.setRequestTimeoutInMs(-1);
-
       NingOutputToJaxRsStreamingOutputWrapper streamingOutputNingHandler = new NingOutputToJaxRsStreamingOutputWrapper(
           httpClient
               .prepareGet(url)
-              .addQueryParameter("path", fileFullPath)
-              .setPerRequestConfig(unlimitedTimeout)
+              .addQueryParam("path", fileFullPath)
+              .setRequestTimeout(-1)
       );
 
       // Strip file path down to just a file name if we can

@@ -4,7 +4,6 @@ package com.hubspot.singularity.data.zkmigrations;
 import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,16 +14,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.transcoders.StringTranscoder;
-import com.hubspot.singularity.data.zkmigrations.SingularityCmdLineArgsMigration.SingularityPendingRequestPrevious;
 
 public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
@@ -60,61 +60,27 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
 
-  private String getPendingPath(String requestId, String deployId) {
-    return ZKPaths.makePath(SingularityCmdLineArgsMigration.REQUEST_PENDING_PATH, new SingularityDeployKey(requestId, deployId).getId());
-  }
-
-  private String getPendingPath(SingularityPendingTaskId pendingTaskId) {
-    return ZKPaths.makePath(SingularityCmdLineArgsMigration.TASK_PENDING_PATH, pendingTaskId.getId());
-  }
-
   @Test
-  public void testCmdLineArgsMigration() throws Exception {
-    metadataManager.setZkDataVersion("2");
+  public void testNamespaceTasksMigration() throws Exception {
+    metadataManager.setZkDataVersion("11");
+    long now = System.currentTimeMillis();
+    SingularityPendingTaskId testPending = new SingularityPendingTaskId("test", "deploy", now, 1, PendingType.IMMEDIATE, now);
+    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder().setPendingTaskId(testPending).build();
+    curator.create().creatingParentsIfNeeded().forPath("/tasks/scheduled/" + testPending.getId(), objectMapper.writeValueAsBytes(pendingTask));
 
-    // save some old stuff
-    SingularityPendingRequestPrevious p1 = new SingularityPendingRequestPrevious("r1", "d1", 23L, Optional.<String> absent(), PendingType.BOUNCE, Optional.<String> absent());
-    SingularityPendingRequestPrevious p2 = new SingularityPendingRequestPrevious("r2", "d3", 123L, Optional.of("user1"), PendingType.BOUNCE, Optional.of("cmd line args"));
-
-    byte[] p1b = objectMapper.writeValueAsBytes(p1);
-    byte[] p2b = objectMapper.writeValueAsBytes(p2);
-
-    curator.create().creatingParentsIfNeeded().forPath(getPendingPath("r1",  "d1"), p1b);
-    curator.create().creatingParentsIfNeeded().forPath(getPendingPath("r2",  "de"), p2b);
-
-    SingularityPendingTaskId pt1 = new SingularityPendingTaskId("r1", "d1", 23L, 3, PendingType.BOUNCE, 1L);
-    SingularityPendingTaskId pt2 = new SingularityPendingTaskId("r2", "d3", 231L, 1, PendingType.UNPAUSED, 23L);
-
-    curator.create().creatingParentsIfNeeded().forPath(getPendingPath(pt1));
-    curator.create().creatingParentsIfNeeded().forPath(getPendingPath(pt2), StringTranscoder.INSTANCE.toBytes("cmd line args"));
+    SingularityTaskId taskId = new SingularityTaskId("test", "deploy", now, 1, "host", "rack");
+    curator.create().creatingParentsIfNeeded().forPath("/tasks/active/" + taskId.getId());
+    SingularityTaskStatusHolder statusHolder = new SingularityTaskStatusHolder(taskId, Optional.absent(), now, "1234", Optional.absent());
+    curator.create().creatingParentsIfNeeded().forPath("/tasks/statuses/" + taskId.getId(), objectMapper.writeValueAsBytes(statusHolder));
 
     migrationRunner.checkMigrations();
 
-    Assert.assertTrue(!taskManager.getPendingTask(pt1).get().getCmdLineArgsList().isPresent());
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get().get(0).equals("cmd line args"));
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get().size() == 1);
+    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+    Assert.assertTrue(pendingTaskIds.contains(testPending));
+    Assert.assertEquals(pendingTask, taskManager.getPendingTask(testPending).get());
 
-    Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt1));
-    Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt2));
-
-    Assert.assertTrue(requestManager.getPendingRequests().size() == 2);
-
-    for (SingularityPendingRequest r : requestManager.getPendingRequests()) {
-      if (r.getRequestId().equals("r1")) {
-        Assert.assertEquals(r.getDeployId(), p1.getDeployId());
-        Assert.assertEquals(r.getTimestamp(), p1.getTimestamp());
-        Assert.assertEquals(r.getPendingType(), p1.getPendingType());
-        Assert.assertTrue(!r.getCmdLineArgsList().isPresent());
-        Assert.assertEquals(r.getUser(), p1.getUser());
-      } else {
-        Assert.assertEquals(r.getDeployId(), p2.getDeployId());
-        Assert.assertEquals(r.getTimestamp(), p2.getTimestamp());
-        Assert.assertEquals(r.getPendingType(), p2.getPendingType());
-        Assert.assertTrue(r.getCmdLineArgsList().get().size() == 1);
-        Assert.assertTrue(r.getCmdLineArgsList().get().get(0).equals("cmd line args"));
-        Assert.assertEquals(r.getUser(), p2.getUser());
-      }
-    }
+    List<SingularityTaskId> active = taskManager.getActiveTaskIds();
+    Assert.assertTrue(active.contains(taskId));
   }
 
   @Test

@@ -321,7 +321,7 @@ public class SingularityNewTaskChecker {
 
   @VisibleForTesting
   CheckTaskState getTaskState(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
-    if (!taskManager.isActiveTask(task.getTaskId().getId())) {
+    if (!taskManager.isActiveTask(task.getTaskId())) {
       return CheckTaskState.OBSOLETE;
     }
 

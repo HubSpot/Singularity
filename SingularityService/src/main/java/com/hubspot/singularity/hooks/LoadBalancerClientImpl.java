@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -98,7 +98,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private void addAllQueryParams(BoundRequestBuilder boundRequestBuilder, Map<String, String> queryParams) {
     for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-      boundRequestBuilder.addQueryParameter(entry.getKey(), entry.getValue());
+      boundRequestBuilder.addQueryParam(entry.getKey(), entry.getValue());
     }
   }
 

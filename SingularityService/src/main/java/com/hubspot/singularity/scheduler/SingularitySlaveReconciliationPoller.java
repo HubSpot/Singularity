@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
@@ -33,8 +34,14 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final MesosClient mesosClient;
   private final SingularityMesosScheduler mesosScheduler;
+  private final InactiveSlaveManager inactiveSlaveManager;
 
-  @Inject SingularitySlaveReconciliationPoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager, MesosClient mesosClient, SingularityMesosScheduler mesosScheduler) {
+  @Inject SingularitySlaveReconciliationPoller(SingularityConfiguration configuration,
+                                               SlaveManager slaveManager,
+                                               SingularitySlaveAndRackManager slaveAndRackManager,
+                                               MesosClient mesosClient,
+                                               SingularityMesosScheduler mesosScheduler,
+                                               InactiveSlaveManager inactiveSlaveManager) {
     super(configuration.getReconcileSlavesEveryMinutes(), TimeUnit.MINUTES);
 
     this.slaveManager = slaveManager;
@@ -42,12 +49,15 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
     this.slaveAndRackManager = slaveAndRackManager;
     this.mesosClient = mesosClient;
     this.mesosScheduler = mesosScheduler;
+    this.inactiveSlaveManager = inactiveSlaveManager;
   }
 
   @Override
   public void runActionOnPoll() {
     refereshSlavesAndRacks();
     checkDeadSlaves();
+    inactiveSlaveManager.cleanInactiveSlavesList(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(configuration.getCleanInactiveHostListEveryHours()));
+    clearOldSlaveHistory();
   }
 
   private void refereshSlavesAndRacks() {
@@ -89,7 +99,15 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
       }
     }
 
+
+
     LOG.debug("Checked {} dead slaves, deleted {} in {}", deadSlaves.size(), deleted, JavaUtils.duration(start));
+  }
+
+  private void clearOldSlaveHistory() {
+    for (SingularitySlave singularitySlave : slaveManager.getObjects()) {
+      slaveManager.clearOldHistory(singularitySlave.getId());
+    }
   }
 
 }
