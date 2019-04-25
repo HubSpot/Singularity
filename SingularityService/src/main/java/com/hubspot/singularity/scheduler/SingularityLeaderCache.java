@@ -437,8 +437,8 @@ public class SingularityLeaderCache {
     return new ArrayList<>(racks.values());
   }
 
-  public Optional<SingularityRack> getRack(String rackName) {
-    return Optional.fromNullable(racks.get(rackName));
+  public Optional<SingularityRack> getRack(String rackId) {
+    return Optional.fromNullable(racks.get(rackId));
   }
 
   public void putRack(SingularityRack rack) {

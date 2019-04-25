@@ -41,7 +41,7 @@ public class SingularityHealthcheckAsyncHandler {
     startTime = System.currentTimeMillis();
   }
 
-  public void setHealthcehckUri(String healthcheckUri) {
+  public void setHealthcheckUri(String healthcheckUri) {
     this.healthcheckUri = healthcheckUri;
   }
 

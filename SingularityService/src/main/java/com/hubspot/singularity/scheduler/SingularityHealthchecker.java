@@ -337,7 +337,7 @@ public class SingularityHealthchecker {
       saveFailure(handler, "Invalid healthcheck uri or ports not present");
       return;
     }
-    handler.setHealthcehckUri(uri.get());
+    handler.setHealthcheckUri(uri.get());
 
     final Integer timeoutSeconds;
     final String method;
