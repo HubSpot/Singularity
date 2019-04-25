@@ -224,7 +224,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
   public void clearOldHistory(String machineId) {
     List<SingularityMachineStateHistoryUpdate> histories = getHistory(machineId);
-    histories.sort(Comparator.comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp));
+    histories.sort(Comparator.comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp).reversed());
     histories.stream()
         .skip(maxHistoryEntries)
         .forEach((history) -> {
