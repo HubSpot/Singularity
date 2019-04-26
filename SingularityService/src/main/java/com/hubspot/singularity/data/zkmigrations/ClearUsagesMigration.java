@@ -23,6 +23,7 @@ public class ClearUsagesMigration extends ZkDataMigration {
       try {
         // Data format has changed and usage will repopulate when the poller runs
         curator.delete().deletingChildrenIfNeeded().forPath("/usage/slaves");
+        curator.delete().deletingChildrenIfNeeded().forPath("/usage/tasks");
       } catch (NoNodeException nee) {}
     } catch (Exception e) {
       throw new RuntimeException(e);

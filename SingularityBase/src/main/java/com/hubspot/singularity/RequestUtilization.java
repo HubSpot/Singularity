@@ -17,25 +17,25 @@ public class RequestUtilization {
   private int numTasks = 0;
 
   private long maxMemBytesUsed = 0;
-  private double maxMemTimestamp = 0;
+  private long maxMemTimestamp = 0;
   private long minMemBytesUsed = Long.MAX_VALUE;
-  private double minMemTimestamp = 0;
+  private long minMemTimestamp = 0;
   private double maxCpuUsed = 0;
-  private double maxCpusTimestamp = 0;
+  private long maxCpusTimestamp = 0;
   private double minCpuUsed = Double.MAX_VALUE;
-  private double minCpusTimestamp = 0;
+  private long minCpusTimestamp = 0;
   private long maxDiskBytesUsed = 0;
-  private double maxDiskTimestamp = 0;
+  private long maxDiskTimestamp = 0;
   private long minDiskBytesUsed = Long.MAX_VALUE;
-  private double minDiskTimestamp = 0;
+  private long minDiskTimestamp = 0;
 
   private double cpuBurstRating = 0;
 
   private double percentCpuTimeThrottled = 0;
   private double maxPercentCpuTimeThrottled = 0;
-  private double maxCpuThrottledTimestamp = 0;
+  private long maxCpuThrottledTimestamp = 0;
   private double minPercentCpuTimeThrottled = Double.MAX_VALUE;
-  private double minCpuThrottledTimestamp = 0;
+  private long minCpuThrottledTimestamp = 0;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -227,74 +227,74 @@ public class RequestUtilization {
     return this;
   }
 
-  public double getMaxMemTimestamp() {
+  public long getMaxMemTimestamp() {
     return maxMemTimestamp;
   }
 
-  public RequestUtilization setMaxMemTimestamp(double maxMemTimestamp) {
+  public RequestUtilization setMaxMemTimestamp(long maxMemTimestamp) {
     this.maxMemTimestamp = maxMemTimestamp;
     return this;
   }
 
-  public double getMinMemTimestamp() {
+  public long getMinMemTimestamp() {
     return minMemTimestamp;
   }
 
-  public RequestUtilization setMinMemTimestamp(double minMemTimestamp) {
+  public RequestUtilization setMinMemTimestamp(long minMemTimestamp) {
     this.minMemTimestamp = minMemTimestamp;
     return this;
   }
 
-  public double getMaxCpusTimestamp() {
+  public long getMaxCpusTimestamp() {
     return maxCpusTimestamp;
   }
 
-  public RequestUtilization setMaxCpusTimestamp(double maxCpusTimestamp) {
+  public RequestUtilization setMaxCpusTimestamp(long maxCpusTimestamp) {
     this.maxCpusTimestamp = maxCpusTimestamp;
     return this;
   }
 
-  public double getMinCpusTimestamp() {
+  public long getMinCpusTimestamp() {
     return minCpusTimestamp;
   }
 
-  public RequestUtilization setMinCpusTimestamp(double minCpusTimestamp) {
+  public RequestUtilization setMinCpusTimestamp(long minCpusTimestamp) {
     this.minCpusTimestamp = minCpusTimestamp;
     return this;
   }
 
-  public double getMaxDiskTimestamp() {
+  public long getMaxDiskTimestamp() {
     return maxDiskTimestamp;
   }
 
-  public RequestUtilization setMaxDiskTimestamp(double maxDiskTimestamp) {
+  public RequestUtilization setMaxDiskTimestamp(long maxDiskTimestamp) {
     this.maxDiskTimestamp = maxDiskTimestamp;
     return this;
   }
 
-  public double getMinDiskTimestamp() {
+  public long getMinDiskTimestamp() {
     return minDiskTimestamp;
   }
 
-  public RequestUtilization setMinDiskTimestamp(double minDiskTimestamp) {
+  public RequestUtilization setMinDiskTimestamp(long minDiskTimestamp) {
     this.minDiskTimestamp = minDiskTimestamp;
     return this;
   }
 
-  public double getMaxCpuThrottledTimestamp() {
+  public long getMaxCpuThrottledTimestamp() {
     return maxCpuThrottledTimestamp;
   }
 
-  public RequestUtilization setMaxCpuThrottledTimestamp(double maxCpuThrottledTimestamp) {
+  public RequestUtilization setMaxCpuThrottledTimestamp(long maxCpuThrottledTimestamp) {
     this.maxCpuThrottledTimestamp = maxCpuThrottledTimestamp;
     return this;
   }
 
-  public double getMinCpuThrottledTimestamp() {
+  public long getMinCpuThrottledTimestamp() {
     return minCpuThrottledTimestamp;
   }
 
-  public RequestUtilization setMinCpuThrottledTimestamp(double minCpuThrottledTimestamp) {
+  public RequestUtilization setMinCpuThrottledTimestamp(long minCpuThrottledTimestamp) {
     this.minCpuThrottledTimestamp = minCpuThrottledTimestamp;
     return this;
   }

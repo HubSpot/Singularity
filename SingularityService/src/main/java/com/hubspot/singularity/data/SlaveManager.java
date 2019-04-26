@@ -10,10 +10,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
@@ -23,6 +25,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   private static final String SLAVE_ROOT = "/slaves";
   private final SingularityLeaderCache leaderCache;
+  private final UsageManager usageManager;
 
   @Inject
   public SlaveManager(CuratorFramework curator,
@@ -31,9 +34,11 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
                       Transcoder<SingularitySlave> slaveTranscoder,
                       Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
                       Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
-                      SingularityLeaderCache leaderCache) {
+                      SingularityLeaderCache leaderCache,
+                      UsageManager usageManager) {
     super(curator, configuration, metricRegistry, slaveTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
     this.leaderCache = leaderCache;
+    this.usageManager = usageManager;
   }
 
   @Override
@@ -78,5 +83,13 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
     } else {
       LOG.info("Asked to remove slave from leader cache when not active");
     }
+  }
+
+  @Override
+  public StateChangeResult changeState(SingularitySlave singularitySlave, MachineState newState, Optional<String> message, Optional<String> user) {
+    if (newState == MachineState.DEAD) {
+      usageManager.deleteSlaveUsage(singularitySlave.getId());
+    }
+    return super.changeState(singularitySlave, newState, message, user);
   }
 }

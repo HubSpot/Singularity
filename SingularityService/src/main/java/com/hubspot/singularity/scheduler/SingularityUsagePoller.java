@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -50,7 +49,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private final AsyncSemaphore<Void> usageCollectionSemaphore;
   private final ExecutorService usageExecutor;
-  private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
 
   @Inject
   SingularityUsagePoller(SingularityConfiguration configuration,
@@ -72,7 +70,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections, executorServiceFactory.get("usage-semaphore", 5)).build();
     this.usageExecutor = cachedThreadPoolFactory.get("usage-collection");
-    this.requestLocks = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -111,16 +108,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     if (configuration.isShuffleTasksForOverloadedSlaves()) {
       shuffleTasksOnOverloadedHosts(overLoadedHosts);
-    }
-  }
-
-  public void runWithRequestLock(Runnable function, String requestId) {
-    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
-    lock.lock();
-    try {
-      function.run();
-    } finally {
-      lock.unlock();
     }
   }
 

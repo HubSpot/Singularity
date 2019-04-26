@@ -2,25 +2,22 @@ package com.hubspot.singularity.data.usage;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 
 public interface TaskUsageManager {
   Comparator<SingularityTaskUsage> TASK_USAGE_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(SingularityTaskUsage::getTimestamp);
-  Comparator<String> TASK_USAGE_PATH_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(Double::parseDouble);
 
-  void deleteTaskUsage(String taskId);
+  void deleteTaskUsage(SingularityTaskId taskId);
 
-  void deleteSpecificTaskUsage(String taskId, double timestamp);
+  void deleteSpecificTaskUsage(SingularityTaskId taskId, long timestamp);
 
-  void saveCurrentTaskUsage(SingularityTaskCurrentUsageWithId usageWithId);
+  void saveSpecificTaskUsage(SingularityTaskId taskId, SingularityTaskUsage usage);
 
-  void saveSpecificTaskUsage(String taskId, SingularityTaskUsage usage);
+  List<SingularityTaskUsage> getTaskUsage(SingularityTaskId taskId);
 
-  List<SingularityTaskUsage> getTaskUsage(String taskId);
+  int countTasksWithUsage();
 
-  Map<String, SingularityTaskCurrentUsageWithId> getTaskCurrentUsages(List<SingularityTaskId> taskIds);
+  void cleanOldUsages(List<SingularityTaskId> activeTaskIds);
 }

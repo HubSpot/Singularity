@@ -11,19 +11,16 @@ public class SingularityTaskCurrentUsage {
   private final long memoryTotalBytes;
   private final long timestamp;
   private final double cpusUsed;
-  private final double cpusTotal;
   private final long diskTotalBytes;
 
   @JsonCreator
   public SingularityTaskCurrentUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
                                      @JsonProperty("long") long timestamp,
                                      @JsonProperty("cpusUsed") double cpusUsed,
-                                     @JsonProperty("cpusTotal") double cpusTotal,
                                      @JsonProperty("diskTotalBytes") long diskTotalBytes) {
     this.memoryTotalBytes = memoryTotalBytes;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
-    this.cpusTotal = cpusTotal;
     this.diskTotalBytes = diskTotalBytes;
   }
 
@@ -40,11 +37,6 @@ public class SingularityTaskCurrentUsage {
   @Schema(description = "The cpus used by this task")
   public double getCpusUsed() {
     return cpusUsed;
-  }
-
-  @Schema(description = "The cpus allocated for this task")
-  public double getCpusTotal() {
-    return cpusTotal;
   }
 
   @Schema(description = "The total disk usage for this task in bytes")

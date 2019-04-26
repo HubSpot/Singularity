@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class SingularityTaskUsage {
 
   private final long memoryTotalBytes;
-  private final double timestamp; // seconds
+  private final long timestamp; // seconds
   private final double cpuSeconds;
   private final long diskTotalBytes;
   private final long cpusNrPeriods;
@@ -18,7 +18,7 @@ public class SingularityTaskUsage {
 
   @JsonCreator
   public SingularityTaskUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
-                              @JsonProperty("timestamp") double timestamp,
+                              @JsonProperty("timestamp") long timestamp,
                               @JsonProperty("cpuSeconds") double cpuSeconds,
                               @JsonProperty("diskTotalBytes") long diskTotalBytes,
                               @JsonProperty("cpusNrPeriods") long cpusNrPeriods,
@@ -38,8 +38,8 @@ public class SingularityTaskUsage {
     return memoryTotalBytes;
   }
 
-  @Schema(description = "Timestamp this usage was recorded (epoch seconds)")
-  public double getTimestamp() {
+  @Schema(description = "Timestamp this usage was recorded (epoch millis)")
+  public long getTimestamp() {
     return timestamp;
   }
 
@@ -53,14 +53,17 @@ public class SingularityTaskUsage {
     return diskTotalBytes;
   }
 
+  @Schema(description = "Number of cpu periods used by this task (from cgroups)")
   public long getCpusNrPeriods() {
     return cpusNrPeriods;
   }
 
+  @Schema(description = "Number of cpu periods throttled for this task (from cgroups)")
   public long getCpusNrThrottled() {
     return cpusNrThrottled;
   }
 
+  @Schema(description = "Total cpu time throttled for this task(from cgroups)")
   public double getCpusThrottledTimeSecs() {
     return cpusThrottledTimeSecs;
   }

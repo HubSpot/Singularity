@@ -184,13 +184,7 @@ public class SingularityMesosOfferScheduler {
     Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(false);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
-    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(
-        offerHolders.values()
-            .stream()
-            .map(SingularityOfferHolder::getSlaveId)
-            .collect(Collectors.toList()))
-        .stream()
-        .collect(Collectors.toMap(SingularitySlaveUsageWithId::getSlaveId, Function.identity()));
+    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getAllCurrentSlaveUsage();
 
     List<CompletableFuture<Void>> currentSlaveUsagesFutures = new ArrayList<>();
     for (SingularityOfferHolder offerHolder : offerHolders.values()) {

@@ -14,7 +14,7 @@ public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsa
   private final SingularityTaskId taskId;
 
   public SingularityTaskCurrentUsageWithId(SingularityTaskId taskId, SingularityTaskCurrentUsage taskCurrentUsage) {
-    super(taskCurrentUsage.getMemoryTotalBytes(), taskCurrentUsage.getTimestamp(), taskCurrentUsage.getCpusUsed(), taskCurrentUsage.getCpusTotal(), taskCurrentUsage.getDiskTotalBytes());
+    super(taskCurrentUsage.getMemoryTotalBytes(), taskCurrentUsage.getTimestamp(), taskCurrentUsage.getCpusUsed(), taskCurrentUsage.getDiskTotalBytes());
 
     this.taskId = taskId;
   }
@@ -23,10 +23,9 @@ public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsa
   public SingularityTaskCurrentUsageWithId(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
                                            @JsonProperty("long") long timestamp,
                                            @JsonProperty("cpusUsed") double cpusUsed,
-                                           @JsonProperty("cpusTotal") double cpusTotal,
                                            @JsonProperty("diskTotalBytes") long diskTotalBytes,
                                            @JsonProperty("taskId") SingularityTaskId taskId) {
-    super(memoryTotalBytes, timestamp, cpusUsed, cpusTotal, diskTotalBytes);
+    super(memoryTotalBytes, timestamp, cpusUsed, diskTotalBytes);
     this.taskId = taskId;
   }
 

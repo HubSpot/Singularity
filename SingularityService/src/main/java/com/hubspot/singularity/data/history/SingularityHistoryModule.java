@@ -28,6 +28,9 @@ import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
+import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
+import com.hubspot.singularity.data.usage.TaskUsageJDBI;
 
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jdbi.DBIFactory;
@@ -81,9 +84,11 @@ public class SingularityHistoryModule extends AbstractModule {
   private void bindSpecificDatabase() {
     if (isPostgres(configuration)) {
       bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class).toProvider(PostgresTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
       // Currently many unit tests use h2
     } else if (isMySQL(configuration) || isH2(configuration)) {
       bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class).toProvider(MySQLTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
     } else {
       throw new IllegalStateException("Unknown driver class present " + configuration.get().getDriverClass());
     }
@@ -190,6 +195,36 @@ public class SingularityHistoryModule extends AbstractModule {
     @Override
     public PostgresHistoryJDBI get() {
       return dbi.onDemand(PostgresHistoryJDBI.class);
+    }
+
+  }
+
+  static class MySQLTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+    private final DBI dbi;
+
+    @Inject
+    public MySQLTaskUsageJDBIProvider(DBI dbi) {
+      this.dbi = dbi;
+    }
+
+    @Override
+    public MySQLTaskUsageJDBI get() {
+      return dbi.onDemand(MySQLTaskUsageJDBI.class);
+    }
+
+  }
+
+  static class PostgresTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+    private final DBI dbi;
+
+    @Inject
+    public PostgresTaskUsageJDBIProvider(DBI dbi) {
+      this.dbi = dbi;
+    }
+
+    @Override
+    public PostgresTaskUsageJDBI get() {
+      return dbi.onDemand(PostgresTaskUsageJDBI.class);
     }
 
   }

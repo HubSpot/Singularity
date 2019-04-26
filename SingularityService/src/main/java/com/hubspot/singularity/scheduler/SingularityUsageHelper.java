@@ -2,10 +2,8 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -14,7 +12,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
@@ -27,10 +24,10 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestUtilization;
-import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -77,15 +74,6 @@ public class SingularityUsageHelper {
     this.usageManager = usageManager;
 
     this.requestLocks = new ConcurrentHashMap<>();
-  }
-
-  public Set<String> getSlaveIdsToTrackUsageFor() {
-    List<SingularitySlave> slaves = getSlavesToTrackUsageFor();
-    Set<String> slaveIds = new HashSet<>(slaves.size());
-    for (SingularitySlave slave : slaves) {
-      slaveIds.add(slave.getId());
-    }
-    return slaveIds;
   }
 
   public List<SingularitySlave> getSlavesToTrackUsageFor() {
@@ -181,16 +169,13 @@ public class SingularityUsageHelper {
         try {
           task = SingularityTaskId.valueOf(taskId);
         } catch (InvalidSingularityTaskIdException e) {
-          LOG.error("Couldn't get SingularityTaskId for {}", taskUsage);
+          LOG.warn("Couldn't get SingularityTaskId for {}", taskUsage);
           continue;
         }
 
         SingularityTaskUsage latestUsage = getUsage(taskUsage);
-        List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(taskId);
-
-
-        clearOldUsage(taskId);
-        usageManager.saveSpecificTaskUsage(taskId, latestUsage);
+        usageManager.saveSpecificTaskUsage(task, latestUsage);
+        List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(task);
 
         Optional<SingularityTask> maybeTask = taskManager.getTask(task);
         Optional<Resources> maybeResources = Optional.absent();
@@ -206,7 +191,7 @@ public class SingularityUsageHelper {
             cpuReservedOnSlave += cpuReservedForTask;
             diskMbReservedOnSlave += diskMbReservedForTask;
 
-            runWithRequestLock(() -> updateRequestUtilization(utilizationPerRequestId, previousUtilizations.get(maybeTask.get().getTaskRequest().getRequest().getId()), pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask), task.getRequestId());
+            updateRequestUtilization(utilizationPerRequestId, previousUtilizations.get(maybeTask.get().getTaskRequest().getRequest().getId()), pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask);
           }
         }
         memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
@@ -217,19 +202,17 @@ public class SingularityUsageHelper {
           Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
           if (maybeStartingUpdate.isPresent()) {
             long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
-            double usedCpusSinceStart = latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
+            double usedCpusSinceStart = latestUsage.getCpuSeconds() / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - startTimestampSeconds);
             currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
-            usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
             cpusUsedOnSlave += usedCpusSinceStart;
           }
         } else {
           SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
-          double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
+          double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - lastUsage.getTimestamp()));
 
           currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
-          usageManager.saveCurrentTaskUsage(taskId, currentUsage);
           cpusUsedOnSlave += taskCpusUsed;
         }
 
@@ -265,11 +248,6 @@ public class SingularityUsageHelper {
         overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
       }
 
-      List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
-      if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
-        usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
-      }
-
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
         totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
         totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
@@ -281,7 +259,7 @@ public class SingularityUsageHelper {
       }
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
-      usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(slaveUsage, slave.getId()));
     } catch (Throwable t) {
       String message = String.format("Could not get slave usage for host %s", slave.getHost());
       LOG.error(message, t);
@@ -292,7 +270,7 @@ public class SingularityUsageHelper {
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
     return new SingularityTaskUsage(
         taskUsage.getStatistics().getMemTotalBytes(),
-        taskUsage.getStatistics().getTimestamp(),
+        (long) taskUsage.getStatistics().getTimestamp() * 1000,
         taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs(),
         taskUsage.getStatistics().getDiskUsedBytes(),
         taskUsage.getStatistics().getCpusNrPeriods(),
@@ -302,7 +280,7 @@ public class SingularityUsageHelper {
 
   private List<SingularityTaskUsage> getFullListOfTaskUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, TimeUnit.MILLISECONDS.toSeconds(task.getStartedAt()), 0, 0, 0 , 0, 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0 , 0, 0)); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
@@ -401,8 +379,8 @@ public class SingularityUsageHelper {
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
-      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
-      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
+      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / TimeUnit.MILLISECONDS.toSeconds(newerUsage.getTimestamp() - olderUsage.getTimestamp());
+      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / TimeUnit.MILLISECONDS.toSeconds(newerUsage.getTimestamp() - olderUsage.getTimestamp());
 
       if (cpusUsed > newRequestUtilization.getMaxCpuUsed()) {
         newRequestUtilization.setMaxCpuUsed(cpusUsed);
@@ -458,29 +436,5 @@ public class SingularityUsageHelper {
         .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, newRequestUtilization);
-  }
-
-  @VisibleForTesting
-  void clearOldUsage(String taskId) {
-    usageManager.getTaskUsagePaths(taskId)
-        .stream()
-        .map(Double::parseDouble)
-        .skip(configuration.getNumUsageToKeep())
-        .forEach((pathId) -> {
-          SingularityDeleteResult result = usageManager.deleteSpecificTaskUsage(taskId, pathId);
-          if (result.equals(SingularityDeleteResult.DIDNT_EXIST)) {
-            LOG.warn("Didn't delete taskUsage {} for taskId {}", pathId.toString(), taskId);
-          }
-        });
-  }
-
-  public void runWithRequestLock(Runnable function, String requestId) {
-    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
-    lock.lock();
-    try {
-      function.run();
-    } finally {
-      lock.unlock();
-    }
   }
 }

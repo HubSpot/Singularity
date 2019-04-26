@@ -1,6 +1,6 @@
 package com.hubspot.singularity.data.usage;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,6 +17,8 @@ import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.CuratorAsyncManager;
 import com.hubspot.singularity.data.SingularityWebCache;
@@ -24,7 +26,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
-public class UsageManager extends CuratorAsyncManager {
+public class UsageManager extends CuratorAsyncManager implements TaskUsageManager {
 
   private static final String ROOT_PATH = "/usage";
 
@@ -60,13 +62,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   public void activateLeaderCache() {
     leaderCache.cacheRequestUtilizations(getRequestUtilizations(false));
-    leaderCache.cacheSlaveUsages(
-        getAllCurrentSlaveUsage().stream()
-            .collect(Collectors.toMap(
-                SingularitySlaveUsageWithId::getSlaveId,
-                Function.identity()
-            ))
-    );
+    leaderCache.cacheSlaveUsages(getAllCurrentSlaveUsage());
   }
 
   public SingularityCreateResult saveClusterUtilization(SingularityClusterUtilization utilization) {
@@ -142,11 +138,22 @@ public class UsageManager extends CuratorAsyncManager {
     return set(getSlaveUsagePath(usageWithId.getSlaveId()), usageWithId, slaveUsageTranscoder);
   }
 
-  public Collection<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
     if (leaderCache.active()) {
-      return leaderCache.getSlaveUsages().values();
+      return leaderCache.getSlaveUsage(slaveId);
     }
-    return getAsyncChildren(SLAVE_PATH, slaveUsageTranscoder);
+    return getData(getSlaveUsagePath(slaveId), slaveUsageTranscoder);
+  }
+
+  public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+    if (leaderCache.active()) {
+      return leaderCache.getSlaveUsages();
+    }
+    return getAsyncChildren(SLAVE_PATH, slaveUsageTranscoder).stream()
+        .collect(Collectors.toMap(
+            SingularitySlaveUsageWithId::getSlaveId,
+            Function.identity()
+        ));
   }
 
   public SingularityDeleteResult deleteSlaveUsage(String slaveId) {
@@ -156,5 +163,28 @@ public class UsageManager extends CuratorAsyncManager {
     return delete(getSlaveUsagePath(slaveId));
   }
 
+  // Task Usage
+  public void deleteTaskUsage(SingularityTaskId taskId) {
+    taskUsageManager.deleteTaskUsage(taskId);
+  }
 
+  public void deleteSpecificTaskUsage(SingularityTaskId taskId, long timestamp) {
+    taskUsageManager.deleteSpecificTaskUsage(taskId, timestamp);
+  }
+
+  public void saveSpecificTaskUsage(SingularityTaskId taskId, SingularityTaskUsage usage) {
+    taskUsageManager.saveSpecificTaskUsage(taskId, usage);
+  }
+
+  public List<SingularityTaskUsage> getTaskUsage(SingularityTaskId taskId) {
+    return taskUsageManager.getTaskUsage(taskId);
+  }
+
+  public int countTasksWithUsage() {
+    return taskUsageManager.countTasksWithUsage();
+  }
+
+  public void cleanOldUsages(List<SingularityTaskId> activeTaskIds) {
+    taskUsageManager.cleanOldUsages(activeTaskIds);
+  }
 }

@@ -501,4 +501,8 @@ public class SingularityLeaderCache {
   public Map<String, SingularitySlaveUsageWithId> getSlaveUsages() {
     return new HashMap<>(slaveUsages);
   }
+
+  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
+    return Optional.fromNullable(slaveUsages.get(slaveId));
+  }
 }

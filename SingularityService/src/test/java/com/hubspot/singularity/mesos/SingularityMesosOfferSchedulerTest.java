@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUser;
@@ -157,9 +158,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usagePoller.runActionOnPoll();
     SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
 
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", smallUsage);
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host1"));
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), SingularityUser.DEFAULT_USER);
 
@@ -202,9 +203,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usagePoller.runActionOnPoll();
     SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
 
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", smallUsage);
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
-    usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host1"));
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
+    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
         .absent()), SingularityUser.DEFAULT_USER);
