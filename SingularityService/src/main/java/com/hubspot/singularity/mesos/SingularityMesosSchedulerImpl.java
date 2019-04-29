@@ -210,12 +210,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       }
 
       offers.parallelStream().forEach((offer) -> {
-        if (offer.getId() == null) {
+        if (offer.getId() == null || offer.getId().getValue() == null) {
           LOG.warn("Received offer with null ID, skipping ({})", offer);
           offersToCheck.remove(offer);
           return;
         }
-        if (offer.getAgentId() == null) {
+        if (offer.getAgentId() == null || offer.getAgentId().getValue() == null) {
           LOG.warn("Received offer with null agent ID, skipping ({})", offer);
           offersToCheck.remove(offer);
           mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
