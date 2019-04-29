@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class SingularityTaskUsage {
 
   private final long memoryTotalBytes;
-  private final long timestamp; // seconds
+  private final long timestamp; // epoch millis
   private final double cpuSeconds;
   private final long diskTotalBytes;
   private final long cpusNrPeriods;
