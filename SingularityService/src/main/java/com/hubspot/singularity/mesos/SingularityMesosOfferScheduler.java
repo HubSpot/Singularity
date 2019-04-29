@@ -152,6 +152,14 @@ public class SingularityMesosOfferScheduler {
     Set<String> relevantRequestIds = new HashSet<>();
 
     final Map<String, SingularityOfferHolder> offerHolders = offers.stream()
+        .filter((o) -> {
+          if (o == null || o.getAgentId() == null || o.getAgentId().getValue() == null) {
+            LOG.warn("Got bad offer {} in checkOffers!", o);
+            return false;
+          }
+
+          return true;
+        })
         .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
         .entrySet().stream()
         .filter((e) -> e.getValue().size() > 0)
