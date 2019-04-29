@@ -136,5 +136,3 @@ CREATE TABLE `taskUsage` (
   `timestamp` TIMESTAMP NOT NULL,
    PRIMARY KEY (`taskId`, `timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
