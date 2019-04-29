@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
@@ -154,7 +153,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     String t1 = taskId.getId();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + 5, 1000);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10,(double) (taskId.getStartedAt() + 5000) / 1000, 1000);
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
     SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
@@ -165,7 +164,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), SingularityUser.DEFAULT_USER);
 
-    RequestUtilization requestUtilization = usageManager.getRequestUtilizations().get(requestId);
     Assert.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");

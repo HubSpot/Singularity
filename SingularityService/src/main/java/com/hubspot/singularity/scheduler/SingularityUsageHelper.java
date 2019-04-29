@@ -203,7 +203,7 @@ public class SingularityUsageHelper {
           if (maybeStartingUpdate.isPresent()) {
             long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
             double usedCpusSinceStart = latestUsage.getCpuSeconds() / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - startTimestampSeconds);
-            currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
+            currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), (long) taskUsage.getStatistics().getTimestamp() * 1000, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
 
             cpusUsedOnSlave += usedCpusSinceStart;
           }
@@ -212,7 +212,7 @@ public class SingularityUsageHelper {
 
           double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - lastUsage.getTimestamp()));
 
-          currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
+          currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), (long) taskUsage.getStatistics().getTimestamp() * 1000, taskCpusUsed, latestUsage.getDiskTotalBytes());
           cpusUsedOnSlave += taskCpusUsed;
         }
 
@@ -268,9 +268,10 @@ public class SingularityUsageHelper {
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
+    double timestampMillis = taskUsage.getStatistics().getTimestamp() * 1000;
     return new SingularityTaskUsage(
         taskUsage.getStatistics().getMemTotalBytes(),
-        (long) taskUsage.getStatistics().getTimestamp() * 1000,
+        (long) timestampMillis,
         taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs(),
         taskUsage.getStatistics().getDiskUsedBytes(),
         taskUsage.getStatistics().getCpusNrPeriods(),
@@ -379,8 +380,9 @@ public class SingularityUsageHelper {
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
-      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / TimeUnit.MILLISECONDS.toSeconds(newerUsage.getTimestamp() - olderUsage.getTimestamp());
-      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / TimeUnit.MILLISECONDS.toSeconds(newerUsage.getTimestamp() - olderUsage.getTimestamp());
+      double timeElapsed = (double) (newerUsage.getTimestamp() - olderUsage.getTimestamp()) / 1000;
+      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / timeElapsed;
+      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / timeElapsed;
 
       if (cpusUsed > newRequestUtilization.getMaxCpuUsed()) {
         newRequestUtilization.setMaxCpuUsed(cpusUsed);

@@ -221,17 +221,20 @@ public class SingularityMesosOfferScheduler {
     List<CompletableFuture<Void>> usagesWithScoresFutures = new ArrayList<>();
     Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = new ConcurrentHashMap<>();
     for (SingularitySlaveUsageWithId usage : currentSlaveUsages.values()) {
-      usagesWithScoresFutures.add(offerScoringSemaphore.call(() ->
-          CompletableFuture.runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
-              new SingularitySlaveUsageWithCalculatedScores(
-                usage,
-                mesosConfiguration.getScoreUsingSystemLoad(),
-                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
-                mesosConfiguration.getLoad5OverloadedThreshold(),
-                mesosConfiguration.getLoad1OverloadedThreshold(),
-                usage.getTimestamp())),
-              offerScoringExecutor))
-      );
+      if (offerHolders.containsKey(usage.getSlaveId())) {
+        usagesWithScoresFutures.add(offerScoringSemaphore.call(() ->
+            CompletableFuture.runAsync(() ->
+                    currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
+                        new SingularitySlaveUsageWithCalculatedScores(
+                            usage,
+                            mesosConfiguration.getScoreUsingSystemLoad(),
+                            getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
+                            mesosConfiguration.getLoad5OverloadedThreshold(),
+                            mesosConfiguration.getLoad1OverloadedThreshold(),
+                            usage.getTimestamp())),
+                offerScoringExecutor))
+        );
+      }
     }
 
     CompletableFutures.allOf(usagesWithScoresFutures).join();
