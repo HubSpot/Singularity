@@ -134,8 +134,7 @@ CREATE TABLE `taskUsage` (
   `cpusTotal` DOUBLE UNSIGNED NOT NULL,
   `diskTotalBytes` BIGINT UNSIGNED NOT NULL,
   `timestamp` TIMESTAMP NOT NULL,
-   PRIMARY KEY (`taskId`, `timestamp`),
-   KEY `requestId` (`requestId`)
+   PRIMARY KEY (`taskId`, `timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
