@@ -127,12 +127,15 @@ ALTER TABLE `taskHistory`
 
 --changeset ssalinas:17 dbms:mysql
 CREATE TABLE `taskUsage` (
-  `taskId` varchar(200) NOT NULL DEFAULT '',
   `requestId` varchar(100) NOT NULL,
+  `taskId` varchar(200) NOT NULL DEFAULT '',
   `memoryTotalBytes` BIGINT UNSIGNED NOT NULL,
   `cpusUsed` DOUBLE UNSIGNED NOT NULL,
   `cpusTotal` DOUBLE UNSIGNED NOT NULL,
   `diskTotalBytes` BIGINT UNSIGNED NOT NULL,
-  `timestamp` timestamp NOT NULL,
+  `timestamp` TIMESTAMP NOT NULL,
+   PRIMARY KEY (`taskId`, `timestamp`),
+   KEY `requestId` (`requestId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

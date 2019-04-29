@@ -22,11 +22,11 @@ public class JDBITaskUsageManager implements TaskUsageManager {
   }
 
   public void deleteTaskUsage(SingularityTaskId taskId) {
-    taskUsageJDBI.deleteTaskUsage(taskId.getRequestId(), taskId.getId());
+    taskUsageJDBI.deleteTaskUsage(taskId.getId());
   }
 
   public void deleteSpecificTaskUsage(SingularityTaskId taskId, long timestamp) {
-    taskUsageJDBI.deleteSpecificTaskUsage(taskId.getRequestId(), taskId.getId(), new Date(timestamp));
+    taskUsageJDBI.deleteSpecificTaskUsage(taskId.getId(), new Date(timestamp));
   }
 
   public void saveSpecificTaskUsage(SingularityTaskId taskId, SingularityTaskUsage usage) {
@@ -34,7 +34,7 @@ public class JDBITaskUsageManager implements TaskUsageManager {
   }
 
   public List<SingularityTaskUsage> getTaskUsage(SingularityTaskId taskId) {
-    return taskUsageJDBI.getTaskUsage(taskId.getRequestId(), taskId.getId());
+    return taskUsageJDBI.getTaskUsage(taskId.getId());
   }
 
   public int countTasksWithUsage() {
@@ -52,11 +52,7 @@ public class JDBITaskUsageManager implements TaskUsageManager {
       } catch (InvalidSingularityTaskIdException e) {
         LOG.warn("{} is not a valid task id, will remove task usage from zookeeper", taskIdString);
       }
-      if (taskId == null) {
-        taskUsageJDBI.deleteTaskUsage(taskIdString);
-      } else {
-        taskUsageJDBI.deleteTaskUsage(taskId.getRequestId(), taskId.getId()); // better index
-      }
+      taskUsageJDBI.deleteTaskUsage(taskIdString);
 
       LOG.debug("Deleted obsolete task usage {}", taskIdString);
     }

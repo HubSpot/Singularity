@@ -72,7 +72,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(2, first.getCpuSeconds(), 0);
     Assert.assertEquals(100, first.getMemoryTotalBytes(), 0);
-    Assert.assertEquals(5, first.getTimestamp(), 0);
+    Assert.assertEquals(5000, first.getTimestamp(), 0);
   }
 
   @Test
@@ -578,14 +578,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     }
   }
 
-  private long getTimestampSeconds(SingularityTaskId taskId, long seconds) {
-    return TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + seconds;
-  }
-
-  private void saveTaskUsage(SingularityTaskId taskId, long... times) {
-    for (long time : times) {
-      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0, 0, 0, 0));
-    }
+  private double getTimestampSeconds(SingularityTaskId taskId, long seconds) {
+    return ((double) taskId.getStartedAt() + seconds * 1000) / 1000;
   }
 
   private void testUtilization(SingularityClusterUtilization utilization,
