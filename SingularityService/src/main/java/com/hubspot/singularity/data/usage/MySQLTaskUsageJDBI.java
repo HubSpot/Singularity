@@ -16,12 +16,12 @@ public abstract class MySQLTaskUsageJDBI extends TaskUsageJDBI {
   @SqlUpdate("DELETE FROM taskUsage WHERE taskId = :taskId AND timestamp = :timestamp")
   public abstract void deleteSpecificTaskUsage(@Bind("taskId") String taskId, @Bind("timestamp") Date timestamp);
 
-  @SqlUpdate("INSERT INTO taskUsage (" + FILEDS + ") VALUES (" + FILED_VALUES + ")")
+  @SqlUpdate("INSERT INTO taskUsage (" + FIELDS + ") VALUES (" + FIELD_VALUES + ")")
   public abstract void saveSpecificTaskUsage(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("memoryTotalBytes") long memoryTotalBytes,
                                              @Bind("timestamp") Date timestamp, @Bind("cpuSeconds") double cpuSeconds, @Bind("diskTotalBytes") long diskTotalBytes, @Bind("cpusNrPeriods") long cpusNrPeriods,
                                              @Bind("cpusNrThrottled") long cpusNrThrottled, @Bind("cpusThrottledTimeSecs") double cpusThrottledTimeSecs);
 
-  @SqlQuery("SELECT " + FILEDS + "FROM taskUsage WHERE taskId = :taskId")
+  @SqlQuery("SELECT " + FIELDS + "FROM taskUsage WHERE taskId = :taskId")
   public abstract List<SingularityTaskUsage> getTaskUsage(@Bind("taskId") String taskId);
 
   @SqlQuery("SELECT COUNT(DISTINCT taskId) FROM taskUsage")
