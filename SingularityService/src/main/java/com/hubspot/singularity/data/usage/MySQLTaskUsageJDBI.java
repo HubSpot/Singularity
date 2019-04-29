@@ -25,7 +25,7 @@ public abstract class MySQLTaskUsageJDBI extends TaskUsageJDBI {
                                              @Bind("timestamp") Date timestamp, @Bind("cpuSeconds") double cpuSeconds, @Bind("diskTotalBytes") long diskTotalBytes, @Bind("cpusNrPeriods") long cpusNrPeriods,
                                              @Bind("cpusNrThrottled") long cpusNrThrottled, @Bind("cpusThrottledTimeSecs") double cpusThrottledTimeSecs);
 
-  @SqlUpdate("SELECT " + FILEDS + "FROM taskUsage WHERE requestId = :requestId AND taskId = :taskId")
+  @SqlQuery("SELECT " + FILEDS + "FROM taskUsage WHERE requestId = :requestId AND taskId = :taskId")
   public abstract List<SingularityTaskUsage> getTaskUsage(@Bind("requestId") String requestId, @Bind("taskId") String taskId);
 
   @SqlQuery("SELECT COUNT(DISTINCT taskId) FROM taskUsage")

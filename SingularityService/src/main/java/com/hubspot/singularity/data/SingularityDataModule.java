@@ -8,10 +8,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
-import com.hubspot.singularity.data.usage.TaskUsageManager;
 import com.hubspot.singularity.data.usage.UsageManager;
-import com.hubspot.singularity.data.usage.ZkTaskUsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
@@ -39,12 +36,6 @@ public class SingularityDataModule extends AbstractModule {
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
     bind(UserManager.class).in(Scopes.SINGLETON);
     bind(UsageManager.class).in(Scopes.SINGLETON);
-
-    if (configuration.getDatabaseConfiguration().isPresent()) {
-      bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
-    } else {
-      bind(TaskUsageManager.class).to(ZkTaskUsageManager.class).in(Scopes.SINGLETON);
-    }
 
     bind(WebhookManager.class).in(Scopes.SINGLETON);
 

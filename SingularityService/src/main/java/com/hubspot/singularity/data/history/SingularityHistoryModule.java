@@ -28,9 +28,12 @@ import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
 import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.TaskUsageJDBI;
+import com.hubspot.singularity.data.usage.TaskUsageManager;
+import com.hubspot.singularity.data.usage.ZkTaskUsageManager;
 
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jdbi.DBIFactory;
@@ -76,8 +79,10 @@ public class SingularityHistoryModule extends AbstractModule {
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
       bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
+      bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
+      bind(TaskUsageManager.class).to(ZkTaskUsageManager.class).in(Scopes.SINGLETON);
     }
   }
 

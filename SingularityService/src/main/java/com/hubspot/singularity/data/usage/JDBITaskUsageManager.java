@@ -14,10 +14,10 @@ import com.hubspot.singularity.SingularityTaskUsage;
 public class JDBITaskUsageManager implements TaskUsageManager {
   private static final Logger LOG = LoggerFactory.getLogger(JDBITaskUsageManager.class);
 
-  private final MySQLTaskUsageJDBI taskUsageJDBI;
+  private final TaskUsageJDBI taskUsageJDBI;
 
   @Inject
-  public JDBITaskUsageManager(MySQLTaskUsageJDBI taskUsageJDBI) {
+  public JDBITaskUsageManager(TaskUsageJDBI taskUsageJDBI) {
     this.taskUsageJDBI = taskUsageJDBI;
   }
 
