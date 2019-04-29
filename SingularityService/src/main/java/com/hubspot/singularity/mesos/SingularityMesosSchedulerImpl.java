@@ -205,20 +205,25 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
       Map<String, CachedOffer> cachedOffers = new HashMap<>();
       for (CachedOffer cachedOffer : cachedOfferList) {
-        cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
-        offersToCheck.add(cachedOffer.getOffer());
+        if (isValidOffer(cachedOffer.getOffer())) {
+          cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
+          offersToCheck.add(cachedOffer.getOffer());
+        } else if (cachedOffer.getOffer().getId() != null && cachedOffer.getOffer().getId().getValue() != null) {
+          mesosSchedulerClient.decline(Collections.singletonList(cachedOffer.getOffer().getId()));
+          offerCache.rescindOffer(cachedOffer.getOffer().getId());
+        } else {
+          LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+        }
       }
 
       offers.parallelStream().forEach((offer) -> {
-        if (offer.getId() == null || offer.getId().getValue() == null) {
-          LOG.warn("Received offer with null ID, skipping ({})", offer);
+        if (!isValidOffer(offer)) {
           offersToCheck.remove(offer);
-          return;
-        }
-        if (offer.getAgentId() == null || offer.getAgentId().getValue() == null) {
-          LOG.warn("Received offer with null agent ID, skipping ({})", offer);
-          offersToCheck.remove(offer);
-          mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
+          if (offer.getId() != null && offer.getId().getValue() != null) {
+            mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
+          } else {
+            LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+          }
           return;
         }
         String rolesInfo = MesosUtils.getRoles(offer).toString();
@@ -290,6 +295,18 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
           offers.size() - acceptedOffers.size());
     }, "resourceOffers");
+  }
+
+  private boolean isValidOffer(Offer offer) {
+    if (offer.getId() == null || offer.getId().getValue() == null) {
+      LOG.warn("Received offer with null ID, skipping ({})", offer);
+      return false;
+    }
+    if (offer.getAgentId() == null || offer.getAgentId().getValue() == null) {
+      LOG.warn("Received offer with null agent ID, skipping ({})", offer);
+      return false;
+    }
+    return true;
   }
 
   @Override
