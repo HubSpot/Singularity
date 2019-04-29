@@ -64,6 +64,7 @@ public class SingularityHistoryModule extends AbstractModule {
     resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);
