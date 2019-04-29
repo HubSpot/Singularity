@@ -212,6 +212,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       offers.parallelStream().forEach((offer) -> {
         if (offer.getId() == null) {
           LOG.warn("Received offer with null ID, skipping ({})", offer);
+          offersToCheck.remove(offer);
           return;
         }
         String rolesInfo = MesosUtils.getRoles(offer).toString();
