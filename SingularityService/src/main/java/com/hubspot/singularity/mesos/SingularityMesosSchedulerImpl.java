@@ -215,6 +215,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           offersToCheck.remove(offer);
           return;
         }
+        if (offer.getAgentId() == null) {
+          LOG.warn("Received offer with null agent ID, skipping ({})", offer);
+          offersToCheck.remove(offer);
+          mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
+          return;
+        }
         String rolesInfo = MesosUtils.getRoles(offer).toString();
         LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
             MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
