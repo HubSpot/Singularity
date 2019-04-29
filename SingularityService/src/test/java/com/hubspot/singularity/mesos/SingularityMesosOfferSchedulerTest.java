@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.Assert;
@@ -193,12 +192,12 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     String t1 = taskId.getId();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + 5, 1000);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, getTimestampSeconds(taskId, 5    ), 1000);
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 1 cpus used
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 11, TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + 6, 1000);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 11, getTimestampSeconds(taskId, 6), 1000);
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
     SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
@@ -264,5 +263,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
   private void setRequestType(RequestType type) {
     Mockito.when(request.getRequestType()).thenReturn(type);
+  }
+
+  private double getTimestampSeconds(SingularityTaskId taskId, long seconds) {
+    return ((double) taskId.getStartedAt() + seconds * 1000) / 1000;
   }
 }
