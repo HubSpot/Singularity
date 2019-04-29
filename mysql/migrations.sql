@@ -133,7 +133,7 @@ CREATE TABLE `taskUsage` (
   `cpuSeconds` DOUBLE UNSIGNED NOT NULL,
   `cpusThrottledTimeSecs` DOUBLE UNSIGNED NOT NULL,
   `diskTotalBytes` BIGINT UNSIGNED NOT NULL,
-  `timestamp` TIMESTAMP NOT NULL,
+  `timestamp` BIGINT UNSIGNED NOT NULL,
   `cpusNrPeriods` BIGINT UNSIGNED NOT NULL,
   `cpusNrThrottled` BIGINT UNSIGNED NOT NULL,
    PRIMARY KEY (`taskId`, `timestamp`)

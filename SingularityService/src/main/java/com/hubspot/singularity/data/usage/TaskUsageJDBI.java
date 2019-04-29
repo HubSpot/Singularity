@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data.usage;
 
-import java.util.Date;
 import java.util.List;
 
 import com.hubspot.singularity.SingularityTaskUsage;
@@ -11,9 +10,9 @@ public abstract class TaskUsageJDBI {
 
   public abstract void deleteTaskUsage(String taskId);
 
-  public abstract void deleteSpecificTaskUsage(String taskId, Date timestamp);
+  public abstract void deleteSpecificTaskUsage(String taskId, long timestamp);
 
-  public abstract void saveSpecificTaskUsage(String requestId, String taskId, long memoryTotalBytes, Date timestamp, double cpuSeconds, long diskTotalBytes, long cpusNrPeriods, long cpusNrThrottled,
+  public abstract void saveSpecificTaskUsage(String requestId, String taskId, long memoryTotalBytes, long timestamp, double cpuSeconds, long diskTotalBytes, long cpusNrPeriods, long cpusNrThrottled,
                                              double cpusThrottledTimeSecs);
 
   public abstract List<SingularityTaskUsage> getTaskUsage(String taskId);
