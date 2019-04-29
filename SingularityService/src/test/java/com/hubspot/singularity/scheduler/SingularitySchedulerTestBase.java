@@ -42,12 +42,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
-import com.hubspot.singularity.SingularityLeaderController;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -94,6 +91,8 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -748,7 +747,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, 0L, 0L, timestamp);
   }
 
-  protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
+  protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, double timestampSeconds, int memBytes) {
     return new MesosTaskMonitorObject(null, null, "singularity", id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
