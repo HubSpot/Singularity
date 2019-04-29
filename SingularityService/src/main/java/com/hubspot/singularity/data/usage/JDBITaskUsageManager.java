@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data.usage;
 
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -26,11 +25,11 @@ public class JDBITaskUsageManager implements TaskUsageManager {
   }
 
   public void deleteSpecificTaskUsage(SingularityTaskId taskId, long timestamp) {
-    taskUsageJDBI.deleteSpecificTaskUsage(taskId.getId(), new Date(timestamp));
+    taskUsageJDBI.deleteSpecificTaskUsage(taskId.getId(), timestamp);
   }
 
   public void saveSpecificTaskUsage(SingularityTaskId taskId, SingularityTaskUsage usage) {
-    taskUsageJDBI.saveSpecificTaskUsage(taskId.getRequestId(), taskId.getId(), usage.getMemoryTotalBytes(), new Date(usage.getTimestamp()), usage.getCpuSeconds(), usage.getDiskTotalBytes(), usage.getCpusNrPeriods(), usage.getCpusNrThrottled(), usage.getCpusThrottledTimeSecs());
+    taskUsageJDBI.saveSpecificTaskUsage(taskId.getRequestId(), taskId.getId(), usage.getMemoryTotalBytes(), usage.getTimestamp(), usage.getCpuSeconds(), usage.getDiskTotalBytes(), usage.getCpusNrPeriods(), usage.getCpusNrThrottled(), usage.getCpusThrottledTimeSecs());
   }
 
   public List<SingularityTaskUsage> getTaskUsage(SingularityTaskId taskId) {
