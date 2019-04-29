@@ -60,6 +60,9 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   private void checkToSendTaskFinishedMail(SingularityTaskId taskId) {
     Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskId.getRequestId());
     Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(taskId);
+    if (!taskHistory.isPresent()) {
+      taskHistory = historyManager.getTaskHistory(taskId.getId());
+    }
 
     ShouldSendMailState shouldSendState = shouldSendTaskFinishedMail(taskId, requestWithState, taskHistory);
 
