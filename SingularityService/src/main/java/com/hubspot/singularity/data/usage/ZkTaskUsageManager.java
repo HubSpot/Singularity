@@ -30,7 +30,6 @@ public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsage
   private static final String TASK_PATH = ROOT_PATH + "/tasks";
 
   private static final String USAGE_HISTORY_PATH_KEY = "history";
-  private static final String CURRENT_USAGE_NODE_KEY = "CURRENT";
 
   private final Transcoder<SingularityTaskUsage> taskUsageTranscoder;
 
@@ -51,8 +50,8 @@ public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsage
     return ZKPaths.makePath(getTaskUsagePath(taskId), USAGE_HISTORY_PATH_KEY);
   }
 
-  private String getSpecificTaskUsagePath(SingularityTaskId taskId, double timestamp) {
-    return ZKPaths.makePath(getTaskUsageHistoryPath(taskId), Double.toString(timestamp));
+  private String getSpecificTaskUsagePath(SingularityTaskId taskId, long timestamp) {
+    return ZKPaths.makePath(getTaskUsageHistoryPath(taskId), Long.toString(timestamp));
   }
 
   public void deleteTaskUsage(SingularityTaskId taskId) {

@@ -174,8 +174,8 @@ public class SingularityUsageHelper {
         }
 
         SingularityTaskUsage latestUsage = getUsage(taskUsage);
-        usageManager.saveSpecificTaskUsage(task, latestUsage);
         List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(task);
+        usageManager.saveSpecificTaskUsage(task, latestUsage);
 
         Optional<SingularityTask> maybeTask = taskManager.getTask(task);
         Optional<Resources> maybeResources = Optional.absent();
