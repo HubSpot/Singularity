@@ -19,5 +19,7 @@ public abstract class TaskUsageJDBI {
 
   public abstract List<String> getUniqueTaskIds();
 
+  public abstract List<Long> getUsageTimestampsForTask(String taskId);
+
   public abstract int countTasksWithUsage();
 }

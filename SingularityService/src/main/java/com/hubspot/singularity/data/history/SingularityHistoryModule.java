@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
 import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
 import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
@@ -58,13 +59,14 @@ public class SingularityHistoryModule extends AbstractModule {
     Multibinder<ResultSetMapper<?>> resultSetMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ResultSetMapper<?>>() {});
 
     resultSetMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityTimestampMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);

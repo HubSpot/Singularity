@@ -9,15 +9,19 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class JDBITaskUsageManager implements TaskUsageManager {
   private static final Logger LOG = LoggerFactory.getLogger(JDBITaskUsageManager.class);
 
   private final TaskUsageJDBI taskUsageJDBI;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  public JDBITaskUsageManager(TaskUsageJDBI taskUsageJDBI) {
+  public JDBITaskUsageManager(TaskUsageJDBI taskUsageJDBI,
+                              SingularityConfiguration configuration) {
     this.taskUsageJDBI = taskUsageJDBI;
+    this.configuration = configuration;
   }
 
   public void deleteTaskUsage(SingularityTaskId taskId) {
@@ -42,11 +46,13 @@ public class JDBITaskUsageManager implements TaskUsageManager {
 
   public void cleanOldUsages(List<SingularityTaskId> activeTaskIds) {
     for (String taskIdString : taskUsageJDBI.getUniqueTaskIds()) {
-      SingularityTaskId taskId = null;
       try {
-        taskId = SingularityTaskId.valueOf(taskIdString);
+        SingularityTaskId taskId = SingularityTaskId.valueOf(taskIdString);
         if (activeTaskIds.contains(taskId)) {
-          continue;
+          taskUsageJDBI.getUsageTimestampsForTask(taskIdString).stream()
+              .sorted((t1, t2) -> Long.compare(t2, t1))
+              .skip(configuration.getNumUsageToKeep())
+              .forEach((timestamp) -> deleteSpecificTaskUsage(taskId, timestamp));
         }
       } catch (InvalidSingularityTaskIdException e) {
         LOG.warn("{} is not a valid task id, will remove task usage from zookeeper", taskIdString);

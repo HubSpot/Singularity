@@ -62,14 +62,26 @@ public class SingularityMappers {
 
   }
 
-  static class SingularityRequestIdMapper implements ResultSetMapper<String> {
+  static class SingularityIdMapper implements ResultSetMapper<String> {
 
     @Inject
-    SingularityRequestIdMapper() {}
+    SingularityIdMapper() {}
 
     @Override
     public String map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return r.getString("id");
+    }
+
+  }
+
+  static class SingularityTimestampMapper implements ResultSetMapper<Long> {
+
+    @Inject
+    SingularityTimestampMapper() {}
+
+    @Override
+    public Long map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return r.getLong("timestamp");
     }
 
   }
