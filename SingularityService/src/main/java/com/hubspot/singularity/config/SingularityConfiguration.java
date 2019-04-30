@@ -249,11 +249,9 @@ public class SingularityConfiguration extends Configuration {
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
 
-  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(2);
 
   private int maxPendingImmediatePersists = 200;
-
-  private boolean immediatelyPersistTaskHistory = false;
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
 
@@ -1154,14 +1152,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxPendingImmediatePersists(int maxPendingImmediatePersists) {
     this.maxPendingImmediatePersists = maxPendingImmediatePersists;
-  }
-
-  public boolean isImmediatelyPersistTaskHistory() {
-    return immediatelyPersistTaskHistory;
-  }
-
-  public void setImmediatelyPersistTaskHistory(boolean immediatelyPersistTaskHistory) {
-    this.immediatelyPersistTaskHistory = immediatelyPersistTaskHistory;
   }
 
   public void setS3Configuration(S3Configuration s3Configuration) {

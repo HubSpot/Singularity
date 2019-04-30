@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -35,7 +33,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
@@ -64,13 +61,11 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
@@ -79,8 +74,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.helpers.RebalancingHelper;
@@ -104,17 +97,12 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
   private final SingularityLeaderCache leaderCache;
   private final SingularitySchedulerLock lock;
-  private final HistoryManager historyManager;
-  private final AsyncSemaphore<Void> persisterSemaphore;
-  private final ExecutorService persisterExecutor;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
-                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, HistoryManager historyManager,
-                              @Named(SingularityHistoryModule.PERSISTER_SEMAPHORE) AsyncSemaphore<Void> persisterSemaphore,
-                              @Named(SingularityHistoryModule.PERSISTER_EXECUTOR) ExecutorService persisterExecutor) {
+                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -127,9 +115,6 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
     this.leaderCache = leaderCache;
     this.lock = lock;
-    this.historyManager = historyManager;
-    this.persisterSemaphore = persisterSemaphore;
-    this.persisterExecutor = persisterExecutor;
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -706,26 +691,6 @@ public class SingularityScheduler {
     }
 
     updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult);
-
-    if (configuration.getDatabaseConfiguration().isPresent() && configuration.isImmediatelyPersistTaskHistory()) {
-      persisterSemaphore.call(() ->
-          CompletableFuture.runAsync(() ->
-                  lock.runWithRequestLock(() -> {
-                        LOG.debug("Running immediate persist of task {}", taskId);
-                        Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(taskId);
-                        if (taskHistory.isPresent()) {
-                          historyManager.saveTaskHistory(taskHistory.get());
-                          taskManager.deleteTaskHistory(taskId);
-                        }
-                      },
-                      taskId.getRequestId(),
-                      "immediate-task-history-persist"),
-              persisterExecutor)
-      ).exceptionally((t) -> {
-        LOG.error("Could not immediately persist task {}, poller will retry", taskId, t);
-        return null;
-      });
-    }
   }
 
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, Optional<SingularityTask> task, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
