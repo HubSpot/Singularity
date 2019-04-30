@@ -309,7 +309,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     for (Entry<SingularityUploader, CompletableFuture<Integer>> uploaderToFuture : futures.entrySet()) {
       final SingularityUploader uploader = uploaderToFuture.getKey();
       try {
-        final int foundFiles = uploaderToFuture.getValue().get();
+        LOG.debug("Waiting for future for uploader {}", uploader);
+        final int foundFiles = uploaderToFuture.getValue().get(30, TimeUnit.SECONDS);
         final boolean isFinished = finishing.get(uploader);
 
         if (foundFiles == 0 && shouldExpire(uploader, isFinished)) {
