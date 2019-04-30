@@ -707,7 +707,7 @@ public class SingularityScheduler {
 
     updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult);
 
-    if (configuration.getDatabaseConfiguration().isPresent()) {
+    if (configuration.getDatabaseConfiguration().isPresent() && configuration.isImmediatelyPersistTaskHistory()) {
       persisterSemaphore.call(() ->
           CompletableFuture.runAsync(() ->
                   lock.runWithRequestLock(() -> {
