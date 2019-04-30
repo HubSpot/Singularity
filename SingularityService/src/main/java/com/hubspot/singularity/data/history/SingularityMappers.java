@@ -69,7 +69,7 @@ public class SingularityMappers {
 
     @Override
     public String map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      return r.getString("requestId");
+      return r.getString("id");
     }
 
   }

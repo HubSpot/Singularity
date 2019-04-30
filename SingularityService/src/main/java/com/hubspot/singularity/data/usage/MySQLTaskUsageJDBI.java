@@ -23,7 +23,7 @@ public abstract class MySQLTaskUsageJDBI extends TaskUsageJDBI {
   @SqlQuery("SELECT " + FIELDS + " FROM taskUsage WHERE taskId = :taskId")
   public abstract List<SingularityTaskUsage> getTaskUsage(@Bind("taskId") String taskId);
 
-  @SqlQuery("SELECT DISTINCT taskId FROM taskUsage")
+  @SqlQuery("SELECT DISTINCT taskId as id FROM taskUsage")
   public abstract List<String> getUniqueTaskIds();
 
   @SqlQuery("SELECT COUNT(DISTINCT taskId) FROM taskUsage")
