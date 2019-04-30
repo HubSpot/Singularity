@@ -83,13 +83,22 @@ public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsage
   }
 
   public void cleanOldUsages(List<SingularityTaskId> activeTaskIds) {
+
     for (String requestId : getChildren(TASK_PATH)) {
+      // clean for inactive tasks
       for (String taskIdString : getChildren(ZKPaths.makePath(TASK_PATH, requestId))) {
         SingularityTaskId taskId;
         try {
           taskId = SingularityTaskId.valueOf(taskIdString);
           if (activeTaskIds.contains(taskId)) {
-            continue;
+            // prune old usages for active tasks
+            getChildren(getTaskUsageHistoryPath(taskId)).stream()
+                .map(Long::parseLong)
+                .sorted((t1, t2) -> Long.compare(t2, t1))
+                .skip(configuration.getNumUsageToKeep())
+                .forEach((timestamp) -> {
+                  delete(getSpecificTaskUsagePath(taskId, timestamp));
+                });
           }
         } catch (InvalidSingularityTaskIdException e) {
           LOG.warn("{} is not a valid task id, will remove task usage from zookeeper", taskIdString);

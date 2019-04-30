@@ -26,6 +26,9 @@ public abstract class MySQLTaskUsageJDBI extends TaskUsageJDBI {
   @SqlQuery("SELECT DISTINCT taskId as id FROM taskUsage")
   public abstract List<String> getUniqueTaskIds();
 
+  @SqlQuery("SELECT DISTINCT timestamp FROM taskUsage WHERE taskId = :taskId")
+  public abstract List<Long> getUsageTimestampsForTask(@Bind("taskId") String taskId);
+
   @SqlQuery("SELECT COUNT(DISTINCT taskId) FROM taskUsage")
   public abstract int countTasksWithUsage();
 }
