@@ -127,7 +127,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
     resourceOffers(1);
 
-    configuration.setNumUsageToKeep(2);
+    configuration.setNumUsageToKeep(3);
     configuration.setCheckUsageEveryMillis(1);
 
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
