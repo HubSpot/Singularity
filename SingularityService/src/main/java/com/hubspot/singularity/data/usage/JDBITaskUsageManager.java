@@ -53,6 +53,7 @@ public class JDBITaskUsageManager implements TaskUsageManager {
               .sorted((t1, t2) -> Long.compare(t2, t1))
               .skip(configuration.getNumUsageToKeep())
               .forEach((timestamp) -> deleteSpecificTaskUsage(taskId, timestamp));
+          continue;
         }
       } catch (InvalidSingularityTaskIdException e) {
         LOG.warn("{} is not a valid task id, will remove task usage from zookeeper", taskIdString);

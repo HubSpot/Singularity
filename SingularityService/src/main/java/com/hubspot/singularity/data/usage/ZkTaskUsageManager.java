@@ -99,6 +99,7 @@ public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsage
                 .forEach((timestamp) -> {
                   delete(getSpecificTaskUsagePath(taskId, timestamp));
                 });
+            continue;
           }
         } catch (InvalidSingularityTaskIdException e) {
           LOG.warn("{} is not a valid task id, will remove task usage from zookeeper", taskIdString);
