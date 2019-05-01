@@ -254,9 +254,10 @@ public class HistoryResource extends AbstractHistoryResource {
       authorizationHelper.checkAdminAuthorization(user);
     }
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), skipZk == null ? true : skipZk);
+    boolean canSkipZk = skipZk == null ? true : skipZk;
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), canSkipZk);
     final int limitCount = getLimitCount(count);
-    final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, canSkipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
