@@ -612,7 +612,8 @@ public class SingularityDeployChecker {
     }
 
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(request, deploy, deployActiveTasks, true);
-    if (request.getRequestType().equals(RequestType.WORKER) && deployHealth.equals(DeployHealth.UNHEALTHY)) {
+    // Catch non-web health check failures
+    if (request.getRequestType() == RequestType.WORKER && deployHealth == DeployHealth.UNHEALTHY) {
       return failUnhealthyDeploy(request, pendingDeploy, deploy, deployActiveTasks);
     }
 
