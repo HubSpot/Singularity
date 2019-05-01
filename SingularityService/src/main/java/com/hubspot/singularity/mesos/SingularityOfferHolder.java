@@ -116,7 +116,7 @@ public class SingularityOfferHolder {
     for (SingularityMesosTaskHolder taskHolder : acceptedTasks) {
       taskIds.add(taskHolder.getTask().getTaskId());
       toLaunch.add(taskHolder.getMesosTask());
-      LOG.debug("Launching {} with offer {}", taskHolder.getTask().getTaskId(), offers.get(0).getId());
+      LOG.debug("Launching {} with possible offers {}", taskHolder.getTask().getTaskId(), MesosUtils.formatOfferIdsForLog(offers));
       LOG.trace("Launching {} mesos task: {}", taskHolder.getTask().getTaskId(), MesosUtils.formatForLogging(taskHolder.getMesosTask()));
     }
 
@@ -166,6 +166,8 @@ public class SingularityOfferHolder {
         neededOffers.stream().map(Offer::getId).collect(Collectors.toList()),
         Collections.singletonList(Operation.newBuilder().setType(Type.LAUNCH).setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch).build()).build())
     );
+
+    LOG.debug("Launched tasks with offers {}, unused: {}", MesosUtils.formatOfferIdsForLog(neededOffers), MesosUtils.formatOfferIdsForLog(leftoverOffers));
 
     LOG.info("{} tasks ({}) launched", taskIds.size(), taskIds);
     return leftoverOffers;

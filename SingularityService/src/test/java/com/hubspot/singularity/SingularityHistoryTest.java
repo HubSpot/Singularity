@@ -206,6 +206,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
+    scheduler.drainPendingQueue();
+
     resourceOffers();
 
     Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
@@ -232,7 +234,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
+    requestResource.scheduleImmediately(singularityUser, requestId, null);
+
+    scheduler.drainPendingQueue();
 
     resourceOffers();
 

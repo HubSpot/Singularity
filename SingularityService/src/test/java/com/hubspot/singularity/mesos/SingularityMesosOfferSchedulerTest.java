@@ -31,6 +31,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
+import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityUsagePoller;
 import com.hubspot.singularity.scheduler.TestingMesosClient;
@@ -39,6 +40,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
   @Inject
   protected SingularityMesosOfferScheduler scheduler;
+
+  @Inject
+  protected SingularityScheduler singularityScheduler;
 
   @Inject
   protected DeployManager deployManager;
@@ -170,6 +174,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
     slaveAndRackManager.checkOffer(host3Offer);
 
+    singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
     Assert.assertEquals(2, offerHolders.size());
 
@@ -216,6 +221,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
     slaveAndRackManager.checkOffer(host3Offer);
 
+    singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
     Assert.assertEquals(2, offerHolders.size());
 

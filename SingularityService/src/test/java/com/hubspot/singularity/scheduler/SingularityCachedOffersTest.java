@@ -76,6 +76,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
         )
     );
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
 
     List<Offer> cachedOffers = offerCache.peekOffers();

@@ -170,6 +170,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
 
+    scheduler.drainPendingQueue();
+    scheduler.checkForDecomissions();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size() == 1);
@@ -182,6 +184,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMMISSIONING);
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2"))));
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2"))));
 
@@ -193,8 +196,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     }
 
     // all task should have moved.
-
     cleaner.drainCleanupQueue();
+    scheduler.drainPendingQueue();
 
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave4").get()).size() == 1);
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave3").get()).size() == 1);
@@ -210,22 +213,27 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(StateChangeResult.SUCCESS, rackManager.changeState("rack2", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user2")));
 
     // it shouldn't place any on here, since it's DECOMMissioned
+    scheduler.drainPendingQueue();
+    scheduler.checkForDecomissions();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     slaveResource.activateSlave(singularityUser, "slave1", null);
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(1, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     Assert.assertTrue(rackManager.getObject("rack2").get().getCurrentState().getState() == MachineState.DECOMMISSIONING);
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1"))));
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
@@ -255,6 +263,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user1")));
 
     scheduler.drainPendingQueue();
+    scheduler.checkForDecomissions();
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
@@ -333,6 +342,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.GREEDY)).setInstances(Optional.of(2)));
 
+    scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1")));
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2")));
 
@@ -354,6 +364,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     // decommission frozen slave1
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user1")));
 
+    scheduler.checkForDecomissions();
+    scheduler.drainPendingQueue();
     resourceOffers();
     cleaner.drainCleanupQueue();
 
