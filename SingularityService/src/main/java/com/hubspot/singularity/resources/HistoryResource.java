@@ -164,14 +164,15 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
-    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, true);
+    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, skipZk == null ? true : skipZk);
   }
 
   @GET
@@ -182,15 +183,17 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
 
-    Optional<Integer> dataCount = deployTaskHistoryHelper.getBlendedHistoryCount(key, true);
+    boolean canSkipZk = skipZk == null ? true : skipZk;
+    Optional<Integer> dataCount = deployTaskHistoryHelper.getBlendedHistoryCount(key, canSkipZk);
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-    final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, true);
+    final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, canSkipZk);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -212,7 +215,8 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @Parameter(description = "Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     if (requestId.isPresent()) {
       authorizationHelper.checkForAuthorizationByRequestId(requestId.get(), user, SingularityAuthorizationScope.READ);
     } else {
@@ -223,7 +227,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter,
-        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, true);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, skipZk == null ? true : skipZk);
   }
 
   @GET
@@ -242,14 +246,15 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @Parameter(description = "Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     if (requestId.isPresent()) {
       authorizationHelper.checkForAuthorizationByRequestId(requestId.get(), user, SingularityAuthorizationScope.READ);
     } else {
       authorizationHelper.checkAdminAuthorization(user);
     }
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), true);
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), skipZk == null ? true : skipZk);
     final int limitCount = getLimitCount(count);
     final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
@@ -273,14 +278,15 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @Parameter(description = "Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter,
-        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, true);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount, skipZk == null ? false : skipZk);
   }
 
   @GET
@@ -299,12 +305,13 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @Parameter(description = "Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), true);
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection), skipZk == null ? true : skipZk);
     final int limitCount = getLimitCount(count);
-    final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -334,13 +341,14 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, false);
+    return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, skipZk == null ? false : skipZk);
   }
 
   @GET
@@ -350,12 +358,13 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId, false);
     final int limitCount = getLimitCount(count);
-    final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page);
+    final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -368,13 +377,14 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, true);
+    return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, skipZk == null ? false : skipZk);
   }
 
   @GET
@@ -384,13 +394,15 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
-      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
+      @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(requestId, true);
+    boolean canSkipZk = skipZk == null ? true : skipZk;
+    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(requestId, canSkipZk);
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
-    final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, true);
+    final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, canSkipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -419,13 +431,14 @@ public class HistoryResource extends AbstractHistoryResource {
   public Set<List<String>> getRecentCommandLineArgs(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
-      @Parameter(description = "Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
+      @Parameter(description = "Max number of recent args to return") @QueryParam("count") Optional<Integer> count,
+      @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") Boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
       Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
-      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount, true);
+      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount, skipZk == null ? true : skipZk);
     Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
