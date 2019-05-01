@@ -52,7 +52,6 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
         lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers -> pendingTaskDeletes"));
       }
 
-      scheduler.checkForDecomissions();
       scheduler.drainPendingQueue();
 
       // Check against only cached offers

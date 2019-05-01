@@ -165,6 +165,7 @@ public class SingularityMesosOfferScheduler {
   public void resourceOffers(List<Offer> uncached) {
     final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", uncached.size());
+    scheduler.checkForDecomissions();
     boolean delclineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
