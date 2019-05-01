@@ -83,6 +83,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       setConfigurationForNoDelay();
 
       cleaner.drainCleanupQueue();
+      scheduler.drainPendingQueue();
       resourceOffers();
 
       List<SingularityTaskId> taskIds = taskManager.getAllTaskIds();

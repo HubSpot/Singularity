@@ -1,28 +1,20 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
-import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
-import com.hubspot.singularity.mesos.SingularityOfferHolder;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
@@ -30,20 +22,20 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerPoller.class);
 
-  private final OfferCache offerCache;
-  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularityMesosOfferScheduler offerScheduler;
+  private final TaskManager taskManager;
+  private final SingularityScheduler scheduler;
   private final DisasterManager disasterManager;
   private final SingularitySchedulerLock lock;
 
   @Inject
-  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SingularityMesosSchedulerClient schedulerClient,
+  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, TaskManager taskManager, SingularityScheduler scheduler,
                              SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, true);
 
-    this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
-    this.schedulerClient = schedulerClient;
+    this.taskManager = taskManager;
+    this.scheduler = scheduler;
     this.disasterManager = disasterManager;
     this.lock = lock;
   }
@@ -55,59 +47,16 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       return;
     }
 
-
     lock.runWithOffersLock(() -> {
-      List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
-      Map<String, CachedOffer> offerIdToCachedOffer = new HashMap<>(cachedOffers.size());
-      List<Offer> offers = new ArrayList<>(cachedOffers.size());
-
-      for (CachedOffer cachedOffer : cachedOffers) {
-        offerIdToCachedOffer.put(cachedOffer.getOfferId(), cachedOffer);
-        offers.add(cachedOffer.getOffer());
+      for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
+        lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers -> pendingTaskDeletes"));
       }
 
-      Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
+      scheduler.checkForDecomissions();
+      scheduler.drainPendingQueue();
 
-      if (offerHolders.isEmpty()) {
-        return;
-      }
-
-      int acceptedOffers = 0;
-      int launchedTasks = 0;
-
-      for (SingularityOfferHolder offerHolder : offerHolders) {
-        List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
-
-        if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          List<Offer> unusedOffers = offerHolder.launchTasksAndGetUnusedOffers(schedulerClient);
-          launchedTasks += offerHolder.getAcceptedTasks().size();
-          acceptedOffers += cachedOffersFromHolder.size() - unusedOffers.size();
-
-          // Return to the cache those offers which we checked out of the cache, but didn't end up using.
-          List<CachedOffer> unusedCachedOffers = unusedOffers.stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
-          unusedCachedOffers.forEach((cachedOffer) -> {
-            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
-            offerCache.returnOffer(cachedOffer);
-          });
-
-          // Notify the cache of the cached offers that we did use.
-          cachedOffersFromHolder.removeAll(unusedCachedOffers);
-          cachedOffersFromHolder.forEach((cachedOffer) -> {
-            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
-            offerCache.useOffer(cachedOffer);
-          });
-        } else {
-          cachedOffersFromHolder.forEach((cachedOffer) -> {
-            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
-            offerCache.returnOffer(cachedOffer);
-          });
-        }
-      }
-
-      LOG.info("{} remaining offers not accounted for in offer check", offerIdToCachedOffer.size());
-      offerIdToCachedOffer.values().forEach(offerCache::returnOffer);
-
-      LOG.info("Launched {} tasks on {} cached offers (returned {})", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers);
-    }, getClass().getSimpleName());
+      // Check against only cached offers
+      offerScheduler.resourceOffers(Collections.emptyList());
+    }, "SingularitySchedulerPoller");
   }
 }
