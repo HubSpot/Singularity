@@ -206,7 +206,7 @@ public class SingularityTestModule implements Module {
           }
         }));
 
-    mainBinder.install(new SingularityDataModule());
+    mainBinder.install(new SingularityDataModule(configuration));
     mainBinder.install(new SingularitySchedulerModule());
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule(configuration));

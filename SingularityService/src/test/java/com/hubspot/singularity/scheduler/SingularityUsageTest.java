@@ -18,12 +18,12 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
@@ -65,19 +65,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     String slaveId = firstTask.getAgentId().getValue();
 
-    List<String> slaves = usageManager.getSlavesWithUsage();
+    Assert.assertEquals(0, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
+    Assert.assertEquals(100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
-    Assert.assertEquals(1, slaves.size());
-    Assert.assertEquals(slaves.get(0), slaveId);
-
-    Assert.assertEquals(0, usageManager.getSlaveUsage(slaveId).get(0).getCpusUsed(), 0);
-    Assert.assertEquals(100, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed(), 0);
-
-    SingularityTaskUsage first = usageManager.getTaskUsage(firstTask.getTaskId().getId()).get(0);
+    SingularityTaskUsage first = usageManager.getTaskUsage(firstTask.getTaskId()).get(0);
 
     Assert.assertEquals(2, first.getCpuSeconds(), 0);
     Assert.assertEquals(100, first.getMemoryTotalBytes(), 0);
-    Assert.assertEquals(5, first.getTimestamp(), 0);
+    Assert.assertEquals(5000, first.getTimestamp(), 0);
   }
 
   @Test
@@ -103,10 +98,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(2, usageManager.getTasksWithUsage().size());
-    Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
+    Assert.assertEquals(2, usageManager.countTasksWithUsage());
+    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
 
-    Assert.assertEquals(1100, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed(), 0);
+    Assert.assertEquals(1100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
     // kill task one
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_KILLED);
@@ -114,15 +109,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(1, usageManager.getTasksWithUsage().size());
-    Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
+    Assert.assertEquals(1, usageManager.countTasksWithUsage());
+    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
 
     slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
 
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(1, usageManager.getTasksWithUsage().size());
-    Assert.assertEquals(0, usageManager.getSlavesWithUsage().size());
+    Assert.assertEquals(1, usageManager.countTasksWithUsage());
+    Assert.assertEquals(0, usageManager.getAllCurrentSlaveUsage().size());
   }
 
   @Test
@@ -132,19 +127,19 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
     resourceOffers(1);
 
-    configuration.setNumUsageToKeep(2);
+    configuration.setNumUsageToKeep(3);
     configuration.setCheckUsageEveryMillis(1);
 
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
 
-    String t1 = taskIds.get(0).getId();
-    String t2 = taskIds.get(1).getId();
+    SingularityTaskId t1 = taskIds.get(0);
+    SingularityTaskId t2 = taskIds.get(1);
 
     String slaveId = slaveManager.getObjectIds().get(0);
     String host = slaveManager.getObjects().get(0).getHost();
 
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
-    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, 5, 1024);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 2, 5, 100);
+    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2.getId(), 10, 5, 1024);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
@@ -155,8 +150,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     // 5 seconds have elapsed, t1 has used 1 CPU the whole time = 5 + 2
     // t2 has used 2.5 CPUs the whole time =
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 7, 10, 125);
-    MesosTaskMonitorObject t2u2 = getTaskMonitor(t2, 22.5, 10, 750);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1.getId(), 7, 10, 125);
+    MesosTaskMonitorObject t2u2 = getTaskMonitor(t2.getId(), 22.5, 10, 750);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
 
@@ -164,9 +159,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     // check usage now
-    Assert.assertEquals(3.5, usageManager.getSlaveUsage(slaveId).get(1).getCpusUsed(), 0);
-    Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get(1).getMemoryBytesUsed(), 0);
-    Assert.assertEquals(2, usageManager.getSlaveUsage(slaveId).get(1).getNumTasks(), 0);
+    Assert.assertEquals(3.5, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
+    Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
+    Assert.assertEquals(2, usageManager.getSlaveUsage(slaveId).get().getNumTasks(), 0);
 
     // check task usage
     Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
@@ -174,8 +169,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Thread.sleep(2);
 
-    MesosTaskMonitorObject t1u3 = getTaskMonitor(t1, 8, 11, 125);
-    MesosTaskMonitorObject t2u3 = getTaskMonitor(t2, 23.5, 11, 1024);
+    MesosTaskMonitorObject t1u3 = getTaskMonitor(t1.getId(), 8, 11, 125);
+    MesosTaskMonitorObject t2u3 = getTaskMonitor(t2.getId(), 23.5, 11, 1024);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
 
@@ -184,30 +179,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     //check that there is only 2 usages
 
-    Assert.assertEquals(2, usageManager.getSlaveUsage(slaveId).size());
     Assert.assertEquals(3, usageManager.getTaskUsage(t1).size());
     Assert.assertEquals(3, usageManager.getTaskUsage(t2).size());
 
     Assert.assertEquals(10.0, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
     Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
 
-    Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed(), 0);
-    Assert.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get(1).getMemoryBytesUsed(), 0);
+    Assert.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
-    Assert.assertEquals(slaveId, usageManager.getAllCurrentSlaveUsage().get(0).getSlaveId());
-    Assert.assertEquals(1149, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed(), 0);
-
-    List<SingularityTaskCurrentUsageWithId> taskCurrentUsages = usageManager.getTaskCurrentUsages(taskManager.getActiveTaskIds());
-
-    Assert.assertEquals(2, taskCurrentUsages.size());
-
-    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
-
-    for (SingularityTaskCurrentUsageWithId taskCurrentUsage : taskCurrentUsages) {
-      activeTaskIds.remove(taskCurrentUsage.getTaskId());
-    }
-
-    Assert.assertTrue(activeTaskIds.isEmpty());
+    Assert.assertEquals(2, usageManager.countTasksWithUsage());
   }
 
   @Test
@@ -220,16 +200,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String t1 = taskId.getId();
+    SingularityTaskId t1 = taskId;
     String host = slaveManager.getObjects().get(0).getHost();
 
     // used 8 cpu
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 40, getTimestampSeconds(taskId, 5), 800);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 40, getTimestampSeconds(taskId, 5), 800);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // used 8 cpu
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 80, getTimestampSeconds(taskId, 10), 850);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1.getId(), 80, getTimestampSeconds(taskId, 10), 850);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
@@ -258,16 +238,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String t1 = taskId.getId();
     String host = slaveManager.getObjects().get(0).getHost();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, getTimestampSeconds(taskId, 5), 1024);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(taskId.getId(), 10, getTimestampSeconds(taskId, 5), 1024);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 20, getTimestampSeconds(taskId, 10), 900);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(taskId.getId(), 20, getTimestampSeconds(taskId, 10), 900);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
@@ -275,7 +254,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
-    int taskUsages = usageManager.getTaskUsage(t1).size();
+    int taskUsages = usageManager.getTaskUsage(taskId).size();
     testUtilization(utilization, 2, taskUsages, cpuReserved, memMbReserved,
         0, 0, 1,
         0, 0, 86,
@@ -295,16 +274,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String t1 = taskId.getId();
     String host = slaveManager.getObjects().get(0).getHost();
 
     // 4 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 20, getTimestampSeconds(taskId, 5), 1024);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(taskId.getId(), 20, getTimestampSeconds(taskId, 5), 1024);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 4 cpus used
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 40, getTimestampSeconds(taskId, 10), 1024);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(taskId.getId(), 40, getTimestampSeconds(taskId, 10), 1024);
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
@@ -312,7 +290,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
-    int taskUsages = usageManager.getTaskUsage(t1).size();
+    int taskUsages = usageManager.getTaskUsage(taskId).size();
     testUtilization(utilization, 2, taskUsages, cpuReserved, memMbReserved,
         1, 0, 0,
         2, 0, 0,
@@ -320,37 +298,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         2, 0, 0);
 
     Assert.assertEquals(requestId, utilization.getMaxOverUtilizedCpuRequestId());
-  }
-
-  @Test
-  public void itCorrectlyDeletesOldUsage() {
-    configuration.setNumUsageToKeep(2);
-    configuration.setCheckUsageEveryMillis(TimeUnit.MINUTES.toMillis(1));
-    long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-
-    // no usages exist, none are deleted
-    String taskId = "newTask";
-    clearUsages(taskId);
-
-    // 1 usage exists, none are deleted
-    taskId = "singleUsage";
-    saveTaskUsage(taskId, now);
-    clearUsages(taskId);
-    Assert.assertEquals(1, usageManager.getTaskUsage(taskId).size());
-
-    // 2 usages exist 1 min apart, none are deleted
-    taskId = "twoUsages";
-    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(1));
-    clearUsages(taskId);
-    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-
-    // 3 usages, oldest is deleted
-    taskId = "threeUsages";
-    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(3), now + TimeUnit.MINUTES.toSeconds(4));
-    clearUsages(taskId);
-    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
   }
 
   @Test
@@ -386,8 +333,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
     List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
-    int t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
-    int t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    int t1TaskUsages = usageManager.getTaskUsage(t1).size();
+    int t2TaskUsages = usageManager.getTaskUsage(t2).size();
     Assert.assertEquals(2, t1TaskUsages);
     Assert.assertEquals(2, t2TaskUsages);
 
@@ -421,8 +368,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
     List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
-    int t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
-    int t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    int t1TaskUsages = usageManager.getTaskUsage(t1).size();
+    int t2TaskUsages = usageManager.getTaskUsage(t2).size();
     Assert.assertEquals(1, t1TaskUsages);
     Assert.assertEquals(1, t2TaskUsages);
     Assert.assertEquals(1, requestUtilizations.size());
@@ -449,8 +396,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     utilization = usageManager.getClusterUtilization().get();
     requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
-    t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
-    t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    t1TaskUsages = usageManager.getTaskUsage(t1).size();
+    t2TaskUsages = usageManager.getTaskUsage(t2).size();
     Assert.assertEquals(2, t1TaskUsages);
     Assert.assertEquals(2, t2TaskUsages);
     Assert.assertEquals(1, requestUtilizations.size());
@@ -477,8 +424,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     utilization = usageManager.getClusterUtilization().get();
     requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
-    t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
-    t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    t1TaskUsages = usageManager.getTaskUsage(t1).size();
+    t2TaskUsages = usageManager.getTaskUsage(t2).size();
     Assert.assertEquals(3, t1TaskUsages);
     Assert.assertEquals(3, t2TaskUsages);
     Assert.assertEquals(1, requestUtilizations.size());
@@ -504,7 +451,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
       SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
-      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
       String t1 = taskId1.getId();
@@ -555,7 +502,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
       SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
-      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
       String t1 = taskId1.getId();
@@ -601,7 +548,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
       SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
-      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
       String t1 = taskId1.getId();
@@ -631,18 +578,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     }
   }
 
-  private long getTimestampSeconds(SingularityTaskId taskId, long seconds) {
-    return TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + seconds;
-  }
-
-  private void saveTaskUsage(String taskId, long... times) {
-    for (long time : times) {
-      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0, 0, 0, 0));
-    }
-  }
-
-  private void clearUsages(String taskId) {
-    usageHelper.clearOldUsage(taskId);
+  private double getTimestampSeconds(SingularityTaskId taskId, long seconds) {
+    return ((double) taskId.getStartedAt() + seconds * 1000) / 1000;
   }
 
   private void testUtilization(SingularityClusterUtilization utilization,
