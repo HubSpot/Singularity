@@ -631,12 +631,6 @@ public class SingularityDeployChecker {
       return checkCanMoveToNextDeployStep(request, deploy, pendingDeploy, updatePendingDeployRequest);
     }
 
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(request, deploy, deployActiveTasks, true);
-    // Catch non-web health check failures
-    if (request.getRequestType() == RequestType.WORKER && deployHealth == DeployHealth.UNHEALTHY) {
-      return failUnhealthyDeploy(request, pendingDeploy, deploy, deployActiveTasks);
-    }
-
     final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
     if (deployActiveTasks.size() < deployProgress.getTargetActiveInstances()) {
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
@@ -656,6 +650,7 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.WAITING, Optional.of("Waiting on load balancer API"), pendingDeploy.getLastLoadBalancerUpdate());
     }
 
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(request, deploy, deployActiveTasks, true);
     switch (deployHealth) {
       case WAITING:
         maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
@@ -683,16 +678,12 @@ public class SingularityDeployChecker {
         return enqueueAndProcessLbRequest(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks);
       case UNHEALTHY:
       default:
-        return failUnhealthyDeploy(request, pendingDeploy, deploy, deployActiveTasks);
+        for (SingularityTaskId activeTaskId : deployActiveTasks) {
+          taskManager.markHealthchecksFinished(activeTaskId);
+          taskManager.clearStartupHealthchecks(activeTaskId);
+        }
+        return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, "Not all tasks for deploy were healthy", deployActiveTasks);
     }
-  }
-
-  private SingularityDeployResult failUnhealthyDeploy(SingularityRequest request, SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy, Collection<SingularityTaskId> deployActiveTasks) {
-    for (SingularityTaskId activeTaskId : deployActiveTasks) {
-      taskManager.markHealthchecksFinished(activeTaskId);
-      taskManager.clearStartupHealthchecks(activeTaskId);
-    }
-    return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, "Not all tasks for deploy were healthy", deployActiveTasks);
   }
 
   private SingularityDeployResult checkCanMoveToNextDeployStep(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy,
