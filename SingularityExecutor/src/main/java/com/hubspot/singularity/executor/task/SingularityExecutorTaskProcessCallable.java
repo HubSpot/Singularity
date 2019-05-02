@@ -47,7 +47,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     LOG.info("Process being started");
     Process process = startProcess(processBuilder);
 
-    if (!runHealthcheck()) {
+    if (!runHealthcheck(process)) {
       task.getLog().info("Killing task {} that did not pass health checks", task.getTaskId());
       super.signalKillToProcessIfActive();
     }
@@ -64,7 +64,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     return "SingularityExecutorTaskProcessCallable [task=" + task + "]";
   }
 
-  private boolean runHealthcheck() {
+  private boolean runHealthcheck(Process process) {
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
 
@@ -79,12 +79,12 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
 
       try {
         Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-            .retryIfResult(bool -> !bool)
+            .retryIfResult(bool -> bool)
             .withWaitStrategy(WaitStrategies.fixedWait(retryInterval, TimeUnit.SECONDS))
             .withStopStrategy(StopStrategies.stopAfterDelay(maxDelay, TimeUnit.SECONDS))
             .build();
 
-        retryer.call(fullHealthcheckPath::exists);
+        retryer.call(() -> !fullHealthcheckPath.exists() && process.isAlive());
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
       } catch (ExecutionException | RetryException e) {
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
