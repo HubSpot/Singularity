@@ -30,6 +30,12 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   private final SingularityExecutorConfiguration configuration;
   private final SingularityExecutorTask task;
 
+  enum HealthCheckResult {
+    PASSED,
+    FAILED,
+    WAITING;
+  }
+
   public SingularityExecutorTaskProcessCallable(SingularityExecutorConfiguration configuration,
                                                 SingularityExecutorTask task,
                                                 ProcessBuilder processBuilder,
@@ -68,31 +74,45 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     Optional<HealthcheckOptions> maybeOptions = task.getTaskDefinition().getHealthcheckOptions();
     Optional<String> expectedHealthcheckResultFilePath = task.getTaskDefinition().getHealthcheckResultFilePath();
 
-    if (maybeOptions.isPresent() && expectedHealthcheckResultFilePath.isPresent()) {
-      LOG.debug("Checking for healthcheck file {}", expectedHealthcheckResultFilePath.get());
-      String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
-      File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
+    if (!maybeOptions.isPresent() || !expectedHealthcheckResultFilePath.isPresent()) {
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
+      return true;
+    }
 
-      Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
-      Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(5);
-      long maxDelay = maybeOptions.get().getStartupTimeoutSeconds().or(45) + (retryInterval * healthcheckMaxRetries);
+    LOG.debug("Checking for healthcheck file {}", expectedHealthcheckResultFilePath.get());
+    String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
+    File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
 
-      try {
-        Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-            .retryIfResult(bool -> bool)
-            .withWaitStrategy(WaitStrategies.fixedWait(retryInterval, TimeUnit.SECONDS))
-            .withStopStrategy(StopStrategies.stopAfterDelay(maxDelay, TimeUnit.SECONDS))
-            .build();
+    Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
+    Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(5);
+    long maxDelay = maybeOptions.get().getStartupTimeoutSeconds().or(45) + (retryInterval * healthcheckMaxRetries);
 
-        retryer.call(() -> !fullHealthcheckPath.exists() && process.isAlive());
+    try {
+      Retryer<HealthCheckResult> retryer = RetryerBuilder.<HealthCheckResult>newBuilder()
+          .retryIfResult(result -> result == HealthCheckResult.WAITING)
+          .withWaitStrategy(WaitStrategies.fixedWait(retryInterval, TimeUnit.SECONDS))
+          .withStopStrategy(StopStrategies.stopAfterDelay(maxDelay, TimeUnit.SECONDS))
+          .build();
+
+      HealthCheckResult result = retryer.call(() -> {
+        if (fullHealthcheckPath.exists()) {
+          return HealthCheckResult.PASSED;
+        } else if (process.isAlive()) {
+          return HealthCheckResult.WAITING;
+        }
+        return HealthCheckResult.FAILED;
+      });
+
+      if (result == HealthCheckResult.PASSED) {
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
-      } catch (ExecutionException | RetryException e) {
+        return true;
+      } else {
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
         return false;
       }
-    } else {
-      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
+    } catch (ExecutionException | RetryException e) {
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
+      return false;
     }
-    return true;
   }
 }
