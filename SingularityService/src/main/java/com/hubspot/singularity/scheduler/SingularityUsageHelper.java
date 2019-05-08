@@ -101,6 +101,7 @@ public class SingularityUsageHelper {
       Map<String, RequestUtilization> utilizationPerRequestId,
       Map<String, RequestUtilization> previousUtilizations,
       Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+      Map<SingularitySlaveUsage, List<TaskIdWithUsage>> highMemUsageHosts,
       AtomicLong totalMemBytesUsed,
       AtomicLong totalMemBytesAvailable,
       AtomicDouble totalCpuUsed,
@@ -157,6 +158,7 @@ public class SingularityUsageHelper {
       }
 
       boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+      boolean slaveExperiencingHighMemUsage = ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) > configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
@@ -216,11 +218,11 @@ public class SingularityUsageHelper {
           cpusUsedOnSlave += taskCpusUsed;
         }
 
-        if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
+        if (currentUsage != null && currentUsage.getCpusUsed() > 0) {
           if (isEligibleForShuffle(task)) {
             Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
             if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
-              LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
+              LOG.trace("Task {} already being cleaned up to spread cpu or mem usage, skipping", taskId);
             } else {
               if (maybeResources.isPresent()) {
                 possibleTasksToShuffle.add(new TaskIdWithUsage(task, maybeResources.get(), currentUsage));
@@ -246,6 +248,10 @@ public class SingularityUsageHelper {
 
       if (slaveOverloaded) {
         overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
+      }
+
+      if (slaveExperiencingHighMemUsage) {
+        highMemUsageHosts.put(slaveUsage, possibleTasksToShuffle);
       }
 
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
