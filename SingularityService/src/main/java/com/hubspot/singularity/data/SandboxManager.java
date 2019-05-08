@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
@@ -107,10 +108,12 @@ public class SandboxManager {
       }
 
       return Optional.of(parseResponseBody(response));
+    } catch (UnknownHostException uhe) {
+      throw new SlaveNotFoundException(uhe);
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      if ((e.getCause() != null) && (e.getCause().getClass() == ConnectException.class)) {
+      if ((e.getCause() != null) && (e.getCause().getClass() == ConnectException.class || e.getCause().getClass() == UnknownHostException.class)) {
         throw new SlaveNotFoundException(e);
       } else {
         throw Throwables.propagate(e);
