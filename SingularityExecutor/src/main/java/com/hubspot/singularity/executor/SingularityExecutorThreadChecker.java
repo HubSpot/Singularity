@@ -141,7 +141,7 @@ public class SingularityExecutorThreadChecker {
 
             @Override
             public void onFailure(Throwable t) {
-              taskProcess.getTask().getLog().warn("Unable to run pre-threadkill shell command {} for {}!", configuration.getRunShellCommandBeforeKillDueToThreads().get().getName(), taskProcess.getTask().getTaskId());
+              taskProcess.getTask().getLog().warn("Unable to run pre-threadkill shell command {} for {}!", configuration.getRunShellCommandBeforeKillDueToThreads().get().getName(), taskProcess.getTask().getTaskId(), t);
               taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
               KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
 
