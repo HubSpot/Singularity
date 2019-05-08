@@ -70,13 +70,11 @@ public class SandboxManager {
       }
 
       return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
-    } catch (ConnectException ce) {
-      throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      if (e.getCause().getClass() == ConnectException.class) {
+      if (Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof UnknownHostException || t instanceof ConnectException)) {
         throw new SlaveNotFoundException(e);
       } else {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }
