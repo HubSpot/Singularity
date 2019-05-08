@@ -320,11 +320,13 @@ public class SingularityUsageHelper {
   }
 
   private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    if (taskHistoryUpdate.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+    String statusMessage = taskHistoryUpdate.getStatusMessage().or("");
+    if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
       return true;
     }
     for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
-      if (previous.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+      statusMessage = previous.getStatusMessage().or("");
+      if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
         return true;
       }
     }
