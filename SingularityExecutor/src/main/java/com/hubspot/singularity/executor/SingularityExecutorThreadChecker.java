@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.checkerframework.checker.nullness.compatqual.NullableDecl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
@@ -132,7 +131,7 @@ public class SingularityExecutorThreadChecker {
 
           Futures.addCallback(shellRunner.start(), new FutureCallback<Integer>() {
             @Override
-            public void onSuccess(@NullableDecl Integer result) {
+            public void onSuccess(Integer result) {
               taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
               KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
 
