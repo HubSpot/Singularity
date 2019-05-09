@@ -183,12 +183,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private double getSystemLoadForShuffle(SingularitySlaveUsage usage) {
     switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
       case LOAD_1:
-        return usage.getSystemLoad15Min();
-      case LOAD_15:
-        return usage.getSystemLoad15Min();
+        return usage.getSystemLoad1Min();
       case LOAD_5:
-      default:
         return usage.getSystemLoad5Min();
+      case LOAD_15:
+      default:
+        return usage.getSystemLoad15Min();
     }
   }
 
