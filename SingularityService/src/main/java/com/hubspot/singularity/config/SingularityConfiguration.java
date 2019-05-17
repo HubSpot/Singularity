@@ -82,7 +82,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxConcurrentUsageCollections = 15;
 
-  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
+  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing resources for larger clusters
 
   private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.90;
 
