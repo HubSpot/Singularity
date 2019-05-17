@@ -84,8 +84,6 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
 
-  private boolean shuffleTasksForSlavesWithHighMemoryUsage = false; // recommended 'true' when oversubscribing memory for larger clusters
-
   private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.90;
 
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
@@ -1499,14 +1497,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
     this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
-  }
-
-  public boolean isShuffleTasksForSlavesWithHighMemoryUsage() {
-    return shuffleTasksForSlavesWithHighMemoryUsage;
-  }
-
-  public void setShuffleTasksForSlavesWithHighMemoryUsage(boolean shuffleTasksForSlavesWithHighMemoryUsage) {
-    this.shuffleTasksForSlavesWithHighMemoryUsage = shuffleTasksForSlavesWithHighMemoryUsage;
   }
 
   public double getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() {
