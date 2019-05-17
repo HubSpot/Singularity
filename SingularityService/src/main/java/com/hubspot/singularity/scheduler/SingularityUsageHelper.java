@@ -156,7 +156,8 @@ public class SingularityUsageHelper {
           break;
       }
 
-      boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+      boolean slaveOverloadedForCpu = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+      boolean slaveExperiencingHighMemUsage = ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) > configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
@@ -216,11 +217,11 @@ public class SingularityUsageHelper {
           cpusUsedOnSlave += taskCpusUsed;
         }
 
-        if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
+        if (currentUsage != null && currentUsage.getCpusUsed() > 0) {
           if (isEligibleForShuffle(task)) {
             Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
             if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
-              LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
+              LOG.trace("Task {} already being cleaned up to spread cpu or mem usage, skipping", taskId);
             } else {
               if (maybeResources.isPresent()) {
                 possibleTasksToShuffle.add(new TaskIdWithUsage(task, maybeResources.get(), currentUsage));
@@ -244,7 +245,7 @@ public class SingularityUsageHelper {
           memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
           systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
 
-      if (slaveOverloaded) {
+      if (slaveOverloadedForCpu || slaveExperiencingHighMemUsage) {
         overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
       }
 
@@ -314,11 +315,13 @@ public class SingularityUsageHelper {
   }
 
   private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    if (taskHistoryUpdate.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+    String statusMessage = taskHistoryUpdate.getStatusMessage().or("");
+    if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
       return true;
     }
     for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
-      if (previous.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+      statusMessage = previous.getStatusMessage().or("");
+      if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
         return true;
       }
     }
