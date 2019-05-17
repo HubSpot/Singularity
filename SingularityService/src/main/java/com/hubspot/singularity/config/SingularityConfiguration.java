@@ -84,7 +84,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing resources for larger clusters
 
-  private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.90;
+  private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.82;
 
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
 
