@@ -101,7 +101,6 @@ public class SingularityUsageHelper {
       Map<String, RequestUtilization> utilizationPerRequestId,
       Map<String, RequestUtilization> previousUtilizations,
       Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-      Map<SingularitySlaveUsage, List<TaskIdWithUsage>> highMemUsageHosts,
       AtomicLong totalMemBytesUsed,
       AtomicLong totalMemBytesAvailable,
       AtomicDouble totalCpuUsed,
@@ -157,7 +156,7 @@ public class SingularityUsageHelper {
           break;
       }
 
-      boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+      boolean slaveOverloadedForCpu = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
       boolean slaveExperiencingHighMemUsage = ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) > configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
@@ -246,12 +245,8 @@ public class SingularityUsageHelper {
           memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
           systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
 
-      if (slaveOverloaded) {
+      if (slaveOverloadedForCpu || slaveExperiencingHighMemUsage) {
         overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
-      }
-
-      if (slaveExperiencingHighMemUsage) {
-        highMemUsageHosts.put(slaveUsage, possibleTasksToShuffle);
       }
 
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
