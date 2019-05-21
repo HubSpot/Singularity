@@ -117,12 +117,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   static class OverusedResource {
     enum Type { MEMORY, CPU };
 
-    double usage;
     double overusage;
     Type resourceType;
 
-    OverusedResource(double usage, double overusage, Type resourceType) {
-      this.usage = usage;
+    OverusedResource(double overusage, Type resourceType) {
       this.overusage = overusage;
       this.resourceType = resourceType;
     }
@@ -139,9 +137,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     double memOverusage = memOverageBytes / targetMemUsageBytes;
 
     if (cpuOverusage > memOverusage) {
-      return new OverusedResource(currentCpuLoad, cpuOverusage, Type.CPU);
+      return new OverusedResource(cpuOverusage, Type.CPU);
     } else {
-      return new OverusedResource(overloadedSlave.getMemoryBytesUsed(), memOverusage, Type.MEMORY);
+      return new OverusedResource(memOverusage, Type.MEMORY);
     }
   }
 
