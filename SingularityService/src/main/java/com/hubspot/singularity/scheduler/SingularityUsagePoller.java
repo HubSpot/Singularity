@@ -236,7 +236,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               SizeUnit.BYTES.toMegabytes(((long) currentMemUsageBytes)),
               SizeUnit.BYTES.toMegabytes(((long) overloadedSlave.getSystemMemTotalBytes())),
               SizeUnit.BYTES.toMegabytes(taskIdWithUsage.getUsage().getMemoryTotalBytes()),
-              taskIdWithUsage.getRequestedResources().getMemoryMb()));
+              ((long) taskIdWithUsage.getRequestedResources().getMemoryMb())));
 
           currentMemUsageBytes -= taskIdWithUsage.getUsage().getMemoryTotalBytes();
 
