@@ -212,14 +212,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         Optional<String> message;
 
         if (shufflingForCpu) {
-          currentCpuLoad -= taskIdWithUsage.getUsage().getCpusUsed();
-          LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), currentCpuLoad - overloadedSlave.getSystemCpusTotal());
           message = Optional.of(String.format(
               "Load on slave is %s / %s, shuffling task using %s / %s to less busy host",
-              mostOverusedResource.usage,
+              currentCpuLoad,
               overloadedSlave.getSystemCpusTotal(),
               taskIdWithUsage.getUsage().getCpusUsed(),
               taskIdWithUsage.getRequestedResources().getCpus()));
+
+          currentCpuLoad -= taskIdWithUsage.getUsage().getCpusUsed();
+          LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), currentCpuLoad - overloadedSlave.getSystemCpusTotal());
+
           taskManager.createTaskCleanup(
               new SingularityTaskCleanup(
                   Optional.absent(),
@@ -231,16 +233,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                   Optional.absent(), Optional.absent()));
 
         } else {
+          message = Optional.of(String.format(
+              "Mem usage on slave is %sMiB / %sMiB, shuffling task using %sMiB / %sMiB to less busy host",
+              SizeUnit.BYTES.toMegabytes(((long) currentMemUsageBytes)),
+              SizeUnit.BYTES.toMegabytes(((long) overloadedSlave.getSystemMemTotalBytes())),
+              SizeUnit.BYTES.toMegabytes(taskIdWithUsage.getUsage().getMemoryTotalBytes()),
+              taskIdWithUsage.getRequestedResources().getMemoryMb()));
+
           currentMemUsageBytes -= taskIdWithUsage.getUsage().getMemoryTotalBytes();
 
           LOG.debug("Cleaning up task {} to free up mem on overloaded host (remaining mem overage: {}MiB)", taskIdWithUsage.getTaskId(), SizeUnit.BYTES.toMegabytes(((long) (currentMemUsageBytes - (configuration
               .getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() * overloadedSlave.getSystemMemTotalBytes())))));
-          message = Optional.of(String.format(
-              "Mem usage on slave is %sMiB / %sMiB, shuffling task using %sMiB / %sMiB to less busy host",
-              SizeUnit.BYTES.toMegabytes(((long) mostOverusedResource.usage)),
-              SizeUnit.BYTES.toMegabytes(((long) overloadedSlave.getSystemMemTotalBytes())),
-              SizeUnit.BYTES.toMegabytes(taskIdWithUsage.getUsage().getMemoryTotalBytes()),
-              taskIdWithUsage.getRequestedResources().getMemoryMb()));
+
           taskManager.createTaskCleanup(
               new SingularityTaskCleanup(
                   Optional.absent(),
