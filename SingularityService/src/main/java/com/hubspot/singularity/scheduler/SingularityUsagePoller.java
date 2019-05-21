@@ -173,7 +173,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       int shuffledTasksOnSlave = 0;
 
       double currentCpuLoad = getSystemLoadForShuffle(overloadedSlave);
-      double currentMemUsageBytes = overloadedSlave.getMemoryBytesUsed();
+      double currentMemUsageBytes = overloadedSlave.getSystemMemTotalBytes() - overloadedSlave.getSystemMemFreeBytes();
 
       OverusedResource mostOverusedResource = getMostOverusedResource(overloadedSlave, currentCpuLoad, currentMemUsageBytes);
 
