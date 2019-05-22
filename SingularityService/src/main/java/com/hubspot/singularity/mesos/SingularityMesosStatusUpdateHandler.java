@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -14,11 +15,13 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Meter;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
@@ -55,6 +58,10 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 public class SingularityMesosStatusUpdateHandler {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosStatusUpdateHandler.class);
 
+  private static final Set<MesosTaskState> ACTIVE_STATES = ImmutableSet.of(
+      MesosTaskState.TASK_STAGING, MesosTaskState.TASK_STARTING, MesosTaskState.TASK_RUNNING
+  );
+
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final RequestManager requestManager;
@@ -75,7 +82,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
   private final ExecutorService statusUpdatesExecutor;
-  private final AsyncSemaphore<Boolean> statusUpdatesSemaphore;
+  private final AsyncSemaphore<StatusUpdateResult> statusUpdatesSemaphore;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager,
@@ -121,6 +128,16 @@ public class SingularityMesosStatusUpdateHandler {
         .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(), executorServiceFactory.get("status-update-semaphore", 5))
         .withQueueSize(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize())
         .build();
+  }
+
+  private boolean isRecoveryStatusUpdate(ExtendedTaskState taskState, final SingularityTaskStatusHolder newTaskStatusHolder) {
+    if (taskState.isDone() &&
+        newTaskStatusHolder.getTaskStatus().isPresent() &&
+        ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
+      LOG.warn("Task {} recovered but may have already been replaced, shutting down", newTaskStatusHolder.getTaskId());
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -209,7 +226,7 @@ public class SingularityMesosStatusUpdateHandler {
     requestManager.addToPendingQueue(pendingRequest);
   }
 
-  private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
+  private StatusUpdateResult unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
     final String taskId = status.getTaskId().getValue();
 
     long timestamp = System.currentTimeMillis();
@@ -228,10 +245,12 @@ public class SingularityMesosStatusUpdateHandler {
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
-    if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
+    if (isRecoveryStatusUpdate(taskState, newTaskStatusHolder)) {
+      return StatusUpdateResult.KILL_TASK;
+    } else if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-      return;
+      return StatusUpdateResult.IGNORED;
     }
 
     final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
@@ -300,6 +319,7 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+    return StatusUpdateResult.DONE;
   }
 
   private synchronized void handleCompletedTaskState(TaskStatus status, SingularityTaskId taskIdObj, ExtendedTaskState taskState,
@@ -311,21 +331,20 @@ public class SingularityMesosStatusUpdateHandler {
     scheduler.handleCompletedTask(task, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, status);
   }
 
-  public CompletableFuture<Boolean> processStatusUpdateAsync(Protos.TaskStatus status) {
+  public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(Protos.TaskStatus status) {
     return statusUpdatesSemaphore.call(() -> CompletableFuture.supplyAsync(() -> {
         final String taskId = status.getTaskId().getValue();
         final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
         if (!maybeTaskId.isPresent()) {
-          return false;
+          return StatusUpdateResult.INVALID_TASK_ID;
         }
 
-        schedulerLock.runWithRequestLock(
+        return schedulerLock.runWithRequestLockAndReturn(
             () -> unsafeProcessStatusUpdate(status, maybeTaskId.get()),
             maybeTaskId.get().getRequestId(),
             getClass().getSimpleName()
         );
-        return true;
       }, statusUpdatesExecutor)
     );
   }
