@@ -450,7 +450,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 200000, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -474,7 +474,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
       mesosClient.setSlaveMetricsSnapshot(
           "host1",
-          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 200000, 0, 30000, 0, 0, 0, 15, 0, 0, 0, 0)
       );
 
       usagePoller.runActionOnPoll();
@@ -484,7 +484,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       Assert.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
 
       // Even though it's not the worst offender, task 2 is cleaned up because it's been running long enough.
-      Assert.assertEquals(taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
+      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
@@ -492,7 +492,53 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void itCreatesTaskCleanupsWhenAMachineIsOverloaded() {
+  public void itCreatesTaskCleanupsWhenAMachineIsOverloadedOnMemory() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
+      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+
+      initRequest();
+      initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
+      saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
+      resourceOffers(1);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(10, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 200000, 10000, 10, 10, 10, 10, 0, 107374182);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
+
+      SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
+      String t1 = taskId1.getId();
+      SingularityTaskId taskId2 = taskManager.getActiveTaskIds().get(1);
+      String t2 = taskId2.getId();
+      SingularityTaskId taskId3 = taskManager.getActiveTaskIds().get(2);
+      String t3 = taskId3.getId();
+      statusUpdate(taskManager.getTask(taskId1).get(), TaskState.TASK_STARTING, Optional.of(taskId1.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId2).get(), TaskState.TASK_STARTING, Optional.of(taskId2.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId3).get(), TaskState.TASK_STARTING, Optional.of(taskId3.getStartedAt()));
+      // task 1 using 3G mem
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, TimeUnit.MILLISECONDS.toSeconds(taskId1.getStartedAt()) + 5, 95000);
+      // task 2 using 2G mem
+      MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 5, TimeUnit.MILLISECONDS.toSeconds(taskId2.getStartedAt()) + 5, 63333);
+      // task 3 using 1G mem
+      MesosTaskMonitorObject t3u1 = getTaskMonitor(t3, 5, TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5, 31667);
+      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 200000, 0, 10000, 0, 0, 0, 10, 0, 0, 0, 0)
+      );
+
+      usagePoller.runActionOnPoll();
+
+      // First task is cleaned up
+      Assert.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
+      // Second task is not cleaned up because it is from the same request as task 1
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+    }
+  }
+
+  @Test
+  public void itCreatesTaskCleanupsWhenAMachineIsOverloadedOnCpu() {
     try {
       configuration.setShuffleTasksForOverloadedSlaves(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
@@ -501,7 +547,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 200000, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -522,13 +568,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
       mesosClient.setSlaveMetricsSnapshot(
           "host1",
-          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 200000, 0, 30000, 0, 0, 0, 15, 0, 0, 0, 0)
       );
 
       usagePoller.runActionOnPoll();
 
       // First task is cleaned up
-      Assert.assertEquals(taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
+      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
       // Second task is not cleaned up because it is from the same request as task 1
       Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
@@ -547,7 +593,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 200000, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -563,13 +609,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1));
       mesosClient.setSlaveMetricsSnapshot(
           "host1",
-          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 200000, 0, 30000, 0, 0, 0, 15, 0, 0, 0, 0)
       );
 
       usagePoller.runActionOnPoll();
 
       // First task is cleaned up
-      Assert.assertEquals(taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
+      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
       // Second task doesn't get cleaned up dur to cluster wide limit
       Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
