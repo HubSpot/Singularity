@@ -211,7 +211,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final BaragonService lbService = new BaragonService(deploy.getLoadBalancerServiceIdOverride().or(request.getId()), serviceOwners, deploy.getServiceBasePath().get(),
         deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
         deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
-    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams, Collections.<UpstreamInfo>emptyList(),Optional.<String>absent(), Optional.of(RequestAction.UPDATE), false, false, false, true);
     return sendLoadBalancerRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
