@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -68,6 +69,14 @@ public class ArtifactManager extends SimpleProcessManager {
     }
   }
 
+  private void chmodReadOnly(Path path) {
+    try {
+      Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("-rw-r--r--"));
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  }
+
   private void checkMd5(Artifact artifact, Path path) {
     if (!md5Matches(artifact, path)) {
       throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifact.getMd5sum().get()));
@@ -91,6 +100,7 @@ public class ArtifactManager extends SimpleProcessManager {
       throw new IllegalArgumentException("Unknown artifact type: " + artifact.getClass());
     }
 
+    chmodReadOnly(downloadTo);
     checkFilesize(artifact, downloadTo);
     checkMd5(artifact, downloadTo);
   }
@@ -115,6 +125,7 @@ public class ArtifactManager extends SimpleProcessManager {
       throw new RuntimeException(String.format("Couldn't extract %s", embeddedArtifact.getName()), e);
     }
 
+    chmodReadOnly(extractTo);
     checkMd5(embeddedArtifact, extractTo);
   }
 
