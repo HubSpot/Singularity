@@ -5,7 +5,6 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -669,9 +668,10 @@ public class RequestResource extends AbstractRequestResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "List of request ids to fetch") @QueryParam("id") List<String> ids
   ) {
-    List<SingularityRequestParent> found = requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(Lists.newArrayList(requestManager.getRequests(ids)), SingularityAuthorizationScope.READ, user),
-        user, false, false, Optional.absent(), Collections.emptyList());
+    List<SingularityRequestParent> found = filterAutorized(Lists.newArrayList(requestManager.getRequests(ids)), SingularityAuthorizationScope.READ, user)
+        .stream()
+        .map(this::fillEntireRequest)
+        .collect(Collectors.toList());
     Set<String> notFound = new HashSet<>(ids);
     found.forEach((r) -> notFound.remove(r.getRequest().getId()));
     return new SingularityRequestBatch(found, notFound);
