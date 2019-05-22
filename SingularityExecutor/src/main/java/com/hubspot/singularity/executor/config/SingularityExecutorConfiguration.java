@@ -243,6 +243,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   private Optional<Long> maxServiceLogSizeMb = Optional.absent();
 
+  @JsonProperty
+  private boolean verifyAssignedPorts = false;
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -731,6 +734,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   }
 
+  public boolean isVerifyAssignedPorts() {
+    return verifyAssignedPorts;
+  }
+
+  public void setVerifyAssignedPorts(boolean verifyAssignedPorts) {
+    this.verifyAssignedPorts = verifyAssignedPorts;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
@@ -739,6 +750,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
         ", taskAppDirectory='" + taskAppDirectory + '\'' +
         ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+        ", initialIdleExecutorShutdownWaitMillis=" + initialIdleExecutorShutdownWaitMillis +
         ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
         ", stopDriverAfterMillis=" + stopDriverAfterMillis +
         ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
@@ -752,11 +764,13 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateCommand='" + logrotateCommand + '\'' +
         ", logrotateStateFile='" + logrotateStateFile + '\'' +
         ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+        ", logrotateHourlyConfDirectory='" + logrotateHourlyConfDirectory + '\'' +
         ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
         ", logrotateMaxageDays=" + logrotateMaxageDays +
         ", logrotateCount=" + logrotateCount +
         ", logrotateDateformat='" + logrotateDateformat + '\'' +
         ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+        ", ignoreLogrotateOutput=" + ignoreLogrotateOutput +
         ", logrotateCompressionSettings=" + logrotateCompressionSettings +
         ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
         ", tailLogLinesToSave=" + tailLogLinesToSave +
@@ -786,8 +800,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateFrequency=" + logrotateFrequency +
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
-        ", defaultCfsPeriod=" + defaultCfsPeriod +
         ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
+        ", defaultCfsPeriod=" + defaultCfsPeriod +
+        ", extraScriptContent='" + extraScriptContent + '\'' +
+        ", extraDockerScriptContent='" + extraDockerScriptContent + '\'' +
+        ", maxServiceLogSizeMb=" + maxServiceLogSizeMb +
+        ", verifyAssignedPorts=" + verifyAssignedPorts +
         "} " + super.toString();
   }
 }
