@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -9,8 +10,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
@@ -24,6 +30,7 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,8 +47,13 @@ import io.swagger.v3.oas.annotations.tags.Tags;
 public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @Inject
-  public RackResource(RackManager rackManager, SingularityAuthorizationHelper authorizationHelper, SingularityValidator validator) {
-    super(rackManager, authorizationHelper, validator);
+  public RackResource(AsyncHttpClient httpClient,
+                      LeaderLatch leaderLatch,
+                      ObjectMapper objectMapper,
+                      RackManager rackManager,
+                      SingularityAuthorizationHelper authorizationHelper,
+                      SingularityValidator validator) {
+    super(httpClient, leaderLatch, objectMapper, rackManager, authorizationHelper, validator);
   }
 
   @Override
@@ -72,52 +84,73 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @DELETE
   @Path("/rack/{rackId}")
   @Operation(summary = "Remove a known rack, erasing history. This operation will cancel decommissioning of racks")
-  public void removeRack(
+  public Response removeRack(
+      @Context HttpServletRequest requestContext,
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId) {
-    super.remove(rackId, user);
+    return maybeProxyToLeader(requestContext, Response.class, null, () -> {
+      super.remove(rackId, user);
+      return Response.ok().build();
+    });
   }
 
   @POST
   @Path("/rack/{rackId}/decommission")
   @Operation(summary = "Begin decommissioning a specific active rack")
-  public void decommissionRack(
+  public Response decommissionRack(
+      @Context HttpServletRequest requestContext,
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a rack") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
-    super.decommission(rackId, maybeChangeRequest, user, SingularityAction.DECOMMISSION_RACK);
+    return maybeProxyToLeader(requestContext, Response.class, changeRequest, () -> {
+      final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+      super.decommission(rackId, maybeChangeRequest, user, SingularityAction.DECOMMISSION_RACK);
+      return Response.ok().build();
+    });
+
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   @Operation(summary = "Freeze a specific rack")
-  public void freezeRack(
+  public Response freezeRack(
+      @Context HttpServletRequest requestContext,
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
-    super.freeze(rackId, maybeChangeRequest, user, SingularityAction.FREEZE_RACK);
+    return maybeProxyToLeader(requestContext, Response.class, changeRequest, () -> {
+      final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+      super.freeze(rackId, maybeChangeRequest, user, SingularityAction.FREEZE_RACK);
+      return Response.ok().build();
+    });
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @Operation(summary = "Activate a decomissioning rack, canceling decomission without erasing history")
-  public void activateRack(
+  public Response activateRack(
+      @Context HttpServletRequest requestContext,
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
-    super.activate(rackId, maybeChangeRequest, user, SingularityAction.ACTIVATE_RACK);
+    return maybeProxyToLeader(requestContext, Response.class, changeRequest, () -> {
+      final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+      super.activate(rackId, maybeChangeRequest, user, SingularityAction.ACTIVATE_RACK);
+      return Response.ok().build();
+    });
   }
 
   @DELETE
   @Path("/rack/{rackId}/expiring")
   @Operation(summary = "Delete any expiring machine state changes for this rack")
-  public void deleteExpiringStateChange(
+  public Response deleteExpiringStateChange(
+      @Context HttpServletRequest requestContext,
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId) {
-    super.cancelExpiring(rackId, user);
+    return maybeProxyToLeader(requestContext, Response.class, null, () -> {
+      super.cancelExpiring(rackId, user);
+      return Response.ok().build();
+    });
   }
 
   @GET

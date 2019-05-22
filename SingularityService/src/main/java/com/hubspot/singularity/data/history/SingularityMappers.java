@@ -7,6 +7,12 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.exceptions.ResultSetException;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -22,18 +28,11 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.exceptions.ResultSetException;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.dropwizard.db.DataSourceFactory;
 
 public class SingularityMappers {
 
@@ -63,14 +62,26 @@ public class SingularityMappers {
 
   }
 
-  static class SingularityRequestIdMapper implements ResultSetMapper<String> {
+  static class SingularityIdMapper implements ResultSetMapper<String> {
 
     @Inject
-    SingularityRequestIdMapper() {}
+    SingularityIdMapper() {}
 
     @Override
     public String map(int index, ResultSet r, StatementContext ctx) throws SQLException {
-      return r.getString("requestId");
+      return r.getString("id");
+    }
+
+  }
+
+  static class SingularityTimestampMapper implements ResultSetMapper<Long> {
+
+    @Inject
+    SingularityTimestampMapper() {}
+
+    @Override
+    public Long map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return r.getLong("timestamp");
     }
 
   }
@@ -160,6 +171,25 @@ public class SingularityMappers {
       return new SingularityRequestIdCount(r.getString("requestId"), r.getInt("count"));
     }
 
+  }
+
+  static class SingularityTaskUsageMapper implements ResultSetMapper<SingularityTaskUsage> {
+
+    @Inject
+    SingularityTaskUsageMapper() {}
+
+    @Override
+    public SingularityTaskUsage map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return new SingularityTaskUsage(
+          r.getLong("memoryTotalBytes"),
+          r.getLong("timestamp"),
+          r.getDouble("cpuSeconds"),
+          r.getLong("diskTotalBytes"),
+          r.getLong("cpusNrPeriods"),
+          r.getLong("cpusNrThrottled"),
+          r.getDouble("cpusThrottledTimeSecs")
+      );
+    }
   }
 
   public static class SingularityRequestIdCount {

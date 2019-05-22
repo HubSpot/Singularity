@@ -24,6 +24,13 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
+import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
+import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
+import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
+import com.hubspot.singularity.data.usage.TaskUsageJDBI;
+import com.hubspot.singularity.data.usage.TaskUsageManager;
+import com.hubspot.singularity.data.usage.ZkTaskUsageManager;
 
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jdbi.DBIFactory;
@@ -44,12 +51,14 @@ public class SingularityHistoryModule extends AbstractModule {
     Multibinder<ResultSetMapper<?>> resultSetMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ResultSetMapper<?>>() {});
 
     resultSetMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityTimestampMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);
@@ -65,17 +74,21 @@ public class SingularityHistoryModule extends AbstractModule {
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
       bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
+      bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
+      bind(TaskUsageManager.class).to(ZkTaskUsageManager.class).in(Scopes.SINGLETON);
     }
   }
 
   private void bindSpecificDatabase() {
     if (isPostgres(configuration)) {
       bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class).toProvider(PostgresTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
       // Currently many unit tests use h2
     } else if (isMySQL(configuration) || isH2(configuration)) {
       bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class).toProvider(MySQLTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
     } else {
       throw new IllegalStateException("Unknown driver class present " + configuration.get().getDriverClass());
     }
@@ -168,6 +181,36 @@ public class SingularityHistoryModule extends AbstractModule {
     @Override
     public PostgresHistoryJDBI get() {
       return dbi.onDemand(PostgresHistoryJDBI.class);
+    }
+
+  }
+
+  static class MySQLTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+    private final DBI dbi;
+
+    @Inject
+    public MySQLTaskUsageJDBIProvider(DBI dbi) {
+      this.dbi = dbi;
+    }
+
+    @Override
+    public MySQLTaskUsageJDBI get() {
+      return dbi.onDemand(MySQLTaskUsageJDBI.class);
+    }
+
+  }
+
+  static class PostgresTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+    private final DBI dbi;
+
+    @Inject
+    public PostgresTaskUsageJDBIProvider(DBI dbi) {
+      this.dbi = dbi;
+    }
+
+    @Override
+    public PostgresTaskUsageJDBI get() {
+      return dbi.onDemand(PostgresTaskUsageJDBI.class);
     }
 
   }

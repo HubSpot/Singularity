@@ -53,7 +53,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
@@ -344,12 +344,7 @@ public class SingularityMesosOfferScheduler {
     Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(false);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
-    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(
-        offerHolders.values().stream()
-            .map(SingularityOfferHolder::getSlaveId)
-            .collect(Collectors.toList()))
-        .stream()
-        .collect(Collectors.toMap(SingularitySlaveUsageWithId::getSlaveId, Function.identity()));
+    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getAllCurrentSlaveUsage();
 
     List<CompletableFuture<Void>> currentSlaveUsagesFutures = new ArrayList<>();
     for (SingularityOfferHolder offerHolder : offerHolders.values()) {
@@ -386,16 +381,18 @@ public class SingularityMesosOfferScheduler {
     List<CompletableFuture<Void>> usagesWithScoresFutures = new ArrayList<>();
     Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = new ConcurrentHashMap<>();
     for (SingularitySlaveUsageWithId usage : currentSlaveUsages.values()) {
-      usagesWithScoresFutures.add(
-          runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
-              new SingularitySlaveUsageWithCalculatedScores(
-                usage,
-                mesosConfiguration.getScoreUsingSystemLoad(),
-                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
-                mesosConfiguration.getLoad5OverloadedThreshold(),
-                mesosConfiguration.getLoad1OverloadedThreshold(),
-                usage.getTimestamp()))
-          ));
+      if (offerHolders.containsKey(usage.getSlaveId())) {
+        usagesWithScoresFutures.add(
+            runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
+                new SingularitySlaveUsageWithCalculatedScores(
+                    usage,
+                    mesosConfiguration.getScoreUsingSystemLoad(),
+                    getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
+                    mesosConfiguration.getLoad5OverloadedThreshold(),
+                    mesosConfiguration.getLoad1OverloadedThreshold(),
+                    usage.getTimestamp()))
+            ));
+      }
     }
 
     CompletableFutures.allOf(usagesWithScoresFutures).join();

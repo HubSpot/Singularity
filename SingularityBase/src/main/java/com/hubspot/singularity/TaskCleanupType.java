@@ -20,6 +20,7 @@ public enum TaskCleanupType {
   PAUSING(false, false),
   PRIORITY_KILL(true, true),
   REBALANCE_CPU_USAGE(false, false),
+  REBALANCE_MEMORY_USAGE(false, false),
   REBALANCE_RACKS(false, false),
   REBALANCE_SLAVE_ATTRIBUTES(false, false),
   REQUEST_DELETING(true, true),
