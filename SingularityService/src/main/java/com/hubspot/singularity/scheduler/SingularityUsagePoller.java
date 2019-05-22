@@ -203,9 +203,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           LOG.debug("Request {} already has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
           continue;
         }
-        if (((shufflingForCpu && currentCpuLoad <= overloadedSlave.getSystemCpusTotal()) ||
-            (!shufflingForCpu && currentMemUsageBytes <= getTargetMemoryUtilizationForHost(overloadedSlave))
-            || shuffledTasksOnSlave > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal())) {
+
+        boolean resourceNoLongerOverutilized = (shufflingForCpu && currentCpuLoad <= overloadedSlave.getSystemCpusTotal()) || (!shufflingForCpu && currentMemUsageBytes <= getTargetMemoryUtilizationForHost(overloadedSlave));
+        boolean shufflingTooManyTasks = shuffledTasksOnSlave > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal();
+
+        if (resourceNoLongerOverutilized || shufflingTooManyTasks) {
           LOG.debug("Not shuffling any more tasks on slave {} ({} overage : {}%, shuffledOnHost: {}, totalShuffleCleanups: {})", taskIdWithUsage.getTaskId().getSanitizedHost(), mostOverusedResource.resourceType, mostOverusedResource.overusage * 100, shuffledTasksOnSlave, currentShuffleCleanupsTotal);
           break;
         }
