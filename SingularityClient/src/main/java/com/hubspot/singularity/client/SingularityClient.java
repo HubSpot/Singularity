@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -61,6 +62,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -158,6 +160,7 @@ public class SingularityClient {
   private static final String TRACK_BY_RUN_ID_FORMAT = TASK_TRACKER_FORMAT + "/run/%s/%s";
 
   private static final String REQUESTS_FORMAT = "%s/requests";
+  private static final String REQUESTS_GET_BATCH_FORMAT = REQUESTS_FORMAT + "/batch";
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
   private static final String REQUESTS_GET_PAUSED_FORMAT = REQUESTS_FORMAT + "/paused";
   private static final String REQUESTS_GET_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/cooldown";
@@ -754,6 +757,25 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(REQUESTS_FORMAT, getApiBase(host));
 
     return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
+  }
+
+  /**
+   * Get a specific batch of requests
+   *
+   * @return
+   *    A SingularityRequestBatch containing the found and not found requests/ids
+   */
+  public SingularityRequestBatch getRequestsBatch(Set<String> requestIds) {
+    final Function<String, String> requestUri = (host) -> String.format(REQUESTS_GET_BATCH_FORMAT, getApiBase(host));
+    Map<String, Object> queryParams = new HashMap<>();
+    queryParams.put("id", requestIds);
+
+    Optional<SingularityRequestBatch> maybeResult = getSingleWithParams(requestUri, "requests BATCH", "requests BATCH", Optional.of(queryParams), SingularityRequestBatch.class);
+    if (!maybeResult.isPresent()) {
+      throw new SingularityClientException("Singularity url not found", 404);
+    } else {
+      return maybeResult.get();
+    }
   }
 
   /**

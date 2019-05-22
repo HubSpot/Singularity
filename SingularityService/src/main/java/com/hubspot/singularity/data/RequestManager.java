@@ -392,6 +392,16 @@ public class RequestManager extends CuratorAsyncManager {
     return getRequests(false);
   }
 
+  public List<SingularityRequestWithState> getRequests(List<String> requestIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequests().stream()
+          .filter((r) -> requestIds.contains(r.getRequest().getId()))
+          .collect(Collectors.toList());
+    }
+
+    return fetchRequests(requestIds);
+  }
+
   public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
     if (leaderCache.active()) {
       return leaderCache.getRequests();
@@ -410,6 +420,11 @@ public class RequestManager extends CuratorAsyncManager {
 
   public List<SingularityRequestWithState> fetchRequests() {
     return getAsyncChildren(NORMAL_PATH_ROOT, requestTranscoder);
+  }
+
+  public List<SingularityRequestWithState> fetchRequests(List<String> requestIds) {
+    List<String> paths = requestIds.stream().map(this::getRequestPath).collect(Collectors.toList());
+    return getAsync(NORMAL_PATH_ROOT, paths, requestTranscoder);
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {

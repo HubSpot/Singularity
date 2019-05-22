@@ -5,6 +5,8 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -48,6 +50,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
@@ -657,6 +660,21 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     return fillEntireRequest(requestWithState);
+  }
+
+  @GET
+  @Path("/batch")
+  @Operation(summary = "Retrieve a specific batch of requests")
+  public SingularityRequestBatch getRequestsBatch(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "List of request ids to fetch") @QueryParam("id") List<String> ids
+  ) {
+    List<SingularityRequestParent> found = requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getRequests(ids)), SingularityAuthorizationScope.READ, user),
+        user, false, false, Optional.absent(), Collections.emptyList());
+    Set<String> notFound = new HashSet<>(ids);
+    found.forEach((r) -> notFound.remove(r.getRequest().getId()));
+    return new SingularityRequestBatch(found, notFound);
   }
 
   @GET
