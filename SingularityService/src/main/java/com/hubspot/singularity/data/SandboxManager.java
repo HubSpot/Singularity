@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
@@ -69,13 +70,11 @@ public class SandboxManager {
       }
 
       return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
-    } catch (ConnectException ce) {
-      throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      if (e.getCause().getClass() == ConnectException.class) {
+      if (Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof UnknownHostException || t instanceof ConnectException)) {
         throw new SlaveNotFoundException(e);
       } else {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }
@@ -107,13 +106,11 @@ public class SandboxManager {
       }
 
       return Optional.of(parseResponseBody(response));
-    } catch (ConnectException ce) {
-      throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      if ((e.getCause() != null) && (e.getCause().getClass() == ConnectException.class)) {
+      if (Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof UnknownHostException || t instanceof ConnectException)) {
         throw new SlaveNotFoundException(e);
       } else {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }
