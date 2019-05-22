@@ -394,8 +394,10 @@ public class SingularityClient {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Long) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Boolean) {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
+      } else if (queryParamEntry.getValue() instanceof Set) {
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Set) queryParamEntry.getValue());
       } else {
-        throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
+        throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int, Set and boolean values are supported",
             queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
       }
     }
@@ -763,7 +765,7 @@ public class SingularityClient {
    * Get a specific batch of requests
    *
    * @return
-   *    A SingularityRequestBatch containing the found and not found requests/ids
+   *    A SingularityRequestBatch containing the found request data and not found request ids
    */
   public SingularityRequestBatch getRequestsBatch(Set<String> requestIds) {
     final Function<String, String> requestUri = (host) -> String.format(REQUESTS_GET_BATCH_FORMAT, getApiBase(host));
