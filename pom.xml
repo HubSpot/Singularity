@@ -30,7 +30,7 @@
 
   <properties>
     <aws.sdk.version>1.11.497</aws.sdk.version>
-    <baragon.version>0.7.0</baragon.version>
+    <baragon.version>0.7.0-qa-SNAPSHOT</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
     <basepom.release.profiles>oss-release</basepom.release.profiles>
     <dep.classmate.version>1.3.1</dep.classmate.version>
