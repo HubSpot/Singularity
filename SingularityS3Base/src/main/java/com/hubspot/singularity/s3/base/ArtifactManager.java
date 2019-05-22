@@ -71,7 +71,7 @@ public class ArtifactManager extends SimpleProcessManager {
 
   private void chmodReadOnly(Path path) {
     try {
-      Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("-rw-r--r--"));
+      Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("-rw-r--r-"));
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }
