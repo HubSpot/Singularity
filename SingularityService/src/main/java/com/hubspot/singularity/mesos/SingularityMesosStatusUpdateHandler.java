@@ -36,6 +36,7 @@ import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
@@ -134,7 +135,7 @@ public class SingularityMesosStatusUpdateHandler {
     if (taskState.isDone() &&
         newTaskStatusHolder.getTaskStatus().isPresent() &&
         ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
-      LOG.warn("Task {} recovered but may have already been replaced, shutting down", newTaskStatusHolder.getTaskId());
+      LOG.warn("Task {} recovered but may have already been replaced", newTaskStatusHolder.getTaskId());
       return true;
     }
     return false;
@@ -246,7 +247,28 @@ public class SingularityMesosStatusUpdateHandler {
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
     if (isRecoveryStatusUpdate(taskState, newTaskStatusHolder)) {
-      return StatusUpdateResult.KILL_TASK;
+      LOG.info("Found recovery status update with reason {} for task {}", status.getReason(), taskId);
+      final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(taskIdObj);
+      if (!maybeTaskHistory.isPresent() || !maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {
+        LOG.warn("Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos");
+        return StatusUpdateResult.KILL_TASK;
+      }
+      boolean reactivated = taskManager.reactivateTask(taskIdObj, taskState, newTaskStatusHolder, Optional.fromNullable(status.getMessage()), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+      if (reactivated) {
+        requestManager.addToPendingQueue(
+            new SingularityPendingRequest(
+                taskIdObj.getRequestId(),
+                taskIdObj.getDeployId(),
+                now,
+                Optional.absent(),
+                PendingType.TASK_RECOVERED,
+                Optional.absent(),
+                Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue())))
+        );
+        return StatusUpdateResult.DONE;
+      } else {
+        return StatusUpdateResult.KILL_TASK;
+      }
     } else if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
