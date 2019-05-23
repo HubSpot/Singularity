@@ -28,7 +28,6 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -243,13 +242,13 @@ public class SingularityLeaderCache {
     return activeTaskIds.contains(taskId);
   }
 
-  public void putActiveTask(SingularityTask task) {
+  public void putActiveTask(SingularityTaskId taskId) {
     if (!active) {
-      LOG.warn("putActiveTask {}, but not active", task.getTaskId());
+      LOG.warn("putActiveTask {}, but not active", taskId);
       return;
     }
 
-    activeTaskIds.add(task.getTaskId());
+    activeTaskIds.add(taskId);
   }
 
   public List<SingularityRequestWithState> getRequests() {

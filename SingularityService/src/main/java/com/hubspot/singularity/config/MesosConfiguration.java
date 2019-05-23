@@ -68,6 +68,7 @@ public class MesosConfiguration {
 
   private double recheckMetricsLoad1Threshold = 0.75;
   private double recheckMetricsLoad5Threshold = 0.8;
+  private int agentReregisterTimeoutSeconds = 600;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -371,5 +372,13 @@ public class MesosConfiguration {
 
   public void setRecheckMetricsLoad5Threshold(double recheckMetricsLoad5Threshold) {
     this.recheckMetricsLoad5Threshold = recheckMetricsLoad5Threshold;
+  }
+
+  public int getAgentReregisterTimeoutSeconds() {
+    return agentReregisterTimeoutSeconds;
+  }
+
+  public void setAgentReregisterTimeoutSeconds(int agentReregisterTimeoutSeconds) {
+    this.agentReregisterTimeoutSeconds = agentReregisterTimeoutSeconds;
   }
 }

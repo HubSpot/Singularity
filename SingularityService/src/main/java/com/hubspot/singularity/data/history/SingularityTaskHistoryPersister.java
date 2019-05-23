@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +17,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -36,6 +39,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final HistoryManager historyManager;
   private final RequestManager requestManager;
   private final SingularitySchedulerLock lock;
+  private final int agentReregisterTimeoutSeconds;
 
   @Inject
   public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager,
@@ -48,6 +52,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.lock = lock;
+    this.agentReregisterTimeoutSeconds = configuration.getMesosConfiguration().getAgentReregisterTimeoutSeconds();
   }
 
   @Override
@@ -73,7 +78,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
           AtomicInteger transferred = new AtomicInteger();
           allTaskIds.stream()
               .filter((t) -> t.getRequestId().equals(requestId))
-              .filter((t) -> !(activeForRequest.contains(t) || lbCleaningTaskIds.contains(t) || isPartOfPendingDeploy(pendingDeploys, t)))
+              .filter((t) -> !(activeForRequest.contains(t) || lbCleaningTaskIds.contains(t) || isPartOfPendingDeploy(pendingDeploys, t) || couldReturnWithRecoveredAgent(t)))
               .forEach((t) -> {
                 if (moveToHistoryOrCheckForPurge(t, transferred.getAndIncrement())) {
                   numTransferred.getAndIncrement();
@@ -100,6 +105,31 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     }
 
     return false;
+  }
+
+  private boolean couldReturnWithRecoveredAgent(SingularityTaskId taskId) {
+    Optional<SingularityTaskHistoryUpdate> maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_LOST)
+        .or(taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_UNREACHABLE));
+    boolean couldReturn = false;
+    long lastUpdateTime = 0;
+    if (maybeUnreachable.isPresent()) {
+      lastUpdateTime = maybeUnreachable.get().getTimestamp();
+      if (maybeUnreachable.get().getTaskState() == ExtendedTaskState.TASK_UNREACHABLE) {
+        couldReturn = true;
+      }
+      if (maybeUnreachable.get().getTaskState() == ExtendedTaskState.TASK_LOST
+          && maybeUnreachable.get().getStatusReason().isPresent()
+          && maybeUnreachable.get().getStatusReason().get().equals(Reason.REASON_AGENT_REMOVED.name())) {
+        couldReturn = true;
+      }
+    }
+
+    // Allow 1.5 times the reregistration timeout before persisting the task
+    if (couldReturn) {
+      couldReturn = System.currentTimeMillis() - lastUpdateTime < TimeUnit.SECONDS.toMillis(agentReregisterTimeoutSeconds) * 1.5;
+    }
+
+    return couldReturn;
   }
 
   @Override
