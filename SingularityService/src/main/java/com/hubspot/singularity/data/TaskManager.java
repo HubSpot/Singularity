@@ -639,14 +639,15 @@ public class TaskManager extends CuratorAsyncManager {
     }
     SingularityTaskHistoryUpdate last = updates.get(updates.size() - 1);
     updates.remove(last);
+    LOG.info("Removing obsolete status update {}", last);
 
     // remove the terminal task status update to return to previous state
-    deleteTaskHistoryUpdate(taskId, last.getTaskState(), Optional.of(updates.get(updates.size() - 1)));
+    deleteTaskHistoryUpdate(taskId, last.getTaskState(), Optional.absent());
 
     // Fill back into the leader cache and active task state
-    updates.forEach((u) -> leaderCache.saveTaskHistoryUpdate(u, true));
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, newUpdate.getServerTimestamp(), taskState, statusMessage, statusReason));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, newUpdate.getServerTimestamp(), taskState, statusMessage, statusReason), true);
     saveLastActiveTaskStatus(newUpdate);
+    LOG.info("New status for recovered task is {}", newUpdate);
 
     // Mark as active again
     leaderCache.putActiveTask(taskId);
