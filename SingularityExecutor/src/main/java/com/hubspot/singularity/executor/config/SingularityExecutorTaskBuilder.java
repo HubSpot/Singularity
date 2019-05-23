@@ -1,7 +1,7 @@
 package com.hubspot.singularity.executor.config;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
@@ -109,13 +109,13 @@ public class SingularityExecutorTaskBuilder {
 
   private boolean isPortInUse(int port) {
     try {
-      new Socket("127.0.0.1", port).close();
-      return true;
+      new ServerSocket(port, 1).close();
+      return false;
     } catch(IOException e) {
       // Could not connect.
     }
 
-    return false;
+    return true;
   }
 
   private SingularityTaskExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
