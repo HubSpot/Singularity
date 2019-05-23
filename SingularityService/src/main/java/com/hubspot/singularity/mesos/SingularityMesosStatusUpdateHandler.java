@@ -131,10 +131,11 @@ public class SingularityMesosStatusUpdateHandler {
         .build();
   }
 
-  private boolean isRecoveryStatusUpdate(ExtendedTaskState taskState, final SingularityTaskStatusHolder newTaskStatusHolder) {
-    if (taskState.isDone() &&
-        newTaskStatusHolder.getTaskStatus().isPresent() &&
-        ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
+  private boolean isRecoveryStatusUpdate(Optional<SingularityTaskStatusHolder> previousTaskStatusHolder, ExtendedTaskState taskState, final SingularityTaskStatusHolder newTaskStatusHolder) {
+    if (!previousTaskStatusHolder.isPresent() // Task was already removed from the active list
+        && !taskState.isDone()
+        && newTaskStatusHolder.getTaskStatus().isPresent()
+        && ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
       LOG.warn("Task {} recovered but may have already been replaced", newTaskStatusHolder.getTaskId());
       return true;
     }
@@ -246,7 +247,7 @@ public class SingularityMesosStatusUpdateHandler {
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
-    if (isRecoveryStatusUpdate(taskState, newTaskStatusHolder)) {
+    if (isRecoveryStatusUpdate(previousTaskStatusHolder, taskState, newTaskStatusHolder)) {
       LOG.info("Found recovery status update with reason {} for task {}", status.getReason(), taskId);
       final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(taskIdObj);
       if (!maybeTaskHistory.isPresent() || !maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {

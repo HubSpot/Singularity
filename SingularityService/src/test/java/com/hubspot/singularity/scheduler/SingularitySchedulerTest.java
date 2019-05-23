@@ -2481,6 +2481,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRecoveredTask() {
+    // set up the slave first
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+
     initRequest();
     initFirstDeploy();
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
