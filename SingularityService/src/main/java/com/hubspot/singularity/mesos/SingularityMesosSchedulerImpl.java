@@ -280,9 +280,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     URI masterUri = URI.create(nextMaster);
 
+    String userInfo = masterUri.getUserInfo();
+    if (userInfo == null && mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
+      userInfo = String.format("%s:%s", mesosConfiguration.getMesosUsername().get(), mesosConfiguration.getMesosPassword().get());
+    }
+
     mesosSchedulerClient.subscribe(new URI(
         masterUri.getScheme() == null ? "http" : masterUri.getScheme(),
-        masterUri.getUserInfo(),
+        userInfo,
         masterUri.getHost(),
         masterUri.getPort(),
         Strings.isNullOrEmpty(masterUri.getPath()) ? "/api/v1/scheduler" : masterUri.getPath(),
