@@ -69,6 +69,9 @@ public class MesosConfiguration {
   private double recheckMetricsLoad1Threshold = 0.75;
   private double recheckMetricsLoad5Threshold = 0.8;
 
+  private Optional<String> mesosUsername;
+  private Optional<String> mesosPassword;
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -371,5 +374,21 @@ public class MesosConfiguration {
 
   public void setRecheckMetricsLoad5Threshold(double recheckMetricsLoad5Threshold) {
     this.recheckMetricsLoad5Threshold = recheckMetricsLoad5Threshold;
+  }
+
+  public Optional<String> getMesosUsername() {
+    return mesosUsername;
+  }
+
+  public void setMesosUsername(Optional<String> mesosUsername) {
+    this.mesosUsername = mesosUsername;
+  }
+
+  public Optional<String> getMesosPassword() {
+    return mesosPassword;
+  }
+
+  public void setMesosPassword(Optional<String> mesosPassword) {
+    this.mesosPassword = mesosPassword;
   }
 }
