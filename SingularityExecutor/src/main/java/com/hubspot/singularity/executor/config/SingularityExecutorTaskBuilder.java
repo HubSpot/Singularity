@@ -1,10 +1,15 @@
 package com.hubspot.singularity.executor.config;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.Value.Range;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -74,6 +79,10 @@ public class SingularityExecutorTaskBuilder {
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
     SingularityTaskExecutorData taskExecutorData = readExecutorData(jsonObjectMapper, taskInfo);
 
+    if (executorConfiguration.isVerifyAssignedPorts()) {
+      checkAssignedPorts(taskInfo);
+    }
+
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, taskExecutorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
         taskExecutorData.getServiceLog(), Files.getFileExtension(taskExecutorData.getServiceLog()), taskExecutorData.getServiceFinishedTailLog(), executorConfiguration.getTaskAppDirectory(),
         executorConfiguration.getExecutorBashLog(), executorConfiguration.getLogrotateStateFile(), executorConfiguration.getSignatureVerifyOut());
@@ -81,6 +90,32 @@ public class SingularityExecutorTaskBuilder {
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 
     return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration, jsonObjectMapper);
+  }
+
+  private void checkAssignedPorts(TaskInfo taskInfo) {
+    for (Resource portsResource : taskInfo.getResourcesList().stream()
+        .filter((r) -> r.getName().equals("ports"))
+        .collect(Collectors.toList())) {
+      for (Range r : portsResource.getRanges().getRangeList()) {
+        for (long port = r.getBegin(); port <= r.getEnd(); port++) {
+          if (isPortInUse((int) port)) {
+            throw new RuntimeException(String.format("Assigned port %d was already in use", port));
+          }
+        }
+      }
+    }
+
+  }
+
+  private boolean isPortInUse(int port) {
+    try {
+      new ServerSocket(port, 1).close();
+      return false;
+    } catch(IOException e) {
+      // Could not connect.
+    }
+
+    return true;
   }
 
   private SingularityTaskExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {

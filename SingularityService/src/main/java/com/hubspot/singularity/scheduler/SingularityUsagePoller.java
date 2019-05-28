@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
@@ -32,6 +33,7 @@ import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.usage.UsageManager;
@@ -49,6 +51,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final TaskManager taskManager;
+  private final DisasterManager disasterManager;
 
   private final AsyncSemaphore<Void> usageCollectionSemaphore;
   private final ExecutorService usageExecutor;
@@ -60,6 +63,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          RequestManager requestManager,
                          DeployManager deployManager,
                          TaskManager taskManager,
+                         DisasterManager disasterManager,
                          SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                          SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
@@ -70,6 +74,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.taskManager = taskManager;
+    this.disasterManager = disasterManager;
 
     this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections, executorServiceFactory.get("usage-semaphore", 5)).build();
     this.usageExecutor = cachedThreadPoolFactory.get("usage-collection");
@@ -109,7 +114,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             totalCpuUsed.get(), totalCpuAvailable.get(), totalDiskBytesUsed.get(), totalDiskBytesAvailable.get(), now));
     utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
-    if (configuration.isShuffleTasksForOverloadedSlaves()) {
+    if (configuration.isShuffleTasksForOverloadedSlaves() && !disasterManager.isDisabled(SingularityAction.TASK_SHUFFLE)) {
       shuffleTasksOnOverloadedHosts(overLoadedHosts);
     }
   }
