@@ -658,7 +658,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
     int httpPort = configuration.getSlaveHttpsPort().isPresent() ? configuration.getSlaveHttpsPort().get() : configuration.getSlaveHttpPort();
 
-    String url = String.format("%s://%s:%s/files/download.json",
+    String url = String.format("%s://%s:%s/files/download",
         httpPrefix, slaveHostname, httpPort);
 
     try {
