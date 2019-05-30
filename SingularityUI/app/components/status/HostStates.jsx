@@ -30,6 +30,19 @@ function HostStates(props) {
           sortable={true}
         />
         <Column
+          label="Leader"
+          id="leader"
+          key="leader"
+          cellData={(host) => host.master}
+          cellRender={(master) => (
+            <Glyphicon
+              className={master ? 'color-success' : 'color-error'}
+              glyph={master ? 'ok' : 'remove'}
+            />
+          )}
+          sortable={true}
+        />
+        <Column
           label="Scheduler Client Status"
           id="driverStatus"
           key="driverStatus"
