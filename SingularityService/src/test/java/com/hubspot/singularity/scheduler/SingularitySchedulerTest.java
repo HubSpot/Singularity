@@ -17,6 +17,7 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -2476,5 +2477,42 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     Assert.assertEquals(1, taskManager.getNumCleanupTasks());
     Assert.assertEquals(taskManager.getCleanupTaskIds().get(0), secondTask.getTaskId());
+  }
+
+  @Test
+  public void testRecoveredTask() {
+    // set up the slave first
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+
+    initRequest();
+    initFirstDeploy();
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+    TaskStatus lost = TaskStatus.newBuilder()
+        .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
+        .setReason(Reason.REASON_AGENT_REMOVED)
+        .setMessage("health check timed out")
+        .setState(TaskState.TASK_LOST)
+        .build();
+
+    sms.statusUpdate(lost).join();
+
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+    Assert.assertTrue(taskManager.getTaskHistory(task.getTaskId()).isPresent());
+
+    TaskStatus recovered = TaskStatus.newBuilder()
+        .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
+        .setReason(Reason.REASON_AGENT_REREGISTERED)
+        .setMessage("agent reregistered")
+        .setState(TaskState.TASK_RUNNING)
+        .build();
+
+    sms.statusUpdate(recovered).join();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+    Assert.assertEquals(1, requestManager.getSizeOfPendingQueue());
   }
 }

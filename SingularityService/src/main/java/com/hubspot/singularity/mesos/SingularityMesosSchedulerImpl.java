@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -19,8 +20,10 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.DurationInfo;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.InverseOffer;
+import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
@@ -343,7 +346,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       return CompletableFuture.completedFuture(false);
     }
     try {
-      return handleStatusUpdateAsync(status);
+      return handleStatusUpdateAsync(status)
+          .thenApply((r) -> r == StatusUpdateResult.DONE);
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception", t);
       notifyStopping();
@@ -558,7 +562,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     return state;
   }
 
-  private CompletableFuture<Boolean> handleStatusUpdateAsync(TaskStatus status) {
+  private CompletableFuture<StatusUpdateResult> handleStatusUpdateAsync(TaskStatus status) {
     long start = System.currentTimeMillis();
     return statusUpdateHandler.processStatusUpdateAsync(status)
         .whenCompleteAsync((result, throwable) -> {
@@ -569,6 +573,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           }
           if (status.hasUuid()) {
             mesosSchedulerClient.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+          }
+          if (result == StatusUpdateResult.KILL_TASK) {
+            LOG.info("Killing a task {} which Singularity has no remaining active state for. It will be given 1 minute to shut down gracefully", status.getTaskId().getValue());
+            mesosSchedulerClient.kill(status.getTaskId(), status.getAgentId(),
+                KillPolicy.newBuilder().setGracePeriod(DurationInfo.newBuilder().setNanoseconds(TimeUnit.MINUTES.toNanos(1)).build()).build());
           }
           LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
         });

@@ -627,6 +627,33 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getUpdatePath(taskId, state));
   }
 
+  public boolean reactivateTask(SingularityTaskId taskId, ExtendedTaskState taskState, SingularityTaskStatusHolder newUpdate, Optional<String> statusMessage, Optional<String> statusReason) {
+    if (!leaderCache.active()) {
+      LOG.error("reactivateTask can only be called on the leading Singularity instance");
+      return false;
+    }
+    List<SingularityTaskHistoryUpdate> updates = getTaskHistoryUpdates(taskId);
+    if (updates.size() < 2) {
+      LOG.error("No valid previous task state to return to for task {}", taskId);
+      return false;
+    }
+    SingularityTaskHistoryUpdate last = updates.get(updates.size() - 1);
+    updates.remove(last);
+    LOG.info("Removing obsolete status update {}", last);
+
+    // remove the terminal task status update to return to previous state
+    deleteTaskHistoryUpdate(taskId, last.getTaskState(), Optional.absent());
+
+    // Fill back into the leader cache and active task state
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, newUpdate.getServerTimestamp(), taskState, statusMessage, statusReason), true);
+    saveLastActiveTaskStatus(newUpdate);
+    LOG.info("New status for recovered task is {}", newUpdate);
+
+    // Mark as active again
+    leaderCache.putActiveTask(taskId);
+    return true;
+  }
+
   public boolean isActiveTask(SingularityTaskId taskId) {
     if (leaderCache.active()) {
       return leaderCache.isActiveTask(taskId);
@@ -978,7 +1005,7 @@ public class TaskManager extends CuratorAsyncManager {
           .forPath(getLastActiveTaskStatusPath(task.getTaskId()), taskStatusTranscoder.toBytes(taskStatusHolder))
           .and().commit();
 
-      leaderCache.putActiveTask(task);
+      leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
