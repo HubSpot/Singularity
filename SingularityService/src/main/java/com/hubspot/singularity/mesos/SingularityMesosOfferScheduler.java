@@ -166,17 +166,17 @@ public class SingularityMesosOfferScheduler {
     final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", uncached.size());
     scheduler.checkForDecomissions();
-    boolean delclineImmediately = false;
+    boolean declineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
-      delclineImmediately = true;
+      declineImmediately = true;
     }
     if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
       LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
-      delclineImmediately = true;
+      declineImmediately = true;
     }
 
-    if (delclineImmediately) {
+    if (declineImmediately) {
       mesosSchedulerClient.decline(uncached.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
