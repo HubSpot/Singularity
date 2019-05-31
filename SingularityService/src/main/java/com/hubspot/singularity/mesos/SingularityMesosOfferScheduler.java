@@ -201,7 +201,7 @@ public class SingularityMesosOfferScheduler {
         mesosSchedulerClient.decline(Collections.singletonList(cachedOffer.getOffer().getId()));
         offerCache.rescindOffer(cachedOffer.getOffer().getId());
       } else {
-        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", cachedOffer);
       }
     }
 
@@ -281,7 +281,7 @@ public class SingularityMesosOfferScheduler {
       if (offer.getId() != null && offer.getId().getValue() != null) {
         mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
       } else {
-        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", offer);
       }
       return;
     }
