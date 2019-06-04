@@ -46,6 +46,7 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.Sin
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
@@ -319,6 +320,7 @@ public class SingularityExecutorCleanup {
         if (lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
           LOG.info("Task {} is done for > 15 minutes, removing logrotate files");
           taskCleanup.cleanUpLogs();
+          checkForLogrotateAdditionalFilesToDelete(taskDefinition);
         }
         if (lastUpdate.get().getTaskState().isFailed()) {
           final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
@@ -337,6 +339,25 @@ public class SingularityExecutorCleanup {
         && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().get().getType() == SingularityContainerType.DOCKER);
 
     return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
+  }
+
+  private void checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
+    executorConfiguration.getLogrotateAdditionalFiles()
+        .stream()
+        .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
+        .forEach(toDelete -> {
+          try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDefinition.getTaskDirectoryPath(), String.format("glob:%s", toDelete.getFilename()))) {
+            stream.iterator().forEachRemaining(path -> {
+              try {
+                Files.delete(path);
+              } catch (IOException e) {
+                LOG.error("Unable to delete logrotateAdditionalFile {}", path.toString(), e);
+              }
+            });
+          } catch (IOException e) {
+            LOG.error("Unable to list files while trying to delete for {}", toDelete);
+          }
+        });
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {

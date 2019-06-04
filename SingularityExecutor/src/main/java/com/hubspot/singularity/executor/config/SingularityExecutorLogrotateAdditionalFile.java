@@ -12,22 +12,25 @@ public class SingularityExecutorLogrotateAdditionalFile {
     private final Optional<String> extension;
     private final Optional<String> dateformat;
     private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
+    private final boolean deleteInExecutorCleanup;
 
     @JsonCreator
     @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
-        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), null);
+        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), null, false);
     }
 
     @JsonCreator
     public SingularityExecutorLogrotateAdditionalFile(@JsonProperty("filename") String filename,
             @JsonProperty("extension") Optional<String> extension,
             @JsonProperty("dateformat") Optional<String> dateformat,
-            @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
+            @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride,
+            @JsonProperty("deleteInExecutorCleanup") boolean deleteInExecutorCleanup) {
         this.filename = filename;
         this.extension = extension;
         this.dateformat = dateformat;
         this.logrotateFrequencyOverride = Optional.fromNullable(logrotateFrequencyOverride);
+        this.deleteInExecutorCleanup = deleteInExecutorCleanup;
     }
 
     public String getFilename() {
@@ -46,4 +49,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
         return logrotateFrequencyOverride;
     }
 
+    public boolean isDeleteInExecutorCleanup() {
+        return deleteInExecutorCleanup;
+    }
 }
