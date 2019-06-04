@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -346,19 +347,36 @@ public class SingularityExecutorCleanup {
         .stream()
         .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
         .forEach(toDelete -> {
-          try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDefinition.getTaskDirectoryPath(), toDelete.getFilename())) {
-            stream.iterator().forEachRemaining(path -> {
-              try {
-                LOG.debug("Trying to delete {} for task {}...", toDelete.getFilename(), taskDefinition.getTaskId());
-                Files.delete(path);
-              } catch (IOException e) {
-                LOG.error("Unable to delete logrotateAdditionalFile {}", path.toString(), e);
-              }
-            });
+          String glob = String.format("glob:%s/%s", taskDefinition.getTaskDirectoryPath().toAbsolutePath(), toDelete.getFilename());
+
+          LOG.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
+
+          try {
+            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob), new ArrayList<>());
+            for (Path match : matches) {
+              Files.delete(match);
+              LOG.debug("Deleted {}", match);
+            }
           } catch (IOException e) {
             LOG.error("Unable to list files while trying to delete for {}", toDelete);
           }
         });
+  }
+
+  private List<Path> findGlob(Path path, PathMatcher matcher, List<Path> matched) throws IOException {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+      for (Path entry : stream) {
+        if (Files.isDirectory(entry)) {
+          findGlob(entry, matcher, matched);
+        }
+
+        if (matcher.matches(entry)) {
+          matched.add(entry);
+        }
+      }
+    }
+
+    return matched;
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
