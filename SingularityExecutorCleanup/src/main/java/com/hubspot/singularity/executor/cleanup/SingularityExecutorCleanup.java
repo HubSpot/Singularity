@@ -376,9 +376,7 @@ public class SingularityExecutorCleanup {
         for (Path entry : stream) {
           if (Files.isDirectory(entry)) {
             stack.push(entry);
-          }
-
-          if (matcher.matches(entry)) {
+          } else if (matcher.matches(entry)) {
             matched.add(entry);
           }
         }
