@@ -355,7 +355,7 @@ public class SingularityExecutorCleanup {
               }
             });
           } catch (IOException e) {
-            LOG.error("Unable to list files while trying to files to delete for {}", toDelete);
+            LOG.error("Unable to list files while trying to delete for {}", toDelete);
           }
         });
   }
