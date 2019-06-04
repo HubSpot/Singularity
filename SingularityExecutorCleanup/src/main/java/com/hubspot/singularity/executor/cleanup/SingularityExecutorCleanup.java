@@ -7,9 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -352,7 +354,7 @@ public class SingularityExecutorCleanup {
           LOG.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
 
           try {
-            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob), new ArrayList<>());
+            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob));
             for (Path match : matches) {
               Files.delete(match);
               LOG.debug("Deleted {}", match);
@@ -363,15 +365,22 @@ public class SingularityExecutorCleanup {
         });
   }
 
-  private List<Path> findGlob(Path path, PathMatcher matcher, List<Path> matched) throws IOException {
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-      for (Path entry : stream) {
-        if (Files.isDirectory(entry)) {
-          findGlob(entry, matcher, matched);
-        }
+  private List<Path> findGlob(Path path, PathMatcher matcher) throws IOException {
+    Deque<Path> stack = new ArrayDeque<>();
+    List<Path> matched = new ArrayList<>();
 
-        if (matcher.matches(entry)) {
-          matched.add(entry);
+    stack.push(path);
+
+    while (!stack.isEmpty()) {
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(stack.pop())) {
+        for (Path entry : stream) {
+          if (Files.isDirectory(entry)) {
+            stack.push(entry);
+          }
+
+          if (matcher.matches(entry)) {
+            matched.add(entry);
+          }
         }
       }
     }
