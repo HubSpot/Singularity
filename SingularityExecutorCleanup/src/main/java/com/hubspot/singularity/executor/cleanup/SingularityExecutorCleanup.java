@@ -346,10 +346,10 @@ public class SingularityExecutorCleanup {
         .stream()
         .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
         .forEach(toDelete -> {
-          LOG.debug("Trying to delete {} for task {}...", toDelete.getFilename(), taskDefinition.getTaskId());
           try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDefinition.getTaskDirectoryPath(), toDelete.getFilename())) {
             stream.iterator().forEachRemaining(path -> {
               try {
+                LOG.debug("Trying to delete {} for task {}...", toDelete.getFilename(), taskDefinition.getTaskId());
                 Files.delete(path);
               } catch (IOException e) {
                 LOG.error("Unable to delete logrotateAdditionalFile {}", path.toString(), e);
