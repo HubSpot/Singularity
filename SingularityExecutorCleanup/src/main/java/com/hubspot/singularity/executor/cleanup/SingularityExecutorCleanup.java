@@ -346,7 +346,7 @@ public class SingularityExecutorCleanup {
         .stream()
         .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
         .forEach(toDelete -> {
-          try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDefinition.getTaskDirectoryPath(), String.format("glob:%s", toDelete.getFilename()))) {
+          try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDefinition.getTaskDirectoryPath(), toDelete.getFilename())) {
             stream.iterator().forEachRemaining(path -> {
               try {
                 Files.delete(path);
