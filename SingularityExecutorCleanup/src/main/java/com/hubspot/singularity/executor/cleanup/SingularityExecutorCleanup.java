@@ -334,7 +334,13 @@ public class SingularityExecutorCleanup {
             cleanupTaskAppDirectory = false;
           }
         }
+      } else {
+        // No information is available, the task data has probably aged out of storage. Clean logrotateAdditionalFiles we've been asked to delete.
+        checkForLogrotateAdditionalFilesToDelete(taskDefinition);
       }
+    } else {
+      // Same as above
+      checkForLogrotateAdditionalFilesToDelete(taskDefinition);
     }
 
     boolean isDocker = (taskHistory.isPresent()
