@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -196,7 +195,7 @@ public class SingularityMesosOfferScheduler {
         ));
 
     List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
-    Map<String, CachedOffer> cachedOffers = new HashMap<>();
+    Map<String, CachedOffer> cachedOffers = new ConcurrentHashMap<>();
     for (CachedOffer cachedOffer : cachedOfferList) {
       if (isValidOffer(cachedOffer.getOffer())) {
         cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
