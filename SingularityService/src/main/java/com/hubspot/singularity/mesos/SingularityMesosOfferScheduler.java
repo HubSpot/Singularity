@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,17 +165,17 @@ public class SingularityMesosOfferScheduler {
     final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", uncached.size());
     scheduler.checkForDecomissions();
-    boolean delclineImmediately = false;
+    boolean declineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
-      delclineImmediately = true;
+      declineImmediately = true;
     }
     if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
       LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
-      delclineImmediately = true;
+      declineImmediately = true;
     }
 
-    if (delclineImmediately) {
+    if (declineImmediately) {
       mesosSchedulerClient.decline(uncached.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
@@ -189,19 +188,23 @@ public class SingularityMesosOfferScheduler {
       }
     }
 
-    List<Offer> offersToCheck = Collections.synchronizedList(new ArrayList<>(uncached));
+    Map<String, Offer> offersToCheck = uncached.stream()
+        .collect(Collectors.toConcurrentMap(
+            (o) -> o.getId().getValue(),
+            Function.identity()
+        ));
 
     List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
-    Map<String, CachedOffer> cachedOffers = new HashMap<>();
+    Map<String, CachedOffer> cachedOffers = new ConcurrentHashMap<>();
     for (CachedOffer cachedOffer : cachedOfferList) {
       if (isValidOffer(cachedOffer.getOffer())) {
         cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
-        offersToCheck.add(cachedOffer.getOffer());
+        offersToCheck.put(cachedOffer.getOfferId(), cachedOffer.getOffer());
       } else if (cachedOffer.getOffer().getId() != null && cachedOffer.getOffer().getId().getValue() != null) {
         mesosSchedulerClient.decline(Collections.singletonList(cachedOffer.getOffer().getId()));
         offerCache.rescindOffer(cachedOffer.getOffer().getId());
       } else {
-        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", cachedOffer);
       }
     }
 
@@ -249,7 +252,7 @@ public class SingularityMesosOfferScheduler {
     } catch (Throwable t) {
       LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
-      mesosSchedulerClient.decline(offersToCheck.stream()
+      mesosSchedulerClient.decline(offersToCheck.values().stream()
           .filter((o) -> {
             if (o == null || o.getId() == null || o.getId().getValue() == null) {
               LOG.warn("Got bad offer {} while trying to decline offers!", o);
@@ -262,9 +265,9 @@ public class SingularityMesosOfferScheduler {
           .map(Offer::getId)
           .collect(Collectors.toList()));
 
-      offersToCheck.forEach((o) -> {
-        if (cachedOffers.containsKey(o.getId().getValue())) {
-          offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+      offersToCheck.forEach((id, o) -> {
+        if (cachedOffers.containsKey(id)) {
+          offerCache.returnOffer(cachedOffers.get(id));
         }
       });
 
@@ -275,13 +278,13 @@ public class SingularityMesosOfferScheduler {
         uncached.size() - acceptedOffers.size());
   }
 
-  private void checkOfferAndSlave(Offer offer, List<Offer> offersToCheck) {
+  private void checkOfferAndSlave(Offer offer, Map<String, Offer> offersToCheck) {
     if (!isValidOffer(offer)) {
-      offersToCheck.remove(offer);
+      offersToCheck.remove(offer.getId().getValue());
       if (offer.getId() != null && offer.getId().getValue() != null) {
         mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
       } else {
-        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!");
+        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", offer);
       }
       return;
     }
@@ -292,7 +295,7 @@ public class SingularityMesosOfferScheduler {
     CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
     if (checkResult == CheckResult.NOT_ACCEPTING_TASKS) {
       mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
-      offersToCheck.remove(offer);
+      offersToCheck.remove(offer.getId().getValue());
       LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
     }
   }
@@ -309,7 +312,7 @@ public class SingularityMesosOfferScheduler {
     return true;
   }
 
-  Collection<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
+  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers) {
     if (offers.isEmpty()) {
       LOG.debug("No offers to check");
       return Collections.emptyList();
@@ -318,7 +321,7 @@ public class SingularityMesosOfferScheduler {
     final List<SingularityTaskRequestHolder> sortedTaskRequestHolders = getSortedDueTaskRequests();
     final int numDueTasks = sortedTaskRequestHolders.size();
 
-    final Map<String, SingularityOfferHolder> offerHolders = offers.stream()
+    final Map<String, SingularityOfferHolder> offerHolders = offers.values().stream()
         .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
         .entrySet().stream()
         .filter((e) -> e.getValue().size() > 0)
