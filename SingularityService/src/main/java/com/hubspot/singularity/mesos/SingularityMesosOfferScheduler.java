@@ -189,6 +189,18 @@ public class SingularityMesosOfferScheduler {
     }
 
     Map<String, Offer> offersToCheck = uncached.stream()
+        .filter((o) -> {
+          if (!isValidOffer(o)) {
+            if (o.getId() != null && o.getId().getValue() != null) {
+              LOG.warn("Got invalid offer {}", o);
+              mesosSchedulerClient.decline(Collections.singletonList(o.getId()));
+            } else {
+              LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", o);
+            }
+            return false;
+          }
+          return true;
+        })
         .collect(Collectors.toConcurrentMap(
             (o) -> o.getId().getValue(),
             Function.identity()
@@ -279,15 +291,6 @@ public class SingularityMesosOfferScheduler {
   }
 
   private void checkOfferAndSlave(Offer offer, Map<String, Offer> offersToCheck) {
-    if (!isValidOffer(offer)) {
-      offersToCheck.remove(offer.getId().getValue());
-      if (offer.getId() != null && offer.getId().getValue() != null) {
-        mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
-      } else {
-        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", offer);
-      }
-      return;
-    }
     String rolesInfo = MesosUtils.getRoles(offer).toString();
     LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
         MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
