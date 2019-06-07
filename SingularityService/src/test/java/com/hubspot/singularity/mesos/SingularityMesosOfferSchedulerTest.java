@@ -1,6 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -11,6 +10,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.MachineLoadMetric;
@@ -31,6 +31,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
+import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityUsagePoller;
 import com.hubspot.singularity.scheduler.TestingMesosClient;
@@ -39,6 +40,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
   @Inject
   protected SingularityMesosOfferScheduler scheduler;
+
+  @Inject
+  protected SingularityScheduler singularityScheduler;
 
   @Inject
   protected DeployManager deployManager;
@@ -170,7 +174,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
     slaveAndRackManager.checkOffer(host3Offer);
 
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
+    singularityScheduler.drainPendingQueue();
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
     Assert.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
@@ -216,7 +221,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
     slaveAndRackManager.checkOffer(host3Offer);
 
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
+    singularityScheduler.drainPendingQueue();
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
     Assert.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
