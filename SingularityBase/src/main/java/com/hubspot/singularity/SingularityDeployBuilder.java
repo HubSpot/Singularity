@@ -16,7 +16,7 @@ import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityDeployBuilder {
 
-  private final String requestId;
+  private String requestId;
 
   private String id;
 
@@ -168,6 +168,11 @@ public class SingularityDeployBuilder {
 
   public String getRequestId() {
     return requestId;
+  }
+
+  public SingularityDeployBuilder setRequestId(String requestId) {
+    this.requestId = requestId;
+    return this;
   }
 
   public String getId() {
