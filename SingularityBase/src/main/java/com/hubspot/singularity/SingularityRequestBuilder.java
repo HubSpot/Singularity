@@ -11,8 +11,8 @@ import com.google.common.base.Optional;
 
 public class SingularityRequestBuilder {
 
-  private final String id;
-  private final RequestType requestType;
+  private String id;
+  private RequestType requestType;
 
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
@@ -119,6 +119,11 @@ public class SingularityRequestBuilder {
 
   public String getId() {
     return id;
+  }
+
+  public SingularityRequestBuilder setId(String id) {
+    this.id = id;
+    return this;
   }
 
   public Optional<List<String>> getOwners() {
@@ -245,6 +250,11 @@ public class SingularityRequestBuilder {
 
   public RequestType getRequestType() {
     return requestType;
+  }
+
+  public SingularityRequestBuilder setRequestType(RequestType requestType) {
+    this.requestType = requestType;
+    return this;
   }
 
   public Optional<Long> getWaitAtLeastMillisAfterTaskFinishesForReschedule() {
