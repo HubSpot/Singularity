@@ -517,7 +517,11 @@ public class SingularityClient {
     } catch (ExecutionException | RetryException exn) {
       if (exn instanceof RetryException) {
         RetryException retryExn = (RetryException) exn;
-        LOG.error("Failed request to Singularity", retryExn.getLastFailedAttempt().getExceptionCause());
+        if (retryExn.getLastFailedAttempt().hasException()) {
+          LOG.error("Failed request to Singularity", retryExn.getLastFailedAttempt().getExceptionCause());
+        } else {
+          LOG.error("Failed request to Singularity", exn);
+        }
       } else {
         LOG.error("Failed request to Singularity", exn);
       }
