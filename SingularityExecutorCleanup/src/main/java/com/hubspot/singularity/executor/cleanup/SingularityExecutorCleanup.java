@@ -320,7 +320,7 @@ public class SingularityExecutorCleanup {
       final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
 
       if (lastUpdate.isPresent()) {
-        if (lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
+        if (taskDefinition.getTaskDirectoryPath().toFile().exists() && lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
           LOG.info("Task {} is done for > 15 minutes, removing logrotate files", taskDefinition.getTaskId());
           taskCleanup.cleanUpLogs();
           checkForLogrotateAdditionalFilesToDelete(taskDefinition);
@@ -334,11 +334,11 @@ public class SingularityExecutorCleanup {
             cleanupTaskAppDirectory = false;
           }
         }
-      } else {
+      } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
         // No information is available, the task data has probably aged out of storage. Clean logrotateAdditionalFiles we've been asked to delete.
         checkForLogrotateAdditionalFilesToDelete(taskDefinition);
       }
-    } else {
+    } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
       // Same as above
       checkForLogrotateAdditionalFilesToDelete(taskDefinition);
     }
