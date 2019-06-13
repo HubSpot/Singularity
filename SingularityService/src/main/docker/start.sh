@@ -45,4 +45,4 @@ if [[ "${SINGULARITY_DB_MIGRATE:-}" != "" ]]; then
 fi
 
 echo "Running: java ${args[@]} -jar /SingularityService.jar $*"
-exec java "${args[@]}" -jar /SingularityService.jar $*
+exec /usr/local/openjdk-8/bin/java "${args[@]}" -jar /SingularityService.jar $*
