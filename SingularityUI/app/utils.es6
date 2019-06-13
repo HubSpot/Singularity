@@ -232,8 +232,12 @@ const Utils = {
   },
 
   getListOfUniqueRequestsFromListOfTasks(listOfTasks) {
-    const requestIds = listOfTasks.map(taskId => taskId.requestId)
-    return _.uniq(requestIds);
+    if (listOfTasks) {
+      const requestIds = listOfTasks.map(taskId => taskId.requestId)
+      return _.uniq(requestIds);
+    } else {
+      return []
+    }
   },
 
   getInstanceNoFromTaskId(taskId) {
