@@ -195,6 +195,9 @@ const Utils = {
   },
 
   getMaxAvailableResource(slaveInfo, statName) {
+    if (!slaveInfo.hasOwnProperty('resources')) {
+      return 0;
+    }
     switch (statName) {
       case STAT_NAMES.cpusUsedStat:
         try {
