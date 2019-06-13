@@ -179,6 +179,11 @@ public class SingularityExecutorCleanup {
           statisticsBldr.incrTotalTaskFiles();
 
           try {
+            if (!file.toFile().exists()) {
+              LOG.error("Tried to read a task definition file at {} which didn't exist!", file.toAbsolutePath().toString());
+              return;
+            }
+
             Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
             if (!maybeTaskDefinition.isPresent()) {
