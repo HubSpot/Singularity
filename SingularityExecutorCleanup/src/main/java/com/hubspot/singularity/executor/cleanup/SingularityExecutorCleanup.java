@@ -168,7 +168,7 @@ public class SingularityExecutorCleanup {
     }
 
     try {
-      try (Stream<Path> paths = Files.walk(directory, 1)) {
+      try (Stream<Path> paths = Files.list(directory)) {
         paths.forEach((file) -> {
           if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
             LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
@@ -180,7 +180,10 @@ public class SingularityExecutorCleanup {
 
           try {
             if (!file.toFile().exists()) {
-              LOG.error("Tried to read a task definition file at {} which didn't exist!", file.toAbsolutePath().toString());
+              LOG.error(
+                  "Tried to read a task definition file at {} which didn't exist! SingularityExecutorTaskCleanup probably cleaned it up after we listed the task definition directory",
+                  file.toAbsolutePath().toString()
+              );
               return;
             }
 
