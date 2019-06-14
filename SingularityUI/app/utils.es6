@@ -195,6 +195,9 @@ const Utils = {
   },
 
   getMaxAvailableResource(slaveInfo, statName) {
+    if (!slaveInfo.hasOwnProperty('resources')) {
+      return 0;
+    }
     switch (statName) {
       case STAT_NAMES.cpusUsedStat:
         try {
@@ -229,8 +232,12 @@ const Utils = {
   },
 
   getListOfUniqueRequestsFromListOfTasks(listOfTasks) {
-    const requestIds = listOfTasks.map(taskId => taskId.requestId)
-    return _.uniq(requestIds);
+    if (listOfTasks) {
+      const requestIds = listOfTasks.map(taskId => taskId.requestId)
+      return _.uniq(requestIds);
+    } else {
+      return []
+    }
   },
 
   getInstanceNoFromTaskId(taskId) {

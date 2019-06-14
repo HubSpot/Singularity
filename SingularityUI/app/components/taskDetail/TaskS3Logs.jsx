@@ -33,7 +33,7 @@ class TaskS3Logs extends Component {
           emptyTableMessage="This task has no history yet"
           data={s3Files}
           keyGetter={(s3File) => s3File.key}
-          rowChunkSize={5}
+          rowChunkSize={20}
           paginated={true}
         >
           <Column
@@ -56,18 +56,24 @@ class TaskS3Logs extends Component {
             label="Last modified"
             id="last-modified"
             key="last-modified"
+            sortable={true}
+            sortData={(s3File) => s3File.lastModified}
             cellData={(s3File) => Utils.absoluteTimestampWithSeconds(s3File.lastModified)}
           />
           <Column
             label="Estimated Start Time"
             id="estimated-start"
             key="estimated-start"
+            sortable={true}
+            sortData={(s3File) => (s3File.startTime) ? s3File.startTime : taskStartedAt}
             cellData={(s3File) => (s3File.startTime) ? Utils.absoluteTimestampWithSeconds(s3File.startTime) : Utils.absoluteTimestampWithSeconds(taskStartedAt)}
           />
           <Column
             label="Estimated End Time"
             id="estimtaed-end"
             key="estimtaed-end"
+            sortable={true}
+            sortData={(s3File) => (s3File.endTime) ? s3File.endTime : s3File.lastModified}
             cellData={(s3File) => (s3File.endTime) ? Utils.absoluteTimestampWithSeconds(s3File.endTime) : Utils.absoluteTimestampWithSeconds(s3File.lastModified)}
           />
           <Column
