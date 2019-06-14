@@ -554,13 +554,10 @@
                     <ports>
                       <port>7099</port>
                     </ports>
-                    <entryPoint>
-                      <exec>
-                        <arg>/etc/singularity/start.sh</arg>
-                      </exec>
-                    </entryPoint>
                     <cmd>
                       <exec>
+                        <args>/bin/bash</args>
+                        <args>/etc/singularity/start.sh</args>
                         <args>server</args>
                         <args>/etc/singularity/singularity.yaml</args>
                       </exec>

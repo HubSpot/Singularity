@@ -144,13 +144,16 @@ const TaskAlerts = (props) => {
       );
     } else {
       respondedMessage = (
-        <span>
-          Last healthcheck did not respond after{' '}
-          <code>
-            {lastHealthcheck.durationMillis && `${Utils.millisecondsToSecondsRoundToTenth(lastHealthcheck.durationMillis)} seconds`}
-          </code>
-          {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
-        </span>
+        <div>
+          <span>
+            Last healthcheck did not respond after{' '}
+            <code>
+              {lastHealthcheck.durationMillis && `${Utils.millisecondsToSecondsRoundToTenth(lastHealthcheck.durationMillis)} seconds`}
+            </code>
+            {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
+          </span>
+          <pre className="healthcheck-message">{lastHealthcheck.errorMessage || lastHealthcheck.responseBody}</pre>
+        </div>
       );
     }
 

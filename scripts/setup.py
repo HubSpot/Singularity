@@ -5,7 +5,7 @@ requirements = [
   'ConfigParser==3.5.0b2',
   'grequests==0.2.0',
   'gevent==1.1b5',
-  'requests==2.5.0',
+  'requests>=2.20.0',
   'termcolor==1.1.0'
 ]
 

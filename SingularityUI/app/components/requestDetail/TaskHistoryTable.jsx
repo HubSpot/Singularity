@@ -71,7 +71,7 @@ class TaskHistoryTable extends Component {
     if (tasks.length) {
       maybeSearchButton = (
         <Link to={`request/${requestId}/task-search`}>
-          <Button bsStyle="primary">
+          <Button bsSize="small" bsStyle="primary">
             <Glyphicon glyph="search" aria-hidden="true" /><span> Search</span>
           </Button>
         </Link>
