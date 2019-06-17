@@ -106,8 +106,8 @@ public class JDBIHistoryManager implements HistoryManager {
         getUserField(deployHistory.getDeployMarker().getUser()),
         getMessageField(deployHistory.getDeployMarker().getMessage()),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
-            deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
-                deployHistoryTranscoder.toBytes(deployHistory));
+        deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
+        deployHistoryTranscoder.toBytes(deployHistory));
   }
 
   @Override
