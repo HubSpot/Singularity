@@ -73,6 +73,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   @Before
   public void createTestData() throws Exception {
     Handle handle = dbiProvider.get().open();
+    handle.getConnection().setAutoCommit(true);
 
     Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
 
@@ -81,10 +82,11 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     try {
       database.close();
+      handle.close();
     } catch (Throwable t) {
     }
 
-    handle.close();
+
   }
 
   @After
