@@ -87,6 +87,6 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
   @SqlUpdate("UPDATE taskHistory SET taskJson = :taskHistory, bytes = '' WHERE taskId = :taskId")
   void setTaskJson(@Bind("taskId") String taskId, @Json SingularityTaskHistory taskHistory);
 
-  void close();
+  default void close() {}
 
 }
