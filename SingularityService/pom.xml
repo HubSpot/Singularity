@@ -70,6 +70,10 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.rholder</groupId>
+      <artifactId>guava-retrying</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -117,11 +121,6 @@
     </dependency>
 
     <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-util</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.hubspot.jackson</groupId>
       <artifactId>jackson-datatype-protobuf</artifactId>
     </dependency>
@@ -152,11 +151,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.palominolabs.metrics</groupId>
       <artifactId>metrics-guice</artifactId>
     </dependency>
@@ -164,6 +158,11 @@
     <dependency>
       <groupId>com.squarespace.jersey2-guice</groupId>
       <artifactId>jersey2-guice-impl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
     </dependency>
 
     <dependency>
@@ -229,6 +228,11 @@
     <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-migrations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-util</artifactId>
     </dependency>
 
     <dependency>
@@ -408,12 +412,12 @@
 
     <dependency>
       <groupId>org.jdbi</groupId>
-      <artifactId>jdbi3-sqlobject</artifactId>
+      <artifactId>jdbi3-json</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.jdbi</groupId>
-      <artifactId>jdbi3-json</artifactId>
+      <artifactId>jdbi3-sqlobject</artifactId>
     </dependency>
 
     <dependency>
@@ -497,10 +501,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.rholder</groupId>
-      <artifactId>guava-retrying</artifactId>
     </dependency>
 
   </dependencies>
