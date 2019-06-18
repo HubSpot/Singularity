@@ -5,12 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.jackson2.Jackson2Config;
+import org.jdbi.v3.jackson2.Jackson2Plugin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -21,11 +22,11 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityJsonStringMapper;
 import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
 import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
@@ -59,6 +60,7 @@ public class SingularityHistoryModule extends AbstractModule {
     Multibinder<ColumnMapper<?>> columnMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ColumnMapper<?>>() {});
     columnMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
     columnMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
+    columnMappers.addBinding().to(SingularityJsonStringMapper.class).in(Scopes.SINGLETON);
     columnMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
     columnMappers.addBinding().to(SingularityMappers.SingularityTimestampMapper.class).in(Scopes.SINGLETON);
 
@@ -75,7 +77,6 @@ public class SingularityHistoryModule extends AbstractModule {
       bind(Jdbi.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
-      bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
       bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
@@ -103,26 +104,6 @@ public class SingularityHistoryModule extends AbstractModule {
     return new ReentrantLock();
   }
 
-  private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
-    bindInterceptor(Matchers.subclassesOf(JDBIHistoryManager.class), Matchers.any(), new MethodInterceptor() {
-
-      @Override
-      public Object invoke(MethodInvocation invocation) throws Throwable {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
-        if (cl == null) {
-          Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
-        }
-
-        try {
-          return invocation.proceed();
-        } finally {
-          Thread.currentThread().setContextClassLoader(cl);
-        }
-      }
-    });
-  }
-
   static class DBIProvider implements Provider<Jdbi> {
     private final JdbiFactory factory = new JdbiFactory();
     private final Environment environment;
@@ -130,6 +111,7 @@ public class SingularityHistoryModule extends AbstractModule {
 
     private Set<RowMapper<?>> rowMappers = ImmutableSet.of();
     private Set<ColumnMapper<?>> columnMappers = ImmutableSet.of();
+    private ObjectMapper objectMapper;
 
     @Inject
     DBIProvider(final Environment environment, final SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
@@ -138,9 +120,11 @@ public class SingularityHistoryModule extends AbstractModule {
     }
 
     @Inject(optional = true)
-    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers) {
+    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers, ObjectMapper objectMapper) {
       checkNotNull(rowMappers, "resultSetMappers is null");
       this.rowMappers = ImmutableSet.copyOf(rowMappers);
+      this.columnMappers = ImmutableSet.copyOf(columnMappers);
+      this.objectMapper = objectMapper;
     }
 
     @Override
@@ -153,6 +137,8 @@ public class SingularityHistoryModule extends AbstractModule {
         for (ColumnMapper<?> resultSetMapper : columnMappers) {
           jdbi.registerColumnMapper(resultSetMapper);
         }
+        jdbi.installPlugin(new Jackson2Plugin());
+        jdbi.getConfig(Jackson2Config.class).setMapper(objectMapper);
 
         return jdbi;
       } catch (Exception e) {

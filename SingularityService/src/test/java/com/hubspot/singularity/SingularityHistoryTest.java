@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -101,7 +102,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   private SingularityTaskHistory buildTask(long launchTime) {
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    return new SingularityTaskHistory(null, Optional.<String> absent(), Optional.<String>absent(), null, task, null, null, null);
+    return new SingularityTaskHistory(
+        Collections.singletonList(new SingularityTaskHistoryUpdate(task.getTaskId(), launchTime, ExtendedTaskState.TASK_LAUNCHED, Optional.absent(), Optional.absent())),
+        Optional.<String> absent(), Optional.<String>absent(), null, task, null, null, null);
   }
 
   private void saveTasks(int num, long launchTime) {

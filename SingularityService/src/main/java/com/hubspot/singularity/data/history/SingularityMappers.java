@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -11,9 +12,11 @@ import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.result.ResultSetException;
 import org.jdbi.v3.core.statement.StatementContext;
+import org.jdbi.v3.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -62,6 +65,18 @@ public class SingularityMappers {
 
   }
 
+  @Json
+  static class SingularityJsonStringMapper implements ColumnMapper<String> {
+
+    @Inject
+    SingularityJsonStringMapper() {}
+
+    @Override
+    public String map(ResultSet r, int index, StatementContext ctx) throws SQLException {
+      return r.getString("json");
+    }
+  }
+
   static class SingularityIdMapper implements ColumnMapper<String> {
 
     @Inject
@@ -71,7 +86,6 @@ public class SingularityMappers {
     public String map(ResultSet r, int index, StatementContext ctx) throws SQLException {
       return r.getString("id");
     }
-
   }
 
   static class SingularityTimestampMapper implements ColumnMapper<Long> {
@@ -88,10 +102,13 @@ public class SingularityMappers {
 
   static class SingularityRequestHistoryMapper implements RowMapper<SingularityRequestHistory> {
     private final String userColumn;
+    private final ObjectMapper objectMapper;
 
     @Inject
-    SingularityRequestHistoryMapper(SingularityConfiguration singularityConfiguration) {
+    SingularityRequestHistoryMapper(SingularityConfiguration singularityConfiguration,
+                                    ObjectMapper objectMapper) {
       this.userColumn = getUserColumn(singularityConfiguration);
+      this.objectMapper = objectMapper;
     }
 
     @Override
@@ -101,9 +118,9 @@ public class SingularityMappers {
             r.getTimestamp("createdAt").getTime(),
             Optional.fromNullable(r.getString(userColumn)),
             RequestHistoryType.valueOf(r.getString("requestState")),
-            r.getObject("requestJson", SingularityRequest.class),
+            objectMapper.readValue(r.getString("json"), SingularityRequest.class),
             Optional.fromNullable(r.getString("message")));
-      } catch (SingularityTranscoderException e) {
+      } catch (IOException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }
     }

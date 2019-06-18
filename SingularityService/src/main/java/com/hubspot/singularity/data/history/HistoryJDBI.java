@@ -24,11 +24,11 @@ public interface HistoryJDBI extends SqlObject {
   void insertTaskHistory(String requestId, String taskId, SingularityTaskHistory taskHistory, Date updatedAt,
                          String lastTaskStatus, String runId, String deployId, String host, Date startedAt);
 
-  java.util.Optional<SingularityTaskHistory> getTaskHistoryForTask(String taskId);
+  SingularityTaskHistory getTaskHistoryForTask(String taskId);
 
-  java.util.Optional<SingularityTaskHistory> getTaskHistoryForTaskByRunId(String requestId, String runId);
+  SingularityTaskHistory getTaskHistoryForTaskByRunId(String requestId, String runId);
 
-  java.util.Optional<SingularityDeployHistory> getDeployHistoryForDeploy(String requestId, String deployId);
+  SingularityDeployHistory getDeployHistoryForDeploy(String requestId, String deployId);
 
   List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 

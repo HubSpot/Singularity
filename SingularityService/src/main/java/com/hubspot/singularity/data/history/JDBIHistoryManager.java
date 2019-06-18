@@ -112,7 +112,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    return Optional.fromJavaUtil(history.getDeployHistoryForDeploy(requestId, deployId));
+    return Optional.fromNullable(history.getDeployHistoryForDeploy(requestId, deployId));
   }
 
   @Override
@@ -169,7 +169,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public void saveTaskHistory(SingularityTaskHistory taskHistory) {
-    if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()).isPresent()) {
+    if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()) != null) {
       if (LOG.isTraceEnabled()) {
         LOG.trace("saveTaskHistory -- existing taskHistory {}", taskHistory);
       }
@@ -194,12 +194,12 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    return Optional.fromJavaUtil(history.getTaskHistoryForTask(taskId));
+    return Optional.fromNullable(history.getTaskHistoryForTask(taskId));
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
-    return Optional.fromJavaUtil(history.getTaskHistoryForTaskByRunId(requestId, runId));
+    return Optional.fromNullable(history.getTaskHistoryForTaskByRunId(requestId, runId));
   }
 
   @Override

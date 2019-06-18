@@ -18,7 +18,7 @@ import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 public class SingularityCuratorTestBase {
 
   @Rule
-  public Timeout globalTimeout = Timeout.seconds(30); // 30 seconds max for each @Test method
+  public Timeout globalTimeout = Timeout.seconds(60); // 30 seconds max for each @Test method
 
   @Inject
   protected CuratorFramework cf;

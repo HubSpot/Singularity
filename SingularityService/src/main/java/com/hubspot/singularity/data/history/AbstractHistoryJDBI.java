@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jdbi.v3.core.statement.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +127,10 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
 
     LOG.trace("Generated sql for task search: {}, binds: {}", sql, binds);
 
-    return getHandle().createQuery(sql).mapTo(SingularityTaskIdHistory.class).list();
+    Query query = getHandle().createQuery(sql);
+    binds.forEach(query::bind);
+
+    return query.mapTo(SingularityTaskIdHistory.class).list();
   }
 
   default int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
@@ -142,7 +146,9 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
 
     LOG.trace("Generated sql for task search count: {}, binds: {}", sql, binds);
 
-    return getHandle().createQuery(sql).mapTo(Integer.class).first();
+    Query query = getHandle().createQuery(sql);
+    binds.forEach(query::bind);
+    return query.mapTo(Integer.class).first();
   }
 
 }
