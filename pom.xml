@@ -327,6 +327,18 @@
       </dependency>
 
       <dependency>
+        <groupId>org.glassfish.hk2</groupId>
+        <artifactId>hk2-utils</artifactId>
+        <version>${dep.hk2.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>aopalliance-repackaged</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-jdbi3</artifactId>
         <version>${dropwizard.version}</version>
