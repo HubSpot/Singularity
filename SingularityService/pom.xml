@@ -27,11 +27,6 @@
   <dependencies>
 
     <dependency>
-      <groupId>aopalliance</groupId>
-      <artifactId>aopalliance</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
@@ -409,6 +404,16 @@
     <dependency>
       <groupId>org.jdbi</groupId>
       <artifactId>jdbi3-jackson2</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jdbi</groupId>
+      <artifactId>jdbi3-sqlobject</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jdbi</groupId>
+      <artifactId>jdbi3-json</artifactId>
     </dependency>
 
     <dependency>
