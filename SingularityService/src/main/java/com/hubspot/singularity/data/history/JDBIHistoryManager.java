@@ -90,7 +90,7 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveRequestHistoryUpdate requestHistory {}",  requestHistory);
     }
 
-    history.insertRequestHistory(requestHistory.getRequest().getId(), singularityRequestTranscoder.toBytes(requestHistory.getRequest()), new Date(requestHistory.getCreatedAt()),
+    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest(), new Date(requestHistory.getCreatedAt()),
         requestHistory.getEventType().name(), getUserField(requestHistory.getUser()), getMessageField(requestHistory.getMessage()));
   }
 
@@ -107,26 +107,12 @@ public class JDBIHistoryManager implements HistoryManager {
         getMessageField(deployHistory.getDeployMarker().getMessage()),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
         deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
-        deployHistoryTranscoder.toBytes(deployHistory));
+        deployHistory);
   }
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    byte[] historyBytes = history.getDeployHistoryForDeploy(requestId, deployId);
-
-    Optional<SingularityDeployHistory> historyOptional = Optional.absent();
-
-    if (historyBytes != null) {
-      historyOptional = Optional.of(deployHistoryTranscoder.fromBytes(historyBytes));
-    }
-
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getDeployHistory requestId {}, deployId {}, deployHistory {}",
-              requestId, deployId, historyOptional);
-    }
-
-
-    return  historyOptional;
+    return Optional.fromJavaUtil(history.getDeployHistoryForDeploy(requestId, deployId));
   }
 
   @Override
@@ -183,7 +169,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public void saveTaskHistory(SingularityTaskHistory taskHistory) {
-    if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()) != null) {
+    if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()).isPresent()) {
       if (LOG.isTraceEnabled()) {
         LOG.trace("saveTaskHistory -- existing taskHistory {}", taskHistory);
       }
@@ -201,37 +187,19 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveTaskHistory -- will insert taskHistory {}", taskHistory);
     }
 
-    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
+    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistory, new Date(taskIdHistory.getUpdatedAt()),
         lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull(), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
         new Date(taskIdHistory.getTaskId().getStartedAt()));
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    byte[] historyBytes = history.getTaskHistoryForTask(taskId);
-    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
-    if (historyBytes != null && historyBytes.length > 0) {
-      taskHistoryOptional = Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
-    }
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByTaskId taskId {}, taskHistory {} ", taskId, taskHistoryOptional);
-    }
-
-    return taskHistoryOptional;
+    return Optional.fromJavaUtil(history.getTaskHistoryForTask(taskId));
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
-    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(requestId, runId);
-
-    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
-    if (historyBytes != null && historyBytes.length > 0) {
-      taskHistoryOptional =  Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
-    }
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByRequestAndRun requestId {}, runId {}, taskHistory {}", requestId, runId, taskHistoryOptional);
-    }
-    return taskHistoryOptional;
+    return Optional.fromJavaUtil(history.getTaskHistoryForTaskByRunId(requestId, runId));
   }
 
   @Override

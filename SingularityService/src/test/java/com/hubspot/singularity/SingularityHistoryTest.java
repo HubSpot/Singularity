@@ -9,12 +9,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ import liquibase.resource.FileSystemResourceAccessor;
 public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
-  protected Provider<DBI> dbiProvider;
+  protected Provider<Jdbi> dbiProvider;
 
   @Inject
   protected HistoryManager historyManager;
