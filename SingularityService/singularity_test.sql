@@ -20,7 +20,6 @@ CREATE TABLE deployHistory (
   deployJson TEXT DEFAULT NULL,
   message varchar(280) DEFAULT NULL,
   PRIMARY KEY (requestId,deployId),
-  KEY requestId (requestId,createdAt)
 );
 
 CREATE TABLE taskHistory (
@@ -36,16 +35,4 @@ CREATE TABLE taskHistory (
   startedAt timestamp NULL DEFAULT NULL,
   purged tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (taskId),
-  KEY requestId (requestId,updatedAt),
-  KEY runId (runId,requestId),
-  KEY startedAt (requestId,startedAt),
-  KEY lastTaskStatus (requestId,lastTaskStatus,startedAt),
-  KEY deployId (requestId,deployId,startedAt),
-  KEY host (requestId,host,startedAt),
-  KEY host2 (host),
-  KEY requestDeployUpdated (requestId, deployId, updatedAt),
-  KEY hostUpdated (host, updatedAt),
-  KEY updatedAt (updatedAt,requestId),
-  KEY purged (requestId,purged,updatedAt),
-  KEY startedAt3 (startedAt)
 );
