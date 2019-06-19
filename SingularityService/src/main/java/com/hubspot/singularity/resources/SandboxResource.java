@@ -17,6 +17,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -41,6 +44,7 @@ import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,9 +64,9 @@ public class SandboxResource extends AbstractHistoryResource {
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosExecutorInfoSupport logSupport,
-      SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper) {
-    super(historyManager, taskManager, deployManager, authorizationHelper);
+  public SandboxResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosExecutorInfoSupport logSupport,
+                         SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper) {
+    super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
 
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;

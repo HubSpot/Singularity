@@ -61,4 +61,25 @@ public interface HistoryJDBI extends SqlObject {
   int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
                             Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
                             Optional<Long> updatedAfter);
+
+  @Deprecated
+  byte[] getTaskHistoryBytesForTask(String taskId);
+
+  @Deprecated
+  byte[] getTaskHistoryBytesForTaskByRunId(String requestId, String runId);
+
+  @Deprecated
+  byte[] getDeployHistoryBytesForDeploy(String requestId, String deployId);
+
+  List<byte[]> getTasksWithBytes(int limit);
+
+  void setTaskJson(String taskId, SingularityTaskHistory taskHistory);
+
+  List<SingularityRequestAndTime> getRequestsWithBytes(int limit);
+
+  void setRequestJson(String requestId, Date createdAt, SingularityRequest request);
+
+  List<byte[]> getDeploysWithBytes(int limit);
+
+  void setDeployJson(String requestId, String deployId, SingularityDeployHistory deployHistory);
 }

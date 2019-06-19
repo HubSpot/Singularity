@@ -7,14 +7,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -39,6 +46,7 @@ import com.hubspot.singularity.data.history.DeployTaskHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,9 +69,9 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployTaskHistoryHelper deployTaskHistoryHelper;
 
   @Inject
-  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authorizationHelper, DeployTaskHistoryHelper deployTaskHistoryHelper) {
-    super(historyManager, taskManager, deployManager, authorizationHelper);
+  public HistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
+                         RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authorizationHelper, DeployTaskHistoryHelper deployTaskHistoryHelper) {
+    super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
 
     this.requestHistoryHelper = requestHistoryHelper;
     this.deployHistoryHelper = deployHistoryHelper;
@@ -452,4 +460,16 @@ public class HistoryResource extends AbstractHistoryResource {
     return args;
   }
 
+  @POST
+  @Path("/sql-backfill")
+  @Operation(summary = "For upgrades to version 0.23.0, start the json column backfill in sql")
+  public Response startSqlBackfill(@Parameter(hidden = true) @Auth SingularityUser user,
+                               @Context HttpServletRequest requestContext,
+                               @Parameter(description = "batch size for sql SELECTs") @QueryParam("batchSize") @DefaultValue("20") int batchSize) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(requestContext, Response.class, null, () -> {
+      historyManager.startHistoryBackfill(batchSize);
+      return Response.ok().build();
+    });
+  }
 }

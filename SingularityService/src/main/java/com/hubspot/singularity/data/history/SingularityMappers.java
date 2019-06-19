@@ -114,12 +114,39 @@ public class SingularityMappers {
     @Override
     public SingularityRequestHistory map(ResultSet r, StatementContext ctx) throws SQLException {
       try {
+        SingularityRequest request;
+        String json = r.getString("json");
+        if (json != null) {
+          request = objectMapper.readValue(json, SingularityRequest.class);
+        } else {
+          request = objectMapper.readValue(r.getBytes("request"), SingularityRequest.class);
+        }
         return new SingularityRequestHistory(
             r.getTimestamp("createdAt").getTime(),
             Optional.fromNullable(r.getString(userColumn)),
             RequestHistoryType.valueOf(r.getString("requestState")),
-            objectMapper.readValue(r.getString("json"), SingularityRequest.class),
+            request,
             Optional.fromNullable(r.getString("message")));
+      } catch (IOException e) {
+        throw new ResultSetException("Could not deserialize database result", e, ctx);
+      }
+    }
+  }
+
+  static class SingularityRequestWithTimeMapper implements RowMapper<SingularityRequestAndTime> {
+    private final ObjectMapper objectMapper;
+
+    @Inject
+    SingularityRequestWithTimeMapper(ObjectMapper objectMapper) {
+      this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public SingularityRequestAndTime map(ResultSet r, StatementContext ctx) throws SQLException {
+      try {
+        return new SingularityRequestAndTime(
+            objectMapper.readValue(r.getBytes("request"), SingularityRequest.class),
+            r.getTimestamp("createdAt").getTime());
       } catch (IOException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }

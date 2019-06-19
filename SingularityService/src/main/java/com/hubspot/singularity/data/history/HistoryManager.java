@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -10,7 +11,6 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 public interface HistoryManager {
 
@@ -44,11 +44,11 @@ public interface HistoryManager {
 
   List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
 
-  List<SingularityRequestIdCount> getRequestIdCounts(Date before);
-
   List<String> getRequestIdsInTaskHistory();
 
   int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before);
 
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount);
+
+  CompletableFuture<Void> startHistoryBackfill(int batchSize);
 }

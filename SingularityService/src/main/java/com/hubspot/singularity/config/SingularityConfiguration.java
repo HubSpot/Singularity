@@ -239,6 +239,8 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
 
+  private boolean sqlFallBackToBytesFields = true;
+
   @JsonProperty("mesos")
   @Valid
   private MesosConfiguration mesosConfiguration;
@@ -1694,5 +1696,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setProxyRunNowToLeader(boolean proxyRunNowToLeader) {
     this.proxyRunNowToLeader = proxyRunNowToLeader;
+  }
+
+  public boolean isSqlFallBackToBytesFields() {
+    return sqlFallBackToBytesFields;
+  }
+
+  public void setSqlFallBackToBytesFields(boolean sqlFallBackToBytesFields) {
+    this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 }

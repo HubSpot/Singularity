@@ -56,6 +56,7 @@ public class SingularityHistoryModule extends AbstractModule {
     rowMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
     rowMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
     rowMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityRequestWithTimeMapper.class).in(Scopes.SINGLETON);
 
     Multibinder<ColumnMapper<?>> columnMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ColumnMapper<?>>() {});
     columnMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
