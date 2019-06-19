@@ -149,6 +149,11 @@ public class SingularityExecutorThreadChecker {
 
             }
           });
+        } else {
+          taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+          KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+          taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
         }
 
       }
