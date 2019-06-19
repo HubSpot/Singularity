@@ -21,6 +21,8 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class JDBIHistoryManager implements HistoryManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(JDBIHistoryManager.class);
@@ -281,6 +283,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   public CompletableFuture<Void> startHistoryBackfill(int batchSize) {
     if (!historyBackfillRunning.compareAndSet(false, true)) {
       LOG.warn("History backfill already running, will not restart");

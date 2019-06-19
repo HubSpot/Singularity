@@ -15,6 +15,8 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class NoopHistoryManager implements HistoryManager {
 
   @Inject
@@ -104,6 +106,7 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   public CompletableFuture<Void> startHistoryBackfill(int batchSize) {
     return CompletableFuture.completedFuture(null);
   }
