@@ -96,19 +96,19 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
   byte[] getDeployHistoryBytesForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
 
   // Queries for history migration
-  @SqlQuery("SELECT bytes FROM taskHistory WHERE purged = false AND bytes != '' LIMIT :limit")
+  @SqlQuery("SELECT bytes FROM taskHistory WHERE purged = false AND bytes != '' AND bytes IS NOT NULL LIMIT :limit")
   List<byte[]> getTasksWithBytes(@Bind("limit") int limit);
 
   @SqlUpdate("UPDATE taskHistory SET json = :json, bytes = '' WHERE taskId = :taskId")
   void setTaskJson(@Bind("taskId") String taskId, @Bind("json") @Json SingularityTaskHistory taskHistory);
 
-  @SqlQuery("SELECT request, createdAt FROM requestHistory WHERE request != '' LIMIT :limit")
+  @SqlQuery("SELECT request, createdAt FROM requestHistory WHERE request != '' AND request IS NOT NULL LIMIT :limit")
   List<SingularityRequestAndTime> getRequestsWithBytes(@Bind("limit") int limit);
 
   @SqlUpdate("UPDATE requestHistory SET json = :json, request = '' WHERE requestId = :requestId AND createdAt = :createdAt")
   void setRequestJson(@Bind("requestId") String requestId, @Bind("createdAt") Date createdAt, @Bind("json") @Json SingularityRequest request);
 
-  @SqlQuery("SELECT bytes FROM deployHistory WHERE bytes != '' LIMIT :limit")
+  @SqlQuery("SELECT bytes FROM deployHistory WHERE bytes != '' AND bytes IS NOT NULL LIMIT :limit")
   List<byte[]> getDeploysWithBytes(@Bind("limit") int limit);
 
   @SqlUpdate("UPDATE deployHistory SET json = :json, bytes = '' WHERE requestId = :requestId AND deployId = :deployId")
