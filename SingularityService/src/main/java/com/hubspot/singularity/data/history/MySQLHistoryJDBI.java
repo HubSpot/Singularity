@@ -69,6 +69,18 @@ public abstract class MySQLHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
   public abstract int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
+  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory")
+  public abstract List<String> getRequestIdsWithHistory();
+
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  public abstract int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
+  @SqlQuery("SELECT DISTINCT requestId FROM deployHistory")
+  public abstract List<String> getRequestIdsWithDeploys();
+
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  public abstract int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
 
   public abstract void close();
 

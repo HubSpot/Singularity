@@ -51,4 +51,8 @@ public interface HistoryManager {
   int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before);
 
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount);
+
+  void purgeRequestHistory();
+
+  void purgeDeployHistory();
 }

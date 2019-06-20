@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -25,17 +27,22 @@ public class JDBIHistoryManager implements HistoryManager {
   private static final Logger LOG = LoggerFactory.getLogger(JDBIHistoryManager.class);
 
   private final HistoryJDBI history;
+  private final SingularityConfiguration configuration;
   private final Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
   private final Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
   private final Transcoder<SingularityRequest> singularityRequestTranscoder;
 
   @Inject
-  public JDBIHistoryManager(HistoryJDBI history, Transcoder<SingularityTaskHistory> taskHistoryTranscoder, Transcoder<SingularityDeployHistory> deployHistoryTranscoder,
-      Transcoder<SingularityRequest> singularityRequestTranscoder) {
+  public JDBIHistoryManager(HistoryJDBI history,
+                            SingularityConfiguration configuration,
+                            Transcoder<SingularityTaskHistory> taskHistoryTranscoder,
+                            Transcoder<SingularityDeployHistory> deployHistoryTranscoder,
+                            Transcoder<SingularityRequest> singularityRequestTranscoder) {
     this.taskHistoryTranscoder = taskHistoryTranscoder;
     this.deployHistoryTranscoder = deployHistoryTranscoder;
     this.singularityRequestTranscoder = singularityRequestTranscoder;
     this.history = history;
+    this.configuration = configuration;
   }
 
   @Override
@@ -288,6 +295,28 @@ public class JDBIHistoryManager implements HistoryManager {
 
         history.updateTaskHistoryNullBytesForRequestBefore(requestId, purgeBefore.get(), maxPurgeCount);
       }
+    }
+  }
+
+  @Override
+  public void purgeRequestHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeRequestHistoryAfterDays());
+    for (String requestId : history.getRequestIdsWithHistory()) {
+      int purged;
+      do {
+        purged = history.purgeRequestHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
+    }
+  }
+
+  @Override
+  public void purgeDeployHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeDeployHistoryAfterDays());
+    for (String requestId : history.getRequestIdsWithDeploys()) {
+      int purged;
+      do {
+        purged = history.purgeDeployHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
     }
   }
 
