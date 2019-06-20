@@ -20,6 +20,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -309,7 +310,16 @@ public class JDBIHistoryManager implements HistoryManager {
     List<byte[]> taskHistories = history.getTasksWithBytes(batchSize);
     while (!taskHistories.isEmpty()) {
       taskHistories.stream()
-          .map(taskHistoryTranscoder::fromBytes)
+          .map((bytes) -> {
+            try {
+              return Optional.of(taskHistoryTranscoder.fromBytes(bytes));
+            } catch (SingularityTranscoderException ste) {
+              LOG.warn("Could not deserialize task", ste);
+              return Optional.<SingularityTaskHistory>absent();
+            }
+          })
+          .filter(Optional::isPresent)
+          .map(Optional::get)
           .forEach((t) -> history.setTaskJson(t.getTask().getTaskId().getId(), t));
       taskHistories = history.getTasksWithBytes(batchSize);
     }
@@ -327,7 +337,16 @@ public class JDBIHistoryManager implements HistoryManager {
     List<byte[]> deployHistories = history.getDeploysWithBytes(batchSize);
     while (!deployHistories.isEmpty()) {
       deployHistories.stream()
-          .map(deployHistoryTranscoder::fromBytes)
+          .map((bytes) -> {
+            try {
+              return Optional.of(deployHistoryTranscoder.fromBytes(bytes));
+            } catch (SingularityTranscoderException ste) {
+              LOG.warn("Could not deserialize deploy", ste);
+              return Optional.<SingularityDeployHistory>absent();
+            }
+          })
+          .filter(Optional::isPresent)
+          .map(Optional::get)
           .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
       deployHistories = history.getDeploysWithBytes(batchSize);
     }
