@@ -79,6 +79,12 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
   int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
+  @SqlUpdate("DELETE FROM requestHistory WHERE createdAt < :threshold LIMIT :batchSize")
+  int purgeRequestHistory(@Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
+  @SqlUpdate("DELETE FROM deployHistory WHERE createdAt < :threshold LIMIT :batchSize")
+  int purgeDeployHistory(@Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
   // Deprecated queries for before json backfill is finished
   @Deprecated
   @SingleValue

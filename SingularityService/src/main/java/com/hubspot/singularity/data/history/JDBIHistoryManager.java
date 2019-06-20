@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.history;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class JDBIHistoryManager implements HistoryManager {
   private final Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
   private final Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
   private final AtomicBoolean historyBackfillRunning;
+  private final SingularityConfiguration configuration;
 
   @Inject
   public JDBIHistoryManager(HistoryJDBI history,
@@ -43,6 +45,7 @@ public class JDBIHistoryManager implements HistoryManager {
     this.deployHistoryTranscoder = deployHistoryTranscoder;
     this.history = history;
     this.historyBackfillRunning = new AtomicBoolean(false);
+    this.configuration = configuration;
   }
 
   @Override
@@ -328,5 +331,23 @@ public class JDBIHistoryManager implements HistoryManager {
           .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
       deployHistories = history.getDeploysWithBytes(batchSize);
     }
+  }
+
+  @Override
+  public void purgeRequestHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeRequestHistoryAfterDays());
+    int purged;
+    do {
+      purged = history.purgeRequestHistory(new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+    } while (purged > 0);
+  }
+
+  @Override
+  public void purgeDeployHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeDeployHistoryAfterDays());
+    int purged;
+    do {
+      purged = history.purgeDeployHistory(new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+    } while (purged > 0);
   }
 }

@@ -82,4 +82,8 @@ public interface HistoryJDBI extends SqlObject {
   List<byte[]> getDeploysWithBytes(int limit);
 
   void setDeployJson(String requestId, String deployId, SingularityDeployHistory deployHistory);
+
+  int purgeRequestHistory(Date threshold, int batchSize);
+
+  int purgeDeployHistory(Date threshold, int batchSize);
 }

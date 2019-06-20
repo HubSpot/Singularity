@@ -111,4 +111,9 @@ public class NoopHistoryManager implements HistoryManager {
     return CompletableFuture.completedFuture(null);
   }
 
+  @Override
+  public void purgeRequestHistory() {}
+
+  @Override
+  public void purgeDeployHistory() {}
 }

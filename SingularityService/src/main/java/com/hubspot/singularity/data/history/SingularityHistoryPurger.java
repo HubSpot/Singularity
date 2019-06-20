@@ -76,6 +76,8 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       }, requestId, getClass().getSimpleName());
     }
     purgeStaleZkData();
+    historyManager.purgeRequestHistory();
+    historyManager.purgeDeployHistory();
   }
 
   private void purge(String requestId, long start, Optional<Integer> afterTasksPerRequest, Optional<Integer> afterDays, boolean deleteRow) {

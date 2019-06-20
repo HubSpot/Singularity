@@ -51,4 +51,8 @@ public interface HistoryManager {
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount);
 
   CompletableFuture<Void> startHistoryBackfill(int batchSize);
+
+  void purgeRequestHistory();
+
+  void purgeDeployHistory();
 }
