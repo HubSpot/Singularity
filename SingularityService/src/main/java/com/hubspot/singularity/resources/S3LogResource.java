@@ -182,12 +182,12 @@ public class S3LogResource extends AbstractHistoryResource {
   private Collection<String> getS3PrefixesForRequest(S3Configuration s3Configuration, String requestId, Optional<Long> startArg, Optional<Long> endArg, String group) {
     Optional<SingularityRequestHistory> firstHistory = requestHistoryHelper.getFirstHistory(requestId);
 
-    checkNotFound(firstHistory.isPresent(), "No request history found for %s", requestId);
+    if (!startArg.isPresent()) {
+      checkBadRequest(firstHistory.isPresent(), "No request history found for %s. A start time must be specified.", requestId);
+    }
 
     long start = firstHistory.get().getCreatedAt();
-    if (startArg.isPresent()) {
-      start = Math.max(startArg.get(), start);
-    }
+    start = Math.max(startArg.or(0L), start);
 
     Optional<SingularityRequestHistory> lastHistory = requestHistoryHelper.getLastHistory(requestId);
 
