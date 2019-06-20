@@ -72,13 +72,13 @@ public abstract class MySQLHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT DISTINCT requestId as id FROM requestHistory")
   public abstract List<String> getRequestIdsWithHistory();
 
-  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
   public abstract int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
   @SqlQuery("SELECT DISTINCT requestId as id FROM deployHistory")
   public abstract List<String> getRequestIdsWithDeploys();
 
-  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
   public abstract int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
 
