@@ -82,6 +82,18 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
   int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
+  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory")
+  List<String> getRequestIdsWithHistory();
+
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
+  @SqlQuery("SELECT DISTINCT requestId FROM deployHistory")
+  List<String> getRequestIdsWithDeploys();
+
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
   // Deprecated queries for before json backfill is finished
   @Deprecated
   @SingleValue
@@ -113,18 +125,6 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
 
   @SqlQuery("SELECT bytes FROM deployHistory WHERE bytes != '' AND bytes IS NOT NULL LIMIT :limit")
   List<byte[]> getDeploysWithBytes(@Bind("limit") int limit);
-
-  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory")
-  List<String> getRequestIdsWithHistory();
-
-  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
-  int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
-
-  @SqlQuery("SELECT DISTINCT requestId FROM deployHistory")
-  List<String> getRequestIdsWithDeploys();
-
-  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
-  int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
   @SqlUpdate("UPDATE deployHistory SET json = :json, bytes = '' WHERE requestId = :requestId AND deployId = :deployId")
   void setDeployJson(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("json") @Json SingularityDeployHistory deployHistory);

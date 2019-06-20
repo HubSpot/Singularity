@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,6 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
