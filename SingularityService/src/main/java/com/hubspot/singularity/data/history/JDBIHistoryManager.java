@@ -356,6 +356,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public void purgeRequestHistory() {
     long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeRequestHistoryAfterDays());
     for (String requestId : history.getRequestIdsWithHistory()) {
+      LOG.debug("Purging old request history for {}", requestId);
       int purged;
       do {
         purged = history.purgeRequestHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
@@ -367,6 +368,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public void purgeDeployHistory() {
     long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeDeployHistoryAfterDays());
     for (String requestId : history.getRequestIdsWithDeploys()) {
+      LOG.debug("Purging old deploy history for {}", requestId);
       int purged;
       do {
         purged = history.purgeDeployHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());

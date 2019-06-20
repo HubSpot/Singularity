@@ -83,13 +83,13 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT DISTINCT requestId FROM requestHistory")
   List<String> getRequestIdsWithHistory();
 
-  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
   int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
   @SqlQuery("SELECT DISTINCT requestId FROM deployHistory")
   List<String> getRequestIdsWithDeploys();
 
-  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt < :threshold LIMIT :batchSize")
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
   int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
   // Deprecated queries for before json backfill is finished
