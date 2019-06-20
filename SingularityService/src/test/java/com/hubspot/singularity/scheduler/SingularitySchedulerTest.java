@@ -876,7 +876,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    configuration.setFastFailureCooldownCount(1);
+    configuration.setFastFailureCooldownCount(2);
 
     SingularityTask firstTask = startTask(firstDeploy);
     statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5)));
@@ -886,45 +886,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask secondTask = startTask(firstDeploy);
     statusUpdate(secondTask, TaskState.TASK_FAILED);
 
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
-  }
-
-  @Test
-  public void testCooldownScalesToInstances() {
-    initRequest();
-    initFirstDeploy();
-
-    configuration.setSlowFailureCooldownCount(2);
-
-    requestManager.activate(request.toBuilder().setInstances(Optional.of(4)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String>absent());
-
-    SingularityTask task1 = startTask(firstDeploy, 1);
-    SingularityTask task2 = startTask(firstDeploy, 2);
-    SingularityTask task3 = startTask(firstDeploy, 3);
-    SingularityTask task4 = startTask(firstDeploy, 4);
-
-    statusUpdate(task1, TaskState.TASK_FAILED);
-    statusUpdate(task2, TaskState.TASK_FAILED);
-    statusUpdate(task3, TaskState.TASK_FAILED);
-
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
-
-    task1 = startTask(firstDeploy, 1);
-    task2 = startTask(firstDeploy, 2);
-    task3 = startTask(firstDeploy, 3);
-
-    statusUpdate(task1, TaskState.TASK_FAILED);
-    statusUpdate(task2, TaskState.TASK_FAILED);
-
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
-
-    statusUpdate(task3, TaskState.TASK_FAILED);
-
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.SYSTEM_COOLDOWN);
-
-    statusUpdate(task4, TaskState.TASK_FINISHED);
-
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() != RequestState.SYSTEM_COOLDOWN);
   }
 
   @Test

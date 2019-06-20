@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
@@ -30,7 +29,7 @@ public class SingularityCooldown {
     this.configuration = configuration;
   }
 
-  boolean shouldEnterCooldown(SingularityRequest request, SingularityTaskId taskId, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
+  boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
     if (requestState != RequestState.ACTIVE || !request.isAlwaysRunning()) {
       return false;
     }
@@ -58,7 +57,7 @@ public class SingularityCooldown {
         .count();
     java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
 
-    return failureCount > configuration.getSlowFailureCooldownCount()
+    return failureCount >= configuration.getSlowFailureCooldownCount()
         && mostRecentFailure.isPresent()
         && mostRecentFailure.get() > configuration.getSlowCooldownExpiresMinutesWithoutFailure();
   }
@@ -76,7 +75,7 @@ public class SingularityCooldown {
       failureCount++;
     }
 
-    return failureCount > configuration.getFastFailureCooldownCount();
+    return failureCount >= configuration.getFastFailureCooldownCount();
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {

@@ -591,7 +591,7 @@ public class SingularityScheduler {
     }
 
     if (!status.hasReason() || !status.getReason().equals(Reason.REASON_INVALID_OFFERS)) {
-      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
+      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
         LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request, System.currentTimeMillis());
