@@ -186,8 +186,7 @@ public class S3LogResource extends AbstractHistoryResource {
       checkBadRequest(firstHistory.isPresent(), "No request history found for %s. A start time must be specified.", requestId);
     }
 
-    long start = firstHistory.get().getCreatedAt();
-    start = Math.max(startArg.or(0L), start);
+    long start = Math.max(startArg.or(0L), firstHistory.get().getCreatedAt());
 
     Optional<SingularityRequestHistory> lastHistory = requestHistoryHelper.getLastHistory(requestId);
 
