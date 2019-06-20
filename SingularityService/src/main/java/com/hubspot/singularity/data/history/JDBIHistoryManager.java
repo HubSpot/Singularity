@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -31,22 +33,22 @@ public class JDBIHistoryManager implements HistoryManager {
 
   private final HistoryJDBI history;
   private final boolean fallBackToBytesFields;
+  private final SingularityConfiguration configuration;
   private final Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
   private final Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
   private final AtomicBoolean historyBackfillRunning;
-  private final SingularityConfiguration configuration;
 
   @Inject
   public JDBIHistoryManager(HistoryJDBI history,
                             SingularityConfiguration configuration,
                             Transcoder<SingularityTaskHistory> taskHistoryTranscoder,
                             Transcoder<SingularityDeployHistory> deployHistoryTranscoder) {
-    this.fallBackToBytesFields = configuration.isSqlFallBackToBytesFields();
     this.taskHistoryTranscoder = taskHistoryTranscoder;
     this.deployHistoryTranscoder = deployHistoryTranscoder;
     this.history = history;
     this.historyBackfillRunning = new AtomicBoolean(false);
     this.configuration = configuration;
+    this.fallBackToBytesFields = configuration.isSqlFallBackToBytesFields();
   }
 
   @Override
@@ -355,18 +357,23 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void purgeRequestHistory() {
     long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeRequestHistoryAfterDays());
-    int purged;
-    do {
-      purged = history.purgeRequestHistory(new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
-    } while (purged > 0);
+    for (String requestId : history.getRequestIdsWithHistory()) {
+      int purged;
+      do {
+        purged = history.purgeRequestHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
+    }
   }
 
   @Override
   public void purgeDeployHistory() {
     long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeDeployHistoryAfterDays());
-    int purged;
-    do {
-      purged = history.purgeDeployHistory(new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
-    } while (purged > 0);
+    for (String requestId : history.getRequestIdsWithDeploys()) {
+      int purged;
+      do {
+        purged = history.purgeDeployHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
+    }
   }
+
 }

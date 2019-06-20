@@ -2,8 +2,10 @@ package com.hubspot.singularity.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -216,6 +218,10 @@ public class SingularityConfiguration extends Configuration {
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
   private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
+
+  private boolean preResolveUpstreamDNS = false;
+
+  private Set<String> skipDNSPreResolutionForRequests = new HashSet<>();
 
   private int logFetchMaxThreads = 15;
 
@@ -722,6 +728,22 @@ public class SingularityConfiguration extends Configuration {
 
   public String getLoadBalancerUri() {
     return loadBalancerUri;
+  }
+
+  public boolean isPreResolveUpstreamDNS() {
+    return preResolveUpstreamDNS;
+  }
+
+  public void setPreResolveUpstreamDNS(boolean preResolveUpstreamDNS) {
+    this.preResolveUpstreamDNS = preResolveUpstreamDNS;
+  }
+
+  public Set<String> getSkipDNSPreResolutionForRequests() {
+    return skipDNSPreResolutionForRequests;
+  }
+
+  public void setSkipDNSPreResolutionForRequests(Set<String> skipDNSPreResolutionForRequests) {
+    this.skipDNSPreResolutionForRequests = skipDNSPreResolutionForRequests;
   }
 
   public int getLogFetchMaxThreads() {
