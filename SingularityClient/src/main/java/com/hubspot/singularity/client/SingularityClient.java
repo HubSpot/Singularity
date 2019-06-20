@@ -1381,11 +1381,24 @@ public class SingularityClient {
    *     A collection of {@link SingularityS3Log}
    */
   public Collection<SingularityS3Log> getRequestLogs(String requestId) {
+    return getRequestLogs(requestId, Optional.absent(), Optional.absent());
+  }
+
+  public Collection<SingularityS3Log> getRequestLogs(String requestId, Optional<Long> start, Optional<Long> end) {
     final Function<String, String> requestUri = (host) -> String.format(S3_LOG_GET_REQUEST_LOGS, getApiBase(host), requestId);
 
     final String type = String.format("S3 logs for request %s", requestId);
 
-    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+    Map<String, Object> dateRange = new HashMap<>();
+    if (start.isPresent()) {
+      dateRange.put("start", start.get());
+    }
+
+    if (end.isPresent()) {
+      dateRange.put("end", end.get());
+    }
+
+    return getCollectionWithParams(requestUri, type, Optional.of(dateRange), S3_LOG_COLLECTION);
   }
 
   /**
