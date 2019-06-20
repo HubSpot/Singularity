@@ -847,7 +847,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
 
-    configuration.setCooldownAfterFailures(2);
+    configuration.setFastFailureCooldownCount(2);
 
     SingularityTask firstTask = startTask(firstDeploy);
     SingularityTask secondTask = startTask(firstDeploy);
@@ -876,7 +876,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    configuration.setCooldownAfterFailures(1);
+    configuration.setFastFailureCooldownCount(1);
 
     SingularityTask firstTask = startTask(firstDeploy);
     statusUpdate(firstTask, TaskState.TASK_FAILED, Optional.of(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5)));
@@ -894,8 +894,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    configuration.setCooldownAfterFailures(2);
-    configuration.setCooldownAfterPctOfInstancesFail(.51);
+    configuration.setSlowFailureCooldownCount(2);
 
     requestManager.activate(request.toBuilder().setInstances(Optional.of(4)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String>absent());
 

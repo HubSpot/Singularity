@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
@@ -13,9 +12,8 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
   private final SingularityCooldownChecker checker;
 
   @Inject
-  SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker) {
-    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, true);
-
+  SingularityCooldownPoller(SingularityCooldownChecker checker) {
+    super(1, TimeUnit.MINUTES, true);
     this.checker = checker;
   }
 
