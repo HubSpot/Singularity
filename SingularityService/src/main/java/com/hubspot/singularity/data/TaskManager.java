@@ -62,7 +62,7 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -119,7 +119,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private final ZkCache<SingularityTask> taskCache;
   private final SingularityWebCache webCache;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
 
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
@@ -131,7 +131,7 @@ public class TaskManager extends CuratorAsyncManager {
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder,
       Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,  Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
-      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache,
+      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityCache leaderCache,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 

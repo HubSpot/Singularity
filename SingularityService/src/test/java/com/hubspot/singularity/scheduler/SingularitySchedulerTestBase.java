@@ -80,6 +80,8 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
+import com.hubspot.singularity.cache.SingularityCache;
+import com.hubspot.singularity.cache.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -106,7 +108,7 @@ import com.ning.http.client.AsyncHttpClient;
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Inject
-  protected SingularityLeaderCache leaderCache;
+  protected SingularityCache leaderCache;
   @Inject
   protected SingularityMesosScheduler sms;
   @Inject

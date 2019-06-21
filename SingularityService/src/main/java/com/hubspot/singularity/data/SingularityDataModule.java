@@ -7,6 +7,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.cache.SingularityCacheModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
@@ -49,6 +50,8 @@ public class SingularityDataModule extends AbstractModule {
     bind(PriorityManager.class).in(Scopes.SINGLETON);
     bind(RequestGroupManager.class).in(Scopes.SINGLETON);
     bind(AuthTokenManager.class).in(Scopes.SINGLETON);
+
+    install(new SingularityCacheModule(configuration.getCacheConfiguration()));
   }
 
   @Provides

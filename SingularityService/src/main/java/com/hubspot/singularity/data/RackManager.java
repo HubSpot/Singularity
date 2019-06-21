@@ -15,14 +15,14 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class RackManager extends AbstractMachineManager<SingularityRack> {
   private static final Logger LOG = LoggerFactory.getLogger(RackManager.class);
 
   private static final String RACK_ROOT = "/racks";
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
 
   @Inject
   public RackManager(CuratorFramework curator,
@@ -31,7 +31,7 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
                      Transcoder<SingularityRack> rackTranscoder,
                      Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
                      Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
-                     SingularityLeaderCache leaderCache) {
+                     SingularityCache leaderCache) {
     super(curator, configuration, metricRegistry, rackTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
 
     this.leaderCache = leaderCache;

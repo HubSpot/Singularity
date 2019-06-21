@@ -50,7 +50,7 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -73,7 +73,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
   private final MesosProtosUtils mesosProtosUtils;
   private final String serverId;
   private final SingularitySchedulerLock schedulerLock;
@@ -99,7 +99,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
                                              SingularitySchedulerLock schedulerLock,
                                              SingularityConfiguration configuration,
-                                             SingularityLeaderCache leaderCache,
+                                             SingularityCache leaderCache,
                                              MesosProtosUtils mesosProtosUtils,
                                              SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                                              SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,

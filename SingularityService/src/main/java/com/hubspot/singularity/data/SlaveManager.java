@@ -17,14 +17,14 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   private static final Logger LOG = LoggerFactory.getLogger(SlaveManager.class);
 
   private static final String SLAVE_ROOT = "/slaves";
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
   private final UsageManager usageManager;
 
   @Inject
@@ -34,7 +34,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
                       Transcoder<SingularitySlave> slaveTranscoder,
                       Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
                       Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
-                      SingularityLeaderCache leaderCache,
+                      SingularityCache leaderCache,
                       UsageManager usageManager) {
     super(curator, configuration, metricRegistry, slaveTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
     this.leaderCache = leaderCache;

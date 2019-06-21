@@ -1,4 +1,4 @@
-package com.hubspot.singularity.scheduler;
+package com.hubspot.singularity.cache;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +18,7 @@ public class SingularityLeaderCacheCoordinator {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final UsageManager usageManager;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
 
   @Inject
   public SingularityLeaderCacheCoordinator(TaskManager taskManager,
@@ -27,7 +27,7 @@ public class SingularityLeaderCacheCoordinator {
                                            SlaveManager slaveManager,
                                            RackManager rackManager,
                                            UsageManager usageManager,
-                                           SingularityLeaderCache leaderCache) {
+                                           SingularityCache leaderCache) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -44,11 +44,11 @@ public class SingularityLeaderCacheCoordinator {
     slaveManager.activateLeaderCache();
     rackManager.activateLeaderCache();
     usageManager.activateLeaderCache();
-    leaderCache.activate();
+    leaderCache.markLeader();
   }
 
   public void stopLeaderCache() {
-    leaderCache.stop();
+    leaderCache.close();
   }
 
 }

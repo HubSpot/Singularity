@@ -40,22 +40,6 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean cacheOffers = false;
 
-  private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
-
-  private int cacheTasksMaxSize = 5000;
-
-  private int cacheTasksInitialSize = 100;
-
-  private long cacheTasksForMillis = TimeUnit.DAYS.toMillis(1);
-
-  private int cacheDeploysMaxSize = 2000;
-
-  private int cacheDeploysInitialSize = 100;
-
-  private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
-
-  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
-
   private long checkDeploysEverySeconds = 5;
 
   private long checkAutoSpreadAllSlavesEverySeconds = 30;
@@ -253,6 +237,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private NetworkConfiguration networkConfiguration = new NetworkConfiguration();
 
+  @JsonProperty("cache")
+  @Valid
+  private CacheConfiguration cacheConfiguration = new CacheConfiguration();
+
   private int newTaskCheckerBaseDelaySeconds = 1;
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
@@ -408,10 +396,6 @@ public class SingularityConfiguration extends Configuration {
     return askDriverToKillTasksAgainAfterMillis;
   }
 
-  public long getCacheStateForMillis() {
-    return cacheStateForMillis;
-  }
-
   public long getDispatchTaskShellCommandsEverySeconds() {
     return dispatchTaskShellCommandsEverySeconds;
   }
@@ -484,14 +468,6 @@ public class SingularityConfiguration extends Configuration {
     return pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
-  public long getCacheForWebForMillis() {
-    return cacheForWebForMillis;
-  }
-
-  public void setCacheForWebForMillis(long cacheForWebForMillis) {
-    this.cacheForWebForMillis = cacheForWebForMillis;
-  }
-
   public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
     this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
   }
@@ -514,46 +490,6 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
-  }
-
-  public int getCacheTasksMaxSize() {
-    return cacheTasksMaxSize;
-  }
-
-  public void setCacheTasksMaxSize(int cacheTasksMaxSize) {
-    this.cacheTasksMaxSize = cacheTasksMaxSize;
-  }
-
-  public int getCacheTasksInitialSize() {
-    return cacheTasksInitialSize;
-  }
-
-  public void setCacheTasksInitialSize(int cacheTasksInitialSize) {
-    this.cacheTasksInitialSize = cacheTasksInitialSize;
-  }
-
-  public int getCacheDeploysMaxSize() {
-    return cacheDeploysMaxSize;
-  }
-
-  public void setCacheDeploysMaxSize(int cacheDeploysMaxSize) {
-    this.cacheDeploysMaxSize = cacheDeploysMaxSize;
-  }
-
-  public int getCacheDeploysInitialSize() {
-    return cacheDeploysInitialSize;
-  }
-
-  public void setCacheDeploysInitialSize(int cacheDeploysInitialSize) {
-    this.cacheDeploysInitialSize = cacheDeploysInitialSize;
-  }
-
-  public long getCacheDeploysForMillis() {
-    return cacheDeploysForMillis;
-  }
-
-  public void setCacheDeploysForMillis(long cacheDeploysForMillis) {
-    this.cacheDeploysForMillis = cacheDeploysForMillis;
   }
 
   public int getCoreThreadpoolSize() {
@@ -784,6 +720,14 @@ public class SingularityConfiguration extends Configuration {
     return networkConfiguration;
   }
 
+  public CacheConfiguration getCacheConfiguration() {
+    return cacheConfiguration;
+  }
+
+  public void setCacheConfiguration(CacheConfiguration cacheConfiguration) {
+    this.cacheConfiguration = cacheConfiguration;
+  }
+
   public int getNewTaskCheckerBaseDelaySeconds() {
     return newTaskCheckerBaseDelaySeconds;
   }
@@ -922,10 +866,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setAskDriverToKillTasksAgainAfterMillis(long askDriverToKillTasksAgainAfterMillis) {
     this.askDriverToKillTasksAgainAfterMillis = askDriverToKillTasksAgainAfterMillis;
-  }
-
-  public void setCacheStateForMillis(long cacheStateForMillis) {
-    this.cacheStateForMillis = cacheStateForMillis;
   }
 
   public void setCheckDeploysEverySeconds(long checkDeploysEverySeconds) {
@@ -1273,14 +1213,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCleanInactiveHostListEveryHours(long cleanInactiveHostListEveryHours) {
     this.cleanInactiveHostListEveryHours = cleanInactiveHostListEveryHours;
-  }
-
-  public long getCacheTasksForMillis() {
-    return cacheTasksForMillis;
-  }
-
-  public void setCacheTasksForMillis(long cacheTasksForMillis) {
-    this.cacheTasksForMillis = cacheTasksForMillis;
   }
 
   public LDAPConfiguration getLdapConfiguration() {

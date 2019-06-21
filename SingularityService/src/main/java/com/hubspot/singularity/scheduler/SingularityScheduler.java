@@ -66,6 +66,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
@@ -95,14 +96,14 @@ public class SingularityScheduler {
   private final RebalancingHelper rebalancingHelper;
   private final RackManager rackManager;
   private final SingularityMailer mailer;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
   private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
-                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
+                              SingularityCache leaderCache, SingularitySchedulerLock lock) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;

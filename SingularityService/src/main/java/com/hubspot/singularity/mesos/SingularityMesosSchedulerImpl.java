@@ -53,7 +53,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
+import com.hubspot.singularity.cache.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.netty.handler.codec.PrematureChannelClosureException;

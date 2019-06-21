@@ -58,7 +58,7 @@ import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 
@@ -82,7 +82,7 @@ public class SingularityMesosOfferScheduler {
   private final UsageManager usageManager;
   private final DeployManager deployManager;
   private final SingularitySchedulerLock lock;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
   private final boolean offerCacheEnabled;
   private final DisasterManager disasterManager;
   private final boolean delayWhenStatusUpdateDeltaTooLarge;
@@ -109,7 +109,7 @@ public class SingularityMesosOfferScheduler {
                                         SingularitySlaveAndRackManager slaveAndRackManager,
                                         SingularityTaskSizeOptimizer taskSizeOptimizer,
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
-                                        SingularityLeaderCache leaderCache,
+                                        SingularityCache leaderCache,
                                         SingularityUsageHelper usageHelper,
                                         UsageManager usageManager,
                                         DeployManager deployManager,

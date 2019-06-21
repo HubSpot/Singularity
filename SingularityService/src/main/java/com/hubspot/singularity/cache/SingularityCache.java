@@ -1,4 +1,4 @@
-package com.hubspot.singularity.scheduler;
+package com.hubspot.singularity.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -31,104 +29,185 @@ import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.config.CacheConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.atomix.core.Atomix;
+import io.atomix.core.map.DistributedMap;
+import io.atomix.core.set.DistributedSet;
 
 @Singleton
-public class SingularityLeaderCache {
+public class SingularityCache {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCache.class);
 
-  private Map<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
-  private Set<SingularityTaskId> activeTaskIds;
-  private Map<String, SingularityRequestWithState> requests;
-  private Map<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
-  private Map<String, SingularityRequestDeployState> requestIdToDeployState;
-  private Map<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
-  private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
-  private Map<String, SingularitySlave> slaves;
-  private Map<String, SingularityRack> racks;
-  private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
-  private Map<String, RequestUtilization> requestUtilizations;
-  private Map<String, SingularitySlaveUsageWithId> slaveUsages;
+  private final Atomix atomix;
+  private final CacheConfiguration cacheConfiguration;
 
-  private volatile boolean active;
+  private DistributedMap<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
+  private DistributedSet<SingularityTaskId> activeTaskIds;
+  private DistributedMap<String, SingularityRequestWithState> requests;
+  private DistributedMap<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
+  private DistributedMap<String, SingularityRequestDeployState> requestIdToDeployState;
+  private DistributedMap<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
+  private DistributedMap<SingularityTaskId, SingularityHistoryUpdates> historyUpdates;
+  private DistributedMap<String, SingularitySlave> slaves;
+  private DistributedMap<String, SingularityRack> racks;
+  private DistributedSet<SingularityPendingTaskId> pendingTaskIdsToDelete;
+  private DistributedMap<String, RequestUtilization> requestUtilizations;
+  private DistributedMap<String, SingularitySlaveUsageWithId> slaveUsages;
+
+  private volatile boolean leader;
 
   @Inject
-  public SingularityLeaderCache() {
-    this.active = false;
+  public SingularityCache(Atomix atomix,
+                          SingularityConfiguration configuration) {
+    this.leader = false;
+    this.atomix = atomix;
+    this.cacheConfiguration = configuration.getCacheConfiguration();
   }
 
-  public void activate() {
-    active = true;
+  public void setup() {
+    this.pendingTaskIdToPendingTask = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "pendingTaskIdToPendingTask",
+        SingularityPendingTaskId.class,
+        SingularityPendingTask.class,
+        cacheConfiguration.getPendingTaskCacheSize());
+    this.activeTaskIds = CacheObjectBuilder.newAtomixSet(
+        atomix,
+        "activeTaskIds",
+        SingularityTaskId.class
+    );
+    this.requests = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "requests",
+        String.class,
+        SingularityRequestWithState.class,
+        cacheConfiguration.getRequestCacheSize());
+    this.cleanupTasks = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "cleanupTasks",
+        SingularityTaskId.class,
+        SingularityTaskCleanup.class,
+        cacheConfiguration.getCleanupTasksCacheSize());
+    this.requestIdToDeployState = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "requestIdToDeployState",
+        String.class,
+        SingularityRequestDeployState.class,
+        cacheConfiguration.getRequestCacheSize());
+    this.killedTasks = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "killedTasks",
+        SingularityTaskId.class,
+        SingularityKilledTaskIdRecord.class,
+        cacheConfiguration.getRequestCacheSize());
+    this.historyUpdates = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "historyUpdates",
+        SingularityTaskId.class,
+        SingularityHistoryUpdates.class,
+        cacheConfiguration.getHistoryUpdateCacheSize());
+    this.slaves = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "slaves",
+        String.class,
+        SingularitySlave.class,
+        cacheConfiguration.getSlaveCacheSize());
+    this.racks = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "racks",
+        String.class,
+        SingularityRack.class,
+        cacheConfiguration.getRackCacheSize());
+    this.pendingTaskIdsToDelete = CacheObjectBuilder.newAtomixSet(
+        atomix,
+        "pendingTaskIdsToDelete",
+        SingularityPendingTaskId.class
+    );
+    this.requestUtilizations = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "requestUtilizations",
+        String.class,
+        RequestUtilization.class,
+        cacheConfiguration.getRequestCacheSize());
+    this.slaveUsages = CacheObjectBuilder.newAtomixMap(
+        atomix,
+        "slaveUsages",
+        String.class,
+        SingularitySlaveUsageWithId.class,
+        cacheConfiguration.getSlaveCacheSize());
   }
 
+  public void markLeader() {
+    leader = true;
+  }
+
+  public void close() {
+    leader = false;
+  }
+
+  public boolean isLeader() {
+    return leader;
+  }
+
+
+  // Loading in initial data
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
-    this.pendingTaskIdToPendingTask = new ConcurrentHashMap<>(pendingTasks.size());
     pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));
   }
 
   public void cachePendingTasksToDelete(List<SingularityPendingTaskId> pendingTaskIds) {
-    this.pendingTaskIdsToDelete = new HashSet<>(pendingTaskIds.size());
     pendingTaskIdsToDelete.addAll(pendingTaskIds);
   }
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
-    this.activeTaskIds = Collections.synchronizedSet(new HashSet<SingularityTaskId>(activeTaskIds.size()));
     activeTaskIds.forEach(this.activeTaskIds::add);
   }
 
   public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
-    this.requests = new ConcurrentHashMap<>(requestsWithState.size());
     requestsWithState.forEach((r) -> requests.put(r.getRequest().getId(), r));
   }
 
   public void cacheCleanupTasks(List<SingularityTaskCleanup> cleanups) {
-    this.cleanupTasks = new ConcurrentHashMap<>(cleanups.size());
     cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
   }
 
   public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
-    this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
     requestIdToDeployState.putAll(requestDeployStates);
   }
 
   public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
-    this.killedTasks = new ConcurrentHashMap<>(killedTasks.size());
     killedTasks.forEach((k) -> this.killedTasks.put(k.getTaskId(), k));
   }
 
   public void cacheTaskHistoryUpdates(Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates) {
-    this.historyUpdates = new ConcurrentHashMap<>(historyUpdates.size());
     historyUpdates.entrySet().stream().forEach((e) ->
         this.historyUpdates.put(
             e.getKey(),
-            e.getValue().stream()
-                .collect(Collectors.toMap((u) -> u.getTaskState(), (u) -> u)))
+            new SingularityHistoryUpdates(e.getValue().stream()
+                .collect(Collectors.toMap((u) -> u.getTaskState(), (u) -> u))))
     );
   }
 
   public void cacheSlaves(List<SingularitySlave> slaves) {
-    this.slaves = slaves.stream().collect(Collectors.toConcurrentMap(SingularitySlave::getId, Function.identity()));
+    slaves.forEach((s) -> this.slaves.put(s.getId(), s));
   }
 
   public void cacheRacks(List<SingularityRack> racks) {
-    this.racks = racks.stream().collect(Collectors.toConcurrentMap(SingularityRack::getId, Function.identity()));
-  }
-  public void stop() {
-    active = false;
+    racks.forEach((r) -> this.racks.put(r.getId(), r));
   }
 
   public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
-    this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
+    this.requestUtilizations.putAll(requestUtilizations);
   }
 
   public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
-    this.slaveUsages = new ConcurrentHashMap<>(slaveUsages);
+    this.slaveUsages.putAll(slaveUsages);
   }
 
-  public boolean active() {
-    return active;
-  }
-
+  // Methods to actually access the data
   public List<SingularityPendingTask> getPendingTasks() {
     return new ArrayList<>(pendingTaskIdToPendingTask.values());
   }
@@ -151,12 +230,16 @@ public class SingularityLeaderCache {
   }
 
   public void markPendingTaskForDeletion(SingularityPendingTaskId taskId) {
+    if (!leader) {
+      LOG.warn("markPendingTaskForDeletion {}, but not leader", taskId);
+      return;
+    }
     pendingTaskIdsToDelete.add(taskId);
   }
 
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
-    if (!active) {
-      LOG.warn("deletePendingTask {}, but not active", pendingTaskId);
+    if (!leader) {
+      LOG.warn("deletePendingTask {}, but not leader", pendingTaskId);
       return;
     }
     if (pendingTaskIdsToDelete.contains(pendingTaskId)) {
@@ -170,8 +253,8 @@ public class SingularityLeaderCache {
   }
 
   public void savePendingTask(SingularityPendingTask pendingTask) {
-    if (!active) {
-      LOG.warn("savePendingTask {}, but not active", pendingTask);
+    if (!leader) {
+      LOG.warn("savePendingTask {}, but not leader", pendingTask);
       return;
     }
 
@@ -179,8 +262,8 @@ public class SingularityLeaderCache {
   }
 
   public void deleteActiveTaskId(SingularityTaskId taskId) {
-    if (!active) {
-      LOG.warn("deleteActiveTask {}, but not active", taskId);
+    if (!leader) {
+      LOG.warn("deleteActiveTask {}, but not leader", taskId);
       return;
     }
 
@@ -188,13 +271,9 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityTaskId> exists(List<SingularityTaskId> taskIds) {
-    List<SingularityTaskId> activeTaskIds = new ArrayList<>(taskIds.size());
-    for (SingularityTaskId taskId : taskIds) {
-      if (this.activeTaskIds.contains(taskId)) {
-        activeTaskIds.add(taskId);
-      }
-    }
-    return activeTaskIds;
+    return taskIds.stream()
+        .filter(this.activeTaskIds::contains)
+        .collect(Collectors.toList());
   }
 
   public List<SingularityTaskId> getActiveTaskIds() {
@@ -243,8 +322,8 @@ public class SingularityLeaderCache {
   }
 
   public void putActiveTask(SingularityTaskId taskId) {
-    if (!active) {
-      LOG.warn("putActiveTask {}, but not active", taskId);
+    if (!leader) {
+      LOG.warn("putActiveTask {}, but not leader", taskId);
       return;
     }
 
@@ -260,8 +339,8 @@ public class SingularityLeaderCache {
   }
 
   public void putRequest(SingularityRequestWithState requestWithState) {
-    if (!active) {
-      LOG.warn("putRequest {}, but not active", requestWithState.getRequest().getId());
+    if (!leader) {
+      LOG.warn("putRequest {}, but not leader", requestWithState.getRequest().getId());
       return;
     }
 
@@ -269,8 +348,8 @@ public class SingularityLeaderCache {
   }
 
   public void deleteRequest(String reqeustId) {
-    if (!active) {
-      LOG.warn("deleteRequest {}, but not active", reqeustId);
+    if (!leader) {
+      LOG.warn("deleteRequest {}, but not leader", reqeustId);
       return;
     }
 
@@ -290,8 +369,8 @@ public class SingularityLeaderCache {
   }
 
   public void deleteTaskCleanup(SingularityTaskId taskId) {
-    if (!active) {
-      LOG.warn("deleteTaskCleanup {}, but not active", taskId);
+    if (!leader) {
+      LOG.warn("deleteTaskCleanup {}, but not leader", taskId);
       return;
     }
 
@@ -299,8 +378,8 @@ public class SingularityLeaderCache {
   }
 
   public void saveTaskCleanup(SingularityTaskCleanup cleanup) {
-    if (!active) {
-      LOG.warn("saveTaskCleanup {}, but not active", cleanup);
+    if (!leader) {
+      LOG.warn("saveTaskCleanup {}, but not leader", cleanup);
       return;
     }
 
@@ -308,8 +387,8 @@ public class SingularityLeaderCache {
   }
 
   public void createTaskCleanupIfNotExists(SingularityTaskCleanup cleanup) {
-    if (!active) {
-      LOG.warn("createTaskCleanupIfNotExists {}, but not active", cleanup);
+    if (!leader) {
+      LOG.warn("createTaskCleanupIfNotExists {}, but not leader", cleanup);
       return;
     }
 
@@ -333,8 +412,8 @@ public class SingularityLeaderCache {
   }
 
   public void deleteRequestDeployState(String requestId) {
-    if (!active) {
-      LOG.warn("deleteRequestDeployState {}, but not active", requestId);
+    if (!leader) {
+      LOG.warn("deleteRequestDeployState {}, but not leader", requestId);
       return;
     }
 
@@ -342,8 +421,8 @@ public class SingularityLeaderCache {
   }
 
   public void putRequestDeployState(SingularityRequestDeployState requestDeployState) {
-    if (!active) {
-      LOG.warn("putRequestDeployState {}, but not active", requestDeployState.getRequestId());
+    if (!leader) {
+      LOG.warn("putRequestDeployState {}, but not leader", requestDeployState.getRequestId());
       return;
     }
 
@@ -355,59 +434,59 @@ public class SingularityLeaderCache {
   }
 
   public void addKilledTask(SingularityKilledTaskIdRecord killedTask) {
-    if (!active) {
-      LOG.warn("addKilledTask {}, but not active", killedTask.getTaskId().getId());
+    if (!leader) {
+      LOG.warn("addKilledTask {}, but not leader", killedTask.getTaskId().getId());
       return;
     }
     killedTasks.put(killedTask.getTaskId(), killedTask);
   }
 
   public void deleteKilledTask(SingularityTaskId killedTaskId) {
-    if (!active) {
-      LOG.warn("deleteKilledTask {}, but not active", killedTaskId.getId());
+    if (!leader) {
+      LOG.warn("deleteKilledTask {}, but not leader", killedTaskId.getId());
       return;
     }
     killedTasks.remove(killedTaskId);
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
-    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId)).or(new HashMap<>()).values());
+    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId).getHistoryUpdates()).or(new HashMap<>()).values());
     Collections.sort(updates);
     return updates;
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> allHistoryUpdates = new HashMap<>(historyUpdates);
+    Map<SingularityTaskId, SingularityHistoryUpdates> allHistoryUpdates = new HashMap<>(historyUpdates);
     return allHistoryUpdates.entrySet().stream()
         .filter((e) -> taskIds.contains(e.getKey()))
-        .collect(Collectors.toMap(Map.Entry::getKey, (e) -> new ArrayList<>(e.getValue().values()))
+        .collect(Collectors.toMap(Map.Entry::getKey, (e) -> new ArrayList<>(e.getValue().getHistoryUpdates().values()))
     );
   }
 
   public void saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate, boolean overwrite) {
-    if (!active) {
-      LOG.warn("saveTaskHistoryUpdate {}, but not active", taskHistoryUpdate);
+    if (!leader) {
+      LOG.warn("saveTaskHistoryUpdate {}, but not leader", taskHistoryUpdate);
       return;
     }
-    historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new ConcurrentHashMap<>());
+    historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new SingularityHistoryUpdates(new HashMap<>()));
     if (overwrite) {
-      historyUpdates.get(taskHistoryUpdate.getTaskId()).put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).getHistoryUpdates().put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     } else {
-      historyUpdates.get(taskHistoryUpdate.getTaskId()).putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).getHistoryUpdates().putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     }
   }
 
   public void deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state) {
-    if (!active) {
-      LOG.warn("deleteTaskHistoryUpdate {}, but not active", taskId);
+    if (!leader) {
+      LOG.warn("deleteTaskHistoryUpdate {}, but not leader", taskId);
       return;
     }
-    historyUpdates.getOrDefault(taskId, new HashMap<>()).remove(state);
+    historyUpdates.getOrDefault(taskId, new SingularityHistoryUpdates(new HashMap<>())).getHistoryUpdates().remove(state);
   }
 
   public void deleteTaskHistory(SingularityTaskId taskId) {
-    if (!active) {
-      LOG.warn("deleteTaskHistory {}, but not active", taskId);
+    if (!leader) {
+      LOG.warn("deleteTaskHistory {}, but not leader", taskId);
       return;
     }
     historyUpdates.remove(taskId);
@@ -422,16 +501,16 @@ public class SingularityLeaderCache {
   }
 
   public void putSlave(SingularitySlave slave) {
-    if (!active) {
-      LOG.warn("putSlave {}, but not active", slave);
+    if (!leader) {
+      LOG.warn("putSlave {}, but not leader", slave);
     }
 
     slaves.put(slave.getId(), slave);
   }
 
   public void removeSlave(String slaveId) {
-    if (!active) {
-      LOG.warn("remove slave {}, but not active", slaveId);
+    if (!leader) {
+      LOG.warn("remove slave {}, but not leader", slaveId);
       return;
     }
     slaves.remove(slaveId);
@@ -446,32 +525,32 @@ public class SingularityLeaderCache {
   }
 
   public void putRack(SingularityRack rack) {
-    if (!active) {
-      LOG.warn("putSlave {}, but not active", rack);
+    if (!leader) {
+      LOG.warn("putSlave {}, but not leader", rack);
     }
 
     racks.put(rack.getId(), rack);
   }
 
   public void removeRack(String rackId) {
-    if (!active) {
-      LOG.warn("remove rack {}, but not active", rackId);
+    if (!leader) {
+      LOG.warn("remove rack {}, but not leader", rackId);
       return;
     }
     racks.remove(rackId);
   }
 
   public void putRequestUtilization(RequestUtilization requestUtilization) {
-    if (!active) {
-      LOG.warn("putRequestUtilization {}, but not active", requestUtilization);
+    if (!leader) {
+      LOG.warn("putRequestUtilization {}, but not leader", requestUtilization);
     }
 
     requestUtilizations.put(requestUtilization.getRequestId(), requestUtilization);
   }
 
   public void removeRequestUtilization(String requestId) {
-    if (!active) {
-      LOG.warn("removeRequestUtilization {}, but not active", requestId);
+    if (!leader) {
+      LOG.warn("removeRequestUtilization {}, but not leader", requestId);
       return;
     }
     requestUtilizations.remove(requestId);
@@ -482,16 +561,16 @@ public class SingularityLeaderCache {
   }
 
   public void putSlaveUsage(SingularitySlaveUsageWithId slaveUsage) {
-    if (!active) {
-      LOG.warn("putSlaveUsage {}, but not active", slaveUsage);
+    if (!leader) {
+      LOG.warn("putSlaveUsage {}, but not leader", slaveUsage);
     }
 
     slaveUsages.put(slaveUsage.getSlaveId(), slaveUsage);
   }
 
   public void removeSlaveUsage(String slaveId) {
-    if (!active) {
-      LOG.warn("removeSlaveUsage {}, but not active", slaveId);
+    if (!leader) {
+      LOG.warn("removeSlaveUsage {}, but not leader", slaveId);
       return;
     }
     slaveUsages.remove(slaveId);

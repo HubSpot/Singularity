@@ -2,6 +2,8 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.hubspot.singularity.cache.SingularityCache;
+import com.hubspot.singularity.cache.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
@@ -40,7 +42,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityUsagePoller.class).in(Scopes.SINGLETON);
     bind(SingularityMesosTaskPrioritizer.class).in(Scopes.SINGLETON);
     bind(SingularityMesosOfferScheduler.class).in(Scopes.SINGLETON);
-    bind(SingularityLeaderCache.class).in(Scopes.SINGLETON);
+    bind(SingularityCache.class).in(Scopes.SINGLETON);
     bind(SingularityLeaderCacheCoordinator.class).in(Scopes.SINGLETON);
     bind(SingularityAutoScaleSpreadAllPoller.class).in(Scopes.SINGLETON);
     bind(SingularityMesosHeartbeatChecker.class).in(Scopes.SINGLETON);

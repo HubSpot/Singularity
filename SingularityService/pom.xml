@@ -182,6 +182,16 @@
     </dependency>
 
     <dependency>
+      <groupId>io.atomix</groupId>
+      <artifactId>atomix</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.atomix</groupId>
+      <artifactId>atomix-primary-backup</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-assets</artifactId>
     </dependency>

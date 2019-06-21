@@ -42,7 +42,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
@@ -58,7 +58,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final SingularityEventListener singularityEventListener;
 
   private final SingularityWebCache webCache;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -88,7 +88,7 @@ public class RequestManager extends CuratorAsyncManager {
                         Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
                         Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
                         Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-                        SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
+                        SingularityWebCache webCache, SingularityCache leaderCache) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;

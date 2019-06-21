@@ -46,7 +46,7 @@ import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -63,12 +63,12 @@ public class SingularitySlaveAndRackManager {
   private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final AtomicInteger activeSlavesLost;
-  private final SingularityLeaderCache leaderCache;
+  private final SingularityCache leaderCache;
 
   @Inject
   SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
                                  RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, InactiveSlaveManager inactiveSlaveManager,
-                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost, SingularityLeaderCache leaderCache) {
+                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost, SingularityCache leaderCache) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -536,7 +536,7 @@ public class SingularitySlaveAndRackManager {
     return result;
   }
 
-  void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
+  void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityCache leaderCache) {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (!slave.isPresent()) {
@@ -568,7 +568,7 @@ public class SingularitySlaveAndRackManager {
     }
   }
 
-  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularityLeaderCache leaderCache) {
+  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularityCache leaderCache) {
     for (SingularityTaskId activeTaskId : leaderCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedRackId().equals(taskId.getSanitizedRackId())) {
         return true;
@@ -578,7 +578,7 @@ public class SingularitySlaveAndRackManager {
     return false;
   }
 
-  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularityLeaderCache stateCache) {
+  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularityCache stateCache) {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
