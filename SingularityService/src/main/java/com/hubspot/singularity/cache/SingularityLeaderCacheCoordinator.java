@@ -18,7 +18,7 @@ public class SingularityLeaderCacheCoordinator {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
   private final UsageManager usageManager;
-  private final SingularityCache leaderCache;
+  private final SingularityCache cache;
 
   @Inject
   public SingularityLeaderCacheCoordinator(TaskManager taskManager,
@@ -27,14 +27,14 @@ public class SingularityLeaderCacheCoordinator {
                                            SlaveManager slaveManager,
                                            RackManager rackManager,
                                            UsageManager usageManager,
-                                           SingularityCache leaderCache) {
+                                           SingularityCache cache) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.usageManager = usageManager;
-    this.leaderCache = leaderCache;
+    this.cache = cache;
   }
 
   public void activateLeaderCache() {
@@ -44,11 +44,11 @@ public class SingularityLeaderCacheCoordinator {
     slaveManager.activateLeaderCache();
     rackManager.activateLeaderCache();
     usageManager.activateLeaderCache();
-    leaderCache.markLeader();
+    cache.markLeader();
   }
 
   public void stopLeaderCache() {
-    leaderCache.close();
+    cache.markNotLeader();
   }
 
 }

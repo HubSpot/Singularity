@@ -242,14 +242,7 @@ public abstract class CuratorManager {
     }
   }
 
-  private <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache, Optional<Boolean> shouldCheckExists) {
-    if (!stat.isPresent() && zkCache.isPresent()) {
-      Optional<T> cachedValue = zkCache.get().get(path);
-      if (cachedValue.isPresent() && (!shouldCheckExists.isPresent() || (shouldCheckExists.get().booleanValue() && checkExists(path).isPresent()))) {
-        return cachedValue;
-      }
-    }
-
+  private <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<Boolean> shouldCheckExists) {
     final long start = System.currentTimeMillis();
     int bytes = 0;
 
@@ -271,10 +264,6 @@ public abstract class CuratorManager {
 
       final T object = transcoder.fromBytes(data);
 
-      if (zkCache.isPresent()) {
-        zkCache.get().set(path, object);
-      }
-
       return Optional.of(object);
     } catch (NoNodeException nne) {
       LOG.trace("No node found for path {}", path);
@@ -287,14 +276,14 @@ public abstract class CuratorManager {
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat>absent(), transcoder, Optional.<ZkCache<T>>absent(), Optional.<Boolean>absent());
+    return getData(path, Optional.absent(), transcoder, Optional.absent());
   }
 
-  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, ZkCache<T> zkCache, boolean shouldCheckExists) {
-    return getData(path, Optional.<Stat>absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, boolean shouldCheckExists) {
+    return getData(path, Optional.absent(), transcoder, Optional.of(shouldCheckExists));
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, Optional.<Stat>absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>>absent(), Optional.<Boolean>absent());
+    return getData(path, Optional.absent(), StringTranscoder.INSTANCE, Optional.absent());
   }
 }

@@ -1,12 +1,7 @@
 package com.hubspot.singularity.data;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.cache.SingularityCacheModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.usage.UsageManager;
@@ -37,12 +32,8 @@ public class SingularityDataModule extends AbstractModule {
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
     bind(UserManager.class).in(Scopes.SINGLETON);
     bind(UsageManager.class).in(Scopes.SINGLETON);
-
     bind(WebhookManager.class).in(Scopes.SINGLETON);
-
     bind(NotificationsManager.class).in(Scopes.SINGLETON);
-
-    bind(SingularityWebCache.class).in(Scopes.SINGLETON);
 
     bind(ExecutorIdGenerator.class).asEagerSingleton();
     bind(WebhookManager.class).in(Scopes.SINGLETON);
@@ -52,17 +43,5 @@ public class SingularityDataModule extends AbstractModule {
     bind(AuthTokenManager.class).in(Scopes.SINGLETON);
 
     install(new SingularityCacheModule(configuration.getCacheConfiguration()));
-  }
-
-  @Provides
-  @Singleton
-  public ZkCache<SingularityTask> taskCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), configuration.getCacheTasksForMillis(), registry, "tasks");
-  }
-
-  @Provides
-  @Singleton
-  public ZkCache<SingularityDeploy> deployCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<>(configuration.getCacheDeploysMaxSize(), configuration.getCacheDeploysInitialSize(), configuration.getCacheDeploysForMillis(), registry, "deploys");
   }
 }

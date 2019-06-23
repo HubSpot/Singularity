@@ -21,7 +21,7 @@ public class CacheObjectBuilder {
         .withCompatibleSerialization()
         .withRegistrationRequired(false)
         .withProtocol(MultiPrimaryProtocol.builder("in-memory-data")
-            .withBackups(3)
+            .withBackups(3) // TODO count for this?
             .withReplication(Replication.ASYNCHRONOUS)
             .withConsistency(Consistency.EVENTUAL).build());
 

@@ -138,14 +138,20 @@ public class SingularityCache {
         String.class,
         SingularitySlaveUsageWithId.class,
         cacheConfiguration.getSlaveCacheSize());
+    // TODO caffeine cache to replace ZkCache
   }
 
   public void markLeader() {
     leader = true;
   }
 
+  public void markNotLeader() {
+    leader = false;
+  }
+
   public void close() {
     leader = false;
+    // TODO - close individual maps + shut down atomix
   }
 
   public boolean isLeader() {
@@ -154,6 +160,7 @@ public class SingularityCache {
 
 
   // Loading in initial data
+  // TODO - clear each first
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));
   }

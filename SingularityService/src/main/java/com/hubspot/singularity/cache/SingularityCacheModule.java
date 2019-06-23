@@ -28,12 +28,13 @@ public class SingularityCacheModule extends AbstractModule {
   @Provides
   @Singleton
   public Atomix providesAtomixCache(ZkNodeDiscoveryProvider zkNodeDiscoveryProvider,
-                                    @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+                                    @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) throws Exception {
     String host = hostAndPort.getHost();
     Atomix atomix = Atomix.builder()
         .withMemberId(host)
         .withAddress(host, cacheConfiguration.getAtomixPort())
         .withMembershipProvider(zkNodeDiscoveryProvider)
+        .withShutdownHook(false) // TODO - Shut this down manually???
         .build();
     atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
     return atomix;

@@ -16,6 +16,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
@@ -41,6 +42,7 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityMesosExecutorInfoSupport executorInfoSupport;
   private final SingularityGraphiteReporter graphiteReporter;
   private final ExecutorIdGenerator executorIdGenerator;
+  private final SingularityCache cache;
   private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
 
   private final CuratorFramework curatorFramework;
@@ -57,6 +59,7 @@ public class SingularityLifecycleManaged implements Managed {
                                      SingularityMesosExecutorInfoSupport executorInfoSupport,
                                      SingularityGraphiteReporter graphiteReporter,
                                      ExecutorIdGenerator executorIdGenerator,
+                                     SingularityCache cache,
                                      Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
@@ -67,6 +70,7 @@ public class SingularityLifecycleManaged implements Managed {
     this.executorInfoSupport = executorInfoSupport;
     this.graphiteReporter = graphiteReporter;
     this.executorIdGenerator = executorIdGenerator;
+    this.cache = cache;
     this.leaderOnlyPollers = leaderOnlyPollers;
   }
 
@@ -75,6 +79,7 @@ public class SingularityLifecycleManaged implements Managed {
     if (!started.getAndSet(true)) {
       startCurator();
       leaderLatch.start();
+      cache.setup();
       leaderController.start(); // start the state poller
       graphiteReporter.start();
       executorIdGenerator.start();
@@ -93,6 +98,7 @@ public class SingularityLifecycleManaged implements Managed {
       stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
       stopExecutors(); // Shuts down the executors for pollers and async semaphores
       stopLeaderLatch(); // let go of leadership
+      closeCache(); // Stop listening for distributed map updates
       stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
@@ -180,6 +186,15 @@ public class SingularityLifecycleManaged implements Managed {
       curatorFramework.close();
     } catch (Throwable t) {
       LOG.warn("Could not close curator ({})", t.getMessage());
+    }
+  }
+
+  private void closeCache() {
+    try {
+      LOG.info("Closing cache");
+      cache.close();
+    } catch (Throwable t) {
+      LOG.warn("Could not close cache", t);
     }
   }
 }

@@ -21,14 +21,12 @@ public class RequestGroupManager extends CuratorAsyncManager {
   private static final String REQUEST_GROUP_ROOT = "/groups";
 
   private final Transcoder<SingularityRequestGroup> requestGroupTranscoder;
-  private final SingularityWebCache webCache;
 
   @Inject
   public RequestGroupManager(CuratorFramework curator, SingularityConfiguration configuration,
-                             MetricRegistry metricRegistry, Transcoder<SingularityRequestGroup> requestGroupTranscoder, SingularityWebCache webCache) {
+                             MetricRegistry metricRegistry, Transcoder<SingularityRequestGroup> requestGroupTranscoder) {
     super(curator, configuration, metricRegistry);
     this.requestGroupTranscoder = requestGroupTranscoder;
-    this.webCache = webCache;
   }
 
   private String getRequestGroupPath(String requestGroupId) {

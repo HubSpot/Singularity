@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +56,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         paths.add(ZKPaths.makePath(parent, child));
       }
 
-      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.absent()).values());
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder).values());
 
 
       return result;
@@ -66,19 +65,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
 
-  private <T> Map<String, T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final Optional<ZkCache<T>> cache) throws Exception {
+  private <T> Map<String, T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) throws Exception {
     final Map<String, T> objects = new HashMap<>(paths.size());
-
-    if (cache.isPresent()) {
-      for (Iterator<String> itr = paths.iterator(); itr.hasNext();) {
-        final String path = itr.next();
-        final Optional<T> fromCache = cache.get().get(path);
-        if (fromCache.isPresent()) {
-          objects.put(path, fromCache.get());
-          itr.remove();
-        }
-      }
-    }
 
     if (paths.isEmpty()) {
       return objects;
@@ -102,10 +90,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           bytes.getAndAdd(event.getData().length);
           final T object = transcoder.fromBytes(event.getData());
           synchronizedObjects.put(event.getPath(), object);
-
-          if (cache.isPresent()) {
-            cache.get().set(event.getPath(), object);
-          }
         } finally {
           latch.countDown();
         }
@@ -230,17 +214,9 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
 
-  protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final ZkCache<T> cache) {
-    try {
-      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.of(cache)).values());
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
   protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder).values());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -248,7 +224,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   protected <T> Map<String, T> getAsyncWithPath(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent());
+      return getAsyncThrows(pathNameForLogs, paths, transcoder);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
