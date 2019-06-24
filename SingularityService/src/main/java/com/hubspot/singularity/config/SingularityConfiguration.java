@@ -126,7 +126,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long slowFailureCooldownMs = 600000;
 
-  private long slowCooldownExpiresMinutesWithoutFailure = 15;
+  private long slowCooldownExpiresMinutesWithoutFailure = 5;
 
   private long cooldownMinScheduleSeconds = 120;
 

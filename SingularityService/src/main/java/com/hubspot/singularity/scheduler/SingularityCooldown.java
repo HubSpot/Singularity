@@ -59,7 +59,7 @@ public class SingularityCooldown {
 
     return failureCount >= configuration.getSlowFailureCooldownCount()
         && mostRecentFailure.isPresent()
-        && mostRecentFailure.get() > configuration.getSlowCooldownExpiresMinutesWithoutFailure();
+        && mostRecentFailure.get() > System.currentTimeMillis() - configuration.getSlowCooldownExpiresMinutesWithoutFailure();
   }
 
   private boolean hasFastFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
