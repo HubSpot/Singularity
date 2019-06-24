@@ -321,6 +321,7 @@ public class JDBIHistoryManager implements HistoryManager {
           .filter(Optional::isPresent)
           .map(Optional::get)
           .forEach((t) -> history.setTaskJson(t.getTask().getTaskId().getId(), t));
+      LOG.debug("Converted {} task histories to json format", taskHistories.size());
       taskHistories = history.getTasksWithBytes(batchSize);
     }
   }
@@ -329,6 +330,7 @@ public class JDBIHistoryManager implements HistoryManager {
     List<SingularityRequestAndTime> requests = history.getRequestsWithBytes(batchSize);
     while (!requests.isEmpty()) {
       requests.forEach((r) -> history.setRequestJson(r.getRequest().getId(), new Date(r.getCreatedAt()), r.getRequest()));
+      LOG.debug("Converted {} request histories to json format", requests.size());
       requests = history.getRequestsWithBytes(batchSize);
     }
   }
@@ -348,6 +350,7 @@ public class JDBIHistoryManager implements HistoryManager {
           .filter(Optional::isPresent)
           .map(Optional::get)
           .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
+      LOG.debug("Converted {} deploy histories to json format", deployHistories.size());
       deployHistories = history.getDeploysWithBytes(batchSize);
     }
   }
