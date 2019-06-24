@@ -698,11 +698,20 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of all request ids")
   public List<String> getAllRequestIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Filter to request ids that match this string (case insensitive)") @QueryParam("requestIdLike") String requestIdLike) {
+    List<String> allIds = filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
         .stream()
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
+    if (requestIdLike == null) {
+      return allIds;
+    } else {
+      String lowerCase = requestIdLike.toLowerCase();
+      return allIds.stream()
+          .filter((id) -> id.toLowerCase().startsWith(lowerCase))
+          .collect(Collectors.toList());
+    }
   }
 
   @GET
