@@ -71,7 +71,7 @@ public interface HistoryJDBI extends SqlObject {
   @Deprecated
   byte[] getDeployHistoryBytesForDeploy(String requestId, String deployId);
 
-  List<byte[]> getTasksWithBytes(int limit);
+  List<byte[]> getTasksWithBytes(String requestId, int limit);
 
   void setTaskJson(String taskId, SingularityTaskHistory taskHistory);
 
@@ -79,7 +79,7 @@ public interface HistoryJDBI extends SqlObject {
 
   void setRequestJson(String requestId, Date createdAt, SingularityRequest request);
 
-  List<byte[]> getDeploysWithBytes(int limit);
+  List<byte[]> getDeploysWithBytes(String requestId, int limit);
 
   void setDeployJson(String requestId, String deployId, SingularityDeployHistory deployHistory);
 

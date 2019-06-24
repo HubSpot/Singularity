@@ -307,22 +307,24 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private void backfillTaskJson(int batchSize) {
-    List<byte[]> taskHistories = history.getTasksWithBytes(batchSize);
-    while (!taskHistories.isEmpty()) {
-      taskHistories.stream()
-          .map((bytes) -> {
-            try {
-              return Optional.of(taskHistoryTranscoder.fromBytes(bytes));
-            } catch (SingularityTranscoderException ste) {
-              LOG.warn("Could not deserialize task", ste);
-              return Optional.<SingularityTaskHistory>absent();
-            }
-          })
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .forEach((t) -> history.setTaskJson(t.getTask().getTaskId().getId(), t));
-      LOG.debug("Converted {} task histories to json format", taskHistories.size());
-      taskHistories = history.getTasksWithBytes(batchSize);
+    for (String requestId : history.getRequestIdsInTaskHistory()) {
+      List<byte[]> taskHistories = history.getTasksWithBytes(requestId, batchSize);
+      while (!taskHistories.isEmpty()) {
+        taskHistories.stream()
+            .map((bytes) -> {
+              try {
+                return Optional.of(taskHistoryTranscoder.fromBytes(bytes));
+              } catch (SingularityTranscoderException ste) {
+                LOG.warn("Could not deserialize task", ste);
+                return Optional.<SingularityTaskHistory>absent();
+              }
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach((t) -> history.setTaskJson(t.getTask().getTaskId().getId(), t));
+        LOG.debug("Converted {} task histories to json format", taskHistories.size());
+        taskHistories = history.getTasksWithBytes(requestId, batchSize);
+      }
     }
   }
 
@@ -336,22 +338,24 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private void backfillDeployJson(int batchSize) {
-    List<byte[]> deployHistories = history.getDeploysWithBytes(batchSize);
-    while (!deployHistories.isEmpty()) {
-      deployHistories.stream()
-          .map((bytes) -> {
-            try {
-              return Optional.of(deployHistoryTranscoder.fromBytes(bytes));
-            } catch (SingularityTranscoderException ste) {
-              LOG.warn("Could not deserialize deploy", ste);
-              return Optional.<SingularityDeployHistory>absent();
-            }
-          })
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
-      LOG.debug("Converted {} deploy histories to json format", deployHistories.size());
-      deployHistories = history.getDeploysWithBytes(batchSize);
+    for (String requestId : history.getRequestIdsWithDeploys()) {
+      List<byte[]> deployHistories = history.getDeploysWithBytes(requestId, batchSize);
+      while (!deployHistories.isEmpty()) {
+        deployHistories.stream()
+            .map((bytes) -> {
+              try {
+                return Optional.of(deployHistoryTranscoder.fromBytes(bytes));
+              } catch (SingularityTranscoderException ste) {
+                LOG.warn("Could not deserialize deploy", ste);
+                return Optional.<SingularityDeployHistory>absent();
+              }
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
+        LOG.debug("Converted {} deploy histories to json format", deployHistories.size());
+        deployHistories = history.getDeploysWithBytes(requestId, batchSize);
+      }
     }
   }
 
