@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -50,7 +51,7 @@ public class SingularityCooldown {
 
   }
 
-  private boolean hasFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp, long cooldownPeriod, int cooldownCount, long expiresAfterMs) {
+  private boolean hasFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp, long cooldownPeriod, int cooldownCount, long expiresAfterMins) {
     final long now = System.currentTimeMillis();
     long thresholdTime = now - cooldownPeriod;
     List<Long> failureTimestamps = deployStatistics.getInstanceSequentialFailureTimestamps().asMap()
@@ -67,7 +68,7 @@ public class SingularityCooldown {
     java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
 
     return failureCount >= cooldownCount
-        && (!mostRecentFailure.isPresent() || mostRecentFailure.get() > System.currentTimeMillis() - expiresAfterMs);
+        && (!mostRecentFailure.isPresent() || mostRecentFailure.get() > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins));
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
