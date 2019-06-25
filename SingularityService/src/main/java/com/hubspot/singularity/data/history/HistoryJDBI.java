@@ -3,6 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.Date;
 import java.util.List;
 
+import org.skife.jdbi.v2.sqlobject.mixins.GetHandle;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
@@ -10,8 +12,6 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
-
-import org.skife.jdbi.v2.sqlobject.mixins.GetHandle;
 
 public interface HistoryJDBI extends GetHandle {
 
@@ -48,4 +48,12 @@ public interface HistoryJDBI extends GetHandle {
   int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
                             Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
                             Optional<Long> updatedAfter);
+
+  List<String> getRequestIdsWithHistory();
+
+  int purgeRequestHistory(String requestId, Date threshold, int batchSize);
+
+  List<String> getRequestIdsWithDeploys();
+
+  int purgeDeployHistory(String requestId, Date threshold, int batchSize);
 }
