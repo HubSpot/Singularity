@@ -42,8 +42,17 @@ public class SingularityCooldown {
   }
 
   private boolean hasSlowFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
+    return hasFailureLoop(deployStatistics, recentFailureTimestamp, configuration.getSlowFailureCooldownMs(), configuration.getSlowFailureCooldownCount(), configuration.getSlowCooldownExpiresMinutesWithoutFailure());
+  }
+
+  private boolean hasFastFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
+    return hasFailureLoop(deployStatistics, recentFailureTimestamp, configuration.getFastFailureCooldownMs(), configuration.getFastFailureCooldownCount(), configuration.getFastCooldownExpiresMinutesWithoutFailure());
+
+  }
+
+  private boolean hasFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp, long cooldownPeriod, int cooldownCount, long expiresAfterMs) {
     final long now = System.currentTimeMillis();
-    long thresholdTime = now - configuration.getSlowFailureCooldownMs();
+    long thresholdTime = now - cooldownPeriod;
     List<Long> failureTimestamps = deployStatistics.getInstanceSequentialFailureTimestamps().asMap()
         .values()
         .stream()
@@ -57,25 +66,8 @@ public class SingularityCooldown {
         .count();
     java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
 
-    return failureCount >= configuration.getSlowFailureCooldownCount()
-        && mostRecentFailure.isPresent()
-        && mostRecentFailure.get() > System.currentTimeMillis() - configuration.getSlowCooldownExpiresMinutesWithoutFailure();
-  }
-
-  private boolean hasFastFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    final long now = System.currentTimeMillis();
-    long thresholdTime = now - configuration.getFastFailureCooldownMs();
-    long failureCount = deployStatistics.getInstanceSequentialFailureTimestamps().asMap()
-        .values()
-        .stream()
-        .flatMap(Collection::stream)
-        .filter((t) -> t > thresholdTime)
-        .count();
-    if (recentFailureTimestamp.isPresent() && recentFailureTimestamp.get() > thresholdTime) {
-      failureCount++;
-    }
-
-    return failureCount >= configuration.getFastFailureCooldownCount();
+    return failureCount >= cooldownCount
+        && (!mostRecentFailure.isPresent() || mostRecentFailure.get() > System.currentTimeMillis() - expiresAfterMs);
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {

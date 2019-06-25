@@ -122,11 +122,13 @@ public class SingularityConfiguration extends Configuration {
 
   private long fastFailureCooldownMs = 60000;
 
+  private long fastCooldownExpiresMinutesWithoutFailure = 5;
+
   private int slowFailureCooldownCount = 5;
 
   private long slowFailureCooldownMs = 600000;
 
-  private long slowCooldownExpiresMinutesWithoutFailure = 5;
+  private long slowCooldownExpiresMinutesWithoutFailure = 8;
 
   private long cooldownMinScheduleSeconds = 120;
 
@@ -522,6 +524,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setFastFailureCooldownMs(long fastFailureCooldownMs) {
     this.fastFailureCooldownMs = fastFailureCooldownMs;
+  }
+
+  public long getFastCooldownExpiresMinutesWithoutFailure() {
+    return fastCooldownExpiresMinutesWithoutFailure;
+  }
+
+  public void setFastCooldownExpiresMinutesWithoutFailure(long fastCooldownExpiresMinutesWithoutFailure) {
+    this.fastCooldownExpiresMinutesWithoutFailure = fastCooldownExpiresMinutesWithoutFailure;
   }
 
   public int getSlowFailureCooldownCount() {
