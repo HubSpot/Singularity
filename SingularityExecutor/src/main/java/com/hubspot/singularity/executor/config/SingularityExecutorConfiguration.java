@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
@@ -203,6 +204,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private List<String> shellCommandPrefix = Collections.emptyList();
+
+  @JsonProperty
+  private Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads = Optional.absent();
 
   @JsonProperty
   private int dockerClientTimeLimitSeconds = 300;
@@ -597,6 +601,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setShellCommandPrefix(List<String> shellCommandPrefix) {
     this.shellCommandPrefix = shellCommandPrefix;
+  }
+
+  public Optional<SingularityShellCommand> getRunShellCommandBeforeKillDueToThreads() {
+    return runShellCommandBeforeKillDueToThreads;
+  }
+
+  public void setRunShellCommandBeforeKillDueToThreads(Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads) {
+    this.runShellCommandBeforeKillDueToThreads = runShellCommandBeforeKillDueToThreads;
   }
 
   public int getDockerClientTimeLimitSeconds() {

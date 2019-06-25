@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,17 +17,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
@@ -44,13 +52,15 @@ public class SingularityExecutorThreadChecker {
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
   private final DockerUtils dockerUtils;
+  private final ObjectMapper objectMapper;
 
   private SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerUtils dockerUtils) {
+  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.configuration = configuration;
     this.dockerUtils = dockerUtils;
+    this.objectMapper = objectMapper;
 
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getThreadCheckThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorThreadCheckerThread-%d").build());
   }
@@ -86,10 +96,10 @@ public class SingularityExecutorThreadChecker {
 
       final int maxThreads = taskProcess.getTask().getExecutorData().getMaxTaskThreads().get();
 
-      int usedThreads = 0;
+      final AtomicInteger usedThreads = new AtomicInteger(0);
 
       try {
-        usedThreads = getNumUsedThreads(taskProcess);
+        usedThreads.set(getNumUsedThreads(taskProcess));
         LOG.trace("{} is using {} threads", taskProcess.getTask().getTaskId(), usedThreads);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
@@ -101,13 +111,51 @@ public class SingularityExecutorThreadChecker {
         continue;
       }
 
-      if (usedThreads > maxThreads) {
+      if (usedThreads.get() > maxThreads) {
         taskProcess.getTask().getLog().info("{} using too many threads: {} (max {})", taskProcess.getTask().getTaskId(), usedThreads, maxThreads);
 
-        taskProcess.getTask().markKilledDueToThreads(usedThreads);
-        KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+        if (configuration.getRunShellCommandBeforeKillDueToThreads().isPresent()) {
+          SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(
+              SingularityTaskId.valueOf(taskProcess.getTask().getTaskId()),
+              Optional.absent(),
+              System.currentTimeMillis(),
+              configuration.getRunShellCommandBeforeKillDueToThreads().get()
+          );
 
-        taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+          SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(
+              objectMapper, shellRequest, taskProcess.getTask()
+          );
+
+          SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, configuration, taskProcess.getTask(),
+              taskProcess, monitor.getShellCommandExecutorServiceForTask(taskProcess.getTask().getTaskId()), updater);
+
+          Futures.addCallback(shellRunner.start(), new FutureCallback<Integer>() {
+            @Override
+            public void onSuccess(Integer result) {
+              taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+              KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+              taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+              taskProcess.getTask().getLog().warn("Unable to run pre-threadkill shell command {} for {}!", configuration.getRunShellCommandBeforeKillDueToThreads().get().getName(), taskProcess.getTask().getTaskId(), t);
+              taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+              KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+              taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+
+            }
+          });
+        } else {
+          taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+          KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+          taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+        }
+
       }
     }
   }
