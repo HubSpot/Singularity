@@ -71,6 +71,7 @@ class TaskSearch extends React.Component {
 
   renderTags() {
     const {requestId, deployId, runId, host, startedAfter, startedBefore, updatedBefore, updatedAfter, lastTaskStatus} = this.props.filter;
+    console.log(lastTaskStatus)
     return (
       <div>
         {requestId && !this.props.params.requestId && this.renderTag('Request ID', requestId)}{' '}
