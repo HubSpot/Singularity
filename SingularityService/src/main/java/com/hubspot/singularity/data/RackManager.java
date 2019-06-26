@@ -47,37 +47,22 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
   }
 
   @Override
-  public Optional<SingularityRack> getObjectFromLeaderCache(String rackId) {
-    if (leaderCache.active()) {
-      return leaderCache.getRack(rackId);
-    }
-
-    return Optional.absent(); // fallback to zk
+  public Optional<SingularityRack> getObject(String rackId) {
+    return leaderCache.getRack(rackId);
   }
 
   @Override
-  public List<SingularityRack> getObjectsFromLeaderCache() {
-    if (leaderCache.active()) {
-      return leaderCache.getRacks();
-    }
-    return null; // fallback to zk
+  public List<SingularityRack> getObjects() {
+    return leaderCache.getRacks();
   }
 
   @Override
-  public void saveObjectToLeaderCache(SingularityRack rackId) {
-    if (leaderCache.active()) {
-      leaderCache.putRack(rackId);
-    } else {
-      LOG.info("Asked to save slaves to leader cache when not active");
-    }
+  public void saveObjectToCache(SingularityRack rackId) {
+    leaderCache.putRack(rackId);
   }
 
   @Override
-  public void deleteFromLeaderCache(String rackId) {
-    if (leaderCache.active()) {
-      leaderCache.removeRack(rackId);
-    } else {
-      LOG.info("Asked to remove slave from leader cache when not active");
-    }
+  public void deleteFromCache(String rackId) {
+    leaderCache.removeRack(rackId);
   }
 }

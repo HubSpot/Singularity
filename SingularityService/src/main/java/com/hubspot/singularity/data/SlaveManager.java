@@ -51,38 +51,23 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public Optional<SingularitySlave> getObjectFromLeaderCache(String slaveId) {
-    if (leaderCache.active()) {
-      return leaderCache.getSlave(slaveId);
-    }
-
-    return Optional.absent(); // fallback to zk
+  public Optional<SingularitySlave> getObject(String slaveId) {
+    return leaderCache.getSlave(slaveId);
   }
 
   @Override
-  public List<SingularitySlave> getObjectsFromLeaderCache() {
-    if (leaderCache.active()) {
-      return leaderCache.getSlaves();
-    }
-    return null; // fallback to zk
+  public List<SingularitySlave> getObjects() {
+    return leaderCache.getSlaves();
   }
 
   @Override
-  public void saveObjectToLeaderCache(SingularitySlave singularitySlave) {
-    if (leaderCache.active()) {
-      leaderCache.putSlave(singularitySlave);
-    } else {
-      LOG.info("Asked to save slaves to leader cache when not active");
-    }
+  public void saveObjectToCache(SingularitySlave singularitySlave) {
+    leaderCache.putSlave(singularitySlave);
   }
 
   @Override
-  public void deleteFromLeaderCache(String slaveId) {
-    if (leaderCache.active()) {
-      leaderCache.removeSlave(slaveId);
-    } else {
-      LOG.info("Asked to remove slave from leader cache when not active");
-    }
+  public void deleteFromCache(String slaveId) {
+    leaderCache.removeSlave(slaveId);
   }
 
   @Override

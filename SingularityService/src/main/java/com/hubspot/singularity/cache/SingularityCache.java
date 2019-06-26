@@ -29,9 +29,11 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
+import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -42,6 +44,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import io.atomix.core.Atomix;
 import io.atomix.core.map.DistributedMap;
 import io.atomix.core.set.DistributedSet;
+import io.atomix.core.value.AtomicValue;
 
 @Singleton
 public class SingularityCache {
@@ -56,6 +59,7 @@ public class SingularityCache {
   private DistributedMap<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
   private DistributedSet<SingularityTaskId> activeTaskIds;
   private DistributedMap<String, SingularityRequestWithState> requests;
+  private DistributedMap<String, SingularityRequestGroup> requestGroups;
   private DistributedMap<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
   private DistributedMap<String, SingularityRequestDeployState> requestIdToDeployState;
   private DistributedMap<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
@@ -65,6 +69,7 @@ public class SingularityCache {
   private DistributedSet<SingularityPendingTaskId> pendingTaskIdsToDelete;
   private DistributedMap<String, RequestUtilization> requestUtilizations;
   private DistributedMap<String, SingularitySlaveUsageWithId> slaveUsages;
+  private AtomicValue<SingularityState> state;
 
   private volatile boolean leader;
 
@@ -105,6 +110,12 @@ public class SingularityCache {
         "requests",
         String.class,
         SingularityRequestWithState.class,
+        cacheConfiguration.getRequestCacheSize());
+    this.requestGroups = CacheUtils.newAtomixMap(
+        atomix,
+        "requestGroups",
+        String.class,
+        SingularityRequestGroup.class,
         cacheConfiguration.getRequestCacheSize());
     this.cleanupTasks = CacheUtils.newAtomixMap(
         atomix,
@@ -159,7 +170,7 @@ public class SingularityCache {
         String.class,
         SingularitySlaveUsageWithId.class,
         cacheConfiguration.getSlaveCacheSize());
-    // TODO caffeine cache to replace ZkCache
+    this.state = CacheUtils.newAtomicValue(atomix, "state", SingularityState.class);
   }
 
   void markLeader() {
@@ -199,6 +210,13 @@ public class SingularityCache {
     CacheUtils.syncMaps(
         requests,
         requestsWithState.stream().collect(Collectors.toMap((r) -> r.getRequest().getId(), Function.identity()))
+    );
+  }
+
+  public void cacheRequestGroups(List<SingularityRequestGroup> requestGroups) {
+    CacheUtils.syncMaps(
+        this.requestGroups,
+        requestGroups.stream().collect(Collectors.toMap(SingularityRequestGroup::getId, Function.identity()))
     );
   }
 
@@ -384,13 +402,39 @@ public class SingularityCache {
     requests.put(requestWithState.getRequest().getId(), requestWithState);
   }
 
-  public void deleteRequest(String reqeustId) {
+  public void deleteRequest(String requestId) {
     if (!leader) {
-      LOG.warn("deleteRequest {}, but not leader", reqeustId);
+      LOG.warn("deleteRequest {}, but not leader", requestId);
       return;
     }
 
-    requests.remove(reqeustId);
+    requests.remove(requestId);
+  }
+
+  public List<SingularityRequestGroup> getRequestGroups() {
+    return new ArrayList<>(requestGroups.values());
+  }
+
+  public Optional<SingularityRequestGroup> getRequestGroup(String id) {
+    return Optional.fromNullable(requestGroups.get(id));
+  }
+
+  public void putRequestGroup(SingularityRequestGroup requestGroup) {
+    if (!leader) {
+      LOG.warn("putRequest {}, but not leader", requestGroup.getId());
+      return;
+    }
+
+    requestGroups.put(requestGroup.getId(), requestGroup);
+  }
+
+  public void deleteRequestGroup(String id) {
+    if (!leader) {
+      LOG.warn("deleteRequest {}, but not leader", id);
+      return;
+    }
+
+    requestGroups.remove(id);
   }
 
   public List<SingularityTaskCleanup> getCleanupTasks() {
@@ -660,5 +704,13 @@ public class SingularityCache {
       deployCache.put(deployKey, fetched.get());
     }
     return fetched;
+  }
+
+  public void setState(SingularityState state) {
+    this.state.set(state);
+  }
+
+  public SingularityState getState() {
+    return state.get();
   }
 }

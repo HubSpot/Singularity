@@ -54,20 +54,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getAsyncChildren(getHistoryPath(objectId), historyTranscoder);
   }
 
-  public List<T> getObjects() {
-    List<T> fromCache = getObjectsFromLeaderCache();
-    if (fromCache != null) {
-      return fromCache;
-    } else {
-      return getObjectsNoCache(getRoot());
-    }
-  }
-
-  protected abstract List<T> getObjectsFromLeaderCache();
-
-  public List<String> getObjectIds() {
-    return getChildren(getRoot());
-  }
+  public abstract List<T> getObjects();
 
   public int getNumObjectsAtState(MachineState state) {
     return getObjectsFiltered(state).size();
@@ -119,26 +106,13 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return ZKPaths.makePath(getRoot(), objectId);
   }
 
-  public Optional<T> getObject(String objectId) {
-    Optional<T> maybeCached = getObjectFromLeaderCache(objectId);
-    if(!maybeCached.isPresent()) {
-      return getObjectNoCache(objectId);
-    } else {
-      return maybeCached;
-    }
-  }
-
-  protected abstract Optional<T> getObjectFromLeaderCache(String objectId);
-
-  public Optional<T> getObjectNoCache(String objectId) {
-    return getData(getObjectPath(objectId), transcoder);
-  }
+  public abstract Optional<T> getObject(String objectId);
 
   protected List<T> getObjectsNoCache(String root) {
     return getAsyncChildren(root, transcoder);
   }
 
-  protected abstract void deleteFromLeaderCache(String objectId);
+  protected abstract void deleteFromCache(String objectId);
 
   public enum StateChangeResult {
     FAILURE_NOT_FOUND, FAILURE_ALREADY_AT_STATE, FAILURE_ILLEGAL_TRANSITION, SUCCESS;
@@ -237,17 +211,17 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public SingularityDeleteResult deleteObject(String objectId) {
-    deleteFromLeaderCache(objectId);
+    deleteFromCache(objectId);
     return delete(getObjectPath(objectId));
   }
 
   public void saveObject(T object) {
     saveHistoryUpdate(object.getCurrentState());
     save(getObjectPath(object.getId()), object, transcoder);
-    saveObjectToLeaderCache(object);
+    saveObjectToCache(object);
   }
 
-  protected abstract void saveObjectToLeaderCache(T object);
+  protected abstract void saveObjectToCache(T object);
 
   private String getExpiringPath(String machineId) {
     return ZKPaths.makePath(getRoot(), EXPIRING_PATH, machineId);

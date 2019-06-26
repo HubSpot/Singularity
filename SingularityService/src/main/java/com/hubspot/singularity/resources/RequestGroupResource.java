@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -52,8 +53,8 @@ public class RequestGroupResource extends AbstractLeaderAwareResource {
   @GET
   @Operation(summary = "Get a list of Singularity request groups")
   public List<SingularityRequestGroup> getRequestGroupIds(
-      @Parameter(description = "Use a cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
-    return requestGroupManager.getRequestGroups(useWebCache != null && useWebCache);
+      @Parameter(description = "Use a cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return requestGroupManager.getRequestGroups(skipCache);
   }
 
   @GET

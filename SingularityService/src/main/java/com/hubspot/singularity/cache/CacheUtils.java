@@ -13,6 +13,8 @@ import io.atomix.core.map.DistributedMap;
 import io.atomix.core.map.DistributedMapBuilder;
 import io.atomix.core.set.DistributedSet;
 import io.atomix.core.set.DistributedSetBuilder;
+import io.atomix.core.value.AtomicValue;
+import io.atomix.core.value.AtomicValueBuilder;
 import io.atomix.primitive.Consistency;
 import io.atomix.primitive.Replication;
 import io.atomix.protocols.backup.MultiPrimaryProtocol;
@@ -46,6 +48,17 @@ public class CacheUtils {
             .withConsistency(Consistency.EVENTUAL).build());
 
     return setBuilder.build();
+  }
+
+  static <T> AtomicValue<T> newAtomicValue(Atomix atomix, String name, Class<T> clazz) {
+    AtomicValueBuilder<T> valueBuilder = atomix.<T>atomicValueBuilder(name)
+        .withRegistrationRequired(false)
+        .withProtocol(MultiPrimaryProtocol.builder("in-memory-data")
+            .withBackups(3)
+            .withReplication(Replication.ASYNCHRONOUS)
+            .withConsistency(Consistency.EVENTUAL).build())
+        .withValueType(clazz);
+    return valueBuilder.build();
   }
 
   static <K, V> void syncMaps(Map<K, V> existing, Map<K, V> desired) {

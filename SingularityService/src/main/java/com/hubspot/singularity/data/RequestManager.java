@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestCleanupType;
@@ -34,6 +31,7 @@ import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
@@ -42,7 +40,6 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
-import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
@@ -57,8 +54,7 @@ public class RequestManager extends CuratorAsyncManager {
 
   private final SingularityEventListener singularityEventListener;
 
-  private final SingularityWebCache webCache;
-  private final SingularityCache leaderCache;
+  private final SingularityCache cache;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -79,16 +75,25 @@ public class RequestManager extends CuratorAsyncManager {
       SingularityExpiringPause.class, EXPIRING_PAUSE_PATH_ROOT,
       SingularityExpiringScale.class, EXPIRING_SCALE_PATH_ROOT,
       SingularityExpiringSkipHealthchecks.class, EXPIRING_SKIP_HC_PATH_ROOT
-      );
+  );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
 
   @Inject
-  public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
-                        Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
-                        Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
-                        Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-                        SingularityWebCache webCache, SingularityCache leaderCache) {
+  public RequestManager(CuratorFramework curator,
+                        SingularityConfiguration configuration,
+                        MetricRegistry metricRegistry,
+                        SingularityEventListener singularityEventListener,
+                        Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+                        Transcoder<SingularityRequestWithState> requestTranscoder,
+                        Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
+                        Transcoder<SingularityPendingRequest> pendingRequestTranscoder,
+                        Transcoder<SingularityRequestHistory> requestHistoryTranscoder,
+                        Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
+                        Transcoder<SingularityExpiringScale> expiringScaleTranscoder,
+                        Transcoder<SingularityExpiringPause> expiringPauseTranscoder,
+                        Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+                        SingularityCache cache) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -104,8 +109,7 @@ public class RequestManager extends CuratorAsyncManager {
         SingularityExpiringSkipHealthchecks.class, expiringSkipHealthchecksTranscoder
         );
 
-    this.leaderCache = leaderCache;
-    this.webCache = webCache;
+    this.cache = cache;
   }
 
   private String getRequestPath(String requestId) {
@@ -223,8 +227,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, long timestamp, Optional<String> user, Optional<String> message) {
     saveHistory(new SingularityRequestHistory(timestamp, user, eventType, request, message));
-    leaderCache.putRequest(new SingularityRequestWithState(request, state, timestamp));
-    return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state, timestamp), requestTranscoder);
+    SingularityRequestWithState requestWithState = new SingularityRequestWithState(request, state, timestamp);
+    SingularityCreateResult result = save(getRequestPath(request.getId()), requestWithState, requestTranscoder);
+    cache.putRequest(requestWithState);
+    return result;
   }
 
   public SingularityCreateResult pause(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
@@ -299,10 +305,9 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult markDeleted(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
     save(request, RequestState.DELETED, RequestHistoryType.DELETED, timestamp, user, message);
-    if (leaderCache.active()) {
-      leaderCache.deleteRequest(request.getId());
-    }
-    return delete(getRequestPath(request.getId()));
+    SingularityDeleteResult result = delete(getRequestPath(request.getId()));
+    cache.deleteRequest(request.getId());
+    return result;
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
@@ -318,129 +323,63 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests(Collection<String> requestIds) {
-    return getRequests(requestIds, false);
-  }
-
-  public List<SingularityRequestWithState> getRequests(Collection<String> requestIds, boolean useWebCache) {
-    if (leaderCache.active()) {
-      return leaderCache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
-    }
-
-    if (useWebCache) {
-      if (webCache.useCachedRequests()) {
-        return webCache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
-      } else {
-        List<SingularityRequestWithState> requests = getRequests(true);
-        webCache.cacheRequests(requests);
-        return requests.stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
-      }
-    }
-
-    final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
-    for (String requestId : requestIds) {
-      paths.add(getRequestPath(requestId));
-    }
-
-    return getAsync("getRequests", paths, requestTranscoder);
+    return cache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
   }
 
   private Iterable<SingularityRequestWithState> filter(List<SingularityRequestWithState> requests, final RequestState... states) {
-    return Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
-
-      @Override
-      public boolean apply(SingularityRequestWithState input) {
-        for (RequestState state : states) {
-          if (input.getState() == state) {
-            return true;
+    return requests.stream()
+        .filter((r) -> {
+          for (RequestState state : states) {
+            if (r.getState() == state) {
+              return true;
+            }
           }
-        }
-        return false;
-      }
-
-    });
+          return false;
+        }).collect(Collectors.toList());
   }
 
-  private Iterable<SingularityRequestWithState> getRequests(boolean useWebCache, RequestState... states) {
-    return filter(getRequests(useWebCache), states);
+  private Iterable<SingularityRequestWithState> getRequests(boolean skipCache, RequestState... states) {
+    return filter(getRequests(skipCache), states);
   }
 
-  public Iterable<SingularityRequestWithState> getPausedRequests(boolean useWebCache) {
-    return getRequests(useWebCache, RequestState.PAUSED);
+  public Iterable<SingularityRequestWithState> getPausedRequests(boolean skipCache) {
+    return getRequests(skipCache, RequestState.PAUSED);
   }
 
   public Iterable<SingularityRequestWithState> getActiveRequests() {
     return getActiveRequests(false);
   }
 
-  public Iterable<SingularityRequestWithState> getActiveRequests(boolean useWebCache) {
-    return getRequests(useWebCache, RequestState.ACTIVE, RequestState.DEPLOYING_TO_UNPAUSE);
+  public Iterable<SingularityRequestWithState> getActiveRequests(boolean skipCache) {
+    return getRequests(skipCache, RequestState.ACTIVE, RequestState.DEPLOYING_TO_UNPAUSE);
   }
 
-  public Iterable<SingularityRequestWithState> getCooldownRequests(boolean useWebCache) {
-    return getRequests(useWebCache, RequestState.SYSTEM_COOLDOWN);
+  public Iterable<SingularityRequestWithState> getCooldownRequests(boolean skipCache) {
+    return getRequests(skipCache, RequestState.SYSTEM_COOLDOWN);
   }
 
-  public Iterable<SingularityRequestWithState> getFinishedRequests(boolean useWebCache) {
-    return getRequests(useWebCache, RequestState.FINISHED);
+  public Iterable<SingularityRequestWithState> getFinishedRequests(boolean skipCache) {
+    return getRequests(skipCache, RequestState.FINISHED);
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheRequests(fetchRequests());
+    cache.cacheRequests(getRequests(true));
   }
 
   public List<SingularityRequestWithState> getRequests() {
     return getRequests(false);
   }
 
-  public List<SingularityRequestWithState> getRequests(List<String> requestIds) {
-    if (leaderCache.active()) {
-      return leaderCache.getRequests().stream()
-          .filter((r) -> requestIds.contains(r.getRequest().getId()))
-          .collect(Collectors.toList());
+  public List<SingularityRequestWithState> getRequests(boolean skipCache) {
+    if (!skipCache) {
+      return cache.getRequests();
     }
 
-    return fetchRequests(requestIds);
-  }
-
-  public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
-    if (leaderCache.active()) {
-      return leaderCache.getRequests();
-    }
-
-    if (useWebCache && webCache.useCachedRequests()) {
-      return webCache.getRequests();
-    }
-    List<SingularityRequestWithState> requests = fetchRequests();
-
-    if (useWebCache) {
-      webCache.cacheRequests(requests);
-    }
-    return requests;
-  }
-
-  public List<SingularityRequestWithState> fetchRequests() {
     return getAsyncChildren(NORMAL_PATH_ROOT, requestTranscoder);
   }
 
-  public List<SingularityRequestWithState> fetchRequests(List<String> requestIds) {
-    List<String> paths = requestIds.stream().map(this::getRequestPath).collect(Collectors.toList());
-    return getAsync(NORMAL_PATH_ROOT, paths, requestTranscoder);
-  }
-
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return getRequest(requestId, false);
-  }
-
-  public Optional<SingularityRequestWithState> getRequest(String requestId, boolean useWebCache) {
-    if (leaderCache.active()) {
-      return leaderCache.getRequest(requestId);
-    }
-
-    if (useWebCache && webCache.useCachedRequests()) {
-      return webCache.getRequest(requestId);
-    }
-
-    return getData(getRequestPath(requestId), requestTranscoder);
+    return cache.getRequest(requestId);
   }
 
   public void startDeletingRequest(SingularityRequest request, Optional<Boolean> removeFromLoadBalancer, Optional<String> user, Optional<String> actionId, Optional<String> message) {

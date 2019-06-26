@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -20,12 +21,17 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 public class RequestGroupManager extends CuratorAsyncManager {
   private static final String REQUEST_GROUP_ROOT = "/groups";
 
+  private final SingularityCache cache;
   private final Transcoder<SingularityRequestGroup> requestGroupTranscoder;
 
   @Inject
-  public RequestGroupManager(CuratorFramework curator, SingularityConfiguration configuration,
-                             MetricRegistry metricRegistry, Transcoder<SingularityRequestGroup> requestGroupTranscoder) {
+  public RequestGroupManager(CuratorFramework curator,
+                             SingularityConfiguration configuration,
+                             MetricRegistry metricRegistry,
+                             SingularityCache cache,
+                             Transcoder<SingularityRequestGroup> requestGroupTranscoder) {
     super(curator, configuration, metricRegistry);
+    this.cache = cache;
     this.requestGroupTranscoder = requestGroupTranscoder;
   }
 
@@ -33,31 +39,35 @@ public class RequestGroupManager extends CuratorAsyncManager {
     return ZKPaths.makePath(REQUEST_GROUP_ROOT, requestGroupId);
   }
 
-  public List<SingularityRequestGroup> getRequestGroups(boolean useWebCache) {
-    if (useWebCache && webCache.useCachedRequestGroups()) {
-      return webCache.getRequestGroups();
+  public void activateLeaderCache() {
+    cache.cacheRequestGroups(getRequestGroups(true));
+  }
+
+  public List<SingularityRequestGroup> getRequestGroups(boolean skipCache) {
+    if (!skipCache) {
+      return cache.getRequestGroups();
     }
-    List<SingularityRequestGroup> requestGroups = getAsyncChildren(REQUEST_GROUP_ROOT, requestGroupTranscoder);
-    if (useWebCache) {
-      webCache.cacheRequestGroups(requestGroups);
-    }
-    return requestGroups;
+    return getAsyncChildren(REQUEST_GROUP_ROOT, requestGroupTranscoder);
   }
 
   public Optional<SingularityRequestGroup> getRequestGroup(String requestGroupId) {
-    return getData(getRequestGroupPath(requestGroupId), requestGroupTranscoder);
+    return cache.getRequestGroup(requestGroupId);
   }
 
   public SingularityCreateResult saveRequestGroup(SingularityRequestGroup requestGroup) {
-    return save(getRequestGroupPath(requestGroup.getId()), requestGroup, requestGroupTranscoder);
+    SingularityCreateResult result = save(getRequestGroupPath(requestGroup.getId()), requestGroup, requestGroupTranscoder);
+    cache.putRequestGroup(requestGroup);
+    return result;
   }
 
   public SingularityDeleteResult deleteRequestGroup(String requestGroupId) {
-    return delete(getRequestGroupPath(requestGroupId));
+    SingularityDeleteResult result = delete(getRequestGroupPath(requestGroupId));
+    cache.deleteRequestGroup(requestGroupId);
+    return result;
   }
 
   public void removeFromAllGroups(String requestId) {
-    getRequestGroups(false).stream()
+    getRequestGroups(true).stream()
         .filter((g) -> g.getRequestIds().contains(requestId))
         .forEach((g) -> {
           List<String> ids = new ArrayList<>();

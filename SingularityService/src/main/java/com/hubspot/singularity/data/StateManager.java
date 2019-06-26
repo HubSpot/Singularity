@@ -43,6 +43,7 @@ import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -65,6 +66,7 @@ public class StateManager extends CuratorManager {
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
+  private final SingularityCache cache;
   private final PriorityManager priorityManager;
   private final AtomicLong statusUpdateDeltaAvg;
   private final AtomicLong lastHeartbeatTime;
@@ -84,6 +86,7 @@ public class StateManager extends CuratorManager {
                       SingularityAuthDatastore authDatastore,
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
+                      SingularityCache cache,
                       @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
                       @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(curatorFramework, configuration, metricRegistry);
@@ -99,6 +102,7 @@ public class StateManager extends CuratorManager {
     this.authDatastore = authDatastore;
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
+    this.cache = cache;
     this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
     this.lastHeartbeatTime = lastHeartbeatTime;
   }

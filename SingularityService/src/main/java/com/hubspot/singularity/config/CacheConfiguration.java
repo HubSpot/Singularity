@@ -7,7 +7,7 @@ public class CacheConfiguration {
   private int atomixPort = 5283;
   private int pendingTaskCacheSize = 10000;
   private int requestCacheSize = 15000;
-  private int cleanupTasksCacheSize = 1000;
+  private int cleanupTasksCacheSize = 2000;
   private int historyUpdateCacheSize = 20000;
   private int slaveCacheSize = 1000;
   private int rackCacheSize = 100;

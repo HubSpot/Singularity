@@ -34,7 +34,7 @@ public class CleanOldNodesMigration extends ZkDataMigration {
         }
       }
       List<String> allIds = requestManager.getAllRequestIds();
-      for (SingularityRequestGroup requestGroup : requestGroupManager.getRequestGroups(false)) {
+      for (SingularityRequestGroup requestGroup : requestGroupManager.getRequestGroups(true)) {
         List<String> ids = requestGroup.getRequestIds()
             .stream()
             .filter(allIds::contains)

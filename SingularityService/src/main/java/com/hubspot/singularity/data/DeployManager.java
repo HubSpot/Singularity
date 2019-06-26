@@ -224,6 +224,7 @@ public class DeployManager extends CuratorAsyncManager {
     }
 
     final SingularityRequestDeployState newState = new SingularityRequestDeployState(deploy.getRequestId(), activeDeploy, pendingDeploy);
+    cache.putDeploy(deploy);
 
     return saveNewRequestDeployState(newState);
   }

@@ -87,7 +87,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String t1 = taskIds.get(0).getId();
     String t2 = taskIds.get(1).getId();
 
-    String slaveId = slaveManager.getObjectIds().get(0);
+    String slaveId = slaveManager.getObjects().get(0).getId();
     String host = slaveManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
@@ -99,7 +99,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     Assert.assertEquals(2, usageManager.countTasksWithUsage());
-    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
+    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
 
     Assert.assertEquals(1100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
@@ -110,14 +110,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     Assert.assertEquals(1, usageManager.countTasksWithUsage());
-    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
+    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
 
     slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
 
     cleaner.runActionOnPoll();
 
     Assert.assertEquals(1, usageManager.countTasksWithUsage());
-    Assert.assertEquals(0, usageManager.getAllCurrentSlaveUsage().size());
+    Assert.assertEquals(0, usageManager.getAllCurrentSlaveUsage(false).size());
   }
 
   @Test
@@ -135,7 +135,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     SingularityTaskId t1 = taskIds.get(0);
     SingularityTaskId t2 = taskIds.get(1);
 
-    String slaveId = slaveManager.getObjectIds().get(0);
+    String slaveId = slaveManager.getObjects().get(0).getId();
     String host = slaveManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 2, 5, 100);
