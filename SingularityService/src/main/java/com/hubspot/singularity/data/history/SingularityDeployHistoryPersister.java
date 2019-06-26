@@ -67,7 +67,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
           ));
 
 
-      for (String requestId : deployManager.getAllRequestDeployStatesByRequestId().keySet()) {
+      for (String requestId : deployManager.getAllRequestDeployStatesByRequestId(true).keySet()) {
         LOG.info("Checking deploy histories to persist for request {}", requestId);
         schedulerLock.runWithRequestLock(() -> {
           Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);

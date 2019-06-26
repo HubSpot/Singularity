@@ -36,7 +36,7 @@ public abstract class BlendedHistoryHelper<T, Q> {
 
   public List<SingularityTaskIdHistory> getTaskHistoriesFor(TaskManager taskManager, Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
-    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds, false);
 
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
 

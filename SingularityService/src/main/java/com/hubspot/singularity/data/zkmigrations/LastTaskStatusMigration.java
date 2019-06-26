@@ -41,7 +41,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
     final List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
 
     for (SingularityTaskId taskId : taskIds) {
-      List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId));
+      List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId, true));
       Optional<MesosTaskStatusObject> taskStatus = Optional.absent();
 
       for (SingularityTaskHistoryUpdate update : updates) {

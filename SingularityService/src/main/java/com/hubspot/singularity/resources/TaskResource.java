@@ -17,6 +17,7 @@ import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -150,14 +151,14 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve list of scheduled tasks")
   public List<SingularityTaskRequest> getScheduledTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
 
     return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user,
-        taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
+        taskManager.getPendingTasks(skipCache), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
   }
 
   @GET
@@ -169,8 +170,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
   )
   public List<SingularityPendingTaskId> getScheduledTaskIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(skipCache), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -251,7 +252,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityTaskRequest> getScheduledTasksForRequest(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request id to retrieve pending tasks for") @PathParam("requestId") String requestId,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final List<SingularityPendingTask> tasks = Lists.newArrayList(taskManager.getPendingTasksForRequest(requestId, true));
@@ -287,12 +288,12 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityTask> getTasksForSlave(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "The mesos slave id to retrieve tasks for") @PathParam("slaveId") String slaveId,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(skipCache), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -301,8 +302,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve the list of active tasks for all requests")
   public List<SingularityTask> getActiveTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(skipCache), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -311,13 +312,13 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve the list of cleaning tasks for all requests")
   public List<SingularityTaskCleanup> getCleaningTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(skipCache), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET

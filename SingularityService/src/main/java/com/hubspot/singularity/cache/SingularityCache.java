@@ -8,16 +8,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -26,6 +32,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -43,6 +50,8 @@ public class SingularityCache {
 
   private final Atomix atomix;
   private final CacheConfiguration cacheConfiguration;
+  private final Cache<SingularityTaskId, SingularityTask> taskCache;
+  private final Cache<SingularityDeployKey, SingularityDeploy> deployCache;
 
   private DistributedMap<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
   private DistributedSet<SingularityTaskId> activeTaskIds;
@@ -65,74 +74,86 @@ public class SingularityCache {
     this.leader = false;
     this.atomix = atomix;
     this.cacheConfiguration = configuration.getCacheConfiguration();
+    this.taskCache = CacheBuilder.newBuilder()
+        .maximumSize(cacheConfiguration.getTaskCacheMaxSize())
+        .concurrencyLevel(2)
+        .initialCapacity(cacheConfiguration.getTaskCacheInitialSize())
+        .expireAfterAccess(cacheConfiguration.getCacheTasksForMillis(), TimeUnit.MILLISECONDS)
+        .build();
+    this.deployCache = CacheBuilder.newBuilder()
+        .maximumSize(cacheConfiguration.getTaskCacheMaxSize())
+        .concurrencyLevel(2)
+        .initialCapacity(cacheConfiguration.getTaskCacheInitialSize())
+        .expireAfterAccess(cacheConfiguration.getCacheTasksForMillis(), TimeUnit.MILLISECONDS)
+        .build();
   }
 
   public void setup() {
-    this.pendingTaskIdToPendingTask = CacheObjectBuilder.newAtomixMap(
+    this.pendingTaskIdToPendingTask = CacheUtils.newAtomixMap(
         atomix,
         "pendingTaskIdToPendingTask",
         SingularityPendingTaskId.class,
         SingularityPendingTask.class,
         cacheConfiguration.getPendingTaskCacheSize());
-    this.activeTaskIds = CacheObjectBuilder.newAtomixSet(
+    this.activeTaskIds = CacheUtils.newAtomixSet(
         atomix,
         "activeTaskIds",
         SingularityTaskId.class
     );
-    this.requests = CacheObjectBuilder.newAtomixMap(
+    this.requests = CacheUtils.newAtomixMap(
         atomix,
         "requests",
         String.class,
         SingularityRequestWithState.class,
         cacheConfiguration.getRequestCacheSize());
-    this.cleanupTasks = CacheObjectBuilder.newAtomixMap(
+    this.cleanupTasks = CacheUtils.newAtomixMap(
         atomix,
         "cleanupTasks",
         SingularityTaskId.class,
         SingularityTaskCleanup.class,
         cacheConfiguration.getCleanupTasksCacheSize());
-    this.requestIdToDeployState = CacheObjectBuilder.newAtomixMap(
+    this.requestIdToDeployState = CacheUtils.newAtomixMap(
         atomix,
         "requestIdToDeployState",
         String.class,
         SingularityRequestDeployState.class,
         cacheConfiguration.getRequestCacheSize());
-    this.killedTasks = CacheObjectBuilder.newAtomixMap(
+    this.killedTasks = CacheUtils.newAtomixMap(
         atomix,
         "killedTasks",
         SingularityTaskId.class,
         SingularityKilledTaskIdRecord.class,
         cacheConfiguration.getRequestCacheSize());
-    this.historyUpdates = CacheObjectBuilder.newAtomixMap(
+    this.historyUpdates = CacheUtils.newAtomixMap(
         atomix,
         "historyUpdates",
         SingularityTaskId.class,
         SingularityHistoryUpdates.class,
         cacheConfiguration.getHistoryUpdateCacheSize());
-    this.slaves = CacheObjectBuilder.newAtomixMap(
+    this.slaves = CacheUtils.newAtomixMap(
         atomix,
         "slaves",
         String.class,
         SingularitySlave.class,
         cacheConfiguration.getSlaveCacheSize());
-    this.racks = CacheObjectBuilder.newAtomixMap(
+    this.racks = CacheUtils.newAtomixMap(
         atomix,
         "racks",
         String.class,
         SingularityRack.class,
         cacheConfiguration.getRackCacheSize());
-    this.pendingTaskIdsToDelete = CacheObjectBuilder.newAtomixSet(
+    this.pendingTaskIdsToDelete = CacheUtils.newAtomixSet(
         atomix,
         "pendingTaskIdsToDelete",
         SingularityPendingTaskId.class
     );
-    this.requestUtilizations = CacheObjectBuilder.newAtomixMap(
+    this.requestUtilizations = CacheUtils.newAtomixMap(
         atomix,
         "requestUtilizations",
         String.class,
         RequestUtilization.class,
         cacheConfiguration.getRequestCacheSize());
-    this.slaveUsages = CacheObjectBuilder.newAtomixMap(
+    this.slaveUsages = CacheUtils.newAtomixMap(
         atomix,
         "slaveUsages",
         String.class,
@@ -141,80 +162,98 @@ public class SingularityCache {
     // TODO caffeine cache to replace ZkCache
   }
 
-  public void markLeader() {
+  void markLeader() {
     leader = true;
   }
 
-  public void markNotLeader() {
+  void markNotLeader() {
     leader = false;
   }
 
   public void close() {
     leader = false;
-    // TODO - close individual maps + shut down atomix
+    atomix.stop().join();
   }
 
   public boolean isLeader() {
     return leader;
   }
 
-
-  // Loading in initial data
-  // TODO - clear each first
+  // Loading in initial data. Sync entries of the maps to avoid the extra network caused by clear + putAll
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
-    pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));
-  }
-
-  public void cachePendingTasksToDelete(List<SingularityPendingTaskId> pendingTaskIds) {
-    pendingTaskIdsToDelete.addAll(pendingTaskIds);
-  }
-
-  public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
-    activeTaskIds.forEach(this.activeTaskIds::add);
-  }
-
-  public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
-    requestsWithState.forEach((r) -> requests.put(r.getRequest().getId(), r));
-  }
-
-  public void cacheCleanupTasks(List<SingularityTaskCleanup> cleanups) {
-    cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
-  }
-
-  public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
-    requestIdToDeployState.putAll(requestDeployStates);
-  }
-
-  public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
-    killedTasks.forEach((k) -> this.killedTasks.put(k.getTaskId(), k));
-  }
-
-  public void cacheTaskHistoryUpdates(Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates) {
-    historyUpdates.entrySet().stream().forEach((e) ->
-        this.historyUpdates.put(
-            e.getKey(),
-            new SingularityHistoryUpdates(e.getValue().stream()
-                .collect(Collectors.toMap((u) -> u.getTaskState(), (u) -> u))))
+    CacheUtils.syncMaps(
+        pendingTaskIdToPendingTask,
+        pendingTasks.stream().collect(Collectors.toMap(SingularityPendingTask::getPendingTaskId, Function.identity()))
     );
   }
 
+  public void cachePendingTasksToDelete(List<SingularityPendingTaskId> pendingTaskIds) {
+    CacheUtils.syncCollections(pendingTaskIdsToDelete, pendingTaskIds);
+  }
+
+  public void cacheActiveTaskIds(List<SingularityTaskId> active) {
+    CacheUtils.syncCollections(activeTaskIds, active);
+  }
+
+  public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
+    CacheUtils.syncMaps(
+        requests,
+        requestsWithState.stream().collect(Collectors.toMap((r) -> r.getRequest().getId(), Function.identity()))
+    );
+  }
+
+  public void cacheCleanupTasks(List<SingularityTaskCleanup> cleanups) {
+    CacheUtils.syncMaps(
+        cleanupTasks,
+        cleanups.stream().collect(Collectors.toMap(SingularityTaskCleanup::getTaskId, Function.identity()))
+    );
+  }
+
+  public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
+    CacheUtils.syncMaps(requestIdToDeployState, requestDeployStates);
+  }
+
+  public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killed) {
+    CacheUtils.syncMaps(
+        killedTasks,
+        killed.stream().collect(Collectors.toMap(SingularityKilledTaskIdRecord::getTaskId, Function.identity()))
+    );
+  }
+
+  public void cacheTaskHistoryUpdates(Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates) {
+    CacheUtils.syncMaps(
+        this.historyUpdates,
+        historyUpdates.entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                (e) -> new SingularityHistoryUpdates(e.getValue().stream()
+                    .collect(Collectors.toMap(SingularityTaskHistoryUpdate::getTaskState, Function.identity())))
+            )));
+  }
+
   public void cacheSlaves(List<SingularitySlave> slaves) {
-    slaves.forEach((s) -> this.slaves.put(s.getId(), s));
+    CacheUtils.syncMaps(
+        this.slaves,
+        slaves.stream().collect(Collectors.toMap(SingularitySlave::getId, Function.identity()))
+    );
   }
 
   public void cacheRacks(List<SingularityRack> racks) {
-    racks.forEach((r) -> this.racks.put(r.getId(), r));
+    CacheUtils.syncMaps(
+        this.racks,
+        racks.stream().collect(Collectors.toMap(SingularityRack::getId, Function.identity()))
+    );
   }
 
   public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
-    this.requestUtilizations.putAll(requestUtilizations);
+    CacheUtils.syncMaps(this.requestUtilizations, requestUtilizations);
   }
 
   public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
-    this.slaveUsages.putAll(slaveUsages);
+    CacheUtils.syncMaps(this.slaveUsages, slaveUsages);
   }
 
-  // Methods to actually access the data
+  // Methods to access the data
   public List<SingularityPendingTask> getPendingTasks() {
     return new ArrayList<>(pendingTaskIdToPendingTask.values());
   }
@@ -295,15 +334,6 @@ public class SingularityCache {
     return allActiveTaskIds.stream()
         .filter(t -> t.getRequestId().equals(requestId))
         .collect(Collectors.toList());
-  }
-
-  public List<String> getActiveTaskIdsAsStrings() {
-    List<SingularityTaskId> localActiveTaskIds = getActiveTaskIds();
-    List<String> strings = new ArrayList<>(localActiveTaskIds.size());
-    for (SingularityTaskId taskId : localActiveTaskIds) {
-      strings.add(taskId.getId());
-    }
-    return strings;
   }
 
   public List<SingularityTaskId> getInactiveTaskIds(List<SingularityTaskId> taskIds) {
@@ -589,5 +619,46 @@ public class SingularityCache {
 
   public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
     return Optional.fromNullable(slaveUsages.get(slaveId));
+  }
+
+  // Guava cached items
+  public void putTask(SingularityTask task) {
+    taskCache.put(task.getTaskId(), task);
+  }
+
+  public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
+    return Optional.fromNullable(taskCache.getIfPresent(taskId));
+  }
+
+  public Optional<SingularityTask> getTask(SingularityTaskId taskId, Function<SingularityTaskId, Optional<SingularityTask>> load) {
+    SingularityTask maybeCached = taskCache.getIfPresent(taskId);
+    if (maybeCached != null) {
+      return Optional.of(maybeCached);
+    }
+    Optional<SingularityTask> fetched = load.apply(taskId);
+    if (fetched.isPresent()) {
+      taskCache.put(taskId, fetched.get());
+    }
+    return fetched;
+  }
+
+  public void putDeploy(SingularityDeploy deploy) {
+    deployCache.put(new SingularityDeployKey(deploy.getRequestId(), deploy.getId()), deploy);
+  }
+
+  public Optional<SingularityDeploy> getDeploy(SingularityDeployKey deployKey) {
+    return Optional.fromNullable(deployCache.getIfPresent(deployKey));
+  }
+
+  public Optional<SingularityDeploy> getDeploy(SingularityDeployKey deployKey, Function<SingularityDeployKey, Optional<SingularityDeploy>> load) {
+    SingularityDeploy maybeCached = deployCache.getIfPresent(deployKey);
+    if (maybeCached != null) {
+      return Optional.of(maybeCached);
+    }
+    Optional<SingularityDeploy> fetched = load.apply(deployKey);
+    if (fetched.isPresent()) {
+      deployCache.put(deployKey, fetched.get());
+    }
+    return fetched;
   }
 }

@@ -19,11 +19,10 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.CuratorAsyncManager;
-import com.hubspot.singularity.data.SingularityWebCache;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.cache.SingularityCache;
 
 @Singleton
 public class UsageManager extends CuratorAsyncManager implements TaskUsageManager {
@@ -58,8 +57,8 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   }
 
   public void activateLeaderCache() {
-    cache.cacheRequestUtilizations(getRequestUtilizations(false));
-    cache.cacheSlaveUsages(getAllCurrentSlaveUsage());
+    cache.cacheRequestUtilizations(getRequestUtilizations(true));
+    cache.cacheSlaveUsages(getAllCurrentSlaveUsage(true));
   }
 
   public SingularityCreateResult saveClusterUtilization(SingularityClusterUtilization utilization) {
@@ -79,48 +78,32 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
     return getRequestUtilizations(false);
   }
 
-  public Map<String, RequestUtilization> getRequestUtilizations(boolean useWebCache) {
-    if (cache.active()) {
+  public Map<String, RequestUtilization> getRequestUtilizations(boolean skipCache) {
+    if (!skipCache) {
       return cache.getRequestUtilizations();
     }
 
-    if (useWebCache && webCache.useCachedRequestUtilizations()) {
-      return webCache.getRequestUtilizations();
-    }
-    Map<String, RequestUtilization> requestUtilizations = getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
+    return getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
         .collect(Collectors.toMap(
             RequestUtilization::getRequestId,
             Function.identity()
         ));
-    if (useWebCache) {
-      webCache.cacheRequestUtilizations(requestUtilizations);
-    }
-    return requestUtilizations;
   }
 
   public Optional<RequestUtilization> getRequestUtilization(String requestId, boolean useWebCache) {
-    if (cache.active()) {
-      return Optional.fromNullable(cache.getRequestUtilizations().get(requestId));
-    }
-
-    if (useWebCache && webCache.useCachedRequestUtilizations()) {
-      return Optional.fromNullable(webCache.getRequestUtilizations().get(requestId));
-    }
-    return getData(getRequestPath(requestId), requestUtilizationTranscoder);
+    return Optional.fromNullable(cache.getRequestUtilizations().get(requestId));
   }
 
   public SingularityCreateResult saveRequestUtilization(RequestUtilization requestUtilization) {
-    if (cache.active()) {
-      cache.putRequestUtilization(requestUtilization);
-    }
-    return save(getRequestPath(requestUtilization.getRequestId()), requestUtilization, requestUtilizationTranscoder);
+    SingularityCreateResult result = save(getRequestPath(requestUtilization.getRequestId()), requestUtilization, requestUtilizationTranscoder);
+    cache.putRequestUtilization(requestUtilization);
+    return result;
   }
 
   public SingularityDeleteResult deleteRequestUtilization(String requestId) {
-    if (cache.active()) {
-      cache.removeRequestUtilization(requestId);
-    }
-    return delete(getRequestPath(requestId));
+    SingularityDeleteResult result = delete(getRequestPath(requestId));
+    cache.removeRequestUtilization(requestId);
+    return result;
   }
 
   // Slave usages
@@ -129,21 +112,17 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   }
 
   public SingularityCreateResult saveCurrentSlaveUsage(SingularitySlaveUsageWithId usageWithId) {
-    if (cache.active()) {
-      cache.putSlaveUsage(usageWithId);
-    }
-    return set(getSlaveUsagePath(usageWithId.getSlaveId()), usageWithId, slaveUsageTranscoder);
+    SingularityCreateResult result = set(getSlaveUsagePath(usageWithId.getSlaveId()), usageWithId, slaveUsageTranscoder);
+    cache.putSlaveUsage(usageWithId);
+    return result;
   }
 
   public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
-    if (cache.active()) {
-      return cache.getSlaveUsage(slaveId);
-    }
-    return getData(getSlaveUsagePath(slaveId), slaveUsageTranscoder);
+    return cache.getSlaveUsage(slaveId);
   }
 
-  public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
-    if (cache.active()) {
+  public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage(boolean skipCache) {
+    if (!skipCache) {
       return cache.getSlaveUsages();
     }
     return getAsyncChildren(SLAVE_PATH, slaveUsageTranscoder).stream()
@@ -154,10 +133,9 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   }
 
   public SingularityDeleteResult deleteSlaveUsage(String slaveId) {
-    if (cache.active()) {
-      cache.removeSlaveUsage(slaveId);
-    }
-    return delete(getSlaveUsagePath(slaveId));
+    SingularityDeleteResult result = delete(getSlaveUsagePath(slaveId));
+    cache.removeSlaveUsage(slaveId);
+    return result;
   }
 
   // Task Usage
