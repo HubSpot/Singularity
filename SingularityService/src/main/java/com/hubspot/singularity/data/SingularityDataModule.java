@@ -8,9 +8,16 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
+
+  private final SingularityConfiguration configuration;
+
+  public SingularityDataModule(final SingularityConfiguration configuration) {
+    this.configuration = configuration;
+  }
 
   @Override
   protected void configure() {
@@ -29,6 +36,8 @@ public class SingularityDataModule extends AbstractModule {
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
     bind(UserManager.class).in(Scopes.SINGLETON);
     bind(UsageManager.class).in(Scopes.SINGLETON);
+
+    bind(WebhookManager.class).in(Scopes.SINGLETON);
 
     bind(NotificationsManager.class).in(Scopes.SINGLETON);
 

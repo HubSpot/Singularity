@@ -13,7 +13,8 @@ public enum SingularityAction {
   SEND_EMAIL(true),
   PROCESS_OFFERS(true), CACHE_OFFERS(true), EXPENSIVE_API_CALLS(true),
   RUN_CLEANUP_POLLER(true), RUN_DEPLOY_POLLER(true), RUN_SCHEDULER_POLLER(true), RUN_EXPIRING_ACTION_POLLER(true),
-  RUN_UPSTREAM_POLLER(true);
+  RUN_UPSTREAM_POLLER(true),
+  TASK_SHUFFLE(true);
 
   private final boolean canDisable;
 

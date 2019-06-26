@@ -1,12 +1,15 @@
 package com.hubspot.singularity.data;
 
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -16,6 +19,7 @@ import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class RackManager extends AbstractMachineManager<SingularityRack> {
+  private static final Logger LOG = LoggerFactory.getLogger(RackManager.class);
 
   private static final String RACK_ROOT = "/racks";
   private final SingularityLeaderCache leaderCache;
@@ -39,33 +43,41 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheRacks(getObjects());
-  }
-
-  public Optional<SingularityRack> getRack(String rackName) {
-    if (leaderCache.active()) {
-      return leaderCache.getRack(rackName);
-    }
-
-    return getObject(rackName);
+    leaderCache.cacheRacks(getObjectsNoCache(getRoot()));
   }
 
   @Override
-  public int getNumActive() {
+  public Optional<SingularityRack> getObjectFromLeaderCache(String rackId) {
     if (leaderCache.active()) {
-      return Math.toIntExact(leaderCache.getRacks().stream().filter(x -> x.getCurrentState().getState().equals(MachineState.ACTIVE)).count());
+      return leaderCache.getRack(rackId);
     }
 
-    return super.getNumActive();
+    return Optional.absent(); // fallback to zk
   }
 
   @Override
-  public void saveObject(SingularityRack rack) {
+  public List<SingularityRack> getObjectsFromLeaderCache() {
     if (leaderCache.active()) {
-      leaderCache.putRack(rack);
+      return leaderCache.getRacks();
     }
-
-    super.saveObject(rack);
+    return null; // fallback to zk
   }
 
+  @Override
+  public void saveObjectToLeaderCache(SingularityRack rackId) {
+    if (leaderCache.active()) {
+      leaderCache.putRack(rackId);
+    } else {
+      LOG.info("Asked to save slaves to leader cache when not active");
+    }
+  }
+
+  @Override
+  public void deleteFromLeaderCache(String rackId) {
+    if (leaderCache.active()) {
+      leaderCache.removeRack(rackId);
+    } else {
+      LOG.info("Asked to remove slave from leader cache when not active");
+    }
+  }
 }

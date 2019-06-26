@@ -108,4 +108,9 @@ public class NoopHistoryManager implements HistoryManager {
     throw new UnsupportedOperationException("NoopHistoryManager can not update/delete");
   }
 
+  @Override
+  public void purgeRequestHistory() {}
+
+  @Override
+  public void purgeDeployHistory() {}
 }

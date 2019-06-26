@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -48,6 +49,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
@@ -79,7 +81,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
@@ -121,9 +122,9 @@ public class RequestResource extends AbstractRequestResource {
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
                          RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper,
                          RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
-    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
+    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.rebalancingHelper = rebalancingHelper;
@@ -661,6 +662,22 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @GET
+  @Path("/batch")
+  @Operation(summary = "Retrieve a specific batch of requests")
+  public SingularityRequestBatch getRequestsBatch(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "List of request ids to fetch") @QueryParam("id") List<String> ids
+  ) {
+    List<SingularityRequestParent> found = filterAutorized(Lists.newArrayList(requestManager.getRequests(ids)), SingularityAuthorizationScope.READ, user)
+        .stream()
+        .map(this::fillEntireRequest)
+        .collect(Collectors.toList());
+    Set<String> notFound = new HashSet<>(ids);
+    found.forEach((r) -> notFound.remove(r.getRequest().getId()));
+    return new SingularityRequestBatch(found, notFound);
+  }
+
+  @GET
   @PropertyFiltering
   @Path("/active")
   @Operation(summary = "Retrieve the list of active requests")
@@ -678,11 +695,23 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @Path("/ids")
-  @Operation(summary = "Retrieve the list of active request ids")
-  public List<String> getActiveRequests(
+  @Operation(summary = "Retrieve the list of all request ids")
+  public List<String> getAllRequestIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+        .stream()
+        .map((r) -> r.getRequest().getId())
+        .collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("/ids/active")
+  @Operation(summary = "Retrieve the list of active request ids")
+  public List<String> getActiveRequestIds(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+    return filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
         .stream()
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
@@ -799,6 +828,21 @@ public class RequestResource extends AbstractRequestResource {
 
   public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
     return fillEntireRequest(fetchRequestWithState(requestId, false, user));
+  }
+
+  @GET
+  @Path("/request/{requestId}/simple")
+  @Operation(
+      summary = "Retrieve a specific Request by ID without additional deploy/task information",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestWithState getRequestSimple(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
   }
 
   @DELETE

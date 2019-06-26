@@ -87,6 +87,7 @@ export const FIELDS = {
         {id: 'portIndex', type: 'number'},
         {id: 'portNumber', type: 'number'},
         {id: 'protocol', type: 'text', default: 'HTTP'},
+        {id: 'method', type: 'text', default: 'GET'},
         {id: 'startupDelaySeconds', type: 'number'},
         {id: 'startupTimeoutSeconds', type: 'number'},
         {id: 'startupIntervalSeconds', type: 'number'},

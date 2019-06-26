@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
@@ -205,6 +206,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private List<String> shellCommandPrefix = Collections.emptyList();
 
   @JsonProperty
+  private Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads = Optional.absent();
+
+  @JsonProperty
   private int dockerClientTimeLimitSeconds = 300;
 
   @JsonProperty
@@ -239,6 +243,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private String extraDockerScriptContent = "";
 
   private Optional<Long> maxServiceLogSizeMb = Optional.absent();
+
+  @JsonProperty
+  private boolean verifyAssignedPorts = false;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -596,6 +603,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommandPrefix = shellCommandPrefix;
   }
 
+  public Optional<SingularityShellCommand> getRunShellCommandBeforeKillDueToThreads() {
+    return runShellCommandBeforeKillDueToThreads;
+  }
+
+  public void setRunShellCommandBeforeKillDueToThreads(Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads) {
+    this.runShellCommandBeforeKillDueToThreads = runShellCommandBeforeKillDueToThreads;
+  }
+
   public int getDockerClientTimeLimitSeconds() {
     return dockerClientTimeLimitSeconds;
   }
@@ -720,6 +735,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   }
 
+  public boolean isVerifyAssignedPorts() {
+    return verifyAssignedPorts;
+  }
+
+  public void setVerifyAssignedPorts(boolean verifyAssignedPorts) {
+    this.verifyAssignedPorts = verifyAssignedPorts;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
@@ -728,6 +751,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
         ", taskAppDirectory='" + taskAppDirectory + '\'' +
         ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+        ", initialIdleExecutorShutdownWaitMillis=" + initialIdleExecutorShutdownWaitMillis +
         ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
         ", stopDriverAfterMillis=" + stopDriverAfterMillis +
         ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
@@ -740,11 +764,13 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateCommand='" + logrotateCommand + '\'' +
         ", logrotateStateFile='" + logrotateStateFile + '\'' +
         ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+        ", logrotateHourlyConfDirectory='" + logrotateHourlyConfDirectory + '\'' +
         ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
         ", logrotateMaxageDays=" + logrotateMaxageDays +
         ", logrotateCount=" + logrotateCount +
         ", logrotateDateformat='" + logrotateDateformat + '\'' +
         ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+        ", ignoreLogrotateOutput=" + ignoreLogrotateOutput +
         ", logrotateCompressionSettings=" + logrotateCompressionSettings +
         ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
         ", tailLogLinesToSave=" + tailLogLinesToSave +
@@ -774,8 +800,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateFrequency=" + logrotateFrequency +
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
-        ", defaultCfsPeriod=" + defaultCfsPeriod +
         ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
+        ", defaultCfsPeriod=" + defaultCfsPeriod +
+        ", extraScriptContent='" + extraScriptContent + '\'' +
+        ", extraDockerScriptContent='" + extraDockerScriptContent + '\'' +
+        ", maxServiceLogSizeMb=" + maxServiceLogSizeMb +
+        ", verifyAssignedPorts=" + verifyAssignedPorts +
         "} " + super.toString();
   }
 }

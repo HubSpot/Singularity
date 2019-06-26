@@ -1,16 +1,11 @@
 package com.hubspot.singularity.mesos;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -19,8 +14,10 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.DurationInfo;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.InverseOffer;
+import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
@@ -38,14 +35,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
@@ -58,9 +53,6 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -78,15 +70,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularityLeaderCacheCoordinator leaderCacheCoordinator;
   private final SingularityMesosFrameworkMessageHandler messageHandler;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
-  private final DisasterManager disasterManager;
   private final OfferCache offerCache;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
-  private final boolean offerCacheEnabled;
-  private final boolean delayWhenStatusUpdateDeltaTooLarge;
-  private final long delayWhenDeltaOverMs;
-  private final AtomicLong statusUpdateDeltaAvg;
   private final AtomicLong lastHeartbeatTime;
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
@@ -123,16 +110,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.abort = abort;
     this.messageHandler = messageHandler;
     this.slaveAndRackManager = slaveAndRackManager;
-    this.disasterManager = disasterManager;
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
     this.statusUpdateHandler = statusUpdateHandler;
     this.mesosSchedulerClient = mesosSchedulerClient;
-    this.offerCacheEnabled = configuration.isCacheOffers();
-    this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
-    this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
-    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
-
     this.lastHeartbeatTime = lastHeartbeatTime;
     this.taskManager = taskManager;
     this.transcoder = transcoder;
@@ -153,6 +134,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
       }
 
+      // Should be called before activation of leader cache or cache could be left empty
+      startup.checkMigrations();
+
       leaderCacheCoordinator.activateLeaderCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();
       masterInfo.set(newMasterInfo);
@@ -170,112 +154,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
-    callWithOffersLock(() -> {
-      final long start = System.currentTimeMillis();
-      lastOfferTimestamp = Optional.of(start);
-      LOG.info("Received {} offer(s)", offers.size());
-      boolean delclineImmediately = false;
-      if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
-        LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
-        delclineImmediately = true;
-      }
-      if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
-        LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
-        delclineImmediately = true;
-      }
-
-      if (delclineImmediately) {
-        mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
-        return;
-      }
-
-      if (offerCacheEnabled) {
-        if (disasterManager.isDisabled(SingularityAction.CACHE_OFFERS)) {
-          offerCache.disableOfferCache();
-        } else {
-          offerCache.enableOfferCache();
-        }
-      }
-
-      List<Offer> offersToCheck = new ArrayList<>(offers);
-
-      List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
-      Map<String, CachedOffer> cachedOffers = new HashMap<>();
-      for (CachedOffer cachedOffer : cachedOfferList) {
-        cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
-        offersToCheck.add(cachedOffer.getOffer());
-      }
-
-      offers.parallelStream().forEach((offer) -> {
-        String rolesInfo = MesosUtils.getRoles(offer).toString();
-        LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
-            MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
-
-        CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
-        if (checkResult == CheckResult.NOT_ACCEPTING_TASKS) {
-          mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
-          offersToCheck.remove(offer);
-          LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
-        }
-      });
-
-      final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
-
-      try {
-        Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck);
-
-        for (SingularityOfferHolder offerHolder : offerHolders) {
-          if (!offerHolder.getAcceptedTasks().isEmpty()) {
-            List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(mesosSchedulerClient);
-
-            leftoverOffers.forEach((o) -> {
-              if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
-              } else {
-                offerCache.cacheOffer(start, o);
-              }
-            });
-
-            List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
-            offersAcceptedFromSlave.removeAll(leftoverOffers);
-            offersAcceptedFromSlave.stream()
-                .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
-                .map((o) -> cachedOffers.remove(o.getId().getValue()))
-                .forEach(offerCache::useOffer);
-            acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
-          } else {
-            offerHolder.getOffers().forEach((o) -> {
-              if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
-              } else {
-                offerCache.cacheOffer(start, o);
-              }
-            });
-          }
-        }
-
-        LOG.info("{} remaining offers not accounted for in offer check", cachedOffers.size());
-        cachedOffers.values().forEach(offerCache::returnOffer);
-      } catch (Throwable t) {
-        LOG.error("Received fatal error while handling offers - will decline all available offers", t);
-
-        mesosSchedulerClient.decline(offersToCheck.stream()
-            .filter((o) -> !acceptedOffers.contains(o.getId()) && !cachedOffers.containsKey(o.getId().getValue()))
-            .map(Offer::getId)
-            .collect(Collectors.toList()));
-
-        offersToCheck.forEach((o) -> {
-          if (cachedOffers.containsKey(o.getId().getValue())) {
-            offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
-          }
-        });
-
-        throw t;
-      }
-
-      LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
-          offers.size() - acceptedOffers.size());
-    }, "resourceOffers");
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
+    try {
+      lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
+    } catch (Throwable t) {
+      LOG.error("Scheduler threw an uncaught exception - exiting", t);
+      exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+      notifyStopping();
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    }
   }
 
   @Override
@@ -304,7 +191,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       return CompletableFuture.completedFuture(false);
     }
     try {
-      return handleStatusUpdateAsync(status);
+      return handleStatusUpdateAsync(status)
+          .thenApply((r) -> r == StatusUpdateResult.DONE);
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception", t);
       notifyStopping();
@@ -392,9 +280,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     URI masterUri = URI.create(nextMaster);
 
+    String userInfo = masterUri.getUserInfo();
+    if (userInfo == null && mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
+      userInfo = String.format("%s:%s", mesosConfiguration.getMesosUsername().get(), mesosConfiguration.getMesosPassword().get());
+    }
+
     mesosSchedulerClient.subscribe(new URI(
         masterUri.getScheme() == null ? "http" : masterUri.getScheme(),
-        masterUri.getUserInfo(),
+        userInfo,
         masterUri.getHost(),
         masterUri.getPort(),
         Strings.isNullOrEmpty(masterUri.getPath()) ? "/api/v1/scheduler" : masterUri.getPath(),
@@ -514,7 +407,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     return state;
   }
 
-  private CompletableFuture<Boolean> handleStatusUpdateAsync(TaskStatus status) {
+  private CompletableFuture<StatusUpdateResult> handleStatusUpdateAsync(TaskStatus status) {
     long start = System.currentTimeMillis();
     return statusUpdateHandler.processStatusUpdateAsync(status)
         .whenCompleteAsync((result, throwable) -> {
@@ -525,6 +418,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           }
           if (status.hasUuid()) {
             mesosSchedulerClient.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+          }
+          if (result == StatusUpdateResult.KILL_TASK) {
+            LOG.info("Killing a task {} which Singularity has no remaining active state for. It will be given 1 minute to shut down gracefully", status.getTaskId().getValue());
+            mesosSchedulerClient.kill(status.getTaskId(), status.getAgentId(),
+                KillPolicy.newBuilder().setGracePeriod(DurationInfo.newBuilder().setNanoseconds(TimeUnit.MINUTES.toNanos(1)).build()).build());
           }
           LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
         });

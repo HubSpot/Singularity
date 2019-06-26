@@ -44,7 +44,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    taskManager.deleteActiveTask(task.getTaskId().getId());
+    taskManager.deleteLastActiveTaskStatus(task.getTaskId());
 
     resourceOffers();
 
@@ -52,6 +52,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     startup.checkSchedulerForInconsistentState();
 
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);

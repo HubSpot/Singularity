@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -48,7 +47,8 @@ public class SingularityLeaderCache {
   private Map<String, SingularitySlave> slaves;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
-  private ConcurrentMap<String, RequestUtilization> requestUtilizations;
+  private Map<String, RequestUtilization> requestUtilizations;
+  private Map<String, SingularitySlaveUsageWithId> slaveUsages;
 
   private volatile boolean active;
 
@@ -121,6 +121,10 @@ public class SingularityLeaderCache {
     this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
   }
 
+  public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
+    this.slaveUsages = new ConcurrentHashMap<>(slaveUsages);
+  }
+
   public boolean active() {
     return active;
   }
@@ -174,13 +178,13 @@ public class SingularityLeaderCache {
     pendingTaskIdToPendingTask.put(pendingTask.getPendingTaskId(), pendingTask);
   }
 
-  public void deleteActiveTaskId(String taskId) {
+  public void deleteActiveTaskId(SingularityTaskId taskId) {
     if (!active) {
       LOG.warn("deleteActiveTask {}, but not active", taskId);
       return;
     }
 
-    activeTaskIds.remove(SingularityTaskId.valueOf(taskId));
+    activeTaskIds.remove(taskId);
   }
 
   public List<SingularityTaskId> exists(List<SingularityTaskId> taskIds) {
@@ -234,17 +238,17 @@ public class SingularityLeaderCache {
     return pendingTaskIdToPendingTask.size();
   }
 
-  public boolean isActiveTask(String taskId) {
-    return activeTaskIds.contains(SingularityTaskId.valueOf(taskId));
+  public boolean isActiveTask(SingularityTaskId taskId) {
+    return activeTaskIds.contains(taskId);
   }
 
-  public void putActiveTask(SingularityTask task) {
+  public void putActiveTask(SingularityTaskId taskId) {
     if (!active) {
-      LOG.warn("putActiveTask {}, but not active", task.getTaskId());
+      LOG.warn("putActiveTask {}, but not active", taskId);
       return;
     }
 
-    activeTaskIds.add(task.getTaskId());
+    activeTaskIds.add(taskId);
   }
 
   public List<SingularityRequestWithState> getRequests() {
@@ -409,8 +413,8 @@ public class SingularityLeaderCache {
     historyUpdates.remove(taskId);
   }
 
-  public Collection<SingularitySlave> getSlaves() {
-    return slaves.values();
+  public List<SingularitySlave> getSlaves() {
+    return new ArrayList<>(slaves.values());
   }
 
   public Optional<SingularitySlave> getSlave(String slaveId) {
@@ -425,12 +429,20 @@ public class SingularityLeaderCache {
     slaves.put(slave.getId(), slave);
   }
 
-  public Collection<SingularityRack> getRacks() {
-    return racks.values();
+  public void removeSlave(String slaveId) {
+    if (!active) {
+      LOG.warn("remove slave {}, but not active", slaveId);
+      return;
+    }
+    slaves.remove(slaveId);
   }
 
-  public Optional<SingularityRack> getRack(String rackName) {
-    return Optional.fromNullable(racks.get(rackName));
+  public List<SingularityRack> getRacks() {
+    return new ArrayList<>(racks.values());
+  }
+
+  public Optional<SingularityRack> getRack(String rackId) {
+    return Optional.fromNullable(racks.get(rackId));
   }
 
   public void putRack(SingularityRack rack) {
@@ -439,6 +451,14 @@ public class SingularityLeaderCache {
     }
 
     racks.put(rack.getId(), rack);
+  }
+
+  public void removeRack(String rackId) {
+    if (!active) {
+      LOG.warn("remove rack {}, but not active", rackId);
+      return;
+    }
+    racks.remove(rackId);
   }
 
   public void putRequestUtilization(RequestUtilization requestUtilization) {
@@ -459,5 +479,29 @@ public class SingularityLeaderCache {
 
   public Map<String, RequestUtilization> getRequestUtilizations() {
     return new HashMap<>(requestUtilizations);
+  }
+
+  public void putSlaveUsage(SingularitySlaveUsageWithId slaveUsage) {
+    if (!active) {
+      LOG.warn("putSlaveUsage {}, but not active", slaveUsage);
+    }
+
+    slaveUsages.put(slaveUsage.getSlaveId(), slaveUsage);
+  }
+
+  public void removeSlaveUsage(String slaveId) {
+    if (!active) {
+      LOG.warn("removeSlaveUsage {}, but not active", slaveId);
+      return;
+    }
+    slaveUsages.remove(slaveId);
+  }
+
+  public Map<String, SingularitySlaveUsageWithId> getSlaveUsages() {
+    return new HashMap<>(slaveUsages);
+  }
+
+  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
+    return Optional.fromNullable(slaveUsages.get(slaveId));
   }
 }

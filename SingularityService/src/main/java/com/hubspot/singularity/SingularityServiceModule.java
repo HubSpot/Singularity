@@ -28,7 +28,7 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new MetricsInstrumentationModule(getBootstrap().getMetricRegistry()));
 
     binder.install(new SingularityMainModule(getConfiguration()));
-    binder.install(new SingularityDataModule());
+    binder.install(new SingularityDataModule(getConfiguration()));
     binder.install(new SingularitySchedulerModule());
     binder.install(new SingularityResourceModule(getConfiguration().getUiConfiguration()));
     binder.install(new SingularityTranscoderModule());
@@ -41,7 +41,7 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     // API Docs
     getEnvironment().jersey().register(SingularityOpenApiResource.class);
 
-    binder.install(new SingularityEventModule());
+    binder.install(new SingularityEventModule(getConfiguration().getWebhookQueueConfiguration()));
   }
 
   @Provides

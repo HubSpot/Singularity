@@ -21,6 +21,7 @@ class TaskSearchFilters extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
     if (this.props.valid) {
+      console.log(this.props.fields)
       const result = _.mapObject(this.props.fields, (field) => field.value);
       this.props.onSearch(result);
     }
@@ -95,7 +96,7 @@ class TaskSearchFilters extends React.Component {
             </div>
             <div className="form-group col-md-4">
               <label htmlFor="lastTaskStatus">Last Task Status</label>
-              <ReduxSelect options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
+              <ReduxSelect simpleValue={true} options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
             </div>
             <div className="col-md-4 text-right">
 

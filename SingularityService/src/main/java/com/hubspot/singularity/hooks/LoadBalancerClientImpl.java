@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -56,6 +56,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
+  private final boolean preResolveUpstreamDNS;
+  private final Set<String> skipDNSPreResolutionForRequests;
   private final MesosProtosUtils mesosProtosUtils;
 
   private static final String OPERATION_URI = "%s/%s";
@@ -68,6 +70,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
     this.taskLabelForLoadBalancerUpstreamGroup = configuration.getTaskLabelForLoadBalancerUpstreamGroup();
+    this.skipDNSPreResolutionForRequests = configuration.getSkipDNSPreResolutionForRequests();
+    this.preResolveUpstreamDNS = configuration.isPreResolveUpstreamDNS();
     this.mesosProtosUtils = mesosProtosUtils;
   }
 
@@ -98,7 +102,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private void addAllQueryParams(BoundRequestBuilder boundRequestBuilder, Map<String, String> queryParams) {
     for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-      boundRequestBuilder.addQueryParameter(entry.getKey(), entry.getValue());
+      boundRequestBuilder.addQueryParam(entry.getKey(), entry.getValue());
     }
   }
 
@@ -208,10 +212,18 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
                                                                  SingularityDeploy deploy, SingularityRequest request) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
     final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
+
+    boolean enableDNSPreResolution;
+    if (skipDNSPreResolutionForRequests.contains(request.getId())) {
+      enableDNSPreResolution = false;
+    } else {
+      enableDNSPreResolution = preResolveUpstreamDNS;
+    }
+
     final BaragonService lbService = new BaragonService(deploy.getLoadBalancerServiceIdOverride().or(request.getId()), serviceOwners, deploy.getServiceBasePath().get(),
         deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
-        deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
-    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
+        deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()), Optional.absent(), Collections.emptySet(), enableDNSPreResolution);
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams, Collections.<UpstreamInfo>emptyList(),Optional.<String>absent(), Optional.of(RequestAction.UPDATE), false, false, false, true);
     return sendLoadBalancerRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 

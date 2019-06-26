@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,6 +21,7 @@ public class HealthcheckOptions {
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;
   private final Optional<HealthcheckProtocol> protocol;
+  private final Optional<HealthcheckMethod> method;
   private final Optional<Integer> startupTimeoutSeconds;
   private final Optional<Integer> startupDelaySeconds;
   private final Optional<Integer> startupIntervalSeconds;
@@ -34,6 +36,7 @@ public class HealthcheckOptions {
                             @JsonProperty("portIndex") Optional<Integer> portIndex,
                             @JsonProperty("portNumber") Optional<Long> portNumber,
                             @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
+                            @JsonProperty("method") Optional<HealthcheckMethod> method,
                             @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds,
                             @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds,
                             @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
@@ -46,6 +49,7 @@ public class HealthcheckOptions {
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
+    this.method = method;
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     this.startupDelaySeconds = startupDelaySeconds;
     this.startupIntervalSeconds = startupIntervalSeconds;
@@ -59,7 +63,9 @@ public class HealthcheckOptions {
   public HealthcheckOptions(String uri,
                             Optional<Integer> portIndex,
                             Optional<Long> portNumber,
-                            Optional<HealthcheckProtocol> protocol,Optional<Integer> startupTimeoutSeconds,
+                            Optional<HealthcheckProtocol> protocol,
+                            Optional<HealthcheckMethod> method,
+                            Optional<Integer> startupTimeoutSeconds,
                             Optional<Integer> startupDelaySeconds,
                             Optional<Integer> startupIntervalSeconds,
                             Optional<Integer> intervalSeconds,
@@ -71,6 +77,7 @@ public class HealthcheckOptions {
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
+    this.method = method;
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     this.startupDelaySeconds = startupDelaySeconds;
     this.startupIntervalSeconds = startupIntervalSeconds;
@@ -87,6 +94,7 @@ public class HealthcheckOptions {
       .setPortIndex(portIndex)
       .setPortNumber(portNumber)
       .setProtocol(protocol)
+      .setMethod(method)
       .setStartupTimeoutSeconds(startupTimeoutSeconds)
       .setStartupDelaySeconds(startupDelaySeconds)
       .setStartupIntervalSeconds(startupIntervalSeconds)
@@ -102,7 +110,7 @@ public class HealthcheckOptions {
     return uri;
   }
 
-  @Schema(description = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
+  @Schema(description = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port); defaults to first port")
   public Optional<Integer> getPortIndex() {
     return portIndex;
   }
@@ -112,9 +120,14 @@ public class HealthcheckOptions {
     return portNumber;
   }
 
-  @Schema(description = "Healthcheck protocol - HTTP or HTTPS")
+  @Schema(description = "Healthcheck protocol - HTTP or HTTPS for HTTP/1, HTTP2 or HTTPS2 for HTTP/2")
   public Optional<HealthcheckProtocol> getProtocol() {
     return protocol;
+  }
+
+  @Schema(description ="Healthcheck HTTP method - GET or POST; GET by default")
+  public Optional<HealthcheckMethod> getMethod() {
+    return method;
   }
 
   @Schema(description = "Consider the task unhealthy/failed if the app has not started responding to healthchecks in this amount of time")
@@ -170,6 +183,7 @@ public class HealthcheckOptions {
         Objects.equals(portIndex, that.portIndex) &&
         Objects.equals(portNumber, that.portNumber) &&
         Objects.equals(protocol, that.protocol) &&
+        Objects.equals(method, that.method) &&
         Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
         Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
         Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
@@ -182,7 +196,7 @@ public class HealthcheckOptions {
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
+    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
   }
 
   @Override
@@ -192,6 +206,7 @@ public class HealthcheckOptions {
         ", portIndex=" + portIndex +
         ", portNumber=" + portNumber +
         ", protocol=" + protocol +
+        ", method=" + method +
         ", startupTimeoutSeconds=" + startupTimeoutSeconds +
         ", startupDelaySeconds=" + startupDelaySeconds +
         ", startupIntervalSeconds=" + startupIntervalSeconds +

@@ -14,6 +14,16 @@
     <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>3.10.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
 
     <dependency>
@@ -34,6 +44,11 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-sns</artifactId>
     </dependency>
 
     <dependency>
@@ -107,6 +122,11 @@
     </dependency>
 
     <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-util</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.hubspot.jackson</groupId>
       <artifactId>jackson-datatype-protobuf</artifactId>
     </dependency>
@@ -134,6 +154,11 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
     </dependency>
 
     <dependency>
@@ -530,13 +555,10 @@
                     <ports>
                       <port>7099</port>
                     </ports>
-                    <entryPoint>
-                      <exec>
-                        <arg>/etc/singularity/start.sh</arg>
-                      </exec>
-                    </entryPoint>
                     <cmd>
                       <exec>
+                        <args>/bin/bash</args>
+                        <args>/etc/singularity/start.sh</args>
                         <args>server</args>
                         <args>/etc/singularity/singularity.yaml</args>
                       </exec>

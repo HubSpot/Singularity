@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
@@ -21,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAction;
@@ -37,9 +39,13 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
 
 @Singleton
 public class SingularityHealthchecker {
@@ -48,6 +54,7 @@ public class SingularityHealthchecker {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
   private final AsyncHttpClient http;
+  private final OkHttpClient http2;
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final SingularityAbort abort;
@@ -63,10 +70,11 @@ public class SingularityHealthchecker {
 
   @Inject
   public SingularityHealthchecker(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                  AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
+                                  AsyncHttpClient http, OkHttpClient http2, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
                                   TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager,
                                   MesosProtosUtils mesosProtosUtils) {
     this.http = http;
+    this.http2 = http2;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
@@ -278,34 +286,104 @@ public class SingularityHealthchecker {
     return true;
   }
 
+  private Callback wrappedHttp2Handler(final SingularityHealthcheckAsyncHandler handler) {
+    return new Callback() {
+      @Override
+      public void onFailure(Call call, IOException e) {
+        handler.onFailed(e);
+      }
+
+      @Override
+      public void onResponse(Call call, okhttp3.Response response) throws IOException {
+        Optional<String> maybeResponseExcerpt = Optional.absent();
+
+        String responseExcerpt = response.peekBody(configuration.getMaxHealthcheckResponseBodyBytes()).string();
+        if (responseExcerpt.length() > 0) {
+          maybeResponseExcerpt = Optional.of(responseExcerpt);
+        }
+
+        handler.onCompleted(Optional.of(response.code()), maybeResponseExcerpt);
+      }
+    };
+  }
+
+  private AsyncCompletionHandler<com.ning.http.client.Response> wrappedHttp1Handler(final SingularityHealthcheckAsyncHandler handler) {
+    return new AsyncCompletionHandler<com.ning.http.client.Response>() {
+      @Override
+      public void onThrowable(Throwable t) {
+        handler.onFailed(t);
+      }
+
+      @Override
+      public com.ning.http.client.Response onCompleted(com.ning.http.client.Response response) throws Exception {
+        Optional<String> maybeResponseExcerpt = Optional.absent();
+
+        if (response.hasResponseBody()) {
+          maybeResponseExcerpt = Optional.of(response.getResponseBodyExcerpt(configuration.getMaxHealthcheckResponseBodyBytes()));
+        }
+
+        handler.onCompleted(Optional.of(response.getStatusCode()), maybeResponseExcerpt);
+
+        return response;
+      }
+    };
+  }
+
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
     final Optional<String> uri = getHealthcheckUri(task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
 
     if (!uri.isPresent()) {
       saveFailure(handler, "Invalid healthcheck uri or ports not present");
       return;
     }
+    handler.setHealthcheckUri(uri.get());
 
-    final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
+    final Integer timeoutSeconds;
+    final String method;
+
+    if (task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+      HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
+
+      method = options.getMethod().or(HealthcheckMethod.GET).getMethod();
+      timeoutSeconds = options.getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    } else {
+      timeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+      method = HealthcheckMethod.GET.getMethod();
+    }
 
     try {
-      PerRequestConfig prc = new PerRequestConfig();
-      prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
-
-      RequestBuilder builder = new RequestBuilder("GET");
-      builder.setFollowRedirects(true);
-      builder.setUrl(uri.get());
-      builder.setPerRequestConfig(prc);
+      HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheck().get().getProtocol().or(HealthcheckProtocol.HTTP);
 
       LOG.trace("Issuing a healthcheck ({}) for task {} with timeout {}s", uri.get(), task.getTaskId(), timeoutSeconds);
 
-      http.prepareRequest(builder.build()).execute(handler);
+      if (protocol == HealthcheckProtocol.HTTP2 || protocol == HealthcheckProtocol.HTTPS2) {
+        // Creates a lightweight new client which shares the underlying resource pools of the original instance.
+        http2.newBuilder()
+            .retryOnConnectionFailure(false)
+            .followRedirects(true)
+            .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+            .cache(null)
+            .build()
+            .newCall(
+                new okhttp3.Request.Builder()
+                    .method(method, null)
+                    .url(uri.get())
+                    .build()
+            ).enqueue(wrappedHttp2Handler(handler));
+      } else {
+        RequestBuilder builder = new RequestBuilder("GET");
+        builder.setFollowRedirects(true);
+        builder.setUrl(uri.get());
+        builder.setRequestTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
+
+        http.prepareRequest(builder.build()).execute(wrappedHttp1Handler(handler));
+      }
     } catch (Throwable t) {
-      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
+      LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri.get(), task.getTaskId(), t);
       exceptionNotifier.notify(String.format("Error preparing healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
-      saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
+      saveFailure(handler, String.format("Healthcheck (%s) failed due to exception: %s", uri.get(), t.getMessage()));
     }
   }
 

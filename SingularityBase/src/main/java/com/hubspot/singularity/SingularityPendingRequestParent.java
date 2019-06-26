@@ -16,13 +16,12 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     return new SingularityPendingRequestParent(singularityRequestParent.getRequest(), singularityRequestParent.getState(), singularityRequestParent.getRequestDeployState(),
         singularityRequestParent.getActiveDeploy(), singularityRequestParent.getPendingDeploy(), singularityRequestParent.getPendingDeployState(), pendingRequest,
         singularityRequestParent.getExpiringBounce(), singularityRequestParent.getExpiringPause(), singularityRequestParent.getExpiringScale(),
-        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getLastHistory(), singularityRequestParent.getMostRecentTask());
+        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds());
   }
 
   public static SingularityPendingRequestParent minimalFromRequestWithState(SingularityRequestWithState requestWithState, SingularityPendingRequest pendingRequest) {
     return new SingularityPendingRequestParent(requestWithState.getRequest(), requestWithState.getState(), Optional.absent(), Optional.absent(),
-        Optional.absent(), Optional.absent(), pendingRequest, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(),
-        Optional.absent(), Optional.absent());
+        Optional.absent(), Optional.absent(), pendingRequest, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
   }
 
   @JsonCreator
@@ -37,10 +36,8 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
                                          @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
                                          @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
                                          @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
-                                         @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds,
-                                         @JsonProperty("lastHistory") Optional<SingularityRequestHistory> lastHistory,
-                                         @JsonProperty("mostRecentTask") Optional<SingularityTaskIdHistory> mostRecentTask) {
-    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds, lastHistory, mostRecentTask);
+                                         @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds) {
+    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds);
     this.pendingRequest = pendingRequest;
   }
 

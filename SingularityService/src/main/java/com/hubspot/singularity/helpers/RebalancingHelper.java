@@ -52,7 +52,7 @@ public class RebalancingHelper {
     for (SingularityTaskId taskId : remainingActiveTasks) {
       countPerRack.add(taskId.getRackId());
       LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
-      if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+      if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2 && taskId.getInstanceNo() > 1) {
         extraCleanedTasks.add(taskId);
         LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
         taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(),
@@ -70,7 +70,7 @@ public class RebalancingHelper {
     Map<String, Map<String, Set<SingularityTaskId>>> attributeTaskMap = new HashMap<>();
 
     for (SingularityTaskId taskId : remainingActiveTasks) {
-      SingularitySlave slave = slaveManager.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
+      SingularitySlave slave = slaveManager.getObject(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
       for (Entry<String, String> entry : slave.getAttributes().entrySet()) {
         attributeTaskMap
             .computeIfAbsent(entry.getKey(), key -> new HashMap<>())

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
   private final Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder;
+  private final int maxHistoryEntries;
 
   public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
       Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder, Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder) {
@@ -39,6 +41,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
     this.expiringMachineStateTranscoder = expiringMachineStateTranscoder;
+    this.maxHistoryEntries = configuration.getMaxMachineHistoryEntries();
   }
 
   protected abstract String getRoot();
@@ -52,8 +55,15 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public List<T> getObjects() {
-    return getObjects(getRoot());
+    List<T> fromCache = getObjectsFromLeaderCache();
+    if (fromCache != null) {
+      return fromCache;
+    } else {
+      return getObjectsNoCache(getRoot());
+    }
   }
+
+  protected abstract List<T> getObjectsFromLeaderCache();
 
   public List<String> getObjectIds() {
     return getChildren(getRoot());
@@ -110,16 +120,25 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public Optional<T> getObject(String objectId) {
+    Optional<T> maybeCached = getObjectFromLeaderCache(objectId);
+    if(!maybeCached.isPresent()) {
+      return getObjectNoCache(objectId);
+    } else {
+      return maybeCached;
+    }
+  }
+
+  protected abstract Optional<T> getObjectFromLeaderCache(String objectId);
+
+  public Optional<T> getObjectNoCache(String objectId) {
     return getData(getObjectPath(objectId), transcoder);
   }
 
-  protected List<T> getObjects(String root) {
+  protected List<T> getObjectsNoCache(String root) {
     return getAsyncChildren(root, transcoder);
   }
 
-  public SingularityDeleteResult removed(String objectId) {
-    return delete(getObjectPath(objectId));
-  }
+  protected abstract void deleteFromLeaderCache(String objectId);
 
   public enum StateChangeResult {
     FAILURE_NOT_FOUND, FAILURE_ALREADY_AT_STATE, FAILURE_ILLEGAL_TRANSITION, SUCCESS;
@@ -203,19 +222,32 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return ZKPaths.makePath(getHistoryPath(historyUpdate.getObjectId()), historyChildPath);
   }
 
+  public void clearOldHistory(String machineId) {
+    List<SingularityMachineStateHistoryUpdate> histories = getHistory(machineId);
+    histories.sort(Comparator.comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp).reversed());
+    histories.stream()
+        .skip(maxHistoryEntries)
+        .forEach((history) -> {
+          delete(getHistoryUpdatePath(history));
+        });
+  }
+
   private SingularityCreateResult saveHistoryUpdate(SingularityMachineStateHistoryUpdate historyUpdate) {
     return create(getHistoryUpdatePath(historyUpdate), historyUpdate, historyTranscoder);
   }
 
   public SingularityDeleteResult deleteObject(String objectId) {
+    deleteFromLeaderCache(objectId);
     return delete(getObjectPath(objectId));
   }
 
   public void saveObject(T object) {
     saveHistoryUpdate(object.getCurrentState());
-
     save(getObjectPath(object.getId()), object, transcoder);
+    saveObjectToLeaderCache(object);
   }
+
+  protected abstract void saveObjectToLeaderCache(T object);
 
   private String getExpiringPath(String machineId) {
     return ZKPaths.makePath(getRoot(), EXPIRING_PATH, machineId);

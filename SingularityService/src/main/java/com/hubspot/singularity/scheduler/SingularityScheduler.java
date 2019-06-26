@@ -643,13 +643,9 @@ public class SingularityScheduler {
   }
 
   @Timed
-  public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state,
+  public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, long timestamp, ExtendedTaskState state,
     SingularityCreateResult taskHistoryUpdateCreateResult, Protos.TaskStatus status) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
-
-    if (wasActive) {
-      taskManager.deleteActiveTask(taskId.getId());
-    }
 
     if (!task.isPresent() || task.get().getTaskRequest().getRequest().isLoadBalanced()) {
       taskManager.createLBCleanupTask(taskId);

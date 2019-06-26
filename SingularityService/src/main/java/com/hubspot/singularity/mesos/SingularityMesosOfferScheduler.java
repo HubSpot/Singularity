@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,17 +18,23 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -44,10 +50,13 @@ import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
+import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -74,6 +83,13 @@ public class SingularityMesosOfferScheduler {
   private final DeployManager deployManager;
   private final SingularitySchedulerLock lock;
   private final SingularityLeaderCache leaderCache;
+  private final boolean offerCacheEnabled;
+  private final DisasterManager disasterManager;
+  private final boolean delayWhenStatusUpdateDeltaTooLarge;
+  private final long delayWhenDeltaOverMs;
+  private final AtomicLong statusUpdateDeltaAvg;
+  private final SingularityMesosSchedulerClient mesosSchedulerClient;
+  private final OfferCache offerCache;
 
   private final double normalizedCpuWeight;
   private final double normalizedMemWeight;
@@ -99,7 +115,11 @@ public class SingularityMesosOfferScheduler {
                                         DeployManager deployManager,
                                         SingularitySchedulerLock lock,
                                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                        SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
+                                        SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                        DisasterManager disasterManager,
+                                        SingularityMesosSchedulerClient mesosSchedulerClient,
+                                        OfferCache offerCache,
+                                        @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -110,6 +130,13 @@ public class SingularityMesosOfferScheduler {
     this.slaveAndRackManager = slaveAndRackManager;
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.leaderCache = leaderCache;
+    this.offerCacheEnabled = configuration.isCacheOffers();
+    this.disasterManager = disasterManager;
+    this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
+    this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
+    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.mesosSchedulerClient = mesosSchedulerClient;
+    this.offerCache = offerCache;
     this.usageHelper = usageHelper;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.taskPrioritizer = taskPrioritizer;
@@ -134,14 +161,161 @@ public class SingularityMesosOfferScheduler {
     this.offerScoringExecutor = cachedThreadPoolFactory.get("offer-scoring");
   }
 
-  public Collection<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
-    for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
-      lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers -> pendingTaskDeletes"));
+  public void resourceOffers(List<Offer> uncached) {
+    final long start = System.currentTimeMillis();
+    LOG.info("Received {} offer(s)", uncached.size());
+    scheduler.checkForDecomissions();
+    boolean declineImmediately = false;
+    if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
+      LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
+      declineImmediately = true;
+    }
+    if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
+      LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
+      declineImmediately = true;
     }
 
-    scheduler.checkForDecomissions();
-    scheduler.drainPendingQueue();
+    if (declineImmediately) {
+      mesosSchedulerClient.decline(uncached.stream().map(Offer::getId).collect(Collectors.toList()));
+      return;
+    }
 
+    if (offerCacheEnabled) {
+      if (disasterManager.isDisabled(SingularityAction.CACHE_OFFERS)) {
+        offerCache.disableOfferCache();
+      } else {
+        offerCache.enableOfferCache();
+      }
+    }
+
+    Map<String, Offer> offersToCheck = uncached.stream()
+        .filter((o) -> {
+          if (!isValidOffer(o)) {
+            if (o.getId() != null && o.getId().getValue() != null) {
+              LOG.warn("Got invalid offer {}", o);
+              mesosSchedulerClient.decline(Collections.singletonList(o.getId()));
+            } else {
+              LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", o);
+            }
+            return false;
+          }
+          return true;
+        })
+        .collect(Collectors.toConcurrentMap(
+            (o) -> o.getId().getValue(),
+            Function.identity()
+        ));
+
+    List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
+    Map<String, CachedOffer> cachedOffers = new ConcurrentHashMap<>();
+    for (CachedOffer cachedOffer : cachedOfferList) {
+      if (isValidOffer(cachedOffer.getOffer())) {
+        cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
+        offersToCheck.put(cachedOffer.getOfferId(), cachedOffer.getOffer());
+      } else if (cachedOffer.getOffer().getId() != null && cachedOffer.getOffer().getId().getValue() != null) {
+        mesosSchedulerClient.decline(Collections.singletonList(cachedOffer.getOffer().getId()));
+        offerCache.rescindOffer(cachedOffer.getOffer().getId());
+      } else {
+        LOG.warn("Offer {} was not valid, but we can't decline it because we have no offer ID!", cachedOffer);
+      }
+    }
+
+    List<CompletableFuture<Void>> slaveCheckFutures = new ArrayList<>();
+    uncached.forEach((offer) -> slaveCheckFutures.add(runAsync(() -> checkOfferAndSlave(offer, offersToCheck))));
+    CompletableFutures.allOf(slaveCheckFutures).join();
+
+    final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
+
+    try {
+      Collection<SingularityOfferHolder> offerHolders = checkOffers(offersToCheck);
+
+      for (SingularityOfferHolder offerHolder : offerHolders) {
+        if (!offerHolder.getAcceptedTasks().isEmpty()) {
+          List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(mesosSchedulerClient);
+
+          leftoverOffers.forEach((o) -> {
+            if (cachedOffers.containsKey(o.getId().getValue())) {
+              offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
+            } else {
+              offerCache.cacheOffer(start, o);
+            }
+          });
+
+          List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
+          offersAcceptedFromSlave.removeAll(leftoverOffers);
+          offersAcceptedFromSlave.stream()
+              .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
+              .map((o) -> cachedOffers.remove(o.getId().getValue()))
+              .forEach(offerCache::useOffer);
+          acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
+        } else {
+          offerHolder.getOffers().forEach((o) -> {
+            if (cachedOffers.containsKey(o.getId().getValue())) {
+              offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
+            } else {
+              offerCache.cacheOffer(start, o);
+            }
+          });
+        }
+      }
+
+      LOG.info("{} remaining offers not accounted for in offer check", cachedOffers.size());
+      cachedOffers.values().forEach(offerCache::returnOffer);
+    } catch (Throwable t) {
+      LOG.error("Received fatal error while handling offers - will decline all available offers", t);
+
+      mesosSchedulerClient.decline(offersToCheck.values().stream()
+          .filter((o) -> {
+            if (o == null || o.getId() == null || o.getId().getValue() == null) {
+              LOG.warn("Got bad offer {} while trying to decline offers!", o);
+              return false;
+            }
+
+            return true;
+          })
+          .filter((o) -> !acceptedOffers.contains(o.getId()) && !cachedOffers.containsKey(o.getId().getValue()))
+          .map(Offer::getId)
+          .collect(Collectors.toList()));
+
+      offersToCheck.forEach((id, o) -> {
+        if (cachedOffers.containsKey(id)) {
+          offerCache.returnOffer(cachedOffers.get(id));
+        }
+      });
+
+      throw t;
+    }
+
+    LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", uncached.size(), JavaUtils.duration(start), acceptedOffers.size(),
+        uncached.size() - acceptedOffers.size());
+  }
+
+  private void checkOfferAndSlave(Offer offer, Map<String, Offer> offersToCheck) {
+    String rolesInfo = MesosUtils.getRoles(offer).toString();
+    LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+        MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
+
+    CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
+    if (checkResult == CheckResult.NOT_ACCEPTING_TASKS) {
+      mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
+      offersToCheck.remove(offer.getId().getValue());
+      LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
+    }
+  }
+
+  private boolean isValidOffer(Offer offer) {
+    if (offer.getId() == null || offer.getId().getValue() == null) {
+      LOG.warn("Received offer with null ID, skipping ({})", offer);
+      return false;
+    }
+    if (offer.getAgentId() == null || offer.getAgentId().getValue() == null) {
+      LOG.warn("Received offer with null agent ID, skipping ({})", offer);
+      return false;
+    }
+    return true;
+  }
+
+  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers) {
     if (offers.isEmpty()) {
       LOG.debug("No offers to check");
       return Collections.emptyList();
@@ -149,9 +323,8 @@ public class SingularityMesosOfferScheduler {
 
     final List<SingularityTaskRequestHolder> sortedTaskRequestHolders = getSortedDueTaskRequests();
     final int numDueTasks = sortedTaskRequestHolders.size();
-    Set<String> relevantRequestIds = new HashSet<>();
 
-    final Map<String, SingularityOfferHolder> offerHolders = offers.stream()
+    final Map<String, SingularityOfferHolder> offerHolders = offers.values().stream()
         .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
         .entrySet().stream()
         .filter((e) -> e.getValue().size() > 0)
@@ -167,13 +340,6 @@ public class SingularityMesosOfferScheduler {
               slaveAndRackHelper.getTextAttributes(offersList.get(0)),
               slaveAndRackHelper.getReservedSlaveAttributes(offersList.get(0)));
         })
-        .peek((offerHolder) -> {
-          taskManager.getActiveTaskIds().forEach((t) -> {
-            if (t.getSanitizedHost().equals(offerHolder.getSanitizedHost())) {
-              relevantRequestIds.add(t.getRequestId());
-            }
-          });
-        })
         .collect(Collectors.toMap(SingularityOfferHolder::getSlaveId, Function.identity()));
 
     if (sortedTaskRequestHolders.isEmpty()) {
@@ -184,17 +350,11 @@ public class SingularityMesosOfferScheduler {
     Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(false);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
-    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(
-        offerHolders.values()
-            .stream()
-            .map(SingularityOfferHolder::getSlaveId)
-            .collect(Collectors.toList()))
-        .stream()
-        .collect(Collectors.toMap(SingularitySlaveUsageWithId::getSlaveId, Function.identity()));
+    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getAllCurrentSlaveUsage();
 
     List<CompletableFuture<Void>> currentSlaveUsagesFutures = new ArrayList<>();
     for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-      currentSlaveUsagesFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
+      currentSlaveUsagesFutures.add(runAsync(() -> {
         String slaveId = offerHolder.getSlaveId();
         Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
 
@@ -220,24 +380,25 @@ public class SingularityMesosOfferScheduler {
           }
 
         }
-      }, offerScoringExecutor)));
+      }));
     }
     CompletableFutures.allOf(currentSlaveUsagesFutures).join();
 
     List<CompletableFuture<Void>> usagesWithScoresFutures = new ArrayList<>();
     Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = new ConcurrentHashMap<>();
     for (SingularitySlaveUsageWithId usage : currentSlaveUsages.values()) {
-      usagesWithScoresFutures.add(offerScoringSemaphore.call(() ->
-          CompletableFuture.runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
-              new SingularitySlaveUsageWithCalculatedScores(
-                usage,
-                mesosConfiguration.getScoreUsingSystemLoad(),
-                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
-                mesosConfiguration.getLoad5OverloadedThreshold(),
-                mesosConfiguration.getLoad1OverloadedThreshold(),
-                usage.getTimestamp())),
-              offerScoringExecutor))
-      );
+      if (offerHolders.containsKey(usage.getSlaveId())) {
+        usagesWithScoresFutures.add(
+            runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
+                new SingularitySlaveUsageWithCalculatedScores(
+                    usage,
+                    mesosConfiguration.getScoreUsingSystemLoad(),
+                    getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
+                    mesosConfiguration.getLoad5OverloadedThreshold(),
+                    mesosConfiguration.getLoad1OverloadedThreshold(),
+                    usage.getTimestamp()))
+            ));
+      }
     }
 
     CompletableFutures.allOf(usagesWithScoresFutures).join();
@@ -254,11 +415,7 @@ public class SingularityMesosOfferScheduler {
         List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
         AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-          scoringFutures.add(offerScoringSemaphore.call(() ->
-              CompletableFuture.supplyAsync(() -> {
-                return calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder);
-              },
-              offerScoringExecutor)));
+          scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder)));
         }
 
         CompletableFutures.allOf(scoringFutures).join();
@@ -286,7 +443,11 @@ public class SingularityMesosOfferScheduler {
     return offerHolders.values();
   }
 
-  private Void calculateScore(
+  private CompletableFuture<Void> runAsync(Runnable runnable) {
+    return offerScoringSemaphore.call(() -> CompletableFuture.runAsync(runnable, offerScoringExecutor));
+  }
+
+  private void calculateScore(
       Map<String, RequestUtilization> requestUtilizations,
       Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId,
       Map<String, Integer> tasksPerOfferHost,
@@ -296,7 +457,7 @@ public class SingularityMesosOfferScheduler {
       AtomicReference<Throwable> scoringException,
       SingularityOfferHolder offerHolder) {
     if (isOfferFull(offerHolder)) {
-      return null;
+      return;
     }
     String slaveId = offerHolder.getSlaveId();
 
@@ -309,7 +470,6 @@ public class SingularityMesosOfferScheduler {
       LOG.error("Uncaught exception while scoring offers", t);
       scoringException.set(t);
     }
-    return null;
   }
 
   private MaxProbableUsage getMaxProbableUsageForSlave(List<SingularityTaskId> activeTaskIds, Map<String, RequestUtilization> requestUtilizations, String sanitizedHostname) {

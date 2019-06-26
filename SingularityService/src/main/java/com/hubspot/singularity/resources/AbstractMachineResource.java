@@ -8,6 +8,9 @@ import java.util.UUID;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
@@ -20,15 +23,17 @@ import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.ning.http.client.AsyncHttpClient;
 
-public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> {
+public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> extends AbstractLeaderAwareResource {
 
   protected final AbstractMachineManager<T> manager;
 
   protected final SingularityAuthorizationHelper authorizationHelper;
   private final SingularityValidator validator;
 
-  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, SingularityValidator validator) {
+  public AbstractMachineResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, SingularityValidator validator) {
+    super(httpClient, leaderLatch, objectMapper);
     this.manager = manager;
     this.authorizationHelper = authorizationHelper;
     this.validator = validator;

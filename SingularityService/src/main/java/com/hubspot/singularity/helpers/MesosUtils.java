@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
@@ -468,5 +469,9 @@ public final class MesosUtils {
 
   public static String formatForLogging(Object object) {
     return object.toString().replace("\n", "").replaceAll("( )+", " ");
+  }
+
+  public static String formatOfferIdsForLog(List<Offer> offers) {
+    return offers.stream().map((o) -> o.getId().getValue()).collect(Collectors.joining(", "));
   }
 }

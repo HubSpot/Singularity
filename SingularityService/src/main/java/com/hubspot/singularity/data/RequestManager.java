@@ -85,10 +85,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   @Inject
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
-      Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
-      Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
-      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-      SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
+                        Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
+                        Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
+                        Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+                        SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -201,6 +201,10 @@ public class RequestManager extends CuratorAsyncManager {
     return getChildren(NORMAL_PATH_ROOT);
   }
 
+  public long getAllRequestIdsBytes() {
+    return getAllRequestIds().stream().mapToLong(x -> x.getBytes().length).sum();
+  }
+
   public List<String> getRequestIdsWithHistory() {
     return getChildren(HISTORY_PATH_ROOT);
   }
@@ -259,11 +263,13 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getPendingPath(requestId, deployId), pendingRequestTranscoder);
   }
 
-  public SingularityCreateResult saveHistory(SingularityRequestHistory history) {
+  public void saveHistory(SingularityRequestHistory history) {
+    saveHistoryToZk(history);
+  }
+
+  private SingularityCreateResult saveHistoryToZk(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
-
     singularityEventListener.requestHistoryEvent(history);
-
     return save(path, history, requestHistoryTranscoder);
   }
 
@@ -386,6 +392,16 @@ public class RequestManager extends CuratorAsyncManager {
     return getRequests(false);
   }
 
+  public List<SingularityRequestWithState> getRequests(List<String> requestIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequests().stream()
+          .filter((r) -> requestIds.contains(r.getRequest().getId()))
+          .collect(Collectors.toList());
+    }
+
+    return fetchRequests(requestIds);
+  }
+
   public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
     if (leaderCache.active()) {
       return leaderCache.getRequests();
@@ -404,6 +420,11 @@ public class RequestManager extends CuratorAsyncManager {
 
   public List<SingularityRequestWithState> fetchRequests() {
     return getAsyncChildren(NORMAL_PATH_ROOT, requestTranscoder);
+  }
+
+  public List<SingularityRequestWithState> fetchRequests(List<String> requestIds) {
+    List<String> paths = requestIds.stream().map(this::getRequestPath).collect(Collectors.toList());
+    return getAsync(NORMAL_PATH_ROOT, paths, requestTranscoder);
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {

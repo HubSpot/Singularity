@@ -3,15 +3,15 @@ package com.hubspot.singularity.data.history;
 import java.util.Date;
 import java.util.List;
 
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
-
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
+
+import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 @UseStringTemplate3StatementLocator
 public abstract class PostgresHistoryJDBI extends AbstractHistoryJDBI {
@@ -48,7 +48,7 @@ public abstract class PostgresHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT COUNT(*) FROM requestHistory WHERE requestId = :requestId")
   public abstract int getRequestHistoryCount(@Bind("requestId") String requestId);
 
-  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') OFFSET :limitStart LIMIT :limitCount")
+  @SqlQuery("SELECT DISTINCT requestId as id FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') OFFSET :limitStart LIMIT :limitCount")
   public abstract List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
 
   @SqlQuery("SELECT requestId, COUNT(*) as count FROM taskHistory WHERE updatedAt \\< :updatedAt GROUP BY requestId")
@@ -63,12 +63,23 @@ public abstract class PostgresHistoryJDBI extends AbstractHistoryJDBI {
   @SqlUpdate("DELETE FROM taskHistory WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
   public abstract void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
 
-  @SqlQuery("SELECT DISTINCT requestId FROM taskHistory")
+  @SqlQuery("SELECT DISTINCT requestId as id FROM taskHistory")
   public abstract List<String> getRequestIdsInTaskHistory();
 
   @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
   public abstract int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
+  @SqlQuery("SELECT DISTINCT requestId as id FROM requestHistory")
+  public abstract List<String> getRequestIdsWithHistory();
+
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
+  public abstract int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
+  @SqlQuery("SELECT DISTINCT requestId as id FROM deployHistory")
+  public abstract List<String> getRequestIdsWithDeploys();
+
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
+  public abstract int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
   public abstract void close();
 

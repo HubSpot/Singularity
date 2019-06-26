@@ -79,10 +79,10 @@ public class UIConfiguration {
   private Optional<String> taskS3LogOmitPrefix = Optional.absent();
 
   @NotEmpty
-  private String timestampFormat = "lll";
+  private String timestampFormat = "lll Z";
 
   @NotEmpty
-  private String timestampWithSecondsFormat = "lll:ss";
+  private String timestampWithSecondsFormat = "lll:ss Z";
 
   @JsonProperty
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();

@@ -11,10 +11,10 @@ import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 @Singleton
 public class SingularityWebhookPoller extends SingularityLeaderOnlyPoller {
 
-  private final SingularityWebhookSender webhookSender;
+  private final AbstractWebhookChecker webhookSender;
 
   @Inject
-  public SingularityWebhookPoller(SingularityWebhookSender webhookSender, SingularityConfiguration configuration) {
+  public SingularityWebhookPoller(AbstractWebhookChecker webhookSender, SingularityConfiguration configuration) {
     super(configuration.getCheckWebhooksEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.webhookSender = webhookSender;
@@ -29,6 +29,4 @@ public class SingularityWebhookPoller extends SingularityLeaderOnlyPoller {
   protected boolean abortsOnError() {
     return false;
   }
-
-
 }

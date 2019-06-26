@@ -47,6 +47,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     expiringUserActionPoller.runActionOnPoll();
 
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
@@ -67,6 +68,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
       Optional.of(new SingularityBounceRequest(Optional.of(false), Optional.absent(), Optional.of(1L), Optional.absent(), Optional.of("msg"), Optional.absent())), singularityUser);
 
     cleaner.drainCleanupQueue();
+    scheduler.drainPendingQueue();
     resourceOffers();
     runLaunchedTasks();
     cleaner.drainCleanupQueue();
@@ -96,7 +98,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
 
     // should have 1 pending task and 2 launched
-
+    scheduler.drainPendingQueue();
     resourceOffersByNumTasks(2);
 
     Assert.assertEquals(1, taskManager.getPendingTasks().size());
@@ -112,6 +114,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     expiringUserActionPoller.runActionOnPoll();
 
+    scheduler.drainPendingQueue();
     resourceOffers();
     cleaner.drainCleanupQueue();
     cleaner.drainCleanupQueue();
@@ -196,9 +199,13 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     expiringUserActionPoller.runActionOnPoll();
 
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
@@ -241,9 +248,13 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     Assert.assertEquals(1, requestManager.getCleanupRequests().size());
     cleaner.drainCleanupQueue();
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
+    scheduler.drainPendingQueue();
     resourceOffers();
     cleaner.drainCleanupQueue();
     killKilledTasks();

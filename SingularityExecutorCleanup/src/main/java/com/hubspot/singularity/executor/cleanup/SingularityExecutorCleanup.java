@@ -3,19 +3,24 @@ package com.hubspot.singularity.executor.cleanup;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +51,7 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.Sin
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
@@ -164,22 +170,40 @@ public class SingularityExecutorCleanup {
     }
 
     try {
-      try (Stream<Path> paths = Files.walk(directory, 1)) {
-        paths.forEach((file) -> {
+      Files.walkFileTree(directory, Collections.emptySet(), 1, new FileVisitor<Path>() {
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+          if (dir.equals(directory)) {
+            return FileVisitResult.CONTINUE;
+          } else {
+            return FileVisitResult.SKIP_SUBTREE;
+          }
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
           if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
             LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
             statisticsBldr.incrInvalidTasks();
-            return;
+            return FileVisitResult.CONTINUE;
           }
 
           statisticsBldr.incrTotalTaskFiles();
 
           try {
+            if (!file.toFile().exists()) {
+              LOG.warn(
+                  "Tried to read a task definition file at {} which didn't exist! SingularityExecutorTaskCleanup probably cleaned it up after we listed the task definition directory",
+                  file.toAbsolutePath().toString()
+              );
+              return FileVisitResult.CONTINUE;
+            }
+
             Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
             if (!maybeTaskDefinition.isPresent()) {
               statisticsBldr.incrInvalidTasks();
-              return;
+              return FileVisitResult.CONTINUE;
             }
 
             SingularityExecutorTaskDefinition taskDefinition = withDefaults(maybeTaskDefinition.get());
@@ -190,7 +214,7 @@ public class SingularityExecutorCleanup {
 
             if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
               statisticsBldr.incrRunningTasksIgnored();
-              return;
+              return FileVisitResult.CONTINUE;
             }
 
             Optional<SingularityTaskHistory> taskHistory = null;
@@ -201,7 +225,7 @@ public class SingularityExecutorCleanup {
               LOG.error("{} - Failed fetching history", taskId, sce);
               exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
               statisticsBldr.incrErrorTasks();
-              return;
+              return FileVisitResult.CONTINUE;
             }
 
             TaskCleanupResult result = cleanTask(taskDefinition, taskHistory);
@@ -222,13 +246,26 @@ public class SingularityExecutorCleanup {
                 break;
             }
 
+            return FileVisitResult.CONTINUE;
           } catch (IOException ioe) {
             LOG.error("Couldn't read file {}", file, ioe);
             exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
             statisticsBldr.incrIoErrorTasks();
+            return FileVisitResult.CONTINUE;
           }
-        });
-      }
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          LOG.warn("Failed to read a task definition file at {}! SingularityExecutorTaskCleanup might have cleaned it up after we listed the task definition directory", file.toString(), exc);
+          return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+          return FileVisitResult.CONTINUE;
+        }
+      });
     } catch (IOException ioe) {
       LOG.error("Couldn't read files", ioe);
       exceptionNotifier.notify(String.format("Error reading files (%s)", ioe.getMessage()), ioe, Collections.emptyMap());
@@ -316,9 +353,10 @@ public class SingularityExecutorCleanup {
       final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
 
       if (lastUpdate.isPresent()) {
-        if (lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
-          LOG.info("Task {} is done for > 15 minutes, removing logrotate files");
+        if (taskDefinition.getTaskDirectoryPath().toFile().exists() && lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
+          LOG.info("Task {} is done for > 15 minutes, removing logrotate files", taskDefinition.getTaskId());
           taskCleanup.cleanUpLogs();
+          checkForLogrotateAdditionalFilesToDelete(taskDefinition);
         }
         if (lastUpdate.get().getTaskState().isFailed()) {
           final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
@@ -329,7 +367,13 @@ public class SingularityExecutorCleanup {
             cleanupTaskAppDirectory = false;
           }
         }
+      } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
+        // No information is available, the task data has probably aged out of storage. Clean logrotateAdditionalFiles we've been asked to delete.
+        checkForLogrotateAdditionalFilesToDelete(taskDefinition);
       }
+    } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
+      // Same as above
+      checkForLogrotateAdditionalFilesToDelete(taskDefinition);
     }
 
     boolean isDocker = (taskHistory.isPresent()
@@ -337,6 +381,48 @@ public class SingularityExecutorCleanup {
         && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().get().getType() == SingularityContainerType.DOCKER);
 
     return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
+  }
+
+  private void checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
+    executorConfiguration.getLogrotateAdditionalFiles()
+        .stream()
+        .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
+        .forEach(toDelete -> {
+          String glob = String.format("glob:%s/%s", taskDefinition.getTaskDirectoryPath().toAbsolutePath(), toDelete.getFilename());
+
+          LOG.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
+
+          try {
+            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob));
+            for (Path match : matches) {
+              Files.delete(match);
+              LOG.debug("Deleted {}", match);
+            }
+          } catch (IOException e) {
+            LOG.error("Unable to list files while trying to delete for {}", toDelete);
+          }
+        });
+  }
+
+  private List<Path> findGlob(Path path, PathMatcher matcher) throws IOException {
+    Deque<Path> stack = new ArrayDeque<>();
+    List<Path> matched = new ArrayList<>();
+
+    stack.push(path);
+
+    while (!stack.isEmpty()) {
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(stack.pop())) {
+        for (Path entry : stream) {
+          if (Files.isDirectory(entry)) {
+            stack.push(entry);
+          } else if (matcher.matches(entry)) {
+            matched.add(entry);
+          }
+        }
+      }
+    }
+
+    return matched;
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {

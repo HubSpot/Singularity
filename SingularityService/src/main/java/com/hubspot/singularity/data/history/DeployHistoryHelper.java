@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 
 @Singleton
@@ -19,7 +20,8 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   private final HistoryManager historyManager;
 
   @Inject
-  public DeployHistoryHelper(DeployManager deployManager, HistoryManager historyManager) {
+  public DeployHistoryHelper(DeployManager deployManager, HistoryManager historyManager, SingularityConfiguration configuration) {
+    super(configuration.getDatabaseConfiguration().isPresent());
     this.deployManager = deployManager;
     this.historyManager = historyManager;
   }
@@ -57,8 +59,13 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   }
 
   @Override
-  protected Optional<Integer> getTotalCount(String requestId) {
-    final int numFromZk = deployManager.getDeployIdsFor(requestId).size();
+  protected Optional<Integer> getTotalCount(String requestId, boolean canSkipZk) {
+    final int numFromZk;
+    if (sqlEnabled && canSkipZk) {
+      numFromZk = 0;
+    } else {
+      numFromZk = deployManager.getDeployIdsFor(requestId).size();
+    }
     final int numFromHistory = historyManager.getDeployHistoryForRequestCount(requestId);
 
     return Optional.of(numFromZk + numFromHistory);

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,6 +44,17 @@ public class SingularitySchedulerLock {
     long start = lock(requestId, name);
     try {
       function.run();
+    } finally {
+      unlock(requestId, name, start);
+    }
+  }
+
+  public <T> T runWithRequestLockAndReturn(Callable<T> function, String requestId, String name) {
+    long start = lock(requestId, name);
+    try {
+      return function.call();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     } finally {
       unlock(requestId, name, start);
     }

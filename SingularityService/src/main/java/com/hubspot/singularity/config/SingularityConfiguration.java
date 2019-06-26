@@ -2,8 +2,10 @@ package com.hubspot.singularity.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -82,7 +84,9 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxConcurrentUsageCollections = 15;
 
-  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
+  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing resources for larger clusters
+
+  private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.82;
 
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
 
@@ -145,6 +149,8 @@ public class SingularityConfiguration extends Configuration {
   private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.absent();
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private int maxMachineHistoryEntries = 10;
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
@@ -213,6 +219,10 @@ public class SingularityConfiguration extends Configuration {
 
   private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
 
+  private boolean preResolveUpstreamDNS = false;
+
+  private Set<String> skipDNSPreResolutionForRequests = new HashSet<>();
+
   private int logFetchMaxThreads = 15;
 
   private int maxDeployIdSize = 50;
@@ -247,9 +257,13 @@ public class SingularityConfiguration extends Configuration {
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
 
-  private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
+  private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(2);
+
+  private int maxPendingImmediatePersists = 200;
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
+  private long cleanInactiveHostListEveryHours = 24;
 
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
@@ -294,8 +308,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long threadpoolShutdownDelayInSeconds = 10;
 
-  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
-
   @Valid
   @JsonProperty("customExecutor")
   @NotNull
@@ -318,6 +330,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("webhookAuth")
   @Valid
   private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
+
+  @JsonProperty("webhookQueue")
+  @Valid
+ private WebhookQueueConfiguration webhookQueueConfiguration = new WebhookQueueConfiguration();
 
   private int maxConcurrentWebhooks = 100;
 
@@ -688,6 +704,14 @@ public class SingularityConfiguration extends Configuration {
     this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
   }
 
+  public int getMaxMachineHistoryEntries() {
+    return maxMachineHistoryEntries;
+  }
+
+  public void setMaxMachineHistoryEntries(int maxMachineHistoryEntries) {
+    this.maxMachineHistoryEntries = maxMachineHistoryEntries;
+  }
+
   public int getListenerThreadpoolSize() {
     return listenerThreadpoolSize;
   }
@@ -702,6 +726,22 @@ public class SingularityConfiguration extends Configuration {
 
   public String getLoadBalancerUri() {
     return loadBalancerUri;
+  }
+
+  public boolean isPreResolveUpstreamDNS() {
+    return preResolveUpstreamDNS;
+  }
+
+  public void setPreResolveUpstreamDNS(boolean preResolveUpstreamDNS) {
+    this.preResolveUpstreamDNS = preResolveUpstreamDNS;
+  }
+
+  public Set<String> getSkipDNSPreResolutionForRequests() {
+    return skipDNSPreResolutionForRequests;
+  }
+
+  public void setSkipDNSPreResolutionForRequests(Set<String> skipDNSPreResolutionForRequests) {
+    this.skipDNSPreResolutionForRequests = skipDNSPreResolutionForRequests;
   }
 
   public int getLogFetchMaxThreads() {
@@ -1130,6 +1170,14 @@ public class SingularityConfiguration extends Configuration {
     this.persistHistoryEverySeconds = persistHistoryEverySeconds;
   }
 
+  public int getMaxPendingImmediatePersists() {
+    return maxPendingImmediatePersists;
+  }
+
+  public void setMaxPendingImmediatePersists(int maxPendingImmediatePersists) {
+    this.maxPendingImmediatePersists = maxPendingImmediatePersists;
+  }
+
   public void setS3Configuration(S3Configuration s3Configuration) {
     this.s3Configuration = s3Configuration;
   }
@@ -1219,20 +1267,20 @@ public class SingularityConfiguration extends Configuration {
     this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
+  public long getCleanInactiveHostListEveryHours() {
+    return cleanInactiveHostListEveryHours;
+  }
+
+  public void setCleanInactiveHostListEveryHours(long cleanInactiveHostListEveryHours) {
+    this.cleanInactiveHostListEveryHours = cleanInactiveHostListEveryHours;
+  }
+
   public long getCacheTasksForMillis() {
     return cacheTasksForMillis;
   }
 
   public void setCacheTasksForMillis(long cacheTasksForMillis) {
     this.cacheTasksForMillis = cacheTasksForMillis;
-  }
-
-  public long getTaskPersistAfterStartupBufferMillis() {
-    return taskPersistAfterStartupBufferMillis;
-  }
-
-  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
-    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
   public LDAPConfiguration getLdapConfiguration() {
@@ -1250,6 +1298,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
+  }
+
+  public WebhookQueueConfiguration getWebhookQueueConfiguration() {
+    return webhookQueueConfiguration;
+  }
+
+  public void setWebhookQueueConfiguration(WebhookQueueConfiguration webhookQueueConfiguration) {
+    this.webhookQueueConfiguration = webhookQueueConfiguration;
   }
 
   public int getMaxConcurrentWebhooks() {
@@ -1463,6 +1519,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
     this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
+  }
+
+  public double getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() {
+    return shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
+  }
+
+  public void setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds) {
+    this.shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
   }
 
   public int getMaxTasksToShuffleTotal() {
