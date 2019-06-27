@@ -92,11 +92,7 @@ public class SingularityCooldownChecker {
       return true;
     }
 
-    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.<Integer> absent(), Optional.<Long> absent())) {
-      return true;
-    }
-
-    return false;
+    return cooldown.hasCooldownExpired(maybeDeployStatistics.get(), Optional.absent());
   }
 
 }
