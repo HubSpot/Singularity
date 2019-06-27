@@ -317,7 +317,7 @@ public class StateManager extends CuratorManager {
       }
     }
     return new SingularityScheduledTasksInfo(
-        lateTasks,
+        generalLateTasks,
         onDemandLateTasks,
         allPendingTaskIds.size() - generalLateTasks.size() - onDemandLateTasks.size(),
         maxTaskLag,
