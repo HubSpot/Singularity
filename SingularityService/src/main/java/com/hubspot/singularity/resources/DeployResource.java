@@ -190,8 +190,14 @@ public class DeployResource extends AbstractRequestResource {
   )
   public SingularityRequestParent cancelDeploy(
       @Parameter(hidden = true) @Auth SingularityUser user,
+      @Context HttpServletRequest requestContext,
       @Parameter(required = true, description = "The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId) {
+
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, null, () -> cancelDeploy(user, requestId, deployId));
+  }
+
+  public SingularityRequestParent cancelDeploy(SingularityUser user, String requestId, String deployId) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
