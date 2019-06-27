@@ -223,7 +223,12 @@ public class DeployResource extends AbstractRequestResource {
   )
   public SingularityRequestParent updatePendingDeploy(
       @Parameter(hidden = true) @Auth SingularityUser user,
+      @Context HttpServletRequest requestContext,
       @RequestBody(required = true) SingularityUpdatePendingDeployRequest updateRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, updateRequest, () -> updatePendingDeploy(user, updateRequest));
+  }
+
+  public SingularityRequestParent updatePendingDeploy(SingularityUser user, SingularityUpdatePendingDeployRequest updateRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(updateRequest.getRequestId(), user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
