@@ -166,7 +166,7 @@ public class StateManager extends CuratorManager {
     final int lbCleanupTasks = taskManager.getNumLbCleanupTasks();
     final int lbCleanupRequests = requestManager.getNumLbCleanupRequests();
 
-    final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
+    final SingularityScheduledTasksInfo scheduledTasksInfo = getScheduledTasksInfo();
 
     final List<String> overProvisionedRequestIds = new ArrayList<>();
     final Set<String> possiblyUnderProvisionedRequestIds = new HashSet<>();
@@ -293,18 +293,45 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
-    final Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = scheduledTasksInfo.getLateTasks().stream()
-        .collect(Collectors.partitioningBy(lateTask -> requestTypeIsOnDemand(lateTask)));
-    final List<SingularityPendingTaskId> maybeOnDemandLateTasks = lateTasksPartitionedByOnDemand.get(true);
-    final List<SingularityPendingTaskId> lateTasks = lateTasksPartitionedByOnDemand.get(false);
-
-    final List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(maybeOnDemandLateTasks);
-
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, lateTasks.size(), lateTasks, onDemandLateTasks.size(), onDemandLateTasks,
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getLateTasks().size(),
+        scheduledTasksInfo.getLateTasks(), scheduledTasksInfo.getOnDemandLateTasks().size(), scheduledTasksInfo.getOnDemandLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
         statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
+  }
+
+  private SingularityScheduledTasksInfo getScheduledTasksInfo() {
+    long now = System.currentTimeMillis();
+    List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
+    List<SingularityPendingTaskId> lateTasks = allPendingTaskIds.stream()
+        .filter((p) -> now - p.getNextRunAt() > singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis())
+        .collect(Collectors.toList());
+
+    Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = lateTasks.stream()
+        .collect(Collectors.partitioningBy(this::requestTypeIsOnDemand));
+    List<SingularityPendingTaskId> generalLateTasks = lateTasksPartitionedByOnDemand.get(false);
+    List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(lateTasksPartitionedByOnDemand.get(true));
+    long maxTaskLag = 0L;
+    for (SingularityPendingTaskId pendingTaskId : generalLateTasks) {
+      long delta = now - pendingTaskId.getNextRunAt();
+      if (delta > maxTaskLag) {
+        maxTaskLag = delta;
+      }
+    }
+    for (SingularityPendingTaskId pendingTaskId : onDemandLateTasks) {
+      long delta = now - pendingTaskId.getNextRunAt();
+      if (delta > maxTaskLag) {
+        maxTaskLag = delta;
+      }
+    }
+    return new SingularityScheduledTasksInfo(
+        lateTasks,
+        onDemandLateTasks,
+        allPendingTaskIds.size() - generalLateTasks.size() - onDemandLateTasks.size(),
+        maxTaskLag,
+        now
+      );
   }
 
   private boolean requestTypeIsOnDemand(SingularityPendingTaskId taskId) {
@@ -314,7 +341,7 @@ public class StateManager extends CuratorManager {
     return false;
   }
 
-  private List<SingularityPendingTaskId> getOnDemandLateTasks (List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
+  private List<SingularityPendingTaskId> getOnDemandLateTasks(List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
     List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
     for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(maybeOnDemandLateTask.getRequestId());
