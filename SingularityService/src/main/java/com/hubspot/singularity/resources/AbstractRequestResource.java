@@ -44,8 +44,8 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
     return fetchRequestWithState(requestId, false, user);
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache, SingularityUser user) {
-    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, useWebCache);
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean skipCache, SingularityUser user) {
+    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, skipCache);
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 

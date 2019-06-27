@@ -151,7 +151,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve list of scheduled tasks")
   public List<SingularityTaskRequest> getScheduledTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
@@ -170,7 +170,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   )
   public List<SingularityPendingTaskId> getScheduledTaskIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(skipCache), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -252,10 +252,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityTaskRequest> getScheduledTasksForRequest(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request id to retrieve pending tasks for") @PathParam("requestId") String requestId,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final List<SingularityPendingTask> tasks = Lists.newArrayList(taskManager.getPendingTasksForRequest(requestId, true));
+    final List<SingularityPendingTask> tasks = Lists.newArrayList(taskManager.getPendingTasksForRequest(requestId, skipCache));
 
     return taskRequestManager.getTaskRequests(tasks);
   }
@@ -288,7 +288,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityTask> getTasksForSlave(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "The mesos slave id to retrieve tasks for") @PathParam("slaveId") String slaveId,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
@@ -301,9 +301,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Path("/active")
   @Operation(summary = "Retrieve the list of active tasks for all requests")
   public List<SingularityTask> getActiveTasks(
-      @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(skipCache), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+      @Parameter(hidden = true) @Auth SingularityUser user) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -312,7 +311,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve the list of cleaning tasks for all requests")
   public List<SingularityTaskCleanup> getCleaningTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
@@ -327,8 +326,9 @@ public class TaskResource extends AbstractLeaderAwareResource {
       summary = "Retrieve the list of killed task ids for all requests",
       description = "A list of task ids where the task has been sent a kill but has not yet sent a status update with a terminal state"
   )
-  public List<SingularityKilledTaskIdRecord> getKilledTasks(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(), SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  public List<SingularityKilledTaskIdRecord> getKilledTasks(@Parameter(hidden = true) @Auth SingularityUser user,
+                                                            @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(skipCache), SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET

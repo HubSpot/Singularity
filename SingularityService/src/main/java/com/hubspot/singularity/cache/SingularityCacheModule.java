@@ -1,5 +1,6 @@
 package com.hubspot.singularity.cache;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.net.HostAndPort;
@@ -12,6 +13,8 @@ import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.CacheConfiguration;
 
 import io.atomix.core.Atomix;
+import io.atomix.primitive.partition.MemberGroupStrategy;
+import io.atomix.protocols.backup.partition.PrimaryBackupPartitionGroup;
 
 public class SingularityCacheModule extends AbstractModule {
   private final CacheConfiguration cacheConfiguration;
@@ -34,7 +37,14 @@ public class SingularityCacheModule extends AbstractModule {
         .withMemberId(host)
         .withAddress(host, cacheConfiguration.getAtomixPort())
         .withMembershipProvider(zkNodeDiscoveryProvider)
-        .withShutdownHook(false) // TODO - Shut this down manually???
+        .withShutdownHook(false) // Closed in SingularityLifecycleManaged
+        .withReachabilityTimeout(Duration.ofSeconds(cacheConfiguration.getAtomixReachabilityTimeoutSeconds()))
+        .withClusterId("singularity")
+        .withPartitionGroups(
+            PrimaryBackupPartitionGroup.builder("in-memory-data")
+                .withNumPartitions(1)
+                .withMemberGroupStrategy(MemberGroupStrategy.HOST_AWARE)
+                .build())
         .build();
     atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
     return atomix;

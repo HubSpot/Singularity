@@ -323,7 +323,14 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests(Collection<String> requestIds) {
-    return cache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
+    return getRequests(requestIds, false);
+  }
+
+  public List<SingularityRequestWithState> getRequests(Collection<String> requestIds, boolean skipCache) {
+    List<SingularityRequestWithState> requets = skipCache ?
+        getRequests(skipCache) :
+        cache.getRequests();
+    return requets.stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
   }
 
   private Iterable<SingularityRequestWithState> filter(List<SingularityRequestWithState> requests, final RequestState... states) {
@@ -379,7 +386,14 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return cache.getRequest(requestId);
+    return getRequest(requestId, false);
+  }
+
+  public Optional<SingularityRequestWithState> getRequest(String requestId, boolean skipCache) {
+    if (!skipCache) {
+      return cache.getRequest(requestId);
+    }
+    return getData(getRequestPath(requestId), requestTranscoder);
   }
 
   public void startDeletingRequest(SingularityRequest request, Optional<Boolean> removeFromLoadBalancer, Optional<String> user, Optional<String> actionId, Optional<String> message) {

@@ -121,6 +121,10 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
     return cache.getSlaveUsage(slaveId);
   }
 
+  public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+    return getAllCurrentSlaveUsage(false);
+  }
+
   public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage(boolean skipCache) {
     if (!skipCache) {
       return cache.getSlaveUsages();

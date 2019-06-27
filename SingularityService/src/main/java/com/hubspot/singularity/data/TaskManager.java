@@ -443,6 +443,10 @@ public class TaskManager extends CuratorAsyncManager {
     return tasks;
   }
 
+  public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
+    return getTaskHistoryUpdates(taskId, false);
+  }
+
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId, boolean skipCache) {
     if (!skipCache) {
       return cache.getTaskHistoryUpdates(taskId);
@@ -454,6 +458,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public Optional<SingularityTaskHistoryUpdate> getTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState taskState) {
     return getData(getUpdatePath(taskId, taskState), taskHistoryUpdateTranscoder);
+  }
+
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
+    return getTaskHistoryUpdates(taskIds, false);
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds, boolean skipCache) {
@@ -777,7 +785,14 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
-    return cache.getPendingTaskIds();
+    return getPendingTaskIds(false);
+  }
+
+  public List<SingularityPendingTaskId> getPendingTaskIds(boolean skipCache) {
+    if (!skipCache) {
+      return cache.getPendingTaskIds();
+    }
+    return getAsyncNestedChildIdsAsList(PENDING_PATH_ROOT, PENDING_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
@@ -787,9 +802,16 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId) {
-    return cache.getPendingTasks().stream()
-        .filter((p) -> p.getPendingTaskId().getRequestId().equals(requestId))
-        .collect(Collectors.toList());
+    return getPendingTasksForRequest(requestId, false);
+  }
+
+  public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId, boolean skipCache) {
+    if (!skipCache) {
+      return cache.getPendingTasks().stream()
+          .filter((p) -> p.getPendingTaskId().getRequestId().equals(requestId))
+          .collect(Collectors.toList());
+    }
+    return getAsyncChildren(getPendingForRequestPath(requestId), pendingTaskTranscoder);
   }
 
   public List<SingularityPendingTask> getPendingTasks() {
@@ -905,6 +927,10 @@ public class TaskManager extends CuratorAsyncManager {
     SingularityCreateResult result = save(getKilledPath(killedTaskIdRecord.getTaskId()), killedTaskIdRecord, killedTaskIdRecordTranscoder);
     cache.addKilledTask(killedTaskIdRecord);
     return result;
+  }
+
+  public List<SingularityKilledTaskIdRecord> getKilledTaskIdRecords() {
+    return getKilledTaskIdRecords(false);
   }
 
   public List<SingularityKilledTaskIdRecord> getKilledTaskIdRecords(boolean skipCache) {
@@ -1025,11 +1051,14 @@ public class TaskManager extends CuratorAsyncManager {
     cache.markPendingTaskForDeletion(pendingTaskId);
   }
 
+  public List<SingularityPendingTaskId> getPendingTasksMarkedForDeletion() {
+    return getPendingTasksMarkedForDeletion(false);
+  }
+
   public List<SingularityPendingTaskId> getPendingTasksMarkedForDeletion(boolean skipCache) {
     if (!skipCache) {
       return cache.getPendingTaskIdsToDelete();
     }
-
     return getChildrenAsIds(PENDING_TASKS_TO_DELETE_PATH_ROOT, pendingTaskIdTranscoder);
   }
 

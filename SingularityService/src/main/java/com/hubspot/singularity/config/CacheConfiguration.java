@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfiguration {
   private int atomixStartTimeoutSeconds = 30;
   private int atomixPort = 5283;
+  private int atomixReachabilityTimeoutSeconds = 30;
   private int pendingTaskCacheSize = 10000;
   private int requestCacheSize = 15000;
   private int cleanupTasksCacheSize = 2000;
@@ -33,6 +34,14 @@ public class CacheConfiguration {
 
   public void setAtomixPort(int atomixPort) {
     this.atomixPort = atomixPort;
+  }
+
+  public int getAtomixReachabilityTimeoutSeconds() {
+    return atomixReachabilityTimeoutSeconds;
+  }
+
+  public void setAtomixReachabilityTimeoutSeconds(int atomixReachabilityTimeoutSeconds) {
+    this.atomixReachabilityTimeoutSeconds = atomixReachabilityTimeoutSeconds;
   }
 
   public int getPendingTaskCacheSize() {

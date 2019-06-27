@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -49,9 +50,11 @@ public class UsageResource {
   @GET
   @Path("/slaves")
   @Operation(summary = "Retrieve a list of slave resource usage models with slave ids")
-  public Collection<SingularitySlaveUsageWithId> getSlavesWithUsage(@Parameter(hidden = true) @Auth SingularityUser user) {
+  public Collection<SingularitySlaveUsageWithId> getSlavesWithUsage(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     authorizationHelper.checkAdminAuthorization(user);
-    return usageManager.getAllCurrentSlaveUsage().values();
+    return usageManager.getAllCurrentSlaveUsage(skipCache).values();
   }
 
   @GET
@@ -71,26 +74,33 @@ public class UsageResource {
   @Path("/cluster/utilization")
   @Operation(summary = "GET a summary of utilization for all slaves and requests in the mesos cluster")
   public SingularityClusterUtilization getClusterUtilization(@Parameter(hidden = true) @Auth SingularityUser user) {
-    //authorizationHelper.checkAdminAuthorization(user); Needed for ui pages outside single request
+    authorizationHelper.checkReadAuthorization(user);
     WebExceptions.checkNotFound(usageManager.getClusterUtilization().isPresent(), "No cluster utilization has been saved yet");
-
     return usageManager.getClusterUtilization().get();
   }
 
   @GET
   @Path("/requests")
-  public List<RequestUtilization> getRequestUtilizations(@Auth SingularityUser user,
-                                                         @QueryParam("useWebCache") Boolean useWebCache) {
-    return new ArrayList<>(usageManager.getRequestUtilizations(useWebCache != null && useWebCache).values());
+  @Operation(
+      summary = "Retrieve the usage summaries for all requests"
+  )
+  public List<RequestUtilization> getRequestUtilizations(
+      @Auth SingularityUser user,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return new ArrayList<>(usageManager.getRequestUtilizations(skipCache).values());
   }
 
   @GET
   @Path("/requests/request/{requestId}")
-  public Optional<RequestUtilization> getRequestUtilization(@Auth SingularityUser user,
-                                                            @PathParam("requestId") String requestId,
-                                                            @QueryParam("useWebCache") Boolean useWebCache) {
+  @Operation(
+      summary = "Retrieve the usage summary for a single request"
+  )
+  public Optional<RequestUtilization> getRequestUtilization(
+      @Auth SingularityUser user,
+      @Parameter(description = "The request to fetch usage data for") @PathParam("requestId") String requestId,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
-    return usageManager.getRequestUtilization(requestId, useWebCache != null && useWebCache);
+    return usageManager.getRequestUtilization(requestId, skipCache);
   }
 
 }

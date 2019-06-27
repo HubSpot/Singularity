@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -133,33 +132,21 @@ public class StateManager extends CuratorManager {
   }
 
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
-    Optional<SingularityState> fromZk = Optional.absent();
+    Optional<SingularityState> fromCache = Optional.absent();
 
     if (!skipCache) {
-      fromZk = getData(STATE_PATH, stateTranscoder);
+      fromCache = Optional.fromNullable(cache.getState());
     }
 
-    if (fromZk.isPresent()) {
-      final long now = System.currentTimeMillis();
-      final long delta = now - fromZk.get().getGeneratedAt();
-
-      if (delta < singularityConfiguration.getCacheStateForMillis()) {
-        return fromZk.get();
-      }
+    if (fromCache.isPresent()) {
+      return fromCache.get();
     }
 
-    final long start = System.currentTimeMillis();
+    return generateState(includeRequestIds);
+  }
 
-    SingularityState newState = generateState(includeRequestIds);
-
-    if (!skipCache) {
-      final byte[] bytes = stateTranscoder.toBytes(newState);
-      save(STATE_PATH, newState, stateTranscoder);
-
-      LOG.info("Generated new state and saved {} bytes in {}", bytes.length, JavaUtils.duration(start));
-    }
-
-    return newState;
+  public void generateAndSaveNewState() {
+    cache.setState(generateState(true));
   }
 
   public SingularityState generateState(boolean includeRequestIds) {

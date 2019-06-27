@@ -260,7 +260,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
-  private long saveStateEverySeconds = 60;
+  private long saveStateEverySeconds = 30;
 
   @JsonProperty("sentry")
   @Valid

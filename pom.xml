@@ -33,6 +33,7 @@
     <baragon.version>0.9.0</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
     <basepom.release.profiles>oss-release</basepom.release.profiles>
+    <dep.atomix.version>3.0.8</dep.atomix.version>
     <dep.classmate.version>1.3.1</dep.classmate.version>
     <dep.commons-lang3.version>3.7</dep.commons-lang3.version>
     <dep.curator.version>4.2.0</dep.curator.version>
@@ -58,7 +59,7 @@
     <dep.mesos.rxjava.version>0.1.0</dep.mesos.rxjava.version>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
     <dep.netty3.version>3.10.6.Final</dep.netty3.version>
-    <dep.netty.version>4.1.22.Final</dep.netty.version>
+    <dep.netty.version>4.1.27.Final</dep.netty.version>
     <dep.protobuf-java.version>3.5.1</dep.protobuf-java.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
     <dep.rxJava.version>1.3.8</dep.rxJava.version>
@@ -263,6 +264,22 @@
       </dependency>
 
       <dependency>
+        <groupId>de.neuland-bfi</groupId>
+        <artifactId>jade4j</artifactId>
+        <version>1.2.7</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>com.hubspot.dropwizard</groupId>
         <artifactId>dropwizard-guicier</artifactId>
         <version>${dropwizard.guicier.version}</version>
@@ -329,13 +346,31 @@
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix</artifactId>
-        <version>3.0.6</version>
+        <version>${dep.atomix.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.atomix</groupId>
+        <artifactId>atomix-cluster</artifactId>
+        <version>${dep.atomix.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId> <!-- conflicts with mesos-rxjava -->
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix-primary-backup</artifactId>
-        <version>3.0.6</version>
+        <version>${dep.atomix.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.atomix</groupId>
+        <artifactId>atomix-primitive</artifactId>
+        <version>${dep.atomix.version}</version>
       </dependency>
 
       <dependency>

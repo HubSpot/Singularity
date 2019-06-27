@@ -46,8 +46,6 @@ public class MergingSourceProviderTest extends SingularityTestBaseNoDb {
         final InputStream mergedConfigStream = buildConfigurationSourceProvider(DEFAULT_PATH).open(OVERRIDE_PATH);
         final SingularityConfiguration mergedConfig = objectMapper.readValue(YAML_FACTORY.createParser(mergedConfigStream), SingularityConfiguration.class);
 
-        assertEquals(10000, mergedConfig.getCacheTasksMaxSize());
-        assertEquals(500, mergedConfig.getCacheTasksInitialSize());
         assertEquals(100, mergedConfig.getCheckDeploysEverySeconds());
         assertEquals("baseuser", mergedConfig.getDatabaseConfiguration().get().getUser());
         assertEquals("overridepassword", mergedConfig.getDatabaseConfiguration().get().getPassword());

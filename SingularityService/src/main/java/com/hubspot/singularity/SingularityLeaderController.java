@@ -157,6 +157,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
       numCachedOffers++;
     }
 
+    // TODO - get some cache/atomix state here?
     return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
@@ -203,6 +204,9 @@ public class SingularityLeaderController implements LeaderLatchListener {
           final SingularityHostState state = getHostState();
           LOG.trace("Saving state in ZK: " + state);
           stateManager.save(state);
+          if (master) {
+            stateManager.generateAndSaveNewState();
+          }
         } catch (InterruptedException e) {
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {

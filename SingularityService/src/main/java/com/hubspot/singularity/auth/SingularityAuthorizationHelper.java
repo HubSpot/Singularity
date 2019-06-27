@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -227,19 +225,11 @@ public class SingularityAuthorizationHelper {
       return objects;
     }
 
-    final Set<String> requestIds = copyOf(Iterables.transform(objects, new Function<T, String>() {
-      @Override
-      public String apply(@Nonnull T input) {
-        return requestIdFunction.apply(input);
-      }
-    }));
+    final Set<String> requestIds = objects.stream()
+        .map(requestIdFunction::apply)
+        .collect(Collectors.toSet());
 
-    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds), new Function<SingularityRequestWithState, String>() {
-      @Override
-      public String apply(@Nonnull SingularityRequestWithState input) {
-        return input.getRequest().getId();
-      }
-    });
+    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds), (r) -> r.getRequest().getId());
 
     return objects.stream()
         .filter((input) -> {
@@ -249,17 +239,12 @@ public class SingularityAuthorizationHelper {
         .collect(Collectors.toList());
   }
 
-  public List<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
+  public List<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean skipCache) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
 
-    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds, useWebCache), new Function<SingularityRequestWithState, String>() {
-      @Override
-      public String apply(@Nonnull SingularityRequestWithState input) {
-        return input.getRequest().getId();
-      }
-    });
+    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds, skipCache), (r) -> r.getRequest().getId());
 
     return requestIds.stream()
         .filter((input) -> requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope))

@@ -415,13 +415,13 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(required = true, description = "Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ, useWebCache != null && useWebCache);  // TODO: will this screw up pagination? A: yes.
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ, skipCache);  // TODO: will this screw up pagination? A: yes.
   }
 
   @GET

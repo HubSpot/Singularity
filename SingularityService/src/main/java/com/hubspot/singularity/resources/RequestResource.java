@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -683,13 +684,13 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of active requests")
   public List<SingularityRequestParent> getActiveRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
       @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
       @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(skipCache)), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
@@ -698,8 +699,8 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of all request ids")
   public List<String> getAllRequestIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return filterAutorized(Lists.newArrayList(requestManager.getRequests(skipCache)), SingularityAuthorizationScope.READ, user)
         .stream()
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
@@ -710,8 +711,8 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of active request ids")
   public List<String> getActiveRequestIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(skipCache)), SingularityAuthorizationScope.READ, user)
         .stream()
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
@@ -724,13 +725,13 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of paused requests")
   public List<SingularityRequestParent> getPausedRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
       @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
       @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(skipCache)), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
@@ -740,13 +741,13 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of requests in system cooldown")
   public List<SingularityRequestParent> getCooldownRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
       @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
       @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(skipCache)), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
@@ -756,13 +757,13 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)")
   public List<SingularityRequestParent> getFinishedRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
-                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                            @QueryParam("limit") Integer limit,
-                                                            @QueryParam("requestType") List<RequestType> requestTypes) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache,
+      @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @Parameter(description = "Max requests to fetch") @QueryParam("limit") Integer limit,
+      @Parameter(description = "Limit your query to the specified request types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(skipCache)), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
@@ -771,13 +772,13 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of all requests")
   public List<SingularityRequestParent> getRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
       @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
       @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
-        filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
+        filterAutorized(requestManager.getRequests(skipCache), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
@@ -822,8 +823,8 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequestParent getRequest(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache), user));
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return fillEntireRequest(fetchRequestWithState(requestId, skipCache, user));
   }
 
   public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
@@ -841,8 +842,8 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequestWithState getRequestSimple(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return fetchRequestWithState(requestId, skipCache, user);
   }
 
   @DELETE
@@ -1086,7 +1087,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(summary = "Retrieve the list of tasks being cleaned from load balancers.")
   public Iterable<String> getLbCleanupRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, skipCache);
   }
 }

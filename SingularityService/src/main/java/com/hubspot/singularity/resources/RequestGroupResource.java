@@ -53,7 +53,7 @@ public class RequestGroupResource extends AbstractLeaderAwareResource {
   @GET
   @Operation(summary = "Get a list of Singularity request groups")
   public List<SingularityRequestGroup> getRequestGroupIds(
-      @Parameter(description = "Use a cached version of this data to limit expensive api calls") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
     return requestGroupManager.getRequestGroups(skipCache);
   }
 
