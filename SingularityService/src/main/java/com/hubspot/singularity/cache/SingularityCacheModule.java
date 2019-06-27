@@ -26,12 +26,13 @@ public class SingularityCacheModule extends AbstractModule {
   @Override
   public void configure() {
     bind(ZkNodeDiscoveryProvider.class).in(Scopes.SINGLETON);
+    bind(SingularityCache.class).in(Scopes.SINGLETON);
   }
 
   @Provides
   @Singleton
-  public Atomix providesAtomixCache(ZkNodeDiscoveryProvider zkNodeDiscoveryProvider,
-                                    @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) throws Exception {
+  public Atomix providesAtomix(ZkNodeDiscoveryProvider zkNodeDiscoveryProvider,
+                               @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) throws Exception {
     String host = hostAndPort.getHost();
     Atomix atomix = Atomix.builder()
         .withMemberId(host)
@@ -40,6 +41,11 @@ public class SingularityCacheModule extends AbstractModule {
         .withShutdownHook(false) // Closed in SingularityLifecycleManaged
         .withReachabilityTimeout(Duration.ofSeconds(cacheConfiguration.getAtomixReachabilityTimeoutSeconds()))
         .withClusterId("singularity")
+        .withManagementGroup(PrimaryBackupPartitionGroup.builder("in-memory-data")
+            .withNumPartitions(1)
+            .withMemberGroupStrategy(MemberGroupStrategy.HOST_AWARE)
+            .build()
+        )
         .withPartitionGroups(
             PrimaryBackupPartitionGroup.builder("in-memory-data")
                 .withNumPartitions(1)

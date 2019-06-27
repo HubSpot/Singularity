@@ -99,6 +99,8 @@ import okhttp3.OkHttpClient;
 
 public class SingularityMainModule implements Module {
 
+  private static final String LEADER_PATH = "/leader";
+
   public static final String TASK_TEMPLATE = "task.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
@@ -129,7 +131,6 @@ public class SingularityMainModule implements Module {
   public void configure(Binder binder) {
     binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
 
-    binder.bind(LeaderLatch.class).to(SingularityLeaderLatch.class).in(Scopes.SINGLETON);
     binder.bind(CuratorFramework.class).toProvider(SingularityCuratorProvider.class).in(Scopes.SINGLETON);
 
     Multibinder<ConnectionStateListener> connectionStateListeners = Multibinder.newSetBinder(binder, ConnectionStateListener.class);
@@ -244,6 +245,13 @@ public class SingularityMainModule implements Module {
     public HostAndPort get() {
       return HostAndPort.fromParts(hostname, httpPort);
     }
+  }
+
+  @Provides
+  @Singleton
+  LeaderLatch providesLeaderLatch(CuratorFramework curatorFramework,
+                                  @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort httpHostAndPort) {
+    return new LeaderLatch(checkNotNull(curatorFramework, "curatorFramework is null"), LEADER_PATH, httpHostAndPort.toString());
   }
 
   @Provides

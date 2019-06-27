@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ public class SingularityLifecycleManaged implements Managed {
                                      SingularityGraphiteReporter graphiteReporter,
                                      ExecutorIdGenerator executorIdGenerator,
                                      SingularityCache cache,
+                                     Set<LeaderLatchListener> listeners,
                                      Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
@@ -67,6 +69,9 @@ public class SingularityLifecycleManaged implements Managed {
     this.curatorFramework = curatorFramework;
     this.leaderController = leaderController;
     this.leaderLatch = leaderLatch;
+    for (LeaderLatchListener listener : listeners) {
+      leaderLatch.addListener(listener);
+    }
     this.executorInfoSupport = executorInfoSupport;
     this.graphiteReporter = graphiteReporter;
     this.executorIdGenerator = executorIdGenerator;
