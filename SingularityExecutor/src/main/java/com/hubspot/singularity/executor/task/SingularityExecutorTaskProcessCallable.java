@@ -85,7 +85,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
 
     Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
     Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(5);
-    long maxDelay = maybeOptions.get().getStartupTimeoutSeconds().or(45) + (retryInterval * healthcheckMaxRetries);
+    long maxDelay = retryInterval * healthcheckMaxRetries;
 
     try {
       Retryer<HealthCheckResult> retryer = RetryerBuilder.<HealthCheckResult>newBuilder()
