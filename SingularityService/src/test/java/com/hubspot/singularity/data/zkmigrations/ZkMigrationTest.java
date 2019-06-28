@@ -77,7 +77,7 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
     List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds(true); // cache hasn't been loaded yet for this test
     Assert.assertTrue(pendingTaskIds.contains(testPending));
-    Assert.assertEquals(pendingTask, taskManager.getPendingTask(testPending).get());
+    Assert.assertEquals(pendingTask, taskManager.getPendingTask(testPending, true).get());
 
     List<SingularityTaskId> active = taskManager.getActiveTaskIds();
     Assert.assertTrue(active.contains(taskId));

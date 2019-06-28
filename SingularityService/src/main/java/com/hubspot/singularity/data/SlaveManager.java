@@ -24,7 +24,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   private static final Logger LOG = LoggerFactory.getLogger(SlaveManager.class);
 
   private static final String SLAVE_ROOT = "/slaves";
-  private final SingularityCache leaderCache;
+  private final SingularityCache cache;
   private final UsageManager usageManager;
 
   @Inject
@@ -34,10 +34,10 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
                       Transcoder<SingularitySlave> slaveTranscoder,
                       Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
                       Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
-                      SingularityCache leaderCache,
+                      SingularityCache cache,
                       UsageManager usageManager) {
     super(curator, configuration, metricRegistry, slaveTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
-    this.leaderCache = leaderCache;
+    this.cache = cache;
     this.usageManager = usageManager;
   }
 
@@ -47,27 +47,27 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheSlaves(getObjectsNoCache(getRoot()));
+    cache.cacheSlaves(getObjectsNoCache(getRoot()));
   }
 
   @Override
   public Optional<SingularitySlave> getObject(String slaveId) {
-    return leaderCache.getSlave(slaveId);
+    return cache.getSlave(slaveId);
   }
 
   @Override
   public List<SingularitySlave> getObjects() {
-    return leaderCache.getSlaves();
+    return cache.getSlaves();
   }
 
   @Override
   public void saveObjectToCache(SingularitySlave singularitySlave) {
-    leaderCache.putSlave(singularitySlave);
+    cache.putSlave(singularitySlave);
   }
 
   @Override
   public void deleteFromCache(String slaveId) {
-    leaderCache.removeSlave(slaveId);
+    cache.removeSlave(slaveId);
   }
 
   @Override

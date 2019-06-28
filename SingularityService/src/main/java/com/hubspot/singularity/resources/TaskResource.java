@@ -196,8 +196,9 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Retrieve information about a pending task")
   public SingularityTaskRequest getPendingTask(
       @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(description = "The unique id of the pending task") @PathParam("pendingTaskId") String pendingTaskIdStr) {
-    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
+      @Parameter(description = "The unique id of the pending task") @PathParam("pendingTaskId") String pendingTaskIdStr,
+      @Parameter(description = "Skip the cache and read data directly from zookeeper") @QueryParam("skipCache") @DefaultValue("false") boolean skipCache) {
+    Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr), skipCache);
 
     checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
 

@@ -84,7 +84,10 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
 
-    Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().equals(slaveManager.getHistory("slave1").get(0)));
+    SingularityMachineStateHistoryUpdate currentState = slaveManager.getObject("slave1").get().getCurrentState();
+    SingularityMachineStateHistoryUpdate historyUpdate = slaveManager.getHistory("slave1").get(0);
+
+    Assert.assertTrue(currentState.equals(historyUpdate));
 
     sms.slaveLost(AgentID.newBuilder().setValue("slave1").build());
 

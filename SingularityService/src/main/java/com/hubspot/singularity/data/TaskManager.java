@@ -760,7 +760,14 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
-    return cache.getPendingTask(pendingTaskId);
+    return getPendingTask(pendingTaskId, false);
+  }
+
+  public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId, boolean skipCache) {
+    if (!skipCache) {
+      return cache.getPendingTask(pendingTaskId);
+    }
+    return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
   private Optional<SingularityTask> getTaskCheckCache(SingularityTaskId taskId, boolean shouldCheckExists) {
