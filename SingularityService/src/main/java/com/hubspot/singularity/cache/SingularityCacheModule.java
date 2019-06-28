@@ -26,6 +26,7 @@ public class SingularityCacheModule extends AbstractModule {
   public void configure() {
     bind(ZkNodeDiscoveryProvider.class).in(Scopes.SINGLETON);
     bind(SingularityCache.class).in(Scopes.SINGLETON);
+    bind(CacheUtils.class).in(Scopes.SINGLETON);
   }
 
   @Provides
@@ -37,6 +38,7 @@ public class SingularityCacheModule extends AbstractModule {
         .withMemberId(host)
         .withAddress(host, cacheConfiguration.getAtomixPort())
         .withMembershipProvider(zkNodeDiscoveryProvider)
+        .withCompatibleSerialization()
         .withShutdownHook(false) // Closed in SingularityLifecycleManaged
         .withReachabilityTimeout(Duration.ofSeconds(cacheConfiguration.getAtomixReachabilityTimeoutSeconds()))
         .withClusterId("singularity")

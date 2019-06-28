@@ -44,6 +44,8 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.datastore.SingularityDisabledAuthDatastore;
+import com.hubspot.singularity.cache.CacheUtils;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -220,8 +222,10 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
-
     mainBinder.install(new SingularityEventModule(configuration.getWebhookQueueConfiguration()));
+
+    mainBinder.bind(SingularityCache.class).in(Scopes.SINGLETON);
+    mainBinder.bind(CacheUtils.class).in(Scopes.SINGLETON);
 
     // Auth module bits
     mainBinder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
