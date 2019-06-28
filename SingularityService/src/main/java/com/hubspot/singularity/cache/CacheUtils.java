@@ -19,7 +19,7 @@ import io.atomix.primitive.Consistency;
 import io.atomix.primitive.Replication;
 import io.atomix.protocols.backup.MultiPrimaryProtocol;
 
-public class CacheUtils {
+class CacheUtils {
 
   static <K, V> DistributedMap<K, V> newAtomixMap(Atomix atomix, String name, Class<K> keyClass, Class<V> valueClass, int cacheSize) {
     DistributedMapBuilder<K, V> distributedMapBuilder = atomix.<K, V>mapBuilder(name)
@@ -28,7 +28,6 @@ public class CacheUtils {
         .withValueType(valueClass)
         .withCacheEnabled(true)
         .withCacheSize(cacheSize)
-        .withCompatibleSerialization()
         .withRegistrationRequired(false)
         .withProtocol(MultiPrimaryProtocol.builder("in-memory-data")
             .withBackups(3) // TODO count for this?
@@ -70,7 +69,7 @@ public class CacheUtils {
       existing.put(key, desired.get(key));
     }
     for (K key : difference.entriesOnlyOnRight().keySet()) {
-      existing.put(key, desired.get(key));;
+      existing.put(key, desired.get(key));
     }
     difference.entriesOnlyOnLeft().keySet().forEach(existing::remove);
   }

@@ -33,7 +33,7 @@
     <baragon.version>0.9.0</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
     <basepom.release.profiles>oss-release</basepom.release.profiles>
-    <dep.atomix.version>3.0.8</dep.atomix.version>
+    <dep.atomix.version>3.0.11</dep.atomix.version>
     <dep.classmate.version>1.3.1</dep.classmate.version>
     <dep.commons-lang3.version>3.7</dep.commons-lang3.version>
     <dep.curator.version>4.2.0</dep.curator.version>
@@ -347,12 +347,6 @@
         <groupId>io.atomix</groupId>
         <artifactId>atomix</artifactId>
         <version>${dep.atomix.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
@@ -364,10 +358,6 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-transport-native-epoll</artifactId> <!-- conflicts with mesos-rxjava -->
           </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
 
@@ -375,48 +365,24 @@
         <groupId>io.atomix</groupId>
         <artifactId>atomix-utils</artifactId>
         <version>${dep.atomix.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix-primary-backup</artifactId>
         <version>${dep.atomix.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix-primitive</artifactId>
         <version>${dep.atomix.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix-storage</artifactId>
         <version>${dep.atomix.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
