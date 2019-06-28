@@ -75,7 +75,7 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
     migrationRunner.checkMigrations();
 
-    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds(true); // cache hasn't been loaded yet for this test
     Assert.assertTrue(pendingTaskIds.contains(testPending));
     Assert.assertEquals(pendingTask, taskManager.getPendingTask(testPending).get());
 
@@ -106,13 +106,14 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     migrationRunner.checkMigrations();
 
     // assert that the migration properly set the requestType field
-    Assert.assertEquals(RequestType.ON_DEMAND, requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.WORKER, requestManager.getRequest(oldWorkerRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.SCHEDULED, requestManager.getRequest(oldScheduledRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.SERVICE, requestManager.getRequest(oldServiceRequest.getId()).get().getRequest().getRequestType());
+    // cache isn't loaded for this, so skip cache on these calls
+    Assert.assertEquals(RequestType.ON_DEMAND, requestManager.getRequest(oldOnDemandRequest.getId(), true).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.WORKER, requestManager.getRequest(oldWorkerRequest.getId(), true).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.SCHEDULED, requestManager.getRequest(oldScheduledRequest.getId(), true).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.SERVICE, requestManager.getRequest(oldServiceRequest.getId(), true).get().getRequest().getRequestType());
 
     // assert that the migration properly carried over any additional fields on the request
-    Assert.assertEquals(Optional.of(owners), requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getOwners());
+    Assert.assertEquals(Optional.of(owners), requestManager.getRequest(oldOnDemandRequest.getId(), true).get().getRequest().getOwners());
   }
 
   @Test

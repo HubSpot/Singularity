@@ -705,7 +705,7 @@ public class TaskManager extends CuratorAsyncManager {
       return Optional.absent();
     }
 
-    List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId, false);
+    List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
     Optional<String> directory = getDirectory(taskId);
     Optional<String> containerId = getContainerId(taskId);
     List<SingularityTaskHealthcheckResult> healthchecks = getHealthcheckResults(taskId);

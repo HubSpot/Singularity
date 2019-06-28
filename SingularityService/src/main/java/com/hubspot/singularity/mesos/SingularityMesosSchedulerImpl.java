@@ -137,7 +137,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       // Should be called before activation of leader cache or cache could be left empty
       startup.checkMigrations();
 
-      leaderCacheCoordinator.activateLeaderCache();
+      leaderCacheCoordinator.activateCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();
       masterInfo.set(newMasterInfo);
       startup.startup(newMasterInfo);
@@ -332,7 +332,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
     state = SchedulerState.STOPPED;
 
-    leaderCacheCoordinator.stopLeaderCache();
+    leaderCacheCoordinator.shutdownCache();
     mesosSchedulerClient.close();
 
     LOG.info("Scheduler now in state: {}", state);

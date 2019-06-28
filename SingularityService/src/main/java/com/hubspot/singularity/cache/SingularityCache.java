@@ -93,7 +93,8 @@ public class SingularityCache {
         .build();
   }
 
-  public void setup() {
+  public void setup() throws Exception {
+    atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
     this.pendingTaskIdToPendingTask = CacheUtils.newAtomixMap(
         atomix,
         "pendingTaskIdToPendingTask",
@@ -183,6 +184,20 @@ public class SingularityCache {
 
   public void close() {
     leader = false;
+    pendingTaskIdToPendingTask.close();
+    activeTaskIds.close();
+    requests.close();
+    requestGroups.close();
+    cleanupTasks.close();
+    requestIdToDeployState.close();
+    killedTasks.close();
+    historyUpdates.close();
+    slaves.close();
+    racks.close();
+    pendingTaskIdsToDelete.close();
+    requestUtilizations.close();
+    slaveUsages.close();
+    state.close();
     atomix.stop().join();
   }
 
@@ -345,11 +360,7 @@ public class SingularityCache {
   }
 
   public List<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
-    Set<SingularityTaskId> allActiveTaskIds;
-    synchronized (activeTaskIds) {
-      allActiveTaskIds = new HashSet<>(activeTaskIds);
-    }
-    return allActiveTaskIds.stream()
+    return activeTaskIds.stream()
         .filter(t -> t.getRequestId().equals(requestId))
         .collect(Collectors.toList());
   }
@@ -531,7 +542,7 @@ public class SingularityCache {
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
-    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId).getHistoryUpdates()).or(new HashMap<>()).values());
+    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId)).or(new SingularityHistoryUpdates(new HashMap<>())).getHistoryUpdates().values());
     Collections.sort(updates);
     return updates;
   }
@@ -549,12 +560,14 @@ public class SingularityCache {
       LOG.warn("saveTaskHistoryUpdate {}, but not leader", taskHistoryUpdate);
       return;
     }
-    historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new SingularityHistoryUpdates(new HashMap<>()));
+    Map<ExtendedTaskState, SingularityTaskHistoryUpdate> updates = historyUpdates.getOrDefault(taskHistoryUpdate.getTaskId(), new SingularityHistoryUpdates(new HashMap<>())).getHistoryUpdates();
+
     if (overwrite) {
-      historyUpdates.get(taskHistoryUpdate.getTaskId()).getHistoryUpdates().put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      updates.put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     } else {
-      historyUpdates.get(taskHistoryUpdate.getTaskId()).getHistoryUpdates().putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      updates.putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     }
+    historyUpdates.put(taskHistoryUpdate.getTaskId(), new SingularityHistoryUpdates(updates));
   }
 
   public void deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state) {
@@ -562,7 +575,9 @@ public class SingularityCache {
       LOG.warn("deleteTaskHistoryUpdate {}, but not leader", taskId);
       return;
     }
-    historyUpdates.getOrDefault(taskId, new SingularityHistoryUpdates(new HashMap<>())).getHistoryUpdates().remove(state);
+    Map<ExtendedTaskState, SingularityTaskHistoryUpdate> updates = historyUpdates.getOrDefault(taskId, new SingularityHistoryUpdates(new HashMap<>())).getHistoryUpdates();
+    updates.remove(state);
+    historyUpdates.put(taskId, new SingularityHistoryUpdates(updates));
   }
 
   public void deleteTaskHistory(SingularityTaskId taskId) {

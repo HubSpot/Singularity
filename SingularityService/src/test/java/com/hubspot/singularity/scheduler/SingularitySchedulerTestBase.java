@@ -206,6 +206,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @After
   public void teardown() throws Exception {
+    cacheCoordinator.shutdownCache();
     if (httpClient != null) {
       httpClient.close();
     }
@@ -213,7 +214,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Before
   public final void setupDriver() throws Exception {
-    cacheCoordinator.activateLeaderCache();
+    cacheCoordinator.activateCache();
     sms.setSubscribed();
     migrationRunner.checkMigrations();
     configuration.getMesosConfiguration().setFrameworkId("singularity");

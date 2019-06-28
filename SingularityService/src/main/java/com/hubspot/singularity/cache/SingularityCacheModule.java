@@ -1,7 +1,6 @@
 package com.hubspot.singularity.cache;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.net.HostAndPort;
 import com.google.inject.AbstractModule;
@@ -52,7 +51,6 @@ public class SingularityCacheModule extends AbstractModule {
                 .withMemberGroupStrategy(MemberGroupStrategy.HOST_AWARE)
                 .build())
         .build();
-    atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
     return atomix;
   }
 }

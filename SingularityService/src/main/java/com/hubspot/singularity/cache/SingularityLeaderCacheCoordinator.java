@@ -41,7 +41,7 @@ public class SingularityLeaderCacheCoordinator {
     this.cache = cache;
   }
 
-  public void activateLeaderCache() {
+  public void activateCache() {
     taskManager.activateLeaderCache();
     deployManager.activateLeaderCache();
     requestManager.activateLeaderCache();
@@ -52,7 +52,7 @@ public class SingularityLeaderCacheCoordinator {
     cache.markLeader();
   }
 
-  public void stopLeaderCache() {
+  public void shutdownCache() {
     cache.markNotLeader();
   }
 
