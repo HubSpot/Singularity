@@ -589,6 +589,7 @@ public class SingularityCache {
       return;
     }
     historyUpdates.remove(taskId);
+    taskCache.invalidate(taskId);
   }
 
   public List<SingularitySlave> getSlaves() {
