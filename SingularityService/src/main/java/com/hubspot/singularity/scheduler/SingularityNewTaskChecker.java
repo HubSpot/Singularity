@@ -314,7 +314,7 @@ public class SingularityNewTaskChecker {
   private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState, SingularityTaskId taskId) {
     taskManager.markUnhealthyKill(taskId);
 
-    if (requestWithState.isPresent() && taskManager.getNumUnhealthyKills(taskId.getRequestId()) > configuration.getCooldownAfterFailures()) {
+    if (requestWithState.isPresent() && taskManager.getNumUnhealthyKills(taskId.getRequestId()) > configuration.getSlowFailureCooldownCount()) {
       mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
     }
   }
