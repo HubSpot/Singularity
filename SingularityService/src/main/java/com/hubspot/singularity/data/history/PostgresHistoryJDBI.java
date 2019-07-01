@@ -80,13 +80,13 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
   int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
 
-  @SqlQuery("SELECT DISTINCT requestId FROM requestHistory")
+  @SqlQuery("SELECT DISTINCT requestId AS id FROM requestHistory")
   List<String> getRequestIdsWithHistory();
 
   @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
   int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
-  @SqlQuery("SELECT DISTINCT requestId FROM deployHistory")
+  @SqlQuery("SELECT DISTINCT requestId AS id FROM deployHistory")
   List<String> getRequestIdsWithDeploys();
 
   @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
