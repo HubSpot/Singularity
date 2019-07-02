@@ -369,7 +369,9 @@ public class S3LogResource extends AbstractHistoryResource {
                     continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), !result.isTruncated()));
                     List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                      objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                      if (search.getFileNamePrefixWhitelist().isEmpty() || search.getFileNamePrefixWhitelist().stream().anyMatch(whitelistedPrefix -> objectSummary.getKey().startsWith(whitelistedPrefix))) {
+                        objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                      }
                     }
                     return objectSummaryHolders;
                   } else {
@@ -385,7 +387,9 @@ public class S3LogResource extends AbstractHistoryResource {
               ListObjectsV2Result result = s3Client.listObjectsV2(request);
               List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
               for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                if (search.getFileNamePrefixWhitelist().isEmpty() || search.getFileNamePrefixWhitelist().stream().anyMatch(whitelistedPrefix -> objectSummary.getKey().startsWith(whitelistedPrefix))) {
+                  objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                }
               }
               while (result.isTruncated() && result.getContinuationToken() != null) {
                 result = s3Client.listObjectsV2(new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix).withContinuationToken(result.getContinuationToken()));
