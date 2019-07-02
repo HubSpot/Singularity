@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
   private final Map<String, List<String>> requestsAndDeploys;
+  private final List<String> fileNamePrefixWhitelist;
   private final List<String> taskIds;
   private final Optional<Long> start;
   private final Optional<Long> end;
@@ -21,9 +22,19 @@ public class SingularityS3SearchRequest {
   private final Optional<Integer> maxPerPage;
   private final Map<String, ContinuationToken> continuationTokens;
 
-  @JsonCreator
+  public SingularityS3SearchRequest(Map<String, List<String>> requestsAndDeploys,
+                                    List<String> taskIds,
+                                    Optional<Long> start,
+                                    Optional<Long> end,
+                                    boolean excludeMetadata,
+                                    boolean listOnly,
+                                    Optional<Integer> maxPerPage, Map<String, ContinuationToken> continuationTokens) {
+    this(requestsAndDeploys, null, taskIds, start, end, excludeMetadata, listOnly, maxPerPage, continuationTokens);
+  }
 
+  @JsonCreator
   public SingularityS3SearchRequest(@JsonProperty("requestsAndDeploys") Map<String, List<String>> requestsAndDeploys,
+                                    @JsonProperty("fileNamePrefixWhitelist") List<String> fileNamePrefixWhitelist,
                                     @JsonProperty("taskIds") List<String> taskIds,
                                     @JsonProperty("start") Optional<Long> start,
                                     @JsonProperty("end") Optional<Long> end,
@@ -32,6 +43,7 @@ public class SingularityS3SearchRequest {
                                     @JsonProperty("maxPerPage") Optional<Integer> maxPerPage,
                                     @JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens) {
     this.requestsAndDeploys = requestsAndDeploys != null ? requestsAndDeploys : Collections.<String, List<String>>emptyMap();
+    this.fileNamePrefixWhitelist = fileNamePrefixWhitelist != null ? fileNamePrefixWhitelist : Collections.emptyList();
     this.taskIds = taskIds != null ? taskIds : Collections.<String>emptyList();
     this.start = start;
     this.end = end;
@@ -44,6 +56,11 @@ public class SingularityS3SearchRequest {
   @Schema(description = "A map of request IDs to a list of deploy ids to search")
   public Map<String, List<String>> getRequestsAndDeploys() {
     return requestsAndDeploys;
+  }
+
+  @Schema(description = "A whitelist of file name prefixes which should be returned")
+  public List<String> getFileNamePrefixWhitelist() {
+    return fileNamePrefixWhitelist;
   }
 
   @Schema(description = "A list of task IDs to search for")
