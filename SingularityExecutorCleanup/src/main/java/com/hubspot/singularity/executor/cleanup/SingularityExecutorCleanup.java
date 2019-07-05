@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -39,10 +39,10 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientException;
 import com.hubspot.singularity.client.SingularityClientProvider;
@@ -317,15 +317,10 @@ public class SingularityExecutorCleanup {
   private Set<String> getRunningTaskIds() {
     final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(hostname)).getId();
 
-    final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
-
-    final Set<String> runningTaskIds = Sets.newHashSet();
-
-    for (SingularityTask task : activeTasks) {
-      runningTaskIds.add(task.getTaskId().getId());
-    }
-
-    return runningTaskIds;
+    return singularityClient.getActiveTaskIdsOnSlave(slaveId)
+        .stream()
+        .map(SingularityTaskId::getId)
+        .collect(Collectors.toSet());
   }
 
   private boolean executorStillRunning(SingularityExecutorTaskDefinition taskDefinition) {
