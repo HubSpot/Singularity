@@ -138,7 +138,7 @@ public class SingularityClient {
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
-  private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT = TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids"
+  private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT = TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
   private static final String TASKS_BY_STATE_FORMAT =TASKS_FORMAT + "/ids/request/%s";
