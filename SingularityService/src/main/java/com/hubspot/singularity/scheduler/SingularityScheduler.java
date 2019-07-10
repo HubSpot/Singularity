@@ -592,7 +592,10 @@ public class SingularityScheduler {
     }
 
     if (!status.hasReason() || !status.getReason().equals(Reason.REASON_INVALID_OFFERS)) {
-      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
+      if (state != ExtendedTaskState.TASK_KILLED
+          && !state.isSuccess()
+          && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED
+          && cooldown.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
         LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request, System.currentTimeMillis());
@@ -716,10 +719,6 @@ public class SingularityScheduler {
       } else {
         bldr.setAverageSchedulingDelayMillis(Optional.of(startedAt - dueTime));
       }
-
-      final SingularityDeployStatistics newStatistics = bldr.build();
-
-      deployManager.saveDeployStatistics(newStatistics);
     }
 
     bldr.setNumTasks(bldr.getNumTasks() + 1);
