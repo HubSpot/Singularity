@@ -296,6 +296,25 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
+  @Path("/active/slave/{slaveId}/ids")
+  @Operation(
+      summary = "Retrieve list of active tasks on a specific slave",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "A slave with the specified id was not found")
+      }
+  )
+  public List<SingularityTaskId> getTaskIdsForSlave(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "The mesos slave id to retrieve task ids for") @PathParam("slaveId") String slaveId,
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+
+    checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
+
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTaskIdsOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
   @PropertyFiltering
   @Path("/active")
   @Operation(summary = "Retrieve the list of active tasks for all requests")

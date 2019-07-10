@@ -138,6 +138,7 @@ public class SingularityClient {
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
+  private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT = TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
   private static final String TASKS_BY_STATE_FORMAT =TASKS_FORMAT + "/ids/request/%s";
@@ -219,6 +220,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
+  private static final TypeReference<Collection<SingularityTaskId>> TASK_IDS_COLLECTION = new TypeReference<Collection<SingularityTaskId>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
   private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
@@ -866,6 +868,12 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getApiBase(host), slaveId);
 
     return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
+  }
+
+  public Collection<SingularityTaskId> getActiveTaskIdsOnSlave(final String slaveId) {
+    final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT, getApiBase(host), slaveId);
+
+    return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASK_IDS_COLLECTION);
   }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
