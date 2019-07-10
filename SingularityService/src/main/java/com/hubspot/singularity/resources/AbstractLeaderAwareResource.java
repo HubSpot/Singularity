@@ -94,12 +94,13 @@ public class AbstractLeaderAwareResource {
       throw new WebApplicationException(e, 500);
     }
 
-    // void responses
-    if (clazz.isAssignableFrom(Response.class)) {
-      return (T) response;
-    }
-
     try {
+      if (clazz.isAssignableFrom(javax.ws.rs.core.Response.class)) {
+        return (T) javax.ws.rs.core.Response.status(response.getStatusCode())
+            .entity(response.getResponseBody())
+            .build();
+      }
+
       if (response.getStatusCode() > 399) {
         throw new WebApplicationException(response.getResponseBody(Charsets.UTF_8.toString()), response.getStatusCode());
       } else {

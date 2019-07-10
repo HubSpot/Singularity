@@ -117,6 +117,38 @@ public class SingularityTask extends SingularityTaskIdHolder {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityTask task = (SingularityTask) o;
+
+    if (taskRequest != null ? !taskRequest.equals(task.taskRequest) : task.taskRequest != null) {
+      return false;
+    }
+    if (offers != null ? !offers.equals(task.offers) : task.offers != null) {
+      return false;
+    }
+    if (mesosTask != null ? !mesosTask.equals(task.mesosTask) : task.mesosTask != null) {
+      return false;
+    }
+    return rackId != null ? rackId.equals(task.rackId) : task.rackId == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = taskRequest != null ? taskRequest.hashCode() : 0;
+    result = 31 * result + (offers != null ? offers.hashCode() : 0);
+    result = 31 * result + (mesosTask != null ? mesosTask.hashCode() : 0);
+    result = 31 * result + (rackId != null ? rackId.hashCode() : 0);
+    return result;
+  }
+
+  @Override
   public String toString() {
     return "SingularityTask{" +
         "taskRequest=" + taskRequest +

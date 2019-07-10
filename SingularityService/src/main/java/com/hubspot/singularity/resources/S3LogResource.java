@@ -32,6 +32,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ResponseHeaderOverrides;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -86,6 +88,7 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.helpers.S3ObjectSummaryHolder;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,9 +127,9 @@ public class S3LogResource extends AbstractHistoryResource {
   };
 
   @Inject
-  public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager,
-      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, SingularityS3Services s3Services) {
-    super(historyManager, taskManager, deployManager, authorizationHelper);
+  public S3LogResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager,
+                       Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, SingularityS3Services s3Services) {
+    super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
     this.requestManager = requestManager;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;

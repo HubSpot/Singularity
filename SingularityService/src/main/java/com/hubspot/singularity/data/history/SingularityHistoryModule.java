@@ -5,11 +5,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.jackson2.Jackson2Config;
+import org.jdbi.v3.jackson2.Jackson2Plugin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -20,11 +22,11 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityJsonStringMapper;
 import com.hubspot.singularity.data.usage.JDBITaskUsageManager;
 import com.hubspot.singularity.data.usage.MySQLTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
@@ -33,7 +35,7 @@ import com.hubspot.singularity.data.usage.TaskUsageManager;
 import com.hubspot.singularity.data.usage.ZkTaskUsageManager;
 
 import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.jdbi3.JdbiFactory;
 import io.dropwizard.setup.Environment;
 
 public class SingularityHistoryModule extends AbstractModule {
@@ -48,17 +50,20 @@ public class SingularityHistoryModule extends AbstractModule {
 
   @Override
   public void configure() {
-    Multibinder<ResultSetMapper<?>> resultSetMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ResultSetMapper<?>>() {});
+    Multibinder<RowMapper<?>> rowMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<RowMapper<?>>() {});
+    rowMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
+    rowMappers.addBinding().to(SingularityMappers.SingularityRequestWithTimeMapper.class).in(Scopes.SINGLETON);
 
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskUsageMapper.class).in(Scopes.SINGLETON);
-    resultSetMappers.addBinding().to(SingularityMappers.SingularityTimestampMapper.class).in(Scopes.SINGLETON);
+    Multibinder<ColumnMapper<?>> columnMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ColumnMapper<?>>() {});
+    columnMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
+    columnMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
+    columnMappers.addBinding().to(SingularityJsonStringMapper.class).in(Scopes.SINGLETON);
+    columnMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
+    columnMappers.addBinding().to(SingularityMappers.SingularityTimestampMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);
@@ -70,10 +75,9 @@ public class SingularityHistoryModule extends AbstractModule {
 
     // Setup database support
     if (configuration.isPresent()) {
-      bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
+      bind(Jdbi.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
-      bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
       bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
@@ -101,32 +105,14 @@ public class SingularityHistoryModule extends AbstractModule {
     return new ReentrantLock();
   }
 
-  private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {
-    bindInterceptor(Matchers.subclassesOf(JDBIHistoryManager.class), Matchers.any(), new MethodInterceptor() {
-
-      @Override
-      public Object invoke(MethodInvocation invocation) throws Throwable {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
-        if (cl == null) {
-          Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
-        }
-
-        try {
-          return invocation.proceed();
-        } finally {
-          Thread.currentThread().setContextClassLoader(cl);
-        }
-      }
-    });
-  }
-
-  static class DBIProvider implements Provider<DBI> {
-    private final DBIFactory dbiFactory = new DBIFactory();
+  static class DBIProvider implements Provider<Jdbi> {
+    private final JdbiFactory factory = new JdbiFactory();
     private final Environment environment;
     private final DataSourceFactory dataSourceFactory;
 
-    private Set<ResultSetMapper<?>> resultSetMappers = ImmutableSet.of();
+    private Set<RowMapper<?>> rowMappers = ImmutableSet.of();
+    private Set<ColumnMapper<?>> columnMappers = ImmutableSet.of();
+    private ObjectMapper objectMapper;
 
     @Inject
     DBIProvider(final Environment environment, final SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
@@ -135,20 +121,27 @@ public class SingularityHistoryModule extends AbstractModule {
     }
 
     @Inject(optional = true)
-    void setMappers(Set<ResultSetMapper<?>> resultSetMappers) {
-      checkNotNull(resultSetMappers, "resultSetMappers is null");
-      this.resultSetMappers = ImmutableSet.copyOf(resultSetMappers);
+    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers, ObjectMapper objectMapper) {
+      checkNotNull(rowMappers, "resultSetMappers is null");
+      this.rowMappers = ImmutableSet.copyOf(rowMappers);
+      this.columnMappers = ImmutableSet.copyOf(columnMappers);
+      this.objectMapper = objectMapper;
     }
 
     @Override
-    public DBI get() {
+    public Jdbi get() {
       try {
-        DBI dbi = dbiFactory.build(environment, dataSourceFactory, "db");
-        for (ResultSetMapper<?> resultSetMapper : resultSetMappers) {
-          dbi.registerMapper(resultSetMapper);
+        Jdbi jdbi = factory.build(environment, dataSourceFactory, "db");
+        for (RowMapper<?> resultSetMapper : rowMappers) {
+          jdbi.registerRowMapper(resultSetMapper);
         }
+        for (ColumnMapper<?> resultSetMapper : columnMappers) {
+          jdbi.registerColumnMapper(resultSetMapper);
+        }
+        jdbi.installPlugin(new Jackson2Plugin());
+        jdbi.getConfig(Jackson2Config.class).setMapper(objectMapper);
 
-        return dbi;
+        return jdbi;
       } catch (Exception e) {
         throw new ProvisionException("while instantiating DBI", e);
       }
@@ -156,10 +149,10 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   static class MySQLHistoryJDBIProvider implements Provider<HistoryJDBI> {
-    private final DBI dbi;
+    private final Jdbi dbi;
 
     @Inject
-    public MySQLHistoryJDBIProvider(DBI dbi) {
+    public MySQLHistoryJDBIProvider(Jdbi dbi) {
       this.dbi = dbi;
     }
 
@@ -171,10 +164,10 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   static class PostgresHistoryJDBIProvider implements Provider<HistoryJDBI> {
-    private final DBI dbi;
+    private final Jdbi dbi;
 
     @Inject
-    public PostgresHistoryJDBIProvider(DBI dbi) {
+    public PostgresHistoryJDBIProvider(Jdbi dbi) {
       this.dbi = dbi;
     }
 
@@ -186,10 +179,10 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   static class MySQLTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
-    private final DBI dbi;
+    private final Jdbi dbi;
 
     @Inject
-    public MySQLTaskUsageJDBIProvider(DBI dbi) {
+    public MySQLTaskUsageJDBIProvider(Jdbi dbi) {
       this.dbi = dbi;
     }
 
@@ -201,10 +194,10 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   static class PostgresTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
-    private final DBI dbi;
+    private final Jdbi dbi;
 
     @Inject
-    public PostgresTaskUsageJDBIProvider(DBI dbi) {
+    public PostgresTaskUsageJDBIProvider(Jdbi dbi) {
       this.dbi = dbi;
     }
 
