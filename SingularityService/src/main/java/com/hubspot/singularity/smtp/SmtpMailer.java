@@ -526,7 +526,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String subject = String.format("Replacement tasks for request %s are unhealthy — Singularity", request.getId());
 
-    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
 
     final String body = Jade4J.render(replacementTasksFailingTemplate, templateProperties);
 
@@ -562,9 +562,9 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
 
-    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
     templateProperties.put("cooldownDelayFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())));
-    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
+    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getSlowCooldownExpiresMinutesWithoutFailure())));
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 

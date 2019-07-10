@@ -443,6 +443,14 @@ public class TaskManager extends CuratorAsyncManager {
     return tasks;
   }
 
+  public List<SingularityTaskId> getTaskIdsOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost());
+
+    return activeTaskIds.stream()
+        .filter((t) -> t.getSanitizedHost().equals(sanitizedHost))
+        .collect(Collectors.toList());
+  }
+
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
     return getTaskHistoryUpdates(taskId, false);
   }

@@ -78,14 +78,14 @@ public class SingularityExecutorShellCommandRunner {
     return builder;
   }
 
-  public void start() {
+  public ListenableFuture<Integer> start() {
     List<String> command = null;
 
     try {
       command = buildCommand();
     } catch (InvalidShellCommandException isce) {
       shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.<String>absent());
-      return;
+      return null;
     }
 
     final String outputFilename = executorConfiguration.getShellCommandOutFile()
@@ -120,6 +120,8 @@ public class SingularityExecutorShellCommandRunner {
       }
 
     });
+
+    return shellFuture;
   }
 
   private List<String> buildCommand() {

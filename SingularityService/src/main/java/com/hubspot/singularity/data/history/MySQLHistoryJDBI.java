@@ -3,73 +3,131 @@ package com.hubspot.singularity.data.history;
 import java.util.Date;
 import java.util.List;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
+import org.jdbi.v3.json.Json;
+import org.jdbi.v3.sqlobject.SingleValue;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.Define;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
-@UseStringTemplate3StatementLocator
-public abstract class MySQLHistoryJDBI extends AbstractHistoryJDBI {
+public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
 
-  @SqlUpdate("INSERT INTO requestHistory (requestId, request, createdAt, requestState, user, message) VALUES (:requestId, :request, :createdAt, :requestState, :user, :message)")
-  public abstract void insertRequestHistory(@Bind("requestId") String requestId, @Bind("request") byte[] request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState, @Bind("user") String user, @Bind("message") String message);
+  @SqlUpdate("INSERT INTO requestHistory (requestId, json, createdAt, requestState, user, message) VALUES (:requestId, :json, :createdAt, :requestState, :user, :message)")
+  void insertRequestHistory(@Bind("requestId") String requestId, @Bind("json") @Json SingularityRequest request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState,
+                            @Bind("user") String user, @Bind("message") String message);
 
-  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :bytes)")
-  public abstract void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("message") String message, @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("bytes") byte[] bytes);
+  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, json) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :json)")
+  void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("message") String message,
+                           @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("json") @Json SingularityDeployHistory deployHistory);
 
-  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus, runId, deployId, host, startedAt, purged) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus, :runId, :deployId, :host, :startedAt, false)")
-  public abstract void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("updatedAt") Date updatedAt,
-                                         @Bind("lastTaskStatus") String lastTaskStatus, @Bind("runId") String runId, @Bind("deployId") String deployId, @Bind("host") String host,
-                                         @Bind("startedAt") Date startedAt);
+  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, json, updatedAt, lastTaskStatus, runId, deployId, host, startedAt, purged) VALUES (:requestId, :taskId, :json, :updatedAt, :lastTaskStatus, :runId, :deployId, :host, :startedAt, false)")
+  void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("json") @Json SingularityTaskHistory taskHistory, @Bind("updatedAt") Date updatedAt,
+                         @Bind("lastTaskStatus") String lastTaskStatus, @Bind("runId") String runId, @Bind("deployId") String deployId, @Bind("host") String host,
+                         @Bind("startedAt") Date startedAt);
 
-  @SqlQuery("SELECT bytes FROM taskHistory WHERE taskId = :taskId")
-  public abstract byte[] getTaskHistoryForTask(@Bind("taskId") String taskId);
+  @SingleValue
+  @SqlQuery("SELECT json FROM taskHistory WHERE taskId = :taskId")
+  @Json
+  SingularityTaskHistory getTaskHistoryForTask(@Bind("taskId") String taskId);
 
-  @SqlQuery("SELECT bytes FROM taskHistory WHERE requestId = :requestId AND runId = :runId")
-  public abstract byte[] getTaskHistoryForTaskByRunId(@Bind("requestId") String requestId, @Bind("runId") String runId);
+  @SingleValue
+  @SqlQuery("SELECT json FROM taskHistory WHERE requestId = :requestId AND runId = :runId")
+  @Json
+  SingularityTaskHistory getTaskHistoryForTaskByRunId(@Bind("requestId") String requestId, @Bind("runId") String runId);
 
-  @SqlQuery("SELECT bytes FROM deployHistory WHERE requestId = :requestId AND deployId = :deployId")
-  public abstract byte[] getDeployHistoryForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
+  @SingleValue
+  @SqlQuery("SELECT json FROM deployHistory WHERE requestId = :requestId AND deployId = :deployId")
+  @Json
+  SingularityDeployHistory getDeployHistoryForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
 
   @SqlQuery("SELECT requestId, deployId, createdAt, user, message, deployStateAt, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart,:limitCount")
-  public abstract List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
 
   @SqlQuery("SELECT COUNT(*) FROM deployHistory WHERE requestId = :requestId")
-  public abstract int getDeployHistoryForRequestCount(@Bind("requestId") String requestId);
+  int getDeployHistoryForRequestCount(@Bind("requestId") String requestId);
 
-  @SqlQuery("SELECT request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount")
-  public abstract List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  @SqlQuery("SELECT json, request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount")
+  List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId,
+                                                    @Define("orderDirection") String orderDirection,
+                                                    @Bind("limitStart") Integer limitStart,
+                                                    @Bind("limitCount") Integer limitCount);
 
   @SqlQuery("SELECT COUNT(*) FROM requestHistory WHERE requestId = :requestId")
-  public abstract int getRequestHistoryCount(@Bind("requestId") String requestId);
+  int getRequestHistoryCount(@Bind("requestId") String requestId);
 
   @SqlQuery("SELECT DISTINCT requestId as id FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') LIMIT :limitStart, :limitCount")
-  public abstract List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+  List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
 
   @SqlQuery("SELECT requestId, COUNT(*) as count FROM taskHistory WHERE updatedAt \\< :updatedAt GROUP BY requestId")
-  public abstract List<SingularityRequestIdCount> getRequestIdCounts(@Bind("updatedAt") Date updatedAt);
+  List<SingularityRequestIdCount> getRequestIdCounts(@Bind("updatedAt") Date updatedAt);
 
   @SqlQuery("SELECT MIN(updatedAt) from (SELECT updatedAt FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limit) as alias")
-  public abstract Date getMinUpdatedAtWithLimitForRequest(@Bind("requestId") String requestId, @Bind("limit") Integer limit);
+  Date getMinUpdatedAtWithLimitForRequest(@Bind("requestId") String requestId, @Bind("limit") Integer limit);
 
-  @SqlUpdate("UPDATE taskHistory SET bytes = '', purged = true WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
-  public abstract void updateTaskHistoryNullBytesForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
+  @SqlUpdate("UPDATE taskHistory SET json = NULL, purged = true WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
+  void updateTaskHistoryNullBytesForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
 
   @SqlUpdate("DELETE FROM taskHistory WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
-  public abstract void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
+  void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
 
   @SqlQuery("SELECT DISTINCT requestId as id FROM taskHistory")
-  public abstract List<String> getRequestIdsInTaskHistory();
+  List<String> getRequestIdsInTaskHistory();
 
   @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
-  public abstract int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+  int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
 
+  @SqlQuery("SELECT DISTINCT requestId AS id FROM requestHistory")
+  List<String> getRequestIdsWithHistory();
 
-  public abstract void close();
+  @SqlUpdate("DELETE FROM requestHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
+  int purgeRequestHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
 
+  @SqlQuery("SELECT DISTINCT requestId AS id FROM deployHistory")
+  List<String> getRequestIdsWithDeploys();
+
+  @SqlUpdate("DELETE FROM deployHistory WHERE requestId = :requestId AND createdAt \\< :threshold LIMIT :batchSize")
+  int purgeDeployHistory(@Bind("requestId") String requestId, @Bind("threshold") Date threshold, @Bind("batchSize") int batchSize);
+
+  // Deprecated queries for before json backfill is finished
+  @Deprecated
+  @SingleValue
+  @SqlQuery("SELECT bytes FROM taskHistory WHERE taskId = :taskId")
+  byte[] getTaskHistoryBytesForTask(@Bind("taskId") String taskId);
+
+  @Deprecated
+  @SingleValue
+  @SqlQuery("SELECT bytes FROM taskHistory WHERE requestId = :requestId AND runId = :runId")
+  byte[] getTaskHistoryBytesForTaskByRunId(@Bind("requestId") String requestId, @Bind("runId") String runId);
+
+  @Deprecated
+  @SingleValue
+  @SqlQuery("SELECT bytes FROM deployHistory WHERE requestId = :requestId AND deployId = :deployId")
+  byte[] getDeployHistoryBytesForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
+
+  //Queries for history migration
+  @SqlQuery("SELECT bytes FROM taskHistory WHERE requestId = :requestId AND purged = false AND bytes != '' AND bytes IS NOT NULL LIMIT :limit")
+  List<byte[]> getTasksWithBytes(@Bind("requestId") String requestId, @Bind("limit") int limit);
+
+  @SqlUpdate("UPDATE taskHistory SET json = :json, bytes = '' WHERE taskId = :taskId")
+  void setTaskJson(@Bind("taskId") String taskId, @Bind("json") @Json SingularityTaskHistory taskHistory);
+
+  @SqlQuery("SELECT request, createdAt FROM requestHistory WHERE request != '' AND request IS NOT NULL LIMIT :limit")
+  List<SingularityRequestAndTime> getRequestsWithBytes(@Bind("limit") int limit);
+
+  @SqlUpdate("UPDATE requestHistory SET json = :json, request = '' WHERE requestId = :requestId AND createdAt = :createdAt")
+  void setRequestJson(@Bind("requestId") String requestId, @Bind("createdAt") Date createdAt, @Bind("json") @Json SingularityRequest request);
+
+  @SqlQuery("SELECT bytes FROM deployHistory WHERE requestId = :requestId AND bytes != '' AND bytes IS NOT NULL LIMIT :limit")
+  List<byte[]> getDeploysWithBytes(@Bind("requestId") String requestId, @Bind("limit") int limit);
+
+  @SqlUpdate("UPDATE deployHistory SET json = :json, bytes = '' WHERE requestId = :requestId AND deployId = :deployId")
+  void setDeployJson(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("json") @Json SingularityDeployHistory deployHistory);
+
+  default void close() {}
 }

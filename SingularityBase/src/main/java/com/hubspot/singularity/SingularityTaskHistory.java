@@ -87,6 +87,54 @@ public class SingularityTaskHistory {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityTaskHistory that = (SingularityTaskHistory) o;
+
+    if (taskUpdates != null ? !taskUpdates.equals(that.taskUpdates) : that.taskUpdates != null) {
+      return false;
+    }
+    if (directory != null ? !directory.equals(that.directory) : that.directory != null) {
+      return false;
+    }
+    if (containerId != null ? !containerId.equals(that.containerId) : that.containerId != null) {
+      return false;
+    }
+    if (task != null ? !task.equals(that.task) : that.task != null) {
+      return false;
+    }
+    if (healthcheckResults != null ? !healthcheckResults.equals(that.healthcheckResults) : that.healthcheckResults != null) {
+      return false;
+    }
+    if (loadBalancerUpdates != null ? !loadBalancerUpdates.equals(that.loadBalancerUpdates) : that.loadBalancerUpdates != null) {
+      return false;
+    }
+    if (shellCommandHistory != null ? !shellCommandHistory.equals(that.shellCommandHistory) : that.shellCommandHistory != null) {
+      return false;
+    }
+    return taskMetadata != null ? taskMetadata.equals(that.taskMetadata) : that.taskMetadata == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = taskUpdates != null ? taskUpdates.hashCode() : 0;
+    result = 31 * result + (directory != null ? directory.hashCode() : 0);
+    result = 31 * result + (containerId != null ? containerId.hashCode() : 0);
+    result = 31 * result + (task != null ? task.hashCode() : 0);
+    result = 31 * result + (healthcheckResults != null ? healthcheckResults.hashCode() : 0);
+    result = 31 * result + (loadBalancerUpdates != null ? loadBalancerUpdates.hashCode() : 0);
+    result = 31 * result + (shellCommandHistory != null ? shellCommandHistory.hashCode() : 0);
+    result = 31 * result + (taskMetadata != null ? taskMetadata.hashCode() : 0);
+    return result;
+  }
+
+  @Override
   public String toString() {
     return "SingularityTaskHistory{" +
         "taskUpdates=" + taskUpdates +

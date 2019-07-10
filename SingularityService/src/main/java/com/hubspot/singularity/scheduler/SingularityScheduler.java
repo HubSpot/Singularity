@@ -329,8 +329,8 @@ public class SingularityScheduler {
       return requestState;
     }
 
-    if (cooldown.hasCooldownExpired(request, deployStatistics, Optional.<Integer>absent(), Optional.<Long>absent())) {
-      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+    if (cooldown.hasCooldownExpired(deployStatistics, Optional.absent())) {
+      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.absent(), Optional.absent());
       return RequestState.ACTIVE;
     }
 
@@ -592,7 +592,7 @@ public class SingularityScheduler {
     }
 
     if (!status.hasReason() || !status.getReason().equals(Reason.REASON_INVALID_OFFERS)) {
-      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
+      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
         LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request, System.currentTimeMillis());
@@ -736,18 +736,14 @@ public class SingularityScheduler {
       if (SingularityTaskHistoryUpdate.getUpdate(taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_CLEANING).isPresent()) {
         LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown", taskId, state);
       } else {
-
-        if (sequentialFailureTimestamps.size() < configuration.getCooldownAfterFailures()) {
-          sequentialFailureTimestamps.add(timestamp);
-        } else if (timestamp > sequentialFailureTimestamps.get(0)) {
-          sequentialFailureTimestamps.set(0, timestamp);
-        }
-
+        sequentialFailureTimestamps.add(timestamp);
+        bldr.setNumSuccess(0);
         bldr.setNumFailures(bldr.getNumFailures() + 1);
         Collections.sort(sequentialFailureTimestamps);
       }
     } else {
       bldr.setNumSuccess(bldr.getNumSuccess() + 1);
+      bldr.setNumFailures(0);
       sequentialFailureTimestamps.clear();
     }
 

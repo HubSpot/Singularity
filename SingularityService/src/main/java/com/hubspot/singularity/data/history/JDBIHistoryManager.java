@@ -2,6 +2,9 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,29 +16,37 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class JDBIHistoryManager implements HistoryManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(JDBIHistoryManager.class);
 
   private final HistoryJDBI history;
+  private final boolean fallBackToBytesFields;
+  private final SingularityConfiguration configuration;
   private final Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
   private final Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
-  private final Transcoder<SingularityRequest> singularityRequestTranscoder;
+  private final AtomicBoolean historyBackfillRunning;
 
   @Inject
-  public JDBIHistoryManager(HistoryJDBI history, Transcoder<SingularityTaskHistory> taskHistoryTranscoder, Transcoder<SingularityDeployHistory> deployHistoryTranscoder,
-      Transcoder<SingularityRequest> singularityRequestTranscoder) {
+  public JDBIHistoryManager(HistoryJDBI history,
+                            SingularityConfiguration configuration,
+                            Transcoder<SingularityTaskHistory> taskHistoryTranscoder,
+                            Transcoder<SingularityDeployHistory> deployHistoryTranscoder) {
     this.taskHistoryTranscoder = taskHistoryTranscoder;
     this.deployHistoryTranscoder = deployHistoryTranscoder;
-    this.singularityRequestTranscoder = singularityRequestTranscoder;
     this.history = history;
+    this.historyBackfillRunning = new AtomicBoolean(false);
+    this.configuration = configuration;
+    this.fallBackToBytesFields = configuration.isSqlFallBackToBytesFields();
   }
 
   @Override
@@ -90,7 +101,7 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveRequestHistoryUpdate requestHistory {}",  requestHistory);
     }
 
-    history.insertRequestHistory(requestHistory.getRequest().getId(), singularityRequestTranscoder.toBytes(requestHistory.getRequest()), new Date(requestHistory.getCreatedAt()),
+    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest(), new Date(requestHistory.getCreatedAt()),
         requestHistory.getEventType().name(), getUserField(requestHistory.getUser()), getMessageField(requestHistory.getMessage()));
   }
 
@@ -106,27 +117,22 @@ public class JDBIHistoryManager implements HistoryManager {
         getUserField(deployHistory.getDeployMarker().getUser()),
         getMessageField(deployHistory.getDeployMarker().getMessage()),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
-            deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
-                deployHistoryTranscoder.toBytes(deployHistory));
+        deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
+        deployHistory);
   }
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    byte[] historyBytes = history.getDeployHistoryForDeploy(requestId, deployId);
-
-    Optional<SingularityDeployHistory> historyOptional = Optional.absent();
-
-    if (historyBytes != null) {
-      historyOptional = Optional.of(deployHistoryTranscoder.fromBytes(historyBytes));
+    Optional<SingularityDeployHistory> maybeHistory =  Optional.fromNullable(history.getDeployHistoryForDeploy(requestId, deployId));
+    if (!maybeHistory.isPresent() && fallBackToBytesFields) {
+      byte[] historyBytes = history.getDeployHistoryBytesForDeploy(requestId, deployId);
+      Optional<SingularityDeployHistory> historyOptional = Optional.absent();
+      if (historyBytes != null) {
+        historyOptional = Optional.of(deployHistoryTranscoder.fromBytes(historyBytes));
+      }
+      return historyOptional;
     }
-
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getDeployHistory requestId {}, deployId {}, deployHistory {}",
-              requestId, deployId, historyOptional);
-    }
-
-
-    return  historyOptional;
+    return maybeHistory;
   }
 
   @Override
@@ -201,46 +207,35 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveTaskHistory -- will insert taskHistory {}", taskHistory);
     }
 
-    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
+    history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistory, new Date(taskIdHistory.getUpdatedAt()),
         lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull(), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
         new Date(taskIdHistory.getTaskId().getStartedAt()));
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    byte[] historyBytes = history.getTaskHistoryForTask(taskId);
-    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
-    if (historyBytes != null && historyBytes.length > 0) {
-      taskHistoryOptional = Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
+    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.fromNullable(history.getTaskHistoryForTask(taskId));
+    if (!maybeTaskHistory.isPresent() && fallBackToBytesFields) {
+      return fromBytes(history.getTaskHistoryBytesForTask(taskId));
     }
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByTaskId taskId {}, taskHistory {} ", taskId, taskHistoryOptional);
-    }
-
-    return taskHistoryOptional;
+    return maybeTaskHistory;
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
-    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(requestId, runId);
-
-    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
-    if (historyBytes != null && historyBytes.length > 0) {
-      taskHistoryOptional =  Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
+    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.fromNullable(history.getTaskHistoryForTaskByRunId(requestId, runId));
+    if (!maybeTaskHistory.isPresent() && fallBackToBytesFields) {
+      return fromBytes(history.getTaskHistoryBytesForTaskByRunId(requestId, runId));
     }
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByRequestAndRun requestId {}, runId {}, taskHistory {}", requestId, runId, taskHistoryOptional);
-    }
-    return taskHistoryOptional;
+    return maybeTaskHistory;
   }
 
-  @Override
-  public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
-    List<SingularityRequestIdCount> list  = history.getRequestIdCounts(before);
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestIdCountsUsingDateBefore before {}, requestIdCounts {}", before, list);
+  private Optional<SingularityTaskHistory> fromBytes(byte[] historyBytes) {
+    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
+    if (historyBytes != null && historyBytes.length > 0) {
+      taskHistoryOptional =  Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
     }
-    return list;
+    return taskHistoryOptional;
   }
 
   @Override
@@ -288,6 +283,103 @@ public class JDBIHistoryManager implements HistoryManager {
 
         history.updateTaskHistoryNullBytesForRequestBefore(requestId, purgeBefore.get(), maxPurgeCount);
       }
+    }
+  }
+
+  @Override
+  @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
+  public CompletableFuture<Void> startHistoryBackfill(int batchSize) {
+    if (!historyBackfillRunning.compareAndSet(false, true)) {
+      LOG.warn("History backfill already running, will not restart");
+      return CompletableFuture.completedFuture(null);
+    }
+    return CompletableFuture.runAsync(() -> {
+      try {
+        backfillTaskJson(batchSize);
+        backfillRequestJson(batchSize);
+        backfillDeployJson(batchSize);
+      } catch (Throwable t) {
+        LOG.error("While running history backfill", t);
+      } finally {
+        historyBackfillRunning.set(false);
+      }
+    });
+  }
+
+  private void backfillTaskJson(int batchSize) {
+    for (String requestId : history.getRequestIdsInTaskHistory()) {
+      List<byte[]> taskHistories = history.getTasksWithBytes(requestId, batchSize);
+      while (!taskHistories.isEmpty()) {
+        taskHistories.stream()
+            .map((bytes) -> {
+              try {
+                return Optional.of(taskHistoryTranscoder.fromBytes(bytes));
+              } catch (SingularityTranscoderException ste) {
+                LOG.warn("Could not deserialize task", ste);
+                return Optional.<SingularityTaskHistory>absent();
+              }
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach((t) -> history.setTaskJson(t.getTask().getTaskId().getId(), t));
+        LOG.debug("Converted {} task histories to json format", taskHistories.size());
+        taskHistories = history.getTasksWithBytes(requestId, batchSize);
+      }
+    }
+  }
+
+  private void backfillRequestJson(int batchSize) {
+    List<SingularityRequestAndTime> requests = history.getRequestsWithBytes(batchSize);
+    while (!requests.isEmpty()) {
+      requests.forEach((r) -> history.setRequestJson(r.getRequest().getId(), new Date(r.getCreatedAt()), r.getRequest()));
+      LOG.debug("Converted {} request histories to json format", requests.size());
+      requests = history.getRequestsWithBytes(batchSize);
+    }
+  }
+
+  private void backfillDeployJson(int batchSize) {
+    for (String requestId : history.getRequestIdsWithDeploys()) {
+      List<byte[]> deployHistories = history.getDeploysWithBytes(requestId, batchSize);
+      while (!deployHistories.isEmpty()) {
+        deployHistories.stream()
+            .map((bytes) -> {
+              try {
+                return Optional.of(deployHistoryTranscoder.fromBytes(bytes));
+              } catch (SingularityTranscoderException ste) {
+                LOG.warn("Could not deserialize deploy", ste);
+                return Optional.<SingularityDeployHistory>absent();
+              }
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach((d) -> history.setDeployJson(d.getDeployMarker().getRequestId(), d.getDeployMarker().getDeployId(), d));
+        LOG.debug("Converted {} deploy histories to json format", deployHistories.size());
+        deployHistories = history.getDeploysWithBytes(requestId, batchSize);
+      }
+    }
+  }
+
+  @Override
+  public void purgeRequestHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeRequestHistoryAfterDays());
+    for (String requestId : history.getRequestIdsWithHistory()) {
+      LOG.debug("Purging old request history for {}", requestId);
+      int purged;
+      do {
+        purged = history.purgeRequestHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
+    }
+  }
+
+  @Override
+  public void purgeDeployHistory() {
+    long threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(configuration.getHistoryPurgingConfiguration().getPurgeDeployHistoryAfterDays());
+    for (String requestId : history.getRequestIdsWithDeploys()) {
+      LOG.debug("Purging old deploy history for {}", requestId);
+      int purged;
+      do {
+        purged = history.purgeDeployHistory(requestId, new Date(threshold), configuration.getHistoryPurgingConfiguration().getPurgeLimitPerQuery());
+      } while (purged > 0);
     }
   }
 

@@ -3,19 +3,24 @@ package com.hubspot.singularity;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
+import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.Handle;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -31,6 +36,7 @@ import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
@@ -43,7 +49,7 @@ import liquibase.resource.FileSystemResourceAccessor;
 public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
-  protected Provider<DBI> dbiProvider;
+  protected Provider<Jdbi> dbiProvider;
 
   @Inject
   protected HistoryManager historyManager;
@@ -64,6 +70,15 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   protected TaskHistoryHelper taskHistoryHelper;
 
   @Inject
+  private Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
+
+  @Inject
+  private Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
+
+  @Inject
+  protected ObjectMapper objectMapper;
+
+  @Inject
   protected SingularitySchedulerLock lock;
 
   public SingularityHistoryTest() {
@@ -73,6 +88,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   @Before
   public void createTestData() throws Exception {
     Handle handle = dbiProvider.get().open();
+    handle.getConnection().setAutoCommit(true);
 
     Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
 
@@ -81,10 +97,11 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     try {
       database.close();
+      handle.close();
     } catch (Throwable t) {
     }
 
-    handle.close();
+
   }
 
   @After
@@ -99,7 +116,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   private SingularityTaskHistory buildTask(long launchTime) {
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    return new SingularityTaskHistory(null, Optional.<String> absent(), Optional.<String>absent(), null, task, null, null, null);
+    return new SingularityTaskHistory(
+        Collections.singletonList(new SingularityTaskHistoryUpdate(task.getTaskId(), launchTime, ExtendedTaskState.TASK_LAUNCHED, Optional.absent(), Optional.absent())),
+        Optional.<String> absent(), Optional.<String>absent(), null, task, null, null, null);
   }
 
   private void saveTasks(int num, long launchTime) {
@@ -486,6 +505,84 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       } else {
         Assert.assertTrue(!historyItem.getMessage().isPresent());
       }
+    }
+  }
+
+  @Test
+  public void testMigrateToJson() throws IOException {
+    try(Handle handle = dbiProvider.get().open()) {
+      initRequest();
+      initFirstDeploy();
+      SingularityRequest request = new SingularityRequestBuilder("test", RequestType.ON_DEMAND).build();
+      SingularityRequestHistory requestHistory = new SingularityRequestHistory(System.currentTimeMillis(), Optional.absent(), RequestHistoryType.CREATED, request, Optional.absent());
+      handle.createUpdate("INSERT INTO requestHistory (requestId, request, createdAt, requestState, user, message) VALUES (:requestId, :request, :createdAt, :requestState, :user, :message)")
+          .bind("requestId", request.getId())
+          .bind("request", objectMapper.writeValueAsBytes(request))
+          .bind("createdAt", new Date(requestHistory.getCreatedAt()))
+          .bind("requestState", requestHistory.getEventType())
+          .bindNull("user", Types.VARCHAR)
+          .bindNull("message", Types.VARCHAR)
+          .defineNamedBindings()
+          .execute();
+
+      SingularityDeployHistory deployHistory = new SingularityDeployHistory(
+          Optional.absent(),
+          new SingularityDeployMarker("test", "testd", System.currentTimeMillis(), Optional.absent(), Optional.absent()),
+          Optional.of(new SingularityDeployBuilder("test", "testd").build()),
+          Optional.absent()
+      );
+      handle.createUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :bytes)")
+          .bind("requestId", "test")
+          .bind("deployId", "testd")
+          .bind("createdAt", new Date(deployHistory.getDeployMarker().getTimestamp()))
+          .bindNull("user", Types.VARCHAR)
+          .bindNull("message", Types.VARCHAR)
+          .bind("deployStateAt", new Date(deployHistory.getDeployMarker().getTimestamp()))
+          .bind("deployState", DeployState.WAITING.toString())
+          .bind("bytes", deployHistoryTranscoder.toBytes(deployHistory))
+          .defineNamedBindings()
+          .execute();
+
+      SingularityTaskHistory taskHistory = buildTask(System.currentTimeMillis());
+      handle.createUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus, runId, deployId, host, startedAt, purged) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus, :runId, :deployId, :host, :startedAt, false)")
+          .bind("requestId", taskHistory.getTask().getTaskId().getRequestId())
+          .bind("taskId", taskHistory.getTask().getTaskId().getId())
+          .bind("bytes", taskHistoryTranscoder.toBytes(taskHistory))
+          .bind("updatedAt", new Date(System.currentTimeMillis()))
+          .bind("lastTaskStatus", ExtendedTaskState.TASK_LAUNCHED.toString())
+          .bindNull("runId", Types.VARCHAR)
+          .bind("deployId", taskHistory.getTask().getTaskId().getDeployId())
+          .bind("host", taskHistory.getTask().getHostname())
+          .bind("startedAt", new Date(System.currentTimeMillis()))
+          .bind("purged", false)
+          .defineNamedBindings()
+          .execute();
+
+      configuration.setSqlFallBackToBytesFields(true);
+      SingularityRequestHistory requestHistoryBefore = historyManager.getRequestHistory(request.getId(), Optional.absent(), 0, 1).get(0);
+      Assert.assertNotNull(requestHistoryBefore);
+      Assert.assertEquals(requestHistory.getRequest(), requestHistoryBefore.getRequest());
+
+      SingularityDeployHistory deployHistoryBefore = historyManager.getDeployHistory("test", "testd").get();
+      Assert.assertEquals(deployHistory.getDeploy().get(), deployHistoryBefore.getDeploy().get());
+
+      SingularityTaskHistory taskHistoryBefore = historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get();
+      Assert.assertEquals(taskHistory, taskHistoryBefore);
+
+      historyManager.startHistoryBackfill(1).join();
+      configuration.setSqlFallBackToBytesFields(false);
+
+      SingularityRequestHistory requestHistoryAfter = historyManager.getRequestHistory(request.getId(), Optional.absent(), 0, 1).get(0);
+      Assert.assertNotNull(requestHistoryAfter);
+      Assert.assertEquals(requestHistory.getRequest(), requestHistoryAfter.getRequest());
+
+      SingularityDeployHistory deployHistoryAfter = historyManager.getDeployHistory("test", "testd").get();
+      Assert.assertEquals(deployHistory, deployHistoryAfter);
+
+      SingularityTaskHistory taskHistoryAfter = historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get();
+      Assert.assertEquals(taskHistory, taskHistoryAfter);
+    } finally {
+      configuration.setSqlFallBackToBytesFields(false);
     }
   }
 }

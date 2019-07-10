@@ -629,6 +629,7 @@ public class SingularityDeployBuilder {
         ", arguments=" + arguments +
         ", env=" + env +
         ", taskEnv=" + taskEnv +
+        ", runImmediately=" + runImmediately +
         ", uris=" + uris +
         ", executorData=" + executorData +
         ", labels=" + labels +
