@@ -4,6 +4,7 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
+import java.net.ServerSocket;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -242,13 +243,13 @@ public class SingularityTestModule implements Module {
   }
 
   private Atomix getTestAtomix() {
-    int id = 5000 + PORT.getAndIncrement();
+    int id = getFreePort();
     return Atomix.builder()
         .withClusterId("test")
         .withMemberId(String.valueOf(id))
-        .withAddress("localhost", 5000 +id)
+        .withAddress("localhost", id)
         .withMembershipProvider(new BootstrapDiscoveryProvider(
-            Node.builder().withId(String.valueOf(id)).withAddress("localhost", 5000 +id).build()
+            Node.builder().withId(String.valueOf(id)).withAddress("localhost", id).build()
         ))
         .withManagementGroup(PrimaryBackupPartitionGroup.builder("in-memory-data")
             .withNumPartitions(1)
@@ -261,6 +262,14 @@ public class SingularityTestModule implements Module {
                 .withMemberGroupStrategy(MemberGroupStrategy.HOST_AWARE)
                 .build())
         .build();
+  }
+
+  protected int getFreePort() {
+    try (ServerSocket tempServer = new ServerSocket(0)) {
+      return tempServer.getLocalPort();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   private DataSourceFactory getDataSourceFactory() {
