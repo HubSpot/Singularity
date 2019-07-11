@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SingularityScheduledTasksInfo {
@@ -9,9 +8,11 @@ public class SingularityScheduledTasksInfo {
   private final long maxTaskLag;
   private final long timestamp;
   private final List<SingularityPendingTaskId> lateTasks;
+  private final List<SingularityPendingTaskId> onDemandLateTasks;
 
-  private SingularityScheduledTasksInfo(List<SingularityPendingTaskId> lateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
+  public SingularityScheduledTasksInfo(List<SingularityPendingTaskId> lateTasks, List<SingularityPendingTaskId> onDemandLateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
     this.lateTasks = lateTasks;
+    this.onDemandLateTasks = onDemandLateTasks;
     this.numFutureTasks = numFutureTasks;
     this.maxTaskLag = maxTaskLag;
     this.timestamp = timestamp;
@@ -21,8 +22,8 @@ public class SingularityScheduledTasksInfo {
     return lateTasks;
   }
 
-  public int getNumLateTasks() {
-    return getLateTasks().size();
+  public List<SingularityPendingTaskId> getOnDemandLateTasks() {
+    return onDemandLateTasks;
   }
 
   public int getNumFutureTasks() {
@@ -35,29 +36,5 @@ public class SingularityScheduledTasksInfo {
 
   public long getTimestamp() {
     return timestamp;
-  }
-
-  public static SingularityScheduledTasksInfo getInfo(List<SingularityPendingTask> pendingTasks, long millisDeltaForLateTasks) {
-    final long now = System.currentTimeMillis();
-
-    int numFutureTasks = 0;
-    long maxTaskLag = 0;
-    List<SingularityPendingTaskId> lateTasks = new ArrayList<>();
-
-    for (SingularityPendingTask pendingTask : pendingTasks) {
-      long delta = now - pendingTask.getPendingTaskId().getNextRunAt();
-
-      if (delta > millisDeltaForLateTasks) {
-        lateTasks.add(pendingTask.getPendingTaskId());
-      } else {
-        numFutureTasks++;
-      }
-
-      if (delta > maxTaskLag) {
-        maxTaskLag = delta;
-      }
-    }
-
-    return new SingularityScheduledTasksInfo(lateTasks, numFutureTasks, maxTaskLag, now);
   }
 }
