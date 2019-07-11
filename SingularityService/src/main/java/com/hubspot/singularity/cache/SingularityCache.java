@@ -8,7 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,6 +53,7 @@ import io.atomix.core.value.AtomicValue;
 public class SingularityCache {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCache.class);
+    private static final Timer TIMER = new Timer();
 
   private final CacheUtils cacheUtils;
   private final Atomix atomix;
@@ -71,6 +75,9 @@ public class SingularityCache {
   private DistributedMap<String, RequestUtilization> requestUtilizations;
   private DistributedMap<String, SingularitySlaveUsageWithId> slaveUsages;
   private AtomicValue<SingularityState> state;
+  private AtomicValue<Long> lastUpdate;
+
+  private final AtomicLong lastMeasuredLag;
 
   private volatile boolean leader;
 
@@ -79,6 +86,7 @@ public class SingularityCache {
                           Atomix atomix,
                           SingularityConfiguration configuration) {
     this.leader = false;
+    this.lastMeasuredLag = new AtomicLong(0);
     this.cacheUtils = cacheUtils;
     this.atomix = atomix;
     this.cacheConfiguration = configuration.getCacheConfiguration();
@@ -175,10 +183,18 @@ public class SingularityCache {
         SingularitySlaveUsageWithId.class,
         cacheConfiguration.getSlaveCacheSize());
     this.state = cacheUtils.newAtomicValue(atomix, "state", SingularityState.class);
+    this.lastUpdate = cacheUtils.newAtomicValue(atomix, "lastUpdate", Long.class);
+    lastUpdate.addListener((update) -> lastMeasuredLag.set(System.currentTimeMillis() - update.newValue()));
   }
 
   void markLeader() {
     leader = true;
+    TIMER.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        lastUpdate.set(System.currentTimeMillis());
+      }
+    }, 0L, 1000L);
   }
 
   void markNotLeader() {
@@ -207,6 +223,7 @@ public class SingularityCache {
 
   public void close() {
     leader = false;
+    TIMER.cancel();
     pendingTaskIdToPendingTask.close();
     activeTaskIds.close();
     requests.close();
@@ -226,6 +243,10 @@ public class SingularityCache {
 
   public boolean isLeader() {
     return leader;
+  }
+
+  public long getLag() {
+    return leader ? 0 : lastMeasuredLag.get();
   }
 
   // Loading in initial data. Sync entries of the maps to avoid the extra network caused by clear + putAll

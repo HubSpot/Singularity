@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.mesos.OfferCache;
@@ -21,8 +22,9 @@ public class SingularityTestLeaderController extends SingularityLeaderController
                                          SingularityExceptionNotifier exceptionNotifier,
                                          @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
                                          SingularityMesosScheduler scheduler,
-                                         OfferCache offerCache) {
-    super(stateManager, configuration, abort, exceptionNotifier, hostAndPort, scheduler, offerCache);
+                                         OfferCache offerCache,
+                                         SingularityCache cache) {
+    super(stateManager, configuration, abort, exceptionNotifier, hostAndPort, scheduler, offerCache, cache);
   }
 
   @Override

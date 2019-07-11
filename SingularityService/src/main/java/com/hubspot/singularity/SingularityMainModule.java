@@ -3,12 +3,10 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +85,8 @@ import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
 
-import de.neuland.jade4j.Jade4J;
+import de.neuland.jade4j.JadeConfiguration;
+import de.neuland.jade4j.template.ClasspathTemplateLoader;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
@@ -339,51 +338,52 @@ public class SingularityMainModule implements Module {
     return config.getHistoryPurgingConfiguration();
   }
 
-  private JadeTemplate getJadeTemplate(String name) throws URISyntaxException, IOException {
-    File resourceFile = Paths.get(getClass().getClassLoader().getResource(String.format("templates/%s", name)).toURI()).toFile();
-    return Jade4J.getTemplate(resourceFile.getAbsolutePath());
+  private JadeTemplate getJadeTemplate(String name) throws IOException {
+    JadeConfiguration config = new JadeConfiguration();
+    config.setTemplateLoader(new ClasspathTemplateLoader());
+    return config.getTemplate("templates/" + name);
   }
 
   @Provides
   @Singleton
   @Named(TASK_TEMPLATE)
   public JadeTemplate getTaskTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("task.jade");
+    return getJadeTemplate("task");
   }
 
   @Provides
   @Singleton
   @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("request_in_cooldown.jade");
+    return getJadeTemplate("request_in_cooldown");
   }
 
   @Provides
   @Singleton
   @Named(REQUEST_MODIFIED_TEMPLATE)
   public JadeTemplate getRequestModifiedTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("request_modified.jade");
+    return getJadeTemplate("request_modified");
   }
 
   @Provides
   @Singleton
   @Named(RATE_LIMITED_TEMPLATE)
   public JadeTemplate getRateLimitedTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("rate_limited.jade");
+    return getJadeTemplate("rate_limited");
   }
 
   @Provides
   @Singleton
   @Named(DISASTERS_TEMPLATE)
   public JadeTemplate getDisastersTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("disaster.jade");
+    return getJadeTemplate("disaster");
   }
 
   @Provides
   @Singleton
   @Named(REPLACEMENT_TASKS_FAILING_TEMPLATE)
   public JadeTemplate getReplacementTasksFailingTemplate() throws URISyntaxException, IOException {
-    return getJadeTemplate("replacement_tasks_failing.jade");
+    return getJadeTemplate("replacement_tasks_failing");
   }
 
   @Provides

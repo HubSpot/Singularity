@@ -38,7 +38,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
   @Override
   public void applyMigration() {
     final long start = System.currentTimeMillis();
-    final List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
+    final List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds(true);
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId, true));

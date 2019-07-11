@@ -25,6 +25,7 @@ public class SingularityHostState {
 
   private final String mesosMaster;
   private final boolean mesosConnected;
+  private final long cacheLag;
 
   @JsonCreator
   public SingularityHostState(@JsonProperty("master") boolean master,
@@ -37,7 +38,8 @@ public class SingularityHostState {
                               @JsonProperty("mesosConnected") boolean mesosConnected,
                               @JsonProperty("offerCacheSize") int offerCacheSize,
                               @JsonProperty("availableCachedCpus") double availableCachedCpus,
-                              @JsonProperty("availableCachedMemory") double availableCachedMemory) {
+                              @JsonProperty("availableCachedMemory") double availableCachedMemory,
+                              @JsonProperty("cacheLag") long cacheLag) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -49,6 +51,7 @@ public class SingularityHostState {
     this.availableCachedCpus = availableCachedCpus;
     this.availableCachedMemory = availableCachedMemory;
     this.offerCacheSize = offerCacheSize;
+    this.cacheLag = cacheLag;
   }
 
   @Schema(description = "Address for this scheduler instance (host:port)")
@@ -106,6 +109,11 @@ public class SingularityHostState {
     return availableCachedMemory;
   }
 
+  @Schema(description = "Last measured delay for the atomix cache")
+  public long getCacheLag() {
+    return cacheLag;
+  }
+
   @Override
   public String toString() {
     return "SingularityHostState{" +
@@ -120,6 +128,7 @@ public class SingularityHostState {
         ", hostname='" + hostname + '\'' +
         ", mesosMaster='" + mesosMaster + '\'' +
         ", mesosConnected=" + mesosConnected +
+        ", cacheLag='" + cacheLag + '\'' +
         '}';
   }
 }

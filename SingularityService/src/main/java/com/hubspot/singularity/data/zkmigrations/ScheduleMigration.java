@@ -45,7 +45,7 @@ public class ScheduleMigration extends ZkDataMigration  {
     final long start = System.currentTimeMillis();
     int num = 0;
 
-    for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
+    for (SingularityRequestWithState requestWithState : requestManager.getRequests(true)) {
 
       if (requestWithState.getRequest().isScheduled()) {
         Optional<String> schedule = requestWithState.getRequest().getSchedule();

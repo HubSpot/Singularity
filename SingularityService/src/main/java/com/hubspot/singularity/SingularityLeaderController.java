@@ -20,6 +20,7 @@ import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -40,6 +41,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
   private final StatePoller statePoller;
   private final SingularityMesosScheduler scheduler;
   private final OfferCache offerCache;
+  private final SingularityCache cache;
 
   private volatile boolean master;
 
@@ -50,7 +52,8 @@ public class SingularityLeaderController implements LeaderLatchListener {
                                      SingularityExceptionNotifier exceptionNotifier,
                                      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
                                      SingularityMesosScheduler scheduler,
-                                     OfferCache offerCache) {
+                                     OfferCache offerCache,
+                                     SingularityCache cache) {
     this.stateManager = stateManager;
     this.abort = abort;
     this.exceptionNotifier = exceptionNotifier;
@@ -61,6 +64,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
     this.scheduler = scheduler;
 
     this.offerCache = offerCache;
+    this.cache = cache;
 
     this.master = false;
   }
@@ -157,9 +161,8 @@ public class SingularityLeaderController implements LeaderLatchListener {
       numCachedOffers++;
     }
 
-    // TODO - get some cache/atomix state here?
     return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
-       numCachedOffers, cachedCpus, cachedMemoryBytes);
+       numCachedOffers, cachedCpus, cachedMemoryBytes, cache.getLag());
   }
 
   // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.
