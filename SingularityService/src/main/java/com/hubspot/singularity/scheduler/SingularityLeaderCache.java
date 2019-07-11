@@ -61,6 +61,22 @@ public class SingularityLeaderCache {
     active = true;
   }
 
+  // Only for unit testing
+  public void clear() {
+    pendingTaskIdToPendingTask.clear();
+    activeTaskIds.clear();
+    requests.clear();
+    cleanupTasks.clear();
+    requestIdToDeployState.clear();
+    killedTasks.clear();
+    historyUpdates.clear();
+    slaves.clear();
+    racks.clear();
+    pendingTaskIdsToDelete.clear();
+    requestUtilizations.clear();
+    slaveUsages.clear();
+  }
+
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     this.pendingTaskIdToPendingTask = new ConcurrentHashMap<>(pendingTasks.size());
     pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));

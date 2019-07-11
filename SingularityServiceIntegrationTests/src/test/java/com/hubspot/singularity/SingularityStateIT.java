@@ -1,23 +1,19 @@
 package com.hubspot.singularity;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.jukito.JukitoModule;
-import org.jukito.JukitoRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.client.SingularityClient;
 
-@RunWith(JukitoRunner.class)
+import name.falgout.jeffrey.testing.junit.guice.GuiceExtension;
+import name.falgout.jeffrey.testing.junit.guice.IncludeModule;
+
+@ExtendWith(GuiceExtension.class)
+@IncludeModule(DockerTestModule.class)
 public class SingularityStateIT {
-  public static class Module extends JukitoModule {
-    @Override
-    protected void configureTest() {
-      install(new DockerTestModule());
-    }
-  }
 
   @Test
   public void testStateEndpoint(SingularityClient singularityClient) {

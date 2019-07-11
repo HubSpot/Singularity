@@ -1,8 +1,8 @@
 package com.hubspot.singularity.mesos;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -28,8 +28,8 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Volume;
 import org.apache.mesos.v1.Protos.Volume.Mode;
 import org.apache.mesos.v1.Protos.Volume.Source.DockerVolume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -85,7 +85,7 @@ public class SingularityMesosTaskBuilderTest {
 
   private final String user = "testUser";
 
-  @Before
+  @BeforeEach
   public void createMocks() {
     pendingTask = new SingularityPendingTaskBuilder()
         .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
@@ -160,7 +160,7 @@ public class SingularityMesosTaskBuilderTest {
       success = success || (environmentVariable.getName().equals("STARTED_BY_USER") && environmentVariable.getValue().equals(user));
     }
 
-    assertTrue("Expected env variable STARTED_BY_USER to be set to " + user, success);
+    assertTrue(success, "Expected env variable STARTED_BY_USER to be set to " + user);
   }
 
   @Test

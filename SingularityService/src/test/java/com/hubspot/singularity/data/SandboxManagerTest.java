@@ -1,22 +1,21 @@
 package com.hubspot.singularity.data;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.ning.http.client.Response;
 
-public class SandboxManagerTest extends SingularityTestBaseNoDb {
+public class SandboxManagerTest extends SingularitySchedulerTestBase {
   private static final int DEFAULT_OFFSET = 123;
 
   private static final String JSON_START = "{\"data\":\"";
@@ -35,6 +34,10 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Inject
   private SandboxManager sandboxManager;
 
+  public SandboxManagerTest() {
+    super(false);
+  }
+
   @Test
   public void testInvalidUtf8WithOneByteOfThreeByteCharacter() throws IOException {
     // data contains a ☃ character and the first byte of another ☃ character
@@ -42,8 +45,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial ☃ should be dropped
-    assertThat(chunk.getData()).isEqualTo(SNOWMAN);
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET);
+    Assertions.assertEquals(chunk.getData(), SNOWMAN);
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET);
   }
 
   @Test
@@ -53,8 +56,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial ☃ should be dropped
-    assertThat(chunk.getData()).isEqualTo(SNOWMAN);
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET);
+    Assertions.assertEquals(chunk.getData(), SNOWMAN);
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET);
   }
 
   @Test
@@ -64,8 +67,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // nothing should be dropped
-    assertThat(chunk.getData()).isEqualTo(SNOWMAN + SNOWMAN);
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET);
+    Assertions.assertEquals(chunk.getData(), SNOWMAN + SNOWMAN);
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET);
   }
 
   @Test
@@ -75,8 +78,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial fire should be dropped and the offset should be advanced by one byte
-    assertThat(chunk.getData()).isEqualTo(SNOWMAN);
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET + 1);
+    Assertions.assertEquals(chunk.getData(), SNOWMAN);
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET + 1);
   }
 
   @Test
@@ -86,8 +89,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial fire should be dropped and the offset should be advanced by two bytes
-    assertThat(chunk.getData()).isEqualTo(SNOWMAN);
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET + 2);
+    Assertions.assertEquals(chunk.getData(), SNOWMAN);
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET + 2);
   }
 
   @Test
@@ -97,8 +100,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial fire should be dropped and the offset should be advanced by one byte
-    assertThat(chunk.getData()).isEqualTo("");
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET + 1);
+    Assertions.assertEquals(chunk.getData(), "");
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET + 1);
   }
 
   @Test
@@ -108,8 +111,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial fire should be dropped and the offset should be advanced by two bytes
-    assertThat(chunk.getData()).isEqualTo("");
-    assertThat(chunk.getOffset()).isEqualTo(DEFAULT_OFFSET + 2);
+    Assertions.assertEquals(chunk.getData(), "");
+    Assertions.assertEquals(chunk.getOffset(), DEFAULT_OFFSET + 2);
   }
 
   private static byte[] toBytes(Object... objects) throws IOException {

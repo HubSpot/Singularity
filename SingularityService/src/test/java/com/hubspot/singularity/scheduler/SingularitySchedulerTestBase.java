@@ -11,7 +11,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -33,8 +32,8 @@ import org.apache.mesos.v1.Protos.URL;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Text;
 import org.apache.mesos.v1.Protos.Value.Type;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -194,26 +193,38 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
+  private final boolean runZkMigrations;
+
   public SingularitySchedulerTestBase(boolean useDBTests) {
     super(useDBTests, null);
+    this.runZkMigrations = true;
+  }
+
+  public SingularitySchedulerTestBase(boolean useDBTests, boolean runZkMigrations) {
+    super(useDBTests, null);
+    this.runZkMigrations = runZkMigrations;
   }
 
   public SingularitySchedulerTestBase(boolean useDBTests, Function<SingularityConfiguration, Void> customConfigSetup) {
     super(useDBTests, customConfigSetup);
+    this.runZkMigrations = true;
   }
 
-  @After
+  @AfterAll
   public void teardown() throws Exception {
+    super.teardown();
     if (httpClient != null) {
       httpClient.close();
     }
   }
 
-  @Before
-  public final void setupDriver() throws Exception {
-    cacheCoordinator.activateLeaderCache();
+  @BeforeAll
+  public void setup() throws Exception {
+    super.setup();
     sms.setSubscribed();
-    migrationRunner.checkMigrations();
+    if (runZkMigrations) {
+      migrationRunner.checkMigrations();
+    }
     configuration.getMesosConfiguration().setFrameworkId("singularity");
   }
 
@@ -400,8 +411,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishNewTaskChecksAndCleanup() {
-    finishNewTaskChecks();
-
     cleaner.drainCleanupQueue();
     killKilledTasks();
   }
@@ -416,26 +425,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         return;
       } catch (ExecutionException e) {
         throw Throwables.propagate(e);
-      }
-    }
-  }
-
-  protected void finishNewTaskChecks() {
-    while (!newTaskChecker.getTaskCheckFutures().isEmpty()) {
-      for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
-        try {
-          future.get();
-        } catch (InterruptedException e) {
-          return;
-        } catch (ExecutionException e) {
-          throw Throwables.propagate(e);
-        }
-      }
-
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException ie) {
-        break;
       }
     }
   }
@@ -549,7 +538,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initHCDeploy() {
-    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())), Optional.absent());
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setResources(Optional.of(new Resources(0.1, 1, 1))).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())), Optional.absent());
   }
 
   protected void initLoadBalancedDeploy() {

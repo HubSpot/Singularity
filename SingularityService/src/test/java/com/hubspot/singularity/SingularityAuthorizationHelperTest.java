@@ -1,7 +1,7 @@
 package com.hubspot.singularity;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -11,7 +11,8 @@ import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -166,11 +167,11 @@ public class SingularityAuthorizationHelperTest {
     assertFalse(authorizationHelper.hasAdminAuthorization(USER_GROUP_B));
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
    public void testCheckAdminAuthorizationThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkAdminAuthorization(USER_GROUP_A);
+    Assertions.assertThrows(WebApplicationException.class, () -> authorizationHelper.checkAdminAuthorization(USER_GROUP_A));
   }
 
   @Test
@@ -187,11 +188,11 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void testCheckForAuthorizationByTaskIdThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_B, SingularityAuthorizationScope.READ);
+    Assertions.assertThrows(WebApplicationException.class, () -> authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_B, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -201,11 +202,11 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void testCheckForAuthorizationThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, USER_GROUP_B, SingularityAuthorizationScope.READ);
+    Assertions.assertThrows(WebApplicationException.class, () -> authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, USER_GROUP_B, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -215,11 +216,11 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_AB, SingularityAuthorizationScope.READ);
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void testCheckForAuthorizationThrowsOnForbiddenChange() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_A, SingularityAuthorizationScope.READ);
+    Assertions.assertThrows(WebApplicationException.class, () -> authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_A, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -244,7 +245,7 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequest, USER_GROUP_A);
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void itRestrictsAUserFromUpdatingGroupsIfTheyWillNotHaveAccess() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig());
 
@@ -262,6 +263,6 @@ public class SingularityAuthorizationHelperTest {
         .setReadWriteGroups(Optional.of(readWriteGroupsNew))
         .build();
 
-    authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequest, USER_GROUP_A);
+    Assertions.assertThrows(WebApplicationException.class, () -> authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequest, USER_GROUP_A));
   }
 }

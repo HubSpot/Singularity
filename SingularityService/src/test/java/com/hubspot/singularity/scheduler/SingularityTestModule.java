@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
 import org.eclipse.jetty.util.component.LifeCycle;
+import org.jdbi.v3.core.Jdbi;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
@@ -54,6 +55,8 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.managed.SingularityLifecycleManaged;
+import com.hubspot.singularity.managed.SingularityLifecycleManagedTest;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -88,10 +91,6 @@ public class SingularityTestModule implements Module {
 
   private final boolean useDBTests;
   private final Function<SingularityConfiguration, Void> customConfigSetup;
-
-  public SingularityTestModule(boolean useDbTests) throws Exception {
-    this(useDbTests, null);
-  }
 
   public SingularityTestModule(boolean useDbTests,Function<SingularityConfiguration, Void> customConfigSetup) throws Exception {
     this.useDBTests = useDbTests;
@@ -143,6 +142,8 @@ public class SingularityTestModule implements Module {
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
+    } else {
+      mainBinder.bind(Jdbi.class).toProvider(() -> null);
     }
 
     if (customConfigSetup != null) {
@@ -177,6 +178,7 @@ public class SingularityTestModule implements Module {
             binder.bind(Environment.class).toInstance(environment);
 
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+            binder.bind(SingularityLifecycleManaged.class).to(SingularityLifecycleManagedTest.class).asEagerSingleton();
 
             binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
             binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
