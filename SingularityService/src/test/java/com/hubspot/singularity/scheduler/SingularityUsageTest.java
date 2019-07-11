@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -65,14 +65,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     String slaveId = firstTask.getAgentId().getValue();
 
-    Assert.assertEquals(0, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
-    Assert.assertEquals(100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
+    Assertions.assertEquals(0, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
+    Assertions.assertEquals(100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
     SingularityTaskUsage first = usageManager.getTaskUsage(firstTask.getTaskId()).get(0);
 
-    Assert.assertEquals(2, first.getCpuSeconds(), 0);
-    Assert.assertEquals(100, first.getMemoryTotalBytes(), 0);
-    Assert.assertEquals(5000, first.getTimestamp(), 0);
+    Assertions.assertEquals(2, first.getCpuSeconds(), 0);
+    Assertions.assertEquals(100, first.getMemoryTotalBytes(), 0);
+    Assertions.assertEquals(5000, first.getTimestamp(), 0);
   }
 
   @Test
@@ -98,10 +98,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(2, usageManager.countTasksWithUsage());
-    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
+    Assertions.assertEquals(2, usageManager.countTasksWithUsage());
+    Assertions.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
 
-    Assert.assertEquals(1100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
+    Assertions.assertEquals(1100, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
     // kill task one
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_KILLED);
@@ -109,15 +109,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(1, usageManager.countTasksWithUsage());
-    Assert.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
+    Assertions.assertEquals(1, usageManager.countTasksWithUsage());
+    Assertions.assertEquals(1, usageManager.getAllCurrentSlaveUsage(false).size());
 
     slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
 
     cleaner.runActionOnPoll();
 
-    Assert.assertEquals(1, usageManager.countTasksWithUsage());
-    Assert.assertEquals(0, usageManager.getAllCurrentSlaveUsage(false).size());
+    Assertions.assertEquals(1, usageManager.countTasksWithUsage());
+    Assertions.assertEquals(0, usageManager.getAllCurrentSlaveUsage(false).size());
   }
 
   @Test
@@ -159,13 +159,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     // check usage now
-    Assert.assertEquals(3.5, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
-    Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
-    Assert.assertEquals(2, usageManager.getSlaveUsage(slaveId).get().getNumTasks(), 0);
+    Assertions.assertEquals(3.5, usageManager.getSlaveUsage(slaveId).get().getCpusUsed(), 0);
+    Assertions.assertEquals(875, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
+    Assertions.assertEquals(2, usageManager.getSlaveUsage(slaveId).get().getNumTasks(), 0);
 
     // check task usage
-    Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
-    Assert.assertEquals(10, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
+    Assertions.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
+    Assertions.assertEquals(10, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
 
     Thread.sleep(2);
 
@@ -179,15 +179,15 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     //check that there is only 2 usages
 
-    Assert.assertEquals(3, usageManager.getTaskUsage(t1).size());
-    Assert.assertEquals(3, usageManager.getTaskUsage(t2).size());
+    Assertions.assertEquals(3, usageManager.getTaskUsage(t1).size());
+    Assertions.assertEquals(3, usageManager.getTaskUsage(t2).size());
 
-    Assert.assertEquals(10.0, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
-    Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
+    Assertions.assertEquals(10.0, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
+    Assertions.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
 
-    Assert.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
+    Assertions.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(), 0);
 
-    Assert.assertEquals(2, usageManager.countTasksWithUsage());
+    Assertions.assertEquals(2, usageManager.countTasksWithUsage());
   }
 
   @Test
@@ -213,7 +213,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
@@ -224,8 +224,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0, 2, 223,
         0, 2, 223);
 
-    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedCpuRequestId());
-    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
+    Assertions.assertEquals(requestId, utilization.getMaxUnderUtilizedCpuRequestId());
+    Assertions.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
   }
 
   @Test
@@ -250,7 +250,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
@@ -261,7 +261,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0, 0, 86,
         0, 0, 86);
 
-    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
+    Assertions.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
   }
 
   @Test
@@ -286,7 +286,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
@@ -297,7 +297,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         2, 0, 0,
         2, 0, 0);
 
-    Assert.assertEquals(requestId, utilization.getMaxOverUtilizedCpuRequestId());
+    Assertions.assertEquals(requestId, utilization.getMaxOverUtilizedCpuRequestId());
   }
 
   @Test
@@ -328,19 +328,19 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
     List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     int t1TaskUsages = usageManager.getTaskUsage(t1).size();
     int t2TaskUsages = usageManager.getTaskUsage(t2).size();
-    Assert.assertEquals(2, t1TaskUsages);
-    Assert.assertEquals(2, t2TaskUsages);
+    Assertions.assertEquals(2, t1TaskUsages);
+    Assertions.assertEquals(2, t2TaskUsages);
 
-    Assert.assertEquals(1, requestUtilizations.size());
-    Assert.assertEquals(cpuReserved * (t1TaskUsages + t2TaskUsages), requestUtilizations.get(0).getCpuReserved(), 0);
-    Assert.assertEquals(Math.round(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * (t1TaskUsages + t2TaskUsages)), requestUtilizations.get(0).getMemBytesReserved(), 1);
+    Assertions.assertEquals(1, requestUtilizations.size());
+    Assertions.assertEquals(cpuReserved * (t1TaskUsages + t2TaskUsages), requestUtilizations.get(0).getCpuReserved(), 0);
+    Assertions.assertEquals(Math.round(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * (t1TaskUsages + t2TaskUsages)), requestUtilizations.get(0).getMemBytesReserved(), 1);
   }
 
   @Test
@@ -364,24 +364,24 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
     List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     int t1TaskUsages = usageManager.getTaskUsage(t1).size();
     int t2TaskUsages = usageManager.getTaskUsage(t2).size();
-    Assert.assertEquals(1, t1TaskUsages);
-    Assert.assertEquals(1, t2TaskUsages);
-    Assert.assertEquals(1, requestUtilizations.size());
+    Assertions.assertEquals(1, t1TaskUsages);
+    Assertions.assertEquals(1, t2TaskUsages);
+    Assertions.assertEquals(1, requestUtilizations.size());
 
     double maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
     double minCpu = requestUtilizations.get(0).getMinCpuUsed();
     long maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
     long minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
-    Assert.assertEquals(10, maxCpu, 0);
-    Assert.assertEquals(8, minCpu, 0);
-    Assert.assertEquals(800, maxMemBytes);
-    Assert.assertEquals(700, minMemBytes);
+    Assertions.assertEquals(10, maxCpu, 0);
+    Assertions.assertEquals(8, minCpu, 0);
+    Assertions.assertEquals(800, maxMemBytes);
+    Assertions.assertEquals(700, minMemBytes);
 
     // new max and min after 2nd run
 
@@ -392,24 +392,24 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
     utilization = usageManager.getClusterUtilization().get();
     requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     t1TaskUsages = usageManager.getTaskUsage(t1).size();
     t2TaskUsages = usageManager.getTaskUsage(t2).size();
-    Assert.assertEquals(2, t1TaskUsages);
-    Assert.assertEquals(2, t2TaskUsages);
-    Assert.assertEquals(1, requestUtilizations.size());
+    Assertions.assertEquals(2, t1TaskUsages);
+    Assertions.assertEquals(2, t2TaskUsages);
+    Assertions.assertEquals(1, requestUtilizations.size());
 
     maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
     minCpu = requestUtilizations.get(0).getMinCpuUsed();
     maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
     minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
-    Assert.assertEquals(12, maxCpu, 0);
-    Assert.assertEquals(7, minCpu, 0);
-    Assert.assertEquals(850, maxMemBytes);
-    Assert.assertEquals(600, minMemBytes);
+    Assertions.assertEquals(12, maxCpu, 0);
+    Assertions.assertEquals(7, minCpu, 0);
+    Assertions.assertEquals(850, maxMemBytes);
+    Assertions.assertEquals(600, minMemBytes);
 
     // same max and min after 3rd run
 
@@ -420,24 +420,24 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
     usagePoller.runActionOnPoll();
 
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+    Assertions.assertTrue(usageManager.getClusterUtilization().isPresent(), "Couldn't find cluster utilization");
     utilization = usageManager.getClusterUtilization().get();
     requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     t1TaskUsages = usageManager.getTaskUsage(t1).size();
     t2TaskUsages = usageManager.getTaskUsage(t2).size();
-    Assert.assertEquals(3, t1TaskUsages);
-    Assert.assertEquals(3, t2TaskUsages);
-    Assert.assertEquals(1, requestUtilizations.size());
+    Assertions.assertEquals(3, t1TaskUsages);
+    Assertions.assertEquals(3, t2TaskUsages);
+    Assertions.assertEquals(1, requestUtilizations.size());
 
     maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
     minCpu = requestUtilizations.get(0).getMinCpuUsed();
     maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
     minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
-    Assert.assertEquals(12, maxCpu, 0);
-    Assert.assertEquals(7, minCpu, 0);
-    Assert.assertEquals(850, maxMemBytes);
-    Assert.assertEquals(600, minMemBytes);
+    Assertions.assertEquals(12, maxCpu, 0);
+    Assertions.assertEquals(7, minCpu, 0);
+    Assertions.assertEquals(850, maxMemBytes);
+    Assertions.assertEquals(600, minMemBytes);
   }
 
   @Test
@@ -480,11 +480,11 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       usagePoller.runActionOnPoll();
 
       // Tasks are not cleaned up because they haven't been running for long enough.
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId1.getId()).isPresent());
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId1.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
 
       // Even though it's not the worst offender, task 2 is cleaned up because it's been running long enough.
-      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType());
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
@@ -529,9 +529,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       usagePoller.runActionOnPoll();
 
       // First task is cleaned up
-      Assert.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
       // Second task is not cleaned up because it is from the same request as task 1
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
@@ -574,9 +574,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       usagePoller.runActionOnPoll();
 
       // First task is cleaned up
-      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
       // Second task is not cleaned up because it is from the same request as task 1
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
@@ -615,9 +615,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       usagePoller.runActionOnPoll();
 
       // First task is cleaned up
-      Assert.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_CPU_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
       // Second task doesn't get cleaned up dur to cluster wide limit
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
       configuration.setMaxTasksToShuffleTotal(6);
@@ -646,22 +646,22 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
                                double expectedMinUnderUtilizedCpu,
                                long expectedMinUnderUtilizedMemBytes) {
 
-    Assert.assertEquals(expectedTaskUsages, actualTaskUsages);
+    Assertions.assertEquals(expectedTaskUsages, actualTaskUsages);
 
-    Assert.assertEquals(expectedRequestsWithOverUtilizedCpu, utilization.getNumRequestsWithOverUtilizedCpu());
-    Assert.assertEquals(expectedRequestsWithUnderUtilizedCpu, utilization.getNumRequestsWithUnderUtilizedCpu());
-    Assert.assertEquals(expectedRequestsWithUnderUtilizedMemBytes, utilization.getNumRequestsWithUnderUtilizedMemBytes());
+    Assertions.assertEquals(expectedRequestsWithOverUtilizedCpu, utilization.getNumRequestsWithOverUtilizedCpu());
+    Assertions.assertEquals(expectedRequestsWithUnderUtilizedCpu, utilization.getNumRequestsWithUnderUtilizedCpu());
+    Assertions.assertEquals(expectedRequestsWithUnderUtilizedMemBytes, utilization.getNumRequestsWithUnderUtilizedMemBytes());
 
-    Assert.assertEquals(expectedAvgOverUtilizedCpu, utilization.getAvgOverUtilizedCpu(), 0);
-    Assert.assertEquals(expectedAvgUnderUtilizedCpu, utilization.getAvgUnderUtilizedCpu(), 0);
-    Assert.assertEquals(expectedAvgUnderUtilizedMemBytes, utilization.getAvgUnderUtilizedMemBytes(), 0);
+    Assertions.assertEquals(expectedAvgOverUtilizedCpu, utilization.getAvgOverUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedAvgUnderUtilizedCpu, utilization.getAvgUnderUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedAvgUnderUtilizedMemBytes, utilization.getAvgUnderUtilizedMemBytes(), 0);
 
-    Assert.assertEquals(expectedMaxOverUtilizedCpu, utilization.getMaxOverUtilizedCpu(), 0);
-    Assert.assertEquals(expectedMaxUnderUtilizedCpu, utilization.getMaxUnderUtilizedCpu(), 0);
-    Assert.assertEquals(expectedMaxUnderUtilizedMemBytes, utilization.getMaxUnderUtilizedMemBytes());
+    Assertions.assertEquals(expectedMaxOverUtilizedCpu, utilization.getMaxOverUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedMaxUnderUtilizedCpu, utilization.getMaxUnderUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedMaxUnderUtilizedMemBytes, utilization.getMaxUnderUtilizedMemBytes());
 
-    Assert.assertEquals(expectedMinOverUtilizedCpu, utilization.getMinOverUtilizedCpu(), 0);
-    Assert.assertEquals(expectedMinUnderUtilizedCpu, utilization.getMinUnderUtilizedCpu(), 0);
-    Assert.assertEquals(expectedMinUnderUtilizedMemBytes, utilization.getMinUnderUtilizedMemBytes());
+    Assertions.assertEquals(expectedMinOverUtilizedCpu, utilization.getMinOverUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedMinUnderUtilizedCpu, utilization.getMinUnderUtilizedCpu(), 0);
+    Assertions.assertEquals(expectedMinUnderUtilizedMemBytes, utilization.getMinUnderUtilizedMemBytes());
   }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 import javax.validation.Validator;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;

@@ -56,7 +56,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -75,11 +74,10 @@ public class SingularityDeployChecker {
   private final SingularityConfiguration configuration;
   private final LoadBalancerClient lbClient;
   private final SingularitySchedulerLock lock;
-  private final HistoryManager historyManager;
 
   @Inject
   public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, LoadBalancerClient lbClient, RequestManager requestManager, TaskManager taskManager,
-                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, HistoryManager historyManager) {
+                                  SingularityConfiguration configuration, SingularitySchedulerLock lock) {
     this.configuration = configuration;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -87,7 +85,6 @@ public class SingularityDeployChecker {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
     this.lock = lock;
-    this.historyManager = historyManager;
   }
 
   public int checkDeploys() {

@@ -185,6 +185,26 @@ public class SingularityCache {
     leader = false;
   }
 
+  // FOR TESTING ONLY!!!!!
+  public void clear() {
+    pendingTaskIdToPendingTask.clear();
+    activeTaskIds.clear();
+    requests.clear();
+    requestGroups.clear();
+    cleanupTasks.clear();
+    requestIdToDeployState.clear();
+    killedTasks.clear();
+    historyUpdates.clear();
+    slaves.clear();
+    racks.clear();
+    pendingTaskIdsToDelete.clear();
+    requestUtilizations.clear();
+    slaveUsages.clear();
+    // state.clear()
+    deployCache.invalidateAll();
+    taskCache.invalidateAll();
+  }
+
   public void close() {
     leader = false;
     pendingTaskIdToPendingTask.close();

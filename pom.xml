@@ -54,12 +54,14 @@
     <dep.jersey2.version>2.25.1</dep.jersey2.version>
     <dep.jetty.version>9.4.18.v20190429</dep.jetty.version>
     <dep.joda.version>2.10.1</dep.joda.version>
+    <dep.junit.jupiter.version>5.5.0</dep.junit.jupiter.version>
+    <dep.junit.platform.version>1.5.0</dep.junit.platform.version>
     <dep.liquibase.version>3.6.3</dep.liquibase.version>
     <dep.logback.version>1.2.3</dep.logback.version>
     <dep.mesos.rxjava.version>0.1.0</dep.mesos.rxjava.version>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
-    <dep.netty3.version>3.10.6.Final</dep.netty3.version>
     <dep.netty.version>4.1.27.Final</dep.netty.version>
+    <dep.netty3.version>3.10.6.Final</dep.netty3.version>
     <dep.protobuf-java.version>3.5.1</dep.protobuf-java.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
     <dep.rxJava.version>1.3.8</dep.rxJava.version>
@@ -69,7 +71,6 @@
     <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
     <dropwizard.version>1.3.12</dropwizard.version>
     <horizon.version>0.1.1</horizon.version>
-    <jukito.version>1.5</jukito.version>
     <mesos.docker.tag>1.7.1</mesos.docker.tag>
     <!-- 1.8.0 not available yet, still compatible -->
     <mesos.version>1.8.0</mesos.version>
@@ -113,6 +114,12 @@
             <artifactId>joda-time</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.esotericsoftware</groupId>
+        <artifactId>kryo</artifactId>
+        <version>4.0.2</version>
       </dependency>
 
       <dependency>
@@ -265,22 +272,6 @@
       </dependency>
 
       <dependency>
-        <groupId>de.neuland-bfi</groupId>
-        <artifactId>jade4j</artifactId>
-        <version>1.2.7</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
         <groupId>com.hubspot.dropwizard</groupId>
         <artifactId>dropwizard-guicier</artifactId>
         <version>${dropwizard.guicier.version}</version>
@@ -349,6 +340,22 @@
       </dependency>
 
       <dependency>
+        <groupId>de.neuland-bfi</groupId>
+        <artifactId>jade4j</artifactId>
+        <version>1.2.7</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix</artifactId>
         <version>${dep.atomix.version}</version>
@@ -361,15 +368,10 @@
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
-            <artifactId>netty-transport-native-epoll</artifactId> <!-- conflicts with mesos-rxjava -->
+            <artifactId>netty-transport-native-epoll</artifactId>
+            <!-- conflicts with mesos-rxjava -->
           </exclusion>
         </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.atomix</groupId>
-        <artifactId>atomix-utils</artifactId>
-        <version>${dep.atomix.version}</version>
       </dependency>
 
       <dependency>
@@ -387,6 +389,12 @@
       <dependency>
         <groupId>io.atomix</groupId>
         <artifactId>atomix-storage</artifactId>
+        <version>${dep.atomix.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.atomix</groupId>
+        <artifactId>atomix-utils</artifactId>
         <version>${dep.atomix.version}</version>
       </dependency>
 
@@ -673,6 +681,27 @@
       </dependency>
 
       <dependency>
+        <groupId>name.falgout.jeffrey.testing.junit5</groupId>
+        <artifactId>guice-extension</artifactId>
+        <version>1.1.1</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>1.23</version>
@@ -682,6 +711,27 @@
         <groupId>com.jayway.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>1.7.0</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${dep.junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${dep.junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-runner</artifactId>
+        <version>${dep.junit.platform.version}</version>
         <scope>test</scope>
       </dependency>
 
@@ -758,6 +808,9 @@
           <groupId>org.basepom.maven</groupId>
           <artifactId>duplicate-finder-maven-plugin</artifactId>
           <configuration>
+            <ignoredClassPatterns>
+              <ignoredClassPattern>module-info</ignoredClassPattern>
+            </ignoredClassPatterns>
             <ignoredResourcePatterns>
               <ignoredResourcePattern>.*\.html</ignoredResourcePattern>
               <ignoredResourcePattern>about_files/.*</ignoredResourcePattern>

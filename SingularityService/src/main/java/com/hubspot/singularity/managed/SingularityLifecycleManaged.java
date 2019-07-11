@@ -88,7 +88,9 @@ public class SingularityLifecycleManaged implements Managed {
       leaderController.start(); // start the state poller
       graphiteReporter.start();
       executorIdGenerator.start();
-      leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
+      if (startLeaderPollers()) {
+        leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
+      }
     } else {
       LOG.info("Already started, will not call again");
     }
@@ -97,7 +99,9 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
+      if (startLeaderPollers()) {
+        stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
+      }
       stopDirectoryFetcher(); // use http client, stop this before client
       stopStatePollerAndMesosConnection(); // Marks the scheduler as stopped
       stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
@@ -109,6 +113,11 @@ public class SingularityLifecycleManaged implements Managed {
     } else {
       LOG.info("Already stopped");
     }
+  }
+
+  // to override in unit testing
+  protected boolean startLeaderPollers() {
+    return true;
   }
 
   private void stopDirectoryFetcher() {

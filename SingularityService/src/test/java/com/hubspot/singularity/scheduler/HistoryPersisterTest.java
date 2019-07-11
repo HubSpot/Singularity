@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -46,7 +46,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     requestHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
+    Assertions.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
 
     requestManager.startDeletingRequest(request, Optional.absent(), user, Optional.<String> absent(), Optional.<String> absent());
 
@@ -57,13 +57,13 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     requestHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
+    Assertions.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
 
     configuration.setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(1);
 
     requestHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(requestManager.getRequestHistory(requestId).isEmpty());
+    Assertions.assertTrue(requestManager.getRequestHistory(requestId).isEmpty());
   }
 
   @Test
@@ -94,15 +94,15 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     requestManager.activate(requestThree, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4), Optional.<String> absent(), Optional.<String> absent());
     requestManager.cooldown(requestThree, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3));
 
-    Assert.assertEquals(2, requestManager.getRequestHistory(requestOne.getId()).size());
-    Assert.assertEquals(2, requestManager.getRequestHistory(requestTwo.getId()).size());
-    Assert.assertEquals(2, requestManager.getRequestHistory(requestThree.getId()).size());
+    Assertions.assertEquals(2, requestManager.getRequestHistory(requestOne.getId()).size());
+    Assertions.assertEquals(2, requestManager.getRequestHistory(requestTwo.getId()).size());
+    Assertions.assertEquals(2, requestManager.getRequestHistory(requestThree.getId()).size());
 
     requestHistoryPersister.runActionOnPoll();
 
-    Assert.assertEquals(0, requestManager.getRequestHistory(requestOne.getId()).size());
-    Assert.assertEquals(2, requestManager.getRequestHistory(requestTwo.getId()).size());
-    Assert.assertEquals(2, requestManager.getRequestHistory(requestThree.getId()).size());
+    Assertions.assertEquals(0, requestManager.getRequestHistory(requestOne.getId()).size());
+    Assertions.assertEquals(2, requestManager.getRequestHistory(requestTwo.getId()).size());
+    Assertions.assertEquals(2, requestManager.getRequestHistory(requestThree.getId()).size());
   }
 
   @Test
@@ -115,29 +115,29 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     taskHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
-    Assert.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
 
     configuration.setDeleteTasksFromZkWhenNoDatabaseAfterHours(1);
 
     taskHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
-    Assert.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
 
     statusUpdate(taskOne, TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2)));
 
     taskHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
-    Assert.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
 
     cleaner.drainCleanupQueue();
 
     taskHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(!taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
-    Assert.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
+    Assertions.assertTrue(!taskManager.getTaskHistory(taskOne.getTaskId()).isPresent());
+    Assertions.assertTrue(taskManager.getTaskHistory(taskTwo.getTaskId()).isPresent());
   }
 
   @Test
@@ -159,14 +159,14 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     }
 
     final List<SingularityTaskId> tasksBeforePurge = taskManager.getInactiveTaskIdsForDeploy(requestId, firstDeployId);
-    Assert.assertEquals(taskIds.size(), tasksBeforePurge.size());
-    Assert.assertTrue(tasksBeforePurge.containsAll(taskIds));
+    Assertions.assertEquals(taskIds.size(), tasksBeforePurge.size());
+    Assertions.assertTrue(tasksBeforePurge.containsAll(taskIds));
 
     taskHistoryPersister.runActionOnPoll();
 
     final List<SingularityTaskId> tasksAfterPurge = taskManager.getInactiveTaskIdsForDeploy(requestId, firstDeployId);
-    Assert.assertEquals(configuration.getMaxStaleTasksPerRequestInZkWhenNoDatabase().get().intValue(), tasksAfterPurge.size());
-    Assert.assertTrue(tasksAfterPurge.containsAll(taskIds.subList(tasksToLaunch-2, tasksToLaunch-1)));  // we should just have the last 2 tasks
+    Assertions.assertEquals(configuration.getMaxStaleTasksPerRequestInZkWhenNoDatabase().get().intValue(), tasksAfterPurge.size());
+    Assertions.assertTrue(tasksAfterPurge.containsAll(taskIds.subList(tasksToLaunch-2, tasksToLaunch-1)));  // we should just have the last 2 tasks
   }
 
   @Test
@@ -185,34 +185,35 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     deployHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(!deployManager.getDeployHistory(requestOneDeployOne.getRequestId(), requestOneDeployOne.getId(), true).isPresent());
-    Assert.assertTrue(deployManager.getDeployHistory(requestOneDeployTwo.getRequestId(), requestOneDeployTwo.getId(), true).isPresent());
-    Assert.assertTrue(deployManager.getDeployHistory(requestOneDeployThree.getRequestId(), requestOneDeployThree.getId(), true).isPresent());
-    Assert.assertTrue(deployManager.getDeployHistory(requestOneDeployFour.getRequestId(), requestOneDeployFour.getId(), true).isPresent());
-    Assert.assertTrue(deployManager.getDeployHistory(requestTwoDeployOne.getRequestId(), requestTwoDeployOne.getId(), true).isPresent());
-    Assert.assertTrue(deployManager.getDeployHistory(requestTwoDeployTwo.getRequestId(), requestTwoDeployTwo.getId(), true).isPresent());
+    Assertions.assertTrue(!deployManager.getDeployHistory(requestOneDeployOne.getRequestId(), requestOneDeployOne.getId(), true).isPresent());
+    Assertions.assertTrue(deployManager.getDeployHistory(requestOneDeployTwo.getRequestId(), requestOneDeployTwo.getId(), true).isPresent());
+    Assertions.assertTrue(deployManager.getDeployHistory(requestOneDeployThree.getRequestId(), requestOneDeployThree.getId(), true).isPresent());
+    Assertions.assertTrue(deployManager.getDeployHistory(requestOneDeployFour.getRequestId(), requestOneDeployFour.getId(), true).isPresent());
+    Assertions.assertTrue(deployManager.getDeployHistory(requestTwoDeployOne.getRequestId(), requestTwoDeployOne.getId(), true).isPresent());
+    Assertions.assertTrue(deployManager.getDeployHistory(requestTwoDeployTwo.getRequestId(), requestTwoDeployTwo.getId(), true).isPresent());
   }
 
   @Test
   public void testPurgingDoesntApplyIfDatabasePresent() {
-    initRequest();
-    initFirstDeploy();
+    try {
+      initRequest();
+      initFirstDeploy();
 
-    requestManager.startDeletingRequest(request, Optional.absent(), user, Optional.<String> absent(), Optional.<String> absent());
+      requestManager.startDeletingRequest(request, Optional.absent(), user, Optional.<String>absent(), Optional.<String>absent());
 
-    requestManager.deleteHistoryParent(requestId);
+      requestManager.deleteHistoryParent(requestId);
 
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String> absent(), Optional.<String> absent());
+      requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String>absent(), Optional.<String>absent());
 
-    configuration.setDatabaseConfiguration(new DataSourceFactory());
+      configuration.setDatabaseConfiguration(new DataSourceFactory());
 
-    configuration.setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(1);
+      configuration.setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(1);
 
-    requestHistoryPersister.runActionOnPoll();
+      requestHistoryPersister.runActionOnPoll();
 
-    Assert.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
+      Assertions.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
+    } finally {
+      configuration.setDatabaseConfiguration(null);
+    }
   }
-
-
-
 }

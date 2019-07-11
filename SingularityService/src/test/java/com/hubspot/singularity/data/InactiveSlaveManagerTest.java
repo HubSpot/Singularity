@@ -1,7 +1,7 @@
 package com.hubspot.singularity.data;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
@@ -15,7 +15,7 @@ public class InactiveSlaveManagerTest extends SingularitySchedulerTestBase {
   public void itShouldContainAnInactiveHostWhenHostDeactivated() {
     inactiveSlaveManager.deactivateSlave("localhost");
 
-    Assert.assertTrue(inactiveSlaveManager.getInactiveSlaves().contains("localhost"));
+    Assertions.assertTrue(inactiveSlaveManager.getInactiveSlaves().contains("localhost"));
   }
 
   @Test
@@ -23,7 +23,7 @@ public class InactiveSlaveManagerTest extends SingularitySchedulerTestBase {
     inactiveSlaveManager.deactivateSlave("localhost");
     inactiveSlaveManager.activateSlave("localhost");
 
-    Assert.assertFalse(inactiveSlaveManager.getInactiveSlaves().contains("localhost"));
+    Assertions.assertFalse(inactiveSlaveManager.getInactiveSlaves().contains("localhost"));
   }
 
   @Test
@@ -32,6 +32,6 @@ public class InactiveSlaveManagerTest extends SingularitySchedulerTestBase {
 
     resourceOffers();
     SingularitySlave slave = slaveManager.getObject("slave1").get();
-    Assert.assertTrue(slave.getCurrentState().getState().isDecommissioning());
+    Assertions.assertTrue(slave.getCurrentState().getState().isDecommissioning());
   }
 }

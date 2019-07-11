@@ -6,8 +6,8 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
@@ -44,8 +44,8 @@ public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
 
     SingularityTask task = startTask(firstDeploy);
-    Assert.assertEquals(taskManager.getPendingTaskIds().size(), 0);
-    Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
+    Assertions.assertEquals(0, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(0, requestManager.getPendingRequests().size());
 
     try {
       updateHandler.processStatusUpdateAsync(TaskStatus.newBuilder()
@@ -54,15 +54,15 @@ public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
           .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId()))
           .build()).get();
     } catch (InterruptedException | ExecutionException e) {
-      Assert.assertTrue(false);
+      Assertions.assertTrue(false);
     }
 
     if (shouldRetry) {
-      Assert.assertEquals(requestManager.getPendingRequests().size(), 1);
-      Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.RETRY);
+      Assertions.assertEquals(requestManager.getPendingRequests().size(), 1);
+      Assertions.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.RETRY);
     } else {
       if (requestManager.getPendingRequests().size() > 0) {
-        Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
+        Assertions.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
       }
     }
     scheduler.drainPendingQueue();

@@ -1,6 +1,6 @@
 package com.hubspot.singularity.mesos;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,8 +11,8 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.scheduler.Protos.Event;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -136,25 +136,25 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     cleaner.drainCleanupQueue();
 
     List<SingularityTaskCleanup> taskCleanups = taskManager.getCleanupTasks();
-    Assert.assertTrue(taskCleanups.get(0).getRunBeforeKillId().isPresent());
+    Assertions.assertTrue(taskCleanups.get(0).getRunBeforeKillId().isPresent());
     SingularityTaskShellCommandRequestId shellCommandRequestId = taskCleanups.get(0).getRunBeforeKillId().get();
 
     cleaner.drainCleanupQueue();
-    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getCleanupTaskIds().size());
 
     launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
 
     cleaner.drainCleanupQueue();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
 
     taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent(), UpdateType.ACKED));
     cleaner.drainCleanupQueue();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
 
     taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent(), UpdateType.FINISHED));
     cleaner.drainCleanupQueue();
-    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+    Assertions.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
   }
 
   private void setShellCommandsConfiguration() {

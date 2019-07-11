@@ -238,6 +238,10 @@ public class SingularityNewTaskChecker {
     }
   }
 
+  public Future<?> getTaskCheck(SingularityTaskId taskId) {
+    return taskIdToCheck.get(taskId.getId());
+  }
+
   private void reEnqueueCheck(SingularityTask task, SingularityHealthchecker healthchecker) {
     enqueueCheckWithDelay(task, configuration.getCheckNewTasksEverySeconds(), healthchecker);
   }
