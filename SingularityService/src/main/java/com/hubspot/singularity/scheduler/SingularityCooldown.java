@@ -67,8 +67,9 @@ public class SingularityCooldown {
         .count();
     java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
 
-    return failureCount >= cooldownCount
-        && (!mostRecentFailure.isPresent() || mostRecentFailure.get() > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins));
+    boolean mostRecentFailureOutsideWindow = !mostRecentFailure.isPresent() || mostRecentFailure.get() < System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins);
+
+    return failureCount >= cooldownCount && !mostRecentFailureOutsideWindow;
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
