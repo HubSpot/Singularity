@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
@@ -370,6 +371,14 @@ public class SingularityState {
   @Schema(description = "Time in UTC millis at which Singularity received the most recent HEARTBEAT event from the Mesos Master")
   public long getLastHeartbeatAt() {
     return lastHeartbeatAt;
+  }
+
+  @JsonIgnore
+  public SingularityState withHostStates(List<SingularityHostState> hostStates) {
+    return new SingularityState(activeTasks, launchingTasks, activeRequests, cooldownRequests, pausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests,
+        cleaningRequests, activeSlaves, deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, hostStates, oldestDeploy, numDeploys, oldestDeployStep,
+        activeDeploys, lateTasks, listLateTasks, onDemandLateTasks, onDemandListLateTasks, futureTasks, maxTaskLag, generatedAt, overProvisionedRequestIds, underProvisionedRequestIds, overProvisionedRequests,
+        underProvisionedRequests, finishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel, avgStatusUpdateDelayMs, lastHeartbeatAt);
   }
 
   @Override

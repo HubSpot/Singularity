@@ -60,7 +60,6 @@ public class StateManager extends CuratorManager {
   private final DeployManager deployManager;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
-  private final Transcoder<SingularityState> stateTranscoder;
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
@@ -79,7 +78,6 @@ public class StateManager extends CuratorManager {
                       DeployManager deployManager,
                       SlaveManager slaveManager,
                       RackManager rackManager,
-                      Transcoder<SingularityState> stateTranscoder,
                       Transcoder<SingularityHostState> hostStateTranscoder,
                       SingularityConfiguration singularityConfiguration,
                       SingularityAuthDatastore authDatastore,
@@ -92,7 +90,6 @@ public class StateManager extends CuratorManager {
 
     this.requestManager = requestManager;
     this.taskManager = taskManager;
-    this.stateTranscoder = stateTranscoder;
     this.hostStateTranscoder = hostStateTranscoder;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
@@ -114,7 +111,7 @@ public class StateManager extends CuratorManager {
     return getData(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatisticsTranscoder);
   }
 
-  public void save(SingularityHostState hostState) throws InterruptedException {
+  public void save(SingularityHostState hostState) {
     final String path = ZKPaths.makePath(ROOT_PATH, hostState.getHostname());
     final byte[] data = hostStateTranscoder.toBytes(hostState);
 
@@ -135,7 +132,7 @@ public class StateManager extends CuratorManager {
     Optional<SingularityState> fromCache = Optional.absent();
 
     if (!skipCache) {
-      fromCache = Optional.fromNullable(cache.getState());
+      fromCache = Optional.fromNullable(cache.getState().withHostStates(getHostStates())); // Always use fresh host states
     }
 
     if (fromCache.isPresent()) {
