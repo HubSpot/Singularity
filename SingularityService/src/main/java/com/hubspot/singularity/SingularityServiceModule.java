@@ -38,7 +38,7 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularityZkMigrationsModule());
     binder.install(new SingularityMesosClientModule());
     binder.install(new SingularityJerseyModule());
-    binder.install(new SingularityCacheModule(getConfiguration().getCacheConfiguration()));
+    binder.install(new SingularityCacheModule());
 
     // API Docs
     getEnvironment().jersey().register(SingularityOpenApiResource.class);

@@ -52,16 +52,16 @@ import io.atomix.core.value.AtomicValue;
 
 @Singleton
 public class SingularityCache {
-
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCache.class);
-    private static final Timer TIMER = new Timer();
+  private static final Timer TIMER = new Timer();
 
   private final CacheUtils cacheUtils;
-  private final Atomix atomix;
+  private final AtomixProvider atomixProvider;
   private final CacheConfiguration cacheConfiguration;
   private final Cache<SingularityTaskId, SingularityTask> taskCache;
   private final Cache<SingularityDeployKey, SingularityDeploy> deployCache;
 
+  private Atomix atomix;
   private DistributedMap<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
   private DistributedSet<SingularityTaskId> activeTaskIds;
   private DistributedMap<String, SingularityRequestWithState> requests;
@@ -80,20 +80,17 @@ public class SingularityCache {
 
   private final AtomicLong lastMeasuredLag;
   private final ReentrantLock startupLock;
-  private boolean setupStarted;
-
   private volatile boolean leader;
 
   @Inject
   public SingularityCache(CacheUtils cacheUtils,
-                          Atomix atomix,
+                          AtomixProvider atomixProvider,
                           SingularityConfiguration configuration) {
     this.leader = false;
     this.lastMeasuredLag = new AtomicLong(0);
-    this.setupStarted = false;
     this.startupLock = new ReentrantLock();
     this.cacheUtils = cacheUtils;
-    this.atomix = atomix;
+    this.atomixProvider = atomixProvider;
     this.cacheConfiguration = configuration.getCacheConfiguration();
     this.taskCache = CacheBuilder.newBuilder()
         .maximumSize(cacheConfiguration.getTaskCacheMaxSize())
@@ -112,12 +109,12 @@ public class SingularityCache {
   public void setup() throws Exception {
     startupLock.lock();
     try {
-      if (setupStarted) {
+      if (atomix != null) {
         LOG.debug("Atomix setup already finished on another thread");
         return;
       }
-      setupStarted = true;
       LOG.debug("Starting atomix");
+      atomix = atomixProvider.get();
       atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
       this.pendingTaskIdToPendingTask = cacheUtils.newAtomixMap(
           atomix,
