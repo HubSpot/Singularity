@@ -53,7 +53,9 @@ public class AtomixProvider implements Provider<Atomix> {
       Atomix atomix = Atomix.builder()
           .withMemberId(host)
           .withAddress(host, cacheConfiguration.getAtomixPort())
-          .withMembershipProvider(new BootstrapDiscoveryBuilder().withNodes(nodes).build())
+          .withMembershipProvider(new BootstrapDiscoveryBuilder()
+              .withNodes(nodes)
+              .build())
           .withCompatibleSerialization()
           .withShutdownHook(false) // Closed in SingularityLifecycleManaged
           .withReachabilityTimeout(Duration.ofSeconds(cacheConfiguration.getAtomixReachabilityTimeoutSeconds()))

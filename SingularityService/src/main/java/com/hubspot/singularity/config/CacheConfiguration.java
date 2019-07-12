@@ -3,7 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.concurrent.TimeUnit;
 
 public class CacheConfiguration {
-  private int atomixStartTimeoutSeconds = 30;
+  private int atomixStartTimeoutSeconds = 90;
   private int atomixPort = 5283;
   private int atomixReachabilityTimeoutSeconds = 30;
   private int pendingTaskCacheSize = 10000;
