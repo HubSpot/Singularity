@@ -210,8 +210,6 @@ public class SingularityLeaderController implements LeaderLatchListener {
           if (master) {
             stateManager.generateAndSaveNewState();
           }
-        } catch (InterruptedException e) {
-          LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
           // Can get wrapped in a runtime exception, check cause as well
           if (t.getCause() != null && t.getCause() instanceof InterruptedException) {
