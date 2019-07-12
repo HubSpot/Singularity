@@ -42,14 +42,19 @@ public class SingularityLeaderCacheCoordinator {
   }
 
   public void activateCache() {
-    taskManager.activateLeaderCache();
-    deployManager.activateLeaderCache();
-    requestManager.activateLeaderCache();
-    slaveManager.activateLeaderCache();
-    rackManager.activateLeaderCache();
-    usageManager.activateLeaderCache();
-    requestGroupManager.activateLeaderCache();
-    cache.markLeader();
+    try {
+      cache.setup();
+      taskManager.activateLeaderCache();
+      deployManager.activateLeaderCache();
+      requestManager.activateLeaderCache();
+      slaveManager.activateLeaderCache();
+      rackManager.activateLeaderCache();
+      usageManager.activateLeaderCache();
+      requestGroupManager.activateLeaderCache();
+      cache.markLeader();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   public void shutdownCache() {

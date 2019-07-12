@@ -127,7 +127,7 @@ public class CacheUtils {
 
   static <K, V> void syncMaps(Map<K, V> existing, Map<K, V> desired) {
     if (existing.isEmpty()) {
-      existing.putAll(desired);
+      desired.forEach(existing::put); // putAll not supported by atomix DelegatingAsyncDistributedMap
     } else {
       MapDifference<K, V> difference = Maps.difference(existing, desired);
       if (difference.areEqual()) {

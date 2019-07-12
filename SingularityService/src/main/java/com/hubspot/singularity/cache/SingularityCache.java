@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -78,6 +79,8 @@ public class SingularityCache {
   private AtomicValue<Long> lastUpdate;
 
   private final AtomicLong lastMeasuredLag;
+  private final ReentrantLock startupLock;
+  private boolean setupStarted;
 
   private volatile boolean leader;
 
@@ -87,6 +90,8 @@ public class SingularityCache {
                           SingularityConfiguration configuration) {
     this.leader = false;
     this.lastMeasuredLag = new AtomicLong(0);
+    this.setupStarted = false;
+    this.startupLock = new ReentrantLock();
     this.cacheUtils = cacheUtils;
     this.atomix = atomix;
     this.cacheConfiguration = configuration.getCacheConfiguration();
@@ -105,86 +110,97 @@ public class SingularityCache {
   }
 
   public void setup() throws Exception {
-    atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
-    this.pendingTaskIdToPendingTask = cacheUtils.newAtomixMap(
-        atomix,
-        "pendingTaskIdToPendingTask",
-        SingularityPendingTaskId.class,
-        SingularityPendingTask.class,
-        cacheConfiguration.getPendingTaskCacheSize());
-    this.activeTaskIds = cacheUtils.newAtomixSet(
-        atomix,
-        "activeTaskIds",
-        SingularityTaskId.class
-    );
-    this.requests = cacheUtils.newAtomixMap(
-        atomix,
-        "requests",
-        String.class,
-        SingularityRequestWithState.class,
-        cacheConfiguration.getRequestCacheSize());
-    this.requestGroups = cacheUtils.newAtomixMap(
-        atomix,
-        "requestGroups",
-        String.class,
-        SingularityRequestGroup.class,
-        cacheConfiguration.getRequestCacheSize());
-    this.cleanupTasks = cacheUtils.newAtomixMap(
-        atomix,
-        "cleanupTasks",
-        SingularityTaskId.class,
-        SingularityTaskCleanup.class,
-        cacheConfiguration.getCleanupTasksCacheSize());
-    this.requestIdToDeployState = cacheUtils.newAtomixMap(
-        atomix,
-        "requestIdToDeployState",
-        String.class,
-        SingularityRequestDeployState.class,
-        cacheConfiguration.getRequestCacheSize());
-    this.killedTasks = cacheUtils.newAtomixMap(
-        atomix,
-        "killedTasks",
-        SingularityTaskId.class,
-        SingularityKilledTaskIdRecord.class,
-        cacheConfiguration.getRequestCacheSize());
-    this.historyUpdates = cacheUtils.newAtomixMap(
-        atomix,
-        "historyUpdates",
-        SingularityTaskId.class,
-        SingularityHistoryUpdates.class,
-        cacheConfiguration.getHistoryUpdateCacheSize());
-    this.slaves = cacheUtils.newAtomixMap(
-        atomix,
-        "slaves",
-        String.class,
-        SingularitySlave.class,
-        cacheConfiguration.getSlaveCacheSize());
-    this.racks = cacheUtils.newAtomixMap(
-        atomix,
-        "racks",
-        String.class,
-        SingularityRack.class,
-        cacheConfiguration.getRackCacheSize());
-    this.pendingTaskIdsToDelete = cacheUtils.newAtomixSet(
-        atomix,
-        "pendingTaskIdsToDelete",
-        SingularityPendingTaskId.class
-    );
-    this.requestUtilizations = cacheUtils.newAtomixMap(
-        atomix,
-        "requestUtilizations",
-        String.class,
-        RequestUtilization.class,
-        cacheConfiguration.getRequestCacheSize());
-    this.slaveUsages = cacheUtils.newAtomixMap(
-        atomix,
-        "slaveUsages",
-        String.class,
-        SingularitySlaveUsageWithId.class,
-        cacheConfiguration.getSlaveCacheSize());
-    this.state = cacheUtils.newAtomicValue(atomix, "state", SingularityState.class);
-    this.lastUpdate = cacheUtils.newAtomicValue(atomix, "lastUpdate", Long.class);
-    lastUpdate.addListener((update) -> lastMeasuredLag.set(System.currentTimeMillis() - update.newValue()));
+    startupLock.lock();
+    try {
+      if (setupStarted) {
+        LOG.debug("Atomix setup already finished on another thread");
+        return;
+      }
+      setupStarted = true;
+      LOG.debug("Starting atomix");
+      atomix.start().get(cacheConfiguration.getAtomixStartTimeoutSeconds(), TimeUnit.SECONDS);
+      this.pendingTaskIdToPendingTask = cacheUtils.newAtomixMap(
+          atomix,
+          "pendingTaskIdToPendingTask",
+          SingularityPendingTaskId.class,
+          SingularityPendingTask.class,
+          cacheConfiguration.getPendingTaskCacheSize());
+      this.activeTaskIds = cacheUtils.newAtomixSet(
+          atomix,
+          "activeTaskIds",
+          SingularityTaskId.class
+      );
+      this.requests = cacheUtils.newAtomixMap(
+          atomix,
+          "requests",
+          String.class,
+          SingularityRequestWithState.class,
+          cacheConfiguration.getRequestCacheSize());
+      this.requestGroups = cacheUtils.newAtomixMap(
+          atomix,
+          "requestGroups",
+          String.class,
+          SingularityRequestGroup.class,
+          cacheConfiguration.getRequestCacheSize());
+      this.cleanupTasks = cacheUtils.newAtomixMap(
+          atomix,
+          "cleanupTasks",
+          SingularityTaskId.class,
+          SingularityTaskCleanup.class,
+          cacheConfiguration.getCleanupTasksCacheSize());
+      this.requestIdToDeployState = cacheUtils.newAtomixMap(
+          atomix,
+          "requestIdToDeployState",
+          String.class,
+          SingularityRequestDeployState.class,
+          cacheConfiguration.getRequestCacheSize());
+      this.killedTasks = cacheUtils.newAtomixMap(
+          atomix,
+          "killedTasks",
+          SingularityTaskId.class,
+          SingularityKilledTaskIdRecord.class,
+          cacheConfiguration.getRequestCacheSize());
+      this.historyUpdates = cacheUtils.newAtomixMap(
+          atomix,
+          "historyUpdates",
+          SingularityTaskId.class,
+          SingularityHistoryUpdates.class,
+          cacheConfiguration.getHistoryUpdateCacheSize());
+      this.slaves = cacheUtils.newAtomixMap(
+          atomix,
+          "slaves",
+          String.class,
+          SingularitySlave.class,
+          cacheConfiguration.getSlaveCacheSize());
+      this.racks = cacheUtils.newAtomixMap(
+          atomix,
+          "racks",
+          String.class,
+          SingularityRack.class,
+          cacheConfiguration.getRackCacheSize());
+      this.pendingTaskIdsToDelete = cacheUtils.newAtomixSet(
+          atomix,
+          "pendingTaskIdsToDelete",
+          SingularityPendingTaskId.class
+      );
+      this.requestUtilizations = cacheUtils.newAtomixMap(
+          atomix,
+          "requestUtilizations",
+          String.class,
+          RequestUtilization.class,
+          cacheConfiguration.getRequestCacheSize());
+      this.slaveUsages = cacheUtils.newAtomixMap(
+          atomix,
+          "slaveUsages",
+          String.class,
+          SingularitySlaveUsageWithId.class,
+          cacheConfiguration.getSlaveCacheSize());
+      this.state = cacheUtils.newAtomicValue(atomix, "state", SingularityState.class);
+      this.lastUpdate = cacheUtils.newAtomicValue(atomix, "lastUpdate", Long.class);
+      lastUpdate.addListener((update) -> lastMeasuredLag.set(System.currentTimeMillis() - update.newValue()));
+    } finally {
+      startupLock.unlock();
+    }
   }
 
   void markLeader() {
