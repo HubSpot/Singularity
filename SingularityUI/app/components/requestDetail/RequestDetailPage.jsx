@@ -52,7 +52,7 @@ class RequestDetailPage extends Component {
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
         {deleted || <RequestExpiringActions requestId={requestId} />}
-        {deleted || <ActiveTasksTable requestId={requestId} />}
+        {deleted || <ActiveTasksTable requestId={requestId} taskHistoryPage={Number(taskHistoryPage) || 1} taskHistoryPageSize={Number(taskHistoryPageSize) || 10} />}
         {deleted || <PendingTasksTable requestId={requestId} />}
         {deleted || (
           <TaskHistoryTable
