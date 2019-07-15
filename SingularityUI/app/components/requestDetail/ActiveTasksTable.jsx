@@ -20,9 +20,11 @@ import {
   LogLinkAndActions
 } from '../tasks/Columns';
 
+import { FetchTaskHistoryForRequest } from '../../actions/api/history';
+
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
@@ -63,6 +65,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         data={tasksWithHealth}
         keyGetter={(task) => task.taskId.id}
         emptyTableMessage={emptyTableMessage}
+        triggerOnDataSizeChange={fetchTaskHistoryForRequest}
       >
         {Health}
         {InstanceNumberWithHostname}
@@ -81,6 +84,7 @@ ActiveTasksTable.propTypes = {
   tasksAPI: PropTypes.object.isRequired,
   healthyTaskIds: PropTypes.array.isRequired,
   cleaningTaskIds: PropTypes.array.isRequired,
+  fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -98,6 +102,11 @@ const mapStateToProps = (state, ownProps) => {
     return task.id;
   })
 }};
+
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  const { taskHistoryPage, taskHistoryPageSize } = ownProps.location.query;
+  fetchTaskHistoryForRequest: () => dispatch(FetchTaskHistoryForRequest.trigger(ownProps.requestId, taskHistoryPage || 1, taskHistoryPageSize || 10))
+});
 
 export default connect(
   mapStateToProps,
