@@ -2,7 +2,10 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
+import java.util.Map;
+
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -13,10 +16,12 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLeaderController;
+import com.hubspot.singularity.cache.SingularityCache;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -42,6 +47,7 @@ public class TestResource {
   private final SingularityTaskReconciliation taskReconciliation;
   private final SingularityHistoryPurger historyPurger;
   private final HistoryManager historyManager;
+  private final SingularityCache cache;
 
   @Inject
   public TestResource(SingularityConfiguration configuration,
@@ -50,7 +56,8 @@ public class TestResource {
                       final SingularityMesosScheduler scheduler,
                       SingularityTaskReconciliation taskReconciliation,
                       SingularityHistoryPurger historyPurger,
-                      HistoryManager historyManager) {
+                      HistoryManager historyManager,
+                      SingularityCache cache) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
@@ -58,6 +65,7 @@ public class TestResource {
     this.taskReconciliation = taskReconciliation;
     this.historyPurger = historyPurger;
     this.historyManager = historyManager;
+    this.cache = cache;
   }
 
   @POST
@@ -210,5 +218,18 @@ public class TestResource {
   public void runDeployHistoryPurge() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
     historyManager.purgeDeployHistory();
+  }
+
+  @GET
+  @Path("/atomix-data")
+  @Operation(
+      summary = "Get information about the atomix cache"
+  )
+  public Map<String, Object> getAtomixInfo() {
+    return ImmutableMap.of(
+        "requestsSize", cache.getRequests().size(),
+        "lag", cache.getLag(),
+        "tasksSize", cache.getActiveTaskIds().size()
+    );
   }
 }
