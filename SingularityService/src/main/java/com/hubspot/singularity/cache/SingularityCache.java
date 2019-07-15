@@ -262,6 +262,10 @@ public class SingularityCache {
     return leader ? 0 : lastMeasuredLag.get();
   }
 
+  public int getAtomixMemberCount() {
+    return atomix.getMembershipService().getReachableMembers().size();
+  }
+
   // Loading in initial data. Sync entries of the maps to avoid the extra network caused by clear + putAll
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     CacheUtils.syncMaps(

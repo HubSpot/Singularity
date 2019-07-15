@@ -92,9 +92,10 @@ public class CacheUtils {
           .withSerializer(serializer)
           .withRegistrationRequired(false)
           .withProtocol(MultiPrimaryProtocol.builder("in-memory-data")
-              .withBackups(3) // TODO count for this?
+              .withBackups(1)
               .withReplication(Replication.ASYNCHRONOUS)
-              .withConsistency(Consistency.EVENTUAL).build());
+              .withConsistency(Consistency.EVENTUAL)
+              .build());
 
       return distributedMapBuilder.build();
   }
@@ -106,9 +107,10 @@ public class CacheUtils {
         .withElementType(clazz)
         .withCompatibleSerialization()
         .withProtocol(MultiPrimaryProtocol.builder("in-memory-data")
-            .withBackups(3)
+            .withBackups(1)
             .withReplication(Replication.ASYNCHRONOUS)
-            .withConsistency(Consistency.EVENTUAL).build());
+            .withConsistency(Consistency.EVENTUAL)
+            .build());
 
     return setBuilder.build();
   }
