@@ -61,7 +61,6 @@ class RequestDetailPage extends Component {
             initialPageSize={Number(taskHistoryPageSize) || 10}
             onPageChange={num => router.replace({ ...location, query: {...location.query, taskHistoryPage: num }})}
             initialPageNumber={Number(taskHistoryPage) || 1}
-            refresh={this.props.fetchTaskHistoryForRequest}
           />
         )}
         {deleted || <RequestUtilization requestId={requestId} />}
