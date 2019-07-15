@@ -103,10 +103,12 @@ const mapStateToProps = (state, ownProps) => {
   })
 }};
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
+const mapDispatchToProps = (dispatch, ownProps) => {
   const { taskHistoryPage, taskHistoryPageSize } = ownProps.location.query;
-  fetchTaskHistoryForRequest: () => dispatch(FetchTaskHistoryForRequest.trigger(ownProps.requestId, taskHistoryPage || 1, taskHistoryPageSize || 10))
-});
+  return {
+    fetchTaskHistoryForRequest: () => dispatch(FetchTaskHistoryForRequest.trigger(ownProps.requestId, taskHistoryPage || 1, taskHistoryPageSize || 10))
+  }
+};
 
 export default connect(
   mapStateToProps,
