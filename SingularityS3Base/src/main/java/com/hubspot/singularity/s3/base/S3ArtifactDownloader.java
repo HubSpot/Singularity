@@ -30,6 +30,8 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class S3ArtifactDownloader {
 
   private final Logger log;
@@ -158,6 +160,7 @@ public class S3ArtifactDownloader {
     return false;
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private void combineChunk(Path downloadTo, Path path) throws Exception {
     final long start = System.currentTimeMillis();
     long bytes = 0;
