@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +45,12 @@ public class ZkMigrationTest extends SingularitySchedulerTestBase {
 
   public ZkMigrationTest() {
     super(false, false);
+  }
+
+  @BeforeAll
+  public void setup() throws Exception {
+    super.setup();
+    leaderCacheCoordinator.stopLeaderCache();
   }
 
   @Test

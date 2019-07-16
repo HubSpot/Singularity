@@ -318,9 +318,9 @@ public class  SingularitySlavePlacementTest extends SingularitySchedulerTestBase
     try {
       configuration.setRebalanceRacksOnScaleDown(true);
       // Set up 3 active racks
-      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
-      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2"))));
-      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave2", "host2", Optional.of("rack2"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave3", "host3", Optional.of("rack3"))));
 
       initRequest();
       initFirstDeploy();

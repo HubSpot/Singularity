@@ -329,7 +329,8 @@ public class SingularityHealthchecker {
     };
   }
 
-  private void asyncHealthcheck(final SingularityTask task) {
+  @VisibleForTesting
+  void asyncHealthcheck(final SingularityTask task) {
     final Optional<String> uri = getHealthcheckUri(task);
     final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
 

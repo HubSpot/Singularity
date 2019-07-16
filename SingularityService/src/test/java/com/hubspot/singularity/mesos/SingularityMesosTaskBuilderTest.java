@@ -191,9 +191,9 @@ public class SingularityMesosTaskBuilderTest {
 
     for (String key : overrideVariables.keySet()) {
       assertEquals(
-          "Environment variable " + key + " not overridden.",
           environmentVariables.get(key),
-          overrideVariables.get(key));
+          overrideVariables.get(key),
+          "Environment variable " + key + " not overridden.");
     }
   }
 

@@ -434,11 +434,10 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       SingularityTask firstTask = taskManager.getTask(firstTaskId).get();
       statusUpdate(firstTask, TaskState.TASK_RUNNING);
 
-      newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
+      healthchecker.asyncHealthcheck(firstTask);
 
       Awaitility.await("healthcheck present").atMost(6, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
-      Optional<SingularityTaskHealthcheckResult> result = taskManager.getLastHealthcheck(firstTask.getTaskId());
       Assertions.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {
       unsetConfigurationForNoDelay();
@@ -466,7 +465,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       SingularityTask firstTask = taskManager.getTask(firstTaskId).get();
       statusUpdate(firstTask, TaskState.TASK_RUNNING);
 
-      newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
+      healthchecker.asyncHealthcheck(firstTask);
 
       Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
@@ -479,6 +478,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
   private void setConfigurationForNoDelay() {
     configuration.setNewTaskCheckerBaseDelaySeconds(0);
     configuration.setHealthcheckIntervalSeconds(0);
+    configuration.setStartupIntervalSeconds(0);
     configuration.setDeployHealthyBySeconds(0);
     configuration.setKillAfterTasksDoNotRunDefaultSeconds(1);
     configuration.setHealthcheckMaxRetries(Optional.of(0));
@@ -487,6 +487,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
   private void unsetConfigurationForNoDelay() {
     configuration.setNewTaskCheckerBaseDelaySeconds(1);
     configuration.setHealthcheckIntervalSeconds(5);
+    configuration.setStartupIntervalSeconds(2);
     configuration.setDeployHealthyBySeconds(120);
     configuration.setKillAfterTasksDoNotRunDefaultSeconds(600);
     configuration.setHealthcheckMaxRetries(Optional.<Integer>absent());

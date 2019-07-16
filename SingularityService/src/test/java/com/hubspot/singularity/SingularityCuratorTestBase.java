@@ -49,7 +49,7 @@ public class SingularityCuratorTestBase {
   @Inject
   private SingularityLeaderCache cache;
   @Inject
-  private SingularityLeaderCacheCoordinator leaderCacheCoordinator;
+  protected SingularityLeaderCacheCoordinator leaderCacheCoordinator;
   @Inject
   private ZkCache<SingularityDeploy> deployZkCache;
   @Inject
