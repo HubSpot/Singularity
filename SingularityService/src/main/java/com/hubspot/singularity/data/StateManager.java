@@ -134,7 +134,7 @@ public class StateManager extends CuratorManager {
     if (!skipCache) {
       Optional<SingularityState> maybeCached = Optional.fromNullable(cache.getState());
       if (maybeCached.isPresent()) {
-        fromCache = Optional.of(maybeCached.get().withHostStates(getHostStates())); // Always use fresh host states
+        fromCache = Optional.of(maybeCached.get().withHostStates(getHostStates()))  ; // Always use fresh host states
       }
     }
 
