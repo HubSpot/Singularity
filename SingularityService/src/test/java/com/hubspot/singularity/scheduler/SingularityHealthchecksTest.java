@@ -7,7 +7,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +28,7 @@ import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.jayway.awaitility.Awaitility;
 
+@TestMethodOrder(OrderAnnotation.class)
 public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
   public SingularityHealthchecksTest() {
@@ -243,6 +247,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  @Order(-1) // TODO - check why this is needed
   public void testNewTaskCheckerCountsFailures() {
     initRequest();
 
