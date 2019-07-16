@@ -58,6 +58,8 @@ public class SingularityCuratorTestBase {
   private OfferCache offerCache;
   @Inject
   protected MesosProtosUtils mesosProtosUtils;
+  @Inject
+  private SingularityConfiguration configuration;
 
   private SingularityTestModule singularityTestModule;
 
@@ -112,6 +114,7 @@ public class SingularityCuratorTestBase {
     singularityTestModule.getInjector().injectMembers(this);
     singularityTestModule.start();
     leaderCacheCoordinator.activateLeaderCache();
+    configuration.setThreadpoolShutdownDelayInSeconds(0);
     if (useDBTests) {
       Handle handle = dbiProvider.get().open();
       handle.getConnection().setAutoCommit(true);
