@@ -232,7 +232,7 @@ export const NextRun = (
     id="nextRun"
     key="nextRun"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId.nextRunAt
+      (rowData) => rowData.nextRunAt
     }
     cellRender={(cellData) => {
       let label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_SCHEDULED')}`}>SCHEDULED</span>;
@@ -257,7 +257,7 @@ export const PendingType = (
     id="pendingType"
     key="pendingType"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId.pendingType
+      (rowData) => rowData.pendingType
     }
     cellRender={(cellData) => (
       <div>
@@ -283,55 +283,35 @@ export const DeployId = (
   />
 );
 
+export const RequestId = (
+  <Column
+    label="Request ID"
+    id="requestId"
+    key="requestId"
+    cellData={
+      (rowData) => rowData
+    }
+    sortData={(cellData) => cellData.requestId}
+    cellRender={(cellData) =>
+      <Link to={`request/${cellData.requestId}`}>{cellData.requestId}</Link>
+    }
+    sortable={true}
+  />
+);
+
 export const PendingDeployId = (
   <Column
     label="Deploy ID"
     id="pendingDeployId"
     key="pendingDeployId"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId
+      (rowData) => rowData
     }
     sortData={(cellData) => cellData.deployId}
     cellRender={(cellData) =>
       <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</Link>
     }
     sortable={true}
-  />
-);
-
-export const ScheduledActions = (
-  <Column
-    label=""
-    id="actions"
-    key="actions"
-    className="actions-column"
-    cellRender={(cellData) => (
-      <div className="hidden-xs">
-        <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
-        {cellData.request && cellData.request.requestType == "ON_DEMAND" &&
-            <DeletePendingTaskButton
-                taskId={cellData.pendingTask.pendingTaskId.id}
-                requestType={cellData.request.requestType}
-            />
-        }
-        <JSONButton className="inline" object={cellData} showOverlay={true}>
-          {'{ }'}
-        </JSONButton>
-      </div>
-    )}
-  />
-);
-
-export const ScheduledTaskId = (
-  <Column
-    label="Task ID"
-    id="taskId"
-    key="taskId"
-    cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId.id
-    }
-    sortable={true}
-    className="keep-in-check"
   />
 );
 

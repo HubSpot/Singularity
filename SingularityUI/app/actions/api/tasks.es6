@@ -4,7 +4,7 @@ export const FetchTasksInState = buildApiAction(
   'FETCH_TASKS',
   (state, renderNotFoundIf404) => {
     const stateToFetch = state !== 'decommissioning' ? state : 'active';
-
+    let ids = ""
     let propertyString = '?property=';
     const propertyJoin = '&property=';
 
@@ -13,14 +13,15 @@ export const FetchTasksInState = buildApiAction(
         propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
         break;
       case 'scheduled':
-        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join(propertyJoin);
+        ids = "/ids"
+        propertyString = '';
         break;
       default:
         propertyString = '';
     }
 
     return {
-      url: `/tasks/${stateToFetch}${propertyString}`,
+      url: `/tasks/${stateToFetch}${ids}${propertyString}`,
       renderNotFoundIf404
     };
   }

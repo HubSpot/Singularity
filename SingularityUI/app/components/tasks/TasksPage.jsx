@@ -31,8 +31,7 @@ import {
   NextRun,
   PendingType,
   PendingDeployId,
-  ScheduledActions,
-  ScheduledTaskId,
+  RequestId,
   CleanupType,
   JSONAction,
   InstanceNumber
@@ -94,7 +93,7 @@ class TasksPage extends React.Component {
         columns.push(ActiveActions);
         return columns;
       case 'scheduled':
-        return [ScheduledTaskId, NextRun, PendingType, PendingDeployId, ScheduledActions];
+        return [RequestId, NextRun, PendingType, PendingDeployId];
       case 'cleaning':
         return [TaskIdShortened, CleanupType, JSONAction];
       case 'lbcleanup':
@@ -117,8 +116,8 @@ class TasksPage extends React.Component {
       case 'decommissioning':
         return task.taskId.startedAt;
       case 'scheduled':
-        if (!task.pendingTask) return null;
-        return task.pendingTask.pendingTaskId.nextRunAt;
+        if (!task.nextRunAt) return null;
+        return task.nextRunAt;
       default:
         return null;
     }
@@ -140,7 +139,7 @@ class TasksPage extends React.Component {
       table = (
         <UITable
           data={displayTasks}
-          keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(task, ['id']))}
+          keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['id']))}
         >
           {this.getColumns()}
         </UITable>
