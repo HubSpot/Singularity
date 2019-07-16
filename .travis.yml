@@ -2,7 +2,6 @@ language: java
 jdk:
   - openjdk8
 
-install: /bin/true
 script: mvn -B -DskipSingularityWebUI verify
 cache:
   directories:
