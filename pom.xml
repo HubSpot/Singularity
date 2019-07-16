@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>25.3</version>
+    <version>25.4</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
@@ -75,7 +75,6 @@
     <!-- 1.8.0 not available yet, still compatible -->
     <mesos.version>1.8.0</mesos.version>
     <ning.async.version>1.9.38</ning.async.version>
-    <project.build.targetJdk>1.8</project.build.targetJdk>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>
     <singularitybase.image.revision>1</singularitybase.image.revision>
@@ -711,11 +710,6 @@
           </executions>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.18.1</version>
-        </plugin>
-        <plugin>
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>
           <configuration>
@@ -776,23 +770,6 @@
             </ignoredResourcePatterns>
           </configuration>
         </plugin>
-        <!-- Fixes issues with checkstlye if you use logback for logging in maven -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <dependencies>
-            <dependency>
-              <groupId>org.slf4j</groupId>
-              <artifactId>jcl-over-slf4j</artifactId>
-              <version>1.7.5</version>
-            </dependency>
-            <dependency>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-jdk14</artifactId>
-              <version>1.7.5</version>
-            </dependency>
-          </dependencies>
-        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -819,7 +796,3 @@
     <tag>HEAD</tag>
   </scm>
 </project>
-<!-- Local Variables: -->
-<!-- mode: nxml -->
-<!-- nxml-child-indent: 2 -->
-<!-- End: -->
