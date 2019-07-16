@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.ZkCache;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
@@ -46,6 +47,10 @@ public class SingularityCuratorTestBase {
   protected TestingServer ts;
   @Inject
   private SingularityLeaderCache cache;
+  @Inject
+  private ZkCache<SingularityDeploy> deployZkCache;
+  @Inject
+  private ZkCache<SingularityTask> taskZkCache;
   @Inject
   private OfferCache offerCache;
   @Inject
@@ -81,6 +86,8 @@ public class SingularityCuratorTestBase {
 
       // clear from caches
       cache.clear();
+      deployZkCache.invalidateAll();
+      taskZkCache.invalidateAll();
       offerCache.peekOffers().forEach((o) -> offerCache.rescindOffer(o.getId()));
 
       // clear db
