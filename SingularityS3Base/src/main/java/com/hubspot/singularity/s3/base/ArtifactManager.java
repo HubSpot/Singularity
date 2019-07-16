@@ -107,7 +107,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(artifact, downloadTo);
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
 

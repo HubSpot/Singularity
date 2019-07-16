@@ -160,7 +160,7 @@ public class S3ArtifactDownloader {
     return false;
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private void combineChunk(Path downloadTo, Path path) throws Exception {
     final long start = System.currentTimeMillis();
     long bytes = 0;
