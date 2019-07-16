@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
@@ -111,6 +113,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Inject
   private MesosProtosUtils mesosProtosUtils;
+
+  @Inject
+  SingularityMesosStatusUpdateHandler updateHandler;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -2495,5 +2500,49 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(1, taskManager.getNumActiveTasks());
     Assertions.assertEquals(1, requestManager.getSizeOfPendingQueue());
+  }
+
+  @Test
+  public void itRetriesLostShortRunningRequests() {
+    runTest(RequestType.ON_DEMAND, Reason.REASON_AGENT_RESTARTED, true);
+  }
+
+  @Test
+  public void itDoesNotRetryLostLongRunningRequests() {
+    runTest(RequestType.SERVICE, Reason.REASON_AGENT_RESTARTED, false);
+  }
+
+  @Test
+  public void itDoesNotRetryLostRequestsDueToNonAgentFailures() {
+    runTest(RequestType.ON_DEMAND, Reason.REASON_CONTAINER_LIMITATION_DISK, false);
+  }
+
+  private void runTest(RequestType requestType, Reason reason, boolean shouldRetry) {
+    initRequestWithType(requestType, false);
+    initFirstDeploy();
+
+    SingularityTask task = startTask(firstDeploy);
+    Assertions.assertEquals(0, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(0, requestManager.getPendingRequests().size());
+
+    try {
+      updateHandler.processStatusUpdateAsync(TaskStatus.newBuilder()
+          .setState(TaskState.TASK_LOST)
+          .setReason(reason)
+          .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId()))
+          .build()).get();
+    } catch (InterruptedException | ExecutionException e) {
+      Assertions.assertTrue(false);
+    }
+
+    if (shouldRetry) {
+      Assertions.assertEquals(requestManager.getPendingRequests().size(), 1);
+      Assertions.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.RETRY);
+    } else {
+      if (requestManager.getPendingRequests().size() > 0) {
+        Assertions.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
+      }
+    }
+    scheduler.drainPendingQueue();
   }
 }
