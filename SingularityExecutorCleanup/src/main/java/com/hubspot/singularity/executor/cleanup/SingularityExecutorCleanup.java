@@ -68,6 +68,8 @@ import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityExecutorCleanup {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
@@ -399,6 +401,7 @@ public class SingularityExecutorCleanup {
         });
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private List<Path> findGlob(Path path, PathMatcher matcher) throws IOException {
     Deque<Path> stack = new ArrayDeque<>();
     List<Path> matched = new ArrayList<>();

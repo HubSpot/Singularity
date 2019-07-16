@@ -35,6 +35,8 @@ import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public abstract class SingularityUploader {
   static final Logger LOG = LoggerFactory.getLogger(SingularityUploader.class);
   private static final String LOG_START_TIME_ATTR = "logstart";
@@ -132,6 +134,7 @@ public abstract class SingularityUploader {
     return uploadBatch(filesToUpload(isFinished));
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   List<Path> filesToUpload(boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
 
@@ -157,6 +160,7 @@ public abstract class SingularityUploader {
     return toUpload;
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private AtomicInteger handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
     AtomicInteger found = new AtomicInteger();
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {

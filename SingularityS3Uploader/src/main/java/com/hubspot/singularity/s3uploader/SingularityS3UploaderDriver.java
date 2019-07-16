@@ -56,6 +56,8 @@ import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityS3UploaderDriver extends WatchServiceHelper implements SingularityDriver {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
@@ -116,6 +118,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metadataToImmediateUploader = new ConcurrentHashMap<>();
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private void readInitialFiles() throws IOException {
     final long start = System.currentTimeMillis();
     LOG.info("Scanning for metadata files (*{}) in {}", baseConfiguration.getS3UploaderMetadataSuffix(), baseConfiguration.getS3UploaderMetadataDirectory());
