@@ -25,6 +25,7 @@ import com.hubspot.singularity.data.ZkCache;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
@@ -47,6 +48,8 @@ public class SingularityCuratorTestBase {
   protected TestingServer ts;
   @Inject
   private SingularityLeaderCache cache;
+  @Inject
+  private SingularityLeaderCacheCoordinator leaderCacheCoordinator;
   @Inject
   private ZkCache<SingularityDeploy> deployZkCache;
   @Inject
@@ -108,6 +111,7 @@ public class SingularityCuratorTestBase {
 
     singularityTestModule.getInjector().injectMembers(this);
     singularityTestModule.start();
+    leaderCacheCoordinator.activateLeaderCache();
     if (useDBTests) {
       Handle handle = dbiProvider.get().open();
       handle.getConnection().setAutoCommit(true);
