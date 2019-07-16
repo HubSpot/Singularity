@@ -14,7 +14,10 @@ import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +41,7 @@ import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import com.hubspot.singularity.resources.SlaveResource;
 
+@TestMethodOrder(OrderAnnotation.class)
 public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Inject
@@ -278,6 +282,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  @Order(-1) // TODO - check why this fails when run after other tests
   public void testFrozenSlaveTransitions() {
     initRequest();
     initFirstDeploy();
