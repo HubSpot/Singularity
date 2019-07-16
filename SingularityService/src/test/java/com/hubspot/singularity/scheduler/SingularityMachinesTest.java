@@ -27,8 +27,10 @@ import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -843,19 +845,20 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     try {
       configuration.setRebalanceRacksOnScaleDown(true);
       // Set up 3 active racks
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave2", "host2", Optional.of("rack2"))));
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave3", "host3", Optional.of("rack3"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave1", "host1", Optional.of("slave1"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave2", "host2", Optional.of("slave2"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave3", "host3", Optional.of("slave3"))));
 
-      initRequest();
+      request = new SingularityRequestBuilder(requestId, RequestType.WORKER).setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)).build();
+      saveRequest(request);
       initFirstDeploy();
-      saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
-
-      sms.resourceOffers(Arrays.asList(createOffer(2, 256, 2048, "slave1", "host1", Optional.of("rack1"))));
-      sms.resourceOffers(Arrays.asList(createOffer(2, 256, 2048, "slave2", "host2", Optional.of("rack2"))));
-      sms.resourceOffers(Arrays.asList(createOffer(3, 384, 3072, "slave3", "host3", Optional.of("rack3"))));
-
-      Assertions.assertEquals(7, taskManager.getActiveTaskIds().size());
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 1, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave1"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 2, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave1"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 3, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave2"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 4, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave2"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 5, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave3"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 6, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave3"));
+      launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis(), 7, TaskState.TASK_RUNNING, true, Optional.absent(), Optional.of("slave3"));
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build(), singularityUser);
 

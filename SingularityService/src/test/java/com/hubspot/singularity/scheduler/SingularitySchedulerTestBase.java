@@ -292,23 +292,23 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent(), Optional.absent());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState, boolean separateHost) {
-    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, separateHost, Optional.<String>absent());
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, separateHost, Optional.<String>absent(), Optional.absent());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost) {
-    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, separateHost, Optional.<String>absent());
+    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, separateHost, Optional.<String>absent(), Optional.absent());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long taskLaunch, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent(), Optional.absent());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, false, Optional.<String>absent(), Optional.absent());
   }
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, Optional<String> runId) {
@@ -322,22 +322,22 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
-    return prepTask(request, deploy, launchTime, instanceNo, false, Optional.<String>absent());
+    return prepTask(request, deploy, launchTime, instanceNo, false, Optional.absent(), Optional.absent());
   }
 
 
-  protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts, Optional<String> runId) {
+  protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts, Optional<String> runId, Optional<String> slaveAndRack) {
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo, runId);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
     Offer offer;
-    if (separateHosts) {
-      offer = createOffer(125, 1024, 2048, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
+    if (separateHosts || slaveAndRack.isPresent()) {
+      offer = createOffer(125, 1024, 2048, slaveAndRack.or(String.format("slave%s", instanceNo)), slaveAndRack.or(String.format("host%s", instanceNo)), slaveAndRack);
     } else {
       offer = createOffer(125, 1024, 2048);
     }
 
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), slaveAndRack.or("rack1"));
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
     TaskInfo taskInfo = TaskInfo.newBuilder()
@@ -355,11 +355,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask() {
-    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1, false, Optional.<String>absent());
+    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1, false, Optional.<String>absent(), Optional.absent());
   }
 
-  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost, Optional<String> runId) {
-    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo, separateHost, runId);
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost, Optional<String> runId, Optional<String> slave) {
+    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo, separateHost, runId, slave);
 
     taskManager.createTaskAndDeletePendingTask(task);
 

@@ -342,7 +342,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initOnDemandRequest();
     initFirstDeploy();
 
-    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-1"));
+    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-1"), Optional.absent());
     SingularityTask taskTwo = launchTask(request, firstDeploy, 20000L, 10L, 2, TaskState.TASK_RUNNING, true);
     SingularityTask taskThree = launchTask(request, firstDeploy, 30000L, 10L, 3, TaskState.TASK_RUNNING, true);
 
@@ -350,7 +350,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     finishDeploy(marker, secondDeploy);
 
     SingularityTask taskFour = launchTask(request, secondDeploy, 40000L, 10L, 4, TaskState.TASK_RUNNING, true);
-    SingularityTask taskFive = launchTask(request, secondDeploy, 50000L, 10L, 5, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-5"));
+    SingularityTask taskFive = launchTask(request, secondDeploy, 50000L, 10L, 5, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-5"), Optional.absent());
     SingularityTask taskSix = launchTask(request, secondDeploy, 60000L, 10L, 6, TaskState.TASK_RUNNING, true);
     SingularityTask taskSeven = launchTask(request, secondDeploy, 70000L, 10L, 7, TaskState.TASK_RUNNING, true);
 
