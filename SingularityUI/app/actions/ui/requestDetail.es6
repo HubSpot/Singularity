@@ -1,7 +1,6 @@
 import { FetchRequest } from '../api/requests';
 import {
   FetchActiveTasksForRequest,
-  FetchTaskHistoryForRequest,
   FetchDeploysForRequest,
   FetchRequestHistory,
 } from '../api/history';
