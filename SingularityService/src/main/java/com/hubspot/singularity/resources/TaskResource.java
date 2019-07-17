@@ -326,6 +326,16 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   @GET
   @PropertyFiltering
+  @Path("/active/ids")
+  @Operation(summary = "Retrieve the list of active task ids for all requests")
+  public List<SingularityTaskId> getActiveTaskIds(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTaskIds(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
+  @PropertyFiltering
   @Path("/cleaning")
   @Operation(summary = "Retrieve the list of cleaning tasks for all requests")
   public List<SingularityTaskCleanup> getCleaningTasks(

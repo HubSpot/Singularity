@@ -2,7 +2,7 @@ import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchTasksInState = buildApiAction(
   'FETCH_TASKS',
-  (state, renderNotFoundIf404) => {
+  (state, renderNotFoundIf404, showResources) => {
     const stateToFetch = state !== 'decommissioning' ? state : 'active';
     let ids = ""
     let propertyString = '?property=';
@@ -10,7 +10,12 @@ export const FetchTasksInState = buildApiAction(
 
     switch (stateToFetch) {
       case 'active':
-        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        if (showResources) {
+          propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        } else {
+          ids = "/ids"
+          propertyString = '';
+        }
         break;
       case 'scheduled':
         ids = "/ids"

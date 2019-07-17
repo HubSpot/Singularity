@@ -65,6 +65,10 @@ export default class TaskFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {requestTypes: selected}));
   }
 
+  toggleShowResources(active) {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {showResources: active}));
+  }
+
   renderStatusFilter() {
     const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (taskState) => taskState.filterVal === this.props.filter.taskStatus);
     const navItems = TaskFilters.TASK_STATES.map((taskState, index) => {
@@ -126,6 +130,21 @@ export default class TaskFilters extends React.Component {
     );
   }
 
+  renderShowResourcesToggle() {
+    const isActive = this.props.filter.showResources;
+    return (
+      <div className="requests-filter-container pull-right">
+        <ul className="nav nav-pills nav-pills-multi-select">
+          <li key='show-resources' className={isActive ? 'active' : ''}>
+          <a onClick={() => this.toggleShowResources(!isActive)}>
+            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} Show Resources
+          </a>
+        </li>
+        </ul>
+      </div>
+    );
+  }
+
   render() {
     return (
       <div>
@@ -138,8 +157,11 @@ export default class TaskFilters extends React.Component {
           <div className="col-md-12">
             {this.renderSearchInput()}
           </div>
-          <div className="col-md-12">
+          <div className="col-md-9">
             {this.renderRequestTypeFilter()}
+          </div>
+          <div className="col-md-3">
+            {this.renderShowResourcesToggle()}
           </div>
         </div>
       </div>
@@ -150,6 +172,7 @@ export default class TaskFilters extends React.Component {
 TaskFilters.propTypes = {
   onFilterChange: React.PropTypes.func.isRequired,
   filter: React.PropTypes.shape({
+    showResources: React.PropTypes.bool.isRequired,
     taskStatus: React.PropTypes.string.isRequired,
     requestTypes: React.PropTypes.array.isRequired,
     filterText: React.PropTypes.string.isRequired

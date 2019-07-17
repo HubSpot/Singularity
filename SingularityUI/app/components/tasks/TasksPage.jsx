@@ -72,8 +72,17 @@ class TasksPage extends React.Component {
     const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
     this.props.router.push(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
 
+    if (this.props.filter.showResources && !filter.showResources) {
+      const newLocation = this.props.location;
+      newLocation.query.showResources = false;
+      this.props.router.push(newLocation);
+    } else if (!this.props.filter.showResources && filter.showResources) {
+      const location = this.props.location;
+      this.props.router.replace({ ...location, query: {...location.query, showResources: true }})
+    }
+
     if (lastFilterTaskStatus !== filter.taskStatus) {
-      this.props.fetchFilter(filter.taskStatus).then(() => {
+      this.props.fetchFilter(filter.taskStatus, false, filter.showResources).then(() => {
         this.setState({
           loading: false
         });
@@ -125,9 +134,13 @@ class TasksPage extends React.Component {
 
   render() {
     const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
+    let tasks = this.props.tasks;
+    if (this.props.filter.taskStatus === 'active' && !this.props.filter.showResources) {
+      tasks = tasks.map((t) => {task: {taskId: t}})
+    }
     const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
-      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
+      _.sortBy(getFilteredTasks({tasks: tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
+      _.sortBy(getDecomissioningTasks({tasks: tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
     if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
 
     let table;
@@ -157,6 +170,7 @@ class TasksPage extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   const filter = {
+    showResources: ownProps.location.query.showResources == 'true',
     taskStatus: ownProps.params.state || 'active',
     requestTypes: !ownProps.params.requestsSubFilter || ownProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : ownProps.params.requestsSubFilter.split(','),
     filterText: ownProps.params.searchFilter || ''
@@ -173,7 +187,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state, true)),
+    fetchFilter: (state, showResources) => dispatch(FetchTasksInState.trigger(state, true, showResources)),
     fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),

@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -459,14 +458,9 @@ public class TaskManager extends CuratorAsyncManager {
       return webCache.getActiveTasks();
     }
 
-    List<String> children = Lists.transform(getActiveTaskIds(), new Function<SingularityTaskId, String>() {
-
-      @Override
-      public String apply(SingularityTaskId taskId) {
-        return getTaskPath(taskId);
-      }
-
-    });
+    List<String> children = getActiveTaskIds().stream()
+        .map(this::getTaskPath)
+        .collect(Collectors.toList());
 
     List<SingularityTask> activeTasks = getAsync("getActiveTasks", children, taskTranscoder, taskCache);
 
