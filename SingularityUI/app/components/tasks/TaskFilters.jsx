@@ -135,7 +135,7 @@ export default class TaskFilters extends React.Component {
 
   renderShowResourcesToggle() {
     const isActive = this.props.filter.showResources;
-    return (
+    return this.props.displayRequestTypeFilters && (
       <div className="requests-filter-container pull-right">
         <ul className="nav nav-pills nav-pills-multi-select">
           <li key='show-resources' className={isActive ? 'active' : ''}>
