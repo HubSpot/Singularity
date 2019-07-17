@@ -110,6 +110,9 @@ export default class TaskFilters extends React.Component {
   }
 
   renderRequestTypeFilter() {
+    if (!this.props.filter.showResources) {
+      return null;
+    }
     const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((requestType, index) => {
       const isActive = _.contains(this.props.filter.requestTypes, requestType);
       return (

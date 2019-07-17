@@ -66,22 +66,13 @@ class TasksPage extends React.Component {
   handleFilterChange(filter) {
     const lastFilterTaskStatus = this.props.filter.taskStatus;
     this.setState({
-      loading: lastFilterTaskStatus !== filter.taskStatus
+      loading: lastFilterTaskStatus !== filter.taskStatus || this.props.filter.showResources !== filter.showResources
     });
 
-    const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
-    this.props.router.push(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
+    const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length || !filter.showResources ? 'all' : filter.requestTypes.join(',');
+    this.props.router.push(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}?showResources=${filter.showResources}`);
 
-    if (this.props.filter.showResources && !filter.showResources) {
-      const newLocation = this.props.location;
-      newLocation.query.showResources = false;
-      this.props.router.push(newLocation);
-    } else if (!this.props.filter.showResources && filter.showResources) {
-      const location = this.props.location;
-      this.props.router.replace({ ...location, query: {...location.query, showResources: true }})
-    }
-
-    if (lastFilterTaskStatus !== filter.taskStatus) {
+    if (lastFilterTaskStatus !== filter.taskStatus || this.props.filter.showResources !== filter.showResources) {
       this.props.fetchFilter(filter.taskStatus, false, filter.showResources).then(() => {
         this.setState({
           loading: false
@@ -95,11 +86,14 @@ class TasksPage extends React.Component {
     let columns;
     switch (this.props.filter.taskStatus) {
       case 'active':
-        columns = [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory];
-        if (config.showTaskDiskResource) {
-          columns.push(Disk);
+        columns = this.props.filter.showResources ? [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory] : [TaskIdShortened, StartedAt, Host];
+        if (this.props.filter.showResources) {
+          if (config.showTaskDiskResource) {
+            columns.push(Disk);
+          }
+          columns.push(ActiveActions);
         }
-        columns.push(ActiveActions);
+
         return columns;
       case 'scheduled':
         return [RequestId, NextRun, PendingType, PendingDeployId];
@@ -132,21 +126,30 @@ class TasksPage extends React.Component {
     }
   }
 
-  render() {
-    const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
-    let tasks = this.props.tasks;
+  getDisplayTasks() {
+    if (this.state.loading) {
+      return [];
+    }
+
     if (this.props.filter.taskStatus === 'active' && !this.props.filter.showResources) {
-      tasks = tasks.map((t) => {task: {taskId: t}})
+      return  _.sortBy(
+          getFilteredTasks({tasks: _.map(this.props.tasks, (t) => ({taskId: t})), filter: this.props.filter}),
+          (task) => this.getDefaultSortAttribute(task));
     }
     const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
-      _.sortBy(getDecomissioningTasks({tasks: tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
-    if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
+        _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
+        _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
+    return displayTasks;
+  }
 
+  render() {
+    const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
+    const displayTasks = this.getDisplayTasks();
+    if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
-    } else if (!displayTasks.length) {
+    } else if (!displayTasks || !displayTasks.length) {
       table = <div className="empty-table-message"><p>No matching tasks</p></div>;
     } else {
       table = (
@@ -187,7 +190,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state, showResources) => dispatch(FetchTasksInState.trigger(state, true, showResources)),
+    fetchFilter: (state, render404, showResources) => dispatch(FetchTasksInState.trigger(state, render404, showResources)),
     fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
@@ -197,4 +200,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), (props) => refresh(props.params.state)));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), (props) => refresh(props.params.state, props.location.query.showResources == 'true')));
