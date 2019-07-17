@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -21,12 +21,12 @@ import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
-import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
-public class ZkMigrationTest extends SingularityTestBaseNoDb {
+public class ZkMigrationTest extends SingularitySchedulerTestBase {
 
   @Inject
   private ZkDataMigrationRunner migrationRunner;
@@ -43,21 +43,31 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
   @Inject
   private List<ZkDataMigration> migrations;
 
+  public ZkMigrationTest() {
+    super(false, false);
+  }
+
+  @BeforeAll
+  public void setup() throws Exception {
+    super.setup();
+    leaderCacheCoordinator.stopLeaderCache();
+  }
+
   @Test
   public void testMigrationRunner() {
     int largestSeen = 0;
 
     for (ZkDataMigration migration : migrations) {
-      Assert.assertTrue(migration.getMigrationNumber() > largestSeen);
+      Assertions.assertThat(migration.getMigrationNumber()).isGreaterThan(largestSeen);
 
       largestSeen = migration.getMigrationNumber();
     }
 
-    Assert.assertTrue(migrationRunner.checkMigrations() == migrations.size());
+    Assertions.assertThat(migrationRunner.checkMigrations()).isEqualTo(migrations.size());
 
-    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals(Integer.toString(largestSeen)));
+    Assertions.assertThat(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals(Integer.toString(largestSeen))).isTrue();
 
-    Assert.assertTrue(migrationRunner.checkMigrations() == 0);
+    Assertions.assertThat(migrationRunner.checkMigrations()).isEqualTo(0);
   }
 
   @Test
@@ -76,11 +86,11 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     migrationRunner.checkMigrations();
 
     List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
-    Assert.assertTrue(pendingTaskIds.contains(testPending));
-    Assert.assertEquals(pendingTask, taskManager.getPendingTask(testPending).get());
+    Assertions.assertThat(pendingTaskIds).contains(testPending);
+    Assertions.assertThat(pendingTask).isEqualTo(taskManager.getPendingTask(testPending).get());
 
     List<SingularityTaskId> active = taskManager.getActiveTaskIds();
-    Assert.assertTrue(active.contains(taskId));
+    Assertions.assertThat(active).contains(taskId);
   }
 
   @Test
@@ -106,13 +116,13 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     migrationRunner.checkMigrations();
 
     // assert that the migration properly set the requestType field
-    Assert.assertEquals(RequestType.ON_DEMAND, requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.WORKER, requestManager.getRequest(oldWorkerRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.SCHEDULED, requestManager.getRequest(oldScheduledRequest.getId()).get().getRequest().getRequestType());
-    Assert.assertEquals(RequestType.SERVICE, requestManager.getRequest(oldServiceRequest.getId()).get().getRequest().getRequestType());
+    Assertions.assertThat(RequestType.ON_DEMAND).isEqualTo(requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getRequestType());
+    Assertions.assertThat(RequestType.WORKER).isEqualTo(requestManager.getRequest(oldWorkerRequest.getId()).get().getRequest().getRequestType());
+    Assertions.assertThat(RequestType.SCHEDULED).isEqualTo(requestManager.getRequest(oldScheduledRequest.getId()).get().getRequest().getRequestType());
+    Assertions.assertThat(RequestType.SERVICE).isEqualTo(requestManager.getRequest(oldServiceRequest.getId()).get().getRequest().getRequestType());
 
     // assert that the migration properly carried over any additional fields on the request
-    Assert.assertEquals(Optional.of(owners), requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getOwners());
+    Assertions.assertThat(Optional.of(owners)).isEqualTo(requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getOwners());
   }
 
   @Test
@@ -127,12 +137,12 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     curator.create().creatingParentsIfNeeded().forPath("/requests/pending/newDeployRequest-newDeploy", objectMapper.writeValueAsBytes(newDeploy));
     curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/oneOffRequest-oneOffDeploy", now), objectMapper.writeValueAsBytes(oneOffRequest));
 
-    Assert.assertEquals("3 existing requests under old paths", 3, requestManager.getPendingRequests().size());
+    Assertions.assertThat(requestManager.getPendingRequests().size()).isEqualTo(3);
     System.out.println(curator.getChildren().forPath("/requests/pending"));
 
     migrationRunner.checkMigrations();
 
-    Assert.assertEquals("3 existing requests under new paths", 3, requestManager.getPendingRequests().size());
+    Assertions.assertThat(requestManager.getPendingRequests().size()).isEqualTo(3);
     System.out.println(curator.getChildren().forPath("/requests/pending"));
 
     requestManager.deletePendingRequest(newDeploy);
@@ -171,13 +181,13 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     curator.create().creatingParentsIfNeeded().forPath("/requests/pending/newDeployRequest-newDeploy", objectMapper.writeValueAsBytes(newDeploy));
     curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/oneOffRequest-oneOffDeploy", now), objectMapper.writeValueAsBytes(oneOffRequest));
 
-    Assert.assertEquals("3 existing requests under old paths", 3, requestManager.getPendingRequests().size());
+    Assertions.assertThat(requestManager.getPendingRequests().size()).isEqualTo(3);
     System.out.println(curator.getChildren().forPath("/requests/pending"));
 
     migrationRunner.checkMigrations();
 
     System.out.println(curator.getChildren().forPath("/requests/pending"));
-    Assert.assertEquals("3 existing requests under new paths", 3, requestManager.getPendingRequests().size());
+    Assertions.assertThat(requestManager.getPendingRequests().size()).isEqualTo(3);
     System.out.println(curator.getChildren().forPath("/requests/pending"));
 
     requestManager.deletePendingRequest(newDeploy);

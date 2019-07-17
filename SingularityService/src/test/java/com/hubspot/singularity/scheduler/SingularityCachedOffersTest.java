@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.mesos.v1.Protos.Offer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -47,11 +47,11 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
 
     schedulerPoller.runActionOnPoll();
 
-    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(1, taskManager.getActiveTasks().size());
 
     resourceOffers();
 
-    Assert.assertEquals(2, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(2, taskManager.getActiveTasks().size());
   }
 
   @Test
@@ -80,7 +80,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
 
     List<Offer> cachedOffers = offerCache.peekOffers();
-    Assert.assertEquals(1, cachedOffers.size());
+    Assertions.assertEquals(1, cachedOffers.size());
   }
 
   @Test
@@ -113,7 +113,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     schedulerPoller.runActionOnPoll();
 
     List<Offer> cachedOffers = offerCache.peekOffers();
-    Assert.assertEquals(1, cachedOffers.size());
+    Assertions.assertEquals(1, cachedOffers.size());
   }
 
   @Test
@@ -132,8 +132,8 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
 
     schedulerPoller.runActionOnPoll();
 
-    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(1, taskManager.getActiveTasks().size());
 
-    Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
+    Assertions.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
   }
 }

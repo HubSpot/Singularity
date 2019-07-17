@@ -13,8 +13,8 @@ import org.apache.mesos.v1.Protos.Value.Range;
 import org.apache.mesos.v1.Protos.Value.Ranges;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Type;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +29,7 @@ public class MesosUtilsTest {
   private void test(int numPorts, String... ranges) {
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(ranges));
 
-    Assert.assertEquals(numPorts, MesosUtils.getNumPorts(Collections.singletonList(resource)));
+    Assertions.assertEquals(numPorts, MesosUtils.getNumPorts(Collections.singletonList(resource)));
   }
 
   @Test
@@ -50,8 +50,8 @@ public class MesosUtilsTest {
     );
     List<Resource> combined = MesosUtils.combineResources(toAdd);
 
-    Assert.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.absent()), 0.1);
-    Assert.assertEquals(3072, MesosUtils.getMemory(combined, Optional.absent()), 0.1);
+    Assertions.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.absent()), 0.1);
+    Assertions.assertEquals(3072, MesosUtils.getMemory(combined, Optional.absent()), 0.1);
   }
 
   @Test
@@ -67,25 +67,25 @@ public class MesosUtilsTest {
 
     Collections.sort(list);
 
-    Assert.assertTrue(list.get(0).getTaskState() == ExtendedTaskState.TASK_LAUNCHED);
-    Assert.assertTrue(list.get(1).getTaskState() == ExtendedTaskState.TASK_RUNNING);
-    Assert.assertTrue(list.get(2).getTaskState() == ExtendedTaskState.TASK_FAILED);
+    Assertions.assertTrue(list.get(0).getTaskState() == ExtendedTaskState.TASK_LAUNCHED);
+    Assertions.assertTrue(list.get(1).getTaskState() == ExtendedTaskState.TASK_RUNNING);
+    Assertions.assertTrue(list.get(2).getTaskState() == ExtendedTaskState.TASK_FAILED);
   }
 
   @Test
   public void testSubtractResources() {
-    Assert.assertEquals(createResources(3, 60, "23:23", "100:175", "771:1000"),
+    Assertions.assertEquals(createResources(3, 60, "23:23", "100:175", "771:1000"),
         MesosUtils.subtractResources(createResources(5, 100, "23:23", "100:1000"), createResources(2, 40, "176:770")));
 
     List<Resource> subtracted = createResources(100, 1000, "1:100", "101:1000");
 
     subtracted = MesosUtils.subtractResources(subtracted, createResources(5, 100, "23:74", "101:120", "125:130", "750:756"));
 
-    Assert.assertEquals(createResources(95, 900, "1:22", "75:100", "121:124", "131:749", "757:1000"), subtracted);
+    Assertions.assertEquals(createResources(95, 900, "1:22", "75:100", "121:124", "131:749", "757:1000"), subtracted);
 
     subtracted = MesosUtils.subtractResources(subtracted, createResources(20, 20, "75:90", "121:121", "757:1000"));
 
-    Assert.assertEquals(createResources(75, 880, "1:22", "91:100", "122:124", "131:749"), subtracted);
+    Assertions.assertEquals(createResources(75, 880, "1:22", "91:100", "122:124", "131:749"), subtracted);
   }
 
 
@@ -123,15 +123,15 @@ public class MesosUtilsTest {
     int numPorts = 1;
     List<Long> requestedPorts = Arrays.asList(50L, 51L);
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesNotOverlappingRequestedPorts).getResourcesList(), requestedPorts);
-    Assert.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
-    Assert.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
+    Assertions.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
+    Assertions.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
 
     String[] rangesOverlappingRequestPorts = {"23:28"};
     numPorts = 4;
     requestedPorts = Arrays.asList(25L, 27L);
     resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesOverlappingRequestPorts).getResourcesList(), requestedPorts);
-    Assert.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
-    Assert.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
+    Assertions.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
+    Assertions.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class MesosUtilsTest {
     int numPorts = 0;
     List<Long> requestedPorts = Arrays.asList(25L, 27L);
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesOverlappingRequestPorts).getResourcesList(), requestedPorts);
-    Assert.assertEquals(0, MesosUtils.getPorts(resource, numPorts).length);
+    Assertions.assertEquals(0, MesosUtils.getPorts(resource, numPorts).length);
   }
 
   public static Resource buildPortRanges(String... ranges) {

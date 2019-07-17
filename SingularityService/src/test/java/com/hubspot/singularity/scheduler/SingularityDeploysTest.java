@@ -9,8 +9,11 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.mesos.v1.Protos.TaskState;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -35,6 +38,7 @@ import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
   public SingularityDeploysTest() {
@@ -42,6 +46,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  @Order(-1) // TODO - investigate why this succeeds in isolation but fails when run in sequence with other tests
   public void testDeployManagerHandlesFailedLBTask() {
     initLoadBalancedRequest();
     initFirstDeploy();
@@ -55,9 +60,9 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     // this should cause an LB call to happen:
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.ADD).isPresent());
-    Assert.assertTrue(!taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.DEPLOY).isPresent());
-    Assert.assertTrue(!taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.REMOVE).isPresent());
+    Assertions.assertTrue(taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.ADD).isPresent());
+    Assertions.assertTrue(!taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.DEPLOY).isPresent());
+    Assertions.assertTrue(!taskManager.getLoadBalancerState(secondTask.getTaskId(), LoadBalancerRequestType.REMOVE).isPresent());
 
     statusUpdate(secondTask, TaskState.TASK_FAILED);
     statusUpdate(firstTask, TaskState.TASK_FAILED);
@@ -65,12 +70,12 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState() == DeployState.FAILED);
+    Assertions.assertTrue(deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState() == DeployState.FAILED);
 
     List<SingularityPendingTask> pendingTasks = taskManager.getPendingTasks();
 
-    Assert.assertTrue(pendingTasks.size() == 1);
-    Assert.assertTrue(pendingTasks.get(0).getPendingTaskId().getDeployId().equals(firstDeployId));
+    Assertions.assertTrue(pendingTasks.size() == 1);
+    Assertions.assertTrue(pendingTasks.get(0).getPendingTaskId().getDeployId().equals(firstDeployId));
   }
 
   @Test
@@ -102,11 +107,11 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
 
-    Assert.assertTrue(!pendingTaskIds.contains(taskIdOne));
-    Assert.assertTrue(!pendingTaskIds.contains(taskIdTwo));
+    Assertions.assertTrue(!pendingTaskIds.contains(taskIdOne));
+    Assertions.assertTrue(!pendingTaskIds.contains(taskIdTwo));
 
-    Assert.assertTrue(pendingTaskIds.contains(taskIdThree));
-    Assert.assertTrue(pendingTaskIds.contains(taskIdFour));
+    Assertions.assertTrue(pendingTaskIds.contains(taskIdThree));
+    Assertions.assertTrue(pendingTaskIds.contains(taskIdFour));
   }
 
   @Test
@@ -126,21 +131,21 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
-    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
     }
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
   }
 
   @Test
@@ -159,20 +164,20 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
-    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(1, taskManager.getCleanupTaskIds().size());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
     SingularityDeployProgress deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -180,22 +185,22 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     SingularityDeployProgress deployProgressStepTwo = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertFalse(deployProgressStepTwo.isStepComplete());
-    Assert.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
+    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
     }
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -226,16 +231,16 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployResource.cancelDeploy(singularityUser, requestId, secondDeployId);
     deployChecker.checkDeploys();
-    Assert.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
+    Assertions.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
 
     // Incremental deploy task should not be shut down while active deploy is below target instances
     cleaner.drainCleanupQueue();
-    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
-    Assert.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
+    Assertions.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assertions.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
 
     launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     cleaner.drainCleanupQueue();
-    Assert.assertFalse(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assertions.assertFalse(taskManager.getKilledTaskIdRecords().isEmpty());
   }
 
   @Test
@@ -256,7 +261,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     resourceOffers();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
@@ -265,14 +270,14 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(1)).build(), singularityUser);
     scheduler.drainPendingQueue();
 
-    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getCleanupTaskIds().size());
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getCleanupTaskIds().size());
 
     // Extra task from the new deploy should get cleaned up as well
     scheduler.drainPendingQueue();
-    Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(3, taskManager.getCleanupTaskIds().size());
   }
 
   @Test
@@ -291,20 +296,20 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
-    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(1, taskManager.getCleanupTaskIds().size());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
     SingularityDeployProgress deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -313,8 +318,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     // Deploy should not have moved to next step even though instances are launched
     deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     // Add the 'ok' to move to the next step
     deployResource.updatePendingDeploy(singularityUser, new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
@@ -322,22 +327,22 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     SingularityDeployProgress deployProgressStepTwo = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertFalse(deployProgressStepTwo.isStepComplete());
-    Assert.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
+    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
     }
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -358,22 +363,22 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(2), Optional.<Boolean> absent(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
     }
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getCleanupTaskIds().size());
     List<SingularityTaskId> cleanupTaskIds = taskManager.getCleanupTaskIds();
-    Assert.assertTrue(cleanupTaskIds.contains(firstTask.getTaskId()) && cleanupTaskIds.contains(secondTask.getTaskId()));
+    Assertions.assertTrue(cleanupTaskIds.contains(firstTask.getTaskId()) && cleanupTaskIds.contains(secondTask.getTaskId()));
     SingularityDeployProgress deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(2, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(2, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -382,22 +387,22 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     SingularityDeployProgress deployProgressStepTwo = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertFalse(deployProgressStepTwo.isStepComplete());
-    Assert.assertEquals(4, deployProgressStepTwo.getTargetActiveInstances());
+    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertEquals(4, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
-    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(4, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(4, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
       statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
     }
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(4, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(4, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -413,10 +418,10 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
@@ -424,9 +429,9 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(firstNewTaskId));
-    Assert.assertFalse(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
-    Assert.assertEquals(DeployState.CANCELED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(firstNewTaskId));
+    Assertions.assertFalse(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(DeployState.CANCELED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
 
   }
 
@@ -443,18 +448,18 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
 
-    Assert.assertFalse(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
-    Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertFalse(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -469,7 +474,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -481,17 +486,17 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
     deployChecker.checkDeploys();
-    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+    Assertions.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
 
     SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+    Assertions.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
 
     SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.FAILED);
+    Assertions.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.FAILED);
   }
 
   @Test
@@ -503,17 +508,17 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
     deployChecker.checkDeploys();
-    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+    Assertions.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
 
     SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+    Assertions.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
 
     SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
 
     deployChecker.checkDeploys();
-    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.SUCCEEDED);
+    Assertions.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.SUCCEEDED);
   }
 
   @Test
@@ -529,32 +534,32 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.<Boolean> absent(), true);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
 
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();
     SingularityPendingDeploy pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assert.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
+    Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
 
     deployChecker.checkDeploys();
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assert.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
+    Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
 
     deployChecker.checkDeploys();
-    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     SingularityDeployProgress deployProgressStepOne = pendingDeploy.getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -562,14 +567,14 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assert.assertFalse(pendingDeploy.getDeployProgress().get().isStepComplete());
-    Assert.assertEquals(2, pendingDeploy.getDeployProgress().get().getTargetActiveInstances());
+    Assertions.assertFalse(pendingDeploy.getDeployProgress().get().isStepComplete());
+    Assertions.assertEquals(2, pendingDeploy.getDeployProgress().get().getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId secondNewTaskId = null;
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
@@ -583,14 +588,14 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assert.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
+    Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
 
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
   @Test
@@ -609,20 +614,20 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
 
     resourceOffers();
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+    Assertions.assertEquals(1, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
 
     SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
     statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
-    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(1, taskManager.getCleanupTaskIds().size());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(firstTask.getTaskId()));
     SingularityDeployProgress deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
-    Assert.assertTrue(deployProgressStepOne.isStepComplete());
-    Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
+    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -633,13 +638,13 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
-    Assert.assertEquals(1, pendingTaskIds.size());
-    Assert.assertEquals(firstDeployId, pendingTaskIds.get(0).getDeployId());
+    Assertions.assertEquals(1, pendingTaskIds.size());
+    Assertions.assertEquals(firstDeployId, pendingTaskIds.get(0).getDeployId());
 
     cleaner.drainCleanupQueue();
     List<SingularityTaskId> cleanupTaskIds = taskManager.getCleanupTaskIds();
-    Assert.assertEquals(1, cleanupTaskIds.size());
-    Assert.assertEquals(secondDeployId, cleanupTaskIds.get(0).getDeployId());
+    Assertions.assertEquals(1, cleanupTaskIds.size());
+    Assertions.assertEquals(secondDeployId, cleanupTaskIds.get(0).getDeployId());
 
     resourceOffers();
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, firstDeployId)) {
@@ -648,8 +653,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     cleaner.drainCleanupQueue();
 
-    Assert.assertEquals(0, taskManager.getCleanupTaskIds().size());
-    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, firstDeployId).size());
+    Assertions.assertEquals(0, taskManager.getCleanupTaskIds().size());
+    Assertions.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, firstDeployId).size());
   }
 
   @Test
@@ -659,10 +664,10 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
-    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
-    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTasks().isEmpty());
+    Assertions.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
     deploy("nextDeployId");
     deployChecker.checkDeploys();
@@ -670,23 +675,23 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     // no second task should be scheduled
 
-    Assert.assertTrue(taskManager.getPendingTasks().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
-    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
-    Assert.assertTrue(!taskManager.getCleanupTaskIds().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTasks().isEmpty());
+    Assertions.assertTrue(taskManager.getActiveTaskIds().contains(firstTask.getTaskId()));
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertTrue(!taskManager.getCleanupTaskIds().isEmpty());
 
     statusUpdate(firstTask, TaskState.TASK_FINISHED);
     scheduler.drainPendingQueue();
     cleaner.drainCleanupQueue();
 
-    Assert.assertTrue(!taskManager.getPendingTasks().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    Assertions.assertTrue(!taskManager.getPendingTasks().isEmpty());
+    Assertions.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assertions.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
     SingularityPendingTaskId pendingTaskId = taskManager.getPendingTaskIds().get(0);
 
-    Assert.assertEquals("nextDeployId", pendingTaskId.getDeployId());
-    Assert.assertEquals(requestId, pendingTaskId.getRequestId());
+    Assertions.assertEquals("nextDeployId", pendingTaskId.getDeployId());
+    Assertions.assertEquals(requestId, pendingTaskId.getRequestId());
   }
 
   @Test
@@ -696,7 +701,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     createAndSchedulePendingTask(firstDeployId);
 
-    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
 
     deploy("d2");
     scheduler.drainPendingQueue();
@@ -705,7 +710,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
 
   @Test
@@ -723,11 +728,11 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       exception = true;
     }
 
-    Assert.assertTrue(exception);
+    Assertions.assertTrue(exception);
 
     deploy("d3", Optional.of(true));
 
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+    Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
@@ -736,15 +741,15 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.PAUSED);
+    Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.PAUSED);
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
 
     deploy("d4", Optional.of(true));
 
-    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
+    Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
@@ -754,7 +759,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     RequestState requestState = requestManager.getRequest(requestId).get().getState();
 
-    Assert.assertTrue(requestState == RequestState.ACTIVE);
+    Assertions.assertTrue(requestState == RequestState.ACTIVE);
   }
 
   @Test
@@ -771,13 +776,13 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+    Assertions.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
     launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
 
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+    Assertions.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
   }
 
   @Test
@@ -789,8 +794,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
-    Assert.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
 
     SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
     SingularityRequest newRequest = request.toBuilder().setInstances(Optional.of(1)).build();
@@ -810,8 +815,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       }
     }
 
-    Assert.assertEquals(1, pendingTaskIdsForNewDeploy.size());
-    Assert.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+    Assertions.assertEquals(1, pendingTaskIdsForNewDeploy.size());
+    Assertions.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
 
     resourceOffers();
     for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, deployId)) {
@@ -819,21 +824,23 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     }
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(1, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+    Assertions.assertEquals(1, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void testCannotUpdateRequestDuringPendingDeployWithNewData() {
-    initRequest();
-    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
-    SingularityRequest newRequest = request.toBuilder().setInstances(Optional.of(1)).build();
+    Assertions.assertThrows(WebApplicationException.class, () -> {
+      initRequest();
+      SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
+      SingularityRequest newRequest = request.toBuilder().setInstances(Optional.of(1)).build();
 
-    String deployId = "test_new_request_data";
-    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+      String deployId = "test_new_request_data";
+      SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.of(newRequest)), singularityUser);
+      deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.of(newRequest)), singularityUser);
 
-    requestResource.postRequest(newRequest, singularityUser);
+      requestResource.postRequest(newRequest, singularityUser);
+    });
   }
 
   @Test
@@ -851,7 +858,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
-    Assert.assertEquals(DeployState.OVERDUE, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+    Assertions.assertEquals(DeployState.OVERDUE, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
   }
 
   @Test
@@ -874,8 +881,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     SingularityDeployProgress deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
-    Assert.assertEquals(1, deployProgress.getTargetActiveInstances());
-    Assert.assertEquals(1, deployProgress.getCurrentActiveInstances());
+    Assertions.assertEquals(1, deployProgress.getTargetActiveInstances());
+    Assertions.assertEquals(1, deployProgress.getCurrentActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
@@ -889,8 +896,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
     deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
-    Assert.assertEquals(2, deployProgress.getTargetActiveInstances());
-    Assert.assertEquals(2, deployProgress.getCurrentActiveInstances());
+    Assertions.assertEquals(2, deployProgress.getTargetActiveInstances());
+    Assertions.assertEquals(2, deployProgress.getCurrentActiveInstances());
 
     cleaner.drainCleanupQueue();
     statusUpdate(secondTask, TaskState.TASK_KILLED);
@@ -904,8 +911,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
     deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
-    Assert.assertEquals(3, deployProgress.getTargetActiveInstances());
-    Assert.assertEquals(3, deployProgress.getCurrentActiveInstances());
+    Assertions.assertEquals(3, deployProgress.getTargetActiveInstances());
+    Assertions.assertEquals(3, deployProgress.getCurrentActiveInstances());
   }
 
   @Test
@@ -925,14 +932,14 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     resourceOffers();
 
-    Assert.assertEquals(1, taskManager.getNumActiveTasks());
-    Assert.assertEquals(0, taskManager.getNumScheduledTasks());
+    Assertions.assertEquals(1, taskManager.getNumActiveTasks());
+    Assertions.assertEquals(0, taskManager.getNumScheduledTasks());
     SingularityTaskId taskId = taskManager.getActiveTaskIdsForDeploy(requestId, deployId).get(0);
     SingularityTask task = taskManager.getTask(taskId).get();
 
     Map<String, Object> command = (Map<String, Object>) task.getMesosTask().getAllOtherFields().get("command");
 
-    Assert.assertEquals("printenv > tmp.txt", (String) command.get("value"));
+    Assertions.assertEquals("printenv > tmp.txt", (String) command.get("value"));
   }
 
   @Test
@@ -960,7 +967,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     resourceOffers();
 
-    Assert.assertEquals(0, taskManager.getNumActiveTasks());
-    Assert.assertEquals(1, taskManager.getNumScheduledTasks());
+    Assertions.assertEquals(0, taskManager.getNumActiveTasks());
+    Assertions.assertEquals(1, taskManager.getNumScheduledTasks());
   }
 }

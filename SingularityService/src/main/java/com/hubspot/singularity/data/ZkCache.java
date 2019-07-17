@@ -56,6 +56,9 @@ public class ZkCache<T> {
     cache.put(path, object);
   }
 
+  public void invalidateAll() {
+    cache.invalidateAll();
+  }
 }
 
 

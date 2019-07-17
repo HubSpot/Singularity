@@ -31,6 +31,8 @@ import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class ArtifactManager extends SimpleProcessManager {
 
   private final Path cacheDirectory;
@@ -105,6 +107,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(artifact, downloadTo);
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
 

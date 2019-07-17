@@ -15,10 +15,8 @@ import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -39,12 +37,6 @@ import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
-
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.FileSystemResourceAccessor;
 
 public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
@@ -83,34 +75,6 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   public SingularityHistoryTest() {
     super(true);
-  }
-
-  @Before
-  public void createTestData() throws Exception {
-    Handle handle = dbiProvider.get().open();
-    handle.getConnection().setAutoCommit(true);
-
-    Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
-
-    Liquibase liquibase = new Liquibase("singularity_test.sql", new FileSystemResourceAccessor(), database);
-    liquibase.update((String) null);
-
-    try {
-      database.close();
-      handle.close();
-    } catch (Throwable t) {
-    }
-
-
-  }
-
-  @After
-  public void blowDBAway() {
-    Handle handle = dbiProvider.get().open();
-
-    handle.execute("DELETE FROM taskHistory;DELETE FROM requestHistory;DELETE FROM deployHistory;");
-
-    handle.close();
   }
 
   private SingularityTaskHistory buildTask(long launchTime) {
@@ -161,17 +125,17 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     historyManager.saveTaskHistory(taskHistory);
 
-    Assert.assertTrue(historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get().getTask() != null);
+    Assertions.assertTrue(historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get().getTask() != null);
 
-    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager, lock);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
-    Assert.assertTrue(!historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).isPresent());
+    Assertions.assertTrue(!historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).isPresent());
   }
 
   @Test
@@ -181,7 +145,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     saveTasks(3, System.currentTimeMillis());
 
-    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assertions.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
@@ -191,26 +155,26 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assertions.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(1);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(25);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(100);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     saveTasks(10, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(200));
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
   }
 
   @Test
@@ -223,13 +187,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(singularityUser, requestId,
         new SingularityRunNowRequestBuilder().setRunId(runId).build());
 
-    Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
+    Assertions.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
     scheduler.drainPendingQueue();
 
     resourceOffers();
 
-    Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
+    Assertions.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
 
@@ -237,12 +201,12 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     taskHistoryPersister.runActionOnPoll();
 
-    Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
-    Assert.assertEquals(runId, getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
+    Assertions.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
+    Assertions.assertEquals(runId, getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
     parent = requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
-    Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
+    Assertions.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
 
   @Test
@@ -270,7 +234,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     doReturn(Arrays.asList(taskId)).when(taskManagerSpy).getInactiveTaskIdsForRequest(eq(requestId));
 
     // assert that the history works, but more importantly, that we don't NPE
-    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0, 5).size());
+    Assertions.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0, 5).size());
   }
 
   @Test
@@ -378,7 +342,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initOnDemandRequest();
     initFirstDeploy();
 
-    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-1"));
+    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-1"), Optional.absent());
     SingularityTask taskTwo = launchTask(request, firstDeploy, 20000L, 10L, 2, TaskState.TASK_RUNNING, true);
     SingularityTask taskThree = launchTask(request, firstDeploy, 30000L, 10L, 3, TaskState.TASK_RUNNING, true);
 
@@ -386,7 +350,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     finishDeploy(marker, secondDeploy);
 
     SingularityTask taskFour = launchTask(request, secondDeploy, 40000L, 10L, 4, TaskState.TASK_RUNNING, true);
-    SingularityTask taskFive = launchTask(request, secondDeploy, 50000L, 10L, 5, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-5"));
+    SingularityTask taskFive = launchTask(request, secondDeploy, 50000L, 10L, 5, TaskState.TASK_RUNNING, true, Optional.of("test-run-id-5"), Optional.absent());
     SingularityTask taskSix = launchTask(request, secondDeploy, 60000L, 10L, 6, TaskState.TASK_RUNNING, true);
     SingularityTask taskSeven = launchTask(request, secondDeploy, 70000L, 10L, 7, TaskState.TASK_RUNNING, true);
 
@@ -465,13 +429,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   private void match(List<SingularityTaskIdHistory> history, int num, SingularityTask... tasks) {
-    Assert.assertEquals(num, history.size());
+    Assertions.assertEquals(num, history.size());
 
     for (int i = 0; i < tasks.length; i++) {
       SingularityTaskIdHistory idHistory = history.get(i);
       SingularityTask task = tasks[i];
 
-      Assert.assertEquals(task.getTaskId(), idHistory.getTaskId());
+      Assertions.assertEquals(task.getTaskId(), idHistory.getTaskId());
     }
   }
 
@@ -493,17 +457,17 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     List<SingularityRequestHistory> history = historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100);
 
-    Assert.assertEquals(4, history.size());
+    Assertions.assertEquals(4, history.size());
 
     for (SingularityRequestHistory historyItem : history) {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
-        Assert.assertEquals("a msg", historyItem.getMessage().get());
+        Assertions.assertEquals("a msg", historyItem.getMessage().get());
       } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
-        Assert.assertEquals(280, historyItem.getMessage().get().length());
+        Assertions.assertEquals(280, historyItem.getMessage().get().length());
       } else if (historyItem.getEventType() == RequestHistoryType.DELETING) {
-        Assert.assertEquals("a msg", historyItem.getMessage().get());
+        Assertions.assertEquals("a msg", historyItem.getMessage().get());
       } else {
-        Assert.assertTrue(!historyItem.getMessage().isPresent());
+        Assertions.assertTrue(!historyItem.getMessage().isPresent());
       }
     }
   }
@@ -560,27 +524,27 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
       configuration.setSqlFallBackToBytesFields(true);
       SingularityRequestHistory requestHistoryBefore = historyManager.getRequestHistory(request.getId(), Optional.absent(), 0, 1).get(0);
-      Assert.assertNotNull(requestHistoryBefore);
-      Assert.assertEquals(requestHistory.getRequest(), requestHistoryBefore.getRequest());
+      Assertions.assertNotNull(requestHistoryBefore);
+      Assertions.assertEquals(requestHistory.getRequest(), requestHistoryBefore.getRequest());
 
       SingularityDeployHistory deployHistoryBefore = historyManager.getDeployHistory("test", "testd").get();
-      Assert.assertEquals(deployHistory.getDeploy().get(), deployHistoryBefore.getDeploy().get());
+      Assertions.assertEquals(deployHistory.getDeploy().get(), deployHistoryBefore.getDeploy().get());
 
       SingularityTaskHistory taskHistoryBefore = historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get();
-      Assert.assertEquals(taskHistory, taskHistoryBefore);
+      Assertions.assertEquals(taskHistory, taskHistoryBefore);
 
       historyManager.startHistoryBackfill(1).join();
       configuration.setSqlFallBackToBytesFields(false);
 
       SingularityRequestHistory requestHistoryAfter = historyManager.getRequestHistory(request.getId(), Optional.absent(), 0, 1).get(0);
-      Assert.assertNotNull(requestHistoryAfter);
-      Assert.assertEquals(requestHistory.getRequest(), requestHistoryAfter.getRequest());
+      Assertions.assertNotNull(requestHistoryAfter);
+      Assertions.assertEquals(requestHistory.getRequest(), requestHistoryAfter.getRequest());
 
       SingularityDeployHistory deployHistoryAfter = historyManager.getDeployHistory("test", "testd").get();
-      Assert.assertEquals(deployHistory, deployHistoryAfter);
+      Assertions.assertEquals(deployHistory, deployHistoryAfter);
 
       SingularityTaskHistory taskHistoryAfter = historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get();
-      Assert.assertEquals(taskHistory, taskHistoryAfter);
+      Assertions.assertEquals(taskHistory, taskHistoryAfter);
     } finally {
       configuration.setSqlFallBackToBytesFields(false);
     }
