@@ -7,7 +7,7 @@ import Title from './Title';
 import Utils from '../../utils';
 
 const DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS = 1000 * 60 * 60;
-const MAX_LATE_REQUESTS = 10;
+const MAX_LATE_REQUESTS = 20;
 
 class Application extends Component {
   constructor(props) {
@@ -47,6 +47,7 @@ class Application extends Component {
           Singularity is experiencing some delays. The team has already been
           notified.
         `,
+        hideAfter: 5,
       });
     }
   }

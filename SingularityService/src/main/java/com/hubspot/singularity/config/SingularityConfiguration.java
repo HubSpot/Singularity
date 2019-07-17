@@ -54,7 +54,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
 
-  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
+  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(60);
 
   private long checkDeploysEverySeconds = 5;
 
