@@ -232,7 +232,7 @@ export const NextRun = (
     id="nextRun"
     key="nextRun"
     cellData={
-      (rowData) => rowData.nextRunAt
+      (rowData) => rowData.pendingTask ? rowData.pendingTask.pendingTaskId.nextRunAt : rowData.nextRunAt
     }
     cellRender={(cellData) => {
       let label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_SCHEDULED')}`}>SCHEDULED</span>;
