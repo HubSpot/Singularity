@@ -299,6 +299,42 @@ export const RequestId = (
   />
 );
 
+export const ScheduledActions = (
+  <Column
+    label=""
+    id="actions"
+    key="actions"
+    className="actions-column"
+    cellRender={(cellData) => (
+      <div className="hidden-xs">
+        <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
+        {cellData.request && cellData.request.requestType == "ON_DEMAND" &&
+            <DeletePendingTaskButton
+                taskId={cellData.pendingTask.pendingTaskId.id}
+                requestType={cellData.request.requestType}
+            />
+        }
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    )}
+  />
+);
+
+export const ScheduledTaskId = (
+  <Column
+    label="Task ID"
+    id="taskId"
+    key="taskId"
+    cellData={
+      (rowData) => rowData.pendingTask.pendingTaskId.id
+    }
+    sortable={true}
+    className="keep-in-check"
+  />
+);
+
 export const PendingDeployId = (
   <Column
     label="Deploy ID"

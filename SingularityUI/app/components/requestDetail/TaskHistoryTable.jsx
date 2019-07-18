@@ -23,7 +23,7 @@ class TaskHistoryTable extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     requestParent: PropTypes.object,
-    tasksAPI: PropTypes.object.isRequired,
+    tasksAPI: PropTypes.object,
     fetchTaskHistoryForRequest: PropTypes.func.isRequired
   }
 
