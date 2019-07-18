@@ -109,7 +109,7 @@ public class LogrotateTemplateContext {
       transformed.add(
           new LogrotateAdditionalFile(
               taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
-              additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+              additionalFile.getExtension().isPresent() ? additionalFile.getExtension().get() : Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename())), // Can't have possible null in .or()
               dateformat,
               additionalFile.getLogrotateFrequencyOverride()
           ));
