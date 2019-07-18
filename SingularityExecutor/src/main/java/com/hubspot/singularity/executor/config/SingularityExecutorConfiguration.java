@@ -236,6 +236,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private int defaultHealthcheckMaxRetries = 6;
 
+  private int defaultHealthcheckBaseTimeoutSeconds = 30;
+
+  private int defaultHealthcheckInternvalSeconds = 5;
+
   private int defaultCfsPeriod = 100000;
 
   private String extraScriptContent = "";
@@ -743,6 +747,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.verifyAssignedPorts = verifyAssignedPorts;
   }
 
+  public int getDefaultHealthcheckBaseTimeoutSeconds() {
+    return defaultHealthcheckBaseTimeoutSeconds;
+  }
+
+  public void setDefaultHealthcheckBaseTimeoutSeconds(int defaultHealthcheckBaseTimeoutSeconds) {
+    this.defaultHealthcheckBaseTimeoutSeconds = defaultHealthcheckBaseTimeoutSeconds;
+  }
+
+  public int getDefaultHealthcheckInternvalSeconds() {
+    return defaultHealthcheckInternvalSeconds;
+  }
+
+  public void setDefaultHealthcheckInternvalSeconds(int defaultHealthcheckInternvalSeconds) {
+    this.defaultHealthcheckInternvalSeconds = defaultHealthcheckInternvalSeconds;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
@@ -792,6 +812,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
         ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
         ", shellCommandPrefix=" + shellCommandPrefix +
+        ", runShellCommandBeforeKillDueToThreads=" + runShellCommandBeforeKillDueToThreads +
         ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
         ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
         ", maxDockerPullAttempts=" + maxDockerPullAttempts +
@@ -801,6 +822,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
         ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
+        ", defaultHealthcheckBaseTimeoutSeconds=" + defaultHealthcheckBaseTimeoutSeconds +
+        ", defaultHealthcheckInternvalSeconds=" + defaultHealthcheckInternvalSeconds +
         ", defaultCfsPeriod=" + defaultCfsPeriod +
         ", extraScriptContent='" + extraScriptContent + '\'' +
         ", extraDockerScriptContent='" + extraDockerScriptContent + '\'' +
