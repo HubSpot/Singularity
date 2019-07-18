@@ -28,7 +28,7 @@ import Loader from '../common/Loader';
 
 class RequestsPage extends Component {
 
-  static propertyFilter = ['state', 'request.id', 'request.requestType', 'request.instances', 'request.group', 'request.bounceAfterScale', 'requestDeployState.activeDeploy.deployId', 'requestDeployState.activeDeploy.user', 'requestDeployState.activeDeploy.timestamp', 'requestDeployState.activeDeploy.loadBalancerOptions']
+  static propertyFilter = ['state', 'request.id', 'request.requestType', 'request.instances', 'request.group', 'request.bounceAfterScale', 'requestDeployState.activeDeploy.requestId', 'requestDeployState.activeDeploy.deployId', 'requestDeployState.activeDeploy.user', 'requestDeployState.activeDeploy.timestamp', 'requestDeployState.activeDeploy.loadBalancerOptions']
 
   static propTypes = {
     requestsInState: PropTypes.array,
