@@ -98,6 +98,8 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.api.SingularityS3SearchRequest;
+import com.hubspot.singularity.api.SingularityS3SearchResult;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
@@ -200,6 +202,7 @@ public class SingularityClient {
   private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
 
   private static final String S3_LOG_FORMAT = "%s/logs";
+  private static final String S3_LOG_SEARCH_LOGS = S3_LOG_FORMAT + "/search";
   private static final String S3_LOG_GET_TASK_LOGS = S3_LOG_FORMAT + "/task/%s";
   private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
   private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
@@ -1372,6 +1375,26 @@ public class SingularityClient {
   //
 
   /**
+   * Retrieve the list of logs stored in S3 based on a specified search request
+   *
+   * @param searchRequest
+   *     The parameters upon which to base the search
+   * @return
+   *     A result in the form of a {@link SingularityS3SearchResult}
+   */
+  public SingularityS3SearchResult getLogs(SingularityS3SearchRequest searchRequest) {
+    final Function<String, String> requestUri = (host) -> String.format(S3_LOG_SEARCH_LOGS, getApiBase(host));
+
+    final Optional<SingularityS3SearchResult> maybeResult = post(requestUri, "S3 log search", Optional.of(searchRequest), Optional.of(SingularityS3SearchResult.class));
+
+    if (!maybeResult.isPresent()) {
+      throw new SingularityClientException("Singularity url not found", 404);
+    } else {
+      return maybeResult.get();
+    }
+  }
+
+  /**
    * Retrieve the list of logs stored in S3 for a specific task
    *
    * @param taskId
@@ -1398,11 +1421,24 @@ public class SingularityClient {
    *     A collection of {@link SingularityS3Log}
    */
   public Collection<SingularityS3Log> getRequestLogs(String requestId) {
+    return getRequestLogs(requestId, Optional.absent(), Optional.absent());
+  }
+
+  public Collection<SingularityS3Log> getRequestLogs(String requestId, Optional<Long> start, Optional<Long> end) {
     final Function<String, String> requestUri = (host) -> String.format(S3_LOG_GET_REQUEST_LOGS, getApiBase(host), requestId);
 
     final String type = String.format("S3 logs for request %s", requestId);
 
-    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+    Map<String, Object> dateRange = new HashMap<>();
+    if (start.isPresent()) {
+      dateRange.put("start", start.get());
+    }
+
+    if (end.isPresent()) {
+      dateRange.put("end", end.get());
+    }
+
+    return getCollectionWithParams(requestUri, type, Optional.of(dateRange), S3_LOG_COLLECTION);
   }
 
   /**
