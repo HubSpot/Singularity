@@ -34,5 +34,5 @@
   * [Slave Extras](Docs/reference/slave-extras.md)
   * [Deploy Defaults](Docs/reference/deploy-defaults.md)
   * [Health Checks](Docs/reference/healthchecks.md)
-  * [API Reference](Docs/reference/api.html)
+  * [API Reference](http://getsingularity.com/Docs/reference/api.html)
     * [OpenAPI JSON](Docs/reference/openapi.json)
