@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -40,7 +40,7 @@ public class NoopHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -67,12 +67,12 @@ public class NoopHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

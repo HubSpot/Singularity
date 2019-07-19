@@ -12,7 +12,7 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;

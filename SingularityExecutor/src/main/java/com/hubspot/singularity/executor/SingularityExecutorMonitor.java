@@ -21,7 +21,7 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
@@ -226,7 +226,7 @@ public class SingularityExecutorMonitor {
     if (exitCheckerFuture.isPresent()) {
       LOG.info("Canceling an exit checker");
       exitCheckerFuture.get().cancel(true);
-      exitCheckerFuture = Optional.absent();
+      exitCheckerFuture = Optional.empty();
     }
   }
 
@@ -238,7 +238,7 @@ public class SingularityExecutorMonitor {
       taskLock.lock();
       try {
         if (runState == RunState.SHUTDOWN) {
-          finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String> absent());
+          finishTask(task, TaskState.TASK_LOST, "Task couldn't start because executor is shutting down", Optional.<String>empty());
 
           return SubmitState.REJECTED;
         }
@@ -278,11 +278,11 @@ public class SingularityExecutorMonitor {
   }
 
   public Optional<SingularityExecutorTaskProcessCallable> getTaskProcess(String taskId) {
-    return Optional.fromNullable(processRunningTasks.get(taskId));
+    return Optional.ofNullable(processRunningTasks.get(taskId));
   }
 
   public Optional<SingularityExecutorTask> getTask(String taskId) {
-    return Optional.fromNullable(tasks.get(taskId));
+    return Optional.ofNullable(tasks.get(taskId));
   }
 
   public ListeningExecutorService getShellCommandExecutorServiceForTask(String taskId) {
@@ -336,7 +336,7 @@ public class SingularityExecutorMonitor {
         }
 
         if (wasKilled) {
-          finishTask(task, TaskState.TASK_KILLED, "Task killed before service process started", Optional.<String> absent());
+          finishTask(task, TaskState.TASK_KILLED, "Task killed before service process started", Optional.<String>empty());
         }
       }
 
@@ -432,11 +432,11 @@ public class SingularityExecutorMonitor {
   }
 
   public KillState requestKill(String taskId) {
-    return requestKill(taskId, Optional.<String>absent(), false);
+    return requestKill(taskId, Optional.<String>empty(), false);
   }
 
   public KillState requestKill(String taskId, Optional<String> user, boolean destroy) {
-    final Optional<SingularityExecutorTask> maybeTask = Optional.fromNullable(tasks.get(taskId));
+    final Optional<SingularityExecutorTask> maybeTask = Optional.ofNullable(tasks.get(taskId));
 
     if (!maybeTask.isPresent()) {
       return KillState.DIDNT_EXIST;
@@ -560,7 +560,7 @@ public class SingularityExecutorMonitor {
           taskState = TaskState.TASK_KILLED;
 
           if (task.wasDestroyedAfterWaiting()) {
-            final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis());
+            final long millisWaited = task.getExecutorData().getSigKillProcessesAfterMillis().orElse(configuration.getHardKillAfterMillis());
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           } else if (task.wasForceDestroyed()) {

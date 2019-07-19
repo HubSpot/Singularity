@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -57,7 +57,7 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public SingularityDisabledAction getDisabledAction(SingularityAction action) {
     Optional<SingularityDisabledAction> maybeDisabledAction = getData(getActionPath(action), disabledActionTranscoder);
-    return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent(), false, Optional.<Long>absent()));
+    return maybeDisabledAction.orElse(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>empty(), false, Optional.<Long>empty()));
   }
 
   public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated, Optional<Long> expiresAt) {
@@ -66,8 +66,8 @@ public class DisasterManager extends CuratorAsyncManager {
     }
     SingularityDisabledAction disabledAction = new SingularityDisabledAction(
       action,
-      String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE)),
-      user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>absent(),
+      String.format(MESSAGE_FORMAT, action, maybeMessage.orElse(DEFAULT_MESSAGE)),
+      user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>empty(),
       systemGenerated,
       expiresAt);
 
@@ -128,7 +128,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public SingularityDisasterDataPoints getDisasterStats() {
-    SingularityDisasterDataPoints stats = getData(DISASTER_STATS_PATH, disasterStatsTranscoder).or(SingularityDisasterDataPoints.empty());
+    SingularityDisasterDataPoints stats = getData(DISASTER_STATS_PATH, disasterStatsTranscoder).orElse(SingularityDisasterDataPoints.empty());
     Collections.sort(stats.getDataPoints());
     return stats;
   }
@@ -163,13 +163,13 @@ public class DisasterManager extends CuratorAsyncManager {
     }
 
     String message = String.format("Active disasters detected: (%s)%s", newActiveDisasters, automaticallyClearable ? "" : ", action must be re-enabled by an admin user");
-    Optional<Long> expiresAt = Optional.absent();
+    Optional<Long> expiresAt = Optional.empty();
     if (automaticallyClearable) {
       expiresAt = Optional.of(System.currentTimeMillis() + configuration.getDisasterDetection().getDefaultDisabledActionExpiration());
     }
 
     for (SingularityAction action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
-      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), automaticallyClearable, expiresAt);
+      disable(action, Optional.of(message), Optional.<SingularityUser>empty(), automaticallyClearable, expiresAt);
     }
   }
 

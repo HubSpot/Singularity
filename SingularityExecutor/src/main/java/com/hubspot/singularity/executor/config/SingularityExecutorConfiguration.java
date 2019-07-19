@@ -14,7 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
@@ -151,7 +151,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int localDownloadServiceMaxConnections = 25;
 
   @JsonProperty
-  private Optional<Integer> maxTaskThreads = Optional.absent();
+  private Optional<Integer> maxTaskThreads = Optional.empty();
 
   @JsonProperty
   private String dockerPrefix = "se-";
@@ -206,7 +206,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private List<String> shellCommandPrefix = Collections.emptyList();
 
   @JsonProperty
-  private Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads = Optional.absent();
+  private Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads = Optional.empty();
 
   @JsonProperty
   private int dockerClientTimeLimitSeconds = 300;
@@ -218,7 +218,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int maxDockerPullAttempts = 2;
 
   @JsonProperty
-  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.absent();
+  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.empty();
 
   @JsonProperty
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
@@ -246,7 +246,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   private String extraDockerScriptContent = "";
 
-  private Optional<Long> maxServiceLogSizeMb = Optional.absent();
+  private Optional<Long> maxServiceLogSizeMb = Optional.empty();
 
   @JsonProperty
   private boolean verifyAssignedPorts = false;

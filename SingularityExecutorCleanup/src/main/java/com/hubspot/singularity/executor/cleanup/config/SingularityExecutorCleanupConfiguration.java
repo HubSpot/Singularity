@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -50,10 +50,10 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   private boolean runDockerCleanup = false;
 
   @JsonProperty
-  private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.absent();
+  private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.empty();
 
   @JsonProperty
-  private Optional<String> singularityClientCredentialsPath = Optional.absent();
+  private Optional<String> singularityClientCredentialsPath = Optional.empty();
 
   @JsonProperty
   private boolean cleanTasksWhenDecommissioned = true;

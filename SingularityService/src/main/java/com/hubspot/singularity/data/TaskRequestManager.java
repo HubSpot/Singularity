@@ -6,7 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -64,9 +64,9 @@ public class TaskRequestManager {
           continue;
         }
 
-        Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployMarker().getDeployId().equals(task.getPendingTaskId().getDeployId()) ? maybePendingDeploy.get().getUpdatedRequest() : Optional.<SingularityRequest>absent();
+        Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployMarker().getDeployId().equals(task.getPendingTaskId().getDeployId()) ? maybePendingDeploy.get().getUpdatedRequest() : Optional.<SingularityRequest>empty();
 
-        taskRequests.add(new SingularityTaskRequest(updatedRequest.or(request.getRequest()), foundDeploy, task));
+        taskRequests.add(new SingularityTaskRequest(updatedRequest.orElse(request.getRequest()), foundDeploy, task));
       }
     }
 

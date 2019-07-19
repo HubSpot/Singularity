@@ -11,7 +11,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;

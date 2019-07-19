@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
@@ -232,13 +232,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
           taskManager.createTaskCleanup(
               new SingularityTaskCleanup(
-                  Optional.absent(),
+                  Optional.empty(),
                   TaskCleanupType.REBALANCE_CPU_USAGE,
                   System.currentTimeMillis(),
                   taskIdWithUsage.getTaskId(),
                   message,
                   Optional.of(UUID.randomUUID().toString()),
-                  Optional.absent(), Optional.absent()));
+                  Optional.empty(), Optional.empty()));
         } else {
           message = Optional.of(String.format(
               "Mem usage on slave is %sMiB / %sMiB, shuffling task using %sMiB / %sMiB to less busy host",
@@ -253,18 +253,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
           taskManager.createTaskCleanup(
               new SingularityTaskCleanup(
-                  Optional.absent(),
+                  Optional.empty(),
                   TaskCleanupType.REBALANCE_MEMORY_USAGE,
                   System.currentTimeMillis(),
                   taskIdWithUsage.getTaskId(),
                   message,
                   Optional.of(UUID.randomUUID().toString()),
-                  Optional.absent(), Optional.absent()));
+                  Optional.empty(), Optional.empty()));
         }
 
         requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId()
-            .getDeployId(), System.currentTimeMillis(), Optional.absent(),
-            PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
+            .getDeployId(), System.currentTimeMillis(), Optional.empty(),
+            PendingType.TASK_BOUNCE, Optional.empty(), Optional.empty(), Optional.empty(), message, Optional.of(UUID.randomUUID().toString())));
 
         shuffledTasksOnSlave++;
         currentShuffleCleanupsTotal++;

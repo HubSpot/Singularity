@@ -2,7 +2,7 @@ package com.hubspot.singularity.expiring;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 
@@ -31,7 +31,7 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
     super(machineChangeRequest, user, startMillis, actionId);
     this.machineId = machineId;
     this.revertToState = revertToState;
-    this.killTasksOnDecommissionTimeout = killTasksOnDecommissionTimeout.or(false);
+    this.killTasksOnDecommissionTimeout = killTasksOnDecommissionTimeout.orElse(false);
   }
 
   @Schema(description = "Id of the machine being updated")

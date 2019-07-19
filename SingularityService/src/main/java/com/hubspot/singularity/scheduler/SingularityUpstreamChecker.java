@@ -12,7 +12,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.github.rholder.retry.Retryer;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonServiceState;
@@ -109,7 +109,7 @@ public class SingularityUpstreamChecker {
       final BaragonServiceState baragonServiceState = singularityCheckingUpstreamsUpdate.getBaragonServiceState().get();
       return baragonServiceState.getUpstreams()
           .stream()
-          .filter(upstream -> upstream.getGroup().equals(loadBalancerUpstreamGroup.or("default")))
+          .filter(upstream -> upstream.getGroup().equals(loadBalancerUpstreamGroup.orElse("default")))
           .collect(Collectors.toList());
     }
     LOG.debug("Baragon service state for service {} is absent.", singularityCheckingUpstreamsUpdate.getSingularityRequestId());
@@ -117,7 +117,7 @@ public class SingularityUpstreamChecker {
   }
 
   private Collection<UpstreamInfo> getLoadBalancerUpstreamsForService(String singularityRequestId, Optional<String> loadBalancerServiceIdOverride, Optional<String> loadBalancerUpstreamGroup) {
-    final String loadBalancerServiceId = loadBalancerServiceIdOverride.or(singularityRequestId);
+    final String loadBalancerServiceId = loadBalancerServiceIdOverride.orElse(singularityRequestId);
     try {
       LOG.info("Sending request to get load balancer upstreams for service {} with loadBalancerServiceId {}.", singularityRequestId, loadBalancerServiceId);
       final SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(loadBalancerServiceId);
@@ -139,14 +139,14 @@ public class SingularityUpstreamChecker {
       final List<UpstreamInfo> extraUpstreams = getExtraUpstreamsInLoadBalancer(upstreamsInLoadBalancerForService, upstreamsInSingularityForService);
       if (extraUpstreams.isEmpty()) {
         LOG.debug("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
-        return Optional.absent();
+        return Optional.empty();
       }
-      final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.absent());
+      final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.empty());
       LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
       return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
     } catch (TaskIdNotFoundException e) {
       LOG.error("TaskId not found for requestId: {}.", singularityRequest.getId());
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
   private static final long serialVersionUID = 1L;

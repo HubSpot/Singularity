@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -62,7 +62,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
     bind(SingularityRunnerExceptionNotifier.class).in(Scopes.SINGLETON);
 
-    final Optional<String> consolidatedConfigFilename = Optional.fromNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
+    final Optional<String> consolidatedConfigFilename = Optional.ofNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());
 
     configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass, consolidatedConfigFilename);

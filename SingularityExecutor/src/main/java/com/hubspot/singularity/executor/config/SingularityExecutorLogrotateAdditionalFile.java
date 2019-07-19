@@ -2,7 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -17,7 +17,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
     @JsonCreator
     @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
-        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), null, false);
+        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.empty(), Optional.empty(), null, false);
     }
 
     @JsonCreator
@@ -29,7 +29,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
         this.filename = filename;
         this.extension = extension;
         this.dateformat = dateformat;
-        this.logrotateFrequencyOverride = Optional.fromNullable(logrotateFrequencyOverride);
+        this.logrotateFrequencyOverride = Optional.ofNullable(logrotateFrequencyOverride);
         this.deleteInExecutorCleanup = deleteInExecutorCleanup;
     }
 

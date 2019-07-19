@@ -8,7 +8,7 @@ import javax.validation.Validator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -64,7 +64,7 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
 
       final Set<ConstraintViolation<T>> violations = validator.validate(config);
       if (!violations.isEmpty()) {
-        throw new ConfigurationValidationException(filename.or(configuration.filename()), violations);
+        throw new ConfigurationValidationException(filename.orElse(configuration.filename()), violations);
       }
 
       return config;

@@ -22,7 +22,7 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.UniformReservoir;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

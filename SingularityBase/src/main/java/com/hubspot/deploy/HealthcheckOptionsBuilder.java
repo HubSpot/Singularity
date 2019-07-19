@@ -2,10 +2,10 @@ package com.hubspot.deploy;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 
@@ -31,18 +31,18 @@ public class HealthcheckOptionsBuilder {
 
   public HealthcheckOptionsBuilder(Optional<String> uri) {
     this.uri = uri;
-    this.portIndex = Optional.absent();
-    this.portNumber = Optional.absent();
-    this.protocol = Optional.absent();
-    this.method = Optional.absent();
-    this.startupTimeoutSeconds = Optional.absent();
-    this.startupDelaySeconds = Optional.absent();
-    this.startupIntervalSeconds = Optional.absent();
-    this.intervalSeconds = Optional.absent();
-    this.responseTimeoutSeconds = Optional.absent();
-    this.maxRetries = Optional.absent();
-    this.failureStatusCodes = Optional.absent();
-    this.healthcheckResultFilePath = Optional.absent();
+    this.portIndex = Optional.empty();
+    this.portNumber = Optional.empty();
+    this.protocol = Optional.empty();
+    this.method = Optional.empty();
+    this.startupTimeoutSeconds = Optional.empty();
+    this.startupDelaySeconds = Optional.empty();
+    this.startupIntervalSeconds = Optional.empty();
+    this.intervalSeconds = Optional.empty();
+    this.responseTimeoutSeconds = Optional.empty();
+    this.maxRetries = Optional.empty();
+    this.failureStatusCodes = Optional.empty();
+    this.healthcheckResultFilePath = Optional.empty();
   }
 
   public Optional<String> getUri() {

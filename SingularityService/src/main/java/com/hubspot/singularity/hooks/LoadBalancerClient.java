@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;

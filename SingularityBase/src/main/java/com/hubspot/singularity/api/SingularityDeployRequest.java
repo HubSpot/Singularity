@@ -3,7 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 
@@ -30,7 +30,7 @@ public class SingularityDeployRequest {
   }
 
   public SingularityDeployRequest(SingularityDeploy deploy, Optional<Boolean> unpauseOnSuccessfulDeploy, Optional<String> message) {
-    this(deploy, unpauseOnSuccessfulDeploy, message, Optional.<SingularityRequest>absent());
+    this(deploy, unpauseOnSuccessfulDeploy, message, Optional.<SingularityRequest>empty());
   }
 
   @Schema(description = "If deploy is successful, also unpause the request", nullable = true, defaultValue = "false")
@@ -55,7 +55,7 @@ public class SingularityDeployRequest {
 
   @JsonIgnore
   public boolean isUnpauseOnSuccessfulDeploy() {
-    return unpauseOnSuccessfulDeploy.or(Boolean.FALSE);
+    return unpauseOnSuccessfulDeploy.orElse(Boolean.FALSE);
   }
 
   @Override

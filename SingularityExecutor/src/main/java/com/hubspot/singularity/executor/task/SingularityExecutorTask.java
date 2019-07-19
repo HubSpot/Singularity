@@ -12,7 +12,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -68,7 +68,7 @@ public class SingularityExecutorTask {
     this.killed = new AtomicBoolean(false);
     this.destroyedAfterWaiting = new AtomicBoolean(false);
     this.forceDestroyed = new AtomicBoolean(false);
-    this.killedBy = new AtomicReference<>(Optional.<String>absent());
+    this.killedBy = new AtomicReference<>(Optional.<String>empty());
     this.killedAfterThreadOverage = new AtomicBoolean(false);
     this.threadCountAtOverage = new AtomicInteger(0);
 
@@ -83,7 +83,7 @@ public class SingularityExecutorTask {
   public void cleanup(TaskState state) {
     ExtendedTaskState extendedTaskState = MesosUtils.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString()));
 
-    boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
+    boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
 
     boolean isDocker = (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker());
 

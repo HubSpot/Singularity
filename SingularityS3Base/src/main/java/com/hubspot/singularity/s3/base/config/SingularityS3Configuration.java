@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
@@ -25,11 +25,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Obfuscate
   @JsonProperty
-  private Optional<String> s3AccessKey = Optional.absent();
+  private Optional<String> s3AccessKey = Optional.empty();
 
   @Obfuscate
   @JsonProperty
-  private Optional<String> s3SecretKey = Optional.absent();
+  private Optional<String> s3SecretKey = Optional.empty();
 
   @Min(1)
   @JsonProperty
@@ -61,7 +61,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> s3Endpoint = Optional.absent();
+  private Optional<String> s3Endpoint = Optional.empty();
 
   @NotNull
   @JsonProperty
@@ -69,10 +69,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> metricsFilePath = Optional.absent();
+  private Optional<String> metricsFilePath = Optional.empty();
 
   public SingularityS3Configuration() {
-    super(Optional.<String>absent());
+    super(Optional.<String>empty());
   }
 
   public String getArtifactCacheDirectory() {

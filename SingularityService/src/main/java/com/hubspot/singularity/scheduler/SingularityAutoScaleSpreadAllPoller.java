@@ -7,7 +7,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
@@ -51,7 +51,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
       lock.runWithRequestLock(() -> {
         SingularityRequest request = requestWithState.getRequest();
-        SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+        SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
         if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
           return;
@@ -75,7 +75,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     Optional<SingularityRequestHistory.RequestHistoryType> historyType = Optional.of(SingularityRequestHistory.RequestHistoryType.SCALED);
     Optional<String> message = Optional.of(String.format("Auto scale number of instances to spread to all %d available slaves", newRequestedInstances));
 
-    requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.<String>absent(), oldRequest.getSkipHealthchecks(), message, Optional.<SingularityBounceRequest>absent());
+    requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.<String>empty(), oldRequest.getSkipHealthchecks(), message, Optional.<SingularityBounceRequest>empty());
   }
 
   @Override

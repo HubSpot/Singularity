@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,7 +18,7 @@ public class SingularityMesosArtifact {
 
   @JsonCreator
   public static SingularityMesosArtifact fromString(String uri) {
-    return new SingularityMesosArtifact(uri, Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.absent());
+    return new SingularityMesosArtifact(uri, Optional.<Boolean>empty(), Optional.<Boolean>empty(), Optional.<Boolean>empty(), Optional.empty());
   }
 
   @JsonCreator
@@ -28,9 +28,9 @@ public class SingularityMesosArtifact {
                                   @JsonProperty("extract") Optional<Boolean> extract,
                                   @JsonProperty("outputFile") Optional<String> outputFile) {
     this.uri = uri;
-    this.cache = cache.or(false);
-    this.executable = executable.or(false);
-    this.extract = extract.or(true);
+    this.cache = cache.orElse(false);
+    this.executable = executable.orElse(false);
+    this.extract = extract.orElse(true);
     this.outputFile = outputFile;
   }
 

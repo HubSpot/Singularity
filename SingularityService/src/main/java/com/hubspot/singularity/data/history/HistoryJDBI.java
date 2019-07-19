@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.jdbi.v3.sqlobject.SqlObject;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;

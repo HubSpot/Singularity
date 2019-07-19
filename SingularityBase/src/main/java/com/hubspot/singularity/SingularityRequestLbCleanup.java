@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 @JsonIgnoreProperties (ignoreUnknown = true)
 public class SingularityRequestLbCleanup {

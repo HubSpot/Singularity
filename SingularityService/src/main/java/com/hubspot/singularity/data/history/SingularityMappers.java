@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
@@ -123,10 +123,10 @@ public class SingularityMappers {
         }
         return new SingularityRequestHistory(
             r.getTimestamp("createdAt").getTime(),
-            Optional.fromNullable(r.getString(userColumn)),
+            Optional.ofNullable(r.getString(userColumn)),
             RequestHistoryType.valueOf(r.getString("requestState")),
             request,
-            Optional.fromNullable(r.getString("message")));
+            Optional.ofNullable(r.getString("message")));
       } catch (IOException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }
@@ -169,7 +169,7 @@ public class SingularityMappers {
 
         final String lastTaskStatus = r.getString("lastTaskStatus");
 
-        Optional<ExtendedTaskState> lastTaskState = Optional.absent();
+        Optional<ExtendedTaskState> lastTaskState = Optional.empty();
 
         if (lastTaskStatus != null) {
           try {
@@ -179,7 +179,7 @@ public class SingularityMappers {
           }
         }
 
-        return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState, Optional.fromNullable(r.getString("runId")));
+        return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState, Optional.ofNullable(r.getString("runId")));
       } catch (SingularityTranscoderException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }
@@ -197,13 +197,13 @@ public class SingularityMappers {
     @Override
     public SingularityDeployHistory map(ResultSet r, StatementContext ctx) throws SQLException {
       SingularityDeployMarker marker =
-          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString(userColumn)),
-              Optional.fromNullable(r.getString("message")));
+          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.ofNullable(r.getString(userColumn)),
+              Optional.ofNullable(r.getString("message")));
       SingularityDeployResult deployState =
-          new SingularityDeployResult(DeployState.valueOf(r.getString("deployState")), Optional.<String>absent(), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure>emptyList(), r.getTimestamp("deployStateAt")
+          new SingularityDeployResult(DeployState.valueOf(r.getString("deployState")), Optional.<String>empty(), Optional.<SingularityLoadBalancerUpdate>empty(), Collections.<SingularityDeployFailure>emptyList(), r.getTimestamp("deployStateAt")
               .getTime());
 
-      return new SingularityDeployHistory(Optional.of(deployState), marker, Optional.<SingularityDeploy>absent(), Optional.<SingularityDeployStatistics>absent());
+      return new SingularityDeployHistory(Optional.of(deployState), marker, Optional.<SingularityDeploy>empty(), Optional.<SingularityDeployStatistics>empty());
     }
   }
 

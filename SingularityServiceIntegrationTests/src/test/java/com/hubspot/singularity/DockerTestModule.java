@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.hubspot.singularity.client.SingularityClientModule;
@@ -16,7 +16,7 @@ public class DockerTestModule extends AbstractModule {
     final String dockerHost = System.getenv("DOCKER_HOST");
 
     if (Strings.isNullOrEmpty(dockerHost)) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final Matcher m = DOCKER_HOST_PATTERN.matcher(dockerHost);
@@ -24,7 +24,7 @@ public class DockerTestModule extends AbstractModule {
     if (m.matches()) {
       return Optional.of(m.group(1));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -32,6 +32,6 @@ public class DockerTestModule extends AbstractModule {
   protected void configure() {
     final int singularityPort = Integer.parseInt(System.getProperty("singularity.port"));
 
-    install(new SingularityClientModule(Arrays.asList(String.format("%s:%d", getDockerAddress().or("localhost"), singularityPort))));
+    install(new SingularityClientModule(Arrays.asList(String.format("%s:%d", getDockerAddress().orElse("localhost"), singularityPort))));
   }
 }

@@ -1,6 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class UploaderFileAttributes {
   Optional<Long> startTime;

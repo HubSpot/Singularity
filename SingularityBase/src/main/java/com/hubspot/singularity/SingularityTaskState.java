@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -64,7 +64,7 @@ public class SingularityTaskState {
       nullable = true
   )
   public SingularityPendingTaskId getPendingTaskId() {
-    return pendingTaskId.orNull();
+    return pendingTaskId.orElse(null);
   }
 
   @JsonIgnore

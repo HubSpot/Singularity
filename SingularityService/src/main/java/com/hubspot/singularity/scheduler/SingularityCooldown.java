@@ -11,7 +11,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;

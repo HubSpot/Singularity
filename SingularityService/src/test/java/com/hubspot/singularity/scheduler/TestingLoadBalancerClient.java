@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -32,7 +32,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   private SingularityLoadBalancerUpdate getReturnValue(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method) {
-    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), method, Optional.<String> absent());
+    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.<String>empty(), System.currentTimeMillis(), method, Optional.<String>empty());
   }
 
   @Override
@@ -57,7 +57,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
 
   @Override
   public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(String singularityRequestId) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return new SingularityCheckingUpstreamsUpdate(Optional.absent(), singularityRequestId);
+    return new SingularityCheckingUpstreamsUpdate(Optional.empty(), singularityRequestId);
   }
 
   @Override

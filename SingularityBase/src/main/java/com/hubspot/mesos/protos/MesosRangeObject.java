@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class MesosRangeObject {
   private final Optional<Long> begin;
@@ -19,7 +19,7 @@ public class MesosRangeObject {
   }
 
   public Long getBegin() {
-    return begin.orNull();
+    return begin.orElse(null);
   }
 
   @JsonIgnore
@@ -28,7 +28,7 @@ public class MesosRangeObject {
   }
 
   public Long getEnd() {
-    return end.orNull();
+    return end.orElse(null);
   }
 
   @JsonIgnore

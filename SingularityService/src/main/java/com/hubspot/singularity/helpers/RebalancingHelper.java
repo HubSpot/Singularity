@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
@@ -56,7 +56,7 @@ public class RebalancingHelper {
         extraCleanedTasks.add(taskId);
         LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
         taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(),
-            taskId, Optional.absent(), Optional.absent(), Optional.absent()));
+            taskId, Optional.empty(), Optional.empty(), Optional.empty()));
       }
     }
     return extraCleanedTasks;
@@ -107,7 +107,7 @@ public class RebalancingHelper {
 
     for (SingularityTaskId taskId : extraTasksToClean) {
       taskManager.createTaskCleanup(
-          new SingularityTaskCleanup(user, TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES, System.currentTimeMillis(), taskId, Optional.absent(), Optional.absent(), Optional.absent()));
+          new SingularityTaskCleanup(user, TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES, System.currentTimeMillis(), taskId, Optional.empty(), Optional.empty(), Optional.empty()));
     }
     return extraTasksToClean;
   }

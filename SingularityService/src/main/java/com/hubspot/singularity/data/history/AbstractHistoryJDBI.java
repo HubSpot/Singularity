@@ -9,7 +9,7 @@ import org.jdbi.v3.core.statement.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityTaskIdHistory;
@@ -105,11 +105,11 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
-    sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+    sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
 
     if (!requestId.isPresent()) {
       sqlBuilder.append(", requestId ");
-      sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+      sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
     }
 
     // NOTE: PG, MySQL are both compatible with OFFSET LIMIT syntax, while only MySQL understands LIMIT offset, limit.

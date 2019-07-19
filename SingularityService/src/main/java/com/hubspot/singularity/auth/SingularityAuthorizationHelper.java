@@ -7,13 +7,13 @@ import static com.hubspot.singularity.WebExceptions.checkForbidden;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -151,8 +151,8 @@ public class SingularityAuthorizationHelper {
     }
 
     final Set<String> userGroups = user.getGroups();
-    final Set<String> readWriteGroups = Sets.union(request.getGroup().asSet(), request.getReadWriteGroups().or(Collections.<String>emptySet()));
-    final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
+    final Set<String> readWriteGroups = Sets.union(request.getGroup().map(Collections::singleton).orElse(Collections.emptySet()), request.getReadWriteGroups().orElse(Collections.<String>emptySet()));
+    final Set<String> readOnlyGroups = request.getReadOnlyGroups().orElse(defaultReadOnlyGroups);
 
     final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
     final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
@@ -178,8 +178,8 @@ public class SingularityAuthorizationHelper {
 
     checkForbidden(user.isAuthenticated(), "Not authenticated!");
 
-    final Set<String> readWriteGroups = Sets.union(request.getGroup().asSet(), request.getReadWriteGroups().or(Collections.emptySet()));
-    final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
+    final Set<String> readWriteGroups = Sets.union(request.getGroup().map(Collections::singleton).orElse(Collections.emptySet()), request.getReadWriteGroups().orElse(Collections.emptySet()));
+    final Set<String> readOnlyGroups = request.getReadOnlyGroups().orElse(defaultReadOnlyGroups);
 
     checkForAuthorization(user, readWriteGroups, readOnlyGroups, scope, Optional.of(request.getId()));
   }

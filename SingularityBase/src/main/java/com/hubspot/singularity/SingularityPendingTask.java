@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;

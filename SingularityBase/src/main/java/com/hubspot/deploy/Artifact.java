@@ -3,7 +3,7 @@ package com.hubspot.deploy;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

@@ -3,7 +3,7 @@ package com.hubspot.deploy;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class ExecutorDataBuilder {

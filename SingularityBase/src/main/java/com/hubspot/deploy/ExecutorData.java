@@ -7,7 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
@@ -159,7 +159,7 @@ public class ExecutorData {
 
   @JsonIgnore
   public List<S3ArtifactSignature> getS3ArtifactSignaturesOrEmpty() {
-    return s3ArtifactSignatures.or(Collections.<S3ArtifactSignature> emptyList());
+    return s3ArtifactSignatures.orElse(Collections.<S3ArtifactSignature> emptyList());
   }
 
   @Schema(description = "Run logrotate this often. Can be HOURLY, DAILY, WEEKLY, MONTHLY")

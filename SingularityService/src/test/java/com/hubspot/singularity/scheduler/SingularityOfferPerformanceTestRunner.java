@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskState;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;

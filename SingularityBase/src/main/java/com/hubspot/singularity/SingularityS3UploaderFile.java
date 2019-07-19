@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -19,7 +19,7 @@ public class SingularityS3UploaderFile {
 
   @JsonCreator
   public static SingularityS3UploaderFile fromString(String value) {
-    return new SingularityS3UploaderFile(value, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    return new SingularityS3UploaderFile(value, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
@@ -38,7 +38,7 @@ public class SingularityS3UploaderFile {
     this.directory = directory;
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
-    this.checkSubdirectories = checkSubdirectories.or(false);
+    this.checkSubdirectories = checkSubdirectories.orElse(false);
   }
 
   @Schema(description = "The name of the file")

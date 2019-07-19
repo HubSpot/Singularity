@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,7 +21,7 @@ public class SingularityVolume {
       String containerPath,
       Optional<String> hostPath,
       SingularityDockerVolumeMode mode) {
-    this(containerPath, hostPath, mode, Optional.absent());
+    this(containerPath, hostPath, mode, Optional.empty());
   }
 
   @JsonCreator
@@ -32,7 +32,7 @@ public class SingularityVolume {
       @JsonProperty("source") Optional<SingularityVolumeSource> source) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
-    this.mode = Optional.fromNullable(mode);
+    this.mode = Optional.ofNullable(mode);
     this.source = source;
   }
 

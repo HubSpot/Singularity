@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 
@@ -66,8 +66,8 @@ public class SingularityLoadBalancerUpdate {
   }
 
   public static SingularityLoadBalancerUpdate preEnqueue(LoadBalancerRequestId lbRequestId) {
-    return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String>absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE,
-      Optional.<String>absent());
+    return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String>empty(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE,
+      Optional.<String>empty());
   }
 
   @Override

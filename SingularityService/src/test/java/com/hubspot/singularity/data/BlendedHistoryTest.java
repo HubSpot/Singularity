@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.RequestType;
@@ -43,7 +43,7 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityRequestHistory makeHistory(long createdAt, RequestHistoryType type) {
-    return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request, Optional.<String> absent());
+    return new SingularityRequestHistory(createdAt, Optional.<String>empty(), type, request, Optional.<String>empty());
   }
 
   // DESCENDING

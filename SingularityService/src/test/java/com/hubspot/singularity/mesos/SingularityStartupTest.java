@@ -5,7 +5,7 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -138,7 +138,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
     Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String>empty(), PendingType.ONEOFF, Optional.<Boolean>empty(), Optional.<String>empty()));
 
     startup.checkSchedulerForInconsistentState();
 

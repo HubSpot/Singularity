@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -109,7 +109,7 @@ public class SingularitySlaveUsage {
       nullable = true
   )
   public Optional<Long> getMemoryMbTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.absent();
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.empty();
   }
 
   @Schema(
@@ -118,7 +118,7 @@ public class SingularitySlaveUsage {
       nullable = true
   )
   public Optional<Long> getMemoryBytesTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
   }
 
   @Schema(description = "Total disk currently used by tasks in bytes")
@@ -146,7 +146,7 @@ public class SingularitySlaveUsage {
       nullable = true
   )
   public Optional<Long> getDiskBytesTotal() {
-    return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
+    return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
   }
 
   @Schema(description = "Number of active tasks on this salve")

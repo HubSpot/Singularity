@@ -9,7 +9,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestUtilization;
@@ -103,11 +103,11 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
 
   public Optional<RequestUtilization> getRequestUtilization(String requestId, boolean useWebCache) {
     if (leaderCache.active()) {
-      return Optional.fromNullable(leaderCache.getRequestUtilizations().get(requestId));
+      return Optional.ofNullable(leaderCache.getRequestUtilizations().get(requestId));
     }
 
     if (useWebCache && webCache.useCachedRequestUtilizations()) {
-      return Optional.fromNullable(webCache.getRequestUtilizations().get(requestId));
+      return Optional.ofNullable(webCache.getRequestUtilizations().get(requestId));
     }
     return getData(getRequestPath(requestId), requestUtilizationTranscoder);
   }

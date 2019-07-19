@@ -6,7 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;

@@ -12,7 +12,7 @@ import org.jdbi.v3.jackson2.Jackson2Config;
 import org.jdbi.v3.jackson2.Jackson2Plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;

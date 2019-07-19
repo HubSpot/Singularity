@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.LogrotateAdditionalFile;

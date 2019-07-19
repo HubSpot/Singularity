@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class MesosResourceObject {
   private final Optional<String> name;
@@ -26,7 +26,7 @@ public class MesosResourceObject {
   }
 
   public String getName() {
-    return name.orNull();
+    return name.orElse(null);
   }
 
   @JsonIgnore
@@ -35,7 +35,7 @@ public class MesosResourceObject {
   }
 
   public MesosRangesObject getRanges() {
-    return ranges.orNull();
+    return ranges.orElse(null);
   }
 
   @JsonIgnore

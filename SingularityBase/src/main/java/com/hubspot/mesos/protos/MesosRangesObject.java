@@ -7,7 +7,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class MesosRangesObject {
   private final Optional<List<MesosRangeObject>> range;
@@ -18,7 +18,7 @@ public class MesosRangesObject {
   }
 
   public List<MesosRangeObject> getRange() {
-    return range.or(Collections.emptyList());
+    return range.orElse(Collections.emptyList());
   }
 
   @JsonIgnore // to mimic mesos

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
@@ -47,7 +47,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
   public int getExitCode(final List<String> command, long timeoutMillis) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
-    Optional<Integer> exitCode = Optional.absent();
+    Optional<Integer> exitCode = Optional.empty();
     try {
       final Process process = startProcess(processBuilder);
       boolean exited = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
@@ -70,9 +70,9 @@ public class SimpleProcessManager extends SafeProcessManager {
   public List<String> runCommand(final List<String> command, final Redirect redirectOutput, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
-    Optional<Integer> exitCode = Optional.absent();
+    Optional<Integer> exitCode = Optional.empty();
 
-    Optional<OutputReader> reader = Optional.absent();
+    Optional<OutputReader> reader = Optional.empty();
 
     String processToString = getCurrentProcessToString();
 
@@ -133,7 +133,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     public OutputReader(InputStream inputStream) {
       this.output = new ArrayList<>();
       this.inputStream = inputStream;
-      this.error = Optional.absent();
+      this.error = Optional.empty();
     }
 
     @Override

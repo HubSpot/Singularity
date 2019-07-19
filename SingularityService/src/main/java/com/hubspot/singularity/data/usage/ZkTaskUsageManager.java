@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;

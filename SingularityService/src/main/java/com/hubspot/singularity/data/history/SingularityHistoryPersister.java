@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;

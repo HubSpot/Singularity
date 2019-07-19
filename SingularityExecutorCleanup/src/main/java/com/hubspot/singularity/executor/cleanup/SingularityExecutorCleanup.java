@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -120,7 +120,7 @@ public class SingularityExecutorCleanup {
         return cleanupConfiguration.getSingularityClientCredentials();
       }
 
-      return Optional.absent();
+      return Optional.empty();
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -291,7 +291,7 @@ public class SingularityExecutorCleanup {
             oldDefinition.getExecutorData().getS3StorageClass(),
             oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
             oldDefinition.getExecutorData().getCpuHardLimit(),
-            Optional.absent()
+            Optional.empty()
         ),
         oldDefinition.getTaskDirectory(),
         oldDefinition.getExecutorPid(),
@@ -340,7 +340,7 @@ public class SingularityExecutorCleanup {
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerUtils);
 
-    boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
+    boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
 
     if (taskDefinition.shouldLogrotateLogFile()) {
       checkForUncompressedLogrotatedFile(taskDefinition);
@@ -493,7 +493,7 @@ public class SingularityExecutorCleanup {
     } else if (fileName.endsWith(CompressionType.BZIP2.getExtention())) {
       return Optional.of(CompressionType.BZIP2);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

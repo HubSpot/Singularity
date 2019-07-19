@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityRequestBuilder {
 
@@ -58,44 +58,44 @@ public class SingularityRequestBuilder {
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = checkNotNull(id, "id cannot be null");
     this.requestType = checkNotNull(requestType, "requestType cannot be null");
-    this.owners = Optional.absent();
-    this.numRetriesOnFailure = Optional.absent();
-    this.schedule = Optional.absent();
-    this.scheduleType = Optional.absent();
-    this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
-    this.taskExecutionTimeLimitMillis = Optional.absent();
-    this.instances = Optional.absent();
-    this.rackSensitive = Optional.absent();
-    this.loadBalanced = Optional.absent();
-    this.quartzSchedule = Optional.absent();
-    this.scheduleTimeZone = Optional.absent();
-    this.rackAffinity = Optional.absent();
-    this.slavePlacement = Optional.absent();
-    this.requiredSlaveAttributes = Optional.absent();
-    this.allowedSlaveAttributes = Optional.absent();
-    this.slaveAttributeMinimums = Optional.absent();
-    this.scheduledExpectedRuntimeMillis = Optional.absent();
-    this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
-    this.group = Optional.absent();
-    this.readWriteGroups = Optional.absent();
-    this.readOnlyGroups = Optional.absent();
-    this.bounceAfterScale = Optional.absent();
-    this.emailConfigurationOverrides = Optional.absent();
-    this.skipHealthchecks = Optional.absent();
-    this.hideEvenNumberAcrossRacksHint = Optional.absent();
-    this.taskLogErrorRegex = Optional.absent();
-    this.taskLogErrorRegexCaseSensitive = Optional.absent();
-    this.taskPriorityLevel = Optional.absent();
-    this.maxTasksPerOffer = Optional.absent();
-    this.allowBounceToSameHost = Optional.absent();
-    this.requiredRole = Optional.absent();
-    this.dataCenter = Optional.absent();
+    this.owners = Optional.empty();
+    this.numRetriesOnFailure = Optional.empty();
+    this.schedule = Optional.empty();
+    this.scheduleType = Optional.empty();
+    this.killOldNonLongRunningTasksAfterMillis = Optional.empty();
+    this.taskExecutionTimeLimitMillis = Optional.empty();
+    this.instances = Optional.empty();
+    this.rackSensitive = Optional.empty();
+    this.loadBalanced = Optional.empty();
+    this.quartzSchedule = Optional.empty();
+    this.scheduleTimeZone = Optional.empty();
+    this.rackAffinity = Optional.empty();
+    this.slavePlacement = Optional.empty();
+    this.requiredSlaveAttributes = Optional.empty();
+    this.allowedSlaveAttributes = Optional.empty();
+    this.slaveAttributeMinimums = Optional.empty();
+    this.scheduledExpectedRuntimeMillis = Optional.empty();
+    this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.empty();
+    this.group = Optional.empty();
+    this.readWriteGroups = Optional.empty();
+    this.readOnlyGroups = Optional.empty();
+    this.bounceAfterScale = Optional.empty();
+    this.emailConfigurationOverrides = Optional.empty();
+    this.skipHealthchecks = Optional.empty();
+    this.hideEvenNumberAcrossRacksHint = Optional.empty();
+    this.taskLogErrorRegex = Optional.empty();
+    this.taskLogErrorRegexCaseSensitive = Optional.empty();
+    this.taskPriorityLevel = Optional.empty();
+    this.maxTasksPerOffer = Optional.empty();
+    this.allowBounceToSameHost = Optional.empty();
+    this.requiredRole = Optional.empty();
+    this.dataCenter = Optional.empty();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, slaveAttributeMinimums, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>empty(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
         requiredRole, dataCenter);
   }
 

@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
@@ -163,12 +163,12 @@ public final class JavaUtils {
 
   @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getFirst(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getFirst(iterable, null));
+    return Optional.ofNullable(Iterables.getFirst(iterable, null));
   }
 
   @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getLast(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getLast(iterable, null));
+    return Optional.ofNullable(Iterables.getLast(iterable, null));
   }
 
   public static ObjectMapper newObjectMapper() {

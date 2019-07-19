@@ -28,7 +28,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
@@ -101,7 +101,7 @@ public class SingularityS3Uploader extends SingularityUploader {
           }
         }
 
-        Optional<StorageClass> maybeStorageClass = Optional.absent();
+        Optional<StorageClass> maybeStorageClass = Optional.empty();
 
         if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getS3StorageClass())) {
           LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);

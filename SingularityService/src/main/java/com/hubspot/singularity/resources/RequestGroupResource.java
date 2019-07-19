@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;

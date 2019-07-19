@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.rholder.retry.AttemptTimeLimiter;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -114,7 +114,7 @@ public class DockerUtils {
   }
 
   private <T> T callWithRetriesAndTimeout(Callable<T> callable) throws Exception {
-    return callWithRetriesAndTimeout(callable, Optional.<Integer>absent());
+    return callWithRetriesAndTimeout(callable, Optional.<Integer>empty());
   }
 
   private <T> T callWithRetriesAndTimeout(Callable<T> callable, Optional<Integer> retryCount) throws Exception {

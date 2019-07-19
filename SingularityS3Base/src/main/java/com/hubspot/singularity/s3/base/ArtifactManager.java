@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;

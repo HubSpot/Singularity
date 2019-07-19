@@ -3,7 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.hooks.WebhookQueueType;
@@ -20,13 +20,13 @@ public class WebhookQueueConfiguration {
   );
 
   @JsonProperty
-  private Optional<String> awsAccessKey = Optional.absent();
+  private Optional<String> awsAccessKey = Optional.empty();
 
   @JsonProperty
-  private Optional<String> awsSecretKey = Optional.absent();
+  private Optional<String> awsSecretKey = Optional.empty();
 
   @JsonProperty
-  private Optional<String> awsRegion = Optional.absent();
+  private Optional<String> awsRegion = Optional.empty();
 
   private int snsRequestTimeout = 3000;
 

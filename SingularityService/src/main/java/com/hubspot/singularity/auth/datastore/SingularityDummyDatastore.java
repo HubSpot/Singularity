@@ -2,7 +2,7 @@ package com.hubspot.singularity.auth.datastore;
 
 import java.util.Collections;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;

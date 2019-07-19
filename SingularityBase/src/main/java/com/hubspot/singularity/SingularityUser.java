@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,7 +21,7 @@ public class SingularityUser implements Principal {
   private final Set<String> groups;
   private final boolean authenticated;
 
-  public static SingularityUser DEFAULT_USER = new SingularityUser("singularity", Optional.absent(), Optional.absent(), Collections.emptySet(), false);
+  public static SingularityUser DEFAULT_USER = new SingularityUser("singularity", Optional.empty(), Optional.empty(), Collections.emptySet(), false);
 
   public SingularityUser(String id, Optional<String> name, Optional<String> email, Set<String> groups) {
     this(id, name, email, groups, true);
@@ -47,7 +47,7 @@ public class SingularityUser implements Principal {
 
   @Schema(description = "The user's name, or id if name not specified")
   public String getName() {
-    return name.or(id);
+    return name.orElse(id);
   }
 
   @Schema(description = "The user's email", nullable = true)

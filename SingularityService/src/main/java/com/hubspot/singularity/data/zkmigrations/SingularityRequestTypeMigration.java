@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -90,8 +90,8 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
             this.schedule = schedule;
             this.daemon = daemon;
             this.loadBalanced = loadBalanced;
-            this.originalRequestType = originalRequestType == null ? Optional.<RequestType>absent() : originalRequestType;
-            this.requestType = this.originalRequestType.or(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
+            this.originalRequestType = originalRequestType == null ? Optional.<RequestType>empty() : originalRequestType;
+            this.requestType = this.originalRequestType.orElse(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
         }
 
         @JsonAnySetter

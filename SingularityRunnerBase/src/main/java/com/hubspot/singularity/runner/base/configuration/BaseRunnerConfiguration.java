@@ -6,7 +6,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public abstract class BaseRunnerConfiguration {
   public static final String DEFAULT_ROOT_LOG_LEVEL = "INFO";
@@ -15,11 +15,11 @@ public abstract class BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> loggingFilename = Optional.absent();
+  private Optional<String> loggingFilename = Optional.empty();
 
   @NotNull
   @JsonProperty
-  private Optional<String> loggingDirectory = Optional.absent();
+  private Optional<String> loggingDirectory = Optional.empty();
 
   @NotNull
   @JsonProperty
@@ -31,7 +31,7 @@ public abstract class BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> hostname = Optional.absent();
+  private Optional<String> hostname = Optional.empty();
 
   protected BaseRunnerConfiguration(Optional<String> loggingFilename) {
     this.loggingFilename = loggingFilename;

@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;

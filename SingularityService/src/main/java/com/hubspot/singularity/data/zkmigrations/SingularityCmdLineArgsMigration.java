@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -115,7 +115,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       for (String pendingRequest : curator.getChildren().forPath(REQUEST_PENDING_PATH)) {
         SingularityPendingRequestPrevious previous = objectMapper.readValue(curator.getData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest)), SingularityPendingRequestPrevious.class);
         SingularityPendingRequest newRequest = new SingularityPendingRequest(previous.requestId, previous.deployId, previous.timestamp, previous.user, previous.pendingType,
-            getCmdLineArgs(previous.cmdLineArgs), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent());
+            getCmdLineArgs(previous.cmdLineArgs), Optional.<String>empty(), Optional.<Boolean>empty(), Optional.<String>empty(), Optional.<String>empty());
 
         LOG.info("Re-saving {}", newRequest);
 
@@ -156,7 +156,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   private Optional<List<String>> getCmdLineArgs(Optional<String> cmdLineArgs) {
-    return cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>> absent();
+    return cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>>empty();
   }
 
   private Optional<String> getCmdLineArgs(SingularityPendingTaskId pendingTaskId) throws Exception {
@@ -166,7 +166,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       return Optional.of(StringTranscoder.INSTANCE.fromBytes(data));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
 

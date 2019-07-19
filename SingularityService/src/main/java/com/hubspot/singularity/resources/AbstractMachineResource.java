@@ -11,7 +11,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -57,7 +57,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   protected abstract String getObjectTypeString();
 
   private void changeState(String objectId, MachineState newState, Optional<SingularityMachineChangeRequest> changeRequest, Optional<String> user) {
-    Optional<String> message = Optional.absent();
+    Optional<String> message = Optional.empty();
 
     if (changeRequest.isPresent()) {
       message = changeRequest.get().getMessage();
@@ -107,7 +107,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
         new SingularityExpiringMachineState(
           user.getEmail(),
           System.currentTimeMillis(),
-          changeRequest.get().getActionId().or(UUID.randomUUID().toString()),
+          changeRequest.get().getActionId().orElse(UUID.randomUUID().toString()),
           changeRequest.get(),
           objectId,
           changeRequest.get().getRevertToState().get(),

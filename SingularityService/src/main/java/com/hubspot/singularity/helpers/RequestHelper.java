@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -11,7 +12,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -101,8 +101,8 @@ public class RequestHelper {
   private SingularityRequestDeployHolder getDeployHolder(String requestId) {
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
 
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    Optional<SingularityDeploy> activeDeploy = Optional.empty();
+    Optional<SingularityDeploy> pendingDeploy = Optional.empty();
 
     if (requestDeployState.isPresent()) {
       if (requestDeployState.get().getActiveDeploy().isPresent()) {
@@ -139,11 +139,11 @@ public class RequestHelper {
 
       if (maybeDeployId.isPresent()) {
         if (maybeBounceRequest.isPresent()) {
-          Optional<String> actionId = maybeBounceRequest.get().getActionId().or(Optional.of(UUID.randomUUID().toString()));
-          Optional<Boolean> removeFromLoadBalancer = Optional.absent();
+          Optional<String> actionId = Optional.of(maybeBounceRequest.get().getActionId().orElse(UUID.randomUUID().toString()));
+          Optional<Boolean> removeFromLoadBalancer = Optional.empty();
           SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().or(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-              System.currentTimeMillis(), Optional.<Boolean> absent(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
+            new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().orElse(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+              System.currentTimeMillis(), Optional.<Boolean>empty(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
 
           if (createResult != SingularityCreateResult.EXISTED) {
             requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of("Bouncing due to bounce after scale"));
@@ -227,23 +227,23 @@ public class RequestHelper {
             return true;
           }
           if (includeFullRequestData) {
-            if (userModifiedRequestLast(requestIdToLastHistory.getOrDefault(requestId, Optional.absent()), user)) {
+            if (userModifiedRequestLast(requestIdToLastHistory.getOrDefault(requestId, Optional.empty()), user)) {
               return true;
             }
           }
-          return userAssociatedWithDeploy(Optional.fromNullable(deployStates.get(requestId)), user);
+          return userAssociatedWithDeploy(Optional.ofNullable(deployStates.get(requestId)), user);
         })
         .map((request) -> {
           Long lastActionTime = null;
           if (includeFullRequestData) {
             lastActionTime = getLastActionTimeForRequest(
                 request.getRequest(),
-                requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.absent()),
-                Optional.fromNullable(deployStates.get(request.getRequest().getId()))
+                requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.empty()),
+                Optional.ofNullable(deployStates.get(request.getRequest().getId()))
             );
           } else {
             // To save on zk calls, if not returning all data, use the most recent deploy timestamps
-            Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(request.getRequest().getId()));
+            Optional<SingularityRequestDeployState> deployState = Optional.ofNullable(deployStates.get(request.getRequest().getId()));
             if (deployState.isPresent()) {
               if (deployState.get().getPendingDeploy().isPresent()) {
                 lastActionTime = deployState.get().getPendingDeploy().get().getTimestamp();
@@ -260,25 +260,25 @@ public class RequestHelper {
           return new RequestParentWithLastActionTime(request, lastActionTime, maybeUserSettings.isPresent() && maybeUserSettings.get().getStarredRequestIds().contains(request.getRequest().getId()));
         })
         .sorted() // Sorted by last action time descending, with starred requests coming first
-        .limit(limit.or(requests.size()))
+        .limit(limit.orElse(requests.size()))
         .map((parentWithActionTime) -> {
           SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
           if (includeFullRequestData) {
-            CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture.supplyAsync(() -> getTaskIdsByStatusForRequest(requestWithState)).exceptionally((throwable) -> Optional.absent());
-            CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture.supplyAsync(() -> requestManager.getExpiringBounce(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
-            CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture.supplyAsync(() -> requestManager.getExpiringPause(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
-            CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture.supplyAsync(() -> requestManager.getExpiringScale(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
-            CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
+            CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture.supplyAsync(() -> getTaskIdsByStatusForRequest(requestWithState)).exceptionally((throwable) -> Optional.empty());
+            CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture.supplyAsync(() -> requestManager.getExpiringBounce(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
+            CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture.supplyAsync(() -> requestManager.getExpiringPause(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
+            CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture.supplyAsync(() -> requestManager.getExpiringScale(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
+            CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
             return new SingularityRequestParent(
                 requestWithState.getRequest(), requestWithState.getState(),
-                Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
-                Optional.absent(), Optional.absent(), Optional.absent(), // full deploy data not provided
+                Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
+                Optional.empty(), Optional.empty(), Optional.empty(), // full deploy data not provided
                 maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(),
                 maybeTaskIdsByStatus.join());
           } else {
             return new SingularityRequestParent(
-                requestWithState.getRequest(), requestWithState.getState(), Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
-                Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+                requestWithState.getRequest(), requestWithState.getState(), Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
           }
         })
         .collect(Collectors.toList());
@@ -293,7 +293,7 @@ public class RequestHelper {
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(String requestId) {
     Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
     if (!requestWithState.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return getTaskIdsByStatusForRequest(requestWithState.get());

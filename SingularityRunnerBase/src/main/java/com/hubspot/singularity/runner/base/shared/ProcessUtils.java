@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
@@ -31,7 +31,7 @@ public class ProcessUtils {
 
   @SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
   public ProcessUtils(@Nullable Logger log) {
-    this.log = Optional.fromNullable(log);
+    this.log = Optional.ofNullable(log);
   }
 
   public static class ProcessResult {

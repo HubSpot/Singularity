@@ -10,7 +10,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -112,7 +112,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(1, usageManager.countTasksWithUsage());
     Assertions.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
 
-    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
+    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.empty(), Optional.empty());
 
     cleaner.runActionOnPoll();
 

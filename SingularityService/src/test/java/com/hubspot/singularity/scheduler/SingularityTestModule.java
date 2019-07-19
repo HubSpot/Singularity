@@ -18,7 +18,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -180,8 +180,8 @@ public class SingularityTestModule implements Module {
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
             binder.bind(SingularityLifecycleManaged.class).to(SingularityLifecycleManagedTest.class).asEagerSingleton();
 
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
-            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>empty());
+            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>empty());
 
             binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
               @Override

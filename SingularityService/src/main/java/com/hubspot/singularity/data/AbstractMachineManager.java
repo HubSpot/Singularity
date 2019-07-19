@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.MachineState;
@@ -213,7 +213,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private String getHistoryUpdatePath(SingularityMachineStateHistoryUpdate historyUpdate) {

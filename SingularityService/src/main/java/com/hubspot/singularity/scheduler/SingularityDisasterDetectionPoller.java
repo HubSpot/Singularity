@@ -9,7 +9,7 @@ import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -174,10 +174,10 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private boolean tooMuchTaskLag(long now, List<SingularityDisasterDataPoint> dataPoints) {
-    Optional<Long> criticalAvgLagTriggeredSince = Optional.absent();
-    Optional<Long> warningAvgLagTriggeredSince = Optional.absent();
-    Optional<Long> criticalPortionTriggeredSince = Optional.absent();
-    Optional<Long> warningPortionTriggeredSince = Optional.absent();
+    Optional<Long> criticalAvgLagTriggeredSince = Optional.empty();
+    Optional<Long> warningAvgLagTriggeredSince = Optional.empty();
+    Optional<Long> criticalPortionTriggeredSince = Optional.empty();
+    Optional<Long> warningPortionTriggeredSince = Optional.empty();
 
     for (SingularityDisasterDataPoint dataPoint : dataPoints) {
       double overdueTaskPortion = dataPoint.getNumLateTasks() / (double) Math.max((dataPoint.getNumActiveTasks() + dataPoint.getNumPendingTasks()), 1);

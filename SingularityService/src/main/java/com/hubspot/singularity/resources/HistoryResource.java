@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
@@ -121,9 +121,9 @@ public class HistoryResource extends AbstractHistoryResource {
 
   private Optional<Integer> getPageCount(Optional<Integer> dataCount, Integer count) {
     if (!dataCount.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
-    return Optional.fromNullable((int) Math.ceil((double) dataCount.get() / count));
+    return Optional.ofNullable((int) Math.ceil((double) dataCount.get() / count));
   }
 
   @GET
@@ -204,7 +204,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, skipZk);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -267,7 +267,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -322,7 +322,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -375,7 +375,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -412,7 +412,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -442,10 +442,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") @DefaultValue("true") boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
+    final int argCount = count.orElse(DEFAULT_ARGS_HISTORY_COUNT);
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
-      Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
-      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount, skipZk);
+      Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(),
+      Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty()), 0, argCount, skipZk);
     Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {

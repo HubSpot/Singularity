@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.runner.base.shared.SafeProcessManager;
@@ -39,7 +39,7 @@ public class SingularityExecutorShellCommandRunnerCallable extends SafeProcessMa
 
     Optional<Integer> pid = getCurrentPid();
 
-    updater.sendUpdate(UpdateType.STARTED, Optional.of(String.format("pid - %s", pid.orNull())), Optional.<String>absent());
+    updater.sendUpdate(UpdateType.STARTED, Optional.of(String.format("pid - %s", pid.orElse(null))), Optional.<String>empty());
 
     try {
       return process.waitFor();

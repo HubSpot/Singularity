@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -35,7 +35,7 @@ public class SingularityHealthcheckAsyncHandler {
     this.healthchecker = healthchecker;
     this.task = task;
     this.failureStatusCodes = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()) :
+      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().orElse(configuration.getHealthcheckFailureStatusCodes()) :
       configuration.getHealthcheckFailureStatusCodes();
 
     startTime = System.currentTimeMillis();
@@ -46,13 +46,13 @@ public class SingularityHealthcheckAsyncHandler {
   }
 
   public void onCompleted(Optional<Integer> statusCode, Optional<String> responseBodyExcerpt) {
-    saveResult(statusCode, responseBodyExcerpt, Optional.<String> absent(), Optional.<Throwable>absent());
+    saveResult(statusCode, responseBodyExcerpt, Optional.<String>empty(), Optional.<Throwable>empty());
   }
 
   public void onFailed(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck (%s) failed due to exception: %s", healthcheckUri, t.getMessage())), Optional.of(t));
+    saveResult(Optional.<Integer>empty(), Optional.<String>empty(), Optional.of(String.format("Healthcheck (%s) failed due to exception: %s", healthcheckUri, t.getMessage())), Optional.of(t));
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {
