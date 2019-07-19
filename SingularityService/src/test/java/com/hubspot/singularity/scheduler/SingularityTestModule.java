@@ -19,6 +19,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -86,7 +87,8 @@ public class SingularityTestModule implements Module {
   private final ObjectMapper om = Jackson.newObjectMapper()
       .setSerializationInclusion(Include.NON_NULL)
       .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      .registerModule(new ProtobufModule());
+      .registerModule(new ProtobufModule())
+      .registerModule(new Jdk8Module());
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;

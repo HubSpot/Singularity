@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
@@ -98,6 +99,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
     bootstrap.getObjectMapper().registerModule(new GuavaModule());
+    bootstrap.getObjectMapper().registerModule(new Jdk8Module());
     bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
