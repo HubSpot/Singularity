@@ -1,7 +1,6 @@
 package com.hubspot.singularity.config;
 
 import java.util.List;
-
 import java.util.Optional;
 
 public class SingularityTaskMetadataConfiguration {

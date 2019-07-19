@@ -3,8 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import java.util.Optional;
+
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;

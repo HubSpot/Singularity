@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -8,7 +9,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.expiring;
 
 import java.util.Optional;
+
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 
 import io.swagger.v3.oas.annotations.media.Schema;

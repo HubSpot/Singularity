@@ -1,13 +1,13 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.data.MetadataManager;

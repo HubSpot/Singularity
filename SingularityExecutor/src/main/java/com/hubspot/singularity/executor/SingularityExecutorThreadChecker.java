@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,8 +20,6 @@ import org.slf4j.helpers.NOPLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -148,7 +147,7 @@ public class SingularityExecutorThreadChecker {
               taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
 
             }
-          });
+          }, monitor.getShellCommandExecutorServiceForTask(taskProcess.getTask().getTaskId()));
         } else {
           taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
           KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
@@ -190,7 +189,7 @@ public class SingularityExecutorThreadChecker {
         return 0;
       }
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

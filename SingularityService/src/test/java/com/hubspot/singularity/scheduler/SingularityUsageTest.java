@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;

@@ -1,11 +1,12 @@
 package com.hubspot.singularity.runner.base.configuration;
 
+import java.util.Optional;
+
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")

@@ -1,12 +1,12 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
 import org.eclipse.jetty.server.Server;
 
-import java.util.Optional;
 import com.google.inject.Provider;
 
 import io.dropwizard.lifecycle.ServerLifecycleListener;

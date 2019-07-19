@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import java.util.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 

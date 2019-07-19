@@ -81,7 +81,7 @@ public class SingularityRequest {
                             @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
                             @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
                             @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
-                            @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon,
+                            @JsonProperty("daemon") Optional<Boolean> daemon,
                             @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
                             @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex,
                             @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,

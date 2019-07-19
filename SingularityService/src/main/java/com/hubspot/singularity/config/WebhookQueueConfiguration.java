@@ -1,9 +1,9 @@
 package com.hubspot.singularity.config;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.hooks.WebhookQueueType;

@@ -2,11 +2,11 @@ package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -18,7 +19,6 @@ import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;

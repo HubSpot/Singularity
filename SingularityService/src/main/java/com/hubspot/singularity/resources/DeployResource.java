@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -21,7 +22,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;

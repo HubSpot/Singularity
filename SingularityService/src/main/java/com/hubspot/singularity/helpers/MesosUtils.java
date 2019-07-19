@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,9 +21,7 @@ import org.apache.mesos.v1.Protos.Value.Ranges;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Type;
 
-import java.util.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -323,7 +322,7 @@ public final class MesosUtils {
     try {
       return String.format("%s:%s", InetAddresses.fromLittleEndianByteArray(fromIp).getHostAddress(), masterInfo.getPort());
     } catch (UnknownHostException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -15,8 +16,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 public class SimpleProcessManager extends SafeProcessManager {
@@ -108,7 +107,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
       signalKillToProcessIfActive();
 
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       processFinished(exitCode);
     }

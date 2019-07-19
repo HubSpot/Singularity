@@ -2,12 +2,12 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;

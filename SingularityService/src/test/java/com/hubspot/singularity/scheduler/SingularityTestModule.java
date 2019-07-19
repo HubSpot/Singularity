@@ -4,6 +4,7 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -18,7 +19,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;

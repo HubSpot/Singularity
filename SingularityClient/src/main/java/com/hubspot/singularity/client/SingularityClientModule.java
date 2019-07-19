@@ -1,13 +1,13 @@
 package com.hubspot.singularity.client;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import java.util.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;

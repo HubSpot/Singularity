@@ -1,10 +1,10 @@
 package com.hubspot.singularity.api;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
 
 import io.swagger.v3.oas.annotations.media.Schema;

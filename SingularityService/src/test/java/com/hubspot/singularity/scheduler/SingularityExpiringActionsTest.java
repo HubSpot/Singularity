@@ -1,10 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Optional;
+
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.api.SingularityBounceRequest;

@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;

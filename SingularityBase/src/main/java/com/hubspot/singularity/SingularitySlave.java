@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.mesos.json.MesosResourcesObject;
 
 import io.swagger.v3.oas.annotations.media.Schema;

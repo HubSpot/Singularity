@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -10,11 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Optional;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
@@ -37,6 +36,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;

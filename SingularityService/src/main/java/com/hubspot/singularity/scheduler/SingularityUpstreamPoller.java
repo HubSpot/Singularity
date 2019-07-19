@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

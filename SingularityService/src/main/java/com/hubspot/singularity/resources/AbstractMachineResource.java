@@ -3,6 +3,7 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.ws.rs.WebApplicationException;
@@ -11,7 +12,6 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeleteResult;

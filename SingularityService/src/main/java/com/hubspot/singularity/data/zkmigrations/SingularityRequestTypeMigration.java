@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -13,8 +14,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestState;
@@ -61,7 +60,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
                 num++;
             } catch (Throwable t) {
                 LOG.error("Failed to read {}", requestId, t);
-                throw Throwables.propagate(t);
+                throw new RuntimeException(t);
             }
         }
 

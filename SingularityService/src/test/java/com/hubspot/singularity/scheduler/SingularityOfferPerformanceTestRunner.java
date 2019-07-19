@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskState;
 
-import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;

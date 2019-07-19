@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -10,8 +11,6 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
@@ -47,7 +46,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
         return;
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
@@ -68,7 +67,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
         }
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

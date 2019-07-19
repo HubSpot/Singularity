@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.Optional;
+
 import com.google.common.collect.ListMultimap;
 
 public class SingularityDeployStatisticsBuilder {

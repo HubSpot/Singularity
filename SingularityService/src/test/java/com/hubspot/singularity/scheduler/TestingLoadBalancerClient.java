@@ -3,21 +3,21 @@ package com.hubspot.singularity.scheduler;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 
 public class TestingLoadBalancerClient implements LoadBalancerClient {
 

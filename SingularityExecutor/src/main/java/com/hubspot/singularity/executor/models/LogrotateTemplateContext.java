@@ -2,9 +2,9 @@ package com.hubspot.singularity.executor.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;

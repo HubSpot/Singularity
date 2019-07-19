@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,9 +46,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ResponseHeaderOverrides;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -593,7 +592,7 @@ public class S3LogResource extends AbstractHistoryResource {
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -638,7 +637,7 @@ public class S3LogResource extends AbstractHistoryResource {
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -684,7 +683,7 @@ public class S3LogResource extends AbstractHistoryResource {
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -718,7 +717,7 @@ public class S3LogResource extends AbstractHistoryResource {
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", search);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 }

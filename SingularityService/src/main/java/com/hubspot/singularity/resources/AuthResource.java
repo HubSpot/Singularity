@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Optional;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -14,7 +15,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityTokenRequest;

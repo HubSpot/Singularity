@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.jupiter.api.Assertions;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;

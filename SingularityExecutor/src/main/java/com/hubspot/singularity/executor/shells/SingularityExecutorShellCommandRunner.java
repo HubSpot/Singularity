@@ -117,7 +117,7 @@ public class SingularityExecutorShellCommandRunner {
         shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.<String>empty());
       }
 
-    });
+    }, shellCommandExecutorService);
 
     return shellFuture;
   }

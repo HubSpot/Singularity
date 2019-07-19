@@ -2,11 +2,11 @@ package com.hubspot.singularity.api;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

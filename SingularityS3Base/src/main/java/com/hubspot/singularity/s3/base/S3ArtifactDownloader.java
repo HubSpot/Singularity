@@ -16,12 +16,12 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -52,7 +52,7 @@ public class S3ArtifactDownloader {
       downloadThrows(s3Artifact, downloadTo);
       success = true;
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       log.info("S3 Download {}/{} finished {} after {}", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), success ? "successfully" : "with error", JavaUtils.duration(start));
     }
@@ -75,7 +75,10 @@ public class S3ArtifactDownloader {
       clientConfiguration.setSignerOverride("S3SignerType");
     }
 
-    final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
+    final AmazonS3 s3Client = AmazonS3Client.builder()
+        .withCredentials(new AWSStaticCredentialsProvider(getCredentialsForBucket(s3Artifact.getS3Bucket())))
+        .withClientConfiguration(clientConfiguration)
+        .build();
 
     if (configuration.getS3Endpoint().isPresent()) {
       s3Client.setEndpoint(configuration.getS3Endpoint().get());

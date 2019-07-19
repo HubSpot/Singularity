@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
 import java.util.Comparator;
-
 import java.util.Optional;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 

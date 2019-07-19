@@ -1,8 +1,9 @@
 package com.hubspot.singularity.executor;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 
 public class SingularityExecutorCleanupStatistics {

@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -108,7 +107,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         return;
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
@@ -122,7 +121,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         curator.setData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest), pendingRequestTranscoder.toBytes(newRequest));
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -133,7 +132,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         return;
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
@@ -151,7 +150,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

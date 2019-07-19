@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -35,8 +36,6 @@ import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -424,7 +423,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       } catch (InterruptedException e) {
         return;
       } catch (ExecutionException e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
   }
@@ -708,7 +707,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     try {
       Thread.sleep(millis);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

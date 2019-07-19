@@ -5,12 +5,12 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.RequestType;

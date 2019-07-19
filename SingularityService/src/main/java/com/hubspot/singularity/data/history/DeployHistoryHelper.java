@@ -2,8 +2,8 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
 import java.util.List;
-
 import java.util.Optional;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

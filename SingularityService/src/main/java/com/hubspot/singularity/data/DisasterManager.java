@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;

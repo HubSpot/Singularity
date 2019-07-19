@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

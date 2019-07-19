@@ -1,6 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -8,9 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 
 import com.google.common.base.Joiner;
-import java.util.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
 
 public abstract class SafeProcessManager {
@@ -66,7 +65,7 @@ public abstract class SafeProcessManager {
     try {
       this.processLock.lockInterruptibly();
     } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -94,7 +93,7 @@ public abstract class SafeProcessManager {
       log.debug("Started process {}", getCurrentProcessToString());
 
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     } finally {
       processLock.unlock();
     }

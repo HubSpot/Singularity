@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,7 +13,6 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;

@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.Produces;
@@ -24,7 +25,6 @@ import com.codahale.metrics.SharedMetricRegistries;
 import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.hubspot.jackson.jaxrs.PropertyFilter;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 

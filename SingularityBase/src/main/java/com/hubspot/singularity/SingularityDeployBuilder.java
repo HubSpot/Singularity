@@ -3,9 +3,9 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import java.util.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;

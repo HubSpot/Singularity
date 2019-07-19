@@ -1,8 +1,9 @@
 package com.hubspot.singularity.executor.config;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

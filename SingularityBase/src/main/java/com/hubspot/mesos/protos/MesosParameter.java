@@ -1,11 +1,11 @@
 package com.hubspot.mesos.protos;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 public class MesosParameter {
   private final Optional<String> key;

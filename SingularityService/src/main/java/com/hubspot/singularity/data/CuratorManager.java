@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -18,8 +19,6 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -98,7 +97,7 @@ public abstract class CuratorManager {
       }
     } catch (NoNodeException nne) {
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
 
     return 0;
@@ -114,7 +113,7 @@ public abstract class CuratorManager {
       Thread.currentThread().interrupt();
       return Optional.empty();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -135,7 +134,7 @@ public abstract class CuratorManager {
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.empty(), start, root);
     }
@@ -151,7 +150,7 @@ public abstract class CuratorManager {
       LOG.trace("Tried to delete an item at path {} that didn't exist", path);
       return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       log(OperationType.DELETE, Optional.empty(), Optional.<Integer>empty(), start, path);
     }
@@ -173,7 +172,7 @@ public abstract class CuratorManager {
     } catch (NodeExistsException nee) {
       return SingularityCreateResult.EXISTED;
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -206,7 +205,7 @@ public abstract class CuratorManager {
     } catch (NodeExistsException nee) {
       return set(path, data);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -238,7 +237,7 @@ public abstract class CuratorManager {
     } catch (NoNodeException nne) {
       return save(path, data);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -280,7 +279,7 @@ public abstract class CuratorManager {
       LOG.trace("No node found for path {}", path);
       return Optional.empty();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       log(OperationType.GET, Optional.empty(), Optional.<Integer> of(bytes), start, path);
     }

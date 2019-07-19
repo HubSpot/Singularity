@@ -2,10 +2,11 @@ package com.hubspot.singularity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.Optional;
 import com.hubspot.singularity.client.SingularityClient;
 
 import name.falgout.jeffrey.testing.junit.guice.GuiceExtension;

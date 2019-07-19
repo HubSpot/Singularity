@@ -1,6 +1,7 @@
 package com.hubspot.singularity.smtp;
 
 import java.util.Optional;
+
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityRequest;

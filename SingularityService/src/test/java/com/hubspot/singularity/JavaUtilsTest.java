@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 
@@ -42,7 +41,7 @@ public class JavaUtilsTest {
             cdl.await();
             block.await();
           } catch (Throwable t) {
-            throw Throwables.propagate(t);
+            throw new RuntimeException(t);
           }
         }
       });

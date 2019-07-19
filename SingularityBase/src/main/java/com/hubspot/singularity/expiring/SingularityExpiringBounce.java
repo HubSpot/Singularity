@@ -1,7 +1,8 @@
 package com.hubspot.singularity.expiring;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;

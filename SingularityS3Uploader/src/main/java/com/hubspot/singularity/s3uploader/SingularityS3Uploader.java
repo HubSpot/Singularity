@@ -7,9 +7,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -28,8 +30,6 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3Log;
@@ -50,7 +50,9 @@ public class SingularityS3Uploader extends SingularityUploader {
       credentials = new BasicAWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
-    this.s3Client = new AmazonS3Client(credentials);
+    this.s3Client = AmazonS3Client.builder()
+        .withCredentials(new AWSStaticCredentialsProvider(credentials))
+        .build();
   }
 
   @Override
@@ -170,7 +172,7 @@ public class SingularityS3Uploader extends SingularityUploader {
       s3Client.completeMultipartUpload(completeRequest);
     } catch (Exception e) {
       s3Client.abortMultipartUpload(new AbortMultipartUploadRequest(bucketName, key, initResponse.getUploadId()));
-      Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

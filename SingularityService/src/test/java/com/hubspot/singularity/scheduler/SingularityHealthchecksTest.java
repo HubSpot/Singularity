@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;

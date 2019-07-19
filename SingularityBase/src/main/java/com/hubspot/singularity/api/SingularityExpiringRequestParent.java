@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api;
 
 import java.util.Optional;
+
 import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 

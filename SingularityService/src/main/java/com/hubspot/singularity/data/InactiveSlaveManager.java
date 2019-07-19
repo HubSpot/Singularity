@@ -1,13 +1,13 @@
 package com.hubspot.singularity.data;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 
 import com.codahale.metrics.MetricRegistry;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;

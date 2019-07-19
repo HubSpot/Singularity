@@ -1,13 +1,13 @@
 package com.hubspot.singularity.executor.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Validator;
 
@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
-import java.util.Optional;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.LogrotateAdditionalFile;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
@@ -66,7 +64,7 @@ public class SingularityExecutorConfigurationTest {
             return configProvider.get();
         }
         catch(Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

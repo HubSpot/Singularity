@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 

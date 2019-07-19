@@ -1,10 +1,10 @@
 package com.hubspot.singularity.executor.handlebars;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
-import java.util.Optional;
 
 public class IfPresentHelper implements Helper<Object> {
 

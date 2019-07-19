@@ -1,13 +1,13 @@
 package com.hubspot.singularity.s3downloader.server;
 
+import java.util.Optional;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -36,7 +36,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
       try {
         server.get().stop();
       } catch (Throwable t) {
-        throw Throwables.propagate(t);
+        throw new RuntimeException(t);
       }
     }
   }
@@ -67,7 +67,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
 
       server.join();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 

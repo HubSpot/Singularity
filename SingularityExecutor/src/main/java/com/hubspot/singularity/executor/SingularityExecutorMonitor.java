@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +22,6 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
@@ -365,7 +365,7 @@ public class SingularityExecutorMonitor {
         }
       }
 
-    });
+    }, getShellCommandExecutorServiceForTask(task.getTaskId()));
 
   }
 
@@ -607,7 +607,7 @@ public class SingularityExecutorMonitor {
         onFinish(task, taskState);
       }
 
-    });
+    }, getShellCommandExecutorServiceForTask(task.getTaskId()));
   }
 
 }

@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -900,7 +899,7 @@ public class SingularityScheduler {
 
           LOG.trace("Scheduling next run of {} (schedule: {}) at {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
         } catch (ParseException | InvalidRecurrenceRuleException pe) {
-          throw Throwables.propagate(pe);
+          throw new RuntimeException(pe);
         }
       }
     }

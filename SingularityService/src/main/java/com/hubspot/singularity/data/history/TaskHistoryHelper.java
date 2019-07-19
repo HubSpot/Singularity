@@ -3,8 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import java.util.Optional;
+
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;

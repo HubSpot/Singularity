@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.assertj.core.api.Assertions;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;

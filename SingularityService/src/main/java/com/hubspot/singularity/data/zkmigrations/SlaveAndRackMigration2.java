@@ -5,7 +5,6 @@ import javax.inject.Singleton;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 @Singleton
@@ -30,7 +29,7 @@ public class SlaveAndRackMigration2 extends ZkDataMigration {
         curator.delete().deletingChildrenIfNeeded().forPath("/racks");
       } catch (NoNodeException nee) {}
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

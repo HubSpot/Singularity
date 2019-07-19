@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
@@ -120,7 +119,7 @@ public class IndexView extends View {
     try {
       this.shellCommands = ow.writeValueAsString(uiConfiguration.getShellCommands());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     this.shortenSlaveUsageHostname = uiConfiguration.isShortenSlaveUsageHostname();
@@ -138,13 +137,13 @@ public class IndexView extends View {
     try {
       this.quickLinks = ow.writeValueAsString(uiConfiguration.getQuickLinks());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
       this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getNavTitleLinks());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

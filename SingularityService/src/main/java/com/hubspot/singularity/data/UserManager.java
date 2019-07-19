@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -7,7 +8,6 @@ import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
-import java.util.Optional;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUserSettings;

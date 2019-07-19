@@ -5,20 +5,26 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.github.rholder.retry.Retryer;
-import java.util.Optional;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonServiceState;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityRequest;
@@ -31,10 +37,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.WaitStrategies;
 
 @Singleton
 public class SingularityUpstreamChecker {

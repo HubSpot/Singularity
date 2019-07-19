@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -123,7 +122,7 @@ public class StateManager extends CuratorManager {
           curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
         }
       } catch (Throwable t) {
-        throw Throwables.propagate(t);
+        throw new RuntimeException(t);
       }
     }
   }
@@ -432,7 +431,7 @@ public class StateManager extends CuratorManager {
         states.add(hostStateTranscoder.fromBytes(bytes));
       } catch (NoNodeException nne) {
       } catch (Exception e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
 
