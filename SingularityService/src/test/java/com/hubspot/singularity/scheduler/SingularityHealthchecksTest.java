@@ -68,6 +68,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
       newTaskChecker.getTaskCheck(firstTask.getTaskId()).get();
       finishNewTaskChecksAndCleanup();
+      finishHealthchecks();
       // healthcheck will fail
       Assertions.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
       Assertions.assertEquals(0, taskManager.getNumActiveTasks());

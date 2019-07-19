@@ -135,7 +135,7 @@ public class SingularityHealthchecker {
 
   private int getDelaySeconds(SingularityTaskId taskId, HealthcheckOptions options, boolean inStartup, boolean isFirstCheck) {
     if (isFirstCheck && (options.getStartupDelaySeconds().isPresent() || configuration.getStartupDelaySeconds().isPresent())) {
-      int delaySeconds = options.getStartupDelaySeconds().orElse(configuration.getStartupDelaySeconds().get());
+      int delaySeconds = options.getStartupDelaySeconds().orElseGet(() -> configuration.getStartupDelaySeconds().get());
       LOG.trace("Delaying first healthcheck %s seconds for task {}", delaySeconds, taskId);
       return delaySeconds;
     } else if (inStartup) {
