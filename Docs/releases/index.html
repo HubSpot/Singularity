@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Tue Jan 08 2019 11:41:52 GMT-0500 (EST)"
+        data-revision="Fri Jul 19 2019 12:16:17 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -581,10 +581,10 @@
             
         </li>
     
-        <li class="chapter " data-level="6.8" data-path="Docs/reference/api.html">
+        <li class="chapter " data-level="6.8" >
             
                 
-                    <a href="../../Docs/reference/api.html">
+                    <a target="_blank" href="http:/getsingularity.com/Docs/reference/api.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -657,6 +657,7 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-0230">Changes in 0.23.0</a></li>
 <li><a href="#changes-in-0220">Changes in 0.22.0</a></li>
 <li><a href="#changes-in-0210">Changes in 0.21.0</a></li>
 <li><a href="#changes-in-0201">Changes in 0.20.1</a></li>
@@ -697,6 +698,102 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-0230">Changes in <code>0.23.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.23.0+is%3Aclosed" target="_blank">0.23.0 milestone</a> to see new features / bugfixes in detail. <code>0.23.0</code> in general represents a number of performance improvements in relation to Singularity&apos;s usage of zookeeper and mysql as well as a mesos version bump.</p>
+<h2 id="migrations">Migrations</h2>
+<p><strong><em>MySQL/Postgres</em></strong></p>
+<p><code>0.23.0</code> contains multiple database migrations (<a href="https://github.com/HubSpot/Singularity/pull/1928" target="_blank">https://github.com/HubSpot/Singularity/pull/1928</a> + <a href="https://github.com/HubSpot/Singularity/pull/1956" target="_blank">https://github.com/HubSpot/Singularity/pull/1956</a>). These must be run <em>BEFORE</em> deploying the new version of SingularityService and are compatible with the running 0.22.0 release. You can check out our <a href="http://getsingularity.com/Docs/reference/database.html" target="_blank">docs on migrations</a> to run these with liquibase. If you manage a larger installation of Singularity utilizaing mysql (e.g. millions of tasks in task history), we recommend running the migrations using pt-online-schema-change to minimize interruptions. Migrations and ptosc arguments are listed below for convinience:</p>
+<ul>
+<li>Addition of usage tracking table - This can be run with liquibase since it is a non-blocking migration and is the first changeSet in the new release. To run only a single changeSet in liquibase (e.g. to then run the remaining ones with ptosc), add the <code>--count 1</code> option when running <code>db migrate</code></li>
+<li>Change requestHistory table charset + add json column - <code>--alter &quot;CHARACTER SET ascii COLLATE ascii_bin, MODIFY COLUMN request blob DEFAULT NULL, MODIFY COLUMN requestId varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, MODIFY COLUMN requestState ENUM (&apos;CREATED&apos;, &apos;UPDATED&apos;, &apos;DELETING&apos;, &apos;DELETED&apos;, &apos;PAUSED&apos;, &apos;UNPAUSED&apos;, &apos;ENTERED_COOLDOWN&apos;, &apos;EXITED_COOLDOWN&apos;, &apos;FINISHED&apos;, &apos;DEPLOYED_TO_UNPAUSE&apos;, &apos;BOUNCED&apos;, &apos;SCALED&apos;, &apos;SCALE_REVERTED&apos;) NOT NULL, MODIFY COLUMN user varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL, MODIFY COLUMN message varchar(280) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL, ADD COLUMN json JSON DEFAULT NULL&quot;</code></li>
+<li>Change deployHistory table charset + add json column - <code>--alter &quot;CHARACTER SET ascii COLLATE ascii_bin, MODIFY COLUMN bytes MEDIUMBLOB DEFAULT NULL, MODIFY COLUMN requestId varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, MODIFY COLUMN deployId varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, MODIFY COLUMN user varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL, MODIFY COLUMN message varchar(280) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL, MODIFY COLUMN deployState ENUM (&apos;SUCCEEDED&apos;, &apos;FAILED_INTERNAL_STATE&apos;, &apos;CANCELING&apos;, &apos;WAITING&apos;, &apos;OVERDUE&apos;, &apos;FAILED&apos;, &apos;CANCELED&apos;) NOT NULL, ADD COLUMN json JSON DEFAULT NULL&quot;</code></li>
+<li>Change taskHistory table charset/enums + add json column - <code>--alter &quot;CHARACTER SET ascii COLLATE ascii_bin, MODIFY COLUMN bytes MEDIUMBLOB DEFAULT NULL, MODIFY COLUMN taskId varchar(200) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, MODIFY COLUMN requestId varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, MODIFY COLUMN lastTaskStatus ENUM (&apos;TASK_LAUNCHED&apos;, &apos;TASK_STAGING&apos;, &apos;TASK_STARTING&apos;, &apos;TASK_RUNNING&apos;, &apos;TASK_CLEANING&apos;, &apos;TASK_KILLING&apos;, &apos;TASK_FINISHED&apos;, &apos;TASK_FAILED&apos;, &apos;TASK_KILLED&apos;, &apos;TASK_LOST&apos;, &apos;TASK_LOST_WHILE_DOWN&apos;, &apos;TASK_ERROR&apos;, &apos;TASK_DROPPED&apos;, &apos;TASK_GONE&apos;, &apos;TASK_UNREACHABLE&apos;, &apos;TASK_GONE_BY_OPERATOR&apos;, &apos;TASK_UNKNOWN&apos;) NOT NULL, MODIFY COLUMN runId varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL, MODIFY COLUMN deployId varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL, ADD COLUMN json JSON DEFAULT NULL, ADD KEY requestDeployUpdated (requestId, deployId, updatedAt), ADD KEY hostUpdated (host, updatedAt)&quot;</code></li>
+<li>Change taskUsage table charset - <code>--alter &quot;CHARACTER SET ascii COLLATE ascii_bin ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8, MODIFY COLUMN requestId varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT &apos;&apos;, MODIFY COLUMN taskId varchar(200) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT &apos;&apos;&quot;</code></li>
+</ul>
+<p>As seen above, these migrations prep Singularity to use mysql&apos;s json data type instead of a blob for history storage. All net-new history will be stored in the json format and old lob columns are not yet dropped. Singularity will look for either format currently when fetching individual task histories. You can kick off a backfill of data from blob -&gt; json format by sending an http POST to the <code>/api/history/sql-backfill?batchSize=20</code> endpoint on SingularityService (batch size is configurable to balance resources vs speed). If Singularity need to restart/etc, this process is idempotent and can be kicked off as many times as needed, though only one invocation can run at a time.</p>
+<p><strong><em>Zookeeper</em></strong></p>
+<p>On startup, Singularity will run a number of migrations to zookeeper task data. These are aimed at reducing the possible size of any single zookeeper read. You may notice that the first startup of the new Singularity release is slower due to these changes running. This migration is idempotent and will be re-attempted on next startup if it should fail.</p>
+<h2 id="mesos-version-upgrade">Mesos Version Upgrade</h2>
+<p>Singularity <code>0.23.0</code> is build against mesos 1.8, but should be compatible with all earlier 1.x versions of mesos</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1958" target="_blank">1958</a> - Configurably request DNS preresolution for load-balanced services</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1955" target="_blank">1955</a> - Pre-resolve upstreams for Singularity-managed BaragonServices.</li>
+</ul>
+<h3 id="performance-improvements">Performance Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1976" target="_blank">1976</a> - UI Performance Updates for active/pending tasks pages</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1972" target="_blank">1972</a> - More efficient active tasks call for executor cleanup</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1956" target="_blank">1956</a> - SQL migrations for efficiency (blob -&gt; json + utf8 -&gt; ascii)</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1963" target="_blank">1963</a> - Also purge old deploy and request history from SQL</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1920" target="_blank">1920</a> - Add ability to do sns-based updates instead of webhooks</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1922" target="_blank">1922</a> - The zoo is under new management (zk cleanup)</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1938" target="_blank">1938</a> - Make Slave/Rack Resource use proxy to leader</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1932" target="_blank">1932</a> - Refactor calling of offer evaluation</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1939" target="_blank">1939</a> - Add option to fetch a batch of requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1928" target="_blank">1928</a> - MySQL task resource usage storage</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1906" target="_blank">1906</a> - Reduce S3Uploader memory usage during directory scan</li>
+</ul>
+<h3 id="general-improvements">General Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1962" target="_blank">1962</a> - Support searching for request logs with a specified date range via SingularityClient.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1791" target="_blank">1791</a> - Allow fetching full request data (with deploy data) in SingularityClient</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1975" target="_blank">1975</a> - junit5</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1957" target="_blank">1957</a> - Bump Baragon version to 0.9.0.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1961" target="_blank">1961</a> - Rework cooldown logic</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1954" target="_blank">1954</a> - UI And Other Improvements</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1919" target="_blank">1919</a> - Configurably skip shell command prefix for Docker tasks only.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1908" target="_blank">1908</a> - Cleaner failover + update dependencies</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1909" target="_blank">1909</a> - Skip fuser/lsof check when uploader is marked as immediate</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1944" target="_blank">1944</a> - Handle status updates from recovering agents appropriately</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1951" target="_blank">1951</a> - Add builder methods to <code>SingularityRequestBuilder</code> &amp; <code>SingularityDeployBuilder</code></li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1945" target="_blank">1945</a> - Bump to mesos 1.8.0</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1946" target="_blank">1946</a> - Alternative way to specify auth for the mesos scheduler api</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1947" target="_blank">1947</a> - Add zk leader indicator on status ui</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1941" target="_blank">1941</a> - Add ability to disable task shuffle from UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1942" target="_blank">1942</a> - Check assigned ports are available in SingularityExecutor</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1943" target="_blank">1943</a> - Upstream validation</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1937" target="_blank">1937</a> - Shuffle tasks on hosts with overutilized memory resources</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1930" target="_blank">1930</a> - Flag for immediate task history persist</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1915" target="_blank">1915</a> - Make Singularity report byte counts to monitor against jute buffer size</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1914" target="_blank">1914</a> - Fix handling of file-based health check failure</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1905" target="_blank">1905</a> - Add token authenticator option</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1978" target="_blank">1978</a> - Fix deploy link on requests page + pending tasks table</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1979" target="_blank">1979</a> - Fix missing extension for additional logrotate file</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1969" target="_blank">1969</a> - Calculate max task lag after excluding on demands with instance limit</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1970" target="_blank">1970</a> - Proxy deploy cancellations to leader</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1973" target="_blank">1973</a> - tweak cooldown thresholds and evaluation logic</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1974" target="_blank">1974</a> - Fix task history page size on refresh</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1953" target="_blank">1953</a> - Only clean if the sandbox directory still exists.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1966" target="_blank">1966</a> - Fix request state filter and task search task state in UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1952" target="_blank">1952</a> - Only log an exception if it has one</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1949" target="_blank">1949</a> - Update to newer download endpoint name</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1950" target="_blank">1950</a> - Configurably delete <code>logrotateAdditionalFile</code>s 15 mins after task termination.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1933" target="_blank">1933</a> - More explicit choice of canSkipZk flag</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1940" target="_blank">1940</a> - Files from S3Downloader should be world readable, not read-writeable</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1934" target="_blank">1934</a> - Explicitly check for UnknownHostExceptions</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1936" target="_blank">1936</a> - Correctly choose a system load metric.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1931" target="_blank">1931</a> - Change persist strategy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1925" target="_blank">1925</a> - Always remove from LB, even if add in WAITING</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1926" target="_blank">1926</a> - Also attempt to get TaskHistory from history manager for mail</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1927" target="_blank">1927</a> - Skip offers with null id</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1929" target="_blank">1929</a> - Put a time limit on the uploader check so we don&apos;t get stuck</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1913" target="_blank">1913</a> - Clarify logging in offer scheduler</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1912" target="_blank">1912</a> - Also fetch the original file for log snippets in email</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1911" target="_blank">1911</a> - Fix non-paginated fetch of s3 logs for task</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1910" target="_blank">1910</a> - Do the entire deploy history persist under the request lock</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1907" target="_blank">1907</a> - On demand requests with instances shouldn&apos;t trigger task lag over instance count</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1902" target="_blank">1902</a> - Fix typo in auth check path</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1899" target="_blank">1899</a> - Add missing enum</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1901" target="_blank">1901</a> - New adopter</li>
+</ul>
+<hr>
 <h2 id="changes-in-0220">Changes in <code>0.22.0</code></h2>
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/39?closed=1" target="_blank">0.22.0 milestone</a> to see new features / bugfixes in detail. <code>0.22.0</code> represents an <a href="https://github.com/HubSpot/Singularity/pull/1867" target="_blank">upgrade to mesos <code>1.6.1</code></a>. This also includes an upgrade to protobuf 3 and a move to a separate fork of mesos-rxjava. Instuctions for upgrading mesos can be found <a href="http://mesos.apache.org/documentation/latest/upgrades/" target="_blank">here</a>. In internal testing we found communications between old mesos master/upgraded scheduler and vice versa were both backwards compatible back to mesos <code>1.1.0</code>.</p>
 <h3 id="new-features">New Features</h3>
