@@ -266,11 +266,11 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<String> getInUseDeployId(String requestId) {
     Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
 
-    if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent()) {
+    if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
       return Optional.empty();
     }
 
-    SingularityDeployMarker maybeDeployMarker = deployState.get().getActiveDeploy().orElse(deployState.get().getPendingDeploy().get());
+    SingularityDeployMarker maybeDeployMarker = (deployState.get().getActiveDeploy().isPresent() ? deployState.get().getActiveDeploy() : deployState.get().getPendingDeploy()).get();
 
     return Optional.of(maybeDeployMarker.getDeployId());
   }
