@@ -85,7 +85,7 @@ public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
   private final ObjectMapper om = Jackson.newObjectMapper()
-      .setSerializationInclusion(Include.NON_NULL)
+      .setSerializationInclusion(Include.NON_ABSENT)
       .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
       .registerModule(new ProtobufModule())
       .registerModule(new Jdk8Module());

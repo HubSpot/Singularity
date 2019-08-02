@@ -116,7 +116,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
 
     final ObjectMapper mapper = new ObjectMapper(yamlFactory);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());

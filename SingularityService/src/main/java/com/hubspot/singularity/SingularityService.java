@@ -100,7 +100,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     bootstrap.getObjectMapper().registerModule(new ProtobufModule());
     bootstrap.getObjectMapper().registerModule(new GuavaModule());
     bootstrap.getObjectMapper().registerModule(new Jdk8Module());
-    bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_NULL);
+    bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_ABSENT);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
