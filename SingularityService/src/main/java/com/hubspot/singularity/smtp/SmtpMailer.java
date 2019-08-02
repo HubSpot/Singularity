@@ -53,6 +53,8 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.NotificationsManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import de.neuland.jade4j.Jade4J;
@@ -70,6 +72,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   private final TaskManager taskManager;
+  private final TaskHistoryHelper taskHistoryHelper;
+  private final HistoryManager historyManager;
 
   private final JadeTemplate taskTemplate;
   private final JadeTemplate requestInCooldownTemplate;
@@ -93,6 +97,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
       SingularitySmtpSender smtpSender,
       SingularityConfiguration configuration,
       TaskManager taskManager,
+      TaskHistoryHelper taskHistoryHelper,
+      HistoryManager historyManager,
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
       MailTemplateHelpers mailTemplateHelpers,
@@ -109,6 +115,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.smtpConfiguration = configuration.getSmtpConfigurationOptional().get();
     this.configuration = configuration;
     this.taskManager = taskManager;
+    this.taskHistoryHelper = taskHistoryHelper;
+    this.historyManager = historyManager;
     this.metadataManager = metadataManager;
     this.exceptionNotifier = exceptionNotifier;
     this.adminJoiner = Joiner.on(", ").skipNulls();
@@ -152,8 +160,14 @@ public class SmtpMailer implements SingularityMailer, Managed {
   }
 
   private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState, List<SingularityTaskMetadata> taskMetadata, SingularityEmailType emailType) {
-    Optional<SingularityTask> task = taskManager.getTask(taskId);
+    Optional<SingularityTask> task = taskHistoryHelper.getTask(taskId);
     Optional<String> directory = taskManager.getDirectory(taskId);
+    if (!directory.isPresent()) {
+      Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(taskId.getId());
+      if (maybeTaskHistory.isPresent()) {
+        directory = maybeTaskHistory.get().getDirectory();
+      }
+    }
 
     templateProperties.put("singularityTaskLink", mailTemplateHelpers.getSingularityTaskLink(taskId.getId()));
 
