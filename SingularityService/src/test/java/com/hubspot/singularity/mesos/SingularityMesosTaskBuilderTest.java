@@ -167,7 +167,6 @@ public class SingularityMesosTaskBuilderTest {
   public void testEnvironmentVariableOverrides() {
     Map<String, String> overrideVariables = new HashMap<>();
     overrideVariables.put("MY_NEW_ENV_VAR", "test");
-    overrideVariables.put("STARTED_BY_USER", "notTestUser");
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
         .build();
