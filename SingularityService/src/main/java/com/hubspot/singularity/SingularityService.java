@@ -76,6 +76,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
         .modules(new SingularityServiceModule())
         .modules(new SingularityAuthModule())
         .modules(additionalModules)
+        .enableGuiceEnforcer(false)
         .build();
     bootstrap.addBundle(guiceBundle);
 
