@@ -288,6 +288,10 @@ public class SingularityValidator {
       checkBadRequest(deploy.getLoadBalancerGroups().isPresent() && !deploy.getLoadBalancerGroups().get().isEmpty(), "Deploy for a loadBalanced request must include at least one load balacner group");
     }
 
+    checkBadRequest(!deploy.getEnv().isPresent() || deploy.getEnv().get().containsKey("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in env");
+    checkBadRequest(!deploy.getCommand().or("").contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in command");
+    checkBadRequest(!deploy.getArguments().isPresent() || deploy.getArguments().get().stream().noneMatch((arg) -> arg.contains("STARTED_BY_USER")), "Cannot override STARTED_BY_USER in arguments");
+
     checkForIllegalResources(request, deploy);
 
     if (deploy.getResources().isPresent()) {
