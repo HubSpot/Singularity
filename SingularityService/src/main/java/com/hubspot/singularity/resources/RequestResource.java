@@ -395,8 +395,10 @@ public class RequestResource extends AbstractRequestResource {
         @Parameter(hidden = true) @Context HttpServletRequest requestContext,
         @QueryParam("minimal") Boolean minimalReturn,
         @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
-    WebExceptions.checkBadRequest(!runNowRequest.getEnvOverrides().containsKey("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in environment");
-    WebExceptions.checkBadRequest(!runNowRequest.getCommandLineArgs().isPresent() || runNowRequest.getCommandLineArgs().get().stream().noneMatch((arg) -> arg.contains("STARTED_BY_USER")), "Cannot override STARTED_BY_USER");
+    runNowRequest.getEnvOverrides().forEach((k, v) -> {
+      checkBadRequest(!k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in env");
+    });
+    checkBadRequest(!runNowRequest.getCommandLineArgs().isPresent() || runNowRequest.getCommandLineArgs().get().stream().noneMatch((arg) -> arg.contains("STARTED_BY_USER")), "Cannot override STARTED_BY_USER");
     long start = System.currentTimeMillis();
     SingularityPendingRequestParent response;
     if (configuration.isProxyRunNowToLeader()) {
