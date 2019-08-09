@@ -644,12 +644,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.ow2.asm</groupId>
-        <artifactId>asm</artifactId>
-        <version>6.0_ALPHA</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>1.23</version>
