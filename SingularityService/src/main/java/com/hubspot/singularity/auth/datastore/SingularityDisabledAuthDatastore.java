@@ -17,7 +17,7 @@ public class SingularityDisabledAuthDatastore implements SingularityAuthDatastor
   }
 
   @Override
-  public com.google.common.base.Optional<Boolean> isHealthy() {
-    return com.google.common.base.Optional.absent();
+  public Optional<Boolean> isHealthy() {
+    return Optional.empty();
   }
 }

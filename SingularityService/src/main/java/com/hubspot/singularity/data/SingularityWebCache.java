@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestUtilization;
@@ -148,7 +148,7 @@ public class SingularityWebCache {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return Optional.fromNullable(cachedRequests.get(requestId));
+    return Optional.ofNullable(cachedRequests.get(requestId));
   }
 
   public List<SingularityRequestGroup> getRequestGroups() {

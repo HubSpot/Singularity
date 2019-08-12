@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -41,7 +42,7 @@ public class SingularityTaskCleanup {
                                 Optional<String> message,
                                 Optional<String> actionId,
                                 Optional<SingularityTaskShellCommandRequestId> runBeforeKillId) {
-    this(user, cleanupType, timestamp, taskId, message, actionId, runBeforeKillId, Optional.absent());
+    this(user, cleanupType, timestamp, taskId, message, actionId, runBeforeKillId, Optional.empty());
   }
 
   @Schema(description = "An optional unique id associted with the cleanup of this task", nullable = true)

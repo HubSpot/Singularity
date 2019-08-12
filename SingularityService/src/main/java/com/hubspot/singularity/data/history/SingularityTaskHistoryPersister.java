@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,7 +13,6 @@ import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -108,8 +108,10 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   }
 
   private boolean couldReturnWithRecoveredAgent(SingularityTaskId taskId) {
-    Optional<SingularityTaskHistoryUpdate> maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_LOST)
-        .or(taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_UNREACHABLE));
+    Optional<SingularityTaskHistoryUpdate> maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_LOST);
+    if (!maybeUnreachable.isPresent()) {
+      maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_UNREACHABLE);
+    }
     boolean couldReturn = false;
     long lastUpdateTime = 0;
     if (maybeUnreachable.isPresent()) {

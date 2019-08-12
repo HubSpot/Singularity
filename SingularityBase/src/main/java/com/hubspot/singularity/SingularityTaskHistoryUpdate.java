@@ -1,18 +1,15 @@
 package com.hubspot.singularity;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-
-import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterables;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,13 +27,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     UNKNOWN, WAITING, RUNNING, DONE
   }
 
-  public static Optional<SingularityTaskHistoryUpdate> getUpdate(final Iterable<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
-    return Iterables.tryFind(updates, new Predicate<SingularityTaskHistoryUpdate>() {
-      @Override
-      public boolean apply(@Nonnull SingularityTaskHistoryUpdate input) {
-        return input.getTaskState() == taskState;
-      }
-    });
+  public static Optional<SingularityTaskHistoryUpdate> getUpdate(final Collection<SingularityTaskHistoryUpdate> updates, final ExtendedTaskState taskState) {
+    return updates.stream().filter((input) -> input.getTaskState() == taskState).findFirst();
   }
 
   public static SimplifiedTaskState getCurrentState(Iterable<SingularityTaskHistoryUpdate> updates) {

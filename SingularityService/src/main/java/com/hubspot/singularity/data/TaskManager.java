@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -20,10 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -644,7 +643,7 @@ public class TaskManager extends CuratorAsyncManager {
     LOG.info("Removing obsolete status update {}", last);
 
     // remove the terminal task status update to return to previous state
-    deleteTaskHistoryUpdate(taskId, last.getTaskState(), Optional.absent());
+    deleteTaskHistoryUpdate(taskId, last.getTaskState(), Optional.empty());
 
     // Fill back into the leader cache and active task state
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(taskId, newUpdate.getServerTimestamp(), taskState, statusMessage, statusReason), true);
@@ -693,7 +692,7 @@ public class TaskManager extends CuratorAsyncManager {
         return Optional.of(entry.getKey());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private enum TaskFilter {
@@ -795,7 +794,7 @@ public class TaskManager extends CuratorAsyncManager {
     final Optional<SingularityTask> task = getTaskCheckCache(taskId, true);
 
     if (!task.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
@@ -845,7 +844,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveNotifiedOverdue(SingularityTaskId taskId) {
-    save(getNotifiedOverduePath(taskId), Optional.<byte[]> absent());
+    save(getNotifiedOverduePath(taskId), Optional.<byte[]>empty());
   }
 
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
@@ -953,7 +952,7 @@ public class TaskManager extends CuratorAsyncManager {
     try {
       createTaskAndDeletePendingTaskPrivate(task);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -983,9 +982,9 @@ public class TaskManager extends CuratorAsyncManager {
       msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.absent()));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.empty()));
 
-    SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(task.getTaskId(), Optional.absent(), now, serverId, Optional.of(task.getAgentId().getValue()));
+    SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(task.getTaskId(), Optional.empty(), now, serverId, Optional.of(task.getAgentId().getValue()));
 
     String taskStatusParent = getLastActiveTaskParent(task.getTaskId().getRequestId());
     if (!exists(taskStatusParent)) {
@@ -1074,7 +1073,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveTaskFinishedInMailQueue(SingularityTaskId taskId) {
-    return save(getFinishedTaskMailQueuePath(taskId), Optional.<byte[]>absent());
+    return save(getFinishedTaskMailQueuePath(taskId), Optional.<byte[]>empty());
   }
 
   public List<SingularityTaskId> getTaskFinishedMailQueue() {
@@ -1140,7 +1139,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg.append(cleanup.getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.<String>absent()), true);
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.<String>empty()), true);
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {

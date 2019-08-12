@@ -34,13 +34,14 @@
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
     <basepom.release.profiles>oss-release</basepom.release.profiles>
     <dep.classmate.version>1.3.1</dep.classmate.version>
-    <dep.commons-lang3.version>3.8.1</dep.commons-lang3.version>
+    <dep.commons-lang3.version>3.9</dep.commons-lang3.version>
     <dep.curator.version>4.2.0</dep.curator.version>
     <dep.dropwizard-metrics.version>4.0.5</dep.dropwizard-metrics.version>
     <dep.findbugs.jsr.version>3.0.2</dep.findbugs.jsr.version>
     <dep.google.cloud.version>1.15.0</dep.google.cloud.version>
     <dep.google.http-client.version>1.24.1</dep.google.http-client.version>
-    <dep.guava.version>24.1.1-jre</dep.guava.version>
+    <dep.guava.version>25.0-jre</dep.guava.version>
+    <dep.guice.version>4.2.2</dep.guice.version>
     <dep.hibernate-validator.version>5.4.3.Final</dep.hibernate-validator.version>
     <dep.hk2.version>2.5.0-b63</dep.hk2.version>
     <dep.httpclient.version>4.5.5</dep.httpclient.version>
@@ -62,15 +63,15 @@
     <dep.netty.version>4.1.27.Final</dep.netty.version>
     <dep.netty3.version>3.10.6.Final</dep.netty3.version>
     <dep.plugin.surefire.version>2.22.1</dep.plugin.surefire.version>
-    <dep.protobuf-java.version>3.5.1</dep.protobuf-java.version>
+    <dep.protobuf-java.version>3.8.0</dep.protobuf-java.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
     <dep.rxJava.version>1.3.8</dep.rxJava.version>
     <dep.slf4j.version>1.7.26</dep.slf4j.version>
     <dep.swagger.version>2.0.0</dep.swagger.version>
-    <dep.zookeeper.version>3.4.10</dep.zookeeper.version>
+    <dep.zookeeper.version>3.4.14</dep.zookeeper.version>
     <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
     <dropwizard.version>1.3.12</dropwizard.version>
-    <horizon.version>0.1.1</horizon.version>
+    <horizon.version>0.1.2</horizon.version>
     <mesos.docker.tag>1.7.1</mesos.docker.tag>
     <!-- 1.8.0 not available yet, still compatible -->
     <mesos.version>1.8.0</mesos.version>
@@ -333,6 +334,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>3.12.1</version>
+      </dependency>
+
+      <dependency>
         <groupId>de.neuland-bfi</groupId>
         <artifactId>jade4j</artifactId>
         <version>1.2.7</version>
@@ -412,6 +419,12 @@
         <groupId>javax.activation</groupId>
         <artifactId>activation</artifactId>
         <version>1.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.2</version>
       </dependency>
 
       <dependency>
@@ -631,6 +644,19 @@
       </dependency>
 
       <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>1.23</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.jayway.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>1.7.0</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
         <groupId>name.falgout.jeffrey.testing.junit5</groupId>
         <artifactId>guice-extension</artifactId>
         <version>1.1.1</version>
@@ -649,19 +675,6 @@
             <artifactId>junit-platform-commons</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>1.23</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.jayway.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>1.7.0</version>
-        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -696,7 +709,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.13.2</version>
           <configuration>
-            <images />
+            <images></images>
             <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
           <executions>
@@ -742,7 +755,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
               </pluginExecutions>

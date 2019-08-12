@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -23,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 import com.github.rholder.retry.RetryException;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,7 +72,7 @@ public abstract class SingularityUploader {
     if (uploadMetadata.getOnFinishGlob().isPresent()) {
       finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
     } else {
-      finishedPathMatcher = Optional.<PathMatcher> absent();
+      finishedPathMatcher = Optional.<PathMatcher>empty();
     }
 
     this.hostname = hostname;
@@ -243,15 +243,15 @@ public abstract class SingularityUploader {
         String value = Charset.defaultCharset().decode(buf).toString();
         if (Strings.isNullOrEmpty(value)) {
           LOG.debug("No attrbiute {} found for file {}", attribute, file);
-          return Optional.absent();
+          return Optional.empty();
         }
         return Optional.of(Long.parseLong(value));
       } catch (Exception e) {
         LOG.error("Error getting extra file metadata for {}", file, e);
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -282,7 +282,7 @@ public abstract class SingularityUploader {
         LOG.error("Could not get extra file metadata for {}", file, e);
       }
     }
-    return new UploaderFileAttributes(Optional.absent(), Optional.absent());
+    return new UploaderFileAttributes(Optional.empty(), Optional.empty());
   }
 
   @Override

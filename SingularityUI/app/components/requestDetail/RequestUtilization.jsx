@@ -39,7 +39,7 @@ const RequestUtilization = ({utilization}) => {
         </div>
         <div className="col-md-3">
           <UsageInfo
-            title="Averge % CPU Time Throttled"
+            title="Average % CPU Time Throttled"
             total={100}
             used={utilization.percentCpuTimeThrottled / utilization.numTasks}
             style={isCpuThrottled ? 'danger' : null}

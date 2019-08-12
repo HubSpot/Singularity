@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
 import java.util.Comparator;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 
@@ -20,8 +20,8 @@ public class SingularityTaskHistoryQuery {
   private final Optional<OrderDirection> orderDirection;
 
   public SingularityTaskHistoryQuery(String requestId) {
-    this(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(),
-        Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection> absent());
+    this(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(),
+        Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty());
   }
 
   public SingularityTaskHistoryQuery(Optional<String> requestId, Optional<String> deployId,  Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
@@ -97,7 +97,7 @@ public class SingularityTaskHistoryQuery {
           return false;
         }
 
-        if (runId.isPresent() && !runId.get().equals(input.getRunId().or(""))) {
+        if (runId.isPresent() && !runId.get().equals(input.getRunId().orElse(""))) {
           return false;
         }
 
@@ -134,7 +134,7 @@ public class SingularityTaskHistoryQuery {
   }
 
   public Comparator<SingularityTaskIdHistory> getComparator() {
-    final OrderDirection localOrderDirection = orderDirection.or(OrderDirection.DESC);
+    final OrderDirection localOrderDirection = orderDirection.orElse(OrderDirection.DESC);
 
     return new Comparator<SingularityTaskIdHistory>() {
 

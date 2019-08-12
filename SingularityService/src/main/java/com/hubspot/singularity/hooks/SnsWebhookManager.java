@@ -66,7 +66,7 @@ public class SnsWebhookManager {
               .withSocketTimeout(webhookConf.getSnsSocketTimeout())
               .withClientExecutionTimeout(webhookConf.getSnsTotalTimeout())
           )
-          .withRegion(webhookConf.getAwsRegion().or("us-east-1"))
+          .withRegion(webhookConf.getAwsRegion().orElse("us-east-1"))
           .build();
     } else {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();

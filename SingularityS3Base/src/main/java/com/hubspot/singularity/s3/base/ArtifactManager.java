@@ -12,11 +12,10 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -247,17 +246,16 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       super.runCommand(command);
     } catch (InterruptedException | ProcessFailedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
   private String calculateMd5sum(Path path) {
     try {
-      HashCode hc = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
-
+      HashCode hc = com.google.common.io.Files.asByteSource(path.toFile()).hash(Hashing.md5());
       return hc.toString();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

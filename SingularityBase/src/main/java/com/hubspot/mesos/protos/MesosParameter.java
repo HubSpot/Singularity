@@ -1,11 +1,11 @@
 package com.hubspot.mesos.protos;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class MesosParameter {
   private final Optional<String> key;
@@ -19,7 +19,7 @@ public class MesosParameter {
   }
 
   public String getKey() {
-    return key.orNull();
+    return key.orElse(null);
   }
 
   @JsonIgnore
@@ -28,7 +28,7 @@ public class MesosParameter {
   }
 
   public String getValue() {
-    return value.orNull();
+    return value.orElse(null);
   }
 
   @JsonIgnore

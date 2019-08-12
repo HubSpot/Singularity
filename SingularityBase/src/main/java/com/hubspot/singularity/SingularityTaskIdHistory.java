@@ -3,10 +3,10 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -31,7 +31,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
       updatedAt = lastUpdate.getTimestamp();
     }
 
-    return new SingularityTaskIdHistory(taskId, updatedAt, Optional.fromNullable(lastTaskState), task.getTaskRequest().getPendingTask().getRunId());
+    return new SingularityTaskIdHistory(taskId, updatedAt, Optional.ofNullable(lastTaskState), task.getTaskRequest().getPendingTask().getRunId());
   }
 
   @JsonCreator

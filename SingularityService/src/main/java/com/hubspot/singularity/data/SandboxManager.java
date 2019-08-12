@@ -10,11 +10,11 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.CharSource;
 import com.google.inject.Inject;
@@ -98,7 +98,7 @@ public class SandboxManager {
       final Response response = builder.execute().get();
 
       if (response.getStatusCode() == 404) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       if (response.getStatusCode() != 200) {
@@ -140,7 +140,7 @@ public class SandboxManager {
 
     // if we requested data between two characters, return nothing and advance the offset to the end
     if (data.length() <= 4 && data.replace(REPLACEMENT_CHARACTER, "").length() == 0) {
-      return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>absent());
+      return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>empty());
     }
 
     // trim incomplete character at the beginning of the string
@@ -159,6 +159,6 @@ public class SandboxManager {
       endIndex -= 1;
     }
 
-    return new MesosFileChunkObject(data.substring(startIndex, endIndex), initialChunk.getOffset() + startIndex, Optional.<Long>absent());
+    return new MesosFileChunkObject(data.substring(startIndex, endIndex), initialChunk.getOffset() + startIndex, Optional.<Long>empty());
   }
 }

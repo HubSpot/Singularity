@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployUpdate;
@@ -199,7 +198,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     try {
       postRequest.setBody(objectMapper.writeValueAsBytes(payload));
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     CompletableFuture<Response> webhookFuture = new CompletableFuture<>();

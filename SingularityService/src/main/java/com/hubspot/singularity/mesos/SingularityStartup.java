@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -10,11 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
@@ -37,6 +36,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
@@ -166,7 +166,7 @@ class SingularityStartup {
       }
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String>empty(), PendingType.STARTUP, Optional.<Boolean>empty(), Optional.<String>empty()));
   }
 
   private void enqueueHealthAndNewTaskChecks() {
@@ -191,8 +191,8 @@ class SingularityStartup {
 
       if (simplifiedTaskState != SimplifiedTaskState.DONE) {
         SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
-        Optional<SingularityPendingDeploy> pendingDeploy = Optional.fromNullable(pendingDeploys.get(deployKey));
-        Optional<SingularityRequestWithState> request = Optional.fromNullable(idToRequest.get(taskId.getRequestId()));
+        Optional<SingularityPendingDeploy> pendingDeploy = Optional.ofNullable(pendingDeploys.get(deployKey));
+        Optional<SingularityRequestWithState> request = Optional.ofNullable(idToRequest.get(taskId.getRequestId()));
 
         if (!pendingDeploy.isPresent()) {
           newTaskChecker.enqueueNewTaskCheck(task, request, healthchecker);

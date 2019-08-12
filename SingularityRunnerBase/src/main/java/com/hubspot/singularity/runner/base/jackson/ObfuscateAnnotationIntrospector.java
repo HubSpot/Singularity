@@ -3,6 +3,7 @@ package com.hubspot.singularity.runner.base.jackson;
 import static com.hubspot.mesos.JavaUtils.obfuscateValue;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,7 +12,6 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.google.common.base.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
   private static final long serialVersionUID = 1L;

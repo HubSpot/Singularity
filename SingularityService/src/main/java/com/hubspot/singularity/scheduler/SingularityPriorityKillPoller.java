@@ -2,12 +2,12 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -83,7 +83,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                     LOG.info("Killing active task {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
                     taskManager.createTaskCleanup(
                         new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
-                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.<SingularityTaskShellCommandRequestId>empty()));
                     killedTaskCount++;
                 }
             }

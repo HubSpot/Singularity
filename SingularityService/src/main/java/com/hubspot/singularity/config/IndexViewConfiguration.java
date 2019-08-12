@@ -1,6 +1,6 @@
 package com.hubspot.singularity.config;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class IndexViewConfiguration {
   private final UIConfiguration uiConfiguration;

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
@@ -175,7 +175,7 @@ public class SingularityMesosStatusUpdateHandler {
     } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
       exceptionNotifier.notify(String.format("Unexpected taskId %s", taskId), e);
       LOG.error("Unexpected taskId {} ", taskId, e);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -201,7 +201,7 @@ public class SingularityMesosStatusUpdateHandler {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void relaunchTask(SingularityTask task) {
@@ -244,7 +244,7 @@ public class SingularityMesosStatusUpdateHandler {
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
     statusUpdateDeltas.put(now, delta);
 
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>empty());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
@@ -255,16 +255,16 @@ public class SingularityMesosStatusUpdateHandler {
         LOG.warn("Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos");
         return StatusUpdateResult.KILL_TASK;
       }
-      boolean reactivated = taskManager.reactivateTask(taskIdObj, taskState, newTaskStatusHolder, Optional.fromNullable(status.getMessage()), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+      boolean reactivated = taskManager.reactivateTask(taskIdObj, taskState, newTaskStatusHolder, Optional.ofNullable(status.getMessage()), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>empty());
       if (reactivated) {
         requestManager.addToPendingQueue(
             new SingularityPendingRequest(
                 taskIdObj.getRequestId(),
                 taskIdObj.getDeployId(),
                 now,
-                Optional.absent(),
+                Optional.empty(),
                 PendingType.TASK_RECOVERED,
-                Optional.absent(),
+                Optional.empty(),
                 Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue())))
         );
         return StatusUpdateResult.DONE;
@@ -305,7 +305,7 @@ public class SingularityMesosStatusUpdateHandler {
       if (task.isPresent()) {
         final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-        Optional<SingularityRequestWithState> requestWithState = Optional.absent();
+        Optional<SingularityRequestWithState> requestWithState = Optional.empty();
 
         if (taskState == ExtendedTaskState.TASK_RUNNING) {
           requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
@@ -328,7 +328,7 @@ public class SingularityMesosStatusUpdateHandler {
     final Optional<String> statusMessage = getStatusMessage(status, task);
 
     final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>empty());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectoryAndContainerId(taskIdObj);

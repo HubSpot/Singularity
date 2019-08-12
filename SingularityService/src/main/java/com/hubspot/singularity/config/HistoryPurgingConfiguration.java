@@ -2,8 +2,7 @@ package com.hubspot.singularity.config;
 
 import java.util.Collections;
 import java.util.Map;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class HistoryPurgingConfiguration {
 
@@ -31,7 +30,7 @@ public class HistoryPurgingConfiguration {
 
   private Optional<Integer> absentIfNotOverOne(int value) {
     if (value < 1) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(value);
   }

@@ -2,13 +2,11 @@ package com.hubspot.deploy;
 
 import java.util.List;
 import java.util.Objects;
-
-import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 
@@ -16,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes health check behavior for tasks associated with a deploy")
 public class HealthcheckOptions {
-  @NotNull
   private final Optional<String> uri;
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;

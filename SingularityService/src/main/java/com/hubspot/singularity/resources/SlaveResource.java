@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -18,7 +19,6 @@ import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
@@ -120,7 +120,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   public void decommissionSlave(SingularityUser user, String slaveId, SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.decommission(slaveId, maybeChangeRequest, user, SingularityAction.DECOMMISSION_SLAVE);
   }
 
@@ -140,7 +140,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   public void freezeSlave(SingularityUser user, String slaveId, SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.freeze(slaveId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
   }
 
@@ -160,7 +160,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   public void activateSlave(SingularityUser user, String slaveId, SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.activate(slaveId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
   }
 

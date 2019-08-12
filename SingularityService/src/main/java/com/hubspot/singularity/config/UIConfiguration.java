@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -13,7 +14,6 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
@@ -44,7 +44,7 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  private Optional<String> navColor = Optional.absent();
+  private Optional<String> navColor = Optional.empty();
 
   @JsonProperty
   private String baseUrl;
@@ -76,7 +76,7 @@ public class UIConfiguration {
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   @JsonProperty
-  private Optional<String> taskS3LogOmitPrefix = Optional.absent();
+  private Optional<String> taskS3LogOmitPrefix = Optional.empty();
 
   @NotEmpty
   private String timestampFormat = "lll Z";
@@ -85,11 +85,11 @@ public class UIConfiguration {
   private String timestampWithSecondsFormat = "lll:ss Z";
 
   @JsonProperty
-  private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
+  private Optional<String> redirectOnUnauthorizedUrl = Optional.empty();
 
 
   @JsonProperty
-  private Optional<String> extraScript = Optional.absent();
+  private Optional<String> extraScript = Optional.empty();
 
   @JsonProperty
   private String authTokenKey = "token";
@@ -99,13 +99,13 @@ public class UIConfiguration {
   private String authCookieName = "";
 
   @JsonProperty
-  private Optional<String> apiRootOverride = Optional.absent();
+  private Optional<String> apiRootOverride = Optional.empty();
 
   @JsonProperty
-  private Optional<String> appRootOverride = Optional.absent();
+  private Optional<String> appRootOverride = Optional.empty();
 
   @JsonProperty
-  private Optional<String> staticRootOverride = Optional.absent();
+  private Optional<String> staticRootOverride = Optional.empty();
 
   // e.g. {"request":{"SERVICE":[{"title":"my link","template":"http://example.com/{{request.id}}"}]}}
   @JsonProperty
@@ -148,7 +148,7 @@ public class UIConfiguration {
   }
 
   public Optional<String> getBaseUrl() {
-    return Optional.fromNullable(Strings.emptyToNull(baseUrl));
+    return Optional.ofNullable(Strings.emptyToNull(baseUrl));
   }
 
   public void setBaseUrl(String baseUrl) {

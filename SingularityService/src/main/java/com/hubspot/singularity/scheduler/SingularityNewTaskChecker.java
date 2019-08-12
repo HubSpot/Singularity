@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -103,11 +103,11 @@ public class SingularityNewTaskChecker {
       return false;
     }
 
-    if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().or(Boolean.FALSE)) {
+    if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().orElse(Boolean.FALSE)) {
       return false;
     }
 
-    if (requestWithState.isPresent() && requestWithState.get().getRequest().getSkipHealthchecks().or(Boolean.FALSE)) {
+    if (requestWithState.isPresent() && requestWithState.get().getRequest().getSkipHealthchecks().orElse(Boolean.FALSE)) {
       return false;
     }
 
@@ -126,7 +126,9 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
+      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().isPresent() ?
+          task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds() :
+          configuration.getStartupDelaySeconds();
       if (maybeStartupDelay.isPresent()) {
         return maybeStartupDelay.get();
       }
@@ -134,7 +136,7 @@ public class SingularityNewTaskChecker {
       return delaySeconds;
     }
 
-    delaySeconds += task.getTaskRequest().getDeploy().getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
+    delaySeconds += task.getTaskRequest().getDeploy().getDeployHealthTimeoutSeconds().orElse(configuration.getDeployHealthyBySeconds());
 
     return delaySeconds;
   }
@@ -274,8 +276,8 @@ public class SingularityNewTaskChecker {
         if (isHealthcheckOverdue(task)) {
           LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()));
 
-          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.absent(), Optional.absent()));
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.empty(), Optional.empty()));
 
           checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
@@ -286,8 +288,8 @@ public class SingularityNewTaskChecker {
         if (isTaskOverdue(task)) {
           LOG.info("Killing {} because it did not reach the task running state after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()));
 
-          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.absent(), Optional.absent()));
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
+              task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.empty(), Optional.empty()));
 
           checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
@@ -299,8 +301,8 @@ public class SingularityNewTaskChecker {
       case UNHEALTHY_KILL_TASK:
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
-            task.getTaskId(), Optional.of("Task is not healthy"), Optional.absent(), Optional.absent()));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.empty(), Optional.empty()));
 
         checkForRepeatedFailures(requestWithState, task.getTaskId());
         return false;
@@ -366,12 +368,12 @@ public class SingularityNewTaskChecker {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate;
 
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.absent());
+    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.empty());
     boolean taskCleaning = taskManager.getCleanupTaskIds().contains(task.getTaskId());
 
     if ((!lbUpdate.isPresent() || unknownNotRemoving(lbUpdate.get())) && !taskCleaning) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,
-          new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.absent()));
+          new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.empty()));
 
       newLbUpdate = lbClient.enqueue(loadBalancerRequestId, task.getTaskRequest().getRequest(), task.getTaskRequest().getDeploy(), Collections.singletonList(task), Collections.emptyList());
     } else {
@@ -409,7 +411,7 @@ public class SingularityNewTaskChecker {
         break;
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private boolean isHealthcheckOverdue(SingularityTask task) {

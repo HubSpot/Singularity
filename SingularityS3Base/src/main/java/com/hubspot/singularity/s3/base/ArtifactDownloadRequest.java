@@ -1,10 +1,10 @@
 package com.hubspot.singularity.s3.base;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.hubspot.deploy.S3Artifact;
 
