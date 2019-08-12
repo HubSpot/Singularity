@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class BaseRunnerConfiguration {
@@ -13,23 +11,18 @@ public abstract class BaseRunnerConfiguration {
   public static final String DEFAULT_HUBSPOT_LOG_LEVEL = "INFO";
   public static final String DEFAULT_DIRECTORY = "/var/log/singularity/";
 
-  @NotNull
   @JsonProperty
   private Optional<String> loggingFilename = Optional.empty();
 
-  @NotNull
   @JsonProperty
   private Optional<String> loggingDirectory = Optional.empty();
 
-  @NotNull
   @JsonProperty
   private Map<String, String> loggingLevel = new HashMap<>();
 
-  @NotNull
   @JsonProperty
   private Optional<String> loggingPattern = Optional.of("%-5level [%d] [%.15thread] %logger{50} %contextName - %msg%n");
 
-  @NotNull
   @JsonProperty
   private Optional<String> hostname = Optional.empty();
 
