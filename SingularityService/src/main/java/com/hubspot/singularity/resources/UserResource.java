@@ -38,7 +38,7 @@ public class UserResource {
   @Path("/settings")
   @Operation(summary = "Retrieve the settings for the current authenticated user")
   public SingularityUserSettings getUserSettings(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return userManager.getUserSettings(user.getId()).or(SingularityUserSettings.empty());
+    return userManager.getUserSettings(user.getId()).orElse(SingularityUserSettings.empty());
   }
 
   @POST

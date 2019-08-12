@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -123,10 +123,10 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
-    Optional<SingularityDeployHistory> maybeHistory =  Optional.fromNullable(history.getDeployHistoryForDeploy(requestId, deployId));
+    Optional<SingularityDeployHistory> maybeHistory =  Optional.ofNullable(history.getDeployHistoryForDeploy(requestId, deployId));
     if (!maybeHistory.isPresent() && fallBackToBytesFields) {
       byte[] historyBytes = history.getDeployHistoryBytesForDeploy(requestId, deployId);
-      Optional<SingularityDeployHistory> historyOptional = Optional.absent();
+      Optional<SingularityDeployHistory> historyOptional = Optional.empty();
       if (historyBytes != null) {
         historyOptional = Optional.of(deployHistoryTranscoder.fromBytes(historyBytes));
       }
@@ -155,7 +155,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
-    return orderDirection.or(OrderDirection.DESC).name();
+    return orderDirection.orElse(OrderDirection.DESC).name();
   }
 
   @Override
@@ -208,13 +208,13 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistory, new Date(taskIdHistory.getUpdatedAt()),
-        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull(), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
+        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orElse(null), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
         new Date(taskIdHistory.getTaskId().getStartedAt()));
   }
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.fromNullable(history.getTaskHistoryForTask(taskId));
+    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.ofNullable(history.getTaskHistoryForTask(taskId));
     if (!maybeTaskHistory.isPresent() && fallBackToBytesFields) {
       return fromBytes(history.getTaskHistoryBytesForTask(taskId));
     }
@@ -223,7 +223,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.fromNullable(history.getTaskHistoryForTaskByRunId(requestId, runId));
+    Optional<SingularityTaskHistory> maybeTaskHistory = Optional.ofNullable(history.getTaskHistoryForTaskByRunId(requestId, runId));
     if (!maybeTaskHistory.isPresent() && fallBackToBytesFields) {
       return fromBytes(history.getTaskHistoryBytesForTaskByRunId(requestId, runId));
     }
@@ -231,7 +231,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private Optional<SingularityTaskHistory> fromBytes(byte[] historyBytes) {
-    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.absent();
+    Optional<SingularityTaskHistory> taskHistoryOptional = Optional.empty();
     if (historyBytes != null && historyBytes.length > 0) {
       taskHistoryOptional =  Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
     }
@@ -316,7 +316,7 @@ public class JDBIHistoryManager implements HistoryManager {
                 return Optional.of(taskHistoryTranscoder.fromBytes(bytes));
               } catch (SingularityTranscoderException ste) {
                 LOG.warn("Could not deserialize task", ste);
-                return Optional.<SingularityTaskHistory>absent();
+                return Optional.<SingularityTaskHistory>empty();
               }
             })
             .filter(Optional::isPresent)
@@ -347,7 +347,7 @@ public class JDBIHistoryManager implements HistoryManager {
                 return Optional.of(deployHistoryTranscoder.fromBytes(bytes));
               } catch (SingularityTranscoderException ste) {
                 LOG.warn("Could not deserialize deploy", ste);
-                return Optional.<SingularityDeployHistory>absent();
+                return Optional.<SingularityDeployHistory>empty();
               }
             })
             .filter(Optional::isPresent)

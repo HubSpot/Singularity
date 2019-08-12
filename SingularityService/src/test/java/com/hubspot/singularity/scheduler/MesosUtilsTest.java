@@ -3,12 +3,13 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.Value.Range;
 import org.apache.mesos.v1.Protos.Value.Ranges;
 import org.apache.mesos.v1.Protos.Value.Scalar;
@@ -16,13 +17,12 @@ import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.helpers.MesosUtils;
 
 public class MesosUtilsTest {
 
@@ -50,18 +50,18 @@ public class MesosUtilsTest {
     );
     List<Resource> combined = MesosUtils.combineResources(toAdd);
 
-    Assertions.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.absent()), 0.1);
-    Assertions.assertEquals(3072, MesosUtils.getMemory(combined, Optional.absent()), 0.1);
+    Assertions.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.empty()), 0.1);
+    Assertions.assertEquals(3072, MesosUtils.getMemory(combined, Optional.empty()), 0.1);
   }
 
   @Test
   public void testTaskOrdering() {
     final SingularityTaskId taskId = new SingularityTaskId("r", "d", System.currentTimeMillis(), 1, "h", "r");
-    final Optional<String> msg = Optional.absent();
+    final Optional<String> msg = Optional.empty();
 
-    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.<String>absent());
-    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.<String>absent());
-    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.<String>absent());
+    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.<String>empty());
+    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.<String>empty());
+    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.<String>empty());
 
     List<SingularityTaskHistoryUpdate> list = Arrays.asList(update2, update1, update3);
 

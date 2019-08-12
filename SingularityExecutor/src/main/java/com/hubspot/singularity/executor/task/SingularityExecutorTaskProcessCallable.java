@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.task;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +17,6 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.base.Optional;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
@@ -83,8 +83,8 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     String taskAppDirectory = task.getTaskDefinition().getTaskAppDirectory();
     File fullHealthcheckPath = Paths.get(taskAppDirectory, expectedHealthcheckResultFilePath.get()).toFile();
 
-    Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().or(configuration.getDefaultHealthcheckMaxRetries());
-    Integer retryInterval = maybeOptions.get().getIntervalSeconds().or(configuration.getDefaultHealthcheckInternvalSeconds());
+    Integer healthcheckMaxRetries = maybeOptions.get().getMaxRetries().orElse(configuration.getDefaultHealthcheckMaxRetries());
+    Integer retryInterval = maybeOptions.get().getIntervalSeconds().orElse(configuration.getDefaultHealthcheckInternvalSeconds());
     long maxDelay = configuration.getDefaultHealthcheckBaseTimeoutSeconds() + (retryInterval * healthcheckMaxRetries);
 
     try {

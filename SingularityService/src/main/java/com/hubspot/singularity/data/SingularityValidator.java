@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -25,11 +26,8 @@ import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
@@ -146,7 +144,7 @@ public class SingularityValidator {
     this.defaultKillHealthcheckAfterSeconds = configuration.getKillTaskIfNotHealthyAfterSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
-    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().orElse(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.maxRunNowTaskLaunchDelay = configuration.getMaxRunNowTaskLaunchDelayDays();
 
@@ -200,15 +198,15 @@ public class SingularityValidator {
 
       String originalSchedule = request.getQuartzScheduleSafe();
 
-      if (request.getScheduleType().or(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
+      if (request.getScheduleType().orElse(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
         if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-          checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+          checkBadRequest(request.getScheduleType().orElse(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
         }
 
         if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
           quartzSchedule = originalSchedule;
         } else {
-          checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+          checkBadRequest(request.getScheduleType().orElse(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
           checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
 
           quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
@@ -239,14 +237,14 @@ public class SingularityValidator {
     }
 
     if (request.isScheduled()) {
-      checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
+      checkBadRequest(request.getInstances().orElse(1) == 1, "Scheduler requests can not be ran on more than one instance");
     }
 
     if (request.getMaxTasksPerOffer().isPresent()) {
       checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
-    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+    return request.toBuilder().setQuartzSchedule(Optional.ofNullable(quartzSchedule)).build();
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -293,7 +291,7 @@ public class SingularityValidator {
         checkBadRequest(!k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in env");
       });
     }
-    checkBadRequest(!deploy.getCommand().or("").contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in command");
+    checkBadRequest(!deploy.getCommand().orElse("").contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in command");
     checkBadRequest(!deploy.getArguments().isPresent() || deploy.getArguments().get().stream().noneMatch((arg) -> arg.contains("STARTED_BY_USER")), "Cannot override STARTED_BY_USER in arguments");
 
     checkForIllegalResources(request, deploy);
@@ -331,10 +329,10 @@ public class SingularityValidator {
 
       if (maxTotalHealthcheckTimeoutSeconds.isPresent()) {
         HealthcheckOptions options = healthcheckOptions;
-        int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
-        int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
-        int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
-        int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+        int intervalSeconds = options.getIntervalSeconds().orElse(defaultHealthcheckIntervalSeconds);
+        int httpTimeoutSeconds = options.getResponseTimeoutSeconds().orElse(defaultHealthcheckResponseTimeoutSeconds);
+        int startupTime = options.getStartupTimeoutSeconds().orElse(defaultHealthcheckStartupTimeoutSeconds);
+        int attempts = options.getMaxRetries().orElse(defaultHealthcehckMaxRetries) + 1;
 
         int totalHealthCheckTime = startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts);
         checkBadRequest(totalHealthCheckTime < maxTotalHealthcheckTimeoutSeconds.get(),
@@ -449,7 +447,7 @@ public class SingularityValidator {
         Optional.of(getRunId(runNowRequest.getRunId())),
         runNowRequest.getSkipHealthchecks(),
         runNowRequest.getMessage(),
-        Optional.absent(),
+        Optional.empty(),
         runNowRequest.getResources(),
         runNowRequest.getS3UploaderAdditionalFiles(),
         runNowRequest.getRunAsUserOverride(),
@@ -479,7 +477,7 @@ public class SingularityValidator {
           request.getRunAt());
     } else {
       return new SingularityRunNowRequestBuilder()
-          .setRunId(getRunId(Optional.absent()))
+          .setRunId(getRunId(Optional.empty()))
           .build();
     }
   }
@@ -583,9 +581,9 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
-    double diskMbPerInstance = deploy.getResources().or(defaultResources).getDiskMb();
+    double cpusPerInstance = deploy.getResources().orElse(defaultResources).getCpus();
+    double memoryMbPerInstance = deploy.getResources().orElse(defaultResources).getMemoryMb();
+    double diskMbPerInstance = deploy.getResources().orElse(defaultResources).getDiskMb();
 
     checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
     checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
@@ -686,7 +684,7 @@ public class SingularityValidator {
   }
 
   public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
-    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
     if ((isAllowBounceToSameHost(request) && placement == SlavePlacement.SEPARATE_BY_REQUEST)
       || (!isAllowBounceToSameHost(request) && placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC)) {
@@ -706,7 +704,7 @@ public class SingularityValidator {
   }
 
   public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
-    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
     if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
@@ -817,12 +815,9 @@ public class SingularityValidator {
   }
 
   public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
-      @Override
-      public boolean apply(ShellCommandDescriptor input) {
-        return input.getName().equals(shellCommand.getName());
-      }
-    });
+    Optional<ShellCommandDescriptor> commandDescriptor = uiConfiguration.getShellCommands().stream()
+        .filter((i) -> i.getName().equals(shellCommand.getName()))
+        .findFirst();
 
     if (!commandDescriptor.isPresent()) {
       throw WebExceptions.badRequest("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());

@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -210,14 +210,14 @@ public class DeployManager extends CuratorAsyncManager {
       LOG.info("Deploy object for {} already existed (new marker: {})", deploy, deployMarker);
     }
 
-    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>absent()));
+    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>empty()));
 
     create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
 
     final Optional<SingularityRequestDeployState> currentState = getRequestDeployState(deploy.getRequestId());
 
-    Optional<SingularityDeployMarker> activeDeploy = Optional.absent();
-    Optional<SingularityDeployMarker> pendingDeploy = Optional.absent();
+    Optional<SingularityDeployMarker> activeDeploy = Optional.empty();
+    Optional<SingularityDeployMarker> pendingDeploy = Optional.empty();
 
     if (request.isDeployable()) {
       if (currentState.isPresent()) {
@@ -237,19 +237,19 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployMarker> deployMarker = getData(getDeployMarkerPath(requestId, deployId), deployMarkerTranscoder);
 
     if (!deployMarker.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy> absent(), Optional.<SingularityDeployStatistics>absent()));
+      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy>empty(), Optional.<SingularityDeployStatistics>empty()));
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
 
     if (!deploy.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(requestId, deployId);
@@ -266,18 +266,20 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<String> getInUseDeployId(String requestId) {
     Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
 
-    if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent()) {
-      return Optional.absent();
+    if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
+      return Optional.empty();
     }
 
-    return Optional.of(deployState.get().getActiveDeploy().or(deployState.get().getPendingDeploy()).get().getDeployId());
+    SingularityDeployMarker maybeDeployMarker = (deployState.get().getActiveDeploy().isPresent() ? deployState.get().getActiveDeploy() : deployState.get().getPendingDeploy()).get();
+
+    return Optional.of(maybeDeployMarker.getDeployId());
   }
 
   public Optional<String> getActiveDeployId(String requestId) {
     Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
 
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(deployState.get().getActiveDeploy().get().getDeployId());
   }

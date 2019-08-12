@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 
@@ -41,12 +41,12 @@ public class SingularityPendingRequest {
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, null, null, Optional.<Long> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>>empty(), Optional.<String>empty(), skipHealthchecks, message, Optional.<String>empty(), Optional.<Resources>empty(), Collections.emptyList(), Optional.empty(), null, null, null, null, Optional.<Long>empty());
   }
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
     Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, null, null, Optional.<Long>absent());
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>empty(), Collections.emptyList(), Optional.empty(), null, null, null, null, Optional.<Long>empty());
   }
 
   @JsonCreator

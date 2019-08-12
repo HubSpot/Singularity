@@ -1,14 +1,15 @@
 package com.hubspot.singularity.executor.config;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class LogrotateCompressionSettings {
-  private Optional<String> compressCmd = Optional.absent();
-  private Optional<String> uncompressCmd = Optional.absent();
-  private Optional<String> compressOptions = Optional.absent();
-  private Optional<String> compressExt = Optional.absent();
+  private Optional<String> compressCmd = Optional.empty();
+  private Optional<String> uncompressCmd = Optional.empty();
+  private Optional<String> compressOptions = Optional.empty();
+  private Optional<String> compressExt = Optional.empty();
 
   @JsonCreator
   public LogrotateCompressionSettings(@JsonProperty("compressCmd") Optional<String> compressCmd,
@@ -22,7 +23,7 @@ public class LogrotateCompressionSettings {
   }
 
   public static LogrotateCompressionSettings empty() {
-    return new LogrotateCompressionSettings(Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+    return new LogrotateCompressionSettings(Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty());
   }
 
   public Optional<String> getCompressCmd() {

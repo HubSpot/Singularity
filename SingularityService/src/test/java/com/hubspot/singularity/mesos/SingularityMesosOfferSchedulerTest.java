@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.jupiter.api.Assertions;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -100,7 +100,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
-    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.absent()));
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty()));
 
     // NLR - no deployStatistics -> default weights
     setRequestType(RequestType.ON_DEMAND);
@@ -165,7 +165,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.DEFAULT_USER);
 
     Assertions.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
@@ -211,8 +211,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
-        .absent()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional
+        .empty()), SingularityUser.DEFAULT_USER);
 
     Assertions.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 

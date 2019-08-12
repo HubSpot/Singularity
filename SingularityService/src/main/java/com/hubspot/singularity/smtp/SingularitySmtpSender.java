@@ -2,6 +2,7 @@ package com.hubspot.singularity.smtp;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +20,6 @@ import javax.mail.internet.MimeUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -47,7 +47,7 @@ public class SingularitySmtpSender implements Managed {
     if (maybeSmtpConfiguration.isPresent()) {
       this.mailSenderExecutorService = Optional.of(JavaUtils.newFixedTimingOutThreadPool(maybeSmtpConfiguration.get().getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularitySMTPSender-%d"));
     } else {
-      this.mailSenderExecutorService = Optional.absent();
+      this.mailSenderExecutorService = Optional.empty();
     }
   }
 

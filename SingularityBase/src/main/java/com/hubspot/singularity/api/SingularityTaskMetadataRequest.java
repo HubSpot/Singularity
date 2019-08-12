@@ -1,8 +1,9 @@
 package com.hubspot.singularity.api;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.hubspot.singularity.MetadataLevel;
 

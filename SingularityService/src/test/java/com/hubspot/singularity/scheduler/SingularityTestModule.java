@@ -4,6 +4,7 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -18,7 +19,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -84,9 +85,10 @@ public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
   private final ObjectMapper om = Jackson.newObjectMapper()
-      .setSerializationInclusion(Include.NON_NULL)
+      .setSerializationInclusion(Include.NON_ABSENT)
       .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      .registerModule(new ProtobufModule());
+      .registerModule(new ProtobufModule())
+      .registerModule(new Jdk8Module());
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
@@ -180,8 +182,8 @@ public class SingularityTestModule implements Module {
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
             binder.bind(SingularityLifecycleManaged.class).to(SingularityLifecycleManagedTest.class).asEagerSingleton();
 
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
-            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>empty());
+            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>empty());
 
             binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
               @Override

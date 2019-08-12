@@ -13,7 +13,6 @@ import org.apache.mesos.Protos.Value.Range;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -124,7 +123,7 @@ public class SingularityExecutorTaskBuilder {
 
       return objectMapper.readValue(taskInfo.getData().toByteArray(), SingularityTaskExecutorData.class);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

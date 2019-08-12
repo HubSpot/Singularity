@@ -3,11 +3,11 @@ package com.hubspot.mesos.protos;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class MesosRangesObject {
   private final Optional<List<MesosRangeObject>> range;
@@ -18,7 +18,7 @@ public class MesosRangesObject {
   }
 
   public List<MesosRangeObject> getRange() {
-    return range.or(Collections.emptyList());
+    return range.orElse(Collections.emptyList());
   }
 
   @JsonIgnore // to mimic mesos

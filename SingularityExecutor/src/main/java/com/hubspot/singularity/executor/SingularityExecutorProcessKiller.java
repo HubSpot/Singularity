@@ -44,7 +44,7 @@ public class SingularityExecutorProcessKiller {
         processCallable.getTask().markDestroyedAfterWaiting();
         processCallable.signalKillToProcessIfActive();
       }
-    }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().or(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS));
+    }, processCallable.getTask().getExecutorData().getSigKillProcessesAfterMillis().orElse(configuration.getHardKillAfterMillis()), TimeUnit.MILLISECONDS));
 
     LOG.info("Signaling -15 to process {} ({})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid());
     processCallable.markKilled();  // makes it so that the task can not start

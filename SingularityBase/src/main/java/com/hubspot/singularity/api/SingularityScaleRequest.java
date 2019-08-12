@@ -1,8 +1,9 @@
 package com.hubspot.singularity.api;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -23,7 +24,7 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
                                  Optional<String> message,
                                  Optional<Boolean> bounce,
                                  Optional<Boolean> incremental) {
-    this(instances, durationMillis, skipHealthchecks, actionId, message, bounce, incremental, Optional.absent());
+    this(instances, durationMillis, skipHealthchecks, actionId, message, bounce, incremental, Optional.empty());
   }
 
   @JsonCreator

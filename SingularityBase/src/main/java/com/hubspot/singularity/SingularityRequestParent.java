@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
@@ -26,11 +27,11 @@ public class SingularityRequestParent {
   private final Optional<SingularityTaskIdsByStatus> taskIds;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
-    this(request, state, Optional.absent());
+    this(request, state, Optional.empty());
   }
 
   public SingularityRequestParent(SingularityRequest request, RequestState state, Optional<SingularityRequestDeployState> requestDeployState) {
-    this(request, state, requestDeployState, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    this(request, state, requestDeployState, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
