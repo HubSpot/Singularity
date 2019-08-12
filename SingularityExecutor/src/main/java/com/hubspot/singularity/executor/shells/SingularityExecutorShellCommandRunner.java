@@ -8,14 +8,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -46,7 +44,7 @@ public class SingularityExecutorShellCommandRunner {
   }
 
   public static String convertCommandNameToLogfileName(String str) {
-    return CharMatcher.WHITESPACE.or(CharMatcher.is('/')).replaceFrom(str, '-').toLowerCase();
+    return CharMatcher.whitespace().or(CharMatcher.is('/')).replaceFrom(str, '-').toLowerCase();
   }
 
   public SingularityExecutorShellCommandRunner(SingularityTaskShellCommandRequest shellRequest, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTask task,
@@ -84,12 +82,12 @@ public class SingularityExecutorShellCommandRunner {
     try {
       command = buildCommand();
     } catch (InvalidShellCommandException isce) {
-      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.<String>absent());
+      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.<String>empty());
       return null;
     }
 
     final String outputFilename = executorConfiguration.getShellCommandOutFile()
-        .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().or(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
+        .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().orElse(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
         .replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
 
     shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
@@ -109,30 +107,25 @@ public class SingularityExecutorShellCommandRunner {
       public void onSuccess(Integer result) {
         task.getLog().info("ShellRequest {} finished with {}", shellRequest, result);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.<String>absent());
+        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.<String>empty());
       }
 
       @Override
       public void onFailure(Throwable t) {
         task.getLog().warn("ShellRequest {} failed", shellRequest, t);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.<String>absent());
+        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.<String>empty());
       }
 
-    });
+    }, shellCommandExecutorService);
 
     return shellFuture;
   }
 
   private List<String> buildCommand() {
-    Optional<SingularityExecutorShellCommandDescriptor> matchingShellCommandDescriptor = Iterables.tryFind(executorConfiguration.getShellCommands(), new Predicate<SingularityExecutorShellCommandDescriptor>() {
-
-      @Override
-      public boolean apply(SingularityExecutorShellCommandDescriptor input) {
-        return input.getName().equals(shellRequest.getShellCommand().getName());
-      }
-
-    });
+    Optional<SingularityExecutorShellCommandDescriptor> matchingShellCommandDescriptor = executorConfiguration.getShellCommands().stream()
+        .filter((input) -> input.getName().equals(shellRequest.getShellCommand().getName()))
+        .findFirst();
 
     if (!matchingShellCommandDescriptor.isPresent()) {
       throw new InvalidShellCommandException(String.format(
@@ -187,7 +180,7 @@ public class SingularityExecutorShellCommandRunner {
         }
         command.set(i, Integer.toString(pid));
       } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
-        command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
+        command.set(i, taskProcess.getTask().getExecutorData().getUser().orElse(executorConfiguration.getDefaultRunAsUser()));
       }
     }
 

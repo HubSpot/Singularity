@@ -2,6 +2,8 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
+import java.util.Optional;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -12,7 +14,6 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;

@@ -4,6 +4,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.validation.Validation;
@@ -16,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -62,7 +63,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
     bind(SingularityRunnerExceptionNotifier.class).in(Scopes.SINGLETON);
 
-    final Optional<String> consolidatedConfigFilename = Optional.fromNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
+    final Optional<String> consolidatedConfigFilename = Optional.ofNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());
 
     configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass, consolidatedConfigFilename);
@@ -115,10 +116,11 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
 
     final ObjectMapper mapper = new ObjectMapper(yamlFactory);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
+    mapper.registerModule(new Jdk8Module());
 
     return mapper;
   }

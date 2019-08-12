@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.hubspot.baragon.models.BaragonServiceState;
 
 public class SingularityCheckingUpstreamsUpdate {

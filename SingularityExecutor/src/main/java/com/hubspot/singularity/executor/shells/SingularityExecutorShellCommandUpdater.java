@@ -1,8 +1,9 @@
 package com.hubspot.singularity.executor.shells;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
@@ -27,7 +28,7 @@ public class SingularityExecutorShellCommandUpdater {
     try {
       byte[] data = objectMapper.writeValueAsBytes(update);
 
-      task.getLog().info("Sending update {} ({}) for shell command {}", updateType, message.or(""), shellRequest.getId());
+      task.getLog().info("Sending update {} ({}) for shell command {}", updateType, message.orElse(""), shellRequest.getId());
 
       task.getDriver().sendFrameworkMessage(data);
 

@@ -1,10 +1,11 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import java.util.Optional;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class SingularityS3UploaderContentHeaders {
     @NotEmpty

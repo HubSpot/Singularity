@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -33,25 +33,25 @@ public class SingularityDockerInfo {
                                @JsonProperty("dockerParameters") Optional<List<SingularityDockerParameter>> dockerParameters) {
     this.image = image;
     this.privileged = privileged;
-    this.network = Optional.fromNullable(network);
-    this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
-    this.forcePullImage = forcePullImage.or(false);
+    this.network = Optional.ofNullable(network);
+    this.portMappings = portMappings.orElse(Collections.<SingularityDockerPortMapping>emptyList());
+    this.forcePullImage = forcePullImage.orElse(false);
     this.parameters = parameters;
-    this.dockerParameters = dockerParameters.or(parameters.isPresent() ? SingularityDockerParameter.parametersFromMap(parameters.get()) : Collections.<SingularityDockerParameter>emptyList());
+    this.dockerParameters = dockerParameters.orElse(parameters.isPresent() ? SingularityDockerParameter.parametersFromMap(parameters.get()) : Collections.<SingularityDockerParameter>emptyList());
   }
 
   public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, List<SingularityDockerParameter> dockerParameters) {
-    this(image, privileged, network, portMappings, forcePullImage, Optional.<Map<String,String>>absent(), Optional.of(dockerParameters));
+    this(image, privileged, network, portMappings, forcePullImage, Optional.<Map<String,String>>empty(), Optional.of(dockerParameters));
   }
 
   @Deprecated
   public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, Optional<Map<String, String>> parameters) {
-    this(image, privileged, network, portMappings, forcePullImage, parameters, Optional.<List<SingularityDockerParameter>>absent());
+    this(image, privileged, network, portMappings, forcePullImage, parameters, Optional.<List<SingularityDockerParameter>>empty());
   }
 
   @Deprecated
   public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
-    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent(), Optional.<List<SingularityDockerParameter>>absent());
+    this(image, privileged, network, portMappings, Optional.<Boolean>empty(), Optional.<Map<String, String>>empty(), Optional.<List<SingularityDockerParameter>>empty());
   }
 
   @Schema(required = true, description = "Docker image name")

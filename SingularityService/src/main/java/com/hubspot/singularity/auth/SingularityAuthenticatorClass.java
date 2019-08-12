@@ -2,10 +2,10 @@ package com.hubspot.singularity.auth;
 
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityDisabledAuthenticator;
-import com.hubspot.singularity.auth.authenticator.SingularityTokenAuthenticator;
-import com.hubspot.singularity.auth.authenticator.SingularityWebhookAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityHeaderPassthroughAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityQueryParamAuthenticator;
+import com.hubspot.singularity.auth.authenticator.SingularityTokenAuthenticator;
+import com.hubspot.singularity.auth.authenticator.SingularityWebhookAuthenticator;
 
 public enum SingularityAuthenticatorClass {
   DISABLED(SingularityDisabledAuthenticator.class),

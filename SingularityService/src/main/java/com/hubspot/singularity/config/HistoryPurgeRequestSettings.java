@@ -1,12 +1,12 @@
 package com.hubspot.singularity.config;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class HistoryPurgeRequestSettings {
-  private Optional<Integer> deleteTaskHistoryAfterDays = Optional.absent();
-  private Optional<Integer> deleteTaskHistoryAfterTasksPerRequest = Optional.absent();
-  private Optional<Integer> deleteTaskHistoryBytesAfterDays = Optional.absent();
-  private Optional<Integer> deleteTaskHistoryBytesAfterTasksPerRequest = Optional.absent();
+  private Optional<Integer> deleteTaskHistoryAfterDays = Optional.empty();
+  private Optional<Integer> deleteTaskHistoryAfterTasksPerRequest = Optional.empty();
+  private Optional<Integer> deleteTaskHistoryBytesAfterDays = Optional.empty();
+  private Optional<Integer> deleteTaskHistoryBytesAfterTasksPerRequest = Optional.empty();
 
   public Optional<Integer> getDeleteTaskHistoryAfterDays() {
     return deleteTaskHistoryAfterDays;

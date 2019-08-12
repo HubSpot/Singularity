@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,7 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -108,9 +108,9 @@ public class SingularityUsageHelper {
       AtomicLong totalDiskBytesUsed,
       AtomicLong totalDiskBytesAvailable,
       boolean useShortTimeout) {
-    Optional<Long> memoryMbTotal = Optional.absent();
-    Optional<Double> cpusTotal = Optional.absent();
-    Optional<Long> diskMbTotal = Optional.absent();
+    Optional<Long> memoryMbTotal = Optional.empty();
+    Optional<Double> cpusTotal = Optional.empty();
+    Optional<Long> diskMbTotal = Optional.empty();
 
     long memoryMbReservedOnSlave = 0;
     double cpuReservedOnSlave = 0;
@@ -179,9 +179,11 @@ public class SingularityUsageHelper {
         usageManager.saveSpecificTaskUsage(task, latestUsage);
 
         Optional<SingularityTask> maybeTask = taskManager.getTask(task);
-        Optional<Resources> maybeResources = Optional.absent();
+        Optional<Resources> maybeResources = Optional.empty();
         if (maybeTask.isPresent()) {
-          maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
+          maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().isPresent() ?
+              maybeTask.get().getTaskRequest().getPendingTask().getResources() :
+              maybeTask.get().getTaskRequest().getDeploy().getResources();
           if (maybeResources.isPresent()) {
             Resources taskResources = maybeResources.get();
             double memoryMbReservedForTask = taskResources.getMemoryMb();
@@ -315,12 +317,12 @@ public class SingularityUsageHelper {
   }
 
   private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    String statusMessage = taskHistoryUpdate.getStatusMessage().or("");
+    String statusMessage = taskHistoryUpdate.getStatusMessage().orElse("");
     if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
       return true;
     }
     for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
-      statusMessage = previous.getStatusMessage().or("");
+      statusMessage = previous.getStatusMessage().orElse("");
       if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
         return true;
       }

@@ -1,12 +1,12 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
 import org.eclipse.jetty.server.Server;
 
-import com.google.common.base.Optional;
 import com.google.inject.Provider;
 
 import io.dropwizard.lifecycle.ServerLifecycleListener;
@@ -21,7 +21,7 @@ public class ServerProvider implements Provider<Optional<Server>>, ServerLifecyc
 
   @Override
   public Optional<Server> get() {
-    return Optional.fromNullable(serverHolder.get());
+    return Optional.ofNullable(serverHolder.get());
   }
 
   @Override

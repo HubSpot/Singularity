@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 
@@ -42,7 +42,7 @@ public class JavaUtilsTest {
             cdl.await();
             block.await();
           } catch (Throwable t) {
-            throw Throwables.propagate(t);
+            throw new RuntimeException(t);
           }
         }
       });
@@ -64,9 +64,10 @@ public class JavaUtilsTest {
   @Test
   public void testSingularityTaskIdSerialization() throws Exception {
     ObjectMapper om = Jackson.newObjectMapper()
-        .setSerializationInclusion(Include.NON_NULL)
+        .setSerializationInclusion(Include.NON_ABSENT)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModule(new ProtobufModule());
+        .registerModule(new ProtobufModule())
+        .registerModule(new Jdk8Module());
 
     SingularityTaskId taskId = new SingularityTaskId("rid", "did", 100, 1, "host", "rack");
     String id = taskId.getId();

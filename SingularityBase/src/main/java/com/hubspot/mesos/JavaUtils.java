@@ -2,25 +2,18 @@ package com.hubspot.mesos;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -29,18 +22,15 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.singularity.SingularityUser;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -74,7 +64,7 @@ public final class JavaUtils {
     try {
       return URLEncoder.encode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -82,7 +72,7 @@ public final class JavaUtils {
     try {
       return URLDecoder.decode(string, UTF_8.name());
     } catch (UnsupportedEncodingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -126,7 +116,7 @@ public final class JavaUtils {
   }
 
   public static String formatTimestamp(final long millis) {
-    return DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(millis);
+    return DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(millis);
   }
 
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
@@ -163,20 +153,21 @@ public final class JavaUtils {
 
   @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getFirst(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getFirst(iterable, null));
+    return Optional.ofNullable(Iterables.getFirst(iterable, null));
   }
 
   @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
   public static <T> Optional<T> getLast(Iterable<T> iterable) {
-    return Optional.fromNullable(Iterables.getLast(iterable, null));
+    return Optional.ofNullable(Iterables.getLast(iterable, null));
   }
 
   public static ObjectMapper newObjectMapper() {
     final ObjectMapper mapper = new ObjectMapper();
-    mapper.setSerializationInclusion(Include.NON_NULL);
+    mapper.setSerializationInclusion(Include.NON_ABSENT);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new ProtobufModule());
+    mapper.registerModule(new Jdk8Module());
     return mapper;
   }
 

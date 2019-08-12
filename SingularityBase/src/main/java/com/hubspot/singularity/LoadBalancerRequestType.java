@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public enum LoadBalancerRequestType {
 
@@ -18,7 +19,7 @@ public enum LoadBalancerRequestType {
     public LoadBalancerRequestId(@JsonProperty("id") String id, @JsonProperty("requestType") LoadBalancerRequestType requestType, @JsonProperty("attemptNumber") Optional<Integer> attemptNumber) {
       this.id = id;
       this.requestType = requestType;
-      this.attemptNumber = attemptNumber.or(1);
+      this.attemptNumber = attemptNumber.orElse(1);
     }
 
     @Override

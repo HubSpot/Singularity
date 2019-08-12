@@ -2,12 +2,12 @@ package com.hubspot.mesos.protos;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class MesosTaskStatusObject {
   private final Optional<MesosStringValue> agentId;
@@ -29,8 +29,8 @@ public class MesosTaskStatusObject {
                                @JsonProperty("state") Optional<MesosTaskState> state,
                                @JsonProperty("taskId") Optional<MesosStringValue> taskId,
                                @JsonProperty("timestamp") Optional<Double> timestamp) {
-    this.agentId = agentId.or(slaveId);
-    this.slaveId = agentId.or(slaveId);
+    this.agentId = agentId.isPresent() ? agentId : slaveId;
+    this.slaveId = agentId.isPresent() ? agentId : slaveId;
     this.healthy = healthy;
     this.message = message;
     this.reason = reason;
@@ -41,7 +41,7 @@ public class MesosTaskStatusObject {
   }
 
   public MesosStringValue getAgentId() {
-    return agentId.orNull();
+    return agentId.orElse(null);
   }
 
   public boolean hasAgentId() {
@@ -49,7 +49,7 @@ public class MesosTaskStatusObject {
   }
 
   public MesosStringValue getSlaveId() {
-    return slaveId.orNull();
+    return slaveId.orElse(null);
   }
 
   public boolean hasSlaveId() {
@@ -57,7 +57,7 @@ public class MesosTaskStatusObject {
   }
 
   public Boolean getHealthy() {
-    return healthy.orNull();
+    return healthy.orElse(null);
   }
 
   public boolean hasHealthy() {
@@ -65,7 +65,7 @@ public class MesosTaskStatusObject {
   }
 
   public String getMessage() {
-    return message.orNull();
+    return message.orElse(null);
   }
 
   public boolean hasMessage() {
@@ -73,7 +73,7 @@ public class MesosTaskStatusObject {
   }
 
   public MesosTaskStatusReason getReason() {
-    return reason.orNull();
+    return reason.orElse(null);
   }
 
   public boolean hasReason() {
@@ -81,7 +81,7 @@ public class MesosTaskStatusObject {
   }
 
   public MesosTaskState getState() {
-    return state.orNull();
+    return state.orElse(null);
   }
 
   public boolean hasState() {
@@ -89,7 +89,7 @@ public class MesosTaskStatusObject {
   }
 
   public MesosStringValue getTaskId() {
-    return taskId.orNull();
+    return taskId.orElse(null);
   }
 
   public boolean hasTaskId() {
@@ -97,7 +97,7 @@ public class MesosTaskStatusObject {
   }
 
   public Double getTimestamp() {
-    return timestamp.orNull();
+    return timestamp.orElse(null);
   }
 
   public boolean hasTimestamp() {

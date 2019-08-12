@@ -2,11 +2,11 @@ package com.hubspot.singularity.sentry;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -34,7 +34,7 @@ public class SingularityExceptionNotifier {
     if (sentryConfiguration.isPresent()) {
       this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
     } else {
-      this.raven = Optional.absent();
+      this.raven = Optional.empty();
     }
   }
 

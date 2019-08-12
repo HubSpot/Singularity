@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +28,6 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
@@ -214,7 +214,7 @@ public class SingularityMainModule implements Module {
     @Inject
     SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_NAME_PROPERTY) String hostname) {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = configuration.getHostname().or(hostname);
+      this.hostname = configuration.getHostname().orElse(hostname);
 
       Integer port = null;
       if (configuration.getServerFactory() instanceof SimpleServerFactory) {
@@ -249,9 +249,9 @@ public class SingularityMainModule implements Module {
   String getSingularityUriBase(final SingularityConfiguration configuration) {
     final String singularityUiPrefix;
     if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     } else {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     }
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
@@ -383,7 +383,7 @@ public class SingularityMainModule implements Module {
     try {
       return Optional.of(requestProvider.get());
     } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

@@ -2,13 +2,13 @@ package com.hubspot.deploy;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 

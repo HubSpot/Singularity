@@ -1,8 +1,9 @@
 package com.hubspot.singularity.api;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,11 +16,11 @@ public class SingularityMachineChangeRequest extends SingularityExpiringRequestP
 
   @Deprecated
   public SingularityMachineChangeRequest(Optional<String> message) {
-    this(Optional.<Long>absent(), Optional.<String>absent(), message, Optional.<MachineState>absent(), Optional.<Boolean>absent());
+    this(Optional.<Long>empty(), Optional.<String>empty(), message, Optional.<MachineState>empty(), Optional.<Boolean>empty());
   }
 
   public static SingularityMachineChangeRequest empty() {
-    return new SingularityMachineChangeRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    return new SingularityMachineChangeRequest(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
@@ -30,7 +31,7 @@ public class SingularityMachineChangeRequest extends SingularityExpiringRequestP
                                          @JsonProperty("killTasksOnDecommissionTimeout") Optional<Boolean> killTasksOnDecommissionTimeout) {
     super(durationMillis, actionId, message);
     this.revertToState = revertToState;
-    this.killTasksOnDecommissionTimeout = killTasksOnDecommissionTimeout.or(false);
+    this.killTasksOnDecommissionTimeout = killTasksOnDecommissionTimeout.orElse(false);
   }
 
   @Schema(description = "If a durationMillis is specified, return to this state when time has elapsed", nullable = true)
