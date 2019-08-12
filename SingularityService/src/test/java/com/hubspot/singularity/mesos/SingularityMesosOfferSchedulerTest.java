@@ -2,14 +2,14 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import org.apache.mesos.v1.Protos.Offer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -83,8 +83,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     });
   }
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  public void setupMocks() {
     Mockito.when(taskRequest.getRequest()).thenReturn(request);
     Mockito.when(request.getId()).thenReturn("requestId");
 
@@ -100,7 +100,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
-    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.absent()));
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty()));
 
     // NLR - no deployStatistics -> default weights
     setRequestType(RequestType.ON_DEMAND);
@@ -165,9 +165,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.DEFAULT_USER);
 
-    Assert.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+    Assertions.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
     slaveAndRackManager.checkOffer(host2Offer);
@@ -176,11 +176,11 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
     singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
-    Assert.assertEquals(2, offerHolders.size());
+    Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
     for (SingularityOfferHolder offerHolder : offerHolders) {
-      Assert.assertEquals(1, offerHolder.getAcceptedTasks().size());
+      Assertions.assertEquals(1, offerHolder.getAcceptedTasks().size());
     }
   }
 
@@ -211,10 +211,10 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
     usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
-        .absent()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional
+        .empty()), SingularityUser.DEFAULT_USER);
 
-    Assert.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+    Assertions.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
     slaveAndRackManager.checkOffer(host2Offer);
@@ -223,17 +223,17 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
     singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
-    Assert.assertEquals(2, offerHolders.size());
+    Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
     for (SingularityOfferHolder offerHolder : offerHolders) {
-      Assert.assertEquals(1, offerHolder.getAcceptedTasks().size());
+      Assertions.assertEquals(1, offerHolder.getAcceptedTasks().size());
     }
   }
 
   private void assertValueIs(double expectedValue, double actualValue) {
     actualValue = Math.round(actualValue * 1000.0) / 1000.0;
-    Assert.assertTrue(String.format("Expected %f but found %f", expectedValue, actualValue),  actualValue == expectedValue);
+    Assertions.assertEquals(actualValue, expectedValue, String.format("Expected %f but found %f", expectedValue, actualValue));
   }
 
   private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved,

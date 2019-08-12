@@ -2,6 +2,8 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
+import java.util.Optional;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -12,13 +14,13 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
@@ -40,15 +42,23 @@ public class TestResource {
   private final SingularityMesosScheduler scheduler;
   private final SingularityTaskReconciliation taskReconciliation;
   private final SingularityHistoryPurger historyPurger;
+  private final HistoryManager historyManager;
 
   @Inject
-  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityMesosScheduler scheduler, SingularityTaskReconciliation taskReconciliation, SingularityHistoryPurger historyPurger) {
+  public TestResource(SingularityConfiguration configuration,
+                      SingularityLeaderController managed,
+                      SingularityAbort abort,
+                      final SingularityMesosScheduler scheduler,
+                      SingularityTaskReconciliation taskReconciliation,
+                      SingularityHistoryPurger historyPurger,
+                      HistoryManager historyManager) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
     this.scheduler = scheduler;
     this.taskReconciliation = taskReconciliation;
     this.historyPurger = historyPurger;
+    this.historyManager = historyManager;
   }
 
   @POST
@@ -175,5 +185,31 @@ public class TestResource {
   public void runHistoryPurge() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
     historyPurger.runActionOnPoll();
+  }
+
+  @POST
+  @Path("/purge-history/request")
+  @Operation(
+      summary = "Run a request history purge",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
+  public void runRequestHistoryPurge() throws Exception {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    historyManager.purgeRequestHistory();
+  }
+
+  @POST
+  @Path("/purge-history/deploy")
+  @Operation(
+      summary = "Run a request history purge",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
+  public void runDeployHistoryPurge() throws Exception {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    historyManager.purgeDeployHistory();
   }
 }

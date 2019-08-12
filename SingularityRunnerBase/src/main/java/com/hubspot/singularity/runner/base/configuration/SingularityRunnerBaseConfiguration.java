@@ -1,11 +1,12 @@
 package com.hubspot.singularity.runner.base.configuration;
 
+import java.util.Optional;
+
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
@@ -26,20 +27,18 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private String logWatcherMetadataSuffix = ".tail.json";
 
-  @NotNull
   @JsonProperty
-  private Optional<String> sentryDsn = Optional.absent();
+  private Optional<String> sentryDsn = Optional.empty();
 
   @NotNull
   @JsonProperty
   private String sentryPrefix = "";
 
-  @NotNull
   @JsonProperty
-  private Optional<String> useCompressProgram = Optional.absent();
+  private Optional<String> useCompressProgram = Optional.empty();
 
   public SingularityRunnerBaseConfiguration() {
-    super(Optional.<String>absent());
+    super(Optional.<String>empty());
     this.setLoggingDirectory(Optional.of("/var/log/singularity/"));
   }
 

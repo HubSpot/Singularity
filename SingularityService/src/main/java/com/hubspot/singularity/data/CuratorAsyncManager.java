@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityId;
@@ -57,7 +57,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         paths.add(ZKPaths.makePath(parent, child));
       }
 
-      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.absent()).values());
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.empty()).values());
 
 
       return result;
@@ -240,7 +240,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>>empty()).values());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -248,7 +248,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   protected <T> Map<String, T> getAsyncWithPath(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent());
+      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>>empty());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -406,7 +406,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       checkLatch(latch, pathNameForLogs);
     } finally {
-      log(method.operationType, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>absent(), start, pathNameForLogs);
+      log(method.operationType, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>empty(), start, pathNameForLogs);
     }
 
     return results;

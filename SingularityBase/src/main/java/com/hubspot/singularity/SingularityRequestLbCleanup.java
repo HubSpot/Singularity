@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 @JsonIgnoreProperties (ignoreUnknown = true)
 public class SingularityRequestLbCleanup {

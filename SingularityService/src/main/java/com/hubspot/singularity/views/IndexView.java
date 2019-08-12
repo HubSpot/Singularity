@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
@@ -77,15 +76,15 @@ public class IndexView extends View {
 
     String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
 
-    this.appRoot = uiConfiguration.getAppRootOverride().or((rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot);
-    this.staticRoot = uiConfiguration.getStaticRootOverride().or(String.format("%s/static", singularityUriBase));
+    this.appRoot = uiConfiguration.getAppRootOverride().orElse((rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot);
+    this.staticRoot = uiConfiguration.getStaticRootOverride().orElse(String.format("%s/static", singularityUriBase));
     this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
-    this.apiRoot = uiConfiguration.getApiRootOverride().or(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
+    this.apiRoot = uiConfiguration.getApiRootOverride().orElse(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
 
     this.title = uiConfiguration.getTitle();
 
     this.slaveHttpPort = configuration.getSlaveHttpPort();
-    this.slaveHttpsPort = configuration.getSlaveHttpsPort().orNull();
+    this.slaveHttpsPort = configuration.getSlaveHttpsPort().orElse(null);
 
     this.defaultCpus = configuration.getDefaultCpus();
     this.defaultMemory = configuration.getDefaultMemory();
@@ -95,12 +94,12 @@ public class IndexView extends View {
     this.hideNewRequestButton = uiConfiguration.isHideNewRequestButton();
     this.loadBalancingEnabled = configuration.isLoadBalancingEnabled();
 
-    this.navColor = uiConfiguration.getNavColor().or("");
+    this.navColor = uiConfiguration.getNavColor().orElse("");
 
     this.defaultBounceExpirationMinutes = configuration.getBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
-    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().orElse(0);
     this.defaultStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
 
     this.runningTaskLogPath = uiConfiguration.getRunningTaskLogPath();
@@ -108,19 +107,19 @@ public class IndexView extends View {
 
     this.showTaskDiskResource = uiConfiguration.isShowTaskDiskResource();
 
-    this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
+    this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().orElse("");
 
-    this.taskS3LogOmitPrefix = uiConfiguration.getTaskS3LogOmitPrefix().or("");
+    this.taskS3LogOmitPrefix = uiConfiguration.getTaskS3LogOmitPrefix().orElse("");
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
 
-    this.redirectOnUnauthorizedUrl = uiConfiguration.getRedirectOnUnauthorizedUrl().or("");
+    this.redirectOnUnauthorizedUrl = uiConfiguration.getRedirectOnUnauthorizedUrl().orElse("");
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
       this.shellCommands = ow.writeValueAsString(uiConfiguration.getShellCommands());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     this.shortenSlaveUsageHostname = uiConfiguration.isShortenSlaveUsageHostname();
@@ -129,7 +128,7 @@ public class IndexView extends View {
 
     this.timestampWithSecondsFormat = uiConfiguration.getTimestampWithSecondsFormat();
 
-    this.extraScript = uiConfiguration.getExtraScript().orNull();
+    this.extraScript = uiConfiguration.getExtraScript().orElse(null);
 
     this.generateAuthHeader = configuration.isGenerateAuthHeader();
     this.authCookieName = uiConfiguration.getAuthCookieName();
@@ -138,13 +137,13 @@ public class IndexView extends View {
     try {
       this.quickLinks = ow.writeValueAsString(uiConfiguration.getQuickLinks());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
       this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getNavTitleLinks());
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

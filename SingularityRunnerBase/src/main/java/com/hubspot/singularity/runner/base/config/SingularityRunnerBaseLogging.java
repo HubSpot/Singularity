@@ -2,12 +2,12 @@ package com.hubspot.singularity.runner.base.config;
 
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -61,9 +61,12 @@ public class SingularityRunnerBaseLogging {
 
   public Optional<String> getRootLogPath() {
     if (primaryConfiguration.getLoggingFilename().isPresent()) {
-      return Optional.of(Paths.get(primaryConfiguration.getLoggingDirectory().or(baseConfiguration.getLoggingDirectory()).or(BaseRunnerConfiguration.DEFAULT_DIRECTORY)).resolve(primaryConfiguration.getLoggingFilename().get()).toString());
+      String path = primaryConfiguration.getLoggingDirectory().isPresent() ?
+          primaryConfiguration.getLoggingDirectory().get() :
+          baseConfiguration.getLoggingDirectory().orElse(BaseRunnerConfiguration.DEFAULT_DIRECTORY);
+      return Optional.of(Paths.get(path).resolve(primaryConfiguration.getLoggingFilename().get()).toString());
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -71,7 +74,7 @@ public class SingularityRunnerBaseLogging {
     for (BaseRunnerConfiguration configuration : configurations) {
       try {
         final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
-        final String filename = consolidatedConfigFilename.or(annotation == null ? "(unknown)" : annotation.filename());
+        final String filename = consolidatedConfigFilename.orElse(annotation == null ? "(unknown)" : annotation.filename());
         LOG.trace(String.format("Loaded %s from %s:%n%s", configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)));
       } catch (Exception e) {
         LOG.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
@@ -120,7 +123,8 @@ public class SingularityRunnerBaseLogging {
 
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern(primaryConfiguration.getLoggingPattern().or(baseConfiguration.getLoggingPattern()).or(JavaUtils.LOGBACK_LOGGING_PATTERN));
+    encoder.setPattern(primaryConfiguration.getLoggingPattern()
+        .orElse(baseConfiguration.getLoggingPattern().isPresent() ? baseConfiguration.getLoggingPattern().get() : JavaUtils.LOGBACK_LOGGING_PATTERN));
     encoder.start();
 
     fileAppender.setEncoder(encoder);

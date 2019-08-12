@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -11,7 +12,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
@@ -114,10 +114,10 @@ public class DisastersResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The action to disable") @PathParam("action") SingularityAction action,
       @RequestBody(description = "Notes related to a particular disabled action") SingularityDisabledActionRequest disabledActionRequest) {
-    final Optional<SingularityDisabledActionRequest> maybeRequest = Optional.fromNullable(disabledActionRequest);
+    final Optional<SingularityDisabledActionRequest> maybeRequest = Optional.ofNullable(disabledActionRequest);
     authorizationHelper.checkAdminAuthorization(user);
-    Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>absent();
-    disasterManager.disable(action, message, Optional.of(user), false, Optional.absent());
+    Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>empty();
+    disasterManager.disable(action, message, Optional.of(user), false, Optional.empty());
   }
 
   @DELETE

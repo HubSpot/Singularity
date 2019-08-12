@@ -1,12 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.TimeZone;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.google.common.base.Optional;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class SingularityS3Test {
 
@@ -19,42 +18,42 @@ public class SingularityS3Test {
     long start = 1414610537117L; // Wed, 29 Oct 2014 19:22:17 GMT
     long end = 1415724215000L; // Tue, 11 Nov 2014 16:43:35 GMT
 
-    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%taskId", taskId, Optional.<String>empty(), start, end, "default");
 
-    Assert.assertTrue(prefixes.size() == 2);
+    Assertions.assertTrue(prefixes.size() == 2);
 
     end = 1447265861000L; // Tue, 11 Nov 2015 16:43:35 GMT
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%taskId", taskId, Optional.<String>empty(), start, end, "default");
 
-    Assert.assertTrue(prefixes.size() == 2);
+    Assertions.assertTrue(prefixes.size() == 2);
 
     start = 1415750399999L;
     end = 1415771999000L;
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%d/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%d/%taskId", taskId, Optional.<String>empty(), start, end, "default");
 
-    Assert.assertTrue(prefixes.size() == 2);
+    Assertions.assertTrue(prefixes.size() == 2);
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%requestId/%group/%Y/%m", taskId, Optional.<String> absent(), start, end, "groupName");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%requestId/%group/%Y/%m", taskId, Optional.<String>empty(), start, end, "groupName");
 
-    Assert.assertEquals("rid/groupName/2014/11", prefixes.iterator().next());
+    Assertions.assertEquals("rid/groupName/2014/11", prefixes.iterator().next());
 
     final long NOV2014TUES11 = 1415724215000L;
 
-    Assert.assertEquals("wat-hostname", SingularityS3FormatHelper.getKey("wat-%host", 0, System.currentTimeMillis(), "filename", "hostname"));
-    Assert.assertEquals("file1.txt-2", SingularityS3FormatHelper.getKey("%filename-%index", 2, System.currentTimeMillis(), "file1.txt", "hostname"));
-    Assert.assertEquals("yo-2014-11-" + NOV2014TUES11 + "-.txt", SingularityS3FormatHelper.getKey("yo-%Y-%m-%s-%fileext", 2, NOV2014TUES11, "file1.txt", "hostname"));
+    Assertions.assertEquals("wat-hostname", SingularityS3FormatHelper.getKey("wat-%host", 0, System.currentTimeMillis(), "filename", "hostname"));
+    Assertions.assertEquals("file1.txt-2", SingularityS3FormatHelper.getKey("%filename-%index", 2, System.currentTimeMillis(), "file1.txt", "hostname"));
+    Assertions.assertEquals("yo-2014-11-" + NOV2014TUES11 + "-.txt", SingularityS3FormatHelper.getKey("yo-%Y-%m-%s-%fileext", 2, NOV2014TUES11, "file1.txt", "hostname"));
 
     String guid = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", "hostname");
 
-    Assert.assertTrue(guid.startsWith("yo-"));
+    Assertions.assertTrue(guid.startsWith("yo-"));
 
-    Assert.assertTrue(guid.length() > 10);
+    Assertions.assertTrue(guid.length() > 10);
 
     String guid2 = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", "hostname");
 
-    Assert.assertTrue(!guid.equals(guid2));
+    Assertions.assertTrue(!guid.equals(guid2));
 
   }
 

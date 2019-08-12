@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Named;
@@ -16,7 +17,6 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
@@ -64,7 +64,7 @@ public class SingularityAbort implements ConnectionStateListener {
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
     if (newState == ConnectionState.LOST) {
       LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION, Optional.absent());
+      abort(AbortReason.LOST_ZK_CONNECTION, Optional.empty());
     }
   }
 

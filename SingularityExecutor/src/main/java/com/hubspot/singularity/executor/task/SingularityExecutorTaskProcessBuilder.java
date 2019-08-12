@@ -5,13 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.ArtifactList;
@@ -69,7 +69,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     this.templateManager = templateManager;
     this.configuration = configuration;
     this.executorPid = executorPid;
-    this.taskArtifactFetcher = Optional.absent();
+    this.taskArtifactFetcher = Optional.empty();
     this.dockerUtils = dockerUtils;
   }
 
@@ -173,14 +173,14 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         cmd,
         configuration.getTaskAppDirectory(),
         configuration.getLogrotateToDirectory(),
-        executorData.getUser().or(configuration.getDefaultRunAsUser()),
+        executorData.getUser().orElse(configuration.getDefaultRunAsUser()),
         serviceLog,
         serviceLogOutPath(serviceLog),
         task.getTaskId(),
-        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-        !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
-        executorData.getMaxOpenFiles().orNull(),
-        String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
+        executorData.getMaxTaskThreads().isPresent() ? executorData.getMaxTaskThreads() : configuration.getMaxTaskThreads(),
+        !getExecutorUser().equals(executorData.getUser().orElse(configuration.getDefaultRunAsUser())),
+        executorData.getMaxOpenFiles().orElse(null),
+        String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().orElse(configuration.getDefaultRunAsUser())),
         configuration.isUseFileAttributes(),
         getCfsQuota(executorData),
         configuration.getDefaultCfsPeriod(),

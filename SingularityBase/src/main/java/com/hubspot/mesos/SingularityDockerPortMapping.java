@@ -1,10 +1,10 @@
 package com.hubspot.mesos;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -25,11 +25,11 @@ public class SingularityDockerPortMapping {
                                       @JsonProperty("hostPortType") Optional<SingularityPortMappingType> hostPortType,
                                       @JsonProperty("hostPort") int hostPort,
                                       @JsonProperty("protocol") Optional<String> protocol) {
-    this.containerPortType = containerPortType.or(DEFAULT_PORT_MAPPING_TYPE);
+    this.containerPortType = containerPortType.orElse(DEFAULT_PORT_MAPPING_TYPE);
     this.containerPort = containerPort;
-    this.hostPortType = hostPortType.or(DEFAULT_PORT_MAPPING_TYPE);
+    this.hostPortType = hostPortType.orElse(DEFAULT_PORT_MAPPING_TYPE);
     this.hostPort = hostPort;
-    this.protocol = protocol.or(DEFAULT_PROTOCOL);
+    this.protocol = protocol.orElse(DEFAULT_PROTOCOL);
   }
 
   @Schema(description = "Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")

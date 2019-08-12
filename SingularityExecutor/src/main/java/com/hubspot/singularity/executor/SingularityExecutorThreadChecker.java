@@ -5,10 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,17 +18,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
@@ -44,13 +51,15 @@ public class SingularityExecutorThreadChecker {
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
   private final DockerUtils dockerUtils;
+  private final ObjectMapper objectMapper;
 
   private SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerUtils dockerUtils) {
+  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.configuration = configuration;
     this.dockerUtils = dockerUtils;
+    this.objectMapper = objectMapper;
 
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getThreadCheckThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorThreadCheckerThread-%d").build());
   }
@@ -86,10 +95,10 @@ public class SingularityExecutorThreadChecker {
 
       final int maxThreads = taskProcess.getTask().getExecutorData().getMaxTaskThreads().get();
 
-      int usedThreads = 0;
+      final AtomicInteger usedThreads = new AtomicInteger(0);
 
       try {
-        usedThreads = getNumUsedThreads(taskProcess);
+        usedThreads.set(getNumUsedThreads(taskProcess));
         LOG.trace("{} is using {} threads", taskProcess.getTask().getTaskId(), usedThreads);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
@@ -101,13 +110,51 @@ public class SingularityExecutorThreadChecker {
         continue;
       }
 
-      if (usedThreads > maxThreads) {
+      if (usedThreads.get() > maxThreads) {
         taskProcess.getTask().getLog().info("{} using too many threads: {} (max {})", taskProcess.getTask().getTaskId(), usedThreads, maxThreads);
 
-        taskProcess.getTask().markKilledDueToThreads(usedThreads);
-        KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+        if (configuration.getRunShellCommandBeforeKillDueToThreads().isPresent()) {
+          SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(
+              SingularityTaskId.valueOf(taskProcess.getTask().getTaskId()),
+              Optional.empty(),
+              System.currentTimeMillis(),
+              configuration.getRunShellCommandBeforeKillDueToThreads().get()
+          );
 
-        taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+          SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(
+              objectMapper, shellRequest, taskProcess.getTask()
+          );
+
+          SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, configuration, taskProcess.getTask(),
+              taskProcess, monitor.getShellCommandExecutorServiceForTask(taskProcess.getTask().getTaskId()), updater);
+
+          Futures.addCallback(shellRunner.start(), new FutureCallback<Integer>() {
+            @Override
+            public void onSuccess(Integer result) {
+              taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+              KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+              taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+              taskProcess.getTask().getLog().warn("Unable to run pre-threadkill shell command {} for {}!", configuration.getRunShellCommandBeforeKillDueToThreads().get().getName(), taskProcess.getTask().getTaskId(), t);
+              taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+              KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+              taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+
+            }
+          }, monitor.getShellCommandExecutorServiceForTask(taskProcess.getTask().getTaskId()));
+        } else {
+          taskProcess.getTask().markKilledDueToThreads(usedThreads.get());
+          KillState killState = monitor.requestKill(taskProcess.getTask().getTaskId());
+
+          taskProcess.getTask().getLog().info("Killing {} due to thread overage (kill state {})", taskProcess.getTask().getTaskId(), killState);
+        }
+
       }
     }
   }
@@ -117,7 +164,7 @@ public class SingularityExecutorThreadChecker {
   }
 
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
-    Optional<Integer> dockerPid = Optional.absent();
+    Optional<Integer> dockerPid = Optional.empty();
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
       try {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
@@ -142,7 +189,7 @@ public class SingularityExecutorThreadChecker {
         return 0;
       }
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -165,18 +212,18 @@ public class SingularityExecutorThreadChecker {
 
   private Optional<Integer> getNumThreadsFromCommand(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid, String commandFormat) throws InterruptedException, ProcessFailedException {
     SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
-    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format(commandFormat, dockerPid.or(taskProcess.getCurrentPid().get())));
+    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format(commandFormat, dockerPid.orElse(taskProcess.getCurrentPid().get())));
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
     if (output.isEmpty()) {
       LOG.warn("Output from ls was empty ({})", cmd);
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(Integer.parseInt(output.get(0)));
     }
   }
 
   private Optional<Integer> getNumThreadsFromProcStatus(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
-    final Path procStatusPath = Paths.get(String.format("/proc/%s/status", dockerPid.or(taskProcess.getCurrentPid().get())));
+    final Path procStatusPath = Paths.get(String.format("/proc/%s/status", dockerPid.orElse(taskProcess.getCurrentPid().get())));
     if (Files.exists(procStatusPath)) {
       for (String line : Files.readAllLines(procStatusPath, Charsets.UTF_8)) {
         final Matcher matcher = PROC_STATUS_THREADS_REGEX.matcher(line);
@@ -185,15 +232,15 @@ public class SingularityExecutorThreadChecker {
         }
       }
       LOG.warn("Unable to parse threads from proc status file {}", procStatusPath);
-      return Optional.absent();
+      return Optional.empty();
     } else {
-      LOG.warn("Proc status file does not exist for pid {}", dockerPid.or(taskProcess.getCurrentPid().get()));
-      return Optional.absent();
+      LOG.warn("Proc status file does not exist for pid {}", dockerPid.orElse(taskProcess.getCurrentPid().get()));
+      return Optional.empty();
     }
   }
 
   private Optional<Integer> getNumThreadsFromCgroup(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
-    final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
+    final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.orElse(taskProcess.getCurrentPid().get())));
     if (Files.exists(procCgroupPath)) {
       for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
         final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
@@ -202,10 +249,10 @@ public class SingularityExecutorThreadChecker {
         }
       }
       LOG.warn("Unable to parse cgroup container from {}", procCgroupPath.toString());
-      return Optional.absent();
+      return Optional.empty();
     } else {
       LOG.warn("cgroup {} does not exist", procCgroupPath.toString());
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

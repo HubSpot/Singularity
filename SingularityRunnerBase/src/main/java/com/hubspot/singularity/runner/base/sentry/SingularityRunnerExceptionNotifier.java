@@ -1,8 +1,8 @@
 package com.hubspot.singularity.runner.base.sentry;
 
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,7 +25,7 @@ public class SingularityRunnerExceptionNotifier {
     if (configuration.getSentryDsn().isPresent()) {
       this.raven = Optional.of(RavenFactory.ravenInstance(configuration.getSentryDsn().get()));
     } else {
-      this.raven = Optional.absent();
+      this.raven = Optional.empty();
     }
   }
 
@@ -67,7 +67,7 @@ public class SingularityRunnerExceptionNotifier {
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
-        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+        eventBuilder.withExtra(entry.getKey(), entry.getValue());
       }
     }
 

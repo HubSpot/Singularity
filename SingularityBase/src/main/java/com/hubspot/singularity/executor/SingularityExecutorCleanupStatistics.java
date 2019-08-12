@@ -1,8 +1,9 @@
 package com.hubspot.singularity.executor;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 
 public class SingularityExecutorCleanupStatistics {
@@ -124,7 +125,7 @@ public class SingularityExecutorCleanupStatistics {
     }
 
     public SingularityExecutorCleanupStatistics build() {
-      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, waitingTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks, Optional.fromNullable(errorMessage));
+      return new SingularityExecutorCleanupStatistics(totalTaskFiles, mesosRunningTasks, waitingTasks, runningTasksIgnored, successfullyCleanedTasks, ioErrorTasks, errorTasks, invalidTasks, Optional.ofNullable(errorMessage));
     }
 
   }

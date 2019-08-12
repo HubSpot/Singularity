@@ -10,7 +10,6 @@ import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.retry.RetryOneTime;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 @Singleton
@@ -40,7 +39,7 @@ public class ExecutorIdGenerator {
       Preconditions.checkState(atomic.succeeded(), "Atomic increment did not succeed");
       return convertUsingAlphabet(atomic.postValue());
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 

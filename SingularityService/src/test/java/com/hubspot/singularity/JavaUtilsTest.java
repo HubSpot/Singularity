@@ -4,13 +4,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 
@@ -27,7 +27,7 @@ public class JavaUtilsTest {
 
     Thread.sleep(timeoutMillis + 100);
 
-    Assert.assertTrue(es.getPoolSize() == 0);
+    Assertions.assertTrue(es.getPoolSize() == 0);
 
     final CountDownLatch block = new CountDownLatch(1);
     final CountDownLatch cdl = new CountDownLatch(numMaxThreads);
@@ -42,7 +42,7 @@ public class JavaUtilsTest {
             cdl.await();
             block.await();
           } catch (Throwable t) {
-            throw Throwables.propagate(t);
+            throw new RuntimeException(t);
           }
         }
       });
@@ -50,12 +50,12 @@ public class JavaUtilsTest {
 
     cdl.await();
     // all threads are running:
-    Assert.assertTrue(es.getPoolSize() == numMaxThreads);
+    Assertions.assertTrue(es.getPoolSize() == numMaxThreads);
     block.countDown();
 
     Thread.sleep(timeoutMillis + 100);
-    Assert.assertTrue(es.getMaximumPoolSize() == numMaxThreads);
-    Assert.assertTrue(es.getPoolSize() == 0);
+    Assertions.assertTrue(es.getMaximumPoolSize() == numMaxThreads);
+    Assertions.assertTrue(es.getPoolSize() == 0);
 
     es.shutdown();
     es.awaitTermination(timeoutMillis + 1, TimeUnit.MILLISECONDS);
@@ -64,9 +64,10 @@ public class JavaUtilsTest {
   @Test
   public void testSingularityTaskIdSerialization() throws Exception {
     ObjectMapper om = Jackson.newObjectMapper()
-        .setSerializationInclusion(Include.NON_NULL)
+        .setSerializationInclusion(Include.NON_ABSENT)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .registerModule(new ProtobufModule());
+        .registerModule(new ProtobufModule())
+        .registerModule(new Jdk8Module());
 
     SingularityTaskId taskId = new SingularityTaskId("rid", "did", 100, 1, "host", "rack");
     String id = taskId.getId();
@@ -80,14 +81,14 @@ public class JavaUtilsTest {
 
   private void assertEquals(SingularityTaskId one, SingularityTaskId two) {
 
-    Assert.assertEquals(one, two);
+    Assertions.assertEquals(one, two);
 
-    Assert.assertEquals(one.getDeployId(), two.getDeployId());
-    Assert.assertEquals(one.getRequestId(), two.getRequestId());
-    Assert.assertEquals(one.getSanitizedHost(), two.getSanitizedHost());
-    Assert.assertEquals(one.getSanitizedRackId(), two.getSanitizedRackId());
-    Assert.assertEquals(one.getStartedAt(), two.getStartedAt());
-    Assert.assertEquals(one.getInstanceNo(), two.getInstanceNo());
+    Assertions.assertEquals(one.getDeployId(), two.getDeployId());
+    Assertions.assertEquals(one.getRequestId(), two.getRequestId());
+    Assertions.assertEquals(one.getSanitizedHost(), two.getSanitizedHost());
+    Assertions.assertEquals(one.getSanitizedRackId(), two.getSanitizedRackId());
+    Assertions.assertEquals(one.getStartedAt(), two.getStartedAt());
+    Assertions.assertEquals(one.getInstanceNo(), two.getInstanceNo());
   }
 
 }

@@ -6,12 +6,13 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Settings that apply to all tasks and deploys assocaited with this request")
@@ -80,7 +81,7 @@ public class SingularityRequest {
                             @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
                             @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
                             @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
-                            @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon,
+                            @JsonProperty("daemon") Optional<Boolean> daemon,
                             @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
                             @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex,
                             @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,
@@ -277,7 +278,7 @@ public class SingularityRequest {
 
   @JsonIgnore
   public int getInstancesSafe() {
-    return getInstances().or(1);
+    return getInstances().orElse(1);
   }
 
   @JsonIgnore
@@ -316,17 +317,17 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isRackSensitive() {
-    return rackSensitive.or(false);
+    return rackSensitive.orElse(false);
   }
 
   @JsonIgnore
   public boolean isLoadBalanced() {
-    return loadBalanced.or(false);
+    return loadBalanced.orElse(false);
   }
 
   @JsonIgnore
   public ScheduleType getScheduleTypeSafe() {
-    return scheduleType.or(ScheduleType.CRON);
+    return scheduleType.orElse(ScheduleType.CRON);
   }
 
   @Schema(nullable = true, description = "When a scheduled job finishes, wait at least this long before rescheduling it")

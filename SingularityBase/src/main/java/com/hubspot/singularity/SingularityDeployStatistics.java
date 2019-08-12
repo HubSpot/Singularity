@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -87,12 +88,12 @@ public class SingularityDeployStatistics {
     return deployId;
   }
 
-  @Schema(description = "Number of tasks that have finished successfully for this deploy")
+  @Schema(description = "Number of sequential successful tasks (used in cooldown calculations)")
   public int getNumSuccess() {
     return numSuccess;
   }
 
-  @Schema(description = "Number of tasks that have finished with a failure for this deploy")
+  @Schema(description = "Number of sequential failed tasks (used in cooldown calculations)")
   public int getNumFailures() {
     return numFailures;
   }

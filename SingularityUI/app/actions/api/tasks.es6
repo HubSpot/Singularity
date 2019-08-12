@@ -2,25 +2,31 @@ import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchTasksInState = buildApiAction(
   'FETCH_TASKS',
-  (state, renderNotFoundIf404) => {
+  (state, renderNotFoundIf404, showResources) => {
     const stateToFetch = state !== 'decommissioning' ? state : 'active';
-
+    let ids = ""
     let propertyString = '?property=';
     const propertyJoin = '&property=';
 
     switch (stateToFetch) {
       case 'active':
-        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        if (showResources) {
+          propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        } else {
+          ids = "/ids"
+          propertyString = '';
+        }
         break;
       case 'scheduled':
-        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join(propertyJoin);
+        ids = "/ids"
+        propertyString = '';
         break;
       default:
         propertyString = '';
     }
 
     return {
-      url: `/tasks/${stateToFetch}${propertyString}`,
+      url: `/tasks/${stateToFetch}${ids}${propertyString}`,
       renderNotFoundIf404
     };
   }

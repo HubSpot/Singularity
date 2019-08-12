@@ -4,6 +4,7 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -11,13 +12,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
 import org.eclipse.jetty.util.component.LifeCycle;
+import org.jdbi.v3.core.Jdbi;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -54,6 +56,8 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.managed.SingularityLifecycleManaged;
+import com.hubspot.singularity.managed.SingularityLifecycleManagedTest;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -81,17 +85,14 @@ public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
   private final ObjectMapper om = Jackson.newObjectMapper()
-      .setSerializationInclusion(Include.NON_NULL)
+      .setSerializationInclusion(Include.NON_ABSENT)
       .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      .registerModule(new ProtobufModule());
+      .registerModule(new ProtobufModule())
+      .registerModule(new Jdk8Module());
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
   private final Function<SingularityConfiguration, Void> customConfigSetup;
-
-  public SingularityTestModule(boolean useDbTests) throws Exception {
-    this(useDbTests, null);
-  }
 
   public SingularityTestModule(boolean useDbTests,Function<SingularityConfiguration, Void> customConfigSetup) throws Exception {
     this.useDBTests = useDbTests;
@@ -143,6 +144,8 @@ public class SingularityTestModule implements Module {
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
+    } else {
+      mainBinder.bind(Jdbi.class).toProvider(() -> null);
     }
 
     if (customConfigSetup != null) {
@@ -177,9 +180,10 @@ public class SingularityTestModule implements Module {
             binder.bind(Environment.class).toInstance(environment);
 
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+            binder.bind(SingularityLifecycleManaged.class).to(SingularityLifecycleManagedTest.class).asEagerSingleton();
 
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
-            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>empty());
+            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>empty());
 
             binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
               @Override

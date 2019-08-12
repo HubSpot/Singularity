@@ -4,11 +4,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 
 public class S3Configuration {
@@ -61,9 +61,9 @@ public class S3Configuration {
   @NotNull
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
 
-  private Optional<String> s3StorageClass = Optional.absent();
+  private Optional<String> s3StorageClass = Optional.empty();
 
-  private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
+  private Optional<Long> applyS3StorageClassAfterBytes = Optional.empty();
 
   public int getMaxS3Threads() {
     return maxS3Threads;

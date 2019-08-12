@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -145,8 +145,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
     templateProperties.put("requestScheduled", request.isScheduled());
     templateProperties.put("requestOneOff", request.isOneOff());
 
-    templateProperties.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
-    templateProperties.put("numRetries", request.getNumRetriesOnFailure().or(0));
+    templateProperties.put("taskWillRetry", request.getNumRetriesOnFailure().orElse(0) > 0);
+    templateProperties.put("numRetries", request.getNumRetriesOnFailure().orElse(0));
 
     templateProperties.put("color", emailType.getColor());
   }
@@ -163,7 +163,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     templateProperties.put("taskId", taskId.getId());
     templateProperties.put("deployId", taskId.getDeployId());
 
-    templateProperties.put("taskDirectory", directory.or("directory missing"));
+    templateProperties.put("taskDirectory", directory.orElse("directory missing"));
 
     templateProperties.put("color", emailType.getColor());
 
@@ -191,7 +191,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
   private static Optional<TaskCleanupType> getTaskCleanupTypefromSingularityTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     if (!taskHistoryUpdate.getStatusMessage().isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String taskCleanupTypeMsg = taskHistoryUpdate.getStatusMessage().get();
@@ -206,7 +206,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       return Optional.of(TaskCleanupType.valueOf(taskCleanupTypeMsg.toUpperCase()));
     } catch (IllegalArgumentException iae) {
       LOG.warn("Couldn't parse TaskCleanupType from update {}", taskHistoryUpdate);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -255,7 +255,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       case TASK_LOST:
         return Optional.of(SingularityEmailType.TASK_LOST);
       default:
-        return Optional.absent();
+        return Optional.empty();
     }
   }
 
@@ -329,7 +329,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
-    final Optional<String> user = task.isPresent() ? task.get().getTaskRequest().getPendingTask().getUser() : Optional.<String> absent();
+    final Optional<String> user = task.isPresent() ? task.get().getTaskRequest().getPendingTask().getUser() : Optional.<String>empty();
 
     queueMail(emailDestination, request, emailType, user, subject, body);
   }
@@ -453,7 +453,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     Boolean killTasks = Boolean.TRUE;
 
-    Optional<String> message = Optional.absent();
+    Optional<String> message = Optional.empty();
 
     if (pauseRequest.isPresent()) {
       setupExpireFormat(additionalProperties, pauseRequest.get().getDurationMillis());
@@ -472,14 +472,14 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
   @Override
   public void sendRequestUnpausedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
-    sendRequestMail(request, RequestMailType.UNPAUSED, user, message, Optional.<Map<String, Object>> absent());
+    sendRequestMail(request, RequestMailType.UNPAUSED, user, message, Optional.<Map<String, Object>>empty());
   }
 
   @Override
   public void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user) {
     Map<String, Object> additionalProperties = new HashMap<>();
 
-    Optional<String> message = Optional.absent();
+    Optional<String> message = Optional.empty();
 
     if (newScaleRequest.isPresent()) {
       setupExpireFormat(additionalProperties, newScaleRequest.get().getDurationMillis());
@@ -487,14 +487,14 @@ public class SmtpMailer implements SingularityMailer, Managed {
     }
 
     additionalProperties.put("newInstances", request.getInstancesSafe());
-    additionalProperties.put("oldInstances", formerInstances.or(1));
+    additionalProperties.put("oldInstances", formerInstances.orElse(1));
 
     sendRequestMail(request, RequestMailType.SCALED, user, message, Optional.of(additionalProperties));
   }
 
   @Override
   public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
-    sendRequestMail(request, RequestMailType.REMOVED, user, message, Optional.<Map<String, Object>> absent());
+    sendRequestMail(request, RequestMailType.REMOVED, user, message, Optional.<Map<String, Object>>empty());
   }
 
   @Override
@@ -526,11 +526,11 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String subject = String.format("Replacement tasks for request %s are unhealthy — Singularity", request.getId());
 
-    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
 
     final String body = Jade4J.render(replacementTasksFailingTemplate, templateProperties);
 
-    queueMail(emailDestination, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING, Optional.<String> absent(), subject, body);
+    queueMail(emailDestination, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING, Optional.<String>empty(), subject, body);
   }
 
   @Override
@@ -562,13 +562,13 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
 
-    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
     templateProperties.put("cooldownDelayFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())));
-    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
+    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getSlowCooldownExpiresMinutesWithoutFailure())));
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 
-    queueMail(emailDestination, request, SingularityEmailType.REQUEST_IN_COOLDOWN, Optional.<String> absent(), subject, body);
+    queueMail(emailDestination, request, SingularityEmailType.REQUEST_IN_COOLDOWN, Optional.<String>empty(), subject, body);
   }
 
   @Override

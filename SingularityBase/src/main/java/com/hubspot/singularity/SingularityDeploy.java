@@ -8,11 +8,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -184,9 +184,13 @@ public class SingularityDeploy {
     this.runImmediatelyRequest = runImmediatelyRequest;
 
     this.labels = labels;
-    this.mesosLabels = mesosLabels.or(labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.<List<SingularityMesosTaskLabel>>absent());
+    this.mesosLabels = mesosLabels.isPresent() ?
+        mesosLabels :
+        (labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.empty());
     this.taskLabels = taskLabels;
-    this.mesosTaskLabels = mesosTaskLabels.or(taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.<Map<Integer,List<SingularityMesosTaskLabel>>>absent());
+    this.mesosTaskLabels = mesosTaskLabels.isPresent() ?
+        mesosTaskLabels :
+        (taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.empty());
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -201,17 +205,17 @@ public class SingularityDeploy {
       this.healthcheck = Optional.of(new HealthcheckOptions(
         healthcheckUri.get(),
         healthcheckPortIndex,
-        Optional.<Long>absent(),
+        Optional.<Long>empty(),
         healthcheckProtocol,
-        Optional.<HealthcheckMethod>absent(),
-        Optional.<Integer>absent(),
-        Optional.<Integer>absent(),
-        Optional.<Integer>absent(),
-        healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>absent(),
-        healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>absent(),
+        Optional.<HealthcheckMethod>empty(),
+        Optional.<Integer>empty(),
+        Optional.<Integer>empty(),
+        Optional.<Integer>empty(),
+        healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>empty(),
+        healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>empty(),
         healthcheckMaxRetries,
-        Optional.<List<Integer>>absent(),
-        Optional.absent()));
+        Optional.<List<Integer>>empty(),
+        Optional.empty()));
     } else {
       this.healthcheck = healthcheck;
     }
@@ -547,6 +551,218 @@ public class SingularityDeploy {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityDeploy that = (SingularityDeploy) o;
+
+    if (requestId != null ? !requestId.equals(that.requestId) : that.requestId != null) {
+      return false;
+    }
+    if (id != null ? !id.equals(that.id) : that.id != null) {
+      return false;
+    }
+    if (version != null ? !version.equals(that.version) : that.version != null) {
+      return false;
+    }
+    if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) {
+      return false;
+    }
+    if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) {
+      return false;
+    }
+    if (containerInfo != null ? !containerInfo.equals(that.containerInfo) : that.containerInfo != null) {
+      return false;
+    }
+    if (customExecutorCmd != null ? !customExecutorCmd.equals(that.customExecutorCmd) : that.customExecutorCmd != null) {
+      return false;
+    }
+    if (customExecutorId != null ? !customExecutorId.equals(that.customExecutorId) : that.customExecutorId != null) {
+      return false;
+    }
+    if (customExecutorSource != null ? !customExecutorSource.equals(that.customExecutorSource) : that.customExecutorSource != null) {
+      return false;
+    }
+    if (customExecutorResources != null ? !customExecutorResources.equals(that.customExecutorResources) : that.customExecutorResources != null) {
+      return false;
+    }
+    if (resources != null ? !resources.equals(that.resources) : that.resources != null) {
+      return false;
+    }
+    if (command != null ? !command.equals(that.command) : that.command != null) {
+      return false;
+    }
+    if (arguments != null ? !arguments.equals(that.arguments) : that.arguments != null) {
+      return false;
+    }
+    if (env != null ? !env.equals(that.env) : that.env != null) {
+      return false;
+    }
+    if (uris != null ? !uris.equals(that.uris) : that.uris != null) {
+      return false;
+    }
+    if (executorData != null ? !executorData.equals(that.executorData) : that.executorData != null) {
+      return false;
+    }
+    if (labels != null ? !labels.equals(that.labels) : that.labels != null) {
+      return false;
+    }
+    if (mesosLabels != null ? !mesosLabels.equals(that.mesosLabels) : that.mesosLabels != null) {
+      return false;
+    }
+    if (taskLabels != null ? !taskLabels.equals(that.taskLabels) : that.taskLabels != null) {
+      return false;
+    }
+    if (mesosTaskLabels != null ? !mesosTaskLabels.equals(that.mesosTaskLabels) : that.mesosTaskLabels != null) {
+      return false;
+    }
+    if (taskEnv != null ? !taskEnv.equals(that.taskEnv) : that.taskEnv != null) {
+      return false;
+    }
+    if (runImmediatelyRequest != null ? !runImmediatelyRequest.equals(that.runImmediatelyRequest) : that.runImmediatelyRequest != null) {
+      return false;
+    }
+    if (healthcheckUri != null ? !healthcheckUri.equals(that.healthcheckUri) : that.healthcheckUri != null) {
+      return false;
+    }
+    if (healthcheckIntervalSeconds != null ? !healthcheckIntervalSeconds.equals(that.healthcheckIntervalSeconds) : that.healthcheckIntervalSeconds != null) {
+      return false;
+    }
+    if (healthcheckTimeoutSeconds != null ? !healthcheckTimeoutSeconds.equals(that.healthcheckTimeoutSeconds) : that.healthcheckTimeoutSeconds != null) {
+      return false;
+    }
+    if (healthcheckPortIndex != null ? !healthcheckPortIndex.equals(that.healthcheckPortIndex) : that.healthcheckPortIndex != null) {
+      return false;
+    }
+    if (healthcheckProtocol != null ? !healthcheckProtocol.equals(that.healthcheckProtocol) : that.healthcheckProtocol != null) {
+      return false;
+    }
+    if (healthcheckMaxRetries != null ? !healthcheckMaxRetries.equals(that.healthcheckMaxRetries) : that.healthcheckMaxRetries != null) {
+      return false;
+    }
+    if (healthcheckMaxTotalTimeoutSeconds != null ? !healthcheckMaxTotalTimeoutSeconds.equals(that.healthcheckMaxTotalTimeoutSeconds) : that.healthcheckMaxTotalTimeoutSeconds != null) {
+      return false;
+    }
+    if (healthcheck != null ? !healthcheck.equals(that.healthcheck) : that.healthcheck != null) {
+      return false;
+    }
+    if (skipHealthchecksOnDeploy != null ? !skipHealthchecksOnDeploy.equals(that.skipHealthchecksOnDeploy) : that.skipHealthchecksOnDeploy != null) {
+      return false;
+    }
+    if (deployHealthTimeoutSeconds != null ? !deployHealthTimeoutSeconds.equals(that.deployHealthTimeoutSeconds) : that.deployHealthTimeoutSeconds != null) {
+      return false;
+    }
+    if (considerHealthyAfterRunningForSeconds != null ? !considerHealthyAfterRunningForSeconds.equals(that.considerHealthyAfterRunningForSeconds) : that.considerHealthyAfterRunningForSeconds != null) {
+      return false;
+    }
+    if (serviceBasePath != null ? !serviceBasePath.equals(that.serviceBasePath) : that.serviceBasePath != null) {
+      return false;
+    }
+    if (loadBalancerGroups != null ? !loadBalancerGroups.equals(that.loadBalancerGroups) : that.loadBalancerGroups != null) {
+      return false;
+    }
+    if (loadBalancerPortIndex != null ? !loadBalancerPortIndex.equals(that.loadBalancerPortIndex) : that.loadBalancerPortIndex != null) {
+      return false;
+    }
+    if (loadBalancerOptions != null ? !loadBalancerOptions.equals(that.loadBalancerOptions) : that.loadBalancerOptions != null) {
+      return false;
+    }
+    if (loadBalancerDomains != null ? !loadBalancerDomains.equals(that.loadBalancerDomains) : that.loadBalancerDomains != null) {
+      return false;
+    }
+    if (loadBalancerAdditionalRoutes != null ? !loadBalancerAdditionalRoutes.equals(that.loadBalancerAdditionalRoutes) : that.loadBalancerAdditionalRoutes != null) {
+      return false;
+    }
+    if (loadBalancerTemplate != null ? !loadBalancerTemplate.equals(that.loadBalancerTemplate) : that.loadBalancerTemplate != null) {
+      return false;
+    }
+    if (loadBalancerServiceIdOverride != null ? !loadBalancerServiceIdOverride.equals(that.loadBalancerServiceIdOverride) : that.loadBalancerServiceIdOverride != null) {
+      return false;
+    }
+    if (loadBalancerUpstreamGroup != null ? !loadBalancerUpstreamGroup.equals(that.loadBalancerUpstreamGroup) : that.loadBalancerUpstreamGroup != null) {
+      return false;
+    }
+    if (deployInstanceCountPerStep != null ? !deployInstanceCountPerStep.equals(that.deployInstanceCountPerStep) : that.deployInstanceCountPerStep != null) {
+      return false;
+    }
+    if (deployStepWaitTimeMs != null ? !deployStepWaitTimeMs.equals(that.deployStepWaitTimeMs) : that.deployStepWaitTimeMs != null) {
+      return false;
+    }
+    if (autoAdvanceDeploySteps != null ? !autoAdvanceDeploySteps.equals(that.autoAdvanceDeploySteps) : that.autoAdvanceDeploySteps != null) {
+      return false;
+    }
+    if (maxTaskRetries != null ? !maxTaskRetries.equals(that.maxTaskRetries) : that.maxTaskRetries != null) {
+      return false;
+    }
+    if (shell != null ? !shell.equals(that.shell) : that.shell != null) {
+      return false;
+    }
+    if (user != null ? !user.equals(that.user) : that.user != null) {
+      return false;
+    }
+    return s3UploaderAdditionalFiles != null ? s3UploaderAdditionalFiles.equals(that.s3UploaderAdditionalFiles) : that.s3UploaderAdditionalFiles == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = requestId != null ? requestId.hashCode() : 0;
+    result = 31 * result + (id != null ? id.hashCode() : 0);
+    result = 31 * result + (version != null ? version.hashCode() : 0);
+    result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
+    result = 31 * result + (containerInfo != null ? containerInfo.hashCode() : 0);
+    result = 31 * result + (customExecutorCmd != null ? customExecutorCmd.hashCode() : 0);
+    result = 31 * result + (customExecutorId != null ? customExecutorId.hashCode() : 0);
+    result = 31 * result + (customExecutorSource != null ? customExecutorSource.hashCode() : 0);
+    result = 31 * result + (customExecutorResources != null ? customExecutorResources.hashCode() : 0);
+    result = 31 * result + (resources != null ? resources.hashCode() : 0);
+    result = 31 * result + (command != null ? command.hashCode() : 0);
+    result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
+    result = 31 * result + (env != null ? env.hashCode() : 0);
+    result = 31 * result + (uris != null ? uris.hashCode() : 0);
+    result = 31 * result + (executorData != null ? executorData.hashCode() : 0);
+    result = 31 * result + (labels != null ? labels.hashCode() : 0);
+    result = 31 * result + (mesosLabels != null ? mesosLabels.hashCode() : 0);
+    result = 31 * result + (taskLabels != null ? taskLabels.hashCode() : 0);
+    result = 31 * result + (mesosTaskLabels != null ? mesosTaskLabels.hashCode() : 0);
+    result = 31 * result + (taskEnv != null ? taskEnv.hashCode() : 0);
+    result = 31 * result + (runImmediatelyRequest != null ? runImmediatelyRequest.hashCode() : 0);
+    result = 31 * result + (healthcheckUri != null ? healthcheckUri.hashCode() : 0);
+    result = 31 * result + (healthcheckIntervalSeconds != null ? healthcheckIntervalSeconds.hashCode() : 0);
+    result = 31 * result + (healthcheckTimeoutSeconds != null ? healthcheckTimeoutSeconds.hashCode() : 0);
+    result = 31 * result + (healthcheckPortIndex != null ? healthcheckPortIndex.hashCode() : 0);
+    result = 31 * result + (healthcheckProtocol != null ? healthcheckProtocol.hashCode() : 0);
+    result = 31 * result + (healthcheckMaxRetries != null ? healthcheckMaxRetries.hashCode() : 0);
+    result = 31 * result + (healthcheckMaxTotalTimeoutSeconds != null ? healthcheckMaxTotalTimeoutSeconds.hashCode() : 0);
+    result = 31 * result + (healthcheck != null ? healthcheck.hashCode() : 0);
+    result = 31 * result + (skipHealthchecksOnDeploy != null ? skipHealthchecksOnDeploy.hashCode() : 0);
+    result = 31 * result + (deployHealthTimeoutSeconds != null ? deployHealthTimeoutSeconds.hashCode() : 0);
+    result = 31 * result + (considerHealthyAfterRunningForSeconds != null ? considerHealthyAfterRunningForSeconds.hashCode() : 0);
+    result = 31 * result + (serviceBasePath != null ? serviceBasePath.hashCode() : 0);
+    result = 31 * result + (loadBalancerGroups != null ? loadBalancerGroups.hashCode() : 0);
+    result = 31 * result + (loadBalancerPortIndex != null ? loadBalancerPortIndex.hashCode() : 0);
+    result = 31 * result + (loadBalancerOptions != null ? loadBalancerOptions.hashCode() : 0);
+    result = 31 * result + (loadBalancerDomains != null ? loadBalancerDomains.hashCode() : 0);
+    result = 31 * result + (loadBalancerAdditionalRoutes != null ? loadBalancerAdditionalRoutes.hashCode() : 0);
+    result = 31 * result + (loadBalancerTemplate != null ? loadBalancerTemplate.hashCode() : 0);
+    result = 31 * result + (loadBalancerServiceIdOverride != null ? loadBalancerServiceIdOverride.hashCode() : 0);
+    result = 31 * result + (loadBalancerUpstreamGroup != null ? loadBalancerUpstreamGroup.hashCode() : 0);
+    result = 31 * result + (deployInstanceCountPerStep != null ? deployInstanceCountPerStep.hashCode() : 0);
+    result = 31 * result + (deployStepWaitTimeMs != null ? deployStepWaitTimeMs.hashCode() : 0);
+    result = 31 * result + (autoAdvanceDeploySteps != null ? autoAdvanceDeploySteps.hashCode() : 0);
+    result = 31 * result + (maxTaskRetries != null ? maxTaskRetries.hashCode() : 0);
+    result = 31 * result + (shell != null ? shell.hashCode() : 0);
+    result = 31 * result + (user != null ? user.hashCode() : 0);
+    result = 31 * result + (s3UploaderAdditionalFiles != null ? s3UploaderAdditionalFiles.hashCode() : 0);
+    return result;
+  }
+
+  @Override
   public String toString() {
     return "SingularityDeploy{" +
         "requestId='" + requestId + '\'' +
@@ -563,7 +779,6 @@ public class SingularityDeploy {
         ", command=" + command +
         ", arguments=" + arguments +
         ", env=" + env +
-        ", runImmediately" + runImmediatelyRequest +
         ", uris=" + uris +
         ", executorData=" + executorData +
         ", labels=" + labels +
@@ -571,6 +786,7 @@ public class SingularityDeploy {
         ", taskLabels=" + taskLabels +
         ", mesosTaskLabels=" + mesosTaskLabels +
         ", taskEnv=" + taskEnv +
+        ", runImmediatelyRequest=" + runImmediatelyRequest +
         ", healthcheckUri=" + healthcheckUri +
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
         ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +

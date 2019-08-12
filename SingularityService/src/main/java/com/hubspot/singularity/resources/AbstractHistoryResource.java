@@ -3,7 +3,11 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -14,15 +18,17 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.ning.http.client.AsyncHttpClient;
 
-public abstract class AbstractHistoryResource {
+public abstract class AbstractHistoryResource extends AbstractLeaderAwareResource {
 
   protected final HistoryManager historyManager;
   protected final TaskManager taskManager;
   protected final DeployManager deployManager;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper) {
+  public AbstractHistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper) {
+    super(httpClient, leaderLatch, objectMapper);
     this.historyManager = historyManager;
     this.taskManager = taskManager;
     this.deployManager = deployManager;

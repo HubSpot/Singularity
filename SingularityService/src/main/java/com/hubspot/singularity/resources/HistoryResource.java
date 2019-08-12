@@ -5,17 +5,24 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import com.google.common.base.Optional;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
@@ -39,6 +46,7 @@ import com.hubspot.singularity.data.history.DeployTaskHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,9 +69,9 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployTaskHistoryHelper deployTaskHistoryHelper;
 
   @Inject
-  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authorizationHelper, DeployTaskHistoryHelper deployTaskHistoryHelper) {
-    super(historyManager, taskManager, deployManager, authorizationHelper);
+  public HistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
+                         RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authorizationHelper, DeployTaskHistoryHelper deployTaskHistoryHelper) {
+    super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
 
     this.requestHistoryHelper = requestHistoryHelper;
     this.deployHistoryHelper = deployHistoryHelper;
@@ -113,9 +121,9 @@ public class HistoryResource extends AbstractHistoryResource {
 
   private Optional<Integer> getPageCount(Optional<Integer> dataCount, Integer count) {
     if (!dataCount.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
-    return Optional.fromNullable((int) Math.ceil((double) dataCount.get() / count));
+    return Optional.ofNullable((int) Math.ceil((double) dataCount.get() / count));
   }
 
   @GET
@@ -196,7 +204,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount, skipZk);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -259,7 +267,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -314,7 +322,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -367,7 +375,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -404,7 +412,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount, skipZk);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -434,10 +442,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Skip checking zookeeper, items that have not been persisted yet may not appear") @QueryParam("skipZk") @DefaultValue("true") boolean skipZk) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
+    final int argCount = count.orElse(DEFAULT_ARGS_HISTORY_COUNT);
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
-      Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
-      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount, skipZk);
+      Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(),
+      Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty()), 0, argCount, skipZk);
     Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
@@ -452,4 +460,16 @@ public class HistoryResource extends AbstractHistoryResource {
     return args;
   }
 
+  @POST
+  @Path("/sql-backfill")
+  @Operation(summary = "For upgrades to version 0.23.0, start the json column backfill in sql")
+  public Response startSqlBackfill(@Parameter(hidden = true) @Auth SingularityUser user,
+                               @Context HttpServletRequest requestContext,
+                               @Parameter(description = "batch size for sql SELECTs") @QueryParam("batchSize") @DefaultValue("20") int batchSize) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(requestContext, Response.class, null, () -> {
+      historyManager.startHistoryBackfill(batchSize);
+      return Response.ok().build();
+    });
+  }
 }

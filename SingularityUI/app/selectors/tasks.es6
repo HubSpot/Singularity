@@ -32,6 +32,7 @@ export const getDecomissioningTasks = createSelector(
 );
 
 const getFilter = (state) => ({
+  showResources: state.filter.showResources,
   state: state.filter.taskStatus,
   requestTypes: state.filter.requestTypes,
   filterText: state.filter.filterText
@@ -41,7 +42,7 @@ export const getFilteredTasks = createSelector(
   [getTasks, getFilter],
   (tasks, filter) => {
     // Filter by requestType
-    if (filter.state === 'active') {
+    if (filter.state === 'active' && filter.showResources) {
       tasks = _.filter(tasks, (task) => {
         return task.taskRequest && _.contains(filter.requestTypes, task.taskRequest.request.requestType);
       });

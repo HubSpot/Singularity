@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.Produces;
@@ -24,7 +25,6 @@ import com.codahale.metrics.SharedMetricRegistries;
 import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.hubspot.jackson.jaxrs.PropertyFilter;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 
@@ -68,7 +68,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
 
     final PropertyFiltering annotation = findPropertyFiltering(annotations);
 
-    final PropertyFilter propertyFilter = new PropertyFilter(Optional.fromNullable(uriInfo.getQueryParameters().get(annotation.using())).or(Collections.<String>emptyList()));
+    final PropertyFilter propertyFilter = new PropertyFilter(Optional.ofNullable(uriInfo.getQueryParameters().get(annotation.using())).orElse(Collections.<String>emptyList()));
 
     if (!propertyFilter.hasFilters()) {
       super.writeTo(o, type, genericType, annotations, mediaType, httpHeaders, os);

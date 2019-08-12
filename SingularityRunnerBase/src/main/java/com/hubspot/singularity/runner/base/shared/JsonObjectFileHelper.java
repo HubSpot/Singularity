@@ -10,11 +10,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 
@@ -40,7 +40,7 @@ public class JsonObjectFileHelper {
       log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
 
       if (bytes.length == 0) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       T object = objectMapper.readValue(bytes, clazz);
@@ -51,7 +51,7 @@ public class JsonObjectFileHelper {
       log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), new String(bytes, UTF_8), e);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public InputStream toInputStream(Map<String, Object> input) throws IOException {

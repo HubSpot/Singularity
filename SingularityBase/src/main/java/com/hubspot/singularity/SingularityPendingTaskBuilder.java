@@ -3,8 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 
@@ -27,17 +27,17 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTaskBuilder() {
     this.pendingTaskId = null;
-    this.cmdLineArgsList = Optional.absent();
-    this.user = Optional.absent();
-    this.runId = Optional.absent();
-    this.skipHealthchecks = Optional.absent();
-    this.message = Optional.absent();
-    this.resources = Optional.absent();
+    this.cmdLineArgsList = Optional.empty();
+    this.user = Optional.empty();
+    this.runId = Optional.empty();
+    this.skipHealthchecks = Optional.empty();
+    this.message = Optional.empty();
+    this.resources = Optional.empty();
     this.s3UploaderAdditionalFiles = Collections.emptyList();
-    this.runAsUserOverride = Optional.absent();
+    this.runAsUserOverride = Optional.empty();
     this.envOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
-    this.actionId = Optional.absent();
+    this.actionId = Optional.empty();
   }
 
   public SingularityPendingTaskBuilder setPendingTaskId(SingularityPendingTaskId pendingTaskId) {

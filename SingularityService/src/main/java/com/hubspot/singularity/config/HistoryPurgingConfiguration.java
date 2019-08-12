@@ -2,8 +2,7 @@ package com.hubspot.singularity.config;
 
 import java.util.Collections;
 import java.util.Map;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class HistoryPurgingConfiguration {
 
@@ -23,11 +22,15 @@ public class HistoryPurgingConfiguration {
 
   private int purgeStaleRequestIdsAfterDays = 7;
 
+  private int purgeRequestHistoryAfterDays = 365;
+
+  private int purgeDeployHistoryAfterDays = 365;
+
   private Map<String, HistoryPurgeRequestSettings> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
     if (value < 1) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(value);
   }
@@ -102,5 +105,21 @@ public class HistoryPurgingConfiguration {
 
   public void setPurgeStaleRequestIdsAfterDays(int purgeStaleRequestIdsAfterDays) {
     this.purgeStaleRequestIdsAfterDays = purgeStaleRequestIdsAfterDays;
+  }
+
+  public int getPurgeRequestHistoryAfterDays() {
+    return purgeRequestHistoryAfterDays;
+  }
+
+  public void setPurgeRequestHistoryAfterDays(int purgeRequestHistoryAfterDays) {
+    this.purgeRequestHistoryAfterDays = purgeRequestHistoryAfterDays;
+  }
+
+  public int getPurgeDeployHistoryAfterDays() {
+    return purgeDeployHistoryAfterDays;
+  }
+
+  public void setPurgeDeployHistoryAfterDays(int purgeDeployHistoryAfterDays) {
+    this.purgeDeployHistoryAfterDays = purgeDeployHistoryAfterDays;
   }
 }

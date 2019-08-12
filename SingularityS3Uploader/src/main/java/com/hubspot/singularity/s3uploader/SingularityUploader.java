@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -23,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 import com.github.rholder.retry.RetryException;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +34,8 @@ import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNoti
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public abstract class SingularityUploader {
   static final Logger LOG = LoggerFactory.getLogger(SingularityUploader.class);
@@ -70,7 +72,7 @@ public abstract class SingularityUploader {
     if (uploadMetadata.getOnFinishGlob().isPresent()) {
       finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
     } else {
-      finishedPathMatcher = Optional.<PathMatcher> absent();
+      finishedPathMatcher = Optional.<PathMatcher>empty();
     }
 
     this.hostname = hostname;
@@ -132,6 +134,7 @@ public abstract class SingularityUploader {
     return uploadBatch(filesToUpload(isFinished));
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   List<Path> filesToUpload(boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
 
@@ -157,6 +160,7 @@ public abstract class SingularityUploader {
     return toUpload;
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   private AtomicInteger handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
     AtomicInteger found = new AtomicInteger();
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
@@ -239,15 +243,15 @@ public abstract class SingularityUploader {
         String value = Charset.defaultCharset().decode(buf).toString();
         if (Strings.isNullOrEmpty(value)) {
           LOG.debug("No attrbiute {} found for file {}", attribute, file);
-          return Optional.absent();
+          return Optional.empty();
         }
         return Optional.of(Long.parseLong(value));
       } catch (Exception e) {
         LOG.error("Error getting extra file metadata for {}", file, e);
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -278,7 +282,7 @@ public abstract class SingularityUploader {
         LOG.error("Could not get extra file metadata for {}", file, e);
       }
     }
-    return new UploaderFileAttributes(Optional.absent(), Optional.absent());
+    return new UploaderFileAttributes(Optional.empty(), Optional.empty());
   }
 
   @Override

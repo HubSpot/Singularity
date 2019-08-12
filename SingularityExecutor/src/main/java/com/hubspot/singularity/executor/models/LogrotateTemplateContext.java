@@ -2,9 +2,9 @@ package com.hubspot.singularity.executor.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -51,23 +51,23 @@ public class LogrotateTemplateContext {
   }
 
   public String getLogrotateFrequency() {
-    return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
+    return taskDefinition.getExecutorData().getLogrotateFrequency().orElse(configuration.getLogrotateFrequency()).getLogrotateValue();
   }
 
   public String getCompressCmd() {
-    return configuration.getLogrotateCompressionSettings().getCompressCmd().orNull();
+    return configuration.getLogrotateCompressionSettings().getCompressCmd().orElse(null);
   }
 
   public String getUncompressCmd() {
-    return configuration.getLogrotateCompressionSettings().getUncompressCmd().orNull();
+    return configuration.getLogrotateCompressionSettings().getUncompressCmd().orElse(null);
   }
 
   public String getCompressOptions() {
-    return configuration.getLogrotateCompressionSettings().getCompressOptions().orNull();
+    return configuration.getLogrotateCompressionSettings().getCompressOptions().orElse(null);
   }
 
   public String getCompressExt() {
-    return configuration.getLogrotateCompressionSettings().getCompressExt().orNull();
+    return configuration.getLogrotateCompressionSettings().getCompressExt().orElse(null);
   }
 
   /**
@@ -109,7 +109,7 @@ public class LogrotateTemplateContext {
       transformed.add(
           new LogrotateAdditionalFile(
               taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
-              additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+              additionalFile.getExtension().isPresent() ? additionalFile.getExtension().get() : Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename())), // Can't have possible null in .orElse()
               dateformat,
               additionalFile.getLogrotateFrequencyOverride()
           ));
@@ -124,7 +124,7 @@ public class LogrotateTemplateContext {
     if ((lastPeriodIndex > -1) && !filename.substring(lastPeriodIndex + 1).contains("*")) {
       return Optional.of(filename.substring(lastPeriodIndex + 1));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

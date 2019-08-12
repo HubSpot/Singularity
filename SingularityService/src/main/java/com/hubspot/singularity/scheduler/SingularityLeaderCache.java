@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -59,6 +59,46 @@ public class SingularityLeaderCache {
 
   public void activate() {
     active = true;
+  }
+
+  // Only for unit testing
+  public void clear() {
+    if (pendingTaskIdToPendingTask != null) {
+      pendingTaskIdToPendingTask.clear();
+    }
+    if (activeTaskIds != null) {
+      activeTaskIds.clear();
+    }
+    if (requests != null) {
+      requests.clear();
+    }
+    if (cleanupTasks != null) {
+      cleanupTasks.clear();
+    }
+    if (requestIdToDeployState != null) {
+      requestIdToDeployState.clear();
+    }
+    if (killedTasks != null) {
+      killedTasks.clear();
+    }
+    if (historyUpdates != null) {
+      historyUpdates.clear();
+    }
+    if (slaves != null) {
+      slaves.clear();
+    }
+    if (racks != null) {
+      racks.clear();
+    }
+    if (pendingTaskIdsToDelete != null) {
+      pendingTaskIdsToDelete.clear();
+    }
+    if (requestUtilizations != null) {
+      requestUtilizations.clear();
+    }
+    if (slaveUsages != null) {
+      slaveUsages.clear();
+    }
   }
 
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
@@ -166,7 +206,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
-    return Optional.fromNullable(pendingTaskIdToPendingTask.get(pendingTaskId));
+    return Optional.ofNullable(pendingTaskIdToPendingTask.get(pendingTaskId));
   }
 
   public void savePendingTask(SingularityPendingTask pendingTask) {
@@ -256,7 +296,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return Optional.fromNullable(requests.get(requestId));
+    return Optional.ofNullable(requests.get(requestId));
   }
 
   public void putRequest(SingularityRequestWithState requestWithState) {
@@ -286,7 +326,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityTaskCleanup> getTaskCleanup(SingularityTaskId taskId) {
-    return Optional.fromNullable(cleanupTasks.get(taskId));
+    return Optional.ofNullable(cleanupTasks.get(taskId));
   }
 
   public void deleteTaskCleanup(SingularityTaskId taskId) {
@@ -317,7 +357,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
-    return Optional.fromNullable(requestIdToDeployState.get(requestId));
+    return Optional.ofNullable(requestIdToDeployState.get(requestId));
   }
 
   public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId() {
@@ -371,7 +411,7 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
-    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId)).or(new HashMap<>()).values());
+    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.ofNullable(historyUpdates.get(taskId)).orElse(new HashMap<>()).values());
     Collections.sort(updates);
     return updates;
   }
@@ -418,7 +458,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularitySlave> getSlave(String slaveId) {
-    return Optional.fromNullable(slaves.get(slaveId));
+    return Optional.ofNullable(slaves.get(slaveId));
   }
 
   public void putSlave(SingularitySlave slave) {
@@ -442,7 +482,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRack> getRack(String rackId) {
-    return Optional.fromNullable(racks.get(rackId));
+    return Optional.ofNullable(racks.get(rackId));
   }
 
   public void putRack(SingularityRack rack) {
@@ -502,6 +542,6 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
-    return Optional.fromNullable(slaveUsages.get(slaveId));
+    return Optional.ofNullable(slaveUsages.get(slaveId));
   }
 }

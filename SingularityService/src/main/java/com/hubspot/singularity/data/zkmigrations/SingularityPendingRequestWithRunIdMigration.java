@@ -59,7 +59,7 @@ public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration
             .forPath(String.format("%s/%s", basePath, originalBasename)));
         if (pendingRequest.getPendingType() == PendingType.IMMEDIATE || pendingRequest.getPendingType() == PendingType.ONEOFF) {
           String deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId()).getId();
-          String rewrittenBasename = String.format("%s%s%s", deployKey, pendingRequest.getTimestamp(), pendingRequest.getRunId().or(""));
+          String rewrittenBasename = String.format("%s%s%s", deployKey, pendingRequest.getTimestamp(), pendingRequest.getRunId().orElse(""));
           if (originalBasename.equals(rewrittenBasename)) {
             LOG.warn("Not rewriting znode {}, because it had no runId and was therefore already correct", originalBasename);
           } else {

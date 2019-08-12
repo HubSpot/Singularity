@@ -3,20 +3,19 @@ package com.hubspot.singularity.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import java.net.URI;
+import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
@@ -34,7 +33,7 @@ public class SingularityClientTest {
 
   private SingularityClient singularityClient;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     singularityClient = buildClient();
@@ -56,7 +55,7 @@ public class SingularityClientTest {
         .thenReturn(true)
         .thenReturn(false);
 
-    singularityClient.pauseSingularityRequest("requestId", Optional.absent());
+    singularityClient.pauseSingularityRequest("requestId", Optional.empty());
 
     verify(httpClient, times(2))
         .execute(requestCaptor.capture());
@@ -75,10 +74,10 @@ public class SingularityClientTest {
         .thenReturn(true);
 
     assertThatExceptionOfType(SingularityClientException.class)
-        .isThrownBy(() -> singularityClient.pauseSingularityRequest("requestId", Optional.absent()));
+        .isThrownBy(() -> singularityClient.pauseSingularityRequest("requestId", Optional.empty()));
   }
 
   private SingularityClient buildClient() {
-    return new SingularityClient("singularity/v2/api", httpClient, ImmutableList.of("host1", "host2"), Optional.absent());
+    return new SingularityClient("singularity/v2/api", httpClient, ImmutableList.of("host1", "host2"), Optional.empty());
   }
 }

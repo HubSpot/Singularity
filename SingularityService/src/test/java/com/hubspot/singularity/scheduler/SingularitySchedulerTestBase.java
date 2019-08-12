@@ -7,11 +7,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -33,11 +33,9 @@ import org.apache.mesos.v1.Protos.URL;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Text;
 import org.apache.mesos.v1.Protos.Value.Type;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -190,55 +188,67 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeployMarker secondDeployMarker;
   protected SingularityDeploy secondDeploy;
 
-  protected Optional<String> user = Optional.absent();
+  protected Optional<String> user = Optional.empty();
 
   protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
+  private final boolean runZkMigrations;
+
   public SingularitySchedulerTestBase(boolean useDBTests) {
     super(useDBTests, null);
+    this.runZkMigrations = true;
+  }
+
+  public SingularitySchedulerTestBase(boolean useDBTests, boolean runZkMigrations) {
+    super(useDBTests, null);
+    this.runZkMigrations = runZkMigrations;
   }
 
   public SingularitySchedulerTestBase(boolean useDBTests, Function<SingularityConfiguration, Void> customConfigSetup) {
     super(useDBTests, customConfigSetup);
+    this.runZkMigrations = true;
   }
 
-  @After
+  @AfterAll
   public void teardown() throws Exception {
+    super.teardown();
     if (httpClient != null) {
       httpClient.close();
     }
   }
 
-  @Before
-  public final void setupDriver() throws Exception {
-    cacheCoordinator.activateLeaderCache();
+  @BeforeAll
+  public void setup() throws Exception {
+    super.setup();
     sms.setSubscribed();
-    migrationRunner.checkMigrations();
+    if (runZkMigrations) {
+      migrationRunner.checkMigrations();
+    }
     configuration.getMesosConfiguration().setFrameworkId("singularity");
   }
 
   protected Offer createOffer(double cpus, double memory, double disk) {
-    return createOffer(cpus, memory, disk,"slave1", "host1", Optional.<String> absent());
+    return createOffer(cpus, memory, disk,"slave1", "host1", Optional.<String>empty());
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, Optional<String> role) {
-    return createOffer(cpus, memory, disk, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), new String[0], role);
+    return createOffer(cpus, memory, disk, "slave1", "host1", Optional.<String>empty(), Collections.<String, String> emptyMap(), new String[0], role);
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host) {
-    return createOffer(cpus, memory, disk, slave, host, Optional.<String>absent());
+    return createOffer(cpus, memory, disk, slave, host, Optional.<String>empty());
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack) {
-    return createOffer(cpus, memory, disk, slave, host, rack, Collections.<String, String> emptyMap(), new String[0], Optional.<String>absent());
+    return createOffer(cpus, memory, disk, slave, host, rack, Collections.<String, String> emptyMap(), new String[0], Optional.<String>empty());
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
-    return createOffer(cpus, memory, disk, slave, host, rack, attributes, new String[0], Optional.<String>absent());
+    return createOffer(cpus, memory, disk, slave, host, rack, attributes, new String[0], Optional.<String>empty());
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges) {
-    return createOffer(cpus, memory, disk, slave, host, rack, attributes, portRanges, Optional.<String>absent());
+    return createOffer(cpus, memory, disk, slave, host, rack, attributes, portRanges, Optional.<String>empty());
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
@@ -271,7 +281,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setAgentId(slaveId)
         .setHostname(host)
         .setUrl(URL.newBuilder().setScheme("scheme").setAddress(Address.newBuilder().setPort(8080)))
-        .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
+        .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.orElse(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(cpusResource)
         .addResources(memoryResources)
         .addResources(diskResources)
@@ -281,23 +291,23 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>empty(), Optional.empty());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState, boolean separateHost) {
-    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, separateHost, Optional.<String>absent());
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, separateHost, Optional.<String>empty(), Optional.empty());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost) {
-    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, separateHost, Optional.<String>absent());
+    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, separateHost, Optional.<String>empty(), Optional.empty());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long taskLaunch, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState, false, Optional.<String>empty(), Optional.empty());
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, false, Optional.<String>absent());
+    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, false, Optional.<String>empty(), Optional.empty());
   }
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, Optional<String> runId) {
@@ -311,22 +321,22 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
-    return prepTask(request, deploy, launchTime, instanceNo, false, Optional.<String>absent());
+    return prepTask(request, deploy, launchTime, instanceNo, false, Optional.empty(), Optional.empty());
   }
 
 
-  protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts, Optional<String> runId) {
+  protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts, Optional<String> runId, Optional<String> slaveAndRack) {
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo, runId);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
     Offer offer;
-    if (separateHosts) {
-      offer = createOffer(125, 1024, 2048, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
+    if (separateHosts || slaveAndRack.isPresent()) {
+      offer = createOffer(125, 1024, 2048, slaveAndRack.orElse(String.format("slave%s", instanceNo)), slaveAndRack.orElse(String.format("host%s", instanceNo)), slaveAndRack);
     } else {
       offer = createOffer(125, 1024, 2048);
     }
 
-    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
+    SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), slaveAndRack.orElse("rack1"));
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
     TaskInfo taskInfo = TaskInfo.newBuilder()
@@ -344,11 +354,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask() {
-    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1, false, Optional.<String>absent());
+    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1, false, Optional.<String>empty(), Optional.empty());
   }
 
-  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost, Optional<String> runId) {
-    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo, separateHost, runId);
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost, Optional<String> runId, Optional<String> slave) {
+    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo, separateHost, runId, slave);
 
     taskManager.createTaskAndDeletePendingTask(task);
 
@@ -371,7 +381,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void statusUpdate(SingularityTask task, TaskState state) {
-    statusUpdate(task, state, Optional.<Long> absent());
+    statusUpdate(task, state, Optional.<Long>empty());
   }
 
   protected void runLaunchedTasks() {
@@ -400,8 +410,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishNewTaskChecksAndCleanup() {
-    finishNewTaskChecks();
-
     cleaner.drainCleanupQueue();
     killKilledTasks();
   }
@@ -415,27 +423,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       } catch (InterruptedException e) {
         return;
       } catch (ExecutionException e) {
-        throw Throwables.propagate(e);
-      }
-    }
-  }
-
-  protected void finishNewTaskChecks() {
-    while (!newTaskChecker.getTaskCheckFutures().isEmpty()) {
-      for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
-        try {
-          future.get();
-        } catch (InterruptedException e) {
-          return;
-        } catch (ExecutionException e) {
-          throw Throwables.propagate(e);
-        }
-      }
-
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException ie) {
-        break;
+        throw new RuntimeException(e);
       }
     }
   }
@@ -449,7 +437,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveRequest(SingularityRequest request) {
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty());
   }
 
   protected void initOnDemandRequest() {
@@ -477,7 +465,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setResources(Optional.of(r))
         .build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty()), singularityUser);
 
     return deploy;
   }
@@ -506,7 +494,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1").setCommand(Optional.of("sleep 1")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty()), singularityUser);
 
     return request;
   }
@@ -528,7 +516,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initWithTasks(int num) {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
 
     initFirstDeploy();
 
@@ -549,7 +537,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initHCDeploy() {
-    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())), Optional.absent());
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setResources(Optional.of(new Resources(0.1, 1, 1))).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())), Optional.empty());
   }
 
   protected void initLoadBalancedDeploy() {
@@ -557,11 +545,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setCommand(Optional.of("sleep 100"))
         .setServiceBasePath(Optional.of("/basepath"))
         .setLoadBalancerGroups(Optional.of(Collections.singleton("test")));
-    firstDeploy = initAndFinishDeploy(request, builder, Optional.absent());
+    firstDeploy = initAndFinishDeploy(request, builder, Optional.empty());
   }
 
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
-    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")), Optional.absent());
+    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")), Optional.empty());
   }
 
   protected SingularityDeploy initAndFinishDeployWithResources(SingularityRequest request, String deployId, double cpus, double memoryMb) {
@@ -573,7 +561,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder, Optional<Resources> maybeResources) {
     SingularityDeploy deploy = builder.setResources(maybeResources).build();
 
-    SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty());
 
     deployManager.saveDeploy(request, marker, deploy);
 
@@ -583,7 +571,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
-    SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String> absent(), Optional.<String> absent());
+    SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String>empty(), Optional.<String>empty());
     builder.setCommand(Optional.of("sleep 100"));
 
     SingularityDeploy deploy = builder.build();
@@ -596,7 +584,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityDeployMarker initSecondDeploy() {
-    secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty());
     secondDeploy = new SingularityDeployBuilder(requestId, secondDeployId).setCommand(Optional.of("sleep 100")).build();
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
@@ -608,7 +596,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
     SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 0, 1, 10, false, true, Collections.<SingularityTaskId>emptySet(), timestamp);
-    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING, Optional.of(startingDeployProgress), Optional.<SingularityRequest>absent()));
+    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>empty(), DeployState.WAITING, Optional.of(startingDeployProgress), Optional.<SingularityRequest>empty()));
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
@@ -616,7 +604,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.<SingularityDeployMarker>empty()));
   }
 
   protected SingularityTask startTask(SingularityDeploy deploy) {
@@ -665,11 +653,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void deploy(String deployId) {
-    deploy(deployId, Optional.<Boolean>absent(), Optional.<Integer>absent(), Optional.<Boolean>absent(), false);
+    deploy(deployId, Optional.<Boolean>empty(), Optional.<Integer>empty(), Optional.<Boolean>empty(), false);
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
-    deploy(deployId, unpauseOnDeploy, Optional.<Integer> absent(), Optional.<Boolean> absent(), false);
+    deploy(deployId, unpauseOnDeploy, Optional.<Integer>empty(), Optional.<Boolean>empty(), false);
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy, Optional<Integer> deployRate, Optional<Boolean> autoAdvance, boolean loadBalanced) {
@@ -685,7 +673,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .setServiceBasePath(Optional.of("/basepath"))
           .setLoadBalancerGroups(Optional.of(groups));
     }
-    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.absent()), singularityUser);
+    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.empty()), singularityUser);
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {
@@ -703,14 +691,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
     SingularityRequest build = bldr.build();
-    requestManager.activate(build, RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
-    requestManager.addToPendingQueue(new SingularityPendingRequest(build.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
+    requestManager.activate(build, RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(build.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String>empty(), PendingType.UPDATED_REQUEST, Optional.<Boolean>empty(), Optional.<String>empty()));
     scheduler.drainPendingQueue();
   }
 
   protected void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
-    final LoadBalancerRequestId lbri = new LoadBalancerRequestId(taskId.getId(), lbrt, Optional.<Integer> absent());
-    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
+    final LoadBalancerRequestId lbri = new LoadBalancerRequestId(taskId.getId(), lbrt, Optional.<Integer>empty());
+    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.<String>empty(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
 
     taskManager.saveLoadBalancerState(taskId, lbrt, update);
   }
@@ -719,7 +707,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     try {
       Thread.sleep(millis);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -740,7 +728,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTaskRequest buildTaskRequest(SingularityRequest request, SingularityDeploy deploy, long launchTime) {
-    return new SingularityTaskRequest(request, deploy, buildPendingTask(request, deploy, launchTime, 100, Optional.<String>absent()));
+    return new SingularityTaskRequest(request, deploy, buildPendingTask(request, deploy, launchTime, 100, Optional.<String>empty()));
   }
 
   protected MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {

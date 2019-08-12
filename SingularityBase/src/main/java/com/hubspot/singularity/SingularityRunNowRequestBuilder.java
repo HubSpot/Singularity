@@ -3,8 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
@@ -25,17 +25,17 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequestBuilder()
   {
-    this.message = Optional.absent();
-    this.runId = Optional.absent();
-    this.commandLineArgs = Optional.absent();
-    this.skipHealthchecks = Optional.absent();
-    this.resources = Optional.absent();
-    this.runAsUserOverride = Optional.absent();
+    this.message = Optional.empty();
+    this.runId = Optional.empty();
+    this.commandLineArgs = Optional.empty();
+    this.skipHealthchecks = Optional.empty();
+    this.resources = Optional.empty();
+    this.runAsUserOverride = Optional.empty();
     this.envOverrides = Collections.emptyMap();
     this.requiredSlaveAttributeOverrides = Collections.emptyMap();
     this.allowedSlaveAttributeOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
-    this.runAt = Optional.absent();
+    this.runAt = Optional.empty();
   }
 
   public SingularityRunNowRequestBuilder setMessage(String message) {

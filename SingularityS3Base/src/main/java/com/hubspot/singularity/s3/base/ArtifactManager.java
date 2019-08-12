@@ -12,11 +12,10 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -30,6 +29,8 @@ import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNoti
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class ArtifactManager extends SimpleProcessManager {
 
@@ -105,6 +106,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(artifact, downloadTo);
   }
 
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
 
@@ -244,17 +246,16 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       super.runCommand(command);
     } catch (InterruptedException | ProcessFailedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
   private String calculateMd5sum(Path path) {
     try {
-      HashCode hc = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
-
+      HashCode hc = com.google.common.io.Files.asByteSource(path.toFile()).hash(Hashing.md5());
       return hc.toString();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

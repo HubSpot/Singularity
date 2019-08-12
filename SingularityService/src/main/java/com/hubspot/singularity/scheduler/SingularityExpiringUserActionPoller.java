@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -10,7 +11,6 @@ import javax.ws.rs.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -184,7 +184,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected long getDurationMillis(SingularityExpiringBounce expiringBounce) {
-      return expiringBounce.getExpiringAPIRequestObject().getDurationMillis().or(TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes()));
+      return expiringBounce.getExpiringAPIRequestObject().getDurationMillis().orElse(TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes()));
     }
 
     @Override
@@ -199,7 +199,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
             List<SingularityTaskHistoryUpdate> historyUpdates = taskManager.getTaskHistoryUpdates(taskCleanup.getTaskId());
             Collections.sort(historyUpdates);
             if (Iterables.getLast(historyUpdates).getTaskState() == ExtendedTaskState.TASK_CLEANING) {
-              Optional<SingularityTaskHistoryUpdate> maybePreviousHistoryUpdate = historyUpdates.size() > 1 ? Optional.of(historyUpdates.get(historyUpdates.size() - 2)) : Optional.<SingularityTaskHistoryUpdate>absent();
+              Optional<SingularityTaskHistoryUpdate> maybePreviousHistoryUpdate = historyUpdates.size() > 1 ? Optional.of(historyUpdates.get(historyUpdates.size() - 2)) : Optional.<SingularityTaskHistoryUpdate>empty();
               taskManager.deleteTaskHistoryUpdate(taskCleanup.getTaskId(), ExtendedTaskState.TASK_CLEANING, maybePreviousHistoryUpdate);
             }
           }
@@ -215,7 +215,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       }
 
       requestManager.addToPendingQueue(new SingularityPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId(), System.currentTimeMillis(), expiringObject.getUser(),
-          PendingType.CANCEL_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
+          PendingType.CANCEL_BOUNCE, Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(message), Optional.of(expiringObject.getActionId())));
     }
 
   }
@@ -240,7 +240,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       LOG.info("Unpausing request {} because of {}", requestWithState.getRequest().getId(), expiringObject);
 
-      requestHelper.unpause(requestWithState.getRequest(), expiringObject.getUser(), Optional.of(message), Optional.absent());
+      requestHelper.unpause(requestWithState.getRequest(), expiringObject.getUser(), Optional.of(message), Optional.empty());
     }
 
   }
@@ -262,9 +262,9 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final SingularityRequest newRequest = oldRequest.toBuilder().setInstances(expiringObject.getRevertToInstances()).build();
 
       try {
-        Optional<SingularityBounceRequest> maybeBounceRequest = Optional.absent();
+        Optional<SingularityBounceRequest> maybeBounceRequest = Optional.empty();
 
-        if (expiringObject.getBounce().or(false) || newRequest.getBounceAfterScale().or(false)) {
+        if (expiringObject.getBounce().orElse(false) || newRequest.getBounceAfterScale().orElse(false)) {
           LOG.info("Attempting to bounce request {} after expiring scale", newRequest.getId());
           Optional<String> maybeActiveDeployId = deployManager.getInUseDeployId(newRequest.getId());
           if (maybeActiveDeployId.isPresent()) {
@@ -275,9 +275,9 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         }
 
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
-            Optional.<Boolean>absent(), Optional.of(message), maybeBounceRequest);
+            Optional.<Boolean>empty(), Optional.of(message), maybeBounceRequest);
 
-        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest>absent(), oldRequest.getInstances(), expiringObject.getUser());
+        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest>empty(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
@@ -302,8 +302,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(expiringObject.getRevertToSkipHealthchecks()).build();
 
       try {
-        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType>absent(), expiringObject.getUser(),
-            Optional.<Boolean>absent(), Optional.of(message), Optional.<SingularityBounceRequest>absent());
+        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType>empty(), expiringObject.getUser(),
+            Optional.<Boolean>empty(), Optional.of(message), Optional.<SingularityBounceRequest>empty());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
@@ -339,8 +339,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
               TaskCleanupType.DECOMMISSION_TIMEOUT,
               now, taskId,
               Optional.of(String.format("Slave decommission (started by: %s) timed out after %sms", expiringObject.getUser(), now - expiringObject.getStartMillis())),
-              Optional.<String> absent(),
-              Optional.<SingularityTaskShellCommandRequestId> absent()));
+              Optional.<String>empty(),
+              Optional.<SingularityTaskShellCommandRequestId>empty()));
           }
         }
       }

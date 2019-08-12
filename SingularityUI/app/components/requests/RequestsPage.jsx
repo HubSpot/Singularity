@@ -28,7 +28,7 @@ import Loader from '../common/Loader';
 
 class RequestsPage extends Component {
 
-  static propertyFilter = ['state', 'request.id', 'request.requestType', 'request.instances', 'request.group', 'request.bounceAfterScale', 'requestDeployState.activeDeploy.deployId', 'requestDeployState.activeDeploy.user', 'requestDeployState.activeDeploy.timestamp', 'requestDeployState.activeDeploy.loadBalancerOptions']
+  static propertyFilter = ['state', 'request.id', 'request.requestType', 'request.instances', 'request.group', 'request.bounceAfterScale', 'requestDeployState.activeDeploy.requestId', 'requestDeployState.activeDeploy.deployId', 'requestDeployState.activeDeploy.user', 'requestDeployState.activeDeploy.timestamp', 'requestDeployState.activeDeploy.loadBalancerOptions']
 
   static propTypes = {
     requestsInState: PropTypes.array,
@@ -41,6 +41,7 @@ class RequestsPage extends Component {
     fetchTaskFiles: PropTypes.func,
     scaleRequest: PropTypes.func,
     bounceRequest: PropTypes.func,
+    isFetchingRequests: PropTypes.bool,
     params: PropTypes.object,
     router: PropTypes.object,
     filter: PropTypes.shape({
@@ -115,7 +116,7 @@ class RequestsPage extends Component {
 
   render() {
     let displayRequests = []
-    if (this.props.requestsInState.length) {
+    if (this.props.requestsInState.length || !this.props.isFetchingRequests) {
       displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter, requestUtilizations: this.props.requestUtilizations});
     } else if (this.props.requestIds.data.length) {
       const options = _.map(this.props.requestIds.data, (id) => ({
@@ -130,7 +131,7 @@ class RequestsPage extends Component {
     if (this.state.loading) {
       table = <Loader />;
     } else if (!displayRequests.length) {
-      table = <div className="empty-table-message"><p>No requests found. You may not be part of the correct groups or teams to view the desired requests.</p></div>;
+      table = <div className="empty-table-message"><p>No requests found</p></div>;
     } else {
       table = (
         <UITable
@@ -185,6 +186,7 @@ function mapStateToProps(state, ownProps) {
     pathname: ownProps.location.pathname,
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
+    isFetchingRequests: state.api.requestsInState.isFetching,
     requestUtilizations: state.api.requestUtilizations.data,
     requestIds: state.api.requestIds,
     groups: userGroups,
