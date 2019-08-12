@@ -4,13 +4,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
-
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
-  @NotNull
   private Optional<String> uri;
   private Optional<Integer> portIndex;
   private Optional<Long> portNumber;

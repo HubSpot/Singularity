@@ -27,7 +27,6 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private String logWatcherMetadataSuffix = ".tail.json";
 
-  @NotNull
   @JsonProperty
   private Optional<String> sentryDsn = Optional.empty();
 
@@ -35,7 +34,6 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private String sentryPrefix = "";
 
-  @NotNull
   @JsonProperty
   private Optional<String> useCompressProgram = Optional.empty();
 

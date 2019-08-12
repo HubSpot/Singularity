@@ -59,7 +59,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
-  @NotNull
   @JsonProperty
   private Optional<String> s3Endpoint = Optional.empty();
 
@@ -67,7 +66,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean s3UseV2Signing = false;
 
-  @NotNull
   @JsonProperty
   private Optional<String> metricsFilePath = Optional.empty();
 

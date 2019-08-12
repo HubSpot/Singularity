@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes health check behavior for tasks associated with a deploy")
 public class HealthcheckOptions {
-  @NotNull
   private final Optional<String> uri;
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;
