@@ -16,7 +16,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -75,10 +74,7 @@ public class S3ArtifactDownloader {
       clientConfiguration.setSignerOverride("S3SignerType");
     }
 
-    final AmazonS3 s3Client = AmazonS3Client.builder()
-        .withCredentials(new AWSStaticCredentialsProvider(getCredentialsForBucket(s3Artifact.getS3Bucket())))
-        .withClientConfiguration(clientConfiguration)
-        .build();
+    final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
 
     if (configuration.getS3Endpoint().isPresent()) {
       s3Client.setEndpoint(configuration.getS3Endpoint().get());

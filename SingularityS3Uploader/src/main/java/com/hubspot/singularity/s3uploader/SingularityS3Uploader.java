@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -50,9 +49,7 @@ public class SingularityS3Uploader extends SingularityUploader {
       credentials = new BasicAWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
-    this.s3Client = AmazonS3Client.builder()
-        .withCredentials(new AWSStaticCredentialsProvider(credentials))
-        .build();
+    this.s3Client = new AmazonS3Client(credentials);
   }
 
   @Override
