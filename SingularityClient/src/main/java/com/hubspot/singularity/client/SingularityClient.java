@@ -74,7 +74,7 @@ import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanupResult;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -888,10 +888,10 @@ public class SingularityClient {
     return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASK_IDS_COLLECTION);
   }
 
-  public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
+    public Optional<SingularityTaskCleanup> killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_KILL_TASK_FORMAT, getApiBase(host), taskId);
 
-    return delete(requestUri, "task", taskId, killTaskRequest, Optional.of(SingularityTaskCleanupResult.class));
+    return delete(requestUri, "task", taskId, killTaskRequest, Optional.of(SingularityTaskCleanup.class));
   }
 
   //
