@@ -200,10 +200,6 @@ class SingularityMesosTaskBuilder {
     envVars.put("TASK_ID", taskId.getId());
     envVars.put("ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
-    if (task.getPendingTask().getUser().isPresent()) {
-      envVars.put("STARTED_BY_USER", task.getPendingTask().getUser().get());
-    }
-
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().orElse(Collections.<String, String>emptyMap()).entrySet()) {
       envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
     }
@@ -238,6 +234,11 @@ class SingularityMesosTaskBuilder {
 
     for (Entry entry : task.getPendingTask().getEnvOverrides().entrySet()) {
       envVars.put(entry.getKey().toString(), entry.getValue());
+    }
+
+    // Set this last so it cannot be overridden by the user
+    if (task.getPendingTask().getUser().isPresent()) {
+      envVars.put("STARTED_BY_USER", task.getPendingTask().getUser().get());
     }
 
     Environment.Builder envBldr = Environment.newBuilder();
