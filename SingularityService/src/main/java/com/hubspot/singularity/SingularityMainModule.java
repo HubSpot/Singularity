@@ -27,7 +27,6 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
@@ -53,7 +52,6 @@ import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
-import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.hubspot.singularity.hooks.AbstractWebhookChecker;
@@ -163,7 +161,6 @@ public class SingularityMainModule implements Module {
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
-    bindObjectMapper(binder);
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
@@ -187,10 +184,6 @@ public class SingularityMainModule implements Module {
     } else {
       binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
     }
-  }
-
-  protected void bindObjectMapper(Binder binder) {
-    binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
   }
 
   @Provides
