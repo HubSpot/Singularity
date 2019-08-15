@@ -163,7 +163,7 @@ public class SingularityMainModule implements Module {
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
-    binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
+    bindObjectMapper(binder);
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
@@ -187,6 +187,10 @@ public class SingularityMainModule implements Module {
     } else {
       binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
     }
+  }
+
+  protected void bindObjectMapper(Binder binder) {
+    binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
   }
 
   @Provides
