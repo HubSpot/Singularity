@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +28,6 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
@@ -76,7 +76,6 @@ import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
-import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.MailTemplateHelpers;
 import com.hubspot.singularity.smtp.NoopMailer;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
@@ -85,8 +84,8 @@ import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
 
-import de.neuland.jade4j.parser.Parser;
-import de.neuland.jade4j.parser.node.Node;
+import de.neuland.jade4j.JadeConfiguration;
+import de.neuland.jade4j.template.ClasspathTemplateLoader;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
@@ -215,7 +214,7 @@ public class SingularityMainModule implements Module {
     @Inject
     SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_NAME_PROPERTY) String hostname) {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = configuration.getHostname().or(hostname);
+      this.hostname = configuration.getHostname().orElse(hostname);
 
       Integer port = null;
       if (configuration.getServerFactory() instanceof SimpleServerFactory) {
@@ -250,9 +249,9 @@ public class SingularityMainModule implements Module {
   String getSingularityUriBase(final SingularityConfiguration configuration) {
     final String singularityUiPrefix;
     if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     } else {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     }
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
@@ -331,57 +330,51 @@ public class SingularityMainModule implements Module {
   }
 
   private JadeTemplate getJadeTemplate(String name) throws IOException {
-    Parser parser = new Parser("templates/" + name, JadeTemplateLoader.JADE_LOADER);
-    Node root = parser.parse();
-
-    final JadeTemplate jadeTemplate = new JadeTemplate();
-
-    jadeTemplate.setTemplateLoader(JadeTemplateLoader.JADE_LOADER);
-    jadeTemplate.setRootNode(root);
-
-    return jadeTemplate;
+    JadeConfiguration config = new JadeConfiguration();
+    config.setTemplateLoader(new ClasspathTemplateLoader());
+    return config.getTemplate("templates/" + name);
   }
 
   @Provides
   @Singleton
   @Named(TASK_TEMPLATE)
   public JadeTemplate getTaskTemplate() throws IOException {
-    return getJadeTemplate("task.jade");
+    return getJadeTemplate("task");
   }
 
   @Provides
   @Singleton
   @Named(REQUEST_IN_COOLDOWN_TEMPLATE)
   public JadeTemplate getRequestPausedTemplate() throws IOException {
-    return getJadeTemplate("request_in_cooldown.jade");
+    return getJadeTemplate("request_in_cooldown");
   }
 
   @Provides
   @Singleton
   @Named(REQUEST_MODIFIED_TEMPLATE)
   public JadeTemplate getRequestModifiedTemplate() throws IOException {
-    return getJadeTemplate("request_modified.jade");
+    return getJadeTemplate("request_modified");
   }
 
   @Provides
   @Singleton
   @Named(RATE_LIMITED_TEMPLATE)
   public JadeTemplate getRateLimitedTemplate() throws IOException {
-    return getJadeTemplate("rate_limited.jade");
+    return getJadeTemplate("rate_limited");
   }
 
   @Provides
   @Singleton
   @Named(DISASTERS_TEMPLATE)
   public JadeTemplate getDisastersTemplate() throws IOException {
-    return getJadeTemplate("disaster.jade");
+    return getJadeTemplate("disaster");
   }
 
   @Provides
   @Singleton
   @Named(REPLACEMENT_TASKS_FAILING_TEMPLATE)
   public JadeTemplate getReplacementTasksFailingTemplate() throws IOException {
-    return getJadeTemplate("replacement_tasks_failing.jade");
+    return getJadeTemplate("replacement_tasks_failing");
   }
 
   @Provides
@@ -390,7 +383,7 @@ public class SingularityMainModule implements Module {
     try {
       return Optional.of(requestProvider.get());
     } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

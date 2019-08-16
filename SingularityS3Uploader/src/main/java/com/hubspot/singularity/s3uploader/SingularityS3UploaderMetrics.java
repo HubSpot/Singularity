@@ -3,6 +3,7 @@ package com.hubspot.singularity.s3uploader;
 import static com.hubspot.singularity.s3.base.SingularityS3BaseModule.METRICS_OBJECT_MAPPER;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -10,12 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.jmx.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -53,7 +53,7 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
 
-    this.expiring = Optional.absent();
+    this.expiring = Optional.empty();
     this.timeOfLastSuccessUpload = -1;
 
     registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {

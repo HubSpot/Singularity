@@ -52,7 +52,7 @@ class RequestDetailPage extends Component {
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
         {deleted || <RequestExpiringActions requestId={requestId} />}
-        {deleted || <ActiveTasksTable requestId={requestId} />}
+        {deleted || <ActiveTasksTable requestId={requestId} taskHistoryPage={Number(taskHistoryPage) || 1} taskHistoryPageSize={Number(taskHistoryPageSize) || 10} />}
         {deleted || <PendingTasksTable requestId={requestId} />}
         {deleted || (
           <TaskHistoryTable
@@ -61,7 +61,6 @@ class RequestDetailPage extends Component {
             initialPageSize={Number(taskHistoryPageSize) || 10}
             onPageChange={num => router.replace({ ...location, query: {...location.query, taskHistoryPage: num }})}
             initialPageNumber={Number(taskHistoryPage) || 1}
-            refresh={this.props.fetchTaskHistoryForRequest}
           />
         )}
         {deleted || <RequestUtilization requestId={requestId} />}

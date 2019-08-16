@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
-import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -124,7 +123,7 @@ public class SingularityExecutorModule extends AbstractModule {
           dockerClientBuilder.registryAuth(RegistryAuth.fromDockerConfig().build());
 
         } catch(IOException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
       else {

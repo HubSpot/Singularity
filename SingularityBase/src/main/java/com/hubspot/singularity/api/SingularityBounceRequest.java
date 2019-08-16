@@ -1,10 +1,10 @@
 package com.hubspot.singularity.api;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +27,7 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
   }
 
   public static SingularityBounceRequest defaultRequest() {
-    return new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent(), Optional.<SingularityShellCommand>absent());
+    return new SingularityBounceRequest(Optional.<Boolean>empty(), Optional.<Boolean>empty(), Optional.<Long>empty(), Optional.of(UUID.randomUUID().toString()), Optional.<String>empty(), Optional.<SingularityShellCommand>empty());
   }
 
   public SingularityBounceRequestBuilder toBuilder() {

@@ -1,8 +1,9 @@
 package com.hubspot.singularity.expiring;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 

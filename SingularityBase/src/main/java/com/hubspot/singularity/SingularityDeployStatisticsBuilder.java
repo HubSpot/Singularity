@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.google.common.collect.ListMultimap;
 
 public class SingularityDeployStatisticsBuilder {
@@ -27,10 +28,10 @@ public class SingularityDeployStatisticsBuilder {
     this.requestId = requestId;
     this.deployId = deployId;
 
-    this.lastFinishAt = Optional.absent();
-    this.lastTaskState = Optional.absent();
-    this.averageRuntimeMillis = Optional.absent();
-    this.averageSchedulingDelayMillis = Optional.absent();
+    this.lastFinishAt = Optional.empty();
+    this.lastTaskState = Optional.empty();
+    this.averageRuntimeMillis = Optional.empty();
+    this.averageSchedulingDelayMillis = Optional.empty();
   }
 
   public SingularityDeployStatistics build() {

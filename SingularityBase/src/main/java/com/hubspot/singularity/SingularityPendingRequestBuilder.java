@@ -3,8 +3,8 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -31,19 +31,19 @@ public class SingularityPendingRequestBuilder {
   private Optional<Long> runAt;
 
   public SingularityPendingRequestBuilder() {
-    this.user = Optional.absent();
-    this.cmdLineArgsList = Optional.absent();
-    this.runId = Optional.absent();
-    this.skipHealthchecks = Optional.absent();
-    this.message = Optional.absent();
-    this.actionId = Optional.absent();
-    this.resources = Optional.absent();
-    this.runAsUserOverride = Optional.absent();
+    this.user = Optional.empty();
+    this.cmdLineArgsList = Optional.empty();
+    this.runId = Optional.empty();
+    this.skipHealthchecks = Optional.empty();
+    this.message = Optional.empty();
+    this.actionId = Optional.empty();
+    this.resources = Optional.empty();
+    this.runAsUserOverride = Optional.empty();
     this.envOverrides = Collections.emptyMap();
     this.requiredSlaveAttributeOverrides = Collections.emptyMap();
     this.allowedSlaveAttributeOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
-    this.runAt = Optional.absent();
+    this.runAt = Optional.empty();
   }
 
   public SingularityPendingRequestBuilder setRequestId(String requestId) {

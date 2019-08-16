@@ -1,9 +1,10 @@
 package com.hubspot.singularity.smtp;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityRequest;

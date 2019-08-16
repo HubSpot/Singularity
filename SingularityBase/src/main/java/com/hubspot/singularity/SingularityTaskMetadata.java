@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 
@@ -32,7 +32,7 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     this.title = title;
     this.message = message;
     this.user = user;
-    this.level = level.or(DEFAULT_METADATA_LEVEL);
+    this.level = level.orElse(DEFAULT_METADATA_LEVEL);
   }
 
   @Schema(description = "Timestamp this metadata was created")

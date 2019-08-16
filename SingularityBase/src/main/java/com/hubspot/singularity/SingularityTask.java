@@ -2,11 +2,11 @@ package com.hubspot.singularity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.protos.MesosOfferObject;
@@ -100,7 +100,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
       }
     }
     if (index >= ports.size() || index < 0) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(ports.get(index));
     }
@@ -113,7 +113,39 @@ public class SingularityTask extends SingularityTaskIdHolder {
         return Optional.of(resourceObject);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityTask task = (SingularityTask) o;
+
+    if (taskRequest != null ? !taskRequest.equals(task.taskRequest) : task.taskRequest != null) {
+      return false;
+    }
+    if (offers != null ? !offers.equals(task.offers) : task.offers != null) {
+      return false;
+    }
+    if (mesosTask != null ? !mesosTask.equals(task.mesosTask) : task.mesosTask != null) {
+      return false;
+    }
+    return rackId != null ? rackId.equals(task.rackId) : task.rackId == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = taskRequest != null ? taskRequest.hashCode() : 0;
+    result = 31 * result + (offers != null ? offers.hashCode() : 0);
+    result = 31 * result + (mesosTask != null ? mesosTask.hashCode() : 0);
+    result = 31 * result + (rackId != null ? rackId.hashCode() : 0);
+    return result;
   }
 
   @Override

@@ -1,11 +1,11 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -36,26 +36,26 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     resourceOffers();
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
     startup.checkSchedulerForInconsistentState();
 
     resourceOffers();
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
     taskManager.deleteLastActiveTaskStatus(task.getTaskId());
 
     resourceOffers();
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
     startup.checkSchedulerForInconsistentState();
 
     scheduler.drainPendingQueue();
     resourceOffers();
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
 
 
@@ -65,38 +65,38 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
-    Assert.assertEquals("NEW_DEPLOY request added", 1, requestManager.getPendingRequests().size());
-    Assert.assertTrue("No tasks started yet", taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertEquals(1, requestManager.getPendingRequests().size(), "NEW_DEPLOY request added");
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty(), "No tasks started yet");
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertEquals("NEW_DEPLOY request added", 1, requestManager.getPendingRequests().size());
-    Assert.assertEquals("NEW_DEPLOY is first", PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
-    Assert.assertTrue("No tasks started yet", taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertEquals(1, requestManager.getPendingRequests().size(), "NEW_DEPLOY request added");
+    Assertions.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType(), "NEW_DEPLOY is first");
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty(), "No tasks started yet");
 
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue("Pending queue is cleared", requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty(), "Pending queue is cleared");
     List<SingularityPendingTask> pending = taskManager.getPendingTasks();
 
-    Assert.assertEquals("One task is started", 1, taskManager.getPendingTaskIds().size());
-    Assert.assertEquals("First request takes precedence", PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size(), "One task is started");
+    Assertions.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType(), "First request takes precedence");
 
     startup.checkSchedulerForInconsistentState();
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
-    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().isEmpty());
 
-    Assert.assertTrue(pending.equals(taskManager.getPendingTasks()));
+    Assertions.assertTrue(pending.equals(taskManager.getPendingTasks()));
 
     taskManager.deletePendingTask(pending.get(0).getPendingTaskId());
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertTrue(requestManager.getPendingRequests().size() == 1);
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().size() == 1);
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
   }
 
   @Test
@@ -108,8 +108,8 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     startup.checkSchedulerForInconsistentState();
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
 
     boolean caughtException = false;
 
@@ -119,9 +119,9 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
       caughtException = true;
     }
 
-    Assert.assertTrue(caughtException);
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(caughtException);
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
   }
 
   @Test
@@ -130,19 +130,19 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String>empty(), PendingType.ONEOFF, Optional.<Boolean>empty(), Optional.<String>empty()));
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.ONEOFF);
+    Assertions.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.ONEOFF);
   }
 
   @Test
@@ -154,12 +154,12 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     resourceOffers();
 
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
     startup.checkSchedulerForInconsistentState();
 
     // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=NOT_STARTED) for the RUN_ONCE request
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assertions.assertTrue(requestManager.getPendingRequests().isEmpty());
   }
 }

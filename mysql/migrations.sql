@@ -138,3 +138,43 @@ CREATE TABLE `taskUsage` (
   `cpusNrThrottled` BIGINT UNSIGNED NOT NULL,
    PRIMARY KEY (`taskId`, `timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--changeset ssalinas:18 dbms:mysql
+ALTER TABLE `taskUsage` CHARACTER SET ascii COLLATE ascii_bin ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+ALTER TABLE `taskUsage`
+  MODIFY COLUMN `requestId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  MODIFY COLUMN `taskId` varchar(200) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '';
+
+--changeset ssalinas:19 dbms:mysql
+ALTER TABLE `taskHistory` CHARACTER SET ascii COLLATE ascii_bin;
+ALTER TABLE `taskHistory`
+  MODIFY COLUMN `bytes` MEDIUMBLOB DEFAULT NULL,
+  MODIFY COLUMN `taskId` varchar(200) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  MODIFY COLUMN `requestId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  MODIFY COLUMN `lastTaskStatus` ENUM ('TASK_LAUNCHED', 'TASK_STAGING', 'TASK_STARTING', 'TASK_RUNNING', 'TASK_CLEANING', 'TASK_KILLING', 'TASK_FINISHED', 'TASK_FAILED', 'TASK_KILLED', 'TASK_LOST', 'TASK_LOST_WHILE_DOWN', 'TASK_ERROR', 'TASK_DROPPED', 'TASK_GONE', 'TASK_UNREACHABLE', 'TASK_GONE_BY_OPERATOR', 'TASK_UNKNOWN') NOT NULL,
+  MODIFY COLUMN `runId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  MODIFY COLUMN `deployId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  ADD COLUMN `json` JSON DEFAULT NULL,
+  ADD KEY `requestDeployUpdated` (`requestId`, `deployId`, `updatedAt`),
+  ADD KEY `hostUpdated` (`host`, `updatedAt`);
+
+--changeset ssalinas:20 dbms:mysql
+ALTER TABLE `requestHistory` CHARACTER SET ascii COLLATE ascii_bin;
+ALTER TABLE `requestHistory`
+  MODIFY COLUMN `request` blob DEFAULT NULL,
+  MODIFY COLUMN `requestId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  MODIFY COLUMN `requestState` ENUM ('CREATED', 'UPDATED', 'DELETING', 'DELETED', 'PAUSED', 'UNPAUSED', 'ENTERED_COOLDOWN', 'EXITED_COOLDOWN', 'FINISHED', 'DEPLOYED_TO_UNPAUSE', 'BOUNCED', 'SCALED', 'SCALE_REVERTED') NOT NULL,
+  MODIFY COLUMN `user` varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  MODIFY COLUMN `message` varchar(280) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  ADD COLUMN `json` JSON DEFAULT NULL;
+
+--changeset ssalinas:21 dbms:mysql
+ALTER TABLE `deployHistory` CHARACTER SET ascii COLLATE ascii_bin;
+ALTER TABLE `deployHistory`
+  MODIFY COLUMN `bytes` MEDIUMBLOB DEFAULT NULL,
+  MODIFY COLUMN `requestId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  MODIFY COLUMN `deployId` varchar(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  MODIFY COLUMN `user` varchar(100) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  MODIFY COLUMN `message` varchar(280) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  MODIFY COLUMN `deployState` ENUM ('SUCCEEDED', 'FAILED_INTERNAL_STATE', 'CANCELING', 'WAITING', 'OVERDUE', 'FAILED', 'CANCELED') NOT NULL,
+  ADD COLUMN `json` JSON DEFAULT NULL;

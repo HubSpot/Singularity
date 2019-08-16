@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -142,7 +142,7 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
     if (pendingRequest.getPendingType() == PendingType.ONEOFF
         || pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-      return String.format("%s%s%s", deployKey.toString(), pendingRequest.getTimestamp(), pendingRequest.getRunId().or(""));
+      return String.format("%s%s%s", deployKey.toString(), pendingRequest.getTimestamp(), pendingRequest.getRunId().orElse(""));
     } else {
       return deployKey.toString();
     }
@@ -234,11 +234,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult cooldown(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String>empty(), Optional.<String>empty());
   }
 
   public SingularityCreateResult finish(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String>empty(), Optional.<String>empty());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -447,8 +447,8 @@ public class RequestManager extends CuratorAsyncManager {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String> absent(),
-        Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String>empty(),
+        Optional.<Boolean>empty(), message, actionId, Optional.<SingularityShellCommand>empty()));
 
     markDeleting(request, System.currentTimeMillis(), user, message);
 

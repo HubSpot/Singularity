@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -8,7 +9,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -95,10 +95,10 @@ public class TaskTrackerResource {
     for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId, false)) {
       if (pendingTask.getRunId().isPresent() && pendingTask.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
-            Optional.absent(),
+            Optional.empty(),
             pendingTask.getPendingTaskId(),
             pendingTask.getRunId(),
-            Optional.absent(),
+            Optional.empty(),
             Collections.emptyList(),
             true
         ));
@@ -108,25 +108,28 @@ public class TaskTrackerResource {
     for (SingularityPendingRequest pendingRequest : requestManager.getPendingRequests()) {
       if (pendingRequest.getRequestId().equals(requestId) && pendingRequest.getRunId().isPresent() && pendingRequest.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             pendingRequest.getRunId(),
-            Optional.absent(),
+            Optional.empty(),
             Collections.emptyList(),
             true
         ));
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private Optional<SingularityTaskState> getTaskStateFromId(SingularityTaskId singularityTaskId) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(singularityTaskId).or(historyManager.getTaskHistory(singularityTaskId.toString()));
+    Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(singularityTaskId);
+    if (!maybeTaskHistory.isPresent()) {
+      maybeTaskHistory = historyManager.getTaskHistory(singularityTaskId.toString());
+    }
     if (maybeTaskHistory.isPresent() && maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {
       return Optional.of(SingularityTaskState.fromTaskHistory(maybeTaskHistory.get()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

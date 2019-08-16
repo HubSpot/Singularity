@@ -35,18 +35,22 @@ public class SingularityManagedCachedThreadPoolFactory {
 
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      executorPools.forEach(ExecutorService::shutdown);
+      if (timeoutInMillis == 0) {
+        executorPools.forEach(ExecutorService::shutdownNow);
+      } else {
+        executorPools.forEach(ExecutorService::shutdown);
 
-      long timeoutLeftInMillis = timeoutInMillis;
+        long timeoutLeftInMillis = timeoutInMillis;
 
-      for (ExecutorService service : executorPools) {
-        final long start = System.currentTimeMillis();
+        for (ExecutorService service : executorPools) {
+          final long start = System.currentTimeMillis();
 
-        if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-          return;
+          if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
+            return;
+          }
+
+          timeoutLeftInMillis -= (System.currentTimeMillis() - start);
         }
-
-        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
       }
     }
   }

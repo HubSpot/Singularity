@@ -2,10 +2,10 @@ package com.hubspot.singularity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -16,7 +16,7 @@ public class SingularityDeployFailure {
   private final Optional<String> message;
 
   public SingularityDeployFailure(SingularityDeployFailureReason reason) {
-    this(reason, Optional.<SingularityTaskId>absent(), Optional.<String>absent());
+    this(reason, Optional.<SingularityTaskId>empty(), Optional.<String>empty());
   }
 
   public static List<SingularityDeployFailure> lbUpdateFailed() {

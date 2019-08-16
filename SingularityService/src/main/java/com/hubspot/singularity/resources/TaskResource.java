@@ -11,6 +11,7 @@ import java.net.ConnectException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -296,6 +296,25 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
+  @Path("/active/slave/{slaveId}/ids")
+  @Operation(
+      summary = "Retrieve list of active tasks on a specific slave",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "A slave with the specified id was not found")
+      }
+  )
+  public List<SingularityTaskId> getTaskIdsForSlave(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "The mesos slave id to retrieve task ids for") @PathParam("slaveId") String slaveId,
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+
+    checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
+
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTaskIdsOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
   @PropertyFiltering
   @Path("/active")
   @Operation(summary = "Retrieve the list of active tasks for all requests")
@@ -303,6 +322,16 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/active/ids")
+  @Operation(summary = "Retrieve the list of active task ids for all requests")
+  public List<SingularityTaskId> getActiveTaskIds(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTaskIds(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -443,18 +472,18 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Overrides related to how the task kill is performed") SingularityKillTaskRequest killTaskRequest,
       @Parameter(hidden = true) @Auth SingularityUser user) {
-    final Optional<SingularityKillTaskRequest> maybeKillTaskRequest = Optional.fromNullable(killTaskRequest);
-    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orNull(), () -> killTask(taskId, maybeKillTaskRequest, user));
+    final Optional<SingularityKillTaskRequest> maybeKillTaskRequest = Optional.ofNullable(killTaskRequest);
+    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orElse(null), () -> killTask(taskId, maybeKillTaskRequest, user));
   }
 
   public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest, SingularityUser user) {
     final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE, user);
 
-    Optional<String> message = Optional.absent();
-    Optional<Boolean> override = Optional.absent();
-    Optional<String> actionId = Optional.absent();
-    Optional<Boolean> waitForReplacementTask = Optional.absent();
-    Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
+    Optional<String> message = Optional.empty();
+    Optional<Boolean> override = Optional.empty();
+    Optional<String> actionId = Optional.empty();
+    Optional<Boolean> waitForReplacementTask = Optional.empty();
+    Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.empty();
 
     if (killTaskRequest.isPresent()) {
       actionId = killTaskRequest.get().getActionId();
@@ -469,7 +498,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     TaskCleanupType cleanupType = TaskCleanupType.USER_REQUESTED;
 
-    if (waitForReplacementTask.or(Boolean.FALSE)) {
+    if (waitForReplacementTask.orElse(Boolean.FALSE)) {
       cleanupType = TaskCleanupType.USER_REQUESTED_TASK_BOUNCE;
       validator.checkActionEnabled(SingularityAction.BOUNCE_TASK);
     } else {
@@ -508,7 +537,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     if (cleanupType == TaskCleanupType.USER_REQUESTED_TASK_BOUNCE) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskId().getDeployId(), now, user.getEmail(),
-          PendingType.TASK_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId));
+          PendingType.TASK_BOUNCE, Optional.<List<String>>empty(), Optional.<String>empty(), Optional.<Boolean>empty(), message, actionId));
     }
 
     return taskCleanup;

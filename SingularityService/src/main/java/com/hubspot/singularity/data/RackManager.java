@@ -1,13 +1,13 @@
 package com.hubspot.singularity.data;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
@@ -52,7 +52,7 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
       return leaderCache.getRack(rackId);
     }
 
-    return Optional.absent(); // fallback to zk
+    return Optional.empty(); // fallback to zk
   }
 
   @Override

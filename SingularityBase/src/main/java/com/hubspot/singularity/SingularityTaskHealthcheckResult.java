@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
 
@@ -36,7 +36,7 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     this.durationMillis = durationMillis;
     this.timestamp = timestamp;
     this.responseBody = responseBody;
-    this.startup = startup.or(false);
+    this.startup = startup.orElse(false);
   }
 
   @Override

@@ -1,8 +1,8 @@
 ![Singularity](Docs/images/singularity.png)
 
-**Latest Release Version:** [0.14.1](https://github.com/HubSpot/Singularity/releases/tag/Singularity-0.13.0)
+**Latest Release Version:** [1.0.0](https://github.com/HubSpot/Singularity/releases/tag/Singularity-1.0.0)
 
-**Mesos Version:** [0.28.2](http://mesos.apache.org/documentation/latest/upgrades/)
+**Mesos Version:** [1.8.0](http://mesos.apache.org/documentation/latest/upgrades/)
 
 [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
 

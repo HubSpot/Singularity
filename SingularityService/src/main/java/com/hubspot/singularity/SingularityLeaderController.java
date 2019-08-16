@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -15,7 +16,6 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -125,7 +125,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
         LOG.error("While stopping driver", t);
         exceptionNotifier.notify(String.format("Error while stopping driver (%s)", t.getMessage()), t);
       } finally {
-        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>absent());
+        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>empty());
       }
     }
   }
@@ -138,7 +138,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
 
     final long now = System.currentTimeMillis();
     final Optional<Long> lastOfferTimestamp = getLastOfferTimestamp();
-    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> absent();
+    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long>empty();
 
     String mesosMaster = null;
     Optional<MasterInfo> mesosMasterInfo = getMaster();

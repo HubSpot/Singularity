@@ -1,6 +1,6 @@
 package com.hubspot.singularity.executor.models;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * Handlebars context for generating the runner.sh file.

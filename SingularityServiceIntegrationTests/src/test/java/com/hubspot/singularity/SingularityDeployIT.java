@@ -1,26 +1,22 @@
 package com.hubspot.singularity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.jukito.JukitoModule;
-import org.jukito.JukitoRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import com.hubspot.singularity.client.SingularityClient;
 
-@RunWith(JukitoRunner.class)
+import name.falgout.jeffrey.testing.junit.guice.GuiceExtension;
+import name.falgout.jeffrey.testing.junit.guice.IncludeModule;
+
+@ExtendWith(GuiceExtension.class)
+@IncludeModule(DockerTestModule.class)
 public class SingularityDeployIT {
   private static final String REQUEST_ID = "deploy-it-request-run-once";
-
-  public static class Module extends JukitoModule {
-    @Override
-    protected void configureTest() {
-      install(new DockerTestModule());
-    }
-  }
 
   @Test
   public void testDeploy(SingularityClient singularityClient) throws Exception {
@@ -40,13 +36,13 @@ public class SingularityDeployIT {
         .setCommand(Optional.of("sleep 10"))
         .build();
 
-    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String> absent());
+    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>empty(), Optional.<String>empty());
 
-    Optional<DeployState> deployState = Optional.absent();
+    Optional<DeployState> deployState = Optional.empty();
     for (int i = 0; i < 10; i++) {
       final Optional<SingularityDeployHistory> deployHistory = singularityClient.getHistoryForRequestDeploy(REQUEST_ID, deployId);
       if (deployHistory.isPresent() && deployHistory.get().getDeployResult().isPresent()) {
-        deployState = Optional.fromNullable(deployHistory.get().getDeployResult().get().getDeployState());
+        deployState = Optional.ofNullable(deployHistory.get().getDeployResult().get().getDeployState());
 
         if (deployState.get().isDeployFinished()) {
           break;

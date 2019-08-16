@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -67,8 +67,9 @@ public class SingularityCooldown {
         .count();
     java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
 
-    return failureCount >= cooldownCount
-        && (!mostRecentFailure.isPresent() || mostRecentFailure.get() > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins));
+    boolean mostRecentFailureOutsideWindow = !mostRecentFailure.isPresent() || mostRecentFailure.get() < System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins);
+
+    return failureCount >= cooldownCount && !mostRecentFailureOutsideWindow;
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {

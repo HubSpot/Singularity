@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +17,6 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.RequestType;
@@ -54,7 +54,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
 
-  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
+  private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(60);
 
   private long checkDeploysEverySeconds = 5;
 
@@ -120,7 +120,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int fastFailureCooldownCount = 3;
 
-  private long fastFailureCooldownMs = 60000;
+  private long fastFailureCooldownMs = 30000;
 
   private long fastCooldownExpiresMinutesWithoutFailure = 5;
 
@@ -128,7 +128,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long slowFailureCooldownMs = 600000;
 
-  private long slowCooldownExpiresMinutesWithoutFailure = 8;
+  private long slowCooldownExpiresMinutesWithoutFailure = 5;
 
   private long cooldownMinScheduleSeconds = 120;
 
@@ -152,7 +152,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
-  private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.empty();
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -160,11 +160,11 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
-  private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.empty();
 
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
 
-  private Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase = Optional.empty();
 
   private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -189,15 +189,15 @@ public class SingularityConfiguration extends Configuration {
 
   private int healthcheckTimeoutSeconds = 5;
 
-  private Optional<Integer> startupDelaySeconds = Optional.absent();
+  private Optional<Integer> startupDelaySeconds = Optional.empty();
 
   private int startupTimeoutSeconds = 45;
 
   private int startupIntervalSeconds = 2;
 
-  private Optional<Integer> healthcheckMaxRetries = Optional.absent();
+  private Optional<Integer> healthcheckMaxRetries = Optional.empty();
 
-  private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+  private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.empty();
 
   private long killTaskIfNotHealthyAfterSeconds = 600;
 
@@ -223,7 +223,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
-  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
+  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.empty();
 
   private boolean preResolveUpstreamDNS = false;
 
@@ -250,6 +250,8 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("historyPurging")
   @Valid
   private HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
+
+  private boolean sqlFallBackToBytesFields = true;
 
   @JsonProperty("mesos")
   @Valid
@@ -304,7 +306,7 @@ public class SingularityConfiguration extends Configuration {
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
   @JsonProperty("taskExecutionTimeLimitMillis")
-  private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
+  private Optional<Long> taskExecutionTimeLimitMillis = Optional.empty();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
@@ -395,7 +397,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean allowDeployOfPausedRequests = false;
 
-  private Optional<Integer> cpuHardLimit = Optional.absent();
+  private Optional<Integer> cpuHardLimit = Optional.empty();
 
   // If cpuHardLimit is specified and a task is requesting a base cpu of > cpuHardLimit, that task's new  hard limit is requested cpus * cpuHardLimitScaleFactor
   private double cpuHardLimitScaleFactor = 1.25;
@@ -467,7 +469,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<String> getCommonHostnameSuffixToOmit() {
-    return Optional.fromNullable(Strings.emptyToNull(commonHostnameSuffixToOmit));
+    return Optional.ofNullable(Strings.emptyToNull(commonHostnameSuffixToOmit));
   }
 
   public long getConsiderTaskHealthyAfterRunningForSeconds() {
@@ -607,7 +609,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
-    return Optional.fromNullable(databaseConfiguration);
+    return Optional.ofNullable(databaseConfiguration);
   }
 
   public int getDefaultBounceExpirationMinutes() {
@@ -719,7 +721,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<String> getHostname() {
-    return Optional.fromNullable(Strings.emptyToNull(hostname));
+    return Optional.ofNullable(Strings.emptyToNull(hostname));
   }
 
   public long getKillAfterTasksDoNotRunDefaultSeconds() {
@@ -759,7 +761,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public Optional<Map<String, String>> getLoadBalancerQueryParams() {
-    return Optional.fromNullable(loadBalancerQueryParams);
+    return Optional.ofNullable(loadBalancerQueryParams);
   }
 
   public long getLoadBalancerRequestTimeoutMillis() {
@@ -836,7 +838,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonIgnore
   public Optional<S3Configuration> getS3ConfigurationOptional() {
-    return Optional.fromNullable(s3Configuration);
+    return Optional.ofNullable(s3Configuration);
   }
 
   public long getSandboxHttpTimeoutMillis() {
@@ -849,12 +851,12 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonIgnore
   public Optional<SentryConfiguration> getSentryConfigurationOptional(){
-    return Optional.fromNullable(sentryConfiguration);
+    return Optional.ofNullable(sentryConfiguration);
   }
 
   @JsonIgnore
   public Optional<SMTPConfiguration> getSmtpConfigurationOptional() {
-    return Optional.fromNullable(smtpConfiguration);
+    return Optional.ofNullable(smtpConfiguration);
   }
 
   public S3Configuration getS3Configuration() {
@@ -1319,7 +1321,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonIgnore
   public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
-    return Optional.fromNullable(ldapConfiguration);
+    return Optional.ofNullable(ldapConfiguration);
   }
 
   public WebhookAuthConfiguration getWebhookAuthConfiguration() {
@@ -1746,5 +1748,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setProxyRunNowToLeader(boolean proxyRunNowToLeader) {
     this.proxyRunNowToLeader = proxyRunNowToLeader;
+  }
+
+  public boolean isSqlFallBackToBytesFields() {
+    return sqlFallBackToBytesFields;
+  }
+
+  public void setSqlFallBackToBytesFields(boolean sqlFallBackToBytesFields) {
+    this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 }

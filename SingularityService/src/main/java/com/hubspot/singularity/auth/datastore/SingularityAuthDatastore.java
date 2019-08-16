@@ -6,5 +6,5 @@ import com.hubspot.singularity.SingularityUser;
 
 public interface SingularityAuthDatastore {
   Optional<SingularityUser> getUser(String username);
-  com.google.common.base.Optional<Boolean> isHealthy();
+  Optional<Boolean> isHealthy();
 }

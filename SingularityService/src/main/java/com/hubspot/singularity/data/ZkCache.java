@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -45,7 +45,7 @@ public class ZkCache<T> {
       hitMeter.mark();
     }
 
-    return Optional.fromNullable(fromCache);
+    return Optional.ofNullable(fromCache);
   }
 
   public void delete(String path) {
@@ -56,6 +56,9 @@ public class ZkCache<T> {
     cache.put(path, object);
   }
 
+  public void invalidateAll() {
+    cache.invalidateAll();
+  }
 }
 
 

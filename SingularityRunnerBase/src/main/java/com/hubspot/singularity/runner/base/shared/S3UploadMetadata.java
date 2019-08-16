@@ -2,11 +2,11 @@ package com.hubspot.singularity.runner.base.shared;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 /**
@@ -100,8 +100,8 @@ public class S3UploadMetadata {
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
     this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
     this.uploadImmediately = uploadImmediately;
-    this.checkSubdirectories = checkSubdirectories.or(false);
-    this.uploaderType = uploaderType.or(SingularityUploaderType.S3);
+    this.checkSubdirectories = checkSubdirectories.orElse(false);
+    this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
     this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
     this.gcsStorageClass = gcsStorageClass;
     this.encryptionKey = encryptionKey;
@@ -221,12 +221,12 @@ public class S3UploadMetadata {
   }
 
   public boolean isUseS3ServerSideEncryption() {
-    return useS3ServerSideEncryption.or(false);
+    return useS3ServerSideEncryption.orElse(false);
   }
 
   @JsonIgnore
   public boolean isImmediate() {
-    return uploadImmediately.or(false);
+    return uploadImmediately.orElse(false);
   }
 
   @Override

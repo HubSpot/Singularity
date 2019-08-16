@@ -232,7 +232,7 @@ export const NextRun = (
     id="nextRun"
     key="nextRun"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId.nextRunAt
+      (rowData) => rowData.pendingTask ? rowData.pendingTask.pendingTaskId.nextRunAt : rowData.nextRunAt
     }
     cellRender={(cellData) => {
       let label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_SCHEDULED')}`}>SCHEDULED</span>;
@@ -257,7 +257,7 @@ export const PendingType = (
     id="pendingType"
     key="pendingType"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId.pendingType
+      (rowData) => rowData.pendingType
     }
     cellRender={(cellData) => (
       <div>
@@ -283,17 +283,17 @@ export const DeployId = (
   />
 );
 
-export const PendingDeployId = (
+export const RequestId = (
   <Column
-    label="Deploy ID"
-    id="pendingDeployId"
-    key="pendingDeployId"
+    label="Request ID"
+    id="requestId"
+    key="requestId"
     cellData={
-      (rowData) => rowData.pendingTask.pendingTaskId
+      (rowData) => rowData
     }
-    sortData={(cellData) => cellData.deployId}
+    sortData={(cellData) => cellData.requestId}
     cellRender={(cellData) =>
-      <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</Link>
+      <Link to={`request/${cellData.requestId}`}>{cellData.requestId}</Link>
     }
     sortable={true}
   />
@@ -332,6 +332,22 @@ export const ScheduledTaskId = (
     }
     sortable={true}
     className="keep-in-check"
+  />
+);
+
+export const PendingDeployId = (
+  <Column
+    label="Deploy ID"
+    id="pendingDeployId"
+    key="pendingDeployId"
+    cellData={
+      (rowData) => rowData
+    }
+    sortData={(cellData) => cellData.deployId}
+    cellRender={(cellData) =>
+      <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</Link>
+    }
+    sortable={true}
   />
 );
 

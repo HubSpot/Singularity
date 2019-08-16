@@ -2,12 +2,12 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.mesos.v1.Protos.Offer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -47,11 +47,11 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
 
     schedulerPoller.runActionOnPoll();
 
-    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(1, taskManager.getActiveTasks().size());
 
     resourceOffers();
 
-    Assert.assertEquals(2, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(2, taskManager.getActiveTasks().size());
   }
 
   @Test
@@ -69,10 +69,10 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
             requestId,
             firstDeployId,
             System.currentTimeMillis(),
-            Optional.absent(),
+            Optional.empty(),
             PendingType.TASK_DONE,
-            Optional.absent(),
-            Optional.absent()
+            Optional.empty(),
+            Optional.empty()
         )
     );
 
@@ -80,15 +80,15 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
 
     List<Offer> cachedOffers = offerCache.peekOffers();
-    Assert.assertEquals(1, cachedOffers.size());
+    Assertions.assertEquals(1, cachedOffers.size());
   }
 
   @Test
   public void testLeftoverCachedOffersAreReturnedToCache() throws Exception {
     configuration.setCacheOffers(true);
 
-    Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"80:81"});
-    Offer extraOffer = createOffer(4, 256, 1024, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"83:84"});
+    Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"80:81"});
+    Offer extraOffer = createOffer(4, 256, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"83:84"});
 
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
 
@@ -103,17 +103,17 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
             requestId,
             firstDeployId,
             System.currentTimeMillis(),
-            Optional.absent(),
+            Optional.empty(),
             PendingType.TASK_DONE,
-            Optional.absent(),
-            Optional.absent()
+            Optional.empty(),
+            Optional.empty()
         )
     );
 
     schedulerPoller.runActionOnPoll();
 
     List<Offer> cachedOffers = offerCache.peekOffers();
-    Assert.assertEquals(1, cachedOffers.size());
+    Assertions.assertEquals(1, cachedOffers.size());
   }
 
   @Test
@@ -127,13 +127,13 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
 
     initRequest();
     initFirstDeploy();
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.absent(), PendingType.TASK_DONE,
-        Optional.absent(), Optional.absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.empty(), PendingType.TASK_DONE,
+        Optional.empty(), Optional.empty()));
 
     schedulerPoller.runActionOnPoll();
 
-    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+    Assertions.assertEquals(1, taskManager.getActiveTasks().size());
 
-    Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
+    Assertions.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
   }
 }

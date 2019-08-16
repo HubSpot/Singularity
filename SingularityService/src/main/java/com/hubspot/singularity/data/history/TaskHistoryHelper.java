@@ -3,8 +3,8 @@ package com.hubspot.singularity.data.history;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -79,7 +79,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
       return Optional.of(history.get().getTask());
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<SingularityTaskIdHistory> getByRunId(String requestId, String runId) {
@@ -95,7 +95,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
       return Optional.of(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(history.get().getTask().getTaskId(), history.get().getTask(), history.get().getTaskUpdates()));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -140,7 +140,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
     final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
         query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter());
 
-    return Optional.fromNullable(numFromZk + numFromHistory);
+    return Optional.ofNullable(numFromZk + numFromHistory);
   }
 
 }

@@ -1,13 +1,13 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -42,7 +42,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId));
-      Optional<MesosTaskStatusObject> taskStatus = Optional.absent();
+      Optional<MesosTaskStatusObject> taskStatus = Optional.empty();
 
       for (SingularityTaskHistoryUpdate update : updates) {
         if (update.getTaskState().toTaskState().isPresent()) {
@@ -58,7 +58,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
         }
       }
 
-      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.absent());
+      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.empty());
 
       taskManager.saveLastActiveTaskStatus(taskStatusHolder);
     }

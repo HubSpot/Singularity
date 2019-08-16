@@ -1,12 +1,12 @@
 package com.hubspot.singularity.executor;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public enum SingularityExecutorLogrotateFrequency {
     HOURLY("daily", Optional.of("0 * * * *")),  // we have to use the "daily" frequency because not all versions of logrotate support "hourly"
-    DAILY("daily", Optional.absent()),
-    WEEKLY("weekly", Optional.absent()),
-    MONTHLY("monthly", Optional.absent());
+    DAILY("daily", Optional.empty()),
+    WEEKLY("weekly", Optional.empty()),
+    MONTHLY("monthly", Optional.empty());
 
     private final String logrotateValue;
     private final Optional<String> cronSchedule;
