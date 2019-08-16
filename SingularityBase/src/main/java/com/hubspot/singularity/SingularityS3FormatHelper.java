@@ -120,12 +120,12 @@ public class SingularityS3FormatHelper {
     return String.format("%02d", value);
   }
 
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, String deployId, Optional<String> tag, long start, long end, String group) {
+  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, String deployId, Optional<String> tag, long start, long end, String group, List<String> prefixWhitelist) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, requestId, deployId, tag, group);
 
     keyFormat = trimTaskId(keyFormat, requestId + "-" + deployId);
 
-    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_DEPLOY, start, end);
+    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_DEPLOY, start, end, prefixWhitelist);
   }
 
   private static String trimTaskId(String s3KeyFormat, String replaceWith) {
@@ -143,10 +143,10 @@ public class SingularityS3FormatHelper {
 
     s3KeyFormat = trimTaskId(s3KeyFormat, requestId);
 
-    return getS3KeyPrefixes(s3KeyFormat, DISALLOWED_FOR_REQUEST, start, end);
+    return getS3KeyPrefixes(s3KeyFormat, DISALLOWED_FOR_REQUEST, start, end, Collections.emptyList());
   }
 
-  private static Collection<String> getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end) {
+  private static Collection<String> getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end, List<String> prefixWhitelist) {
     String trimKeyFormat = trimKeyFormat(s3KeyFormat, disallowedKeys);
 
     int indexOfY = trimKeyFormat.indexOf("%Y");
@@ -192,7 +192,9 @@ public class SingularityS3FormatHelper {
         keyBuilder.replace(indexOfD, indexOfD + 2, getDayOrMonth(calendar.get(Calendar.DAY_OF_MONTH)));
       }
 
-      keyPrefixes.add(keyBuilder.toString());
+      if (prefixWhitelist.isEmpty() || prefixWhitelist.stream().anyMatch(allowedPrefix -> keyBuilder.toString().startsWith(allowedPrefix))) {
+        keyPrefixes.add(keyBuilder.toString());
+      }
 
       if (indexOfD > -1) {
         calendar.add(Calendar.DAY_OF_YEAR, 1);
@@ -208,10 +210,10 @@ public class SingularityS3FormatHelper {
     return keyPrefixes;
   }
 
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, SingularityTaskId taskId, Optional<String> tag, long start, long end, String group) {
+  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, SingularityTaskId taskId, Optional<String> tag, long start, long end, String group, List<String> prefixWhitelist) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, taskId, tag, group);
 
-    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_TASK, start, end);
+    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_TASK, start, end, prefixWhitelist);
   }
 
 }
