@@ -21,6 +21,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularitySlave;
@@ -49,7 +50,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Inject
   public SlaveResource(AsyncHttpClient httpClient,
                        LeaderLatch leaderLatch,
-                       ObjectMapper objectMapper,
+                       @Singularity ObjectMapper objectMapper,
                        SlaveManager slaveManager,
                        SingularityAuthorizationHelper authorizationHelper,
                        SingularityValidator validator) {

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -37,7 +38,7 @@ public class SandboxManager {
   private static final TypeReference<Collection<MesosFileObject>> MESOS_FILE_OBJECTS = new TypeReference<Collection<MesosFileObject>>() {};
 
   @Inject
-  public SandboxManager(AsyncHttpClient asyncHttpClient, SingularityConfiguration configuration, ObjectMapper objectMapper) {
+  public SandboxManager(AsyncHttpClient asyncHttpClient, SingularityConfiguration configuration, @Singularity ObjectMapper objectMapper) {
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
     this.configuration = configuration;

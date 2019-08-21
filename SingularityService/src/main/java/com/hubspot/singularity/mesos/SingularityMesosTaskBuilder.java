@@ -61,6 +61,7 @@ import com.hubspot.mesos.SingularityNetworkInfo;
 import com.hubspot.mesos.SingularityPortMapping;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.mesos.SingularityVolumeSource;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -83,7 +84,7 @@ class SingularityMesosTaskBuilder {
   private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
+  SingularityMesosTaskBuilder(@Singularity ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
     this.objectMapper = objectMapper;
     this.idGenerator = idGenerator;
     this.configuration = configuration;

@@ -58,6 +58,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
@@ -126,7 +127,7 @@ public class S3LogResource extends AbstractHistoryResource {
   };
 
   @Inject
-  public S3LogResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager,
+  public S3LogResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager,
                        Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, SingularityS3Services s3Services) {
     super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
     this.requestManager = requestManager;

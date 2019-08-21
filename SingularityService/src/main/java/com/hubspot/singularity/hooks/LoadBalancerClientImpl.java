@@ -26,6 +26,7 @@ import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -62,7 +63,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private static final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, MesosProtosUtils mesosProtosUtils) {
+  public LoadBalancerClientImpl(SingularityConfiguration configuration, @Singularity ObjectMapper objectMapper, AsyncHttpClient httpClient, MesosProtosUtils mesosProtosUtils) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.loadBalancerUri = configuration.getLoadBalancerUri();

@@ -22,6 +22,7 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
@@ -47,7 +48,7 @@ public class SnsWebhookManager {
   private final Map<WebhookType, String> typeToArn;
 
   @Inject
-  public SnsWebhookManager(ObjectMapper objectMapper,
+  public SnsWebhookManager(@Singularity ObjectMapper objectMapper,
                            SingularityConfiguration configuration,
                            SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                            SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory,

@@ -20,6 +20,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
@@ -49,7 +50,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Inject
   public RackResource(AsyncHttpClient httpClient,
                       LeaderLatch leaderLatch,
-                      ObjectMapper objectMapper,
+                      @Singularity ObjectMapper objectMapper,
                       RackManager rackManager,
                       SingularityAuthorizationHelper authorizationHelper,
                       SingularityValidator validator) {

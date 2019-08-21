@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -37,6 +38,7 @@ public class ZkMigrationTest extends SingularitySchedulerTestBase {
   @Inject
   private RequestManager requestManager;
   @Inject
+  @Singularity
   private ObjectMapper objectMapper;
   @Inject
   private CuratorFramework curator;

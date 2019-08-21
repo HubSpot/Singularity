@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.transcoders.JsonTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -30,7 +31,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
     private final Transcoder<OldSingularityRequestWithState> oldSingularityRequestTranscoder;
 
     @Inject
-    public SingularityRequestTypeMigration(ObjectMapper objectMapper, CuratorFramework curator, RequestManager requestManager) {
+    public SingularityRequestTypeMigration(@Singularity ObjectMapper objectMapper, CuratorFramework curator, RequestManager requestManager) {
         super(9);
 
         this.curator = curator;

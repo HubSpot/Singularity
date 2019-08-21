@@ -16,10 +16,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -35,7 +32,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
@@ -77,18 +74,13 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Environment;
 import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
-  private final ObjectMapper om = Jackson.newObjectMapper()
-      .setSerializationInclusion(Include.NON_ABSENT)
-      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      .registerModule(new ProtobufModule())
-      .registerModule(new Jdk8Module());
+  private final ObjectMapper om = JavaUtils.newObjectMapper();
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
