@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -35,7 +36,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
 
   @Inject
-  public SingularityCmdLineArgsMigration(CuratorFramework curator, TaskManager taskManager, ObjectMapper objectMapper, Transcoder<SingularityPendingRequest> pendingRequestTranscoder) {
+  public SingularityCmdLineArgsMigration(CuratorFramework curator, TaskManager taskManager, @Singularity ObjectMapper objectMapper, Transcoder<SingularityPendingRequest> pendingRequestTranscoder) {
     super(4);
     this.curator = curator;
     this.taskManager = taskManager;

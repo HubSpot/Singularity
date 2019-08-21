@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -106,7 +107,7 @@ public class SingularityMappers {
 
     @Inject
     SingularityRequestHistoryMapper(SingularityConfiguration singularityConfiguration,
-                                    ObjectMapper objectMapper) {
+                                    @Singularity ObjectMapper objectMapper) {
       this.userColumn = getUserColumn(singularityConfiguration);
       this.objectMapper = objectMapper;
     }
@@ -137,7 +138,7 @@ public class SingularityMappers {
     private final ObjectMapper objectMapper;
 
     @Inject
-    SingularityRequestWithTimeMapper(ObjectMapper objectMapper) {
+    SingularityRequestWithTimeMapper(@Singularity ObjectMapper objectMapper) {
       this.objectMapper = objectMapper;
     }
 

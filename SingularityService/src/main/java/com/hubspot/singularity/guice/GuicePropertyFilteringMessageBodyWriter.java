@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.jaxrs.PropertyFilter;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.singularity.Singularity;
 
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.setup.Environment;
@@ -44,7 +45,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
   private final ObjectMapper objectMapper;
 
   @Inject
-  public GuicePropertyFilteringMessageBodyWriter(final Environment environment, final ObjectMapper objectMapper) {
+  public GuicePropertyFilteringMessageBodyWriter(final Environment environment, @Singularity ObjectMapper objectMapper) {
     super(objectMapper);
     this.environment = checkNotNull(environment, "environment is null");
     this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");

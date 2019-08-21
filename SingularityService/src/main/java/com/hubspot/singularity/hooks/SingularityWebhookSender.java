@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -49,7 +50,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   @Inject
   public SingularityWebhookSender(SingularityConfiguration configuration,
                                   AsyncHttpClient http,
-                                  ObjectMapper objectMapper,
+                                  @Singularity ObjectMapper objectMapper,
                                   TaskHistoryHelper taskHistoryHelper,
                                   WebhookManager webhookManager,
                                   SingularityManagedScheduledExecutorServiceFactory executorServiceFactory) {

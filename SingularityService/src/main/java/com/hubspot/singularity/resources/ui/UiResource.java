@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.views.IndexView;
@@ -27,7 +28,7 @@ public class UiResource {
   private final ObjectMapper mapper;
 
   @Inject
-  public UiResource(@Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, ObjectMapper mapper) {
+  public UiResource(@Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, @Singularity ObjectMapper mapper) {
     this.configuration = configuration;
     this.singularityUriBase = singularityUriBase;
     this.mapper = mapper;

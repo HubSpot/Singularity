@@ -21,12 +21,13 @@ import com.hubspot.mesos.protos.MesosStringValue;
 import com.hubspot.mesos.protos.MesosTaskObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.Singularity;
 
 public class MesosProtosUtils {
   private final ObjectMapper objectMapper;
 
   @Inject
-  public MesosProtosUtils(ObjectMapper objectMapper) {
+  public MesosProtosUtils(@Singularity ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
   }
 
