@@ -1,10 +1,10 @@
 {
-  "presets": ["es2015"],
+  "presets": ["@babel/env"],
   "plugins": [
-    "transform-runtime",
-    "transform-react-jsx",
-    "transform-object-rest-spread",
-    "transform-class-properties",
+    "@babel/transform-runtime",
+    "@babel/transform-react-jsx",
+    "@babel/proposal-object-rest-spread",
+    "@babel/proposal-class-properties",
     "react-hot-loader/babel"
   ]
 }
