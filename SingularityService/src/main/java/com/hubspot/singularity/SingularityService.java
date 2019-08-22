@@ -12,6 +12,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
+import com.google.inject.Stage;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
@@ -76,11 +77,14 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     final Iterable<? extends ConfiguredBundle<T>> additionalConfiguredBundles = checkNotNull(getDropwizardConfiguredBundles(bootstrap), "getDropwizardConfiguredBundles() returned null");
 
     guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
-        .modules(new SingularityServiceModule())
-        .modules(getObjectMapperModule())
-        .modules(new SingularityAuthModule())
+        .modules(
+            new SingularityServiceModule(),
+            getObjectMapperModule(),
+            new SingularityAuthModule()
+        )
         .modules(additionalModules)
         .enableGuiceEnforcer(false)
+        .stage(getGuiceStage())
         .build();
     bootstrap.addBundle(guiceBundle);
 
@@ -107,6 +111,10 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     bootstrap.getObjectMapper().registerModule(new Jdk8Module());
     bootstrap.getObjectMapper().setSerializationInclusion(Include.NON_ABSENT);
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
+  public Stage getGuiceStage() {
+    return Stage.PRODUCTION;
   }
 
   @Override
