@@ -379,17 +379,17 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.of(70000L), Optional.of(20000L), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(OrderDirection.DESC)), 0, 3), 3,
-        taskSix, taskFive, taskFour);
+        taskFive, taskThree, taskFour);
 
     taskHistoryPersister.runActionOnPoll();
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty()), 0, 3), 3,
-        taskSeven, taskSix, taskFive);
+        taskSeven, taskFive, taskThree);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty()), 2, 1), 1,
-        taskFive);
+        taskThree);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(secondDeployId), Optional.<String>empty(), Optional.of("host4"),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty()), 0, 3), 1,
@@ -405,19 +405,19 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.of(70000L), Optional.of(20000L), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(OrderDirection.ASC)), 0, 3), 3,
-        taskThree, taskFour, taskFive);
+        taskSix, taskFour, taskThree);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.of(70000L), Optional.of(20000L), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(OrderDirection.ASC)), 1, 3), 3,
-        taskFour, taskFive, taskSix);
+        taskFour, taskThree, taskFive);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(140000L), Optional.of(90000L), Optional.of(OrderDirection.ASC)), 0, 3), 3,
-      taskThree, taskFour, taskFive);
+      taskSix, taskFour, taskThree);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(140000L), Optional.of(90000L), Optional.of(OrderDirection.ASC)), 1, 3), 3,
-      taskFour, taskFive, taskSix);
+      taskFour, taskThree, taskFive);
 
     match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String>empty(), Optional.of("test-run-id-1"), Optional.<String>empty(),
         Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.<Long>empty(), Optional.of(OrderDirection.ASC)), 0, 1), 1,
@@ -435,7 +435,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       SingularityTaskIdHistory idHistory = history.get(i);
       SingularityTask task = tasks[i];
 
-      Assertions.assertEquals(task.getTaskId(), idHistory.getTaskId());
+      Assertions.assertEquals(idHistory.getTaskId(), task.getTaskId());
     }
   }
 
