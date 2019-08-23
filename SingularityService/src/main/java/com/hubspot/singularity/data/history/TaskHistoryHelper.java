@@ -52,6 +52,13 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   @Override
+  public List<SingularityTaskIdHistory> getBlendedHistory(SingularityTaskHistoryQuery query, Integer limitStart, Integer limitCount, boolean canSkipZk) {
+    List<SingularityTaskIdHistory> results = super.getBlendedHistory(query, limitStart, limitCount, canSkipZk);
+    Collections.sort(results, query.getComparator());
+    return results;
+  }
+
+  @Override
   protected List<SingularityTaskIdHistory> getFromZk(SingularityTaskHistoryQuery query) {
     final List<SingularityTaskIdHistory> filteredHistory = Lists.newArrayList(Iterables.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()));
 
