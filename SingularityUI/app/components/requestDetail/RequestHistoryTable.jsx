@@ -28,6 +28,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory})
         paginated={true}
         fetchDataFromApi={(page, numberPerPage) => fetchRequestHistory(requestId, numberPerPage, page)}
         isFetching={isFetching}
+        defaultSortBy={'createdAt'}
       >
         <Column
           label="State"
@@ -43,8 +44,9 @@ const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory})
         />
         <Column
           label="Timestamp"
-          id="timestamp"
-          key="timestamp"
+          id="createdAt"
+          key="createdAt"
+          forceSortHeader={true}
           cellData={(requestEvent) => Utils.timestampFromNow(requestEvent.createdAt)}
         />
         <Column
