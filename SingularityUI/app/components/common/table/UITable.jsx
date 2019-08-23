@@ -417,7 +417,7 @@ class UITable extends Component {
       }, col.props.headerClassName);
 
       const sortIndicator = this.sortIndicator(
-        col.props.sortable,
+        col.props.sortable || col.props.forceSortHeader,
         thisColumnSorted,
         this.state.sortDirection
       );

@@ -12,6 +12,7 @@ class Column extends Component {
     sortable: PropTypes.bool,
     sortData: PropTypes.func, // (cellData, object) -> any
     sortFunc: PropTypes.func,
+    forceSortHeader: PropTypes.bool,
     className: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.func
