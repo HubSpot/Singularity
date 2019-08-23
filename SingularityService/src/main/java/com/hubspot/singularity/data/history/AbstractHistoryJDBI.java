@@ -104,7 +104,7 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
 
     applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
-    sqlBuilder.append(" ORDER BY startedAt ");
+    sqlBuilder.append(" ORDER BY updatedAt ");
     sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
 
     if (!requestId.isPresent()) {
