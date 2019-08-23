@@ -143,9 +143,9 @@ public class SingularityTaskHistoryQuery {
         ComparisonChain chain = ComparisonChain.start();
 
         if (localOrderDirection == OrderDirection.ASC) {
-          chain = chain.compare(o1.getTaskId().getStartedAt(), o2.getTaskId().getStartedAt());
+          chain = chain.compare(o1.getUpdatedAt(), o2.getUpdatedAt());
         } else {
-          chain = chain.compare(o2.getTaskId().getStartedAt(), o1.getTaskId().getStartedAt());
+          chain = chain.compare(o2.getUpdatedAt(), o1.getUpdatedAt());
         }
 
         return chain.compare(o1.getTaskId().getRequestId(), o2.getTaskId().getRequestId()).result();
