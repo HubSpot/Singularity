@@ -51,6 +51,7 @@ public class S3UploadMetadata {
   private final Optional<Integer> pid;
   private final Optional<String> s3AccessKey;
   private final Optional<String> s3SecretKey;
+  private final Optional<String> s3Credentials;
   private final Optional<Long> finishedAfterMillisWithoutNewFile;
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyStorageClassIfOverBytes;
@@ -72,6 +73,7 @@ public class S3UploadMetadata {
                           @JsonProperty("pid") Optional<Integer> pid,
                           @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
                           @JsonProperty("s3SecretKey") Optional<String> s3SecretKey,
+                          @JsonProperty("s3Credentials") Optional<String> s3Credentials,
                           @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile,
                           @JsonProperty("storageClass") Optional<String> s3StorageClass,
                           @JsonProperty("applyStorageClassIfOverBytes") Optional<Long> applyStorageClassIfOverBytes,
@@ -95,6 +97,7 @@ public class S3UploadMetadata {
     this.pid = pid;
     this.s3AccessKey = s3AccessKey;
     this.s3SecretKey = s3SecretKey;
+    this.s3Credentials = s3Credentials;
     this.onFinishGlob = onFinishGlob;
     this.s3StorageClass = s3StorageClass;
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
@@ -180,6 +183,10 @@ public class S3UploadMetadata {
     return s3SecretKey;
   }
 
+  public Optional<String> getS3Credentials() {
+    return s3Credentials;
+  }
+
   public Optional<String> getOnFinishGlob() {
     return onFinishGlob;
   }
@@ -241,6 +248,7 @@ public class S3UploadMetadata {
         ", pid=" + pid +
         ", s3AccessKey=" + s3AccessKey +
         ", s3SecretKey=" + s3SecretKey +
+        ", s3Credentials=" + s3Credentials +
         ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile +
         ", s3StorageClass=" + s3StorageClass +
         ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes +

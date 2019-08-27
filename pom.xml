@@ -72,6 +72,7 @@
     <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
     <dropwizard.version>1.3.12</dropwizard.version>
     <horizon.version>0.1.2</horizon.version>
+    <hubspot.style.version>1.3-SNAPSHOT</hubspot.style.version>
     <mesos.docker.tag>1.7.1</mesos.docker.tag>
     <!-- 1.8.0 not available yet, still compatible -->
     <mesos.version>1.8.0</mesos.version>
@@ -186,6 +187,12 @@
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
         <version>1.4.199</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot.immutables</groupId>
+        <artifactId>hubspot-style</artifactId>
+        <version>${hubspot.style.version}</version>
       </dependency>
 
       <dependency>

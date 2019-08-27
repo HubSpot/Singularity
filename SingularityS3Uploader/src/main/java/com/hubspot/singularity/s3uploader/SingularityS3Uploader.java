@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -25,6 +27,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.UploadPartRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -43,9 +46,16 @@ public class SingularityS3Uploader extends SingularityUploader {
   SingularityS3Uploader(BasicAWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
                         SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier, Lock checkFileOpenLock) {
     super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier, checkFileOpenLock);
-    BasicAWSCredentials credentials = defaultCredentials;
+    AWSCredentials credentials = defaultCredentials;
 
-    if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
+    if (uploadMetadata.getS3Credentials().isPresent()) {
+      try {
+        credentials = new ObjectMapper().readValue(uploadMetadata.getS3Credentials().get(), SingularityS3Credentials.class);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    else if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
       credentials = new BasicAWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
