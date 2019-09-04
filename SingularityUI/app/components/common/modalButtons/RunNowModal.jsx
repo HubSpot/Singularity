@@ -48,8 +48,7 @@ class RunNowModal extends Component {
     if (data.environment) {
       const overrides = {};
       data.environment.forEach((input) => {
-        let split = input.split("=", 2);
-        overrides[split[0]] = split[1]
+        overrides[input.substr(0, input.indexOf("="))] = input.substr(input.indexOf("=") + 1);
       });
       data.envOverrides = overrides
       delete data['environment']
@@ -136,6 +135,7 @@ class RunNowModal extends Component {
               name: 'environment',
               type: FormModal.INPUT_TYPES.MULTIINPUT,
               label: 'Environment Overrides: (format key=value)',
+              placeholder: 'JVM_USER_ARGS=-Dmyargs'
             },
           ]}>
           <span>
