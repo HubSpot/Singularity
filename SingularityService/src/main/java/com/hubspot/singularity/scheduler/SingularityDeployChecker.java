@@ -454,8 +454,12 @@ public class SingularityDeployChecker {
 
   private boolean isDeployOverdue(SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy) {
     if (!deploy.isPresent()) {
-      LOG.warn("Can't determine if deploy {} is overdue because it was missing", pendingDeploy);
-      return false;
+      if (System.currentTimeMillis() - pendingDeploy.getDeployMarker().getTimestamp() > TimeUnit.SECONDS.toMillis(configuration.getDeployHealthyBySeconds())) {
+        LOG.warn("Can't determine if deploy {} is overdue because it was missing, but pending time is > {}s, marking as overdue", pendingDeploy, configuration.getDeployHealthyBySeconds());
+      } else {
+        LOG.warn("Can't determine if deploy {} is overdue because it was missing", pendingDeploy);
+        return false;
+      }
     }
 
     if (pendingDeploy.getDeployProgress().isPresent() && pendingDeploy.getDeployProgress().get().isStepComplete()) {

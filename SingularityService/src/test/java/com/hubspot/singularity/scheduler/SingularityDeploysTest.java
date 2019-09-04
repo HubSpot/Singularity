@@ -23,6 +23,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -76,6 +77,23 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(pendingTasks.size() == 1);
     Assertions.assertTrue(pendingTasks.get(0).getPendingTaskId().getDeployId().equals(firstDeployId));
+  }
+
+  @Test
+  public void testMissingDeployIsEventuallyReconciled() {
+    try {
+      initRequest();
+      deploy(firstDeployId);
+
+      Assertions.assertTrue(deployManager.getPendingDeploy(requestId).isPresent());
+      // mimics persister bug or odd concurrency issue
+      deployManager.deleteDeployHistory(new SingularityDeployKey(requestId, firstDeployId));
+      configuration.setDeployHealthyBySeconds(0);
+      deployChecker.checkDeploys();
+      Assertions.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.OVERDUE);
+    } finally {
+      configuration.setDeployHealthyBySeconds(120);
+    }
   }
 
   @Test
