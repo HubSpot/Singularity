@@ -203,6 +203,9 @@ public class SingularityLeaderController implements LeaderLatchListener {
           final SingularityHostState state = getHostState();
           LOG.trace("Saving state in ZK: " + state);
           stateManager.save(state);
+          if (master) {
+            stateManager.saveNewState();
+          }
         } catch (InterruptedException e) {
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
