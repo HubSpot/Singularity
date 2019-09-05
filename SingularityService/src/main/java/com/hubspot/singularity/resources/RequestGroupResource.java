@@ -19,6 +19,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestGroupManager;
@@ -42,7 +43,7 @@ public class RequestGroupResource extends AbstractLeaderAwareResource {
   private final SingularityValidator validator;
 
   @Inject
-  public RequestGroupResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper,
+  public RequestGroupResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper,
                               RequestGroupManager requestGroupManager, SingularityValidator validator) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestGroupManager = requestGroupManager;

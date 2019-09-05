@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -74,7 +75,7 @@ public class DeployResource extends AbstractRequestResource {
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
                         SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
-                        AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHelper requestHelper) {
+                        AsyncHttpClient httpClient, @Singularity ObjectMapper objectMapper, RequestHelper requestHelper) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.configuration = configuration;
     this.taskManager = taskManager;

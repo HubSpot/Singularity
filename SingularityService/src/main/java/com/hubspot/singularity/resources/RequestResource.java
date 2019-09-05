@@ -41,6 +41,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -123,7 +124,7 @@ public class RequestResource extends AbstractRequestResource {
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
                          RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper,
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, @Singularity ObjectMapper objectMapper,
                          RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.mailer = mailer;

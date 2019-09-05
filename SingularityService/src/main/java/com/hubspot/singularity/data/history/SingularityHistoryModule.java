@@ -24,6 +24,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityJsonStringMapper;
@@ -121,7 +122,7 @@ public class SingularityHistoryModule extends AbstractModule {
     }
 
     @Inject(optional = true)
-    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers, ObjectMapper objectMapper) {
+    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers, @Singularity ObjectMapper objectMapper) {
       checkNotNull(rowMappers, "resultSetMappers is null");
       this.rowMappers = ImmutableSet.copyOf(rowMappers);
       this.columnMappers = ImmutableSet.copyOf(columnMappers);

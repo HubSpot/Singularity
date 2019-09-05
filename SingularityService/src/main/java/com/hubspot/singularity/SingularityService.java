@@ -4,18 +4,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
+import com.google.inject.Stage;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 
 import io.dropwizard.Application;
 import io.dropwizard.Bundle;
@@ -73,10 +77,14 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     final Iterable<? extends ConfiguredBundle<T>> additionalConfiguredBundles = checkNotNull(getDropwizardConfiguredBundles(bootstrap), "getDropwizardConfiguredBundles() returned null");
 
     guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
-        .modules(new SingularityServiceModule())
-        .modules(new SingularityAuthModule())
+        .modules(
+            new SingularityServiceModule(),
+            getObjectMapperModule(),
+            new SingularityAuthModule()
+        )
         .modules(additionalModules)
         .enableGuiceEnforcer(false)
+        .stage(getGuiceStage())
         .build();
     bootstrap.addBundle(guiceBundle);
 
@@ -105,6 +113,10 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     bootstrap.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
+  public Stage getGuiceStage() {
+    return Stage.PRODUCTION;
+  }
+
   @Override
   public void run(final T configuration, final Environment environment) throws Exception {}
 
@@ -114,6 +126,13 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
    */
   public Iterable<? extends Module> getGuiceModules(Bootstrap<T> bootstrap) {
     return ImmutableList.of();
+  }
+
+  /**
+   * Ability to override the default object mapper used when embedding Singularity
+   */
+  public Module getObjectMapperModule() {
+    return (binder) -> binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
   }
 
   /**

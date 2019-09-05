@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -69,7 +70,7 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployTaskHistoryHelper deployTaskHistoryHelper;
 
   @Inject
-  public HistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
+  public HistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
                          RequestHistoryHelper requestHistoryHelper, SingularityAuthorizationHelper authorizationHelper, DeployTaskHistoryHelper deployTaskHistoryHelper) {
     super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
 

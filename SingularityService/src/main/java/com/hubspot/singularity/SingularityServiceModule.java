@@ -19,14 +19,11 @@ import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
-import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 
 public class SingularityServiceModule extends DropwizardAwareModule<SingularityConfiguration> {
 
   @Override
   public void configure(Binder binder) {
-    binder.install(new MetricsInstrumentationModule(getBootstrap().getMetricRegistry()));
-
     binder.install(new SingularityMainModule(getConfiguration()));
     binder.install(new SingularityDataModule(getConfiguration()));
     binder.install(new SingularitySchedulerModule());

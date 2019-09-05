@@ -141,11 +141,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.palominolabs.metrics</groupId>
-      <artifactId>metrics-guice</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.squarespace.jersey2-guice</groupId>
       <artifactId>jersey2-guice-impl</artifactId>
     </dependency>

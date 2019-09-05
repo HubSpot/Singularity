@@ -14,6 +14,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.NotificationsManager;
@@ -35,7 +36,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
   private final NotificationsManager notificationsManager;
 
   @Inject
-  public NotificationsResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, NotificationsManager notificationsManager) {
+  public NotificationsResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, NotificationsManager notificationsManager) {
     super(httpClient, leaderLatch, objectMapper);
     this.notificationsManager = notificationsManager;
   }

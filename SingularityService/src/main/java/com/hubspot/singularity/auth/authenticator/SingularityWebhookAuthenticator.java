@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
@@ -39,7 +40,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
   @Inject
   public SingularityWebhookAuthenticator(@Named(SingularityAuthModule.WEBHOOK_AUTH_HTTP_CLIENT) AsyncHttpClient asyncHttpClient,
                                          SingularityConfiguration configuration,
-                                         ObjectMapper objectMapper) {
+                                         @Singularity ObjectMapper objectMapper) {
     this.asyncHttpClient = asyncHttpClient;
     this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
     this.objectMapper = objectMapper;

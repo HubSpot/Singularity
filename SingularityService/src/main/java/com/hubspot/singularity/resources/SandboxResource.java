@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySandboxFile;
@@ -64,7 +65,7 @@ public class SandboxResource extends AbstractHistoryResource {
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosExecutorInfoSupport logSupport,
+  public SandboxResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosExecutorInfoSupport logSupport,
                          SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper) {
     super(httpClient, leaderLatch, objectMapper, historyManager, taskManager, deployManager, authorizationHelper);
 

@@ -35,10 +35,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -98,10 +96,7 @@ public class SingularityMesosTaskBuilderTest {
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new ProtobufModule());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new Jdk8Module());
+    objectMapper = JavaUtils.newObjectMapper();
 
     builder = new SingularityMesosTaskBuilder(objectMapper, idGenerator, configuration, new MesosProtosUtils(objectMapper));
 

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -57,7 +58,7 @@ public final class SingularityJsonTranscoderBinder {
     }
 
     @Inject
-    void inject(ObjectMapper objectMapper) {
+    void inject(@Singularity ObjectMapper objectMapper) {
       this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");
     }
 
@@ -79,7 +80,7 @@ public final class SingularityJsonTranscoderBinder {
     }
 
     @Inject
-    void inject(ObjectMapper objectMapper, SingularityConfiguration singularityConfiguration) {
+    void inject(@Singularity ObjectMapper objectMapper, SingularityConfiguration singularityConfiguration) {
       this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");
       this.singularityConfiguration = checkNotNull(singularityConfiguration, "singularityConfiguration is null");
     }

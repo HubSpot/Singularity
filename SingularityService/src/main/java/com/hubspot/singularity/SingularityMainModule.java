@@ -41,6 +41,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -53,7 +54,6 @@ import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
-import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.hubspot.singularity.hooks.AbstractWebhookChecker;
@@ -163,7 +163,6 @@ public class SingularityMainModule implements Module {
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
-    binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
@@ -426,5 +425,12 @@ public class SingularityMainModule implements Module {
       }
     }
     return leaderOnlyPollers;
+  }
+
+  @Provides
+  @Singleton
+  @Singularity
+  public ObjectMapper providesSingularityObjectMapper() {
+    return JavaUtils.newObjectMapper();
   }
 }
