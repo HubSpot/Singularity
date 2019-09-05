@@ -136,7 +136,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   // Generation of prefixes
-  private Collection<String> getS3PrefixesForTask(S3Configuration s3Configuration, SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg, String group, SingularityUser user) {
+  private Collection<String> getS3PrefixesForTask(S3Configuration s3Configuration, SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg, String group, SingularityUser user, List<String> prefixWhitelist) {
     Optional<SingularityTaskHistory> history = getTaskHistory(taskId, user);
 
     long start = taskId.getStartedAt();
@@ -165,10 +165,10 @@ public class S3LogResource extends AbstractHistoryResource {
       tag = history.get().getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
 
-    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(s3Configuration.getS3KeyFormat(), taskId, tag, start, end, group);
+    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(s3Configuration.getS3KeyFormat(), taskId, tag, start, end, group, prefixWhitelist);
     for (SingularityS3UploaderFile additionalFile : s3Configuration.getS3UploaderAdditionalFiles()) {
       if (additionalFile.getS3UploaderKeyPattern().isPresent() && !additionalFile.getS3UploaderKeyPattern().get().equals(s3Configuration.getS3KeyFormat())) {
-        prefixes.addAll(SingularityS3FormatHelper.getS3KeyPrefixes(additionalFile.getS3UploaderKeyPattern().get(), taskId, tag, start, end, group));
+        prefixes.addAll(SingularityS3FormatHelper.getS3KeyPrefixes(additionalFile.getS3UploaderKeyPattern().get(), taskId, tag, start, end, group, prefixWhitelist));
       }
     }
 
@@ -238,10 +238,10 @@ public class S3LogResource extends AbstractHistoryResource {
       tag = deployHistory.getDeploy().get().getExecutorData().get().getLoggingTag();
     }
 
-    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(s3Configuration.getS3KeyFormat(), requestId, deployId, tag, start, end, group);
+    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(s3Configuration.getS3KeyFormat(), requestId, deployId, tag, start, end, group, Collections.emptyList());
     for (SingularityS3UploaderFile additionalFile : s3Configuration.getS3UploaderAdditionalFiles()) {
       if (additionalFile.getS3UploaderKeyPattern().isPresent() && !additionalFile.getS3UploaderKeyPattern().get().equals(s3Configuration.getS3KeyFormat())) {
-        prefixes.addAll(SingularityS3FormatHelper.getS3KeyPrefixes(additionalFile.getS3UploaderKeyPattern().get(), requestId, deployId, tag, start, end, group));
+        prefixes.addAll(SingularityS3FormatHelper.getS3KeyPrefixes(additionalFile.getS3UploaderKeyPattern().get(), requestId, deployId, tag, start, end, group, Collections.emptyList()));
       }
     }
 
@@ -258,7 +258,7 @@ public class S3LogResource extends AbstractHistoryResource {
         SingularityTaskId taskIdObject = getTaskIdObject(taskId);
         String group = getRequestGroupForTask(taskIdObject, user).orElse(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
         Set<String> s3Buckets = getBuckets(group);
-        Collection<String> prefixes = getS3PrefixesForTask(configuration.get(), taskIdObject, search.getStart(), search.getEnd(), group, user);
+        Collection<String> prefixes = getS3PrefixesForTask(configuration.get(), taskIdObject, search.getStart(), search.getEnd(), group, user, search.getFileNamePrefixWhitelist());
         for (String s3Bucket : s3Buckets) {
           SingularityS3Service s3Service = s3Services.getServiceByGroupAndBucketOrDefault(group, s3Bucket);
           if (!servicesToPrefixes.containsKey(s3Service)) {
@@ -370,7 +370,9 @@ public class S3LogResource extends AbstractHistoryResource {
                     continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), !result.isTruncated()));
                     List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                      objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                      if (search.getFileNamePrefixWhitelist().isEmpty() || search.getFileNamePrefixWhitelist().stream().anyMatch(whitelistedPrefix -> objectSummary.getKey().startsWith(whitelistedPrefix))) {
+                        objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                      }
                     }
                     return objectSummaryHolders;
                   } else {
@@ -386,7 +388,9 @@ public class S3LogResource extends AbstractHistoryResource {
               ListObjectsV2Result result = s3Client.listObjectsV2(request);
               List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
               for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                if (search.getFileNamePrefixWhitelist().isEmpty() || search.getFileNamePrefixWhitelist().stream().anyMatch(whitelistedPrefix -> objectSummary.getKey().startsWith(whitelistedPrefix))) {
+                  objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
+                }
               }
               while (result.isTruncated() && result.getContinuationToken() != null) {
                 result = s3Client.listObjectsV2(new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix).withContinuationToken(result.getContinuationToken()));
