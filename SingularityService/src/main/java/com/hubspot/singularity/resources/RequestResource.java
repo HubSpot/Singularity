@@ -46,6 +46,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -405,6 +406,20 @@ public class RequestResource extends AbstractRequestResource {
           .get()
           .stream()
           .noneMatch((arg) -> arg.contains("STARTED_BY_USER")), "Cannot override STARTED_BY_USER");
+      if (runNowRequest.getResources().isPresent()) {
+        Optional<String> maybeDeployId = deployManager.getActiveDeployId(requestId);
+        if (maybeDeployId.isPresent()) {
+          Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(requestId, maybeDeployId.get());
+          if (maybeDeploy.isPresent() && maybeDeploy.get().getResources().isPresent()) {
+            int deployPorts = maybeDeploy.get().getResources().get().getNumPorts();
+            int runNowPorts = runNowRequest.getResources().get().getNumPorts();
+            checkBadRequest(
+                deployPorts <= runNowPorts,
+                "Number of ports in resource overrides must be >= the amount specified in the Singularity deploy (deploy: %d, runNowRequest: %d)",
+                deployPorts, runNowPorts);
+          }
+        }
+      }
     }
     long start = System.currentTimeMillis();
     SingularityPendingRequestParent response;
