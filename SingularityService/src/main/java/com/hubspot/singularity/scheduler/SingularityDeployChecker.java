@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
@@ -47,6 +48,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
@@ -598,7 +600,17 @@ public class SingularityDeployChecker {
 
   private boolean canRetryTasks(Optional<SingularityDeploy> deploy, Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
     int maxRetries = deploy.get().getMaxTaskRetries().orElse(configuration.getDefaultDeployMaxTaskRetries());
-    return deploy.isPresent() && maxRetries > 0 && inactiveDeployMatchingTasks.size() <= maxRetries;
+    long matchingInactiveTasks = inactiveDeployMatchingTasks.stream()
+        .filter((t) -> {
+          // All TASK_LOSTs that are not resource limit related should be able to be retried
+          for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(t)) {
+            if (historyUpdate.getTaskState() == ExtendedTaskState.TASK_LOST && !historyUpdate.getStatusReason().orElse("").startsWith("REASON_CONTAINER")) {
+              return false;
+            }
+          }
+          return true;
+        }).count();
+    return maxRetries > 0 && matchingInactiveTasks <= maxRetries;
   }
 
   private Set<SingularityTaskId> getNewInactiveDeployTasks(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
