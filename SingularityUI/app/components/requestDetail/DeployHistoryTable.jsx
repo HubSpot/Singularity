@@ -31,6 +31,7 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
         paginated={true}
         fetchDataFromApi={(page, numberPerPage) => fetchDeploys(requestId, numberPerPage, page)}
         isFetching={isFetching}
+        defaultSortBy={'timestamp'}
       >
         <Column
           label="Deploy ID"
@@ -58,6 +59,7 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
           label="Timestamp"
           id="timestamp"
           key="timestamp"
+          forceSortHeader={true}
           cellData={(deploy) => Utils.timestampFromNow(deploy.deployMarker.timestamp)}
         />
         <Column

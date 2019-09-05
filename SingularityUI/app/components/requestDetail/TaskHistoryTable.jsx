@@ -127,6 +127,7 @@ class TaskHistoryTable extends Component {
           isFetching={isFetching}
           initialPageNumber={this.props.initialPageNumber}
           onPageChange={this.props.onPageChange}
+          defaultSortBy={'updatedAt'}
         >
           <Column
             label="Instance"
@@ -166,8 +167,9 @@ class TaskHistoryTable extends Component {
           />
           <Column
             label="Updated At"
-            id="updated"
-            key="updated"
+            id="updatedAt"
+            key="updatedAt"
+            forceSortHeader={true}
             cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
           />
           <Column
