@@ -17,6 +17,7 @@ import {
   DeployId,
   UpdatedAt,
   StartedAt,
+  RunId,
   LogLinkAndActions
 } from '../tasks/Columns';
 
@@ -73,6 +74,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         {DeployId}
         {StartedAt}
         {UpdatedAt}
+        {!Utils.request.isLongRunning(request) && RunId}
         {LogLinkAndActions(config.runningTaskLogPath, Utils.maybe(request, ['request', 'requestType'], 'UNKNOWN'))}
       </UITable>
     </Section>

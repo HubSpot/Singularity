@@ -18,6 +18,12 @@ import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
+import {
+  UpdatedAt,
+  StartedAt,
+  RunId
+} from '../tasks/Columns';
+
 class TaskHistoryTable extends Component {
 
   static propTypes = {
@@ -159,25 +165,15 @@ class TaskHistoryTable extends Component {
               </Link>
             )}
           />
-          <Column
-            label="Started At"
-            id="started"
-            key="started"
-            cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
-          />
-          <Column
-            label="Updated At"
-            id="updatedAt"
-            key="updatedAt"
-            forceSortHeader={true}
-            cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
-          />
+          {StartedAt}
+          {UpdatedAt}
           <Column
             label="Run Time"
             id="run-time"
             key="run-time"
             cellData={(task) => Utils.duration(task.updatedAt - task.taskId.startedAt)}
           />
+          {!Utils.request.isLongRunning(requestParent) && RunId}
           <Column
             id="actions-column"
             key="actions-column"

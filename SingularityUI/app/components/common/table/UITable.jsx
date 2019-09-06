@@ -170,7 +170,7 @@ class UITable extends Component {
 
   doSort(data, sortBy, sortDirection) {
     const sortCol = this.props.children.find((col) => {
-      return col.props.id === sortBy;
+      return col && col.props.id === sortBy;
     });
 
     if (sortCol === undefined) {
@@ -261,6 +261,9 @@ class UITable extends Component {
 
   renderTableRow(rowData, index) {
     const row = this.props.children.map((col) => {
+      if (!col) {
+        return
+      }
       const cellData = col.props.cellData(rowData);
       const cell = col.props.cellRender(
         cellData,
@@ -393,6 +396,9 @@ class UITable extends Component {
 
   renderTableHeader() {
     const headerRow = this.props.children.map((col) => {
+      if (!col) {
+        return;
+      }
       let cell;
       if (typeof col.props.label === 'function') {
         cell = col.props.label(this.props.data);
