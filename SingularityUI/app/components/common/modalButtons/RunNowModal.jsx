@@ -45,6 +45,14 @@ class RunNowModal extends Component {
 
     const runId = uuid.v4();
     data.runId = runId;
+    if (data.environment) {
+      const overrides = {};
+      data.environment.forEach((input) => {
+        overrides[input.substr(0, input.indexOf("="))] = input.substr(input.indexOf("=") + 1);
+      });
+      data.envOverrides = overrides
+      delete data['environment']
+     }
 
     if (data.launchDelay !== undefined) {
       const runAt = (+new Date()) + data.launchDelay;
@@ -122,7 +130,13 @@ class RunNowModal extends Component {
               name: 'fileToTail',
               type: FormModal.INPUT_TYPES.STRING,
               defaultValue: this.getDefaultFileToTail()
-            }
+            },
+            {
+              name: 'environment',
+              type: FormModal.INPUT_TYPES.MULTIINPUT,
+              label: 'Environment Overrides: (format key=value)',
+              placeholder: 'JVM_USER_ARGS=-Dmyargs'
+            },
           ]}>
           <span>
             <p>Are you sure you want to {this.props.rerun ? 'rerun this task' : 'launch a task for this request'}?</p>
