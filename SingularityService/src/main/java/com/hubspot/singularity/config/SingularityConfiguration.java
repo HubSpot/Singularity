@@ -54,6 +54,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
 
+  @Deprecated
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(60);
 
   private long checkDeploysEverySeconds = 5;
@@ -280,7 +281,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
-  private long saveStateEverySeconds = 60;
+  private long saveStateEverySeconds = 30;
 
   @JsonProperty("sentry")
   @Valid
@@ -416,6 +417,7 @@ public class SingularityConfiguration extends Configuration {
     return askDriverToKillTasksAgainAfterMillis;
   }
 
+  @Deprecated
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
   }
