@@ -710,9 +710,11 @@ public class RequestResource extends AbstractRequestResource {
   public List<String> getAllRequestIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
-      @Parameter(description = "Filter to request ids that match this string (case insensitive)") @QueryParam("requestIdLike") String requestIdLike) {
+      @Parameter(description = "Filter to request ids that match this string (case insensitive)") @QueryParam("requestIdLike") String requestIdLike,
+      @Parameter(description = "Filter by request state") @QueryParam("state") Set<RequestState> states) {
     List<String> allIds = filterAutorized(Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user)
         .stream()
+        .filter((r) -> states == null || states.isEmpty() || states.contains(r.getState()))
         .map((r) -> r.getRequest().getId())
         .collect(Collectors.toList());
     if (requestIdLike == null) {
