@@ -74,7 +74,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         {DeployId}
         {StartedAt}
         {UpdatedAt}
-        {RunId(Utils.request.isLongRunning(request))}
+        {!Utils.request.isLongRunning(request) && RunId}
         {LogLinkAndActions(config.runningTaskLogPath, Utils.maybe(request, ['request', 'requestType'], 'UNKNOWN'))}
       </UITable>
     </Section>

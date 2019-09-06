@@ -32,18 +32,16 @@ export const TaskId = (
   />
 );
 
-export const RunId = (hidden) => {
-  return (<Column
+export const RunId = (
+  <Column
     label="Run ID"
     id="runId"
     key="runId"
-    className={hidden ? "hidden" : ""}
-    headerClassName={hidden ? "hidden" : ""}
     cellData={
       (rowData) => rowData.runId
     }
-  />);
-};
+  />
+);
 
 export const TaskIdShortened = (
   <Column
