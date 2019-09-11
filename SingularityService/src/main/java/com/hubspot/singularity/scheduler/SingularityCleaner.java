@@ -523,9 +523,6 @@ public class SingularityCleaner {
     SingularityDeleteResult deletePendingDeployResult = deployManager.deletePendingDeploy(requestCleanup.getRequestId());
     SingularityDeleteResult deleteRequestDeployStateResult = deployManager.deleteRequestDeployState(requestCleanup.getRequestId());
     LOG.trace("Deleted pendingDeploy ({}) and requestDeployState ({}) due to {}", deletePendingDeployResult, deleteRequestDeployStateResult, requestCleanup);
-    taskManager.deleteRequestId(requestCleanup.getRequestId());
-    deployManager.deleteRequestId(requestCleanup.getRequestId());
-    LOG.trace("Deleted stale request data for {}", requestCleanup.getRequestId());
     usageManager.deleteRequestUtilization(requestCleanup.getRequestId());
     requestGroupManager.removeFromAllGroups(requestCleanup.getRequestId());
   }
