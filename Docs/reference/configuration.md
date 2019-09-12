@@ -74,11 +74,14 @@ These are settings that are more likely to be altered.
 | maxRequestIdSize | 100 | Request ids over this size will cause new requests to fail with 400 | int |
 
 #### Cooldown ####
+
+Cooldown is divided into 2 types, fast and slow. These are essentially two sets of differing thresholds for cooldown, meant to act quickly for cases where there are rapid failures, but still provide a notification/signal for cases where there are slow but repeated failures
+
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| cooldownAfterFailures | 3 | The number of sequential failures after which a request is placed into system cooldown (a delay is added to newly scheduled tasks) - set to 0 to disable cooldown | int |
-| cooldownAfterPctOfInstancesFail | 1.0 | The percentage of instances which must fail at least cooldownAfterFailures times to cause the request to enter system cooldown | double |
-| cooldownExpiresAfterMinutes | 15 | The window used to evaluate task failures. Tasks must fail at least cooldownAfterFailures times during this amount of time to enter system cooldown - set to 0 to disable cooldown | long | 
+| fastFailureCooldownCount/slowFailureCooldownCount | 3/5 | The number of sequential failures after which a request is placed into system cooldown | int |
+| fastFailureCooldownMs/slowFailureCooldownMs | 30000/600000 | The time window during which `...CooldownCount` failures must occur | long |
+| fastCooldownExpiresMinutesWithoutFailure/slowCooldownExpiresMinutesWithoutFailure | 5/5 | If there are no failures after this time period, the request will exit cooldown | int | 
 | cooldownMinScheduleSeconds | 120 | When a request enters cooldown, new tasks are delayed by at least this long | long | 
 
 #### Load Balancer API ####
