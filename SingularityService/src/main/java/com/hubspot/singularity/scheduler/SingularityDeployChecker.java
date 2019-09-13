@@ -45,6 +45,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestBuilder;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -185,7 +186,9 @@ public class SingularityDeployChecker {
 
     if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
       if (saveNewDeployState(pendingDeployMarker, Optional.of(pendingDeployMarker))) {
-        if (!(request.getRequestType() == RequestType.RUN_ONCE)) {
+        if (request.getRequestType() == RequestType.ON_DEMAND) {
+          deleteOrRecreatePendingTasks(pendingDeploy);
+        } else if (request.getRequestType() != RequestType.RUN_ONCE) {
           deleteObsoletePendingTasks(pendingDeploy);
         }
         finishDeploy(requestWithState, deploy, pendingDeploy, allOtherMatchingTasks, deployResult);
@@ -205,10 +208,51 @@ public class SingularityDeployChecker {
     finishDeploy(requestWithState, deploy, pendingDeploy, deployMatchingTasks, deployResult);
   }
 
+  private void deleteOrRecreatePendingTasks(SingularityPendingDeploy pendingDeploy) {
+    List<SingularityPendingTaskId> obsoletePendingTasks = new ArrayList<>();
+
+    taskManager.getPendingTaskIdsForRequest(pendingDeploy.getDeployMarker().getRequestId()).forEach((taskId) -> {
+      if (!taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())) {
+        if (taskId.getPendingType() == PendingType.ONEOFF) {
+        Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(taskId);
+          if (maybePendingTask.isPresent()) {
+            // Reschedule any user-initiated pending tasks under the new deploy
+            SingularityPendingTask pendingTask = maybePendingTask.get();
+            requestManager.addToPendingQueue(new SingularityPendingRequest(
+                pendingTask.getPendingTaskId().getRequestId(),
+                pendingDeploy.getDeployMarker().getDeployId(),
+                System.currentTimeMillis(),
+                pendingTask.getUser(),
+                pendingTask.getPendingTaskId().getPendingType(),
+                pendingTask.getCmdLineArgsList(),
+                pendingTask.getRunId(),
+                pendingTask.getSkipHealthchecks(),
+                pendingTask.getMessage(),
+                pendingTask.getActionId(),
+                pendingTask.getResources(),
+                pendingTask.getS3UploaderAdditionalFiles(),
+                pendingTask.getRunAsUserOverride(),
+                pendingTask.getEnvOverrides(),
+                pendingTask.getRequiredSlaveAttributeOverrides(),
+                pendingTask.getAllowedSlaveAttributeOverrides(),
+                pendingTask.getExtraArtifacts(),
+                Optional.of(pendingTask.getPendingTaskId().getNextRunAt())
+            ));
+          }
+        }
+        obsoletePendingTasks.add(taskId);
+      }
+    });
+
+    for (SingularityPendingTaskId pendingTaskId : obsoletePendingTasks) {
+      LOG.debug("Deleting obsolete pending task {}", pendingTaskId.getId());
+      taskManager.deletePendingTask(pendingTaskId);
+    }
+  }
+
   private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
-    List<SingularityPendingTaskId> obsoletePendingTasks = taskManager.getPendingTaskIds()
+    List<SingularityPendingTaskId> obsoletePendingTasks = taskManager.getPendingTaskIdsForRequest(pendingDeploy.getDeployMarker().getRequestId())
         .stream()
-        .filter(taskId -> taskId.getRequestId().equals(pendingDeploy.getDeployMarker().getRequestId()))
         .filter(taskId -> !taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId()))
         .collect(Collectors.toList());
 
