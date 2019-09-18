@@ -189,11 +189,11 @@ public class SingularityS3FormatHelper {
       }
 
       if (indexOfM > -1) {
-        keyBuilder.replace(indexOfM, indexOfM + 2, getDayOrMonth(getMonth(calendar)));
+        keyBuilder.replace(indexOfM, indexOfM + 2, padTwoDigitNumber(getMonth(calendar)));
       }
 
       if (indexOfD > -1) {
-        keyBuilder.replace(indexOfD, indexOfD + 2, getDayOrMonth(calendar.get(Calendar.DAY_OF_MONTH)));
+        keyBuilder.replace(indexOfD, indexOfD + 2, padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
       }
 
       if (prefixWhitelist.isEmpty() || prefixWhitelist.stream().anyMatch(allowedPrefix -> keyBuilder.toString().startsWith(allowedPrefix))) {
