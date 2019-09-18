@@ -73,11 +73,15 @@ public class SingularityS3FormatHelper {
     }
 
     if (s3KeyFormat.contains("%m")) {
-      s3KeyFormat = s3KeyFormat.replace("%m", getDayOrMonth(getMonth(calendar)));
+      s3KeyFormat = s3KeyFormat.replace("%m", padTwoDigitNumber(getMonth(calendar)));
     }
 
     if (s3KeyFormat.contains("%d")) {
-      s3KeyFormat = s3KeyFormat.replace("%d", getDayOrMonth(calendar.get(Calendar.DAY_OF_MONTH)));
+      s3KeyFormat = s3KeyFormat.replace("%d", padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
+    }
+
+    if (s3KeyFormat.contains("%H")) {
+      s3KeyFormat = s3KeyFormat.replace("%H", padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY)));
     }
 
     if (s3KeyFormat.contains("%s")) {
@@ -116,7 +120,7 @@ public class SingularityS3FormatHelper {
     return Integer.toString(year);
   }
 
-  private static String getDayOrMonth(int value) {
+  private static String padTwoDigitNumber(int value) {
     return String.format("%02d", value);
   }
 
