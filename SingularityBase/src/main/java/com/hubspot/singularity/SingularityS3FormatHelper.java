@@ -156,8 +156,9 @@ public class SingularityS3FormatHelper {
     int indexOfY = trimKeyFormat.indexOf("%Y");
     int indexOfM = trimKeyFormat.indexOf("%m");
     int indexOfD = trimKeyFormat.indexOf("%d");
+    int indexOfH = trimKeyFormat.indexOf("%H");
 
-    if (indexOfY == -1 && indexOfM == -1 && indexOfD == -1) {
+    if (indexOfY == -1 && indexOfM == -1 && indexOfD == -1 && indexOfH == -1) {
       return Collections.singleton(trimKeyFormat);
     }
 
@@ -168,6 +169,9 @@ public class SingularityS3FormatHelper {
       }
       if (indexOfD > -1) {
         indexOfD += 2;
+      }
+      if (indexOfH > -1) {
+        indexOfH += 2;
       }
     }
 
@@ -196,11 +200,17 @@ public class SingularityS3FormatHelper {
         keyBuilder.replace(indexOfD, indexOfD + 2, padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
       }
 
+      if (indexOfH > -1) {
+        keyBuilder.replace(indexOfH, indexOfH + 2, padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY)));
+      }
+
       if (prefixWhitelist.isEmpty() || prefixWhitelist.stream().anyMatch(allowedPrefix -> keyBuilder.toString().startsWith(allowedPrefix))) {
         keyPrefixes.add(keyBuilder.toString());
       }
 
-      if (indexOfD > -1) {
+      if (indexOfH > -1) {
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+      } else if (indexOfD > -1) {
         calendar.add(Calendar.DAY_OF_YEAR, 1);
       } else if (indexOfM > -1) {
         calendar.set(Calendar.DAY_OF_MONTH, 1);
