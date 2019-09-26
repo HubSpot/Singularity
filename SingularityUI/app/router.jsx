@@ -38,7 +38,12 @@ const routes = (
     <Route path="requests(/:group)(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
     <Route path="group/:groupId(/:requestId)" component={Group} title={(params) => `Group ${params.groupId}`} />
     <Route path="request">
-      <Route path=":requestId" component={RequestDetailPage} title={(params) => params.requestId} />
+      <Route path=":requestId"
+        component={props => (
+          <RequestDetailPage key={props.params.requestId} {...props} />
+        )}
+        title={(params) => params.requestId}
+      />
       <Route path=":requestId/task-search" component={TaskSearch} title="Task Search" />
       <Route path=":requestId/deploy" component={NewDeployForm} title="New Deploy" />
       <Route path=":requestId/deploy/:deployId" component={DeployDetail} title={(params) => `Deploy ${params.deployId}`} />
