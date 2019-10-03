@@ -33,6 +33,7 @@ import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
@@ -406,6 +407,7 @@ public class SingularityMesosOfferScheduler {
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
 
     Map<String, Integer> tasksPerOfferHost = new ConcurrentHashMap<>();
+    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
@@ -415,7 +417,7 @@ public class SingularityMesosOfferScheduler {
         List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
         AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-          scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder)));
+          scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
         }
 
         CompletableFutures.allOf(scoringFutures).join();
@@ -455,14 +457,15 @@ public class SingularityMesosOfferScheduler {
       Map<String, Double> scorePerOffer,
       List<SingularityTaskId> activeTaskIdsForRequest,
       AtomicReference<Throwable> scoringException,
-      SingularityOfferHolder offerHolder) {
+      SingularityOfferHolder offerHolder,
+      Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
     if (isOfferFull(offerHolder)) {
       return;
     }
     String slaveId = offerHolder.getSlaveId();
 
     try {
-      double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()));
+      double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()), deployStatsCache);
       if (score != 0) {
         scorePerOffer.put(slaveId, score);
       }
@@ -524,9 +527,9 @@ public class SingularityMesosOfferScheduler {
   }
 
   private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, Map<String, Integer> tasksPerOffer,
-                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest, RequestUtilization requestUtilization) {
+                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest, RequestUtilization requestUtilization, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.ofNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
-    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest, requestUtilization);
+    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest, requestUtilization, deployStatsCache);
     if (LOG.isTraceEnabled()) {
       LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
           MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.empty()), offerHolder.getHostname(), maybeSlaveUsage);
@@ -553,7 +556,7 @@ public class SingularityMesosOfferScheduler {
 
   private double score(SingularityOfferHolder offerHolder, Map<String, Integer> tasksPerOffer, SingularityTaskRequestHolder taskRequestHolder,
                        Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest,
-                       RequestUtilization requestUtilization) {
+                       RequestUtilization requestUtilization, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
 
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityPendingTaskId pendingTaskId = taskRequest.getPendingTask().getPendingTaskId();
@@ -593,7 +596,7 @@ public class SingularityMesosOfferScheduler {
     if (!matchesResources) {
       return 0;
     }
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest));
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache));
 
     if (slaveMatchState.isMatchAllowed()) {
       return score(offerHolder.getHostname(), maybeSlaveUsage);
@@ -605,14 +608,17 @@ public class SingularityMesosOfferScheduler {
     return 0;
   }
 
-  private boolean isPreemptibleTask(SingularityTaskRequest taskRequest) {
+  private boolean isPreemptibleTask(SingularityTaskRequest taskRequest, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
     // A long running task can be replaced + killed easily
     if (taskRequest.getRequest().getRequestType().isLongRunning()) {
       return true;
     }
 
     // A short, non-long-running task
-    Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
+    Optional<SingularityDeployStatistics> deployStatistics = deployStatsCache.computeIfAbsent(
+        new SingularityDeployKey(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId()),
+        (key) -> deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId())
+    );
     return deployStatistics.isPresent()
         && deployStatistics.get().getAverageRuntimeMillis().isPresent()
         && deployStatistics.get().getAverageRuntimeMillis().get() < configuration.getPreemptibleTaskMaxExpectedRuntimeMs();
