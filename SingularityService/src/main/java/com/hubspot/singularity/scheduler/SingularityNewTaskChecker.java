@@ -222,7 +222,7 @@ public class SingularityNewTaskChecker {
           taskIdToCheck.remove(task.getTaskId().getId());
         }
       } catch (Throwable t) {
-        LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
+        LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task.getTaskId(), t);
         exceptionNotifier.notify(String.format("Error in task check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
         reEnqueueCheckOrAbort(task, healthchecker);
