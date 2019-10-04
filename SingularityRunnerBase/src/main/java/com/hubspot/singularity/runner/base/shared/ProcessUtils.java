@@ -97,7 +97,8 @@ public class ProcessUtils {
   }
 
   public int getUnixPID(Process process) {
-    Preconditions.checkArgument(process.getClass().getName().equals("java.lang.UNIXProcess"));
+    // older java versions have UNIXProcess, newer have ProcessImpl. Both have a pid field we can access
+    Preconditions.checkArgument(process.getClass().getName().equals("java.lang.UNIXProcess") || process.getClass().getName().equals("java.lang.ProcessImpl"));
 
     Class<?> clazz = process.getClass();
 
