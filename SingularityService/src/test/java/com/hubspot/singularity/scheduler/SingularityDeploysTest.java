@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +78,39 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(pendingTasks.size() == 1);
     Assertions.assertTrue(pendingTasks.get(0).getPendingTaskId().getDeployId().equals(firstDeployId));
+  }
+
+  @Test
+  public void testOnDemandGetsRescheduledWithNewDeploy() {
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Collections.emptyList(),
+        Optional.empty(),
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Collections.emptyList(),
+        Optional.of(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5))
+    );
+
+    requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
+    scheduler.drainPendingQueue();
+    Assertions.assertEquals(runNowRequest.getRunAt().get(), taskManager.getPendingTaskIds().get(0).getNextRunAt());
+    Assertions.assertEquals(firstDeployId, taskManager.getPendingTaskIds().get(0).getDeployId());
+
+    initSecondDeploy();
+    deployChecker.checkDeploys();
+    Assertions.assertEquals(secondDeployId, deployManager.getActiveDeployId(requestId).get());
+    scheduler.drainPendingQueue();
+    Assertions.assertEquals(runNowRequest.getRunAt().get(), taskManager.getPendingTaskIds().get(0).getNextRunAt());
+    Assertions.assertEquals(secondDeployId, taskManager.getPendingTaskIds().get(0).getDeployId());
   }
 
   @Test
