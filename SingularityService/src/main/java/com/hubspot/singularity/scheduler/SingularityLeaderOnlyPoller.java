@@ -127,7 +127,7 @@ public abstract class SingularityLeaderOnlyPoller {
         abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
       }
     } finally {
-      LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
+      LOG.debug("Ran poller {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
     }
   }
 

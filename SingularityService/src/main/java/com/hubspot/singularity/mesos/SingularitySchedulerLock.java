@@ -17,12 +17,14 @@ public class SingularitySchedulerLock {
   private final ReentrantLock stateLock;
   private final ReentrantLock offersLock;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
+  private final ConcurrentHashMap<String, Long> lockTimes;
 
   @Inject
   public SingularitySchedulerLock() {
     this.stateLock = new ReentrantLock();
     this.offersLock = new ReentrantLock();
     this.requestLocks = new ConcurrentHashMap<>();
+    this.lockTimes = new ConcurrentHashMap<>();
   }
 
   private long lock(String requestId, String name) {
@@ -35,7 +37,12 @@ public class SingularitySchedulerLock {
   }
 
   private void unlock(String requestId, String name, long start) {
-    LOG.trace("{} - Unlocking {} ({})", name, requestId, JavaUtils.duration(start));
+    long duration = System.currentTimeMillis() - start;
+    if (duration > 1000) {
+      LOG.debug("{} - Unlocking {} after {}ms", name, requestId, duration);
+    } else {
+      LOG.trace("{} - Unlocking {} after {}ms", name, requestId, duration);
+    }
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
     lock.unlock();
   }
