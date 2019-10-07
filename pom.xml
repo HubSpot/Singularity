@@ -340,6 +340,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.sun.activation</groupId>
+        <artifactId>jakarta.activation</artifactId>
+        <version>1.2.1</version>
+      </dependency>
+
+      <dependency>
         <groupId>de.neuland-bfi</groupId>
         <artifactId>jade4j</artifactId>
         <version>1.2.7</version>
