@@ -46,8 +46,8 @@
     <dep.hk2.version>2.5.0-b63</dep.hk2.version>
     <dep.httpclient.version>4.5.5</dep.httpclient.version>
     <dep.httpcore.version>4.4.9</dep.httpcore.version>
-    <dep.jackson-databind.version>2.9.9</dep.jackson-databind.version>
-    <dep.jackson.version>2.9.9</dep.jackson.version>
+    <dep.jackson-databind.version>2.9.9.3</dep.jackson-databind.version>
+    <dep.jackson.version>2.9.9.3</dep.jackson.version>
     <dep.javassist.version>3.24.1-GA</dep.javassist.version>
     <dep.jboss-logging.version>3.3.0.Final</dep.jboss-logging.version>
     <dep.jdbi3.version>3.8.2</dep.jdbi3.version>
