@@ -49,7 +49,7 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
   private final OfferCache offerCache;
   private final SingularityConfiguration configuration;
 
-  private AtomicReference<ConnectionState> lastState;
+  private final AtomicReference<ConnectionState> lastState;
   private final ReentrantLock stateHandlerLock;
   private TimerTask lostConnectionStateChecker;
 
