@@ -153,6 +153,7 @@ public class SingularityLeaderCache {
   public void cacheRacks(List<SingularityRack> racks) {
     this.racks = racks.stream().collect(Collectors.toConcurrentMap(SingularityRack::getId, Function.identity()));
   }
+
   public void stop() {
     active = false;
   }

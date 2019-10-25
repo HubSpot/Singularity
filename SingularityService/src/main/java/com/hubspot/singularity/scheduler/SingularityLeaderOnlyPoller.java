@@ -124,6 +124,7 @@ public abstract class SingularityLeaderOnlyPoller {
       LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
       exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
       if (abortsOnError()) {
+        // TODO catch zk errors differently here
         abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
       }
     } finally {

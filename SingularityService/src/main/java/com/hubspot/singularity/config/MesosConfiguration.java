@@ -74,6 +74,8 @@ public class MesosConfiguration {
   private Optional<String> mesosUsername = Optional.empty();
   private Optional<String> mesosPassword = Optional.empty();
 
+  private long reconnectTimeoutMillis = 60000;
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -400,5 +402,13 @@ public class MesosConfiguration {
 
   public void setMesosPassword(Optional<String> mesosPassword) {
     this.mesosPassword = mesosPassword;
+  }
+
+  public long getReconnectTimeoutMillis() {
+    return reconnectTimeoutMillis;
+  }
+
+  public void setReconnectTimeoutMillis(long reconnectTimeoutMillis) {
+    this.reconnectTimeoutMillis = reconnectTimeoutMillis;
   }
 }

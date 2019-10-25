@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.curator.framework.state.ConnectionState;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.InverseOffer;
 import org.apache.mesos.v1.Protos.MasterInfo;
@@ -18,10 +19,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
 
 public abstract class SingularityMesosScheduler {
-
-  public enum SchedulerState {
-    NOT_STARTED, SUBSCRIBED, STOPPED;
-  }
 
   /**
    * First event received when the scheduler subscribes. This contains the
@@ -151,6 +148,12 @@ public abstract class SingularityMesosScheduler {
   public abstract long getEventBufferSize();
 
   public abstract void notifyStopping();
+
+  public abstract void reconnectMesos();
+
+  public abstract void notLeader();
+
+  public abstract void setZkConnectionState(ConnectionState connectionState);
 
   public abstract void slaveLost(AgentID slaveId);
 

@@ -3,14 +3,20 @@ package com.hubspot.singularity;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
@@ -28,9 +34,10 @@ import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-public class SingularityLeaderController implements LeaderLatchListener {
+public class SingularityLeaderController implements LeaderLatchListener, ConnectionStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
+  private static final Timer TIMER = new Timer();
 
   private final StateManager stateManager;
   private final SingularityAbort abort;
@@ -40,6 +47,11 @@ public class SingularityLeaderController implements LeaderLatchListener {
   private final StatePoller statePoller;
   private final SingularityMesosScheduler scheduler;
   private final OfferCache offerCache;
+  private final SingularityConfiguration configuration;
+
+  private AtomicReference<ConnectionState> lastState;
+  private final ReentrantLock stateHandlerLock;
+  private TimerTask lostConnectionStateChecker;
 
   private volatile boolean master;
 
@@ -59,10 +71,12 @@ public class SingularityLeaderController implements LeaderLatchListener {
     this.saveStateEveryMs = TimeUnit.SECONDS.toMillis(configuration.getSaveStateEverySeconds());
     this.statePoller = new StatePoller();
     this.scheduler = scheduler;
-
+    this.configuration = configuration;
     this.offerCache = offerCache;
 
     this.master = false;
+    this.stateHandlerLock = new ReentrantLock();
+    this.lastState = new AtomicReference<>(null);
   }
 
   public void start() {
@@ -71,6 +85,40 @@ public class SingularityLeaderController implements LeaderLatchListener {
 
   public void stop() {
     statePoller.finish();
+    TIMER.cancel();
+  }
+
+  @Override
+  public void stateChanged(CuratorFramework client, ConnectionState newState) {
+    stateHandlerLock.lock();
+    try {
+      scheduler.setZkConnectionState(newState);
+      ConnectionState previous = lastState.get();
+      if (!newState.isConnected()) {
+        scheduler.notLeader();
+        lostConnectionStateChecker = new TimerTask() {
+          @Override
+          public void run() {
+            stateHandlerLock.lock();
+            try {
+              LOG.error("Aborting due to loss of zookeeper connection for {}ms. Current connection state {}",
+                  configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis(), newState);
+              abort.abort(AbortReason.LOST_ZK_CONNECTION, Optional.empty());
+            } finally {
+              stateHandlerLock.unlock();
+            }
+          }
+        };
+        TIMER.schedule(lostConnectionStateChecker, configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis());
+      } else if (previous != null && !previous.isConnected()) {
+        // Reconnected in time!
+        if (lostConnectionStateChecker != null) {
+          lostConnectionStateChecker.cancel();
+        }
+      }
+    } finally {
+      stateHandlerLock.unlock();
+    }
   }
 
   protected boolean isTestMode() {
@@ -114,19 +162,9 @@ public class SingularityLeaderController implements LeaderLatchListener {
   @Override
   public void notLeader() {
     LOG.info("We are not the leader! Current state {}", scheduler.getState());
-
     master = false;
-
-    if (scheduler.isRunning() && !isTestMode()) {
-      try {
-        scheduler.notifyStopping();
-        statePoller.wake();
-      } catch (Throwable t) {
-        LOG.error("While stopping driver", t);
-        exceptionNotifier.notify(String.format("Error while stopping driver (%s)", t.getMessage()), t);
-      } finally {
-        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>empty());
-      }
+    if (!isTestMode()) {
+      scheduler.notLeader();
     }
   }
 
@@ -157,7 +195,7 @@ public class SingularityLeaderController implements LeaderLatchListener {
       numCachedOffers++;
     }
 
-    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
+    return new SingularityHostState(master, uptime, scheduler.getState().getMesosSchedulerState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 

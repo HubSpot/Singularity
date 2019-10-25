@@ -179,6 +179,7 @@ public class SingularityLifecycleManaged implements Managed {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
+    curatorFramework.getConnectionStateListenable().addListener(leaderController);
 
     LOG.info("Connected to ZK after {}", JavaUtils.duration(start));
   }

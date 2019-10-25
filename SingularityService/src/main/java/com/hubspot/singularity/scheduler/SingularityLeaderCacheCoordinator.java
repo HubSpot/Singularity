@@ -51,4 +51,7 @@ public class SingularityLeaderCacheCoordinator {
     leaderCache.stop();
   }
 
+  public void clear() {
+    leaderCache.clear();
+  }
 }

@@ -17,6 +17,8 @@ public class ZooKeeperConfiguration {
   @NotNull
   private String zkNamespace;
 
+  private long abortAfterConnectionLostForMillis = 30000;
+
   public String getQuorum() {
     return quorum;
   }
@@ -65,4 +67,11 @@ public class ZooKeeperConfiguration {
     this.zkNamespace = zkNamespace;
   }
 
+  public long getAbortAfterConnectionLostForMillis() {
+    return abortAfterConnectionLostForMillis;
+  }
+
+  public void setAbortAfterConnectionLostForMillis(long abortAfterConnectionLostForMillis) {
+    this.abortAfterConnectionLostForMillis = abortAfterConnectionLostForMillis;
+  }
 }
