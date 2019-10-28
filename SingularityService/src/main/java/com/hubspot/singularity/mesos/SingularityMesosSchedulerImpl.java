@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -43,7 +44,6 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -58,7 +58,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
@@ -95,7 +94,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private Optional<Double> heartbeatIntervalSeconds = Optional.empty();
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
-  private final List<TaskStatus> queuedUpdates;
+  private final StatusUpdateQueue queuedUpdates;
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
@@ -109,11 +108,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                                 SingularityMesosOfferScheduler offerScheduler,
                                 SingularityMesosStatusUpdateHandler statusUpdateHandler,
                                 SingularityMesosSchedulerClient mesosSchedulerClient,
-                                DisasterManager disasterManager,
                                 SingularityConfiguration configuration,
                                 TaskManager taskManager,
                                 Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
-                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                                StatusUpdateQueue queuedUpdates,
                                 @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
@@ -128,7 +126,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.taskManager = taskManager;
     this.transcoder = transcoder;
     this.leaderCacheCoordinator = leaderCacheCoordinator;
-    this.queuedUpdates = Lists.newArrayList();
+    this.queuedUpdates = queuedUpdates;
     this.lock = lock;
     this.state = new SchedulerState();
     this.configuration = configuration;
@@ -152,7 +150,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       masterInfo.set(newMasterInfo);
       startup.startup(newMasterInfo);
       state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
-      queuedUpdates.forEach(this::handleStatusUpdateAsync);
+      try {
+        queuedUpdates.iterate(this::handleStatusUpdateAsync);
+      } catch (Throwable t) {
+        LOG.error("Unable to process queued status updates", t);
+        throw new RuntimeException(t);
+      }
     }, "subscribed", false);
   }
 
@@ -196,10 +199,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Override
   public CompletableFuture<Boolean> statusUpdate(TaskStatus status) {
     if (!state.isRunning()) {
-      LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.getMesosSchedulerState(), status, queuedUpdates.size());
-      queuedUpdates.add(status);
-      // TODO - allow buffer overflow to disk while waiting on reconnect to zk
-      return CompletableFuture.completedFuture(false);
+      try {
+        LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.getMesosSchedulerState(), status, queuedUpdates.size());
+        queuedUpdates.add(status);
+        return CompletableFuture.completedFuture(false);
+      } catch (IOException ioe) {
+        LOG.error("Unable to queue status update", ioe);
+        notifyStopping();
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(ioe));
+        return CompletableFuture.completedFuture(false);
+      }
     }
     try {
       return handleStatusUpdateAsync(status)
@@ -279,6 +288,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       } else if (currentState == MesosSchedulerState.PAUSED_SUBSCRIBED) {
         LOG.info("Already subscribed, restarting scheduler actions");
         state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
+        try {
+          queuedUpdates.iterate(this::handleStatusUpdateAsync);
+        } catch (Throwable t) {
+          LOG.error("Unable to process queued status updates", t);
+          throw new RuntimeException(t);
+        }
         return;
       }
 

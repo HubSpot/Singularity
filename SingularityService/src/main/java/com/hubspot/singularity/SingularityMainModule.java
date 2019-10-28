@@ -68,6 +68,7 @@ import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
+import com.hubspot.singularity.mesos.StatusUpdateQueue;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
@@ -143,7 +144,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
-
+    binder.bind(StatusUpdateQueue.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);

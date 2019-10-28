@@ -93,6 +93,10 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
       if (!newState.isConnected()) {
         LOG.info("No longer connected to zk, pausing scheduler actions and waiting up to {}ms for reconnect",
             configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis());
+        if (lostConnectionStateChecker != null) {
+          LOG.warn("Already started connection state check, due in {}ms", lostConnectionStateChecker.scheduledExecutionTime() - System.currentTimeMillis());
+          return;
+        }
         lostConnectionStateChecker = new TimerTask() {
           @Override
           public void run() {
@@ -110,6 +114,7 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
       } else if (lostConnectionStateChecker != null) {
         LOG.info("Reconnected to zk, scheduler actions resumed");
         lostConnectionStateChecker.cancel();
+        lostConnectionStateChecker = null;
       }
     } finally {
       stateHandlerLock.unlock();
