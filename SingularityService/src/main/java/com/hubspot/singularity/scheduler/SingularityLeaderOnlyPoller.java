@@ -9,9 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -121,11 +123,15 @@ public abstract class SingularityLeaderOnlyPoller {
     try {
       runActionOnPoll();
     } catch (Throwable t) {
-      LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
-      exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
-      if (abortsOnError()) {
-        // TODO catch zk errors differently here
-        abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
+      boolean isZkException = Throwables.getCausalChain(t).stream().anyMatch((throwable) -> throwable instanceof KeeperException);
+      if (isZkException) {
+        LOG.error("Uncaught zk exception in {}, not aborting", getClass().getSimpleName(), t);
+      } else {
+        LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
+        exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
+        if (abortsOnError()) {
+          abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
+        }
       }
     } finally {
       LOG.debug("Ran poller {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
