@@ -36,4 +36,12 @@ public class SchedulerState {
   public void setZkConnectionState(ConnectionState zkConnectionState) {
     this.zkConnectionState = zkConnectionState;
   }
+
+  @Override
+  public String toString() {
+    return "SchedulerState{" +
+        "mesosSchedulerState=" + mesosSchedulerState +
+        ", zkConnectionState=" + zkConnectionState +
+        '}';
+  }
 }
