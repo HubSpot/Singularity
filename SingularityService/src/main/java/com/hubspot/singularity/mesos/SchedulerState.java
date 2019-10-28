@@ -10,8 +10,8 @@ public class SchedulerState {
     PAUSED_FOR_MESOS_RECONNECT,
   }
 
-  private MesosSchedulerState mesosSchedulerState = MesosSchedulerState.NOT_STARTED;
-  private ConnectionState zkConnectionState = ConnectionState.CONNECTED;
+  private volatile MesosSchedulerState mesosSchedulerState = MesosSchedulerState.NOT_STARTED;
+  private volatile ConnectionState zkConnectionState = ConnectionState.CONNECTED;
 
   public boolean isRunning() {
     return mesosSchedulerState != null &&

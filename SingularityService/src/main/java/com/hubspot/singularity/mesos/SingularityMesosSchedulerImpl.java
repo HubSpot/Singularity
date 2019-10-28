@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -88,7 +89,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularitySchedulerLock lock;
 
   private volatile SchedulerState state;
-  private Optional<Long> lastOfferTimestamp = Optional.empty();
+  private volatile Optional<Long> lastOfferTimestamp = Optional.empty();
   private Optional<Double> heartbeatIntervalSeconds = Optional.empty();
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
@@ -268,29 +269,40 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void start() throws Exception {
-    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
-    // If more than one host is provided choose at random, we will be redirected if the host is not the master
-    List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
-    String nextMaster = masters.get(new Random().nextInt(masters.size()));
-    if (!nextMaster.startsWith("http")) {
-      nextMaster = "http://" + nextMaster;
-    }
-    URI masterUri = URI.create(nextMaster);
+    callWithStateLock(() -> {
+      MesosSchedulerState currentState = state.getMesosSchedulerState();
+      if (currentState == MesosSchedulerState.SUBSCRIBED) {
+        LOG.info("Already connected to mesos, will not reconnect");
+        return;
+      }
+      MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
+      // If more than one host is provided choose at random, we will be redirected if the host is not the master
+      List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
+      String nextMaster = masters.get(new Random().nextInt(masters.size()));
+      if (!nextMaster.startsWith("http")) {
+        nextMaster = "http://" + nextMaster;
+      }
+      URI masterUri = URI.create(nextMaster);
 
-    String userInfo = masterUri.getUserInfo();
-    if (userInfo == null && mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
-      userInfo = String.format("%s:%s", mesosConfiguration.getMesosUsername().get(), mesosConfiguration.getMesosPassword().get());
-    }
+      String userInfo = masterUri.getUserInfo();
+      if (userInfo == null && mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
+        userInfo = String.format("%s:%s", mesosConfiguration.getMesosUsername().get(), mesosConfiguration.getMesosPassword().get());
+      }
 
-    mesosSchedulerClient.subscribe(new URI(
-        masterUri.getScheme() == null ? "http" : masterUri.getScheme(),
-        userInfo,
-        masterUri.getHost(),
-        masterUri.getPort(),
-        Strings.isNullOrEmpty(masterUri.getPath()) ? "/api/v1/scheduler" : masterUri.getPath(),
-        masterUri.getQuery(),
-        masterUri.getFragment()
-    ), this);
+      try {
+        mesosSchedulerClient.subscribe(new URI(
+            masterUri.getScheme() == null ? "http" : masterUri.getScheme(),
+            userInfo,
+            masterUri.getHost(),
+            masterUri.getPort(),
+            Strings.isNullOrEmpty(masterUri.getPath()) ? "/api/v1/scheduler" : masterUri.getPath(),
+            masterUri.getQuery(),
+            masterUri.getFragment()
+        ), this);
+      } catch (URISyntaxException e) {
+        throw new RuntimeException(e);
+      }
+    }, "start", false);
   }
 
   private void callWithOffersLock(Runnable function, String method) {

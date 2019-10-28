@@ -7,6 +7,7 @@ import javax.inject.Provider;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.state.SessionConnectionStateErrorPolicy;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
 
     this.curatorFramework = CuratorFrameworkFactory.builder()
         .defaultData(null)
+        .connectionStateErrorPolicy(new SessionConnectionStateErrorPolicy())
         .sessionTimeoutMs(zookeeperConfig.getSessionTimeoutMillis())
         .connectionTimeoutMs(zookeeperConfig.getConnectTimeoutMillis())
         .connectString(zookeeperConfig.getQuorum())

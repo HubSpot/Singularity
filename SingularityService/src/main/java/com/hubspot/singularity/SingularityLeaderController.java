@@ -7,7 +7,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,11 +47,9 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
   private final SingularityMesosScheduler scheduler;
   private final OfferCache offerCache;
   private final SingularityConfiguration configuration;
-
-  private final AtomicReference<ConnectionState> lastState;
   private final ReentrantLock stateHandlerLock;
-  private TimerTask lostConnectionStateChecker;
 
+  private volatile TimerTask lostConnectionStateChecker;
   private volatile boolean master;
 
   @Inject
@@ -76,7 +73,6 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
 
     this.master = false;
     this.stateHandlerLock = new ReentrantLock();
-    this.lastState = new AtomicReference<>(null);
   }
 
   public void start() {
@@ -90,12 +86,13 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
 
   @Override
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
+    LOG.info("Received update for new zk connection state {}", newState);
     stateHandlerLock.lock();
     try {
       scheduler.setZkConnectionState(newState);
-      ConnectionState previous = lastState.get();
       if (!newState.isConnected()) {
-        scheduler.notLeader();
+        LOG.info("No longer connected to zk, pausing scheduler actions and waiting up to {}ms for reconnect",
+            configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis());
         lostConnectionStateChecker = new TimerTask() {
           @Override
           public void run() {
@@ -110,11 +107,9 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
           }
         };
         TIMER.schedule(lostConnectionStateChecker, configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis());
-      } else if (previous != null && !previous.isConnected()) {
-        // Reconnected in time!
-        if (lostConnectionStateChecker != null) {
-          lostConnectionStateChecker.cancel();
-        }
+      } else if (lostConnectionStateChecker != null) {
+        LOG.info("Reconnected to zk, scheduler actions resumed");
+        lostConnectionStateChecker.cancel();
       }
     } finally {
       stateHandlerLock.unlock();
@@ -127,23 +122,28 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
 
   @Override
   public void isLeader() {
-    LOG.info("We are now the leader! Current state {}", scheduler.getState());
+    stateHandlerLock.lock();
+    try {
+      LOG.info("We are now the leader! Current state {}", scheduler.getState());
 
-    master = true;
-   try {
-     if (!isTestMode()) {
-       scheduler.start();
-       statePoller.wake();
-     }
-    } catch (Throwable t) {
-      LOG.error("While starting driver", t);
-      exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
+      master = true;
       try {
-        scheduler.notifyStopping();
-      } catch (Throwable th) {
-        LOG.warn("While stopping scheduler due to bad initial start({})", th.getMessage());
+        if (!isTestMode()) {
+          scheduler.start();
+          statePoller.wake();
+        }
+      } catch (Throwable t) {
+        LOG.error("While starting driver", t);
+        exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
+        try {
+          scheduler.notifyStopping();
+        } catch (Throwable th) {
+          LOG.warn("While stopping scheduler due to bad initial start({})", th.getMessage());
+        }
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       }
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    } finally {
+      stateHandlerLock.unlock();
     }
   }
 
@@ -161,10 +161,15 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
 
   @Override
   public void notLeader() {
-    LOG.info("We are not the leader! Current state {}", scheduler.getState());
-    master = false;
-    if (!isTestMode()) {
-      scheduler.notLeader();
+    stateHandlerLock.lock();
+    try {
+      LOG.info("We are not the leader! Current state {}", scheduler.getState());
+      master = false;
+      if (!isTestMode()) {
+        scheduler.notLeader();
+      }
+    } finally {
+      stateHandlerLock.unlock();
     }
   }
 
