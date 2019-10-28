@@ -30,6 +30,7 @@ import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.apache.mesos.v1.scheduler.Protos.Event.Failure;
 import org.apache.mesos.v1.scheduler.Protos.Event.Message;
 import org.apache.mesos.v1.scheduler.Protos.Event.Subscribed;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -483,6 +485,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         .whenCompleteAsync((result, throwable) -> {
           if (throwable != null) {
             LOG.error("Scheduler threw an uncaught exception processing status updates", throwable);
+            boolean isZkException = Throwables.getCausalChain(throwable).stream().anyMatch((t) -> t instanceof KeeperException);
+            if (isZkException) {
+              LOG.info("Not aborting for KeeperException. Leaving status update unacked for {}", status.getTaskId());
+              return;
+            }
             notifyStopping();
             abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(throwable));
           }
