@@ -8,6 +8,7 @@ public class SchedulerState {
     SUBSCRIBED,
     STOPPED,
     PAUSED_FOR_MESOS_RECONNECT,
+    PAUSED_SUBSCRIBED,
   }
 
   private volatile MesosSchedulerState mesosSchedulerState = MesosSchedulerState.NOT_STARTED;

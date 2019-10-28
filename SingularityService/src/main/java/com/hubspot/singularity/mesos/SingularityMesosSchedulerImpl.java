@@ -274,7 +274,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       if (currentState == MesosSchedulerState.SUBSCRIBED) {
         LOG.info("Already connected to mesos, will not reconnect");
         return;
+      } else if (currentState == MesosSchedulerState.PAUSED_SUBSCRIBED) {
+        LOG.info("Already subscribed, restarting scheduler actions");
+        state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
+        return;
       }
+
       MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
       // If more than one host is provided choose at random, we will be redirected if the host is not the master
       List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
@@ -381,6 +386,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         LOG.info("Scheduler now in state: {}", state);
       }
     }, "notLeader", false);
+  }
+
+  public void pauseForDatastoreReconnect() {
+    callWithStateLock(() -> {
+      if (state.getMesosSchedulerState() == MesosSchedulerState.SUBSCRIBED) {
+        state.setMesosSchedulerState(MesosSchedulerState.PAUSED_SUBSCRIBED);
+      }
+    }, "pause", false);
   }
 
   public void notifyStopping() {

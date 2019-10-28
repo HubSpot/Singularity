@@ -166,7 +166,26 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
       LOG.info("We are not the leader! Current state {}", scheduler.getState());
       master = false;
       if (!isTestMode()) {
-        scheduler.notLeader();
+        LOG.info("Might not be the leader, pausing scheduler actions");
+        scheduler.pauseForDatastoreReconnect();
+        // Check again if we are still not leader in a few seconds. LeaderLatch.reset can often get called on reconnect, which
+        // will call notLeader/isLeader is quick succession.
+        TIMER.schedule(new TimerTask() {
+          @Override
+          public void run() {
+            stateHandlerLock.lock();
+            try {
+              if (master) {
+                LOG.debug("Reconnected as leader before shutdown timeout");
+              } else {
+                LOG.info("No longer the leader, stopping scheduler actions");
+                scheduler.notLeader();
+              }
+            } finally {
+              stateHandlerLock.unlock();
+            }
+          }
+        }, 5000);
       }
     } finally {
       stateHandlerLock.unlock();

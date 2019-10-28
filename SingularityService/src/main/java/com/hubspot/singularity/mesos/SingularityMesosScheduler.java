@@ -153,6 +153,8 @@ public abstract class SingularityMesosScheduler {
 
   public abstract void notLeader();
 
+  public abstract void pauseForDatastoreReconnect();
+
   public abstract void setZkConnectionState(ConnectionState connectionState);
 
   public abstract void slaveLost(AgentID slaveId);
