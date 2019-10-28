@@ -59,7 +59,7 @@ public class StatusUpdateQueue {
     return onDiskQueue.size() + inMemoryQueue.size();
   }
 
-  public void add(TaskStatus update) throws IOException {
+  public synchronized void add(TaskStatus update) throws IOException {
     if (inMemoryQueue.size() < configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()) {
       inMemoryQueue.add(update);
     } else {
@@ -67,7 +67,7 @@ public class StatusUpdateQueue {
     }
   }
 
-  public void iterate(Function<TaskStatus, CompletableFuture<StatusUpdateResult>> function) throws IOException {
+  public synchronized void iterate(Function<TaskStatus, CompletableFuture<StatusUpdateResult>> function) throws IOException {
     onDiskQueue.forEach(function::apply);
     onDiskQueue.clear();
     inMemoryQueue.forEach(function::apply);
