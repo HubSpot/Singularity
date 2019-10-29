@@ -212,4 +212,17 @@ public class TestResource {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
     historyManager.purgeDeployHistory();
   }
+
+  @POST
+  @Path("/reconnect-mesos")
+  @Operation(
+      summary = "Trigger a reconnect to the mesos master",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
+  public void reconnectMesos() {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    scheduler.reconnectMesos();
+  }
 }
