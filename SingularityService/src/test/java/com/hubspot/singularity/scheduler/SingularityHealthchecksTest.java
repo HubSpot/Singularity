@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.Resources;
@@ -30,6 +31,9 @@ import com.jayway.awaitility.Awaitility;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
+
+  @Inject
+  SingularityDeployHealthHelper deployHealthHelper;
 
   public SingularityHealthchecksTest() {
     super(false);
@@ -479,6 +483,24 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     } finally {
       unsetConfigurationForNoDelay();
     }
+  }
+
+  @Test
+  public void testRespectsSkipHealthchecksAfterExpiration() {
+    initRequest();
+    initHCDeploy();
+    scheduler.drainPendingQueue();
+    startTask(firstDeploy);
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertEquals(0, deployHealthHelper.getHealthyTasks(request, Optional.of(firstDeploy), taskManager.getActiveTaskIds(), false).size());
+    SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
+    Assertions.assertFalse(taskManager.getLastHealthcheck(taskId).isPresent());
+
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.empty(), Optional.empty()), singularityUser);
+    Assertions.assertTrue(taskManager.getLastHealthcheck(taskId).isPresent());
+    Assertions.assertEquals(1, deployHealthHelper.getHealthyTasks(request, Optional.of(firstDeploy), taskManager.getActiveTaskIds(), false).size());
+    expiringUserActionPoller.runActionOnPoll();
+    Assertions.assertEquals(1, deployHealthHelper.getHealthyTasks(request, Optional.of(firstDeploy), taskManager.getActiveTaskIds(), false).size());
   }
 
   private void setConfigurationForNoDelay() {
