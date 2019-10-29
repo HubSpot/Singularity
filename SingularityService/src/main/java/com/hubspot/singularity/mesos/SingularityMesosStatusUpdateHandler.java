@@ -355,6 +355,10 @@ public class SingularityMesosStatusUpdateHandler {
     scheduler.handleCompletedTask(task, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, status);
   }
 
+  public boolean hasRoomForMoreUpdates() {
+    return statusUpdatesSemaphore.getQueueSize() < configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize();
+  }
+
   public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(Protos.TaskStatus status) {
     return statusUpdatesSemaphore.call(() -> CompletableFuture.supplyAsync(() -> {
         final String taskId = status.getTaskId().getValue();

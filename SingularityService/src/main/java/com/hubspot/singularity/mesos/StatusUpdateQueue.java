@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 import org.apache.mesos.v1.Protos.TaskStatus;
 
@@ -67,10 +66,11 @@ public class StatusUpdateQueue {
     }
   }
 
-  public synchronized void iterate(Function<TaskStatus, CompletableFuture<StatusUpdateResult>> function) throws IOException {
-    onDiskQueue.forEach(function::apply);
-    onDiskQueue.clear();
-    inMemoryQueue.forEach(function::apply);
-    inMemoryQueue.clear();
+  public Iterator<TaskStatus> diskQueueIterator() {
+    return onDiskQueue.iterator();
+  }
+
+  public TaskStatus nextInMemory() {
+    return inMemoryQueue.poll();
   }
 }
