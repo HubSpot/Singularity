@@ -56,11 +56,12 @@ class SingularityStartup {
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
       SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, DisasterManager disasterManager,
-      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
+      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner, SingularitySchedulerLock lock) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -71,6 +72,7 @@ class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
+    this.lock = lock;
   }
 
   public void checkMigrations() {
@@ -125,18 +127,23 @@ class SingularityStartup {
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
 
-    for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
-      switch (requestWithState.getState()) {
-        case ACTIVE:
-        case SYSTEM_COOLDOWN:
-        case DEPLOYING_TO_UNPAUSE:
-          checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now);
-          break;
-        case DELETED:
-        case PAUSED:
-        case FINISHED:
-          break;
-      }
+    for (String requestId : requestManager.getAllRequestIds()) {
+      lock.runWithRequestLock(() -> {
+        Optional<SingularityRequestWithState> maybeWithState = requestManager.getRequest(requestId);
+        if (maybeWithState.isPresent()) {
+          switch (maybeWithState.get().getState()) {
+            case ACTIVE:
+            case SYSTEM_COOLDOWN:
+            case DEPLOYING_TO_UNPAUSE:
+              checkActiveRequest(maybeWithState.get(), deployKeyToPendingTaskId, now);
+              break;
+            case DELETED:
+            case PAUSED:
+            case FINISHED:
+              break;
+          }
+        }
+      }, requestId, "startup");
     }
   }
 
@@ -180,7 +187,6 @@ class SingularityStartup {
     final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY);
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requestManager.getRequests(), SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
-    requestManager.getActiveRequests();
     int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
 
