@@ -640,6 +640,15 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");
     }
 
+    if (!deploy.isPresent()) {
+      // Check for abandoned pending deploy
+      Optional<SingularityDeployResult> result = deployManager.getDeployResult(request.getId(), pendingDeploy.getDeployMarker().getDeployId());
+      if (result.isPresent() && result.get().getDeployState().isDeployFinished()) {
+        LOG.info("Deploy was already finished, running cleanup of pending data for {}", pendingDeploy.getDeployMarker());
+        return result.get();
+      }
+    }
+
     if (!pendingDeploy.getDeployProgress().isPresent()) {
       return new SingularityDeployResult(DeployState.FAILED, "No deploy progress data present in Zookeeper. Please reattempt your deploy");
     }
