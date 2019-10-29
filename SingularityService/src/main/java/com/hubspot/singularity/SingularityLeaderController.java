@@ -80,6 +80,7 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
   }
 
   public void stop() {
+    scheduler.notifyStopping();
     statePoller.finish();
     TIMER.cancel();
   }
