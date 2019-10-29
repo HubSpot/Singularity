@@ -29,6 +29,7 @@ import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
@@ -101,11 +102,14 @@ public class SingularityMesosSchedulerClient {
           try {
             connect(mesosMasterURI, frameworkInfo, scheduler);
           } catch (RuntimeException|URISyntaxException e) {
-            LOG.error("Could not connect: ", e);
-            scheduler.onConnectException(e);
+            if (!Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof InterruptedException)) {
+              LOG.error("Could not connect: ", e);
+              scheduler.onConnectException(e);
+            } else {
+              LOG.warn("Interruped stream from mesos on subscriber thread, closing");
+            }
           }
         }
-
       };
       subscriberThread.start();
     }
@@ -239,8 +243,12 @@ public class SingularityMesosSchedulerClient {
     try {
       openStream.await();
     } catch (Throwable t) {
-      LOG.error("Observable was unexpectedly closed", t);
-      scheduler.onConnectException(t);
+      if (Throwables.getCausalChain(t).stream().anyMatch((throwable) -> throwable instanceof InterruptedException)) {
+        LOG.warn("Observable interrupted, closed stream from mesos");
+      } else {
+        LOG.error("Observable was unexpectedly closed", t);
+        scheduler.onUncaughtException(t);
+      }
     }
   }
 
@@ -250,8 +258,24 @@ public class SingularityMesosSchedulerClient {
   public void close() {
     if (openStream != null) {
       if (!openStream.isUnsubscribed()) {
+        // Causes a RuntimeException -> InterruptedException in the subscriberThread
         openStream.unsubscribe();
       }
+    }
+    if (subscriberThread != null) {
+      try {
+        if (!subscriberThread.isInterrupted()) {
+          subscriberThread.interrupt();
+        }
+        subscriberThread.join(10000);
+      } catch (InterruptedException ie) {
+        LOG.error("Interrupted waiting for subscriber thread to exit", ie);
+        throw new RuntimeException(ie);
+      }
+      if (subscriberThread.isAlive()) {
+        throw new RuntimeException("Unable to shut down current subscriber thread for mesos events");
+      }
+      subscriberThread = null;
     }
   }
 
