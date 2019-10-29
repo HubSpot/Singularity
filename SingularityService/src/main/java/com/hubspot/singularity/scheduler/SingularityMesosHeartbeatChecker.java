@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
@@ -18,18 +17,15 @@ public class SingularityMesosHeartbeatChecker extends SingularityLeaderOnlyPolle
 
   private final SingularityConfiguration configuration;
   private final SingularityMesosScheduler mesosScheduler;
-  private final SingularityAbort abort;
   private final AtomicLong lastHeartbeatTime;
 
   @Inject
   public SingularityMesosHeartbeatChecker(SingularityConfiguration configuration,
                                           SingularityMesosScheduler mesosScheduler,
-                                          SingularityAbort abort,
                                           @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(configuration.getCheckMesosMasterHeartbeatEverySeconds(), TimeUnit.SECONDS);
     this.configuration = configuration;
     this.mesosScheduler = mesosScheduler;
-    this.abort = abort;
     this.lastHeartbeatTime = lastHeartbeatTime;
   }
 

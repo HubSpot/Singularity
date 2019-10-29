@@ -198,6 +198,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public CompletableFuture<Boolean> statusUpdate(TaskStatus status) {
+    lastHeartbeatTime.getAndSet(System.currentTimeMillis()); // Consider status update a heartbeat, we are still getting valid communication from mesos
     if (!state.isRunning()) {
       try {
         LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.getMesosSchedulerState(), status, queuedUpdates.size());
@@ -361,7 +362,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void reconnectMesos() {
     callWithStateLock(() -> {
       state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
+      LOG.info("Paused scheduler actions, closing existing mesos connection");
       mesosSchedulerClient.close();
+      LOG.info("Closed existing mesos connection");
       try {
         Retryer<Void> startRetryer = RetryerBuilder.<Void>newBuilder()
             .retryIfException()
