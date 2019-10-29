@@ -18,7 +18,6 @@ import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
-import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.ning.http.client.AsyncHttpClient;
@@ -43,7 +42,6 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityGraphiteReporter graphiteReporter;
   private final ExecutorIdGenerator executorIdGenerator;
   private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
-  private final SingularityMesosScheduler scheduler;
 
   private final CuratorFramework curatorFramework;
   private final AtomicBoolean started = new AtomicBoolean(false);
@@ -59,8 +57,7 @@ public class SingularityLifecycleManaged implements Managed {
                                      SingularityMesosExecutorInfoSupport executorInfoSupport,
                                      SingularityGraphiteReporter graphiteReporter,
                                      ExecutorIdGenerator executorIdGenerator,
-                                     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
-                                     SingularityMesosScheduler scheduler) {
+                                     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     this.asyncHttpClient = asyncHttpClient;
