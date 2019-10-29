@@ -130,6 +130,14 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private SingularityLoadBalancerUpdate sendRequestWrapper(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method, Request request, BaragonRequestState onFailure) {
     final long start = System.currentTimeMillis();
     final LoadBalancerUpdateHolder result = sendRequest(loadBalancerRequestId, request, onFailure);
+
+    if ((method != LoadBalancerMethod.CHECK_STATE && method != LoadBalancerMethod.PRE_ENQUEUE) &&
+        result.state == BaragonRequestState.FAILED
+        && result.message.orElse("").contains("is already enqueued with different parameters")) {
+      LOG.info("Baragon request {} already in the queue, will fetch current state instead", loadBalancerRequestId.getId());
+      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, onFailure);
+    }
+
     LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
     return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start, method, Optional.of(request.getUrl()));
   }
