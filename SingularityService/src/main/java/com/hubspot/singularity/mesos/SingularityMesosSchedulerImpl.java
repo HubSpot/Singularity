@@ -159,12 +159,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Timed
   @Override
   public void resourceOffers(List<Offer> offers) {
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, declining {} offer(s)", state.getMesosSchedulerState(), offers.size());
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
-    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     try {
       lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
     } catch (Throwable t) {
