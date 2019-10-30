@@ -27,7 +27,7 @@ public class SingularityStatusUpdateDeltaPoller extends SingularityLeaderOnlyPol
   public void runActionOnPoll() {
     long now = System.currentTimeMillis();
     List<Long> toRemove = statusUpdateDeltas.keySet().stream()
-        .filter((e) -> e < now - 30000)
+        .filter((e) -> e < now - 10000)
         .collect(Collectors.toList());
     toRemove.forEach(statusUpdateDeltas::remove);
     if (statusUpdateDeltas.isEmpty()) {
