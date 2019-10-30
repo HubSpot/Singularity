@@ -36,7 +36,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -116,7 +116,7 @@ public class SingularityMesosOfferScheduler {
                                         DeployManager deployManager,
                                         SingularitySchedulerLock lock,
                                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                        SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                        SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
                                         DisasterManager disasterManager,
                                         SingularityMesosSchedulerClient mesosSchedulerClient,
                                         OfferCache offerCache,

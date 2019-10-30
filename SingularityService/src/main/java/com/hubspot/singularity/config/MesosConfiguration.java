@@ -71,6 +71,8 @@ public class MesosConfiguration {
   private double recheckMetricsLoad5Threshold = 0.8;
   private int agentReregisterTimeoutSeconds = 600;
 
+  private int subscriberThreads = 5;
+
   private Optional<String> mesosUsername = Optional.empty();
   private Optional<String> mesosPassword = Optional.empty();
 
@@ -384,6 +386,14 @@ public class MesosConfiguration {
 
   public void setAgentReregisterTimeoutSeconds(int agentReregisterTimeoutSeconds) {
     this.agentReregisterTimeoutSeconds = agentReregisterTimeoutSeconds;
+  }
+
+  public int getSubscriberThreads() {
+    return subscriberThreads;
+  }
+
+  public void setSubscriberThreads(int subscriberThreads) {
+    this.subscriberThreads = subscriberThreads;
   }
 
   public Optional<String> getMesosUsername() {

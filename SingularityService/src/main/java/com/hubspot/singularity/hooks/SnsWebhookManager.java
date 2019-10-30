@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
@@ -51,7 +51,7 @@ public class SnsWebhookManager {
   public SnsWebhookManager(@Singularity ObjectMapper objectMapper,
                            SingularityConfiguration configuration,
                            SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                           SingularityManagedCachedThreadPoolFactory managedCachedThreadPoolFactory,
+                           SingularityManagedThreadPoolFactory managedCachedThreadPoolFactory,
                            WebhookManager webhookManager) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
