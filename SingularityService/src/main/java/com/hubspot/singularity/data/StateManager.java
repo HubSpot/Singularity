@@ -64,7 +64,7 @@ public class StateManager extends CuratorManager {
   private final SingularityAuthDatastore authDatastore;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
   private final PriorityManager priorityManager;
-  private final AtomicLong statusUpdateDeltaAvg;
+  private final Map<String, Map<Long, Long>> statusUpdateDeltas;
   private final AtomicLong lastHeartbeatTime;
 
   @Inject
@@ -82,7 +82,7 @@ public class StateManager extends CuratorManager {
                       SingularityAuthDatastore authDatastore,
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
-                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Map<String, Map<Long, Long>> statusUpdateDeltas,
                       @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(curatorFramework, configuration, metricRegistry);
 
@@ -97,7 +97,7 @@ public class StateManager extends CuratorManager {
     this.authDatastore = authDatastore;
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
-    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.statusUpdateDeltas = statusUpdateDeltas;
     this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
@@ -273,12 +273,20 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
+    long statusUpdateDeltaAvg = (long) statusUpdateDeltas.entrySet().stream()
+        .flatMapToLong((e) -> e.getValue()
+            .values()
+            .stream()
+            .mapToLong(Long::longValue))
+        .average()
+        .orElse(0);
+
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getLateTasks().size(),
         scheduledTasksInfo.getLateTasks(), scheduledTasksInfo.getOnDemandLateTasks().size(), scheduledTasksInfo.getOnDemandLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
-        statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
+        statusUpdateDeltaAvg, lastHeartbeatTime.get());
   }
 
   private SingularityScheduledTasksInfo getScheduledTasksInfo() {

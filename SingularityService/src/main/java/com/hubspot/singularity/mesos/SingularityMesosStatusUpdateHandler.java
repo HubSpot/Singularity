@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -80,7 +81,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
-  private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
+  private final Map<String, Map<Long, Long>> statusUpdateDeltas;
 
   private final ExecutorService statusUpdatesExecutor;
   private final AsyncSemaphore<StatusUpdateResult> statusUpdatesSemaphore;
@@ -105,7 +106,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
+                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Map<String, Map<Long, Long>> statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -242,7 +243,7 @@ public class SingularityMesosStatusUpdateHandler {
     long delta = now - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
-    statusUpdateDeltas.put(now, delta);
+    statusUpdateDeltas.computeIfAbsent(taskIdObj.getRequestId(), (r) -> new ConcurrentHashMap<>()).put(now, delta);
 
     final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>empty());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);

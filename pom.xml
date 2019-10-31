@@ -46,7 +46,7 @@
     <dep.hk2.version>2.5.0-b63</dep.hk2.version>
     <dep.httpclient.version>4.5.5</dep.httpclient.version>
     <dep.httpcore.version>4.4.9</dep.httpcore.version>
-    <dep.jackson-databind.version>2.9.9</dep.jackson-databind.version>
+    <dep.jackson-databind.version>2.9.9.3</dep.jackson-databind.version>
     <dep.jackson.version>2.9.9</dep.jackson.version>
     <dep.javassist.version>3.24.1-GA</dep.javassist.version>
     <dep.jboss-logging.version>3.3.0.Final</dep.jboss-logging.version>
@@ -281,7 +281,7 @@
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
-        <version>0.8.1</version>
+        <version>0.8.4</version>
       </dependency>
 
       <dependency>
