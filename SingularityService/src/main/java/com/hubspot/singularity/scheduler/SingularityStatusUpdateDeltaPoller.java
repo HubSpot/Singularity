@@ -2,7 +2,6 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -31,21 +30,19 @@ public class SingularityStatusUpdateDeltaPoller extends SingularityLeaderOnlyPol
   @Override
   public void runActionOnPoll() {
     long now = System.currentTimeMillis();
-    Set<String> requestIds = statusUpdateDeltas.keySet();
     int overThreshold = 0;
-    for (String requestId : requestIds) {
-      Map<Long, Long> requestDeltas = statusUpdateDeltas.get(requestId);
-      List<Long> toRemove = requestDeltas.keySet()
+    for (Map<Long, Long> deltas : statusUpdateDeltas.values()) {
+      List<Long> toRemove = deltas.keySet()
           .stream()
           .filter((e) -> e < now - 30000)
           .collect(Collectors.toList());
-      toRemove.forEach(requestDeltas::remove);
-      if (requestDeltas.size() > 0 && Stats.meanOf(requestDeltas.values()) > configuration.getDelayPollersWhenDeltaOverMs()) {
+      toRemove.forEach(deltas::remove);
+      if (deltas.size() > 0 && Stats.meanOf(deltas.values()) > configuration.getDelayPollersWhenDeltaOverMs()) {
         overThreshold++;
       }
     }
 
-    if ((overThreshold * 100.0 / requestIds.size()) > configuration.getDelayPollersWhenPercentOfRequestsOverUpdateDelta()) {
+    if ((overThreshold * 100.0 / statusUpdateDeltas.keySet().size()) > configuration.getDelayPollersWhenPercentOfRequestsOverUpdateDelta()) {
       shortCircuitForStatusUpdateDelay.set(true);
     } else {
       shortCircuitForStatusUpdateDelay.set(false);
