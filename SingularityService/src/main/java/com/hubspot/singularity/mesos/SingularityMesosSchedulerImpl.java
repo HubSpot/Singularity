@@ -103,7 +103,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                                 SingularityConfiguration configuration,
                                 TaskManager taskManager,
                                 Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
-                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
                                 @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;

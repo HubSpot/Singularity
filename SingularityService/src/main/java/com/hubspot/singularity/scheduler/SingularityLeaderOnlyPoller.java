@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -37,8 +35,7 @@ public abstract class SingularityLeaderOnlyPoller {
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
   private SingularityMesosScheduler mesosScheduler;
-  private long delayPollersWhenDeltaOverMs;
-  private AtomicLong statusUpdateDelta30sAverage;
+  private AtomicBoolean shortCircuitForStatusUpdateDelay;
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
     this(pollDelay, pollTimeUnit, false);
@@ -56,15 +53,13 @@ public abstract class SingularityLeaderOnlyPoller {
                                 SingularityExceptionNotifier exceptionNotifier,
                                 SingularityAbort abort,
                                 SingularityMesosScheduler mesosScheduler,
-                                SingularityConfiguration configuration,
-                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDelta30sAverage) {
+                                @Named(SingularityMainModule.STATUS_UPDATE_SHORT_CIRCUIT) AtomicBoolean shortCircuitForStatusUpdateDelay) {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
     this.abort = checkNotNull(abort, "abort is null");
     this.mesosScheduler = checkNotNull(mesosScheduler, "mesosScheduler is null");
-    this.delayPollersWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
-    this.statusUpdateDelta30sAverage = checkNotNull(statusUpdateDelta30sAverage, "statusUpdateDeltaAverage is null");
+    this.shortCircuitForStatusUpdateDelay = checkNotNull(shortCircuitForStatusUpdateDelay, "statusUpdateDeltaAverage is null");
   }
 
   public void start() {
@@ -109,7 +104,7 @@ public abstract class SingularityLeaderOnlyPoller {
       return;
     }
 
-    if (delayWhenLargeStatusUpdateDelta && statusUpdateDelta30sAverage.get() > delayPollersWhenDeltaOverMs) {
+    if (delayWhenLargeStatusUpdateDelta && shortCircuitForStatusUpdateDelay.get()) {
       LOG.info("Delaying run of {} until status updates have caught up", getClass().getSimpleName());
       return;
     }

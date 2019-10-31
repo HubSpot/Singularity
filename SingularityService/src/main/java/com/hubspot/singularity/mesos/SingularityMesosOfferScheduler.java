@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -87,8 +87,7 @@ public class SingularityMesosOfferScheduler {
   private final boolean offerCacheEnabled;
   private final DisasterManager disasterManager;
   private final boolean delayWhenStatusUpdateDeltaTooLarge;
-  private final long delayWhenDeltaOverMs;
-  private final AtomicLong statusUpdateDeltaAvg;
+  private final AtomicBoolean shortCircuitForStatusUpdateDelta;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
   private final OfferCache offerCache;
 
@@ -120,7 +119,7 @@ public class SingularityMesosOfferScheduler {
                                         DisasterManager disasterManager,
                                         SingularityMesosSchedulerClient mesosSchedulerClient,
                                         OfferCache offerCache,
-                                        @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                                        @Named(SingularityMainModule.STATUS_UPDATE_SHORT_CIRCUIT) AtomicBoolean shortCircuitForStatusUpdateDelta) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -134,8 +133,7 @@ public class SingularityMesosOfferScheduler {
     this.offerCacheEnabled = configuration.isCacheOffers();
     this.disasterManager = disasterManager;
     this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
-    this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
-    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.shortCircuitForStatusUpdateDelta = shortCircuitForStatusUpdateDelta;
     this.mesosSchedulerClient = mesosSchedulerClient;
     this.offerCache = offerCache;
     this.usageHelper = usageHelper;
@@ -171,8 +169,8 @@ public class SingularityMesosOfferScheduler {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
       declineImmediately = true;
     }
-    if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
-      LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
+    if (delayWhenStatusUpdateDeltaTooLarge && shortCircuitForStatusUpdateDelta.get()) {
+      LOG.info("Status update delta is too large, declining offers while status updates catch up");
       declineImmediately = true;
     }
 

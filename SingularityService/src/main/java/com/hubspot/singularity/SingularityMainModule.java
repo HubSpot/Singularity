@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -113,7 +114,7 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
-  public static final String STATUS_UPDATE_DELTA_30S_AVERAGE = "singularity.status.update.delta.minute.average";
+  public static final String STATUS_UPDATE_SHORT_CIRCUIT = "singularity.status.update.delay.short.circuit";
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
   public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME = "singularity.last.mesos.master.heartbeat.time";
 
@@ -395,15 +396,15 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(STATUS_UPDATE_DELTA_30S_AVERAGE)
-  public AtomicLong provideDeltasMap() {
-    return new AtomicLong(0);
+  @Named(STATUS_UPDATE_SHORT_CIRCUIT)
+  public AtomicBoolean provideDeltasMap() {
+    return new AtomicBoolean(false);
   }
 
   @Provides
   @Singleton
   @Named(STATUS_UPDATE_DELTAS)
-  public ConcurrentHashMap<Long, Long> provideUpdateDeltasMap() {
+  public Map<String, Map<Long, Long>> provideUpdateDeltasMap() {
     return new ConcurrentHashMap<>();
   }
 
