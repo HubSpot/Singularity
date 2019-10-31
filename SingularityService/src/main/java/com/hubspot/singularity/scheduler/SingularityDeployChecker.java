@@ -640,6 +640,15 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");
     }
 
+    if (!deploy.isPresent()) {
+      // Check for abandoned pending deploy
+      Optional<SingularityDeployResult> result = deployManager.getDeployResult(request.getId(), pendingDeploy.getDeployMarker().getDeployId());
+      if (result.isPresent() && result.get().getDeployState().isDeployFinished()) {
+        LOG.info("Deploy was already finished, running cleanup of pending data for {}", pendingDeploy.getDeployMarker());
+        return result.get();
+      }
+    }
+
     if (!pendingDeploy.getDeployProgress().isPresent()) {
       return new SingularityDeployResult(DeployState.FAILED, "No deploy progress data present in Zookeeper. Please reattempt your deploy");
     }
@@ -712,11 +721,6 @@ public class SingularityDeployChecker {
     }
 
     final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
-    if (deployActiveTasks.size() < deployProgress.getTargetActiveInstances()) {
-      maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
-      return checkOverdue(request, deploy, pendingDeploy, deployActiveTasks, isDeployOverdue);
-    }
-
     if (shouldCheckLbState(pendingDeploy)) {
       final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(getLoadBalancerRequestId(pendingDeploy));
       return processLbState(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks, tasksToShutDown(deployProgress, otherActiveTasks, request), lbUpdate);
@@ -724,6 +728,11 @@ public class SingularityDeployChecker {
 
     if (isDeployOverdue && request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
       return cancelLoadBalancer(pendingDeploy, getDeployFailures(request, deploy, pendingDeploy, DeployState.OVERDUE, deployActiveTasks));
+    }
+
+    if (deployActiveTasks.size() < deployProgress.getTargetActiveInstances()) {
+      maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
+      return checkOverdue(request, deploy, pendingDeploy, deployActiveTasks, isDeployOverdue);
     }
 
     if (isWaitingForCurrentLbRequest(pendingDeploy)) {
@@ -908,8 +917,12 @@ public class SingularityDeployChecker {
         String.format("Deploy was able to launch %s tasks, but not all of them became healthy within %s", deployActiveTasks.size(), JavaUtils.durationFromMillis(getAllowedMillis(deploy.get())));
     }
 
-    if (deploy.isPresent() && isOverdue) {
-      return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.OVERDUE, message, deployActiveTasks);
+    if (isOverdue) {
+      if (deploy.isPresent()) {
+        return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.OVERDUE, message, deployActiveTasks);
+      } else {
+        return new SingularityDeployResult(DeployState.OVERDUE);
+      }
     } else {
       return new SingularityDeployResult(DeployState.WAITING);
     }

@@ -60,6 +60,7 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
@@ -207,6 +208,24 @@ public class RequestResource extends AbstractRequestResource {
           remainingActiveTasks.removeAll(cleanedTasks);
         }
       }
+    }
+
+    if (oldRequest.isPresent() && !oldRequest.get().getSkipHealthchecks().orElse(false) && request.getSkipHealthchecks().orElse(false)) {
+      LOG.info("Marking pending tasks as healthy for skipHealthchecks on {}", request.getId());
+      taskManager.getActiveTaskIdsForRequest(request.getId())
+          .forEach((t) -> {
+            // Will only be saved if async healthchecks have not already finished
+            taskManager.saveHealthcheckResult(
+                new SingularityTaskHealthcheckResult(
+                    Optional.of(200),
+                    Optional.empty(),
+                    System.currentTimeMillis(),
+                    Optional.of(String.format("Healthchecks skipped by %s", user.getId())),
+                    Optional.empty(),
+                    t,
+                    Optional.empty())
+            );
+          });
     }
 
     requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);

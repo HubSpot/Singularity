@@ -48,6 +48,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
+  private static final String ALREADY_ENQUEUED_ERROR = "is already enqueued with different parameters";
 
   private final String loadBalancerUri;
   private final Optional<Map<String, String>> loadBalancerQueryParams;
@@ -130,6 +131,14 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private SingularityLoadBalancerUpdate sendRequestWrapper(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method, Request request, BaragonRequestState onFailure) {
     final long start = System.currentTimeMillis();
     final LoadBalancerUpdateHolder result = sendRequest(loadBalancerRequestId, request, onFailure);
+
+    if ((method != LoadBalancerMethod.CHECK_STATE && method != LoadBalancerMethod.PRE_ENQUEUE) &&
+        result.state == BaragonRequestState.FAILED
+        && result.message.orElse("").contains(ALREADY_ENQUEUED_ERROR)) {
+      LOG.info("Baragon request {} already in the queue, will fetch current state instead", loadBalancerRequestId.getId());
+      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CHECK_STATE, request, onFailure);
+    }
+
     LOG.debug("LB {} request {} had result {} after {}", request.getMethod(), loadBalancerRequestId, result, JavaUtils.duration(start));
     return new SingularityLoadBalancerUpdate(result.state, loadBalancerRequestId, result.message, start, method, Optional.of(request.getUrl()));
   }
