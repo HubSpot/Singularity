@@ -90,6 +90,8 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
     LOG.info("Received update for new zk connection state {}", newState);
     stateHandlerLock.lock();
     try {
+      // If the new state is not connected `setZkConnectionState` will effectively pause all pollers from
+      // continuing to process events. An explicit call to pauseForDatastoreReconnect is not needed here
       scheduler.setZkConnectionState(newState);
       if (!newState.isConnected()) {
         LOG.info("No longer connected to zk, pausing scheduler actions and waiting up to {}ms for reconnect",
