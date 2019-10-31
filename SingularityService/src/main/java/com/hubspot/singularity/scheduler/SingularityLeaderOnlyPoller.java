@@ -14,11 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
-import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -29,7 +27,6 @@ public abstract class SingularityLeaderOnlyPoller {
 
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
-  private final boolean delayWhenLargeStatusUpdateDelta;
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   private ScheduledExecutorService executorService;
@@ -37,16 +34,10 @@ public abstract class SingularityLeaderOnlyPoller {
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
   private SingularityMesosScheduler mesosScheduler;
-  private AtomicBoolean shortCircuitForStatusUpdateDelay;
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
-    this(pollDelay, pollTimeUnit, false);
-  }
-
-  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, boolean delayWhenLargeStatusUpdateDelta) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
-    this.delayWhenLargeStatusUpdateDelta = delayWhenLargeStatusUpdateDelta;
   }
 
   @Inject
@@ -54,14 +45,12 @@ public abstract class SingularityLeaderOnlyPoller {
                                 LeaderLatch leaderLatch,
                                 SingularityExceptionNotifier exceptionNotifier,
                                 SingularityAbort abort,
-                                SingularityMesosScheduler mesosScheduler,
-                                @Named(SingularityMainModule.STATUS_UPDATE_SHORT_CIRCUIT) AtomicBoolean shortCircuitForStatusUpdateDelay) {
+                                SingularityMesosScheduler mesosScheduler) {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
     this.abort = checkNotNull(abort, "abort is null");
     this.mesosScheduler = checkNotNull(mesosScheduler, "mesosScheduler is null");
-    this.shortCircuitForStatusUpdateDelay = checkNotNull(shortCircuitForStatusUpdateDelay, "statusUpdateDeltaAverage is null");
   }
 
   public void start() {
@@ -103,11 +92,6 @@ public abstract class SingularityLeaderOnlyPoller {
 
     if (stopped.get()) {
       LOG.info("Singularity shutting down, will not run {} poller", getClass().getSimpleName());
-      return;
-    }
-
-    if (delayWhenLargeStatusUpdateDelta && shortCircuitForStatusUpdateDelay.get()) {
-      LOG.info("Delaying run of {} until status updates have caught up", getClass().getSimpleName());
       return;
     }
 

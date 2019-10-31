@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -26,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
@@ -35,7 +33,6 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -86,8 +83,6 @@ public class SingularityMesosOfferScheduler {
   private final SingularityLeaderCache leaderCache;
   private final boolean offerCacheEnabled;
   private final DisasterManager disasterManager;
-  private final boolean delayWhenStatusUpdateDeltaTooLarge;
-  private final AtomicBoolean shortCircuitForStatusUpdateDelta;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
   private final OfferCache offerCache;
 
@@ -118,8 +113,7 @@ public class SingularityMesosOfferScheduler {
                                         SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
                                         DisasterManager disasterManager,
                                         SingularityMesosSchedulerClient mesosSchedulerClient,
-                                        OfferCache offerCache,
-                                        @Named(SingularityMainModule.STATUS_UPDATE_SHORT_CIRCUIT) AtomicBoolean shortCircuitForStatusUpdateDelta) {
+                                        OfferCache offerCache) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -132,8 +126,6 @@ public class SingularityMesosOfferScheduler {
     this.leaderCache = leaderCache;
     this.offerCacheEnabled = configuration.isCacheOffers();
     this.disasterManager = disasterManager;
-    this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
-    this.shortCircuitForStatusUpdateDelta = shortCircuitForStatusUpdateDelta;
     this.mesosSchedulerClient = mesosSchedulerClient;
     this.offerCache = offerCache;
     this.usageHelper = usageHelper;
@@ -167,10 +159,6 @@ public class SingularityMesosOfferScheduler {
     boolean declineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
-      declineImmediately = true;
-    }
-    if (delayWhenStatusUpdateDeltaTooLarge && shortCircuitForStatusUpdateDelta.get()) {
-      LOG.info("Status update delta is too large, declining offers while status updates catch up");
       declineImmediately = true;
     }
 

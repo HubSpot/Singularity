@@ -13,7 +13,7 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCooldownPoller(SingularityCooldownChecker checker) {
-    super(1, TimeUnit.MINUTES, true);
+    super(1, TimeUnit.MINUTES);
     this.checker = checker;
   }
 

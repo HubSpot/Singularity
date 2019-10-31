@@ -20,7 +20,7 @@ public class SingularityUpstreamPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityUpstreamPoller(SingularityConfiguration configuration, SingularityUpstreamChecker upstreamChecker, DisasterManager disasterManager) {
-    super(configuration.getCheckUpstreamsEverySeconds(), TimeUnit.SECONDS, true);
+    super(configuration.getCheckUpstreamsEverySeconds(), TimeUnit.SECONDS);
 
     this.upstreamChecker = upstreamChecker;
     this.disasterManager = disasterManager;

@@ -14,7 +14,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityCleanupPoller.class).in(Scopes.SINGLETON);
-    bind(SingularityStatusUpdateDeltaPoller.class).in(Scopes.SINGLETON);
     bind(SingularityExpiringUserActionPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPurger.class).in(Scopes.SINGLETON);
     bind(SingularitySlaveReconciliationPoller.class).in(Scopes.SINGLETON);

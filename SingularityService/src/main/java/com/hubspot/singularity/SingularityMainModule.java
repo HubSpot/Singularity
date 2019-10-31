@@ -25,6 +25,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -114,7 +115,6 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
-  public static final String STATUS_UPDATE_SHORT_CIRCUIT = "singularity.status.update.delay.short.circuit";
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
   public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME = "singularity.last.mesos.master.heartbeat.time";
 
@@ -393,16 +393,9 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(STATUS_UPDATE_SHORT_CIRCUIT)
-  public AtomicBoolean provideDeltasMap() {
-    return new AtomicBoolean(false);
-  }
-
-  @Provides
-  @Singleton
   @Named(STATUS_UPDATE_DELTAS)
-  public Map<String, Map<Long, Long>> provideUpdateDeltasMap() {
-    return new ConcurrentHashMap<>();
+  public Histogram provideUpdateDeltasMap(MetricRegistry registry) {
+    return registry.histogram("status update delta");
   }
 
   @Provides
