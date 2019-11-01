@@ -92,6 +92,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
   private final SingularitySchedulerLock lock;
   private final ExecutorService offerExecutor;
+  private final ExecutorService subscribeExecutor;
 
   private volatile SchedulerState state;
   private volatile Optional<Long> lastOfferTimestamp = Optional.empty();
@@ -134,6 +135,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.queuedUpdates = queuedUpdates;
     this.lock = lock;
     this.offerExecutor = threadPoolFactory.getSingleThreaded("offer-scheduler");
+    this.subscribeExecutor = threadPoolFactory.getSingleThreaded("subscribe-scheduler");
     this.state = new SchedulerState();
     this.configuration = configuration;
 
@@ -141,25 +143,27 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void subscribed(Subscribed subscribed) {
-    callWithStateLock(() -> {
-      Preconditions.checkState(state.getMesosSchedulerState() != MesosSchedulerState.SUBSCRIBED, "Asked to startup - but in invalid state: %s", state.getMesosSchedulerState());
+    CompletableFuture.runAsync(() ->
+        callWithStateLock(() -> {
+          MasterInfo newMasterInfo = subscribed.getMasterInfo();
+          masterInfo.set(newMasterInfo);
+          Preconditions.checkState(state.getMesosSchedulerState() != MesosSchedulerState.SUBSCRIBED, "Asked to startup - but in invalid state: %s", state.getMesosSchedulerState());
 
-      double advertisedHeartbeatIntervalSeconds = subscribed.getHeartbeatIntervalSeconds();
-      if (advertisedHeartbeatIntervalSeconds > 0) {
-        heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
-      }
+          double advertisedHeartbeatIntervalSeconds = subscribed.getHeartbeatIntervalSeconds();
+          if (advertisedHeartbeatIntervalSeconds > 0) {
+            heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
+          }
 
-      if (state.getMesosSchedulerState() != MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT) {
-        // Should be called before activation of leader cache or cache could be left empty
-        startup.checkMigrations();
-        leaderCacheCoordinator.activateLeaderCache();
-      }
-      MasterInfo newMasterInfo = subscribed.getMasterInfo();
-      masterInfo.set(newMasterInfo);
-      startup.startup(newMasterInfo);
-      state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
-      handleQueuedStatusUpdates();
-    }, "subscribed", false);
+          if (state.getMesosSchedulerState() != MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT) {
+            // Should be called before activation of leader cache or cache could be left empty
+            startup.checkMigrations();
+            leaderCacheCoordinator.activateLeaderCache();
+          }
+          startup.startup(newMasterInfo);
+          state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
+          handleQueuedStatusUpdates();
+        }, "subscribed", false),
+        subscribeExecutor);
   }
 
   @Timed
