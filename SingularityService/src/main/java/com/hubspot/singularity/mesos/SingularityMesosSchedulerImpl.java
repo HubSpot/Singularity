@@ -165,7 +165,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Timed
   @Override
   public void resourceOffers(List<Offer> offers) {
-    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
+    long received = System.currentTimeMillis();
+    lastOfferTimestamp = Optional.of(received);
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, declining {} offer(s)", state.getMesosSchedulerState(), offers.size());
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
@@ -173,6 +174,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     CompletableFuture.runAsync(() -> {
       try {
+        LOG.info("Starting offer check after {}ms", System.currentTimeMillis() - received);
         lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
       } catch (Throwable t) {
         LOG.error("Scheduler threw an uncaught exception - exiting", t);
