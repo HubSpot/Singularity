@@ -65,6 +65,7 @@ class SingularityStartup {
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
   private final SingularitySchedulerLock lock;
+  private final SingularityConfiguration configuration;
 
   @Inject
   SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
@@ -82,6 +83,7 @@ class SingularityStartup {
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
     this.lock = lock;
+    this.configuration = configuration;
   }
 
   public void checkMigrations() {
