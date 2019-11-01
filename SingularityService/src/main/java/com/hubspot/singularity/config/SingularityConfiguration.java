@@ -196,7 +196,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int startupIntervalSeconds = 2;
 
-  private int schedulerStartupConcurrency = 100;
+  private int schedulerStartupConcurrency = 20;
 
   private Optional<Integer> healthcheckMaxRetries = Optional.empty();
 
