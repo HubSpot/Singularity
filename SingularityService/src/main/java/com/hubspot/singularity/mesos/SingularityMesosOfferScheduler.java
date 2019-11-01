@@ -302,7 +302,7 @@ public class SingularityMesosOfferScheduler {
     return true;
   }
 
-  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers) {
+  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers, long start) {
     if (offers.isEmpty()) {
       LOG.debug("No offers to check");
       return Collections.emptyList();
@@ -390,40 +390,50 @@ public class SingularityMesosOfferScheduler {
 
     CompletableFutures.allOf(usagesWithScoresFutures).join();
 
-    LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
+    long startCheck = System.currentTimeMillis();
+    LOG.debug("Found slave usages and scores after {}ms", startCheck - start);
 
     Map<String, Integer> tasksPerOfferHost = new ConcurrentHashMap<>();
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
-      lock.runWithRequestLock(() -> {
-        Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
-        List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
+      if (System.currentTimeMillis() - startCheck > mesosConfiguration.getOfferCheckTimeoutMillis()) {
+        LOG.debug("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferCheckTimeoutMillis());
+        break;
+      }
+      lock.runWithRequestLockAndTimeout(() -> {
+            Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
+            List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
-        List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
-        AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
-        for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-          scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
-        }
+            List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
+            AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
+            for (SingularityOfferHolder offerHolder : offerHolders.values()) {
+              scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
+            }
 
-        CompletableFutures.allOf(scoringFutures).join();
+            CompletableFutures.allOf(scoringFutures).join();
 
-        if (scoringException.get() != null) {
-          LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
-              offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
-          // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
-          throw new RuntimeException(scoringException.get());
-        }
+            if (scoringException.get() != null) {
+              LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
+                  offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
+              // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
+              throw new RuntimeException(scoringException.get());
+            }
 
-        if (!scorePerOffer.isEmpty()) {
-          SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
-          LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
-          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferHost, taskRequestHolder);
-          tasksScheduled.getAndIncrement();
-          bestOffer.addMatchedTask(taskHolder);
-          updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
-        }
-      }, taskRequestHolder.getTaskRequest().getRequest().getId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
+            if (!scorePerOffer.isEmpty()) {
+              SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
+              LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
+              SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferHost, taskRequestHolder);
+              tasksScheduled.getAndIncrement();
+              bestOffer.addMatchedTask(taskHolder);
+              updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
+            }
+          },
+          50,
+          taskRequestHolder.getTaskRequest().getRequest().getId(),
+          String.format("%s#%s", getClass().getSimpleName(), "checkOffers"),
+          () -> LOG.info("Waited too long for lock on {}, skipping offer check", taskRequestHolder.getTaskRequest().getRequest().getId())
+      );
     }
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());

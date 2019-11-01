@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
@@ -53,6 +54,27 @@ public class SingularitySchedulerLock {
       function.run();
     } finally {
       unlock(requestId, name, start);
+    }
+  }
+
+  public void runWithRequestLockAndTimeout(Runnable function, long timeout, String requestId, String name, Runnable functionOnTimeout) {
+    final long start = System.currentTimeMillis();
+    LOG.trace("{} - Locking {}", name, requestId);
+    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
+    try {
+      if (lock.tryLock(timeout, TimeUnit.MILLISECONDS)) {
+        try {
+          LOG.trace("{} - Acquired lock on {} ({})", name, requestId, JavaUtils.duration(start));
+          function.run();
+        } finally {
+          unlock(requestId, name, start);
+        }
+      } else {
+        functionOnTimeout.run();
+      }
+    } catch (InterruptedException ie) {
+      LOG.warn("Interrupted waiting for request lock on {}", requestId);
+      functionOnTimeout.run();
     }
   }
 

@@ -101,9 +101,10 @@ class SingularityStartup {
 
     ExecutorService startupExecutor = Executors.newFixedThreadPool(configuration.getSchedulerStartupConcurrency(), new ThreadFactoryBuilder().setNameFormat("startup-%d").build());
 
-    checkSchedulerForInconsistentState(startupExecutor);
+    List<CompletableFuture<Void>> checkFutures = checkSchedulerForInconsistentState(startupExecutor);
 
-    enqueueHealthAndNewTaskChecks(startupExecutor);
+    CompletableFutures.allOf(enqueueHealthAndNewTaskChecks(startupExecutor)).join();
+    CompletableFutures.allOf(checkFutures).join();
 
     startupExecutor.shutdown();
 
@@ -135,7 +136,7 @@ class SingularityStartup {
    *
    */
   @VisibleForTesting
-  void checkSchedulerForInconsistentState(ExecutorService startupExecutor) {
+  List<CompletableFuture<Void>> checkSchedulerForInconsistentState(ExecutorService startupExecutor) {
     final long now = System.currentTimeMillis();
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
@@ -161,7 +162,7 @@ class SingularityStartup {
         }, requestId, "startup")
       , startupExecutor));
     }
-    CompletableFutures.allOf(checkFutures).join();
+    return checkFutures;
   }
 
   private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
@@ -193,9 +194,7 @@ class SingularityStartup {
     requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String>empty(), PendingType.STARTUP, Optional.<Boolean>empty(), Optional.<String>empty()));
   }
 
-  private void enqueueHealthAndNewTaskChecks(ExecutorService startupExecutor) {
-    final long start = System.currentTimeMillis();
-
+  private List<CompletableFuture<Void>> enqueueHealthAndNewTaskChecks(ExecutorService startupExecutor) {
     final List<SingularityTask> activeTasks = taskManager.getActiveTasks();
     final Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, SingularityTaskIdHolder.getTaskIdFunction());
 
@@ -232,8 +231,7 @@ class SingularityStartup {
       }, startupExecutor));
     }
 
-    CompletableFutures.allOf(enqueueFutures).join();
-
-    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks.get(), enqueuedNewTaskChecks.get(), activeTasks.size(), JavaUtils.duration(start));
+    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks)", enqueuedHealthchecks.get(), enqueuedNewTaskChecks.get(), activeTasks.size());
+    return enqueueFutures;
   }
 }
