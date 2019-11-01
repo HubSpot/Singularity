@@ -29,7 +29,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -104,7 +104,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityLeaderCache leaderCache,
                                              MesosProtosUtils mesosProtosUtils,
                                              SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                             SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                             SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
                                              @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas) {

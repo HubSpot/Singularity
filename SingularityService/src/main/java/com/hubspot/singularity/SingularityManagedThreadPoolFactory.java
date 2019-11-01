@@ -15,20 +15,27 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
-public class SingularityManagedCachedThreadPoolFactory {
+public class SingularityManagedThreadPoolFactory {
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ExecutorService> executorPools = new ArrayList<>();
 
   private final long timeoutInMillis;
 
   @Inject
-  public SingularityManagedCachedThreadPoolFactory(final SingularityConfiguration configuration) {
+  public SingularityManagedThreadPoolFactory(final SingularityConfiguration configuration) {
     this.timeoutInMillis = TimeUnit.SECONDS.toMillis(configuration.getThreadpoolShutdownDelayInSeconds());
   }
 
   public synchronized ExecutorService get(String name) {
     checkState(!stopped.get(), "already stopped");
     ExecutorService service = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
+    executorPools.add(service);
+    return service;
+  }
+
+  public synchronized ExecutorService get(String name, int maxSize) {
+    checkState(!stopped.get(), "already stopped");
+    ExecutorService service = Executors.newFixedThreadPool(maxSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
     executorPools.add(service);
     return service;
   }
