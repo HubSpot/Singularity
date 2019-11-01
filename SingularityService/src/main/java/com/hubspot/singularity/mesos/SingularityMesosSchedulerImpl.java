@@ -212,7 +212,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     lastHeartbeatTime.getAndSet(System.currentTimeMillis()); // Consider status update a heartbeat, we are still getting valid communication from mesos
     if (!state.isRunning()) {
       try {
-        LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.getMesosSchedulerState(), status, queuedUpdates.size());
+        LOG.trace("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.getMesosSchedulerState(), status, queuedUpdates.size());
         queuedUpdates.add(status);
         return CompletableFuture.completedFuture(false);
       } catch (IOException ioe) {
