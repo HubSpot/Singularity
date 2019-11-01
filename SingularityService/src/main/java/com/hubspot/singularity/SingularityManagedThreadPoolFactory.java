@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,6 +37,13 @@ public class SingularityManagedThreadPoolFactory {
   public synchronized ExecutorService get(String name, int maxSize) {
     checkState(!stopped.get(), "already stopped");
     ExecutorService service = Executors.newFixedThreadPool(maxSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
+    executorPools.add(service);
+    return service;
+  }
+
+  public synchronized ExecutorService getSingleThreaded(String name) {
+    checkState(!stopped.get(), "already stopped");
+    ExecutorService service = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
     executorPools.add(service);
     return service;
   }

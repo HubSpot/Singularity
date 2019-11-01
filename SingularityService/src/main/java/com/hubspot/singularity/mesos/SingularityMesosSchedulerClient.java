@@ -66,8 +66,6 @@ public class SingularityMesosSchedulerClient {
   private final SingularityConfiguration configuration;
   private final MesosConfiguration mesosConfiguration;
   private final String singularityUriBase;
-  private final Scheduler statusUpdateScheduler;
-  private final Scheduler offerScheduler;
 
   private SerializedSubject<Optional<SinkOperation<Call>>, Optional<SinkOperation<Call>>> publisher;
   private FrameworkID frameworkId;
@@ -76,13 +74,10 @@ public class SingularityMesosSchedulerClient {
 
   @Inject
   public SingularityMesosSchedulerClient(SingularityConfiguration configuration,
-                                         @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) final String singularityUriBase,
-                                         SingularityManagedThreadPoolFactory threadPoolFactory) {
+                                         @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) final String singularityUriBase) {
     this.configuration = configuration;
     this.mesosConfiguration = configuration.getMesosConfiguration();
     this.singularityUriBase = singularityUriBase;
-    this.statusUpdateScheduler = Schedulers.from(threadPoolFactory.get("mesos-rx-status-updates", configuration.getMesosConfiguration().getSubscriberThreads()));
-    this.offerScheduler = Schedulers.from(threadPoolFactory.get("mesos-rx-offers", 1));
   }
 
   /**
@@ -201,7 +196,6 @@ public class SingularityMesosSchedulerClient {
 
       events.filter(event -> event.getType() == Event.Type.INVERSE_OFFERS)
           .map(event -> event.getInverseOffers().getInverseOffersList())
-          .observeOn(offerScheduler)
           .subscribe(scheduler::inverseOffers, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.MESSAGE)
@@ -210,17 +204,14 @@ public class SingularityMesosSchedulerClient {
 
       events.filter(event -> event.getType() == Event.Type.OFFERS)
           .map(event -> event.getOffers().getOffersList())
-          .observeOn(offerScheduler)
           .subscribe(scheduler::resourceOffers, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.RESCIND)
           .map(event -> event.getRescind().getOfferId())
-          .observeOn(offerScheduler)
           .subscribe(scheduler::rescind, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.RESCIND_INVERSE_OFFER)
           .map(event -> event.getRescindInverseOffer().getInverseOfferId())
-          .observeOn(offerScheduler)
           .subscribe(scheduler::rescindInverseOffer, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.SUBSCRIBED)
@@ -241,7 +232,6 @@ public class SingularityMesosSchedulerClient {
               return true;
             }
           })
-          .observeOn(statusUpdateScheduler)
           .subscribe(scheduler::statusUpdate, scheduler::onUncaughtException);
 
       // This is the observable that is responsible for sending calls to mesos master.

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,6 +54,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskId;
@@ -89,6 +91,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final TaskManager taskManager;
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
   private final SingularitySchedulerLock lock;
+  private final ExecutorService offerExecutor;
 
   private volatile SchedulerState state;
   private volatile Optional<Long> lastOfferTimestamp = Optional.empty();
@@ -113,6 +116,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                                 TaskManager taskManager,
                                 Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
                                 StatusUpdateQueue queuedUpdates,
+                                SingularityManagedThreadPoolFactory threadPoolFactory,
                                 @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
@@ -129,8 +133,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.leaderCacheCoordinator = leaderCacheCoordinator;
     this.queuedUpdates = queuedUpdates;
     this.lock = lock;
+    this.offerExecutor = threadPoolFactory.getSingleThreaded("offer-scheduler");
     this.state = new SchedulerState();
     this.configuration = configuration;
+
   }
 
   @Override
@@ -165,14 +171,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
-    try {
-      lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
-    } catch (Throwable t) {
-      LOG.error("Scheduler threw an uncaught exception - exiting", t);
-      exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
-      notifyStopping();
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-    }
+    CompletableFuture.runAsync(() -> {
+      try {
+        lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
+      } catch (Throwable t) {
+        LOG.error("Scheduler threw an uncaught exception - exiting", t);
+        exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+        notifyStopping();
+        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+      }
+    }, offerExecutor);
   }
 
   @Override
@@ -185,7 +193,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     if (!isRunning()) {
       LOG.warn("Received rescind when not running for offer {}", offerId.getValue());
     }
-    callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind");
+    CompletableFuture.runAsync(() -> callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind"), offerExecutor);
   }
 
   @Override
