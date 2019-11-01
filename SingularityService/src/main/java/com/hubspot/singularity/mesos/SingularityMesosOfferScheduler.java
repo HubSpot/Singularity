@@ -33,9 +33,8 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -402,7 +401,7 @@ public class SingularityMesosOfferScheduler {
         LOG.debug("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferCheckTimeoutMillis());
         break;
       }
-      lock.runWithRequestLockAndTimeout(() -> {
+      lock.runWithRequestLock(() -> {
             Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
             List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
@@ -430,11 +429,8 @@ public class SingularityMesosOfferScheduler {
               updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
             }
           },
-          50,
           taskRequestHolder.getTaskRequest().getRequest().getId(),
-          String.format("%s#%s", getClass().getSimpleName(), "checkOffers"),
-          () -> LOG.info("Waited too long for lock on {}, skipping offer check", taskRequestHolder.getTaskRequest().getRequest().getId())
-      );
+          String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
     }
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());
