@@ -37,7 +37,7 @@ public abstract class SingularityMesosScheduler {
    *
    * @param offers A list of offers from mesos
    */
-  public abstract void resourceOffers(List<Offer> offers);
+  public abstract CompletableFuture<Void> resourceOffers(List<Offer> offers);
 
   /**
    * Received whenever there are resources requested back from the scheduler.
@@ -59,7 +59,7 @@ public abstract class SingularityMesosScheduler {
    *
    * @param offerId the recinded offer
    */
-  public abstract void rescind(OfferID offerId);
+  public abstract CompletableFuture<Void> rescind(OfferID offerId);
 
   /**
    * Received when a particular inverse offer is no longer valid (e.g., the

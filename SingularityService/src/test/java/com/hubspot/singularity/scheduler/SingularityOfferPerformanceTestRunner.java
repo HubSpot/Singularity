@@ -58,7 +58,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
 
     start = System.currentTimeMillis();
 
-    sms.resourceOffers(offers);
+    sms.resourceOffers(offers).join();
 
     final long duration = System.currentTimeMillis() - start;
 

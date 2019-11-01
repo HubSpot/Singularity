@@ -164,15 +164,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Timed
   @Override
-  public void resourceOffers(List<Offer> offers) {
+  public CompletableFuture<Void> resourceOffers(List<Offer> offers) {
     long received = System.currentTimeMillis();
     lastOfferTimestamp = Optional.of(received);
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, declining {} offer(s)", state.getMesosSchedulerState(), offers.size());
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
-      return;
+      return CompletableFuture.completedFuture(null);
     }
-    CompletableFuture.runAsync(() -> {
+    return CompletableFuture.runAsync(() -> {
       try {
         LOG.info("Starting offer check after {}ms", System.currentTimeMillis() - received);
         lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
@@ -191,11 +191,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void rescind(OfferID offerId) {
+  public CompletableFuture<Void> rescind(OfferID offerId) {
     if (!isRunning()) {
       LOG.warn("Received rescind when not running for offer {}", offerId.getValue());
     }
-    CompletableFuture.runAsync(() -> callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind"), offerExecutor);
+    return CompletableFuture.runAsync(() -> callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind"), offerExecutor);
   }
 
   @Override
