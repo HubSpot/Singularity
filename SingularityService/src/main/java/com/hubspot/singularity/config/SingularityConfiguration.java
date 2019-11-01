@@ -196,6 +196,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int startupIntervalSeconds = 2;
 
+  private int schedulerStartupConcurrency = 100;
+
   private Optional<Integer> healthcheckMaxRetries = Optional.empty();
 
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.empty();
@@ -1287,6 +1289,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setStartupIntervalSeconds(int startupIntervalSeconds) {
     this.startupIntervalSeconds = startupIntervalSeconds;
+  }
+
+  public int getSchedulerStartupConcurrency() {
+    return schedulerStartupConcurrency;
+  }
+
+  public void setSchedulerStartupConcurrency(int schedulerStartupConcurrency) {
+    this.schedulerStartupConcurrency = schedulerStartupConcurrency;
   }
 
   public long getReconcileSlavesEveryMinutes() {
