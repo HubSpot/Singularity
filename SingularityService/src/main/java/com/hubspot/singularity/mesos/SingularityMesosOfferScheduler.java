@@ -214,7 +214,7 @@ public class SingularityMesosOfferScheduler {
     final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
     try {
-      Collection<SingularityOfferHolder> offerHolders = checkOffers(offersToCheck);
+      Collection<SingularityOfferHolder> offerHolders = checkOffers(offersToCheck, start);
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
