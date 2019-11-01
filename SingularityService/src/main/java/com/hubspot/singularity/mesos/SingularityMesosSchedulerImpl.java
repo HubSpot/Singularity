@@ -142,8 +142,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void subscribed(Subscribed subscribed) {
-    CompletableFuture.runAsync(() ->
+  public CompletableFuture<Void> subscribed(Subscribed subscribed) {
+    return CompletableFuture.runAsync(() ->
         callWithStateLock(() -> {
           MasterInfo newMasterInfo = subscribed.getMasterInfo();
           masterInfo.set(newMasterInfo);

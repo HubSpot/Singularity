@@ -27,7 +27,7 @@ public abstract class SingularityMesosScheduler {
    *
    * @param subscribed Data regarding your subscription
    */
-  public abstract void subscribed(Protos.Event.Subscribed subscribed);
+  public abstract CompletableFuture<Void> subscribed(Protos.Event.Subscribed subscribed);
 
   /**
    * Received whenever there are new resources that are offered to the

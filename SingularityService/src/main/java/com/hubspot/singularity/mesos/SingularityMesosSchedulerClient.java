@@ -40,7 +40,6 @@ import com.hubspot.mesos.rx.java.SinkOperation;
 import com.hubspot.mesos.rx.java.SinkOperations;
 import com.hubspot.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
 import com.hubspot.mesos.rx.java.util.UserAgentEntries;
-import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
@@ -49,8 +48,6 @@ import com.hubspot.singularity.resources.ui.UiResource;
 
 import rx.BackpressureOverflow;
 import rx.Observable;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 
@@ -217,9 +214,9 @@ public class SingularityMesosSchedulerClient {
       events.filter(event -> event.getType() == Event.Type.SUBSCRIBED)
           .map(Event::getSubscribed)
           .subscribe(subscribed -> {
-            this.frameworkId = subscribed.getFrameworkId();
-            scheduler.subscribed(subscribed);
-            }, scheduler::onUncaughtException
+                this.frameworkId = subscribed.getFrameworkId();
+                scheduler.subscribed(subscribed);
+              }, scheduler::onUncaughtException
           );
 
       events.filter(event -> event.getType() == Event.Type.UPDATE)
