@@ -134,7 +134,7 @@ public class SingularityUpstreamChecker {
 
   private Optional<SingularityLoadBalancerUpdate> syncUpstreamsForServiceHelper(SingularityRequest singularityRequest, SingularityDeploy deploy, Optional<String> loadBalancerUpstreamGroup) {
     try {
-      LOG.debug("Sending load balancer request to sync upstreams for service {}.", singularityRequest.getId());
+      LOG.debug("Checking load balancer upstreams for service {}.", singularityRequest.getId());
       Collection<UpstreamInfo> upstreamsInLoadBalancerForService = getLoadBalancerUpstreamsForService(singularityRequest.getId(), deploy.getLoadBalancerServiceIdOverride(), loadBalancerUpstreamGroup);
       LOG.debug("Upstreams in load balancer for singularity service {} are {}.", singularityRequest.getId(), upstreamsInLoadBalancerForService);
       Collection<UpstreamInfo> upstreamsInSingularityForService = getUpstreamsFromActiveHealthyAndCleaningTasksForService(singularityRequest.getId(), loadBalancerUpstreamGroup);
@@ -144,6 +144,11 @@ public class SingularityUpstreamChecker {
         LOG.debug("No extra upstreams for service {}. No load balancer request sent.", singularityRequest.getId());
         return Optional.empty();
       }
+
+      if (extraUpstreams.containsAll(upstreamsInLoadBalancerForService) && extraUpstreams.size() == upstreamsInLoadBalancerForService.size()) {
+        throw new IllegalStateException(String.format("Would remove all remaining upstreams for %s in LB, skipping", singularityRequest.getId()));
+      }
+
       final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(String.format("%s-%s-%s", singularityRequest.getId(), deploy.getId(), System.currentTimeMillis()), LoadBalancerRequestType.REMOVE, Optional.empty());
       LOG.info("Syncing upstreams for service {}. Making and sending load balancer request {} to remove {} extra upstreams. The upstreams removed are: {}.", singularityRequest.getId(), loadBalancerRequestId, extraUpstreams.size(), extraUpstreams);
       return Optional.of(lbClient.makeAndSendLoadBalancerRequest(loadBalancerRequestId, Collections.emptyList(), extraUpstreams, deploy, singularityRequest));
