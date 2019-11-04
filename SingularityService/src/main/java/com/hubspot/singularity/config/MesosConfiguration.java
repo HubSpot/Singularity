@@ -53,9 +53,9 @@ public class MesosConfiguration {
   private Optional<String> credentialPrincipal = Optional.empty();
 
   private long rxEventBufferSize = 10000;
-  private int statusUpdateConcurrencyLimit = 500;
+  private int statusUpdateConcurrencyLimit = 50;
   private int maxStatusUpdateQueueSize = 5000;
-  private int offersConcurrencyLimit = 100;
+  private int offersConcurrencyLimit = 10;
   private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
   private double allocatedResourceWeight = 0.5;
   private double inUseResourceWeight = 0.5;
@@ -67,12 +67,19 @@ public class MesosConfiguration {
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
 
+  // Max time before hort circuiting an offer check run
+  private long offerCheckTimeoutMillis = 5000;
+
   private double recheckMetricsLoad1Threshold = 0.75;
   private double recheckMetricsLoad5Threshold = 0.8;
   private int agentReregisterTimeoutSeconds = 600;
 
+  private int subscriberThreads = 5;
+
   private Optional<String> mesosUsername = Optional.empty();
   private Optional<String> mesosPassword = Optional.empty();
+
+  private long reconnectTimeoutMillis = 60000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -322,6 +329,14 @@ public class MesosConfiguration {
     this.load1OverloadedThreshold = load1OverloadedThreshold;
   }
 
+  public long getOfferCheckTimeoutMillis() {
+    return offerCheckTimeoutMillis;
+  }
+
+  public void setOfferCheckTimeoutMillis(long offerCheckTimeoutMillis) {
+    this.offerCheckTimeoutMillis = offerCheckTimeoutMillis;
+  }
+
   public double getAllocatedResourceWeight() {
     return allocatedResourceWeight;
   }
@@ -386,6 +401,14 @@ public class MesosConfiguration {
     this.agentReregisterTimeoutSeconds = agentReregisterTimeoutSeconds;
   }
 
+  public int getSubscriberThreads() {
+    return subscriberThreads;
+  }
+
+  public void setSubscriberThreads(int subscriberThreads) {
+    this.subscriberThreads = subscriberThreads;
+  }
+
   public Optional<String> getMesosUsername() {
     return mesosUsername;
   }
@@ -400,5 +423,13 @@ public class MesosConfiguration {
 
   public void setMesosPassword(Optional<String> mesosPassword) {
     this.mesosPassword = mesosPassword;
+  }
+
+  public long getReconnectTimeoutMillis() {
+    return reconnectTimeoutMillis;
+  }
+
+  public void setReconnectTimeoutMillis(long reconnectTimeoutMillis) {
+    this.reconnectTimeoutMillis = reconnectTimeoutMillis;
   }
 }

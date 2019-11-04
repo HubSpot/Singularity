@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -21,10 +22,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
-import org.apache.curator.framework.state.ConnectionStateListener;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +70,7 @@ import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
+import com.hubspot.singularity.mesos.StatusUpdateQueue;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
@@ -113,7 +115,6 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
-  public static final String STATUS_UPDATE_DELTA_30S_AVERAGE = "singularity.status.update.delta.minute.average";
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
   public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME = "singularity.last.mesos.master.heartbeat.time";
 
@@ -130,9 +131,6 @@ public class SingularityMainModule implements Module {
     binder.bind(LeaderLatch.class).to(SingularityLeaderLatch.class).in(Scopes.SINGLETON);
     binder.bind(CuratorFramework.class).toProvider(SingularityCuratorProvider.class).in(Scopes.SINGLETON);
 
-    Multibinder<ConnectionStateListener> connectionStateListeners = Multibinder.newSetBinder(binder, ConnectionStateListener.class);
-    connectionStateListeners.addBinding().to(SingularityAbort.class).in(Scopes.SINGLETON);
-
     Multibinder<LeaderLatchListener> leaderLatchListeners = Multibinder.newSetBinder(binder, LeaderLatchListener.class);
     leaderLatchListeners.addBinding().to(SingularityLeaderController.class).in(Scopes.SINGLETON);
 
@@ -147,7 +145,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
-
+    binder.bind(StatusUpdateQueue.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
@@ -173,7 +171,7 @@ public class SingularityMainModule implements Module {
     binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
 
     binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
-    binder.bind(SingularityManagedCachedThreadPoolFactory.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityManagedThreadPoolFactory.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporter.class).in(Scopes.SINGLETON);
 
@@ -395,16 +393,9 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(STATUS_UPDATE_DELTA_30S_AVERAGE)
-  public AtomicLong provideDeltasMap() {
-    return new AtomicLong(0);
-  }
-
-  @Provides
-  @Singleton
   @Named(STATUS_UPDATE_DELTAS)
-  public ConcurrentHashMap<Long, Long> provideUpdateDeltasMap() {
-    return new ConcurrentHashMap<>();
+  public Histogram provideUpdateDeltasMap(MetricRegistry registry) {
+    return registry.histogram("status update delta");
   }
 
   @Provides

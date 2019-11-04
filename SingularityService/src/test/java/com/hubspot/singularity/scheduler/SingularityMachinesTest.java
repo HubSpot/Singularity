@@ -87,9 +87,9 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testBasicSlaveAndRackState() {
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave2", "host2", Optional.of("rack2")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(1, slaveManager.getHistory("slave1").size());
     Assertions.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
@@ -111,7 +111,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DEAD);
     Assertions.assertTrue(rackManager.getObject("rack1").get().getCurrentState().getState() == MachineState.DEAD);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave3", "host3", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave3", "host3", Optional.of("rack1")))).join();
 
     Assertions.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assertions.assertEquals(2, rackManager.getNumObjectsAtState(MachineState.ACTIVE));
@@ -119,7 +119,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(rackManager.getHistory("rack1").size() == 3);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 3);
     Assertions.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
@@ -154,10 +154,10 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2")))).join();
 
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
@@ -186,7 +186,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     scheduler.checkForDecomissions();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size() == 1);
 
@@ -199,8 +199,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2")))).join();
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave4").get())) {
       statusUpdate(task, TaskState.TASK_RUNNING);
@@ -229,26 +229,26 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     // it shouldn't place any on here, since it's DECOMMissioned
     scheduler.drainPendingQueue();
     scheduler.checkForDecomissions();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     slaveResource.activateSlave(singularityUser, "slave1", null);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(1, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     Assertions.assertTrue(rackManager.getObject("rack2").get().getCurrentState().getState() == MachineState.DECOMMISSIONING);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1")))).join();
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
       statusUpdate(task, TaskState.TASK_RUNNING);
@@ -272,13 +272,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testEmptyDecommissioning() {
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.empty(), Optional.of("user1")));
 
     scheduler.drainPendingQueue();
     scheduler.checkForDecomissions();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))).join();
 
     Assertions.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
   }
@@ -358,8 +358,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.GREEDY)).setInstances(Optional.of(2)));
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1")));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1"))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2"))).join();
 
     // freeze slave1
     Assertions.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.FROZEN, Optional.empty(), Optional.of("user1")));
@@ -560,22 +560,22 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)).setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"), createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"), createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2"))).join();
 
     Assertions.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 2);
@@ -588,20 +588,20 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setSlavePlacement(Optional.of(SlavePlacement.SPREAD_ALL_SLAVES)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.of("rack1")))).join();
 
     // assert one Request on one slave.
     Assertions.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 1);
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 0);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2"))).join();
     Assertions.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
 
     spreadAllPoller.runActionOnPoll();
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2"))).join();
 
     // assert Request is spread over the two slaves
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 0);
@@ -631,20 +631,20 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(20)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
     // Default behavior if we don't have info about other hosts that can run this task: be greedy.
-    sms.resourceOffers(Arrays.asList(createOffer(2, 128 * 2, 1024 * 2, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(2, 128 * 2, 1024 * 2, "slave1", "host1"))).join();
     Assertions.assertEquals(2, taskManager.getActiveTaskIds().size());
 
     // Now that at least one other host is running tasks for this request, we expect an even-ish spread,
     // but because we have many tasks pending, we allow quite a bit of unevenness.
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2"))).join();
     Assertions.assertEquals(13, taskManager.getActiveTaskIds().size());
 
     // ...but now we won't schedule more tasks on host2, because it's hosting a disproportionate number of tasks.
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2"))).join();
     Assertions.assertEquals(13, taskManager.getActiveTaskIds().size());
 
     // ...but since host1 is only hosting 2 tasks, we will schedule more tasks on it when an offer is received.
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
     Assertions.assertEquals(20, taskManager.getActiveTaskIds().size());
 
     Map<String, List<SingularityTaskId>> tasksByHost = taskManager.getActiveTaskIdsForRequest(request.getId()).stream()
@@ -665,7 +665,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.GREEDY)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
   }
@@ -680,11 +680,11 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("reservedKey", "notAReservedValue"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("reservedKey", "notAReservedValue")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -700,13 +700,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), reservedAttributesMap)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), reservedAttributesMap))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(reservedAttributesMap)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -724,13 +724,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setAllowedSlaveAttributes(Optional.of(allowedAttributes)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("reservedKey", "reservedValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -744,12 +744,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey", "notTheRightValue")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("notTheRightKey", "requiredValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -772,12 +772,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey", "notTheRightValue")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("notTheRightKey", "requiredValue1")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -792,12 +792,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey1", "requiredValue1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("requiredKey1", "requiredValue1", "someotherkey", "someothervalue"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("requiredKey1", "requiredValue1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("requiredKey1", "requiredValue1", "someotherkey", "someothervalue")))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), requiredAttributes))).join();
 
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
@@ -805,38 +805,38 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testEvenRackPlacement() {
     // Set up 3 active racks
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3")))).join();
 
     initRequest();
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
 
     // rack1 -> 1, rack2 -> 2, rack3 -> 3
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3")))).join();
 
     Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
     Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
 
     // rack1 should not get a third instance until rack3 has a second
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3")))).join();
     Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(7, taskManager.getActiveTaskIds().size());
   }
 
@@ -845,9 +845,9 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     try {
       configuration.setRebalanceRacksOnScaleDown(true);
       // Set up 3 active racks
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave1", "host1", Optional.of("slave1"))));
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave2", "host2", Optional.of("slave2"))));
-      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave3", "host3", Optional.of("slave3"))));
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave1", "host1", Optional.of("slave1")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave2", "host2", Optional.of("slave2")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(0.1, 1, 1, "slave3", "host3", Optional.of("slave3")))).join();
 
       request = new SingularityRequestBuilder(requestId, RequestType.WORKER).setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)).build();
       saveRequest(request);
@@ -882,7 +882,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testPlacementOfBounceTasks() {
     // Set up 1 active rack
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
 
     initRequest();
     initFirstDeploy();
@@ -895,8 +895,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     saveAndSchedule(newRequest.toBuilder());
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack1")))).join();
     Assertions.assertEquals(2, taskManager.getActiveTaskIds().size());
 
     requestResource.bounce(requestId, Optional.empty(), singularityUser);
@@ -908,16 +908,16 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(taskManager.getCleanupTasks().get(0).getActionId().get(), taskManager.getPendingTasks().get(0).getActionId().get());
 
     // BOUNCE should allow a task to launch on the same host
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
 
     // But not a second one from the same bounce
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
 
     // Other pending type should not allow tasks on same host
     saveAndSchedule(newRequest.toBuilder().setInstances(Optional.of(2)));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
     Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
   }
 
@@ -942,11 +942,11 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
 
     // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "spot")))).join();
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
     Assertions.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "non_spot")))).join();
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 10);
     Assertions.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
     Assertions.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
@@ -973,7 +973,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
 
     // Ensure we can go over the minimum if there are enough resources available
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>empty(), ImmutableMap.of("instance_lifecycle_type", "non_spot")))).join();
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 10);
     Assertions.assertEquals(10, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
   }

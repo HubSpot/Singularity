@@ -2,14 +2,12 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Set;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.curator.framework.state.SessionConnectionStateErrorPolicy;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,24 +21,20 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
   private final CuratorFramework curatorFramework;
 
   @Inject
-  public SingularityCuratorProvider(final SingularityConfiguration configuration, final Set<ConnectionStateListener> connectionStateListeners) {
+  public SingularityCuratorProvider(final SingularityConfiguration configuration) {
 
     checkNotNull(configuration, "configuration is null");
-    checkNotNull(connectionStateListeners, "connectionStateListeners is null");
 
     ZooKeeperConfiguration zookeeperConfig = configuration.getZooKeeperConfiguration();
 
     this.curatorFramework = CuratorFrameworkFactory.builder()
         .defaultData(null)
+        .connectionStateErrorPolicy(new SessionConnectionStateErrorPolicy())
         .sessionTimeoutMs(zookeeperConfig.getSessionTimeoutMillis())
         .connectionTimeoutMs(zookeeperConfig.getConnectTimeoutMillis())
         .connectString(zookeeperConfig.getQuorum())
         .retryPolicy(new ExponentialBackoffRetry(zookeeperConfig.getRetryBaseSleepTimeMilliseconds(), zookeeperConfig.getRetryMaxTries()))
         .namespace(zookeeperConfig.getZkNamespace()).build();
-
-    for (ConnectionStateListener connectionStateListener : connectionStateListeners) {
-      curatorFramework.getConnectionStateListenable().addListener(connectionStateListener);
-    }
   }
 
   @Override

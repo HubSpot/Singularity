@@ -1,5 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.data.DeployManager;
@@ -11,6 +14,7 @@ import com.hubspot.singularity.data.usage.UsageManager;
 
 @Singleton
 public class SingularityLeaderCacheCoordinator {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderCacheCoordinator.class);
 
   private final TaskManager taskManager;
   private final DeployManager deployManager;
@@ -38,6 +42,7 @@ public class SingularityLeaderCacheCoordinator {
   }
 
   public void activateLeaderCache() {
+    long start = System.currentTimeMillis();
     taskManager.activateLeaderCache();
     deployManager.activateLeaderCache();
     requestManager.activateLeaderCache();
@@ -45,10 +50,14 @@ public class SingularityLeaderCacheCoordinator {
     rackManager.activateLeaderCache();
     usageManager.activateLeaderCache();
     leaderCache.activate();
+    LOG.info("Populated leader cache after {}ms", System.currentTimeMillis() - start);
   }
 
   public void stopLeaderCache() {
     leaderCache.stop();
   }
 
+  public void clear() {
+    leaderCache.clear();
+  }
 }

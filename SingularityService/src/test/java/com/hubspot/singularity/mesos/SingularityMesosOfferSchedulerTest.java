@@ -175,7 +175,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     slaveAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer), System.currentTimeMillis());
     Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
@@ -222,7 +222,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     slaveAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer));
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer), System.currentTimeMillis());
     Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check

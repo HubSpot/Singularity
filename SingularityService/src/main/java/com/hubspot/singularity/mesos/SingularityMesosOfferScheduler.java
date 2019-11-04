@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
@@ -35,9 +33,8 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -86,9 +83,6 @@ public class SingularityMesosOfferScheduler {
   private final SingularityLeaderCache leaderCache;
   private final boolean offerCacheEnabled;
   private final DisasterManager disasterManager;
-  private final boolean delayWhenStatusUpdateDeltaTooLarge;
-  private final long delayWhenDeltaOverMs;
-  private final AtomicLong statusUpdateDeltaAvg;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
   private final OfferCache offerCache;
 
@@ -116,11 +110,10 @@ public class SingularityMesosOfferScheduler {
                                         DeployManager deployManager,
                                         SingularitySchedulerLock lock,
                                         SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                        SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                        SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
                                         DisasterManager disasterManager,
                                         SingularityMesosSchedulerClient mesosSchedulerClient,
-                                        OfferCache offerCache,
-                                        @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                                        OfferCache offerCache) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -133,9 +126,6 @@ public class SingularityMesosOfferScheduler {
     this.leaderCache = leaderCache;
     this.offerCacheEnabled = configuration.isCacheOffers();
     this.disasterManager = disasterManager;
-    this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
-    this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
-    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
     this.mesosSchedulerClient = mesosSchedulerClient;
     this.offerCache = offerCache;
     this.usageHelper = usageHelper;
@@ -169,10 +159,6 @@ public class SingularityMesosOfferScheduler {
     boolean declineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", uncached.size());
-      declineImmediately = true;
-    }
-    if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
-      LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
       declineImmediately = true;
     }
 
@@ -228,7 +214,7 @@ public class SingularityMesosOfferScheduler {
     final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
     try {
-      Collection<SingularityOfferHolder> offerHolders = checkOffers(offersToCheck);
+      Collection<SingularityOfferHolder> offerHolders = checkOffers(offersToCheck, start);
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
@@ -316,7 +302,7 @@ public class SingularityMesosOfferScheduler {
     return true;
   }
 
-  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers) {
+  Collection<SingularityOfferHolder> checkOffers(final Map<String, Offer> offers, long start) {
     if (offers.isEmpty()) {
       LOG.debug("No offers to check");
       return Collections.emptyList();
@@ -404,40 +390,47 @@ public class SingularityMesosOfferScheduler {
 
     CompletableFutures.allOf(usagesWithScoresFutures).join();
 
-    LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
+    long startCheck = System.currentTimeMillis();
+    LOG.debug("Found slave usages and scores after {}ms", startCheck - start);
 
     Map<String, Integer> tasksPerOfferHost = new ConcurrentHashMap<>();
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
+      if (System.currentTimeMillis() - startCheck > mesosConfiguration.getOfferCheckTimeoutMillis()) {
+        LOG.debug("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferCheckTimeoutMillis());
+        break;
+      }
       lock.runWithRequestLock(() -> {
-        Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
-        List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
+            Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
+            List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
-        List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
-        AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
-        for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-          scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
-        }
+            List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
+            AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
+            for (SingularityOfferHolder offerHolder : offerHolders.values()) {
+              scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
+            }
 
-        CompletableFutures.allOf(scoringFutures).join();
+            CompletableFutures.allOf(scoringFutures).join();
 
-        if (scoringException.get() != null) {
-          LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
-              offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
-          // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
-          throw new RuntimeException(scoringException.get());
-        }
+            if (scoringException.get() != null) {
+              LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
+                  offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
+              // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
+              throw new RuntimeException(scoringException.get());
+            }
 
-        if (!scorePerOffer.isEmpty()) {
-          SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
-          LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
-          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferHost, taskRequestHolder);
-          tasksScheduled.getAndIncrement();
-          bestOffer.addMatchedTask(taskHolder);
-          updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
-        }
-      }, taskRequestHolder.getTaskRequest().getRequest().getId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
+            if (!scorePerOffer.isEmpty()) {
+              SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
+              LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
+              SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferHost, taskRequestHolder);
+              tasksScheduled.getAndIncrement();
+              bestOffer.addMatchedTask(taskHolder);
+              updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
+            }
+          },
+          taskRequestHolder.getTaskRequest().getRequest().getId(),
+          String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
     }
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());

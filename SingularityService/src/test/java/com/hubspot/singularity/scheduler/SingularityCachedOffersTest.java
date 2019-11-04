@@ -77,7 +77,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     );
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
+    sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer)).join();
 
     List<Offer> cachedOffers = offerCache.peekOffers();
     Assertions.assertEquals(1, cachedOffers.size());
@@ -90,7 +90,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"80:81"});
     Offer extraOffer = createOffer(4, 256, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"83:84"});
 
-    sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
+    sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer)).join();
 
     initRequest();
 
@@ -123,7 +123,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     // Each are half of needed memory
     Offer offer1 = createOffer(1, 64, 1024, "slave1", "host1");
     Offer offer2 = createOffer(1, 64, 1024, "slave1", "host1");
-    sms.resourceOffers(ImmutableList.of(offer1, offer2));
+    sms.resourceOffers(ImmutableList.of(offer1, offer2)).join();
 
     initRequest();
     initFirstDeploy();

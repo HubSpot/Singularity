@@ -19,6 +19,7 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -64,7 +65,7 @@ public class StateManager extends CuratorManager {
   private final SingularityAuthDatastore authDatastore;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
   private final PriorityManager priorityManager;
-  private final AtomicLong statusUpdateDeltaAvg;
+  private final Histogram statusUpdateDeltas;
   private final AtomicLong lastHeartbeatTime;
 
   @Inject
@@ -82,7 +83,7 @@ public class StateManager extends CuratorManager {
                       SingularityAuthDatastore authDatastore,
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
-                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas,
                       @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(curatorFramework, configuration, metricRegistry);
 
@@ -97,7 +98,7 @@ public class StateManager extends CuratorManager {
     this.authDatastore = authDatastore;
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
-    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.statusUpdateDeltas = statusUpdateDeltas;
     this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
@@ -278,7 +279,7 @@ public class StateManager extends CuratorManager {
         scheduledTasksInfo.getLateTasks(), scheduledTasksInfo.getOnDemandLateTasks().size(), scheduledTasksInfo.getOnDemandLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
-        statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
+        (long) statusUpdateDeltas.getSnapshot().getMean(), lastHeartbeatTime.get());
   }
 
   private SingularityScheduledTasksInfo getScheduledTasksInfo() {

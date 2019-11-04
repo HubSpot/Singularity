@@ -9,9 +9,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
@@ -32,7 +29,7 @@ import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import ch.qos.logback.classic.LoggerContext;
 
 @Singleton
-public class SingularityAbort implements ConnectionStateListener {
+public class SingularityAbort {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
@@ -58,14 +55,6 @@ public class SingularityAbort implements ConnectionStateListener {
     this.exceptionNotifier = exceptionNotifier;
     this.injector = injector;
     this.hostAndPort = hostAndPort;
-  }
-
-  @Override
-  public void stateChanged(CuratorFramework client, ConnectionState newState) {
-    if (newState == ConnectionState.LOST) {
-      LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION, Optional.empty());
-    }
   }
 
   public enum AbortReason {
@@ -137,7 +126,7 @@ public class SingularityAbort implements ConnectionStateListener {
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       throwable.get().printStackTrace(pw);
-      body = throwable.get().getMessage() + "\n" + sw.toString();
+      body = "<pre>\n" + throwable.get().getMessage() + "\n" + sw.toString() + "\n</pre>";
     } else {
       body = "(no stack trace)";
     }

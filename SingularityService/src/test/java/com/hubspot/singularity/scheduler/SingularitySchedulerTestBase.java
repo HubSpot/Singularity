@@ -631,7 +631,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     List<Offer> offers = Arrays.asList(offer1, offer2);
 
-    sms.resourceOffers(offers);
+    sms.resourceOffers(offers).join();
 
     return offers;
   }
@@ -641,7 +641,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     for (int i = 1; i <= numTasks; i++) {
       offers.add(createOffer(1, 128, 1024, String.format("slave%s", i), String.format("host%s", i)));
     }
-    sms.resourceOffers(offers);
+    sms.resourceOffers(offers).join();
   }
 
   protected void resourceOffers(int numSlaves) {
@@ -649,7 +649,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     for (int i = 1; i <= numSlaves; i++) {
       offers.add(createOffer(20, 20000, 50000, String.format("slave%s", i), String.format("host%s", i)));
     }
-    sms.resourceOffers(offers);
+    sms.resourceOffers(offers).join();
   }
 
   protected void deploy(String deployId) {

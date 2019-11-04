@@ -1,8 +1,13 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
@@ -12,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
@@ -31,6 +37,8 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
+import com.hubspot.singularity.async.CompletableFutures;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -56,11 +64,14 @@ class SingularityStartup {
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
+  private final SingularitySchedulerLock lock;
+  private final SingularityConfiguration configuration;
 
   @Inject
   SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
-      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, DisasterManager disasterManager,
-      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
+                     SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, DisasterManager disasterManager,
+                     SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner, SingularitySchedulerLock lock,
+                     SingularityConfiguration configuration) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -71,6 +82,8 @@ class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
+    this.lock = lock;
+    this.configuration = configuration;
   }
 
   public void checkMigrations() {
@@ -88,9 +101,14 @@ class SingularityStartup {
 
     slaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
-    checkSchedulerForInconsistentState();
+    ExecutorService startupExecutor = Executors.newFixedThreadPool(configuration.getSchedulerStartupConcurrency(), new ThreadFactoryBuilder().setNameFormat("startup-%d").build());
 
-    enqueueHealthAndNewTaskChecks();
+    List<CompletableFuture<Void>> checkFutures = checkSchedulerForInconsistentState(startupExecutor);
+
+    CompletableFutures.allOf(enqueueHealthAndNewTaskChecks(startupExecutor)).join();
+    CompletableFutures.allOf(checkFutures).join();
+
+    startupExecutor.shutdown();
 
     if (!disasterManager.isDisabled(SingularityAction.STARTUP_TASK_RECONCILIATION)) {
       taskReconciliation.startReconciliation();
@@ -120,24 +138,33 @@ class SingularityStartup {
    *
    */
   @VisibleForTesting
-  void checkSchedulerForInconsistentState() {
+  List<CompletableFuture<Void>> checkSchedulerForInconsistentState(ExecutorService startupExecutor) {
     final long now = System.currentTimeMillis();
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
 
-    for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
-      switch (requestWithState.getState()) {
-        case ACTIVE:
-        case SYSTEM_COOLDOWN:
-        case DEPLOYING_TO_UNPAUSE:
-          checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now);
-          break;
-        case DELETED:
-        case PAUSED:
-        case FINISHED:
-          break;
-      }
+    List<CompletableFuture<Void>> checkFutures = new ArrayList<>();
+    for (String requestId : requestManager.getAllRequestIds()) {
+      checkFutures.add(CompletableFuture.runAsync(() ->
+        lock.runWithRequestLock(() -> {
+          Optional<SingularityRequestWithState> maybeWithState = requestManager.getRequest(requestId);
+          if (maybeWithState.isPresent()) {
+            switch (maybeWithState.get().getState()) {
+              case ACTIVE:
+              case SYSTEM_COOLDOWN:
+              case DEPLOYING_TO_UNPAUSE:
+                checkActiveRequest(maybeWithState.get(), deployKeyToPendingTaskId, now);
+                break;
+              case DELETED:
+              case PAUSED:
+              case FINISHED:
+                break;
+            }
+          }
+        }, requestId, "startup")
+      , startupExecutor));
     }
+    return checkFutures;
   }
 
   private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
@@ -169,9 +196,7 @@ class SingularityStartup {
     requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String>empty(), PendingType.STARTUP, Optional.<Boolean>empty(), Optional.<String>empty()));
   }
 
-  private void enqueueHealthAndNewTaskChecks() {
-    final long start = System.currentTimeMillis();
-
+  private List<CompletableFuture<Void>> enqueueHealthAndNewTaskChecks(ExecutorService startupExecutor) {
     final List<SingularityTask> activeTasks = taskManager.getActiveTasks();
     final Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, SingularityTaskIdHolder.getTaskIdFunction());
 
@@ -180,32 +205,35 @@ class SingularityStartup {
     final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY);
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requestManager.getRequests(), SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
-    requestManager.getActiveRequests();
-    int enqueuedNewTaskChecks = 0;
-    int enqueuedHealthchecks = 0;
+    AtomicInteger enqueuedNewTaskChecks = new AtomicInteger(0);
+    AtomicInteger enqueuedHealthchecks = new AtomicInteger(0);
 
+    List<CompletableFuture<Void>> enqueueFutures = new ArrayList<>();
     for (Map.Entry<SingularityTaskId, SingularityTask> entry: activeTaskMap.entrySet()) {
-      SingularityTaskId taskId = entry.getKey();
-      SingularityTask task = entry.getValue();
-      SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(taskUpdates.get(taskId));
+      enqueueFutures.add(CompletableFuture.runAsync(() -> {
+        SingularityTaskId taskId = entry.getKey();
+        SingularityTask task = entry.getValue();
+        SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(taskUpdates.get(taskId));
 
-      if (simplifiedTaskState != SimplifiedTaskState.DONE) {
-        SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
-        Optional<SingularityPendingDeploy> pendingDeploy = Optional.ofNullable(pendingDeploys.get(deployKey));
-        Optional<SingularityRequestWithState> request = Optional.ofNullable(idToRequest.get(taskId.getRequestId()));
+        if (simplifiedTaskState != SimplifiedTaskState.DONE) {
+          SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
+          Optional<SingularityPendingDeploy> pendingDeploy = Optional.ofNullable(pendingDeploys.get(deployKey));
+          Optional<SingularityRequestWithState> request = Optional.ofNullable(idToRequest.get(taskId.getRequestId()));
 
-        if (!pendingDeploy.isPresent()) {
-          newTaskChecker.enqueueNewTaskCheck(task, request, healthchecker);
-          enqueuedNewTaskChecks++;
-        }
-        if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-          if (healthchecker.enqueueHealthcheck(task, pendingDeploy, request)) {
-            enqueuedHealthchecks++;
+          if (!pendingDeploy.isPresent()) {
+            newTaskChecker.enqueueNewTaskCheck(task, request, healthchecker);
+            enqueuedNewTaskChecks.getAndIncrement();
+          }
+          if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
+            if (healthchecker.enqueueHealthcheck(task, pendingDeploy, request)) {
+              enqueuedHealthchecks.getAndIncrement();
+            }
           }
         }
-      }
+      }, startupExecutor));
     }
 
-    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks) in {}", enqueuedHealthchecks, enqueuedNewTaskChecks, activeTasks.size(), JavaUtils.duration(start));
+    LOG.info("Enqueued {} health checks and {} new task checks (out of {} active tasks)", enqueuedHealthchecks.get(), enqueuedNewTaskChecks.get(), activeTasks.size());
+    return enqueueFutures;
   }
 }

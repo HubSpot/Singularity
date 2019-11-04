@@ -31,7 +31,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, TaskManager taskManager, SingularityScheduler scheduler,
                              SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, true);
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS);
 
     this.offerScheduler = offerScheduler;
     this.taskManager = taskManager;

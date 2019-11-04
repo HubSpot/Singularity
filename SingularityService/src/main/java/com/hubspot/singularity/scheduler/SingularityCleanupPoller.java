@@ -22,7 +22,7 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, DisasterManager disasterManager) {
-    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, true);
+    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS);
 
     this.cleaner = cleaner;
     this.disasterManager = disasterManager;

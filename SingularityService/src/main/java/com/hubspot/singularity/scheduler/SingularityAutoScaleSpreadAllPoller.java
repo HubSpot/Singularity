@@ -35,7 +35,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
 
   @Inject
   SingularityAutoScaleSpreadAllPoller(SingularityConfiguration configuration, SlaveManager slaveManager, RequestManager requestManager, RequestHelper requestHelper, SingularitySchedulerLock lock) {
-    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS, true);
+    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS);
     this.slaveManager = slaveManager;
     this.requestManager = requestManager;
     this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();

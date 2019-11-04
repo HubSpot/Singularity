@@ -787,7 +787,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
 
@@ -804,7 +804,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1"))).join();
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();

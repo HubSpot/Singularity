@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -13,6 +14,7 @@ import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -27,7 +29,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -80,7 +82,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
-  private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
+  private final Histogram statusUpdateDeltas;
 
   private final ExecutorService statusUpdatesExecutor;
   private final AsyncSemaphore<StatusUpdateResult> statusUpdatesSemaphore;
@@ -102,10 +104,10 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityLeaderCache leaderCache,
                                              MesosProtosUtils mesosProtosUtils,
                                              SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                             SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory,
+                                             SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
+                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -242,7 +244,7 @@ public class SingularityMesosStatusUpdateHandler {
     long delta = now - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
-    statusUpdateDeltas.put(now, delta);
+    statusUpdateDeltas.update(delta);
 
     final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>empty());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
@@ -353,6 +355,10 @@ public class SingularityMesosStatusUpdateHandler {
     // DECOMMISSIONED because each task state check thinks the other task is still running.
     slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
     scheduler.handleCompletedTask(task, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, status);
+  }
+
+  public boolean hasRoomForMoreUpdates() {
+    return statusUpdatesSemaphore.getQueueSize() < configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize();
   }
 
   public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(Protos.TaskStatus status) {

@@ -22,7 +22,7 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityManagedCachedThreadPoolFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -65,7 +65,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          TaskManager taskManager,
                          DisasterManager disasterManager,
                          SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                         SingularityManagedCachedThreadPoolFactory cachedThreadPoolFactory) {
+                         SingularityManagedThreadPoolFactory cachedThreadPoolFactory) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
