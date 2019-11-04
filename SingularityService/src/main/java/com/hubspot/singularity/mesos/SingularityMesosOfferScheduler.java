@@ -406,7 +406,9 @@ public class SingularityMesosOfferScheduler {
             AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
 
             for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-              scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
+              if (!isOfferFull(offerHolder)) {
+                scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
+              }
             }
 
             CompletableFutures.allOf(scoringFutures).join();
@@ -447,9 +449,6 @@ public class SingularityMesosOfferScheduler {
       AtomicReference<Throwable> scoringException,
       SingularityOfferHolder offerHolder,
       Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
-    if (isOfferFull(offerHolder)) {
-      return;
-    }
     String slaveId = offerHolder.getSlaveId();
 
     try {
