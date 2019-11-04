@@ -178,7 +178,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     return CompletableFuture.runAsync(() -> {
       try {
-        LOG.info("Starting offer check after {}ms", System.currentTimeMillis() - received);
+        long lag = System.currentTimeMillis() - received;
+        if (lag > configuration.getMesosConfiguration().getOfferTimeout()) {
+          LOG.info("Offer lag {} too large, declining {} offers", lag, offers.size());
+          mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
+          return CompletableFuture.completedFuture(null);
+        } else {
+          LOG.info("Starting offer check after {}ms", lag);
+        }
         lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
       } catch (Throwable t) {
         LOG.error("Scheduler threw an uncaught exception - exiting", t);

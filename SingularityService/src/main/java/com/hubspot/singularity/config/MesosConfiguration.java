@@ -80,6 +80,8 @@ public class MesosConfiguration {
   private Optional<String> mesosPassword = Optional.empty();
 
   private long reconnectTimeoutMillis = 60000;
+  // Set to a value at least a few seconds below the configured mesos offer timeout
+  private long offerTimeout = 45000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -431,5 +433,13 @@ public class MesosConfiguration {
 
   public void setReconnectTimeoutMillis(long reconnectTimeoutMillis) {
     this.reconnectTimeoutMillis = reconnectTimeoutMillis;
+  }
+
+  public long getOfferTimeout() {
+    return offerTimeout;
+  }
+
+  public void setOfferTimeout(long offerTimeout) {
+    this.offerTimeout = offerTimeout;
   }
 }

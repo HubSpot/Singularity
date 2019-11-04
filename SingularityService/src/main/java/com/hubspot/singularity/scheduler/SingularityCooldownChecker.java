@@ -2,7 +2,10 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -14,8 +17,11 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.async.CompletableFutures;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
@@ -29,13 +35,16 @@ public class SingularityCooldownChecker {
   private final DeployManager deployManager;
   private final SingularityCooldown cooldown;
   private final SingularitySchedulerLock lock;
+  private final ExecutorService cooldownExecutor;
 
   @Inject
-  public SingularityCooldownChecker(RequestManager requestManager, DeployManager deployManager, SingularityCooldown cooldown, SingularitySchedulerLock lock) {
+  public SingularityCooldownChecker(RequestManager requestManager, DeployManager deployManager, SingularityCooldown cooldown, SingularitySchedulerLock lock,
+                                    SingularityManagedThreadPoolFactory threadPoolFactory, SingularityConfiguration configuration) {
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.cooldown = cooldown;
     this.lock = lock;
+    this.cooldownExecutor = threadPoolFactory.get("cooldown-checker", configuration.getCoreThreadpoolSize());
   }
 
   public void checkCooldowns() {
@@ -50,13 +59,19 @@ public class SingularityCooldownChecker {
 
     AtomicInteger exitedCooldown = new AtomicInteger(0);
 
-    cooldownRequests.parallelStream().forEach((cooldownRequest) -> {
-      lock.runWithRequestLock(() -> {
-        if (checkCooldown(cooldownRequest)) {
-          exitedCooldown.getAndIncrement();
-        }
-      }, cooldownRequest.getRequest().getId(), getClass().getSimpleName());
-    });
+    CompletableFutures.allOf(
+        cooldownRequests.stream()
+            .map((cooldownRequest) ->
+                CompletableFuture.runAsync(
+                    () ->
+                        lock.runWithRequestLock(() -> {
+                          if (checkCooldown(cooldownRequest)) {
+                            exitedCooldown.getAndIncrement();
+                          }
+                        }, cooldownRequest.getRequest().getId(), getClass().getSimpleName()),
+                    cooldownExecutor))
+            .collect(Collectors.toList())
+    ).join();
 
     LOG.info("{} out of {} cooldown requests exited cooldown in {}", exitedCooldown.get(), cooldownRequests.size(), JavaUtils.duration(start));
   }

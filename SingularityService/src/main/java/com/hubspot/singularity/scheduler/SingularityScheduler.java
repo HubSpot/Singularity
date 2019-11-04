@@ -12,6 +12,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -48,6 +50,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -65,6 +68,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
@@ -96,12 +100,13 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
   private final SingularityLeaderCache leaderCache;
   private final SingularitySchedulerLock lock;
+  private final ExecutorService schedulerExecutorService;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
-                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
+                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, SingularityManagedThreadPoolFactory threadPoolFactory) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -114,6 +119,7 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
     this.leaderCache = leaderCache;
     this.lock = lock;
+    this.schedulerExecutorService = threadPoolFactory.get("scheduler", configuration.getCoreThreadpoolSize());
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -239,12 +245,18 @@ public class SingularityScheduler {
     AtomicInteger heldForScheduledActiveTask = new AtomicInteger(0);
     AtomicInteger obsoleteRequests = new AtomicInteger(0);
 
-    deployKeyToPendingRequests.forEach((deployKey, pendingRequestsForDeployKey) -> {
-          lock.runWithRequestLock(
-              () -> handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKey, pendingRequestsForDeployKey),
-              deployKey.getRequestId(),
-              String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue"));
-        });
+    List<CompletableFuture<Void>> checkFutures = deployKeyToPendingRequests.entrySet()
+        .stream()
+        .map((e) ->
+            CompletableFuture.runAsync(() ->
+                lock.runWithRequestLock(
+                    () -> handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, e.getKey(), e.getValue()),
+                    e.getKey().getRequestId(),
+                    String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue")
+                ), schedulerExecutorService)
+        )
+        .collect(Collectors.toList());
+    CompletableFutures.allOf(checkFutures).join();
 
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks.get(), obsoleteRequests.get(), heldForScheduledActiveTask.get(), JavaUtils.duration(start));
   }

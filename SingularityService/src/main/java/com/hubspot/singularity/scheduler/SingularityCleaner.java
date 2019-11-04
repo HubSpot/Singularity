@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -32,6 +34,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -48,6 +51,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestGroupManager;
@@ -78,6 +82,7 @@ public class SingularityCleaner {
   private final SingularitySchedulerLock lock;
   private final UsageManager usageManager;
   private final RequestGroupManager requestGroupManager;
+  private final ExecutorService cleanerExecutor;
 
   private final SingularityConfiguration configuration;
   private final long killNonLongRunningTasksInCleanupAfterMillis;
@@ -86,7 +91,7 @@ public class SingularityCleaner {
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
                             SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier,
                             RequestHistoryHelper requestHistoryHelper, SingularityMesosScheduler scheduler, SingularitySchedulerLock lock, UsageManager usageManager,
-                            RequestGroupManager requestGroupManager) {
+                            RequestGroupManager requestGroupManager, SingularityManagedThreadPoolFactory threadPoolFactory) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -100,7 +105,7 @@ public class SingularityCleaner {
     this.requestGroupManager = requestGroupManager;
 
     this.configuration = configuration;
-
+    this.cleanerExecutor = threadPoolFactory.get("cleaner", configuration.getCoreThreadpoolSize());
     this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
 
@@ -333,11 +338,16 @@ public class SingularityCleaner {
     AtomicInteger numTasksKilled = new AtomicInteger(0);
     AtomicInteger numScheduledTasksRemoved = new AtomicInteger(0);
 
-    cleanupRequests.parallelStream().forEach((requestCleanup) -> {
-      lock.runWithRequestLock(() -> {
-        processRequestCleanup(start, numTasksKilled, numScheduledTasksRemoved, requestCleanup);
-      }, requestCleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainRequestCleanupQueue"));
-    });
+    CompletableFutures.allOf(
+        cleanupRequests.stream()
+            .map((requestCleanup) ->
+                CompletableFuture.runAsync(() ->
+                        lock.runWithRequestLock(() -> {
+                          processRequestCleanup(start, numTasksKilled, numScheduledTasksRemoved, requestCleanup);
+                        }, requestCleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainRequestCleanupQueue")),
+                    cleanerExecutor
+                )).collect(Collectors.toList()))
+        .join();
 
     LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled.get(), numScheduledTasksRemoved.get(), JavaUtils.duration(start));
   }
@@ -556,41 +566,46 @@ public class SingularityCleaner {
     AtomicInteger waiting = new AtomicInteger(0);
     AtomicInteger rekilled = new AtomicInteger(0);
 
-    killedTaskIdRecords.stream()
-        .collect(Collectors.groupingBy((record) -> record.getTaskId().getRequestId()))
-        .entrySet().parallelStream()
-        .forEach((killedTaskIdRecordsForRequest) -> {
-          lock.runWithRequestLock(() -> {
-            for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecordsForRequest.getValue()) {
-              if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId())) {
-                SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
+    CompletableFutures.allOf(
+        killedTaskIdRecords.stream()
+            .collect(Collectors.groupingBy((record) -> record.getTaskId().getRequestId()))
+            .entrySet()
+            .stream()
+            .map((killedTaskIdRecordsForRequest) ->
+                CompletableFuture.runAsync(() ->
+                        lock.runWithRequestLock(() -> {
+                          for (SingularityKilledTaskIdRecord killedTaskIdRecord : killedTaskIdRecordsForRequest.getValue()) {
+                            if (!taskManager.isActiveTask(killedTaskIdRecord.getTaskId())) {
+                              SingularityDeleteResult deleteResult = taskManager.deleteKilledRecord(killedTaskIdRecord.getTaskId());
 
-                LOG.debug("Deleting obsolete {} - {}", killedTaskIdRecord, deleteResult);
+                              LOG.debug("Deleting obsolete {} - {}", killedTaskIdRecord, deleteResult);
 
-                obsolete.getAndIncrement();
+                              obsolete.getAndIncrement();
 
-                continue;
-              }
+                              continue;
+                            }
 
-              long duration = start - killedTaskIdRecord.getTimestamp();
+                            long duration = start - killedTaskIdRecord.getTimestamp();
 
-              if (duration > configuration.getAskDriverToKillTasksAgainAfterMillis()) {
-                LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again",
-                    killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
+                            if (duration > configuration.getAskDriverToKillTasksAgainAfterMillis()) {
+                              LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again",
+                                  killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
-                scheduler.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
-                    killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.empty());
+                              scheduler.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
+                                  killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.empty());
 
-                rekilled.getAndIncrement();
-              } else {
-                LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", killedTaskIdRecord, JavaUtils.durationFromMillis(duration),
-                    JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
+                              rekilled.getAndIncrement();
+                            } else {
+                              LOG.trace("Ignoring {}, because duration {} is less than configured (askDriverToKillTasksAgainAfterMillis) {}", killedTaskIdRecord, JavaUtils.durationFromMillis(duration),
+                                  JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
-                waiting.getAndIncrement();
-              }
-            }
-          }, killedTaskIdRecordsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "checkKilledTaskIdRecords"));
-        });
+                              waiting.getAndIncrement();
+                            }
+                          }
+                        }, killedTaskIdRecordsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "checkKilledTaskIdRecords")),
+                    cleanerExecutor
+                )).collect(Collectors.toList()))
+        .join();
 
     LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
   }
@@ -608,13 +623,17 @@ public class SingularityCleaner {
     }
 
     AtomicInteger killedTasks = new AtomicInteger(0);
-    cleanupTasks.entrySet()
-        .parallelStream()
-        .forEach((taskCleanupsForRequest) -> {
-          lock.runWithRequestLock(() -> {
-            processTaskCleanupsForRequest(taskCleanupsForRequest.getKey(), taskCleanupsForRequest.getValue(), killedTasks);
-          }, taskCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainTaskCleanupQueue"));
-        });
+    CompletableFutures.allOf(
+        cleanupTasks.entrySet()
+            .stream()
+            .map((taskCleanupsForRequest) ->
+                CompletableFuture.runAsync(() ->
+                        lock.runWithRequestLock(() -> {
+                          processTaskCleanupsForRequest(taskCleanupsForRequest.getKey(), taskCleanupsForRequest.getValue(), killedTasks);
+                        }, taskCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainTaskCleanupQueue")),
+                    cleanerExecutor
+                )).collect(Collectors.toList()))
+        .join();
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
     return cleanupTasks.size();
@@ -823,35 +842,40 @@ public class SingularityCleaner {
     AtomicInteger cleanedTasks = new AtomicInteger(0);
     AtomicInteger ignoredTasks = new AtomicInteger(0);
 
-    lbCleanupTasks.stream()
-        .collect(Collectors.groupingBy(SingularityTaskId::getRequestId))
-        .entrySet().parallelStream()
-        .forEach((lbCleanupsForRequest) -> {
-          lock.runWithRequestLock(() -> {
-            for (SingularityTaskId taskId : lbCleanupsForRequest.getValue()) {
-              final long checkStart = System.currentTimeMillis();
+    CompletableFutures.allOf(
+        lbCleanupTasks.stream()
+            .collect(Collectors.groupingBy(SingularityTaskId::getRequestId))
+            .entrySet()
+            .stream()
+            .map((lbCleanupsForRequest) ->
+                CompletableFuture.runAsync(() ->
+                        lock.runWithRequestLock(() -> {
+                          for (SingularityTaskId taskId : lbCleanupsForRequest.getValue()) {
+                            final long checkStart = System.currentTimeMillis();
 
-              final CheckLBState checkLbState = checkLbState(taskId);
+                            final CheckLBState checkLbState = checkLbState(taskId);
 
-              LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, JavaUtils.duration(checkStart));
+                            LOG.debug("LB cleanup for task {} had state {} after {}", taskId, checkLbState, JavaUtils.duration(checkStart));
 
-              switch (checkLbState) {
-                case WAITING:
-                case RETRY:
-                  continue;
-                case DONE:
-                case MISSING_TASK:
-                  cleanedTasks.getAndIncrement();
-                  break;
-                case NOT_LOAD_BALANCED:
-                case LOAD_BALANCE_FAILED:
-                  ignoredTasks.getAndIncrement();
-              }
+                            switch (checkLbState) {
+                              case WAITING:
+                              case RETRY:
+                                continue;
+                              case DONE:
+                              case MISSING_TASK:
+                                cleanedTasks.getAndIncrement();
+                                break;
+                              case NOT_LOAD_BALANCED:
+                              case LOAD_BALANCE_FAILED:
+                                ignoredTasks.getAndIncrement();
+                            }
 
-              taskManager.deleteLBCleanupTask(taskId);
-            }
-          }, lbCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainLBTaskCleanupQueue"));
-        });
+                            taskManager.deleteLBCleanupTask(taskId);
+                          }
+                        }, lbCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainLBTaskCleanupQueue")),
+                    cleanerExecutor))
+            .collect(Collectors.toList()))
+        .join();
 
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks.get() + cleanedTasks.get()), ignoredTasks, JavaUtils.duration(start));
   }
@@ -871,30 +895,36 @@ public class SingularityCleaner {
     AtomicInteger cleanedRequests = new AtomicInteger(0);
     AtomicInteger ignoredRequests = new AtomicInteger(0);
 
-    lbCleanupRequests.parallelStream().forEach((cleanup) -> {
-      lock.runWithRequestLock(() -> {
-        final long checkStart = System.currentTimeMillis();
+    CompletableFutures.allOf(
+        lbCleanupRequests.stream()
+            .map((cleanup) ->
+                CompletableFuture.runAsync(() ->
+                        lock.runWithRequestLock(() -> {
+                          final long checkStart = System.currentTimeMillis();
 
-        final CheckLBState checkLbState = checkRequestLbState(cleanup, lbCleanupTasks);
+                          final CheckLBState checkLbState = checkRequestLbState(cleanup, lbCleanupTasks);
 
-        LOG.debug("LB cleanup for request {} had state {} after {}", cleanup.getRequestId(), checkLbState, JavaUtils.duration(checkStart));
+                          LOG.debug("LB cleanup for request {} had state {} after {}", cleanup.getRequestId(), checkLbState, JavaUtils.duration(checkStart));
 
-        switch (checkLbState) {
-          case WAITING:
-          case RETRY:
-            return;
-          case DONE:
-          case MISSING_TASK:
-            cleanedRequests.getAndIncrement();
-            break;
-          case NOT_LOAD_BALANCED:
-          case LOAD_BALANCE_FAILED:
-            ignoredRequests.getAndIncrement();
-        }
+                          switch (checkLbState) {
+                            case WAITING:
+                            case RETRY:
+                              return;
+                            case DONE:
+                            case MISSING_TASK:
+                              cleanedRequests.getAndIncrement();
+                              break;
+                            case NOT_LOAD_BALANCED:
+                            case LOAD_BALANCE_FAILED:
+                              ignoredRequests.getAndIncrement();
+                          }
 
-        requestManager.deleteLbCleanupRequest(cleanup.getRequestId());
-      }, cleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainLBRequestCleanupQueue"));
-    });
+                          requestManager.deleteLbCleanupRequest(cleanup.getRequestId());
+                        }, cleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainLBRequestCleanupQueue")),
+                    cleanerExecutor
+                ))
+            .collect(Collectors.toList()))
+        .join();
     LOG.info("LB cleaned {} requests ({} left, {} obsolete) in {}", cleanedRequests, lbCleanupRequests.size() - (ignoredRequests.get() + cleanedRequests.get()), ignoredRequests, JavaUtils.duration(start));
   }
 
