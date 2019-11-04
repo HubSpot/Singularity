@@ -53,7 +53,7 @@ public class MesosConfiguration {
   private Optional<String> credentialPrincipal = Optional.empty();
 
   private long rxEventBufferSize = 10000;
-  private int statusUpdateConcurrencyLimit = 50;
+  private int statusUpdateConcurrencyLimit = 10;
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 10;
   private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
@@ -66,9 +66,6 @@ public class MesosConfiguration {
   private boolean omitForMissingUsageData = false;
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
-
-  // Max time before hort circuiting an offer check run
-  private long offerCheckTimeoutMillis = 5000;
 
   private double recheckMetricsLoad1Threshold = 0.75;
   private double recheckMetricsLoad5Threshold = 0.8;
@@ -329,14 +326,6 @@ public class MesosConfiguration {
 
   public void setLoad1OverloadedThreshold(double load1OverloadedThreshold) {
     this.load1OverloadedThreshold = load1OverloadedThreshold;
-  }
-
-  public long getOfferCheckTimeoutMillis() {
-    return offerCheckTimeoutMillis;
-  }
-
-  public void setOfferCheckTimeoutMillis(long offerCheckTimeoutMillis) {
-    this.offerCheckTimeoutMillis = offerCheckTimeoutMillis;
   }
 
   public double getAllocatedResourceWeight() {

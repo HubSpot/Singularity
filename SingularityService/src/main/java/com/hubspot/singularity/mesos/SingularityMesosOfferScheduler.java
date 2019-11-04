@@ -33,7 +33,6 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -390,8 +389,8 @@ public class SingularityMesosOfferScheduler {
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
-      if (System.currentTimeMillis() - startCheck > mesosConfiguration.getOfferCheckTimeoutMillis()) {
-        LOG.info("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferCheckTimeoutMillis());
+      if (System.currentTimeMillis() - start > mesosConfiguration.getOfferTimeout()) {
+        LOG.info("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferTimeout());
         break;
       }
 
