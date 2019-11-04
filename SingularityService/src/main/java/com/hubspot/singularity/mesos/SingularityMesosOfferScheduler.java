@@ -407,11 +407,11 @@ public class SingularityMesosOfferScheduler {
 
             for (SingularityOfferHolder offerHolder : offerHolders.values()) {
               if (!isOfferFull(offerHolder)) {
-                scoringFutures.add(runAsync(() -> calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache)));
+                if (calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache) > mesosConfiguration.getGoodEnoughScoreThreshold()) {
+                  break;
+                }
               }
             }
-
-            CompletableFutures.allOf(scoringFutures).join();
 
             if (scoringException.get() != null) {
               // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
@@ -440,7 +440,7 @@ public class SingularityMesosOfferScheduler {
     return CompletableFuture.runAsync(runnable, offerScoringExecutor);
   }
 
-  private void calculateScore(
+  private double calculateScore(
       Map<String, RequestUtilization> requestUtilizations,
       Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId,
       SingularityTaskRequestHolder taskRequestHolder,
@@ -456,9 +456,11 @@ public class SingularityMesosOfferScheduler {
       if (score != 0) {
         scorePerOffer.put(slaveId, score);
       }
+      return score;
     } catch (Throwable t) {
       LOG.error("Uncaught exception while scoring offers", t);
       scoringException.set(t);
+      return 0;
     }
   }
 

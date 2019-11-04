@@ -66,6 +66,7 @@ public class MesosConfiguration {
   private boolean omitForMissingUsageData = false;
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
+  private double goodEnoughScoreThreshold = 0.4;
 
   private double recheckMetricsLoad1Threshold = 0.75;
   private double recheckMetricsLoad5Threshold = 0.8;
@@ -430,5 +431,13 @@ public class MesosConfiguration {
 
   public void setOfferTimeout(long offerTimeout) {
     this.offerTimeout = offerTimeout;
+  }
+
+  public double getGoodEnoughScoreThreshold() {
+    return goodEnoughScoreThreshold;
+  }
+
+  public void setGoodEnoughScoreThreshold(double goodEnoughScoreThreshold) {
+    this.goodEnoughScoreThreshold = goodEnoughScoreThreshold;
   }
 }
