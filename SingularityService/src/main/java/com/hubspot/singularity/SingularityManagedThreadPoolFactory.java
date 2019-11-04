@@ -6,13 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.async.ExecutorAndQueue;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
@@ -21,6 +24,7 @@ public class SingularityManagedThreadPoolFactory {
   private final List<ExecutorService> executorPools = new ArrayList<>();
 
   private final long timeoutInMillis;
+
 
   @Inject
   public SingularityManagedThreadPoolFactory(final SingularityConfiguration configuration) {
@@ -39,6 +43,17 @@ public class SingularityManagedThreadPoolFactory {
     ExecutorService service = Executors.newFixedThreadPool(maxSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
     executorPools.add(service);
     return service;
+  }
+
+  public synchronized ExecutorAndQueue get(String name, int maxSize, int queueSize) {
+    checkState(!stopped.get(), "already stopped");
+    LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
+    ExecutorService service = new ThreadPoolExecutor(maxSize, maxSize,
+        0L, TimeUnit.MILLISECONDS,
+        queue,
+        new ThreadFactoryBuilder().setNameFormat(name + "-%d").build());
+    executorPools.add(service);
+    return new ExecutorAndQueue(service, queue, queueSize);
   }
 
   public synchronized ExecutorService getSingleThreaded(String name) {

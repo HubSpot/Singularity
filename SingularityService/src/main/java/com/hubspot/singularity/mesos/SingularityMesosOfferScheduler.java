@@ -42,7 +42,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlaveMatchState;
-import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -107,7 +106,6 @@ public class SingularityMesosOfferScheduler {
                                         UsageManager usageManager,
                                         DeployManager deployManager,
                                         SingularitySchedulerLock lock,
-                                        SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
                                         SingularityManagedThreadPoolFactory threadPoolFactory,
                                         DisasterManager disasterManager,
                                         SingularityMesosSchedulerClient mesosSchedulerClient,

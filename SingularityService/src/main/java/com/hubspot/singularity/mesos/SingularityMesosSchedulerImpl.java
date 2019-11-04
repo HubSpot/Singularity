@@ -182,7 +182,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         if (lag > configuration.getMesosConfiguration().getOfferTimeout()) {
           LOG.info("Offer lag {} too large, declining {} offers", lag, offers.size());
           mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
-          return CompletableFuture.completedFuture(null);
+          return;
         } else {
           LOG.info("Starting offer check after {}ms", lag);
         }
