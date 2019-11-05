@@ -190,7 +190,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           if (acquiredLock) {
             offerScheduler.resourceOffers(offers);
           } else {
-            LOG.info("Did not");
+            LOG.info("Did not acquire offer lock in time, will cache offers");
             offers.forEach((o) -> offerCache.cacheOffer(received, o));
           }
           return null;
