@@ -139,6 +139,7 @@ public class SingularityClient {
   private static final String TASKS_FORMAT = "%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
+  private static final String TASKS_GET_ACTIVE_IDS_FORMAT = TASKS_GET_ACTIVE_FORMAT + "/ids";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT = TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
@@ -874,6 +875,12 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_FORMAT, getApiBase(host));
 
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
+  }
+
+  public Collection<SingularityTask> getActiveTasksIds() {
+    final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_IDS_FORMAT, getApiBase(host));
+
+    return getCollection(requestUri, "active tasks ids", TASKS_COLLECTION);
   }
 
   public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
