@@ -411,20 +411,13 @@ public class SingularityMesosOfferScheduler {
 
                           Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
 
-                          AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
-
                           for (SingularityOfferHolder offerHolder : offerHolders.values()) {
                             if (!isOfferFull(offerHolder)) {
-                              if (calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache) > mesosConfiguration
+                              if (calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, offerHolder, deployStatsCache) > mesosConfiguration
                                   .getGoodEnoughScoreThreshold()) {
                                 break;
                               }
                             }
-                          }
-
-                          if (scoringException.get() != null) {
-                            // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
-                            throw new RuntimeException(scoringException.get());
                           }
 
                           if (!scorePerOffer.isEmpty()) {
@@ -461,22 +454,15 @@ public class SingularityMesosOfferScheduler {
       SingularityTaskRequestHolder taskRequestHolder,
       Map<String, Double> scorePerOffer,
       List<SingularityTaskId> activeTaskIdsForRequest,
-      AtomicReference<Throwable> scoringException,
       SingularityOfferHolder offerHolder,
       Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
     String slaveId = offerHolder.getSlaveId();
 
-    try {
-      double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()), deployStatsCache);
-      if (score != 0) {
-        scorePerOffer.put(slaveId, score);
-      }
-      return score;
-    } catch (Throwable t) {
-      LOG.error("Uncaught exception while scoring offers", t);
-      scoringException.set(t);
-      return 0;
+    double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()), deployStatsCache);
+    if (score != 0) {
+      scorePerOffer.put(slaveId, score);
     }
+    return score;
   }
 
   private MaxProbableUsage getMaxProbableUsageForSlave(List<SingularityTaskId> activeTaskIds, Map<String, RequestUtilization> requestUtilizations, String sanitizedHostname) {
