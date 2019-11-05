@@ -267,8 +267,8 @@ public class SingularityMesosOfferScheduler {
       throw t;
     }
 
-    LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", uncached.size(), JavaUtils.duration(start), acceptedOffers.size(),
-        uncached.size() - acceptedOffers.size());
+    LOG.info("Finished handling {} new offer(s) {} from cache ({}), {} accepted, {} declined/cached", uncached.size(), cachedOffers.size(), JavaUtils.duration(start), acceptedOffers.size(),
+        uncached.size() + cachedOffers.size() - acceptedOffers.size());
   }
 
   private void checkOfferAndSlave(Offer offer, Map<String, Offer> offersToCheck) {
