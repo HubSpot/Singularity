@@ -406,7 +406,7 @@ public class SingularityMesosOfferScheduler {
                           List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
                           if (isTooManyInstancesForRequest(taskRequestHolder.getTaskRequest(), activeTaskIdsForRequest)) {
                             LOG.debug("Skipping pending task {}, too many instances already running", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId());
-                            return;
+                            continue;
                           }
 
                           Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
@@ -430,7 +430,7 @@ public class SingularityMesosOfferScheduler {
                           }
                         }
                       } finally {
-                        offerCheckTempLock.lock();
+                        offerCheckTempLock.unlock();
                       }
                     },
                     entry.getKey(),
