@@ -40,6 +40,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final RequestManager requestManager;
   private final SingularitySchedulerLock lock;
   private final int agentReregisterTimeoutSeconds;
+  private final long maxPersisterLockTimeMillis;
 
   @Inject
   public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager,
@@ -53,6 +54,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     this.requestManager = requestManager;
     this.lock = lock;
     this.agentReregisterTimeoutSeconds = configuration.getMesosConfiguration().getAgentReregisterTimeoutSeconds();
+    this.maxPersisterLockTimeMillis = configuration.getMaxTaskHistoryPersisterLockTimeMillis();
   }
 
   @Override
@@ -75,19 +77,22 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
           Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
           List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
 
+          long startRequest = System.currentTimeMillis();
           AtomicInteger transferred = new AtomicInteger();
-          allTaskIds.stream()
-              .filter((t) -> t.getRequestId().equals(requestId))
-              .filter((t) -> !(activeForRequest.contains(t) || lbCleaningTaskIds.contains(t) || isPartOfPendingDeploy(pendingDeploys, t) || couldReturnWithRecoveredAgent(t)))
-              .forEach((t) -> {
-                if (moveToHistoryOrCheckForPurge(t, transferred.getAndIncrement())) {
-                  numTransferred.getAndIncrement();
-                }
+          for (SingularityTaskId taskId : allTaskIds) {
+            if (taskId.getRequestId().equals(requestId) &&
+                !(activeForRequest.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId) || couldReturnWithRecoveredAgent(taskId))
+            ) {
+              if (moveToHistoryOrCheckForPurge(taskId, transferred.getAndIncrement())) {
+                numTransferred.getAndIncrement();
+              }
 
-                numTotal.getAndIncrement();
-              });
-
-
+              numTotal.getAndIncrement();
+              if (System.currentTimeMillis() - startRequest > maxPersisterLockTimeMillis) {
+                break;
+              }
+            }
+          }
         }, requestId, "task history persister");
       }
 
