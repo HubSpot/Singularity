@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -388,48 +389,62 @@ public class SingularityMesosOfferScheduler {
 
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
-    for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
-      if (System.currentTimeMillis() - start > mesosConfiguration.getOfferTimeout()) {
-        LOG.info("Short circuiting offer matching after {}ms", mesosConfiguration.getOfferTimeout());
-        break;
-      }
+    // We spend much of the offer check loop for request level locks. Wait for the locks in parallel, but ensure that actual offer checks
+    // are done in serial to not over commit a single offer
+    ReentrantLock offerCheckTempLock = new ReentrantLock(true);
+    CompletableFutures.allOf(
+        sortedTaskRequestHolders.stream()
+            .collect(Collectors.groupingBy((t) -> t.getTaskRequest().getRequest().getId()))
+            .entrySet()
+            .stream()
+            .map((entry) ->
+              runAsync(() -> {
+                lock.runWithRequestLock(() -> {
+                      offerCheckTempLock.lock();
+                      try {
+                        for (SingularityTaskRequestHolder taskRequestHolder : entry.getValue()) {
+                          List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
+                          if (isTooManyInstancesForRequest(taskRequestHolder.getTaskRequest(), activeTaskIdsForRequest)) {
+                            LOG.debug("Skipping pending task {}, too many instances already running", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId());
+                            return;
+                          }
 
-      lock.runWithRequestLock(() -> {
-            List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
-            if (isTooManyInstancesForRequest(taskRequestHolder.getTaskRequest(), activeTaskIdsForRequest)) {
-              LOG.debug("Skipping pending task {}, too many instances already running", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId());
-              return;
-            }
+                          Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
 
-            Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
-            List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
-            AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
+                          AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
 
-            for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-              if (!isOfferFull(offerHolder)) {
-                if (calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache) > mesosConfiguration.getGoodEnoughScoreThreshold()) {
-                  break;
-                }
-              }
-            }
+                          for (SingularityOfferHolder offerHolder : offerHolders.values()) {
+                            if (!isOfferFull(offerHolder)) {
+                              if (calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder, deployStatsCache) > mesosConfiguration
+                                  .getGoodEnoughScoreThreshold()) {
+                                break;
+                              }
+                            }
+                          }
 
-            if (scoringException.get() != null) {
-              // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
-              throw new RuntimeException(scoringException.get());
-            }
+                          if (scoringException.get() != null) {
+                            // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
+                            throw new RuntimeException(scoringException.get());
+                          }
 
-            if (!scorePerOffer.isEmpty()) {
-              SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
-              LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
-              SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, taskRequestHolder);
-              tasksScheduled.getAndIncrement();
-              bestOffer.addMatchedTask(taskHolder);
-              updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
-            }
-          },
-          taskRequestHolder.getTaskRequest().getRequest().getId(),
-          String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
-    }
+                          if (!scorePerOffer.isEmpty()) {
+                            SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
+                            LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
+                            SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, taskRequestHolder);
+                            tasksScheduled.getAndIncrement();
+                            bestOffer.addMatchedTask(taskHolder);
+                            updateSlaveUsageScores(taskRequestHolder, currentSlaveUsagesBySlaveId, bestOffer.getSlaveId(), requestUtilizations);
+                          }
+                        }
+                      } finally {
+                        offerCheckTempLock.lock();
+                      }
+                    },
+                    entry.getKey(),
+                    String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
+              }))
+            .collect(Collectors.toList()))
+        .join();
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());
 
