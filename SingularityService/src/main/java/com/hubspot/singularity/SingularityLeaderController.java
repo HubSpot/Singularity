@@ -141,8 +141,8 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
       master = true;
       try {
         if (!isTestMode()) {
-          scheduler.start();
           statePoller.wake();
+          scheduler.start();
         }
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
