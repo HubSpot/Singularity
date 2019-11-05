@@ -877,10 +877,10 @@ public class SingularityClient {
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
   }
 
-  public Collection<SingularityTask> getActiveTasksIds() {
+  public Collection<SingularityTaskId> getActiveTasksIds() {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_IDS_FORMAT, getApiBase(host));
 
-    return getCollection(requestUri, "active tasks ids", TASKS_COLLECTION);
+    return getCollection(requestUri, "active tasks ids", TASK_IDS_COLLECTION);
   }
 
   public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
