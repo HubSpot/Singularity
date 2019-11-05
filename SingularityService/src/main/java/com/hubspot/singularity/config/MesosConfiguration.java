@@ -53,7 +53,7 @@ public class MesosConfiguration {
   private Optional<String> credentialPrincipal = Optional.empty();
 
   private long rxEventBufferSize = 10000;
-  private int statusUpdateConcurrencyLimit = 10;
+  private int statusUpdateConcurrencyLimit = 50;
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 10;
   private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
