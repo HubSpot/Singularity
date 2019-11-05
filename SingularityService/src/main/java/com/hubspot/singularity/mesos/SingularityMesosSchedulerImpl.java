@@ -186,7 +186,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         } else {
           LOG.info("Starting offer check after {}ms", lag);
         }
-        lock.runWithOffersLock(() -> offerScheduler.resourceOffers(offers), "SingularityMesosScheduler");
+        lock.runWithOffersLockAndtimeout((acquiredLock) -> {
+          if (acquiredLock) {
+            offerScheduler.resourceOffers(offers);
+          } else {
+            LOG.info("Did not");
+            offers.forEach((o) -> offerCache.cacheOffer(received, o));
+          }
+          return null;
+        }, "SingularityMesosScheduler", configuration.getMesosConfiguration().getOfferLockTimeout());
       } catch (Throwable t) {
         LOG.error("Scheduler threw an uncaught exception - exiting", t);
         exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);

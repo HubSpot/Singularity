@@ -80,6 +80,7 @@ public class MesosConfiguration {
   private long reconnectTimeoutMillis = 60000;
   // Set to a value at least a few seconds below the configured mesos offer timeout
   private long offerTimeout = 45000;
+  private long offerLockTimeout = 1000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -431,6 +432,14 @@ public class MesosConfiguration {
 
   public void setOfferTimeout(long offerTimeout) {
     this.offerTimeout = offerTimeout;
+  }
+
+  public long getOfferLockTimeout() {
+    return offerLockTimeout;
+  }
+
+  public void setOfferLockTimeout(long offerLockTimeout) {
+    this.offerLockTimeout = offerLockTimeout;
   }
 
   public double getGoodEnoughScoreThreshold() {
