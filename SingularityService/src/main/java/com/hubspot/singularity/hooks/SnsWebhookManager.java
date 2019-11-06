@@ -49,8 +49,7 @@ public class SnsWebhookManager {
   @Inject
   public SnsWebhookManager(@Singularity ObjectMapper objectMapper,
                            SingularityConfiguration configuration,
-                           SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                           SingularityManagedThreadPoolFactory managedCachedThreadPoolFactory,
+                           SingularityManagedThreadPoolFactory threadPoolFactory,
                            WebhookManager webhookManager) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
@@ -72,7 +71,7 @@ public class SnsWebhookManager {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();
     }
     this.webhookManager = webhookManager;
-    this.publishExecutor = managedCachedThreadPoolFactory.get("webhook-publish", configuration.getMaxConcurrentWebhooks());
+    this.publishExecutor = threadPoolFactory.get("webhook-publish", configuration.getMaxConcurrentWebhooks());
     this.typeToArn = new ConcurrentHashMap<>();
   }
 

@@ -61,7 +61,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          DeployManager deployManager,
                          TaskManager taskManager,
                          DisasterManager disasterManager,
-                         SingularityManagedThreadPoolFactory cachedThreadPoolFactory) {
+                         SingularityManagedThreadPoolFactory threadPoolFactory) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
@@ -72,7 +72,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.taskManager = taskManager;
     this.disasterManager = disasterManager;
 
-    this.usageExecutor = cachedThreadPoolFactory.get("usage-collection", configuration.getMaxConcurrentUsageCollections());
+    this.usageExecutor = threadPoolFactory.get("usage-collection", configuration.getMaxConcurrentUsageCollections());
   }
 
   @Override
