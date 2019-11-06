@@ -88,7 +88,12 @@ public class SingularitySlaveAndRackManager {
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
-    final MachineState currentSlaveState = slaveManager.getObject(slaveId).get().getCurrentState().getState();
+    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+    if (!maybeSlave.isPresent()) {
+      return SlaveMatchState.RESOURCES_DO_NOT_MATCH;
+    }
+
+    final MachineState currentSlaveState = maybeSlave.get().getCurrentState().getState();
 
     if (currentSlaveState == MachineState.FROZEN) {
       return SlaveMatchState.SLAVE_FROZEN;
