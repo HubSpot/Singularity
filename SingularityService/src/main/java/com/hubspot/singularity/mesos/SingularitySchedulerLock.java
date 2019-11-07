@@ -2,7 +2,9 @@ package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,14 +19,12 @@ public class SingularitySchedulerLock {
   private final ReentrantLock stateLock;
   private final ReentrantLock offersLock;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
-  private final ConcurrentHashMap<String, Long> lockTimes;
 
   @Inject
   public SingularitySchedulerLock() {
     this.stateLock = new ReentrantLock();
     this.offersLock = new ReentrantLock();
     this.requestLocks = new ConcurrentHashMap<>();
-    this.lockTimes = new ConcurrentHashMap<>();
   }
 
   private long lock(String requestId, String name) {
@@ -95,6 +95,25 @@ public class SingularitySchedulerLock {
       function.run();
     } finally {
       unlockOffers(name, start);
+    }
+  }
+
+  public void runWithOffersLockAndtimeout(Function<Boolean, Void> function, String name, long timeoutMillis) {
+    final long start = System.currentTimeMillis();
+    LOG.debug("{} - Locking offers lock", name);
+    try {
+      boolean acquired = offersLock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS);
+      LOG.debug("{} - Acquired offers lock ({}) ({})", name, acquired, JavaUtils.duration(start));
+      long functionStart = System.currentTimeMillis();
+      try {
+        function.apply(acquired);
+      } finally {
+        if (acquired) {
+          unlockOffers(name, functionStart);
+        }
+      }
+    } catch (InterruptedException ie) {
+      LOG.warn("Interrupted waiting for offer lock", ie);
     }
   }
 

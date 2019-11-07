@@ -24,8 +24,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.WebhookType;
@@ -41,7 +41,6 @@ public class SnsWebhookManager {
   private final WebhookQueueConfiguration webhookConf;
   private final ObjectMapper objectMapper;
   private final AmazonSNS snsClient;
-  private final AsyncSemaphore<Void> publishSemaphore;
   private final ExecutorService publishExecutor;
   private final WebhookManager webhookManager;
 
@@ -50,8 +49,7 @@ public class SnsWebhookManager {
   @Inject
   public SnsWebhookManager(@Singularity ObjectMapper objectMapper,
                            SingularityConfiguration configuration,
-                           SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                           SingularityManagedThreadPoolFactory managedCachedThreadPoolFactory,
+                           SingularityManagedThreadPoolFactory threadPoolFactory,
                            WebhookManager webhookManager) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
@@ -73,8 +71,7 @@ public class SnsWebhookManager {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();
     }
     this.webhookManager = webhookManager;
-    this.publishSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks, executorServiceFactory.get("webhook-publish-semaphore", 1)).build();
-    this.publishExecutor = managedCachedThreadPoolFactory.get("webhook-publish");
+    this.publishExecutor = threadPoolFactory.get("webhook-publish", configuration.getMaxConcurrentWebhooks());
     this.typeToArn = new ConcurrentHashMap<>();
   }
 
@@ -135,19 +132,18 @@ public class SnsWebhookManager {
 
   <T> CompletableFuture<Void> publish(WebhookType type, T content) {
     try {
-      return publishSemaphore.call(() ->
-          CompletableFuture.runAsync(() -> {
-            try {
-              PublishRequest publishRequest = new PublishRequest(
-                  getOrCreateSnsTopic(type),
-                  objectMapper.writeValueAsString(content)
-              );
-              PublishResult result = snsClient.publish(publishRequest);
-              LOG.trace("Sent update {} with messageId {}", content, result.getMessageId());
-            } catch (IOException ioe) {
-              throw new RuntimeException(ioe);
-            }
-          }, publishExecutor));
+      return CompletableFuture.runAsync(() -> {
+        try {
+          PublishRequest publishRequest = new PublishRequest(
+              getOrCreateSnsTopic(type),
+              objectMapper.writeValueAsString(content)
+          );
+          PublishResult result = snsClient.publish(publishRequest);
+          LOG.trace("Sent update {} with messageId {}", content, result.getMessageId());
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      }, publishExecutor);
     } catch (Throwable t) {
       CompletableFuture<Void> f = new CompletableFuture<>();
       f.completeExceptionally(t);

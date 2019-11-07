@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -90,7 +91,12 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public List<T> getObjectsFiltered(MachineState state) {
-    return getObjectsFiltered(Optional.of(state));
+    List<T> fromCache = getObjectsFromLeaderCache();
+    if (fromCache != null) {
+      return fromCache.stream().filter((o) -> o.getCurrentState().getState() == state).collect(Collectors.toList());
+    } else {
+      return getObjectsFiltered(Optional.of(state));
+    }
   }
 
   public List<T> getObjectsFiltered(Optional<MachineState> state) {

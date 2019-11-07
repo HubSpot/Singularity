@@ -41,6 +41,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -84,11 +85,11 @@ public class SingularityDeployChecker {
   private final LoadBalancerClient lbClient;
   private final SingularitySchedulerLock lock;
   private final UsageManager usageManager;
-  private final ExecutorService deployCheckExecuotor;
+  private final ExecutorService deployCheckExecutor;
 
   @Inject
   public SingularityDeployChecker(DeployManager deployManager, SingularityDeployHealthHelper deployHealthHelper, LoadBalancerClient lbClient, RequestManager requestManager, TaskManager taskManager,
-                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, UsageManager usageManager) {
+                                  SingularityConfiguration configuration, SingularitySchedulerLock lock, UsageManager usageManager, SingularityManagedThreadPoolFactory threadPoolFactory) {
     this.configuration = configuration;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -97,7 +98,7 @@ public class SingularityDeployChecker {
     this.taskManager = taskManager;
     this.lock = lock;
     this.usageManager = usageManager;
-    this.deployCheckExecuotor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("deploy-checker-%d").build());
+    this.deployCheckExecutor = threadPoolFactory.get("deploy-checker", configuration.getCoreThreadpoolSize());
   }
 
   public int checkDeploys() {
@@ -119,7 +120,7 @@ public class SingularityDeployChecker {
                         () -> checkDeploy(pendingDeploy, cancelDeploys, pendingDeployToKey, deployKeyToDeploy, updateRequests),
                         pendingDeploy.getDeployMarker().getRequestId(),
                         getClass().getSimpleName()),
-                deployCheckExecuotor))
+                deployCheckExecutor))
         .collect(Collectors.toList()))
         .join();
 
@@ -400,7 +401,7 @@ public class SingularityDeployChecker {
       }
       // Clear utilization since a new deploy will update usage patterns
       // do this async so sql isn't on the main scheduling path for deploys
-      CompletableFuture.runAsync(() -> usageManager.deleteRequestUtilization(request.getId()), deployCheckExecuotor)
+      CompletableFuture.runAsync(() -> usageManager.deleteRequestUtilization(request.getId()), deployCheckExecutor)
           .exceptionally((t) -> {
             LOG.error("Could not clear usage data after new deploy", t);
             return null;

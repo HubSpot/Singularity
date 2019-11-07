@@ -59,21 +59,18 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
     for (String requestId : historyManager.getRequestIdsInTaskHistory()) {
-      lock.runWithRequestLock(() -> {
-        HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
-
-        LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
-        if (settings.getDeleteTaskHistoryAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryAfterDays().isPresent()) {
-          purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
-        } else {
-          LOG.debug("No purge settings for deleting task row, skipping for request {}", requestId);
-        }
-        if (settings.getDeleteTaskHistoryBytesAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryBytesAfterDays().isPresent()) {
-          purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
-        } else {
-          LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
-        }
-      }, requestId, getClass().getSimpleName());
+      HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
+      LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
+      if (settings.getDeleteTaskHistoryAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryAfterDays().isPresent()) {
+        purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
+      } else {
+        LOG.debug("No purge settings for deleting task row, skipping for request {}", requestId);
+      }
+      if (settings.getDeleteTaskHistoryBytesAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryBytesAfterDays().isPresent()) {
+        purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
+      } else {
+        LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
+      }
     }
     purgeStaleZkData();
     historyManager.purgeRequestHistory();

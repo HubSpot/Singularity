@@ -39,7 +39,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     this.schedulerClient = schedulerClient;
 
     offerCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(configuration.getCacheOffersForMillis(), TimeUnit.MILLISECONDS)
+        .expireAfterWrite(configuration.getMesosConfiguration().getOfferTimeout(), TimeUnit.MILLISECONDS)
         .maximumSize(configuration.getOfferCacheSize())
         .removalListener(this)
         .build();
