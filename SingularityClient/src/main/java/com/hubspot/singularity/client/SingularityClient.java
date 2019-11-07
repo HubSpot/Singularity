@@ -140,6 +140,7 @@ public class SingularityClient {
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_ACTIVE_IDS_FORMAT = TASKS_GET_ACTIVE_FORMAT + "/ids";
+  private static final String TASKS_GET_ACTIVE_STATES_FORMAT = TASKS_GET_ACTIVE_FORMAT + "/states";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT = TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
@@ -881,6 +882,13 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_IDS_FORMAT, getApiBase(host));
 
     return getCollection(requestUri, "active tasks ids", TASK_IDS_COLLECTION);
+  }
+
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getActiveTaskStates() {
+    final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_ACTIVE_STATES_FORMAT, getApiBase(host));
+
+    return getSingleWithParams(requestUri, "active tasks ids", "all", Optional.empty(), new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {})
+        .orElse(Collections.emptyMap());
   }
 
   public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {

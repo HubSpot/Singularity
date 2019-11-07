@@ -11,6 +11,7 @@ import java.net.ConnectException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -62,6 +63,7 @@ import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityTaskMetadata;
@@ -337,6 +339,17 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTaskIds(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/active/states")
+  @Operation(summary = "Retrieve the list of active task ids for all requests")
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getActiveTaskStates(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
+    List<SingularityTaskId> activeTaskIds = authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTaskIds(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return taskManager.getTaskHistoryUpdates(activeTaskIds);
   }
 
   @GET
