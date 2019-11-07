@@ -134,7 +134,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.leaderCacheCoordinator = leaderCacheCoordinator;
     this.queuedUpdates = queuedUpdates;
     this.lock = lock;
-    this.offerExecutor = threadPoolFactory.getSingleThreaded("offer-scheduler");
+    this.offerExecutor = threadPoolFactory.get("offer-scheduler", 2);
     this.subscribeExecutor = threadPoolFactory.getSingleThreaded("subscribe-scheduler");
     this.state = new SchedulerState();
     this.configuration = configuration;
