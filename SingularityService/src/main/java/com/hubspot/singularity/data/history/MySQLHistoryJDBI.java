@@ -18,13 +18,11 @@ import com.hubspot.singularity.data.history.SingularityMappers.SingularityReques
 
 public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
 
-  @SqlUpdate("INSERT INTO requestHistory (requestId, json, createdAt, requestState, user, message) VALUES (:requestId, :json, :createdAt, :requestState, :user, :message) " +
-      "ON DUPLICATE KEY UPDATE json = :json, requestState = :requestState, user = :user, message = :message")
+  @SqlUpdate("INSERT INTO requestHistory (requestId, json, createdAt, requestState, user, message) VALUES (:requestId, :json, :createdAt, :requestState, :user, :message)")
   void insertRequestHistory(@Bind("requestId") String requestId, @Bind("json") @Json SingularityRequest request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState,
                             @Bind("user") String user, @Bind("message") String message);
 
-  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, json) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :json) " +
-      "ON DUPLICATE KEY UPDATE createdAt = :createdAt, user = :user, message = :message, deployStateAt = :deployStateAt, deployState = :deployState, json = :json")
+  @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, json) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :json)")
   void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("message") String message,
                            @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("json") @Json SingularityDeployHistory deployHistory);
 

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -101,8 +103,16 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveRequestHistoryUpdate requestHistory {}",  requestHistory);
     }
 
-    history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest(), new Date(requestHistory.getCreatedAt()),
-        requestHistory.getEventType().name(), getUserField(requestHistory.getUser()), getMessageField(requestHistory.getMessage()));
+    try {
+      history.insertRequestHistory(requestHistory.getRequest().getId(), requestHistory.getRequest(), new Date(requestHistory.getCreatedAt()),
+          requestHistory.getEventType().name(), getUserField(requestHistory.getUser()), getMessageField(requestHistory.getMessage()));
+    } catch (Throwable t) {
+      if (Throwables.getCausalChain(t).stream().anyMatch((exn) -> exn instanceof SQLIntegrityConstraintViolationException)) {
+        LOG.info("Entry for {} ({}) already existed, skipping save", requestHistory.getRequest(), requestHistory.getCreatedAt());
+      } else {
+        throw t;
+      }
+    }
   }
 
   @Override
@@ -111,14 +121,22 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveDeployHistory {}", deployHistory);
     }
 
-    history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
-        deployHistory.getDeployMarker().getDeployId(),
-        new Date(deployHistory.getDeployMarker().getTimestamp()),
-        getUserField(deployHistory.getDeployMarker().getUser()),
-        getMessageField(deployHistory.getDeployMarker().getMessage()),
-        deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
-        deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
-        deployHistory);
+    try {
+      history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
+          deployHistory.getDeployMarker().getDeployId(),
+          new Date(deployHistory.getDeployMarker().getTimestamp()),
+          getUserField(deployHistory.getDeployMarker().getUser()),
+          getMessageField(deployHistory.getDeployMarker().getMessage()),
+          deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
+          deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
+          deployHistory);
+    } catch (Throwable t) {
+      if (Throwables.getCausalChain(t).stream().anyMatch((exn) -> exn instanceof SQLIntegrityConstraintViolationException)) {
+        LOG.info("Entry for {} - {} already existed, skipping save", deployHistory.getDeployMarker().getRequestId(), deployHistory.getDeployMarker().getDeployId());
+      } else {
+        throw t;
+      }
+    }
   }
 
   @Override

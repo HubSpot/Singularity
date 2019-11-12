@@ -473,6 +473,17 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testDuplicatePersist() {
+    initRequest();
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("msg"), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
+    requestHistoryPersister.runActionOnPoll();
+    SingularityRequestHistory history = historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100).get(0);
+    historyManager.saveRequestHistoryUpdate(history);
+    // Should not throw exception
+    historyManager.saveRequestHistoryUpdate(history);
+  }
+
+  @Test
   public void testMigrateToJson() throws IOException {
     try(Handle handle = dbiProvider.get().open()) {
       initRequest();
