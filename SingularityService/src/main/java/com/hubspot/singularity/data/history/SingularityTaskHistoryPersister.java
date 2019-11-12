@@ -1,9 +1,11 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -76,7 +78,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   }
 
   private Map<String, List<SingularityTaskId>> getInactiveTaskIdsByRequest() {
-    final List<SingularityTaskId> taskIds = new ArrayList<>(taskManager.getAllTaskIds());
+    final Set<SingularityTaskId> taskIds = new HashSet<>(taskManager.getAllTaskIds());
     taskIds.removeAll(taskManager.getActiveTaskIds());
     taskIds.removeAll(taskManager.getLBCleanupTasks());
     List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
