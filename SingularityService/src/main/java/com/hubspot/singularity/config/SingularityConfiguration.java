@@ -270,8 +270,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(2);
 
-  private long maxTaskHistoryPersisterLockTimeMillis = 10000;
-
   private int maxPendingImmediatePersists = 200;
 
   private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
@@ -836,14 +834,6 @@ public class SingularityConfiguration extends Configuration {
 
   public long getPersistHistoryEverySeconds() {
     return persistHistoryEverySeconds;
-  }
-
-  public long getMaxTaskHistoryPersisterLockTimeMillis() {
-    return maxTaskHistoryPersisterLockTimeMillis;
-  }
-
-  public void setMaxTaskHistoryPersisterLockTimeMillis(long maxTaskHistoryPersisterLockTimeMillis) {
-    this.maxTaskHistoryPersisterLockTimeMillis = maxTaskHistoryPersisterLockTimeMillis;
   }
 
   @JsonIgnore
