@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Wed Aug 14 2019 09:50:23 GMT-0400 (EDT)"
+        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -657,6 +657,7 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-110">Changes in 1.1.0</a></li>
 <li><a href="#changes-in-100">Changes in 1.0.0</a></li>
 <li><a href="#changes-in-0230">Changes in 0.23.0</a></li>
 <li><a href="#changes-in-0220">Changes in 0.22.0</a></li>
@@ -699,6 +700,66 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-110">Changes in <code>1.1.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/42" target="_blank">1.1.0 milestone</a> to see new features / bugfixes in detail.</p>
+<p>Singularity <code>1.1.0</code> is mainly focused on scheduler performance. Internally we have also begun testing this version on java 11. Some java 11 notes:</p>
+<ul>
+<li>While the default GC algorithm for java 11 has been updated to G1, we have seen better scheduler throughput and overall performance for SingularityService using parallelgc. We have not yet extensively tested zgc for Singularity</li>
+<li>The SingularityExecutor <em>must</em> be upgraded to 1.1.0 to work with java 11. Earlier versions of all other components should still function on java11, but may not be as performant without the upadtes in this release</li>
+<li>If using mysql with Singularity, the ssl-related updates in the <a href="https://github.com/HubSpot/Singularity/pull/2025" target="_blank">updated version of mysql-connector-java</a> will provide much better performance and remove an error that would previously get logged whenever a new connection was created</li>
+</ul>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2035" target="_blank">2035</a> - New client method to get active tasks&apos; ids</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2036" target="_blank">2036</a> - Add endpoint to fetch all active task states</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2009" target="_blank">2009</a> - Add ability to override environment in run now modal</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1971" target="_blank">1971</a> - Filtered S3 task sandbox file search (API Only)</li>
+</ul>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2039" target="_blank">2039</a> - Make task history persister not use the request level lock</li>
+<li>Scheduler Performance Improvements<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2034" target="_blank">2034</a> - More performance updates</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2032" target="_blank">2032</a> - Reconnect, offer, and startup performance improvements</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2023" target="_blank">2023</a> - Cache deploy stats per offer check run</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2024" target="_blank">2024</a> - Log lock hold times at debug level if too long</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2007" target="_blank">2007</a> - More efficient use of state data</li>
+</ul>
+</li>
+<li>Java 11 Support Updates<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2025" target="_blank">2025</a> - Upgrade mysql-connector-java</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2026" target="_blank">2026</a> - Add jarkata runtime dep for executor module</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2020" target="_blank">2020</a> - Update ProcessUtils to work with java11</li>
+</ul>
+</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2018" target="_blank">2018</a> - Add hour to s3 key format options</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2014" target="_blank">2014</a> - Don&apos;t immediately clean all history items, let the history purger do it</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2008" target="_blank">2008</a> - Make the request id global search include all but deleted requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2011" target="_blank">2011</a> - Retry more TASK_LOST cases on deploy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2012" target="_blank">2012</a> - Show the runId in task tables on request detail page</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2000" target="_blank">2000</a> - Module + ObjectMapper cleanup</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2038" target="_blank">2038</a> - Catch more SQL exceptions in persister queries</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2037" target="_blank">2037</a> - offer executor needs at least 2 threads</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2033" target="_blank">2033</a> - Don&apos;t allow LB sync to remove last remaining upstreams</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2029" target="_blank">2029</a> - Race condition fixes</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2022" target="_blank">2022</a> - Just log the task ID in new task checker so we can see the throwable</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2019" target="_blank">2019</a> - Remount RequestDetailPage when jumping between requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2021" target="_blank">2021</a> - return early for missing deploy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2016" target="_blank">2016</a> - Ensure delayed oneoff tasks get rescheduled on new deploy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2013" target="_blank">2013</a> - Validate number of ports in run now resource overrides</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2010" target="_blank">2010</a> - Clear resource usage after a new deploy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2006" target="_blank">2006</a> - Fix for overdue missing deploy</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2003" target="_blank">2003</a> - Task history ui updates for sort</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2041" target="_blank">2041</a> - Findbugs fixes</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2015" target="_blank">2015</a> - Updated cooldown docs</li>
+</ul>
+<hr>
 <h2 id="changes-in-100">Changes in <code>1.0.0</code></h2>
 <p>Singularity has been running our production infrastructure at HubSpot for years and the team is happy to announce a (probably long overdue) <code>1.0.0</code> release. Check out the <a href="https://github.com/HubSpot/Singularity/milestone/41?closed=1" target="_blank">1.0.0 milestone</a> to see new changes in detail.</p>
 <h2 id="breaking-changes">Breaking Changes</h2>

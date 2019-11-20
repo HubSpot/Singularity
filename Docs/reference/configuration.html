@@ -51,7 +51,7 @@
         data-chapter-title="Configuration"
         data-filepath="Docs/reference/configuration.md"
         data-basepath="../.."
-        data-revision="Wed Aug 14 2019 09:50:23 GMT-0400 (EDT)"
+        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -885,6 +885,7 @@
 </tbody>
 </table>
 <h4 id="cooldown">Cooldown</h4>
+<p>Cooldown is divided into 2 types, fast and slow. These are essentially two sets of differing thresholds for cooldown, meant to act quickly for cases where there are rapid failures, but still provide a notification/signal for cases where there are slow but repeated failures</p>
 <table>
 <thead>
 <tr>
@@ -896,22 +897,22 @@
 </thead>
 <tbody>
 <tr>
-<td>cooldownAfterFailures</td>
-<td>3</td>
-<td>The number of sequential failures after which a request is placed into system cooldown (a delay is added to newly scheduled tasks) - set to 0 to disable cooldown</td>
+<td>fastFailureCooldownCount/slowFailureCooldownCount</td>
+<td>3/5</td>
+<td>The number of sequential failures after which a request is placed into system cooldown</td>
 <td>int</td>
 </tr>
 <tr>
-<td>cooldownAfterPctOfInstancesFail</td>
-<td>1.0</td>
-<td>The percentage of instances which must fail at least cooldownAfterFailures times to cause the request to enter system cooldown</td>
-<td>double</td>
+<td>fastFailureCooldownMs/slowFailureCooldownMs</td>
+<td>30000/600000</td>
+<td>The time window during which <code>...CooldownCount</code> failures must occur</td>
+<td>long</td>
 </tr>
 <tr>
-<td>cooldownExpiresAfterMinutes</td>
-<td>15</td>
-<td>The window used to evaluate task failures. Tasks must fail at least cooldownAfterFailures times during this amount of time to enter system cooldown - set to 0 to disable cooldown</td>
-<td>long</td>
+<td>fastCooldownExpiresMinutesWithoutFailure/slowCooldownExpiresMinutesWithoutFailure</td>
+<td>5/5</td>
+<td>If there are no failures after this time period, the request will exit cooldown</td>
+<td>int</td>
 </tr>
 <tr>
 <td>cooldownMinScheduleSeconds</td>
