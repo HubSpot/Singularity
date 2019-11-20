@@ -26,4 +26,4 @@ stepActivation:
     branches: [hs_staging, hs_qa, hs_stable, master]
 
 env:
-  SET_VERSION_OVERRIDE: "1.1.0-$GIT_BRANCH-SNAPSHOT"
+  SET_VERSION_OVERRIDE: "1.2.0-$GIT_BRANCH-SNAPSHOT"
