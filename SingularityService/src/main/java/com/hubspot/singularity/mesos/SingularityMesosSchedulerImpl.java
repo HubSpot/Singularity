@@ -68,6 +68,7 @@ import com.hubspot.singularity.mesos.SchedulerState.MesosSchedulerState;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.handler.codec.PrematureChannelClosureException;
 
 @Singleton
@@ -168,7 +169,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Timed
   @Override
-  @SuppressWarnings(value="NP_NONNULL_PARAM_VIOLATION") // it is valid to pass NULL to CompletableFuture#completedFuture
+  @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION") // it is valid to pass NULL to CompletableFuture#completedFuture
   public CompletableFuture<Void> resourceOffers(List<Offer> offers) {
     long received = System.currentTimeMillis();
     lastOfferTimestamp = Optional.of(received);
