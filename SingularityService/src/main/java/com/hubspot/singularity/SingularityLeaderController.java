@@ -104,11 +104,11 @@ public class SingularityLeaderController implements LeaderLatchListener, Connect
           @Override
           public void run() {
             stateHandlerLock.lock();
-            if (scheduler.getState().getZkConnectionState().isConnected()) {
-              LOG.debug("Reconnected to zk, will not abort");
-              return;
-            }
             try {
+              if (scheduler.getState().getZkConnectionState().isConnected()) {
+                LOG.debug("Reconnected to zk, will not abort");
+                return;
+              }
               LOG.error("Aborting due to loss of zookeeper connection for {}ms. Current connection state {}",
                   configuration.getZooKeeperConfiguration().getAbortAfterConnectionLostForMillis(), newState);
               abort.abort(AbortReason.LOST_ZK_CONNECTION, Optional.empty());
