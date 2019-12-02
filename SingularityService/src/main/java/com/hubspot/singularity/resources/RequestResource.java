@@ -154,12 +154,13 @@ public class RequestResource extends AbstractRequestResource {
       authorizationHelper.checkForAuthorizedChanges(request, oldRequest.get(), user);
       validator.checkActionEnabled(SingularityAction.UPDATE_REQUEST);
     } else {
+      authorizationHelper.checkForAuthorization(user, request.getReadWriteGroups().orElse(Collections.emptySet()), request.getReadOnlyGroups().orElse(Collections.emptySet()), SingularityAuthorizationScope.WRITE, Optional.empty());
       validator.checkActionEnabled(SingularityAction.CREATE_REQUEST);
     }
 
     if (request.getSlavePlacement().isPresent() && request.getSlavePlacement().get() == SlavePlacement.SPREAD_ALL_SLAVES) {
       checkBadRequest(validator.isSpreadAllSlavesEnabled(), "You must enabled spread to all slaves in order to use the SPREAD_ALL_SLAVES request type");
-      int currentActiveSlaveCount =  slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
       request = request.toBuilder().setInstances(Optional.of(currentActiveSlaveCount)).build();
     }
 
