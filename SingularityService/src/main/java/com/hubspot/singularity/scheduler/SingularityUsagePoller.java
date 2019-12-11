@@ -22,7 +22,6 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -160,6 +159,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         .sorted((usage1, usage2) -> {
           OverusedResource mostOverusedResource1 = getMostOverusedResource(usage1, getSystemLoadForShuffle(usage1), usage1.getMemoryBytesUsed());
           OverusedResource mostOverusedResource2 = getMostOverusedResource(usage2, getSystemLoadForShuffle(usage2), usage2.getMemoryBytesUsed());
+          if (mostOverusedResource1.resourceType != mostOverusedResource2.resourceType) {
+            if (mostOverusedResource1.resourceType == Type.MEMORY) {
+              return -1;
+            } else {
+              return 1;
+            }
+          }
 
           return Double.compare(mostOverusedResource2.overusage, mostOverusedResource1.overusage);
         })
