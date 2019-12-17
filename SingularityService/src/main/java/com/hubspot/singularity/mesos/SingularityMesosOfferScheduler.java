@@ -597,7 +597,7 @@ public class SingularityMesosOfferScheduler {
     int matchedAllowedAttributesCount = slaveAndRackHelper.countMatchedAllowedAttributes(hostAttributes, allowedAttributes);
     double scalingFactor = 1.0;
     if (matchedAllowedAttributesCount > 0){
-      scalingFactor += (matchedAllowedAttributesCount / allowedAttributes.size()); //TODO: how to scale?
+      scalingFactor += (double) matchedAllowedAttributesCount / allowedAttributes.size(); //TODO: how to scale?
     }
     return score * scalingFactor;
   }
