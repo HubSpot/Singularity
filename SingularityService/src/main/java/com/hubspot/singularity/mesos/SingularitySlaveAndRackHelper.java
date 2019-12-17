@@ -116,4 +116,14 @@ public class SingularitySlaveAndRackHelper {
     return true;
   }
 
+  public int countMatchedAllowedAttributes(Map<String, String> attributes, Map<String, String> otherAttributes) {
+    int count = 0;
+    for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
+      if ((attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
 }

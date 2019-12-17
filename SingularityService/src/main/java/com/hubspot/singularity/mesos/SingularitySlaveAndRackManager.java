@@ -291,7 +291,7 @@ public class SingularitySlaveAndRackManager {
 
   }
 
-  private Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
+  public Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
     if (!taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides().isEmpty()) {
       return taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides();
     } else if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())) {
@@ -300,7 +300,7 @@ public class SingularitySlaveAndRackManager {
     return new HashMap<>();
   }
 
-  private Map<String, String> getAllowedAttributes(SingularityTaskRequest taskRequest) {
+  public Map<String, String> getAllowedAttributes(SingularityTaskRequest taskRequest) {
     if (!taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides().isEmpty()) {
       return taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides();
     } else if ((taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())){
