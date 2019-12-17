@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -13,20 +14,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
-public class SingularityCooldown {
+public class SingularityCrashLoops {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityCooldown.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityCrashLoops.class);
 
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SingularityCooldown(SingularityConfiguration configuration) {
+  public SingularityCrashLoops(SingularityConfiguration configuration) {
     this.configuration = configuration;
   }
 
@@ -35,11 +37,12 @@ public class SingularityCooldown {
       return false;
     }
 
-    return hasFailedTooManyTimes(deployStatistics, Optional.of(failureTimestamp));
+    return shouldBeInCooldown(deployStatistics, Optional.of(failureTimestamp));
   }
 
-  private boolean hasFailedTooManyTimes(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    return hasFastFailureLoop(deployStatistics, recentFailureTimestamp) || hasSlowFailureLoop(deployStatistics, recentFailureTimestamp);
+  private boolean shouldBeInCooldown(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
+    // TODO - fast failure loops only
+    return false;
   }
 
   private boolean hasSlowFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
@@ -73,6 +76,11 @@ public class SingularityCooldown {
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    return !hasFailedTooManyTimes(deployStatistics, recentFailureTimestamp);
+    return !shouldBeInCooldown(deployStatistics, recentFailureTimestamp);
+  }
+
+  Set<CrashLoopInfo> getActiveCrashLoops(SingularityDeployStatistics deployStatistics) {
+    // TODO
+    return null;
   }
 }

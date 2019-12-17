@@ -1,0 +1,106 @@
+package com.hubspot.singularity;
+
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class CrashLoopInfo {
+  private final String requestId;
+  private final String deployId;
+  private final long start;
+  private final Optional<Long> end;
+  private final CrashLoopType type;
+  private final String description;
+
+  @JsonCreator
+  public CrashLoopInfo(@JsonProperty("requestId") String requestId,
+                       @JsonProperty("deployId") String deployId,
+                       @JsonProperty("start") long start,
+                       @JsonProperty("end") Optional<Long> end,
+                       @JsonProperty("type") CrashLoopType type,
+                       @JsonProperty("description") String description) {
+    this.requestId = requestId;
+    this.deployId = deployId;
+    this.start = start;
+    this.end = end;
+    this.type = type;
+    this.description = description;
+  }
+
+  public String getRequestId() {
+    return requestId;
+  }
+
+  public String getDeployId() {
+    return deployId;
+  }
+
+  public long getStart() {
+    return start;
+  }
+
+  public Optional<Long> getEnd() {
+    return end;
+  }
+
+  public CrashLoopType getType() {
+    return type;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    CrashLoopInfo that = (CrashLoopInfo) o;
+
+    if (start != that.start) {
+      return false;
+    }
+    if (requestId != null ? !requestId.equals(that.requestId) : that.requestId != null) {
+      return false;
+    }
+    if (deployId != null ? !deployId.equals(that.deployId) : that.deployId != null) {
+      return false;
+    }
+    if (end != null ? !end.equals(that.end) : that.end != null) {
+      return false;
+    }
+    if (type != that.type) {
+      return false;
+    }
+    return description != null ? description.equals(that.description) : that.description == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = requestId != null ? requestId.hashCode() : 0;
+    result = 31 * result + (deployId != null ? deployId.hashCode() : 0);
+    result = 31 * result + (int) (start ^ (start >>> 32));
+    result = 31 * result + (end != null ? end.hashCode() : 0);
+    result = 31 * result + (type != null ? type.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "CrashLoopInfo{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", start=" + start +
+        ", end=" + end +
+        ", type=" + type +
+        ", description='" + description + '\'' +
+        '}';
+  }
+}

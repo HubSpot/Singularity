@@ -89,7 +89,7 @@ public class SingularityScheduler {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
 
   private final SingularityConfiguration configuration;
-  private final SingularityCooldown cooldown;
+  private final SingularityCrashLoops crashLoops;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final TaskRequestManager taskRequestManager;
@@ -103,7 +103,7 @@ public class SingularityScheduler {
   private final ExecutorService schedulerExecutorService;
 
   @Inject
-  public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
+  public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCrashLoops crashLoops, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
                               SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, SingularityManagedThreadPoolFactory threadPoolFactory) {
@@ -116,7 +116,7 @@ public class SingularityScheduler {
     this.rebalancingHelper = rebalancingHelper;
     this.rackManager = rackManager;
     this.mailer = mailer;
-    this.cooldown = cooldown;
+    this.crashLoops = crashLoops;
     this.leaderCache = leaderCache;
     this.lock = lock;
     this.schedulerExecutorService = threadPoolFactory.get("scheduler", configuration.getCoreThreadpoolSize());
@@ -306,20 +306,17 @@ public class SingularityScheduler {
       if (effectivePendingRequests.isEmpty()) {
         effectivePendingRequests.add(pendingRequest);
         RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
-        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
-            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState, pendingRequest, matchingTaskIds, maybePendingDeploy);
         requestManager.deletePendingRequest(pendingRequest);
       } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
         effectivePendingRequests.add(pendingRequest);
         RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
-        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
-            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState, pendingRequest, matchingTaskIds, maybePendingDeploy);
         requestManager.deletePendingRequest(pendingRequest);
       } else if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
         effectivePendingRequests.add(pendingRequest);
         RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
-        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
-            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState, pendingRequest, matchingTaskIds, maybePendingDeploy);
         requestManager.deletePendingRequest(pendingRequest);
       } else if (updatedRequest.isScheduled()
           && (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
@@ -339,7 +336,7 @@ public class SingularityScheduler {
       return requestState;
     }
 
-    if (cooldown.hasCooldownExpired(deployStatistics, Optional.empty())) {
+    if (crashLoops.hasCooldownExpired(deployStatistics, Optional.empty())) {
       requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.empty(), Optional.empty());
       return RequestState.ACTIVE;
     }
@@ -463,8 +460,7 @@ public class SingularityScheduler {
     }
   }
 
-  private int scheduleTasks(SingularityRequest request, RequestState state,
-                            SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest,
+  private int scheduleTasks(SingularityRequest request, RequestState state, SingularityPendingRequest pendingRequest,
                             List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.getRequestType() != RequestType.ON_DEMAND) {
       deleteScheduledTasks(leaderCache.getPendingTasks(), pendingRequest);
@@ -476,7 +472,7 @@ public class SingularityScheduler {
       maybePendingDeploy);
 
     if (numMissingInstances > 0) {
-      schedule(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+      schedule(numMissingInstances, matchingTaskIds, request, state, pendingRequest);
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
@@ -501,10 +497,10 @@ public class SingularityScheduler {
       }
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-        rebalanceRacks(request, state, deployStatistics, pendingRequest, maybePendingDeploy, remainingActiveTasks);
+        rebalanceRacks(request, state, pendingRequest, remainingActiveTasks);
       }
       if (request.getSlaveAttributeMinimums().isPresent()) {
-        rebalanceAttributeDistribution(request, state, deployStatistics, pendingRequest, maybePendingDeploy, remainingActiveTasks);
+        rebalanceAttributeDistribution(request, state, pendingRequest, remainingActiveTasks);
       }
     }
     return numMissingInstances;
@@ -513,33 +509,29 @@ public class SingularityScheduler {
   private void rebalanceAttributeDistribution(
       SingularityRequest request,
       RequestState state,
-      SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest,
-      Optional<SingularityPendingDeploy> maybePendingDeploy,
       List<SingularityTaskId> remainingActiveTasks) {
     Set<SingularityTaskId> extraTasksToClean = rebalancingHelper.rebalanceAttributeDistribution(request, pendingRequest.getUser(), remainingActiveTasks);
     remainingActiveTasks.removeAll(extraTasksToClean);
-    schedule(extraTasksToClean.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+    schedule(extraTasksToClean.size(), remainingActiveTasks, request, state, pendingRequest);
   }
 
   private void rebalanceRacks(
       SingularityRequest request,
       RequestState state,
-      SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest,
-      Optional<SingularityPendingDeploy> maybePendingDeploy,
       List<SingularityTaskId> remainingActiveTasks) {
     List<SingularityTaskId> extraCleanedTasks = rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, pendingRequest.getUser());
     remainingActiveTasks.removeAll(extraCleanedTasks);
     if (extraCleanedTasks.size() > 0) {
-      schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+      schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, pendingRequest);
     }
   }
 
-  private void schedule(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
-    SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+  private void schedule(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
+    SingularityPendingRequest pendingRequest) {
     final List<SingularityPendingTask> scheduledTasks =
-      getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
+      getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, pendingRequest.getDeployId(), pendingRequest);
 
     if (!scheduledTasks.isEmpty()) {
       LOG.trace("Scheduling tasks: {}", scheduledTasks);
@@ -605,7 +597,7 @@ public class SingularityScheduler {
       if (state != ExtendedTaskState.TASK_KILLED
           && !state.isSuccess()
           && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED
-          && cooldown.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
+          && crashLoops.shouldEnterCooldown(request, requestState, deployStatistics, timestamp)) {
         LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
         requestState = RequestState.SYSTEM_COOLDOWN;
         requestManager.cooldown(request, System.currentTimeMillis());
@@ -826,8 +818,8 @@ public class SingularityScheduler {
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
-    SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
-    final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+    String deployId, SingularityPendingRequest pendingRequest) {
+    final Optional<Long> nextRunAt = getNextRunAt(request, state, pendingRequest);
 
     if (!nextRunAt.isPresent()) {
       return Collections.emptyList();
@@ -873,8 +865,7 @@ public class SingularityScheduler {
     return newTasks;
   }
 
-  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest,
-    Optional<SingularityPendingDeploy> maybePendingDeploy) {
+  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityPendingRequest pendingRequest) {
     PendingType pendingType = pendingRequest.getPendingType();
     final long now = System.currentTimeMillis();
 
