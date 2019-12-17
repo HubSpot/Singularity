@@ -578,28 +578,14 @@ public class SingularityMesosOfferScheduler {
     final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache));
 
     if (slaveMatchState.isMatchAllowed()) {
-      double score = score(offerHolder.getHostname(), maybeSlaveUsage);
-      Map<String, String> allowedAttributes = slaveAndRackManager.getAllowedAttributes(taskRequestHolder.getTaskRequest());
-      if (!allowedAttributes.isEmpty()) {
-        score = preferHostsWithAllowedAttributes(score, offerHolder, allowedAttributes);
-      }
-      return score;
+      // TODO: scale here if slave is preferred
+      return score(offerHolder.getHostname(), maybeSlaveUsage);
     } else if (LOG.isTraceEnabled()) {
       LOG.trace("Ignoring offer on host {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getHostname(),
           offerHolder.getRoles(), offerHolder.getHostname(), pendingTaskId, matchesResources, slaveMatchState);
     }
 
     return 0;
-  }
-
-  private double preferHostsWithAllowedAttributes(double score, SingularityOfferHolder offerHolder, Map<String, String> allowedAttributes) {
-    Map<String, String> hostAttributes = offerHolder.getTextAttributes();
-    int matchedAllowedAttributesCount = slaveAndRackHelper.countMatchedAllowedAttributes(hostAttributes, allowedAttributes);
-    double scalingFactor = 1.0;
-    if (matchedAllowedAttributesCount > 0){
-      scalingFactor += (double) matchedAllowedAttributesCount / allowedAttributes.size(); //TODO: how to scale?
-    }
-    return score * scalingFactor;
   }
 
   private boolean isPreemptibleTask(SingularityTaskRequest taskRequest, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {

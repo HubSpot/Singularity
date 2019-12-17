@@ -247,6 +247,10 @@ public class SingularitySlaveAndRackManager {
       case GREEDY:
     }
 
+    if (isSlavePreferredByAllowedAttributes(offerHolder, taskRequest)) {
+      return SlaveMatchState.PREFERRED_SLAVE;
+    }
+
     return SlaveMatchState.OK;
   }
 
@@ -291,7 +295,7 @@ public class SingularitySlaveAndRackManager {
 
   }
 
-  public Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
+  private Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
     if (!taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides().isEmpty()) {
       return taskRequest.getPendingTask().getRequiredSlaveAttributeOverrides();
     } else if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())) {
@@ -300,7 +304,7 @@ public class SingularitySlaveAndRackManager {
     return new HashMap<>();
   }
 
-  public Map<String, String> getAllowedAttributes(SingularityTaskRequest taskRequest) {
+  private Map<String, String> getAllowedAttributes(SingularityTaskRequest taskRequest) {
     if (!taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides().isEmpty()) {
       return taskRequest.getPendingTask().getAllowedSlaveAttributeOverrides();
     } else if ((taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())){
@@ -340,6 +344,12 @@ public class SingularitySlaveAndRackManager {
       }
     }
     return true;
+  }
+
+  private boolean isSlavePreferredByAllowedAttributes(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
+    Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
+    Map<String, String> hostAttributes = offerHolder.getTextAttributes();
+    return slaveAndRackHelper.containsAtLeastOneMatchingAttribute(hostAttributes, allowedAttributes);
   }
 
   private long getNumInstancesWithAttribute(List<SingularityTaskId> taskIds, String attrKey, String attrValue) {
@@ -595,5 +605,7 @@ public class SingularitySlaveAndRackManager {
 
     return false;
   }
+
+
 
 }
