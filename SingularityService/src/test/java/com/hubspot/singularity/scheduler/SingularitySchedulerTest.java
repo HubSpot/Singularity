@@ -1602,7 +1602,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(newRequest, singularityUser);
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().build());
+    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().setMessage("foo bar").build());
     scheduler.drainPendingQueue();
     resourceOffers();
 
@@ -1614,6 +1614,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(MesosTaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
     Assertions.assertEquals(PendingType.RETRY, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assertions.assertEquals("foo bar", taskManager.getPendingTasks().get(0).getMessage().get());
     Assertions.assertEquals(1, deployStatistics.getNumFailures());
     Assertions.assertEquals(1, deployStatistics.getNumSequentialRetries());
   }
