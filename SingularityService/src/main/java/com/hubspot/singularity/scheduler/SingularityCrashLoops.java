@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -15,9 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.CrashLoopType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.TaskFailureEvent;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
@@ -41,38 +44,22 @@ public class SingularityCrashLoops {
   }
 
   private boolean shouldBeInCooldown(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    // TODO - fast failure loops only
-    return false;
+    return cooldownStart(deployStatistics, recentFailureTimestamp).isPresent();
   }
 
-  private boolean hasSlowFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    return hasFailureLoop(deployStatistics, recentFailureTimestamp, configuration.getSlowFailureCooldownMs(), configuration.getSlowFailureCooldownCount(), configuration.getSlowCooldownExpiresMinutesWithoutFailure());
-  }
-
-  private boolean hasFastFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    return hasFailureLoop(deployStatistics, recentFailureTimestamp, configuration.getFastFailureCooldownMs(), configuration.getFastFailureCooldownCount(), configuration.getFastCooldownExpiresMinutesWithoutFailure());
-
-  }
-
-  private boolean hasFailureLoop(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp, long cooldownPeriod, int cooldownCount, long expiresAfterMins) {
-    final long now = System.currentTimeMillis();
-    long thresholdTime = now - cooldownPeriod;
-    List<Long> failureTimestamps = deployStatistics.getInstanceSequentialFailureTimestamps().asMap()
-        .values()
-        .stream()
-        .flatMap(Collection::stream)
+  private Optional<Long> cooldownStart(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
+    long threshold = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1);
+    List<Long> failureTimestamps = deployStatistics.getTaskFailureEvents().stream()
+        .map(TaskFailureEvent::getTimestamp)
+        .collect(Collectors.toList());;
+    recentFailureTimestamp.ifPresent(failureTimestamps::add);
+    List<Long> pastThreshold = failureTimestamps.stream()
+        .filter((t) -> t > threshold)
         .collect(Collectors.toList());
-    if (recentFailureTimestamp.isPresent()) {
-      failureTimestamps.add(recentFailureTimestamp.get());
+    if (pastThreshold.size() > 5) {
+      return pastThreshold.stream().max(Comparator.comparingLong(Long::longValue));
     }
-    long failureCount = failureTimestamps.stream()
-        .filter((t) -> t > thresholdTime)
-        .count();
-    java.util.Optional<Long> mostRecentFailure = failureTimestamps.stream().max(Comparator.comparingLong(Long::valueOf));
-
-    boolean mostRecentFailureOutsideWindow = !mostRecentFailure.isPresent() || mostRecentFailure.get() < System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(expiresAfterMins);
-
-    return failureCount >= cooldownCount && !mostRecentFailureOutsideWindow;
+    return Optional.empty();
   }
 
   boolean hasCooldownExpired(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
@@ -80,7 +67,23 @@ public class SingularityCrashLoops {
   }
 
   Set<CrashLoopInfo> getActiveCrashLoops(SingularityDeployStatistics deployStatistics) {
-    // TODO
-    return null;
+    Set<CrashLoopInfo> active = new HashSet<>();
+
+    // Check fast failures
+    cooldownStart(deployStatistics, Optional.empty())
+        .ifPresent((start) ->
+            active.add(new CrashLoopInfo(
+                deployStatistics.getRequestId(),
+                deployStatistics.getDeployId(),
+                start,
+                Optional.empty(),
+                CrashLoopType.FAST_FAILURE_LOOP
+            )));
+
+    // Check for a single instance looping
+
+
+
+    return active;
   }
 }

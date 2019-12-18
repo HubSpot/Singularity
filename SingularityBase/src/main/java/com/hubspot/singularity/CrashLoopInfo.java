@@ -11,21 +11,18 @@ public class CrashLoopInfo {
   private final long start;
   private final Optional<Long> end;
   private final CrashLoopType type;
-  private final String description;
 
   @JsonCreator
   public CrashLoopInfo(@JsonProperty("requestId") String requestId,
                        @JsonProperty("deployId") String deployId,
                        @JsonProperty("start") long start,
                        @JsonProperty("end") Optional<Long> end,
-                       @JsonProperty("type") CrashLoopType type,
-                       @JsonProperty("description") String description) {
+                       @JsonProperty("type") CrashLoopType type) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.start = start;
     this.end = end;
     this.type = type;
-    this.description = description;
   }
 
   public String getRequestId() {
@@ -46,10 +43,6 @@ public class CrashLoopInfo {
 
   public CrashLoopType getType() {
     return type;
-  }
-
-  public String getDescription() {
-    return description;
   }
 
   @Override
@@ -75,10 +68,7 @@ public class CrashLoopInfo {
     if (end != null ? !end.equals(that.end) : that.end != null) {
       return false;
     }
-    if (type != that.type) {
-      return false;
-    }
-    return description != null ? description.equals(that.description) : that.description == null;
+    return type == that.type;
   }
 
   @Override
@@ -88,7 +78,6 @@ public class CrashLoopInfo {
     result = 31 * result + (int) (start ^ (start >>> 32));
     result = 31 * result + (end != null ? end.hashCode() : 0);
     result = 31 * result + (type != null ? type.hashCode() : 0);
-    result = 31 * result + (description != null ? description.hashCode() : 0);
     return result;
   }
 
@@ -100,7 +89,6 @@ public class CrashLoopInfo {
         ", start=" + start +
         ", end=" + end +
         ", type=" + type +
-        ", description='" + description + '\'' +
         '}';
   }
 }

@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -68,6 +67,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.TaskFailureEvent;
+import com.hubspot.singularity.TaskFailureType;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
@@ -648,7 +649,6 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
-  @Timed
   public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, long timestamp, ExtendedTaskState state,
     SingularityCreateResult taskHistoryUpdateCreateResult, Protos.TaskStatus status) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
@@ -695,10 +695,11 @@ public class SingularityScheduler {
       return;
     }
 
-    updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult);
+    updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult, status);
   }
 
-  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, Optional<SingularityTask> task, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
+  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, Optional<SingularityTask> task, long timestamp,
+                                      ExtendedTaskState state, Optional<PendingType> scheduleResult, Protos.TaskStatus status) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
     if (!state.isFailed()) {
@@ -730,22 +731,50 @@ public class SingularityScheduler {
       bldr.setLastTaskState(Optional.of(state));
     }
 
-    final ListMultimap<Integer, Long> instanceSequentialFailureTimestamps = bldr.getInstanceSequentialFailureTimestamps();
-    final List<Long> sequentialFailureTimestamps = instanceSequentialFailureTimestamps.get(taskId.getInstanceNo());
+    if (task.isPresent()
+        && task.get().getTaskRequest().getRequest().isLongRunning()
+        && state == ExtendedTaskState.TASK_FINISHED) {
+      bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.UNEXPECTED_EXIT));
+    }
+
+    if (state == ExtendedTaskState.TASK_CLEANING) {
+      if (status.hasMessage()) {
+        Optional<TaskCleanupType> maybeCleanupType = getCleanupType(taskId, status.getMessage());
+        if (maybeCleanupType.isPresent()) {
+          switch (maybeCleanupType.get()) {
+            case OVERDUE_NEW_TASK:
+            case UNHEALTHY_NEW_TASK:
+              bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.STARTUP_FAILURE));
+          }
+        }
+      }
+    }
 
     if (!state.isSuccess()) {
       if (SingularityTaskHistoryUpdate.getUpdate(taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_CLEANING).isPresent()) {
-        LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown", taskId, state);
+        LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown/crash loop", taskId, state);
       } else {
-        sequentialFailureTimestamps.add(timestamp);
+        if (state.isFailed()) {
+          if (status.hasMessage() && status.getMessage().contains("Memory limit exceeded")) {
+            bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.OOM));
+          } else {
+            bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.BAD_EXIT_CODE));
+          }
+        }
+
+        if (state == ExtendedTaskState.TASK_LOST && status.hasReason()) {
+          if (isMesosError(status.getReason())) {
+            bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.MESOS_ERROR));
+          } else if (isLostSlave(status.getReason())) {
+            bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.LOST_SLAVE));
+          }
+        }
         bldr.setNumSuccess(0);
         bldr.setNumFailures(bldr.getNumFailures() + 1);
-        Collections.sort(sequentialFailureTimestamps);
       }
     } else {
       bldr.setNumSuccess(bldr.getNumSuccess() + 1);
       bldr.setNumFailures(0);
-      sequentialFailureTimestamps.clear();
     }
 
     if (scheduleResult.isPresent() && scheduleResult.get() == PendingType.RETRY) {
@@ -759,6 +788,59 @@ public class SingularityScheduler {
     LOG.trace("Saving new deploy statistics {}", newStatistics);
 
     deployManager.saveDeployStatistics(newStatistics);
+  }
+
+  private boolean isMesosError(Reason reason) {
+    switch (reason) {
+      case REASON_COMMAND_EXECUTOR_FAILED:
+      case REASON_CONTAINER_LAUNCH_FAILED:
+      case REASON_CONTAINER_PREEMPTED:
+      case REASON_CONTAINER_UPDATE_FAILED:
+      case REASON_EXECUTOR_REGISTRATION_TIMEOUT:
+      case REASON_EXECUTOR_REREGISTRATION_TIMEOUT:
+      case REASON_EXECUTOR_TERMINATED:
+      case REASON_EXECUTOR_UNREGISTERED:
+      case REASON_FRAMEWORK_REMOVED:
+      case REASON_GC_ERROR:
+      case REASON_INVALID_FRAMEWORKID:
+      case REASON_INVALID_OFFERS:
+      case REASON_MASTER_DISCONNECTED:
+      case REASON_RECONCILIATION:
+      case REASON_RESOURCES_UNKNOWN:
+      case REASON_TASK_GROUP_INVALID:
+      case REASON_TASK_GROUP_UNAUTHORIZED:
+      case REASON_TASK_INVALID:
+      case REASON_TASK_UNAUTHORIZED:
+      case REASON_TASK_UNKNOWN:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private boolean isLostSlave(Reason reason) {
+    switch (reason) {
+      case REASON_AGENT_REMOVED:
+      case REASON_AGENT_RESTARTED:
+      case REASON_AGENT_UNKNOWN:
+      case REASON_AGENT_DISCONNECTED:
+      case REASON_AGENT_REMOVED_BY_OPERATOR:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private Optional<TaskCleanupType> getCleanupType(SingularityTaskId taskId, String statusMessage) {
+    try {
+      String[] cleanupTypeString = statusMessage.split("\\s+");
+      if (cleanupTypeString.length > 0) {
+        return Optional.of(TaskCleanupType.valueOf(cleanupTypeString[0]));
+      }
+    } catch (Throwable t) {
+      LOG.info("Could not parse cleanup type from {} for {}", statusMessage, taskId);
+    }
+    return Optional.empty();
   }
 
   private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics, Optional<SingularityTask> task) {

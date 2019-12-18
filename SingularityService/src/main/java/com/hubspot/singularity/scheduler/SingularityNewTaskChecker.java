@@ -279,7 +279,6 @@ public class SingularityNewTaskChecker {
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.empty(), Optional.empty()));
 
-          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -291,7 +290,6 @@ public class SingularityNewTaskChecker {
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.empty(), Optional.empty()));
 
-          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -304,7 +302,6 @@ public class SingularityNewTaskChecker {
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
             task.getTaskId(), Optional.of("Task is not healthy"), Optional.empty(), Optional.empty()));
 
-        checkForRepeatedFailures(requestWithState, task.getTaskId());
         return false;
       case HEALTHY:
       case OBSOLETE:
@@ -315,14 +312,6 @@ public class SingularityNewTaskChecker {
     }
 
     return false;
-  }
-
-  private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState, SingularityTaskId taskId) {
-    taskManager.markUnhealthyKill(taskId);
-
-    if (requestWithState.isPresent() && taskManager.getNumUnhealthyKills(taskId.getRequestId()) > configuration.getSlowFailureCooldownCount()) {
-      mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
-    }
   }
 
   @VisibleForTesting

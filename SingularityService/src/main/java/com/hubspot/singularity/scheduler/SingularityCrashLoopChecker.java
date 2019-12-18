@@ -107,6 +107,7 @@ public class SingularityCrashLoopChecker {
         continue;
       }
       Set<CrashLoopInfo> newActiveCrashLoops = crashLoops.getActiveCrashLoops(maybeDeployStatistics.get());
+      // TODO - add end time to any open crash loops that are no longer in this list
       if (!newActiveCrashLoops.isEmpty()) {
         newActiveCrashLoops.forEach((l) -> {
           if (!activeCrashLoops.contains(l)) {

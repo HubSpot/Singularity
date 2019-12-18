@@ -119,18 +119,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long considerTaskHealthyAfterRunningForSeconds = 5;
 
-  private int fastFailureCooldownCount = 3;
-
-  private long fastFailureCooldownMs = 30000;
-
-  private long fastCooldownExpiresMinutesWithoutFailure = 5;
-
-  private int slowFailureCooldownCount = 5;
-
-  private long slowFailureCooldownMs = 600000;
-
-  private long slowCooldownExpiresMinutesWithoutFailure = 5;
-
   private long cooldownMinScheduleSeconds = 120;
 
   @JsonProperty("database")
@@ -510,54 +498,6 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
-  }
-
-  public int getFastFailureCooldownCount() {
-    return fastFailureCooldownCount;
-  }
-
-  public void setFastFailureCooldownCount(int fastFailureCooldownCount) {
-    this.fastFailureCooldownCount = fastFailureCooldownCount;
-  }
-
-  public long getFastFailureCooldownMs() {
-    return fastFailureCooldownMs;
-  }
-
-  public void setFastFailureCooldownMs(long fastFailureCooldownMs) {
-    this.fastFailureCooldownMs = fastFailureCooldownMs;
-  }
-
-  public long getFastCooldownExpiresMinutesWithoutFailure() {
-    return fastCooldownExpiresMinutesWithoutFailure;
-  }
-
-  public void setFastCooldownExpiresMinutesWithoutFailure(long fastCooldownExpiresMinutesWithoutFailure) {
-    this.fastCooldownExpiresMinutesWithoutFailure = fastCooldownExpiresMinutesWithoutFailure;
-  }
-
-  public int getSlowFailureCooldownCount() {
-    return slowFailureCooldownCount;
-  }
-
-  public void setSlowFailureCooldownCount(int slowFailureCooldownCount) {
-    this.slowFailureCooldownCount = slowFailureCooldownCount;
-  }
-
-  public long getSlowFailureCooldownMs() {
-    return slowFailureCooldownMs;
-  }
-
-  public void setSlowFailureCooldownMs(long slowFailureCooldownMs) {
-    this.slowFailureCooldownMs = slowFailureCooldownMs;
-  }
-
-  public long getSlowCooldownExpiresMinutesWithoutFailure() {
-    return slowCooldownExpiresMinutesWithoutFailure;
-  }
-
-  public void setSlowCooldownExpiresMinutesWithoutFailure(long slowCooldownExpiresMinutesWithoutFailure) {
-    this.slowCooldownExpiresMinutesWithoutFailure = slowCooldownExpiresMinutesWithoutFailure;
   }
 
   public int getCacheTasksMaxSize() {
