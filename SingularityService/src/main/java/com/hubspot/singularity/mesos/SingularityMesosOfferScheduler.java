@@ -578,8 +578,11 @@ public class SingularityMesosOfferScheduler {
     final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache));
 
     if (slaveMatchState.isMatchAllowed()) {
-      // TODO: scale here if slave is preferred
-      return score(offerHolder.getHostname(), maybeSlaveUsage);
+      double score = score(offerHolder.getHostname(), maybeSlaveUsage);
+      if (slaveMatchState.equals(SlaveMatchState.PREFERRED_SLAVE)) {
+        score *= configuration.getPreferredSlaveScaleFactor();
+      }
+      return score;
     } else if (LOG.isTraceEnabled()) {
       LOG.trace("Ignoring offer on host {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getHostname(),
           offerHolder.getRoles(), offerHolder.getHostname(), pendingTaskId, matchesResources, slaveMatchState);

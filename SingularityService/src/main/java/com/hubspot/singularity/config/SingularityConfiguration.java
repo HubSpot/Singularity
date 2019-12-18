@@ -411,6 +411,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
+  private double preferredSlaveScaleFactor = 1.5;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1748,5 +1750,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSqlFallBackToBytesFields(boolean sqlFallBackToBytesFields) {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
+  }
+
+  public double getPreferredSlaveScaleFactor() {
+    return preferredSlaveScaleFactor;
+  }
+
+  public void setPreferredSlaveScaleFactor(double preferredSlaveScaleFactor) {
+    this.preferredSlaveScaleFactor = preferredSlaveScaleFactor;
   }
 }
