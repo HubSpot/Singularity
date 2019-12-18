@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +63,7 @@ public class SingularityDeployStatistics {
         .setNumTasks(numTasks)
         .setAverageRuntimeMillis(averageRuntimeMillis)
         .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
-        .setTaskFailureEvents(taskFailureEvents);
+        .setTaskFailureEvents(new ArrayList<>(taskFailureEvents));
   }
 
   @Schema(description = "The number of tasks associated with this deploy")
