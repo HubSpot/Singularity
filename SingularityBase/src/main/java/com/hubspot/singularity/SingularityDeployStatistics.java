@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +49,7 @@ public class SingularityDeployStatistics {
     this.numTasks = numTasks;
     this.averageRuntimeMillis = averageRuntimeMillis;
     this.averageSchedulingDelayMillis = averageSchedulingDelayMillis;
-    this.taskFailureEvents = taskFailureEvents;
+    this.taskFailureEvents = taskFailureEvents == null ? Collections.emptyList() : taskFailureEvents;
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {

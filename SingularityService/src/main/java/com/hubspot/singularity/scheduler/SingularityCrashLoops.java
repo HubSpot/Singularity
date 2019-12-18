@@ -80,8 +80,31 @@ public class SingularityCrashLoops {
                 CrashLoopType.FAST_FAILURE_LOOP
             )));
 
-    // Check for a single instance looping
+    /*
+     * Startup failure loop
+     * a) multiple instances failing healthchecks, or single instance failing healthchecks too many times in X minutes
+     * b) small count of failures (3?) but instance no matches one that is in cleaning state waiting for a replacement
+     */
 
+    /*
+     * OOM Danger. > X OOMs in Y minutes across all instances
+     */
+
+    /*
+     * Single instance failure. > X failures with same instance no in X minutes
+     */
+
+    /*
+     * Multi instance failure. > X% of instances failing within Y minutes
+     */
+
+    /*
+     * Unexpected Exits. Too many task finished from a long-running type in X minutes
+     */
+
+    /*
+     * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
+     */
 
 
     return active;
