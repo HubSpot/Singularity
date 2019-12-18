@@ -67,6 +67,7 @@ public class SingularityCrashLoops {
   }
 
   Set<CrashLoopInfo> getActiveCrashLoops(SingularityDeployStatistics deployStatistics) {
+    // TODO - make sure this is only checked on active deploys (avoid checking health things for a deploy that is about to fail)
     Set<CrashLoopInfo> active = new HashSet<>();
 
     // Check fast failures

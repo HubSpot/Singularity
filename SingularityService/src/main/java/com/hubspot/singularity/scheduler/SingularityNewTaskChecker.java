@@ -73,12 +73,11 @@ public class SingularityNewTaskChecker {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final DisasterManager disasterManager;
-  private final SingularityMailer mailer;
 
   @Inject
   public SingularityNewTaskChecker(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory, RequestManager requestManager,
                                    SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
-                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager, SingularityMailer mailer) {
+                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager) {
     this.configuration = configuration;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
@@ -92,7 +91,6 @@ public class SingularityNewTaskChecker {
     this.exceptionNotifier = exceptionNotifier;
     this.deployHealthHelper = deployHealthHelper;
     this.disasterManager = disasterManager;
-    this.mailer = mailer;
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
@@ -305,9 +303,6 @@ public class SingularityNewTaskChecker {
         return false;
       case HEALTHY:
       case OBSOLETE:
-        if (requestWithState.isPresent()) {
-          taskManager.clearUnhealthyKills(requestWithState.get().getRequest().getId());
-        }
         return false;
     }
 
