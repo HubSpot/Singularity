@@ -736,17 +736,12 @@ public class SingularityScheduler {
       bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.UNEXPECTED_EXIT));
     }
 
-    if (state == ExtendedTaskState.TASK_CLEANING) {
+    if (state == ExtendedTaskState.TASK_KILLED) {
       if (status.hasMessage()) {
         Optional<TaskCleanupType> maybeCleanupType = getCleanupType(taskId, status.getMessage());
-        if (maybeCleanupType.isPresent()) {
-          switch (maybeCleanupType.get()) {
-            case OVERDUE_NEW_TASK:
-            case UNHEALTHY_NEW_TASK:
-              bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.STARTUP_FAILURE));
-            default:
-              LOG.trace("{} is not a healthcheck cleanup type", maybeCleanupType.get());
-          }
+        if (maybeCleanupType.isPresent() &&
+            (maybeCleanupType.get() == TaskCleanupType.OVERDUE_NEW_TASK || maybeCleanupType.get() == TaskCleanupType.UNHEALTHY_NEW_TASK)) {
+          bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.STARTUP_FAILURE));
         }
       }
     }
@@ -756,8 +751,11 @@ public class SingularityScheduler {
         LOG.debug("{} failed with {} after cleaning - ignoring it for cooldown/crash loop", taskId, state);
       } else {
         if (state.isFailed()) {
-          if (status.hasMessage() && status.getMessage().contains("Memory limit exceeded")) {
+          if ((status.hasMessage() && status.getMessage().contains("Memory limit exceeded"))
+              || (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY)) {
             bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.OOM));
+          } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_DISK) {
+            bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.OUT_OF_DISK_SPACE));
           } else {
             bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.BAD_EXIT_CODE));
           }
