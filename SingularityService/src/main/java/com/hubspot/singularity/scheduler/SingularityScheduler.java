@@ -618,6 +618,7 @@ public class SingularityScheduler {
     PendingType pendingType = PendingType.TASK_DONE;
     Optional<List<String>> cmdLineArgsList = Optional.empty();
     Optional<Resources> resources = Optional.empty();
+    Optional<String> message = Optional.empty();
 
     if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics, task)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
@@ -625,6 +626,7 @@ public class SingularityScheduler {
       if (task.isPresent()) {
         cmdLineArgsList = task.get().getTaskRequest().getPendingTask().getCmdLineArgsList();
         resources = task.get().getTaskRequest().getPendingTask().getResources();
+        message = task.get().getTaskRequest().getPendingTask().getMessage();
       }
     } else if (!request.isAlwaysRunning()) {
       return Optional.empty();
@@ -637,7 +639,7 @@ public class SingularityScheduler {
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-        System.currentTimeMillis(), Optional.empty(), pendingType, cmdLineArgsList, Optional.empty(), Optional.empty(), Optional.empty(),
+        System.currentTimeMillis(), Optional.empty(), pendingType, cmdLineArgsList, Optional.empty(), Optional.empty(), message,
         Optional.empty(), resources, Collections.emptyList(), Optional.empty(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(),
         Collections.emptyList(), Optional.empty());
 
