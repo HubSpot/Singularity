@@ -413,6 +413,12 @@ public class SingularityConfiguration extends Configuration {
 
   private double preferredSlaveScaleFactor = 1.5;
 
+  // high cpu slave, based on cpu to memory ratio
+  private double highCpuSlaveCutOff = 1.5; //TODO
+
+  // high memory slave, based on cpu to memory ratio
+  private double highMemorySlaveCutOff = 0.5; //TODO
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1758,5 +1764,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setPreferredSlaveScaleFactor(double preferredSlaveScaleFactor) {
     this.preferredSlaveScaleFactor = preferredSlaveScaleFactor;
+  }
+
+  public double getHighCpuSlaveCutOff() {
+    return highCpuSlaveCutOff;
+  }
+
+  public void setHighCpuSlaveCutOff(double highCpuSlaveCutOff) {
+    this.highCpuSlaveCutOff = highCpuSlaveCutOff;
+  }
+
+  public double getHighMemorySlaveCutOff() {
+    return highMemorySlaveCutOff;
+  }
+
+  public void setHighMemorySlaveCutOff(double highMemorySlaveCutOff) {
+    this.highMemorySlaveCutOff = highMemorySlaveCutOff;
   }
 }

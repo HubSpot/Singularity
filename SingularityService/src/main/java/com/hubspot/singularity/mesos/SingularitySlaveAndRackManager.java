@@ -28,6 +28,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -46,6 +47,7 @@ import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackHelper.CpuMemoryPreference;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -83,7 +85,7 @@ public class SingularitySlaveAndRackManager {
     this.leaderCache = leaderCache;
   }
 
-  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemptibleTask) {
+  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemptibleTask, RequestUtilization requestUtilization) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
@@ -247,11 +249,27 @@ public class SingularitySlaveAndRackManager {
       case GREEDY:
     }
 
-    if (isSlavePreferredByAllowedAttributes(offerHolder, taskRequest)) {
+    if (isSlavePreferred(offerHolder, taskRequest, requestUtilization)) {
       return SlaveMatchState.PREFERRED_SLAVE;
     }
 
     return SlaveMatchState.OK;
+  }
+
+  private boolean isSlavePreferred(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, RequestUtilization requestUtilization) {
+    return isSlavePreferredByAllowedAttributes(offerHolder, taskRequest) || isSlavePreferredByCpuMemory(offerHolder, requestUtilization);
+  }
+
+  private boolean isSlavePreferredByAllowedAttributes(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
+    Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
+    Map<String, String> hostAttributes = offerHolder.getTextAttributes();
+    return slaveAndRackHelper.containsAtLeastOneMatchingAttribute(hostAttributes, allowedAttributes);
+  }
+
+  public boolean isSlavePreferredByCpuMemory(SingularityOfferHolder offerHolder, RequestUtilization requestUtilization) {
+    CpuMemoryPreference cpuMemoryPreferenceForSlave = slaveAndRackHelper.getCpuMemoryPreferenceForSlave(offerHolder);
+    CpuMemoryPreference cpuMemoryPreferenceForRequest = slaveAndRackHelper.getCpuMemoryPreferenceForRequest(requestUtilization);
+    return cpuMemoryPreferenceForSlave == cpuMemoryPreferenceForRequest;
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
@@ -292,7 +310,6 @@ public class SingularitySlaveAndRackManager {
     }
 
     return true;
-
   }
 
   private Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {
@@ -344,12 +361,6 @@ public class SingularitySlaveAndRackManager {
       }
     }
     return true;
-  }
-
-  private boolean isSlavePreferredByAllowedAttributes(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
-    Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
-    Map<String, String> hostAttributes = offerHolder.getTextAttributes();
-    return slaveAndRackHelper.containsAtLeastOneMatchingAttribute(hostAttributes, allowedAttributes);
   }
 
   private long getNumInstancesWithAttribute(List<SingularityTaskId> taskIds, String attrKey, String attrValue) {
@@ -605,7 +616,5 @@ public class SingularitySlaveAndRackManager {
 
     return false;
   }
-
-
 
 }

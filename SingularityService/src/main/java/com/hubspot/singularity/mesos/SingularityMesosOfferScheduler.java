@@ -575,11 +575,11 @@ public class SingularityMesosOfferScheduler {
     if (!matchesResources) {
       return 0;
     }
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache));
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache), requestUtilization);
 
     if (slaveMatchState.isMatchAllowed()) {
       double score = score(offerHolder.getHostname(), maybeSlaveUsage);
-      if (slaveMatchState.equals(SlaveMatchState.PREFERRED_SLAVE)) {
+      if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
         score *= configuration.getPreferredSlaveScaleFactor();
       }
       return score;
