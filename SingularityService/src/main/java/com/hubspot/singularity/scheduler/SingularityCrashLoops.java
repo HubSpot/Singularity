@@ -1,7 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +23,6 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskFailureEvent;
 import com.hubspot.singularity.TaskFailureType;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -75,7 +72,7 @@ public class SingularityCrashLoops {
     List<Long> pastThreshold = failureTimestamps.stream()
         .filter((t) -> t > threshold)
         .collect(Collectors.toList());
-    if (pastThreshold.size() > 5) {
+    if (pastThreshold.size() >= 5) {
       return pastThreshold.stream().max(Comparator.comparingLong(Long::longValue));
     }
     return Optional.empty();
@@ -106,20 +103,22 @@ public class SingularityCrashLoops {
     long now = System.currentTimeMillis();
 
     // Check fast failures
-    cooldownStart(deployStatistics, Optional.empty())
-        .ifPresent((start) ->
-            active.add(new CrashLoopInfo(
-                deployStatistics.getRequestId(),
-                deployStatistics.getDeployId(),
-                start,
-                Optional.empty(),
-                CrashLoopType.FAST_FAILURE_LOOP
-            )));
+    boolean hasFastFailure = false;
+    Optional<Long> maybeCooldownStart = cooldownStart(deployStatistics, Optional.empty());
+    if (maybeCooldownStart.isPresent()) {
+      active.add(new CrashLoopInfo(
+          deployStatistics.getRequestId(),
+          deployStatistics.getDeployId(),
+          maybeCooldownStart.get(),
+          Optional.empty(),
+          CrashLoopType.FAST_FAILURE_LOOP
+      ));
+      hasFastFailure = true;
+    }
 
     /*
      * Startup failure loop
-     * a) multiple instances failing healthchecks, or single instance failing healthchecks too many times in X minutes
-     * b) small count of failures (3?) but instance no matches one that is in cleaning state waiting for a replacement
+     * a) small count of failures but instance num matches one that is in cleaning state waiting for a replacement
      */
     Map<Integer, Long> taskCleanStartTimes = taskManager.getCleanupTasks().stream()
         .filter((t) -> t.getTaskId().getRequestId().equals(deployStatistics.getRequestId()) && t.getTaskId().getDeployId().equals(deployStatistics.getDeployId()))
@@ -131,42 +130,55 @@ public class SingularityCrashLoops {
     Map<Integer, List<Long>> recentStartupFailures = deployStatistics.getTaskFailureEvents()
         .stream()
         .filter((e) -> e.getType() == TaskFailureType.STARTUP_FAILURE
-            && taskCleanStartTimes.containsKey(e.getInstance())
-            && e.getTimestamp() > taskCleanStartTimes.get(e.getInstance()))
+            && taskCleanStartTimes.containsKey(e.getInstance()))
         .collect(Collectors.groupingBy(
             TaskFailureEvent::getInstance,
             Collectors.mapping(TaskFailureEvent::getTimestamp, Collectors.toList()))
         );
 
-    int totalFailures = 0;
+    boolean hasStartupFailure = false;
     for (Map.Entry<Integer, List<Long>> entry : recentStartupFailures.entrySet()) {
-      if (entry.getValue().size() > 2) { // TODO - only 2 in a row per instance? Maybe 3?
-        active.add(new CrashLoopInfo(
-            deployStatistics.getRequestId(),
-            deployStatistics.getDeployId(),
-            entry.getValue().stream().min(Comparator.comparingLong(Long::longValue)).get(),
-            Optional.empty(),
-            CrashLoopType.STARTUP_FAILURE_LOOP)
-        );
-        break;
+      if (taskCleanStartTimes.containsKey(entry.getKey())) {
+        if (entry.getValue().stream().filter((t) -> t > taskCleanStartTimes.get(entry.getKey())).count() > 2) {
+          active.add(new CrashLoopInfo(
+              deployStatistics.getRequestId(),
+              deployStatistics.getDeployId(),
+              entry.getValue().stream().min(Comparator.comparingLong(Long::longValue)).get(),
+              Optional.empty(),
+              CrashLoopType.STARTUP_FAILURE_LOOP)
+          );
+          hasStartupFailure = true;
+          break;
+        }
       }
-      totalFailures += entry.getValue().size();
-      if (totalFailures > 5) { // TODO - configurable? Percentage of instance count?
+    }
+
+    /*
+     * Startup failure loop
+     * b) multiple instances failing healthchecks too many times in X minutes
+     */
+    if (!hasStartupFailure) {
+      long startupFailThreshold = now - TimeUnit.MINUTES.toMillis(10); // TODO configurable
+      List<Long> recentStartupFailTimestamps = recentStartupFailures.values()
+          .stream()
+          .flatMap(List::stream)
+          .filter((t) -> t > startupFailThreshold)
+          .collect(Collectors.toList());
+      if (recentStartupFailTimestamps.size() > 5) { // TODO - configurable?
         active.add(new CrashLoopInfo(
             deployStatistics.getRequestId(),
             deployStatistics.getDeployId(),
-            entry.getValue().stream().min(Comparator.comparingLong(Long::longValue)).get(),
+            recentStartupFailTimestamps.stream().min(Comparator.comparingLong(Long::longValue)).get(),
             Optional.empty(),
             CrashLoopType.STARTUP_FAILURE_LOOP)
         );
-        break;
       }
     }
 
     /*
      * OOM Danger. > X OOMs in Y minutes across all instances
      */
-    long thresholdOomTime = now - TimeUnit.MINUTES.toMillis(30);
+    long thresholdOomTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable
     List<Long> oomFailures = deployStatistics.getTaskFailureEvents()
         .stream()
         .filter((e) -> e.getType() == TaskFailureType.OOM && e.getTimestamp() > thresholdOomTime)
@@ -179,12 +191,12 @@ public class SingularityCrashLoops {
           deployStatistics.getDeployId(),
           oomFailures.stream().min(Comparator.comparingLong(Long::longValue)).get(),
           Optional.empty(),
-          CrashLoopType.STARTUP_FAILURE_LOOP)
+          CrashLoopType.OOM)
       );
     }
 
     /*
-     * Single instance failure. > X failures with same instance no in X minutes
+     * Single instance failure. > X failures with same instance no in X minutes, bucketed to avoid counting fast failure as one of these
      * Multi instance failure. > X% of instances failing within Y minutes
      */
     Map<Integer, List<Long>> recentFailuresByInstance = deployStatistics.getTaskFailureEvents()
@@ -195,90 +207,92 @@ public class SingularityCrashLoops {
             Collectors.mapping(TaskFailureEvent::getTimestamp, Collectors.toList()))
         );
 
-    int instanceCount = maybeRequest.get().getRequest().getInstancesSafe();
-    long thresholdTime = now - TimeUnit.MINUTES.toMillis(20); // TODO - configurable
-    long recentFailuresAllInstances = 0;
-    boolean singleInstanceFailureLoopFound = false;
-    long multiInstanceStart = Long.MAX_VALUE;
+    boolean foundSingleInstanceLoop = false;
     for (Map.Entry<Integer, List<Long>> entry : recentFailuresByInstance.entrySet()) {
-      List<Long> recent = entry.getValue().stream().filter((t) -> t > thresholdTime).collect(Collectors.toList());
-      if (recent.size() > 4) { // TODO - configurable?
-        if (!singleInstanceFailureLoopFound) {
-          long startTime = recent.stream().min(Comparator.comparingLong(Long::longValue)).get();
-          if (startTime < multiInstanceStart) {
-            multiInstanceStart = startTime;
-          }
-          active.add(new CrashLoopInfo(
-              deployStatistics.getRequestId(),
-              deployStatistics.getDeployId(),
-              startTime,
-              Optional.empty(),
-              CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP)
-          );
-          singleInstanceFailureLoopFound = true;
-        }
-      }
-      recentFailuresAllInstances += recent.size();
-    }
-
-    if (recentFailuresAllInstances >= Math.max(instanceCount / 2, 4)) { // TODO - percent of instances?? configurable?
+      // TODO - configurable
+      Optional<Long> maybeCrashStart = getStartForFailuresInBuckets(now, entry.getValue(), TimeUnit.MINUTES.toMillis(5), 6, 0.80);
+      if (maybeCrashStart.isPresent()) {
         active.add(new CrashLoopInfo(
             deployStatistics.getRequestId(),
             deployStatistics.getDeployId(),
-            multiInstanceStart,
+            maybeCrashStart.get(),
             Optional.empty(),
-            CrashLoopType.MULTI_INSTANCE_FAILURE)
+            CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP)
         );
+        foundSingleInstanceLoop = true;
+        break;
+      }
     }
+
+    // TODO - better multi instance failure check
+
 
     if (maybeRequest.get().getRequest().isLongRunning()) {
       /*
        * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
        */
-      long bucketSizeMillis = TimeUnit.MINUTES.toMillis(30); // TODO - configurable
-      long thresholdSlowFailTimeMillis = bucketSizeMillis * 20;
-      Map<Long, List<Long>> allRecentFailures = recentFailuresByInstance.values()
-          .stream()
-          .flatMap(List::stream)
-          .filter((t) -> t > thresholdSlowFailTimeMillis)
-          .collect(Collectors.groupingBy(
-              (e) -> e / bucketSizeMillis
-          ));
-      int buckets = allRecentFailures.size();
-      long bucketsWithFailure = allRecentFailures.entrySet()
-          .stream()
-          .filter((e) -> !e.getValue().isEmpty())
-          .count();
-      if (bucketsWithFailure / (double) buckets > 0.8) { // TODO - configurable
-        active.add(new CrashLoopInfo(
-            deployStatistics.getRequestId(),
-            deployStatistics.getDeployId(),
-            allRecentFailures.values().stream().flatMap(List::stream).min(Comparator.comparingLong(Long::longValue)).get(),
-            Optional.empty(),
-            CrashLoopType.SLOW_FAILURES)
-        );
-      }
+      getStartForFailuresInBuckets(now, recentFailuresByInstance, TimeUnit.MINUTES.toMillis(30), 20, 0.8)
+          .ifPresent((start) ->
+              active.add(new CrashLoopInfo(
+                  deployStatistics.getRequestId(),
+                  deployStatistics.getDeployId(),
+                  start,
+                  Optional.empty(),
+                  CrashLoopType.SLOW_FAILURES)
+              ));
 
-      /*
-       * Unexpected Exits. Too many task finished from a long-running type in X minutes
-       */
-      long thresholdUnexpectedExitTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable?
-      List<Long> recentUnexpectedExits = deployStatistics.getTaskFailureEvents()
-          .stream()
-          .filter((e) -> e.getType() == TaskFailureType.UNEXPECTED_EXIT && e.getTimestamp() > thresholdUnexpectedExitTime)
-          .map(TaskFailureEvent::getTimestamp)
-          .collect(Collectors.toList());
-      if (recentUnexpectedExits.size() > 4) { // TODO - configurable?
-        active.add(new CrashLoopInfo(
-            deployStatistics.getRequestId(),
-            deployStatistics.getDeployId(),
-            recentUnexpectedExits.stream().min(Comparator.comparingLong(Long::longValue)).get(),
-            Optional.empty(),
-            CrashLoopType.UNEXPECTED_EXITS)
-        );
-      }
+      getUnexpectedExitLoop(now, deployStatistics)
+          .ifPresent(active::add);
     }
 
     return active;
+  }
+
+  /*
+   * Unexpected Exits. Too many task finished from a long-running type in X minutes
+   */
+  private Optional<CrashLoopInfo> getUnexpectedExitLoop(long now, SingularityDeployStatistics deployStatistics) {
+    long thresholdUnexpectedExitTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable?
+    List<Long> recentUnexpectedExits = deployStatistics.getTaskFailureEvents()
+        .stream()
+        .filter((e) -> e.getType() == TaskFailureType.UNEXPECTED_EXIT && e.getTimestamp() > thresholdUnexpectedExitTime)
+        .map(TaskFailureEvent::getTimestamp)
+        .collect(Collectors.toList());
+    if (recentUnexpectedExits.size() > 4) { // TODO - configurable?
+      return Optional.of(new CrashLoopInfo(
+          deployStatistics.getRequestId(),
+          deployStatistics.getDeployId(),
+          recentUnexpectedExits.stream().min(Comparator.comparingLong(Long::longValue)).get(),
+          Optional.empty(),
+          CrashLoopType.UNEXPECTED_EXITS));
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Long> getStartForFailuresInBuckets(long now, Map<Integer, List<Long>> recentFailuresByInstance, long bucketSizeMillis, int numBuckets, double percentThreshold) {
+    return getStartForFailuresInBuckets(
+        now,
+        recentFailuresByInstance.values().stream().flatMap(List::stream).collect(Collectors.toList()),
+        bucketSizeMillis,
+        numBuckets,
+        percentThreshold
+    );
+  }
+
+  private Optional<Long> getStartForFailuresInBuckets(long now, List<Long> recentFailures, long bucketSizeMillis, int numBuckets, double percentThreshold) {
+    long thresholdFailTimeMillis = now - (bucketSizeMillis * numBuckets);
+    Map<Long, List<Long>> bucketedFailures = recentFailures.stream()
+        .filter((t) -> t > thresholdFailTimeMillis)
+        .collect(Collectors.groupingBy(
+            (e) -> e / bucketSizeMillis
+        ));
+    long bucketsWithFailure = bucketedFailures.entrySet()
+        .stream()
+        .filter((e) -> !e.getValue().isEmpty())
+        .count();
+    if ((double) bucketsWithFailure / numBuckets > percentThreshold) {
+      return recentFailures.stream().min(Comparator.comparingLong(Long::longValue));
+    }
+    return Optional.empty();
   }
 }
