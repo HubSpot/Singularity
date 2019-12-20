@@ -233,6 +233,33 @@ public class SingularityCrashLoops {
 
     if (maybeRequest.get().getRequest().isLongRunning()) {
       /*
+       * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
+       */
+      long bucketSizeMillis = TimeUnit.MINUTES.toMillis(30); // TODO - configurable
+      long thresholdSlowFailTimeMillis = bucketSizeMillis * 20;
+      Map<Long, List<Long>> allRecentFailures = recentFailuresByInstance.values()
+          .stream()
+          .flatMap(List::stream)
+          .filter((t) -> t > thresholdSlowFailTimeMillis)
+          .collect(Collectors.groupingBy(
+              (e) -> e / bucketSizeMillis
+          ));
+      int buckets = allRecentFailures.size();
+      long bucketsWithFailure = allRecentFailures.entrySet()
+          .stream()
+          .filter((e) -> !e.getValue().isEmpty())
+          .count();
+      if (bucketsWithFailure / (double) buckets > 0.8) { // TODO - configurable
+        active.add(new CrashLoopInfo(
+            deployStatistics.getRequestId(),
+            deployStatistics.getDeployId(),
+            allRecentFailures.values().stream().flatMap(List::stream).min(Comparator.comparingLong(Long::longValue)).get(),
+            Optional.empty(),
+            CrashLoopType.SLOW_FAILURES)
+        );
+      }
+
+      /*
        * Unexpected Exits. Too many task finished from a long-running type in X minutes
        */
       long thresholdUnexpectedExitTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable?
@@ -251,11 +278,6 @@ public class SingularityCrashLoops {
         );
       }
     }
-
-    /*
-     * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
-     */
-
 
     return active;
   }
