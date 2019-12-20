@@ -23,12 +23,14 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskFailureEvent;
 import com.hubspot.singularity.TaskFailureType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
@@ -39,14 +41,17 @@ public class SingularityCrashLoops {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
+  private final RequestManager requestManager;
 
   @Inject
   public SingularityCrashLoops(SingularityConfiguration configuration,
                                TaskManager taskManager,
-                               DeployManager deployManager) {
+                               DeployManager deployManager,
+                               RequestManager requestManager) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.requestManager = requestManager;
   }
 
   boolean shouldEnterCooldown(SingularityRequest request, RequestState requestState, SingularityDeployStatistics deployStatistics, long failureTimestamp) {
@@ -90,6 +95,11 @@ public class SingularityCrashLoops {
     Optional<SingularityPendingDeploy> maybePending = deployManager.getPendingDeploy(deployStatistics.getRequestId());
     if (maybePending.isPresent() && maybePending.get().getDeployMarker().getDeployId().equals(deployStatistics.getDeployId())) {
       LOG.debug("Not checking cooldown for pending deploy {} - {}", deployStatistics.getRequestId(), deployStatistics.getDeployId());
+      return active;
+    }
+
+    Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(deployStatistics.getRequestId());
+    if (!maybeRequest.isPresent()) {
       return active;
     }
 
@@ -185,13 +195,62 @@ public class SingularityCrashLoops {
             Collectors.mapping(TaskFailureEvent::getTimestamp, Collectors.toList()))
         );
 
+    int instanceCount = maybeRequest.get().getRequest().getInstancesSafe();
+    long thresholdTime = now - TimeUnit.MINUTES.toMillis(20); // TODO - configurable
+    long recentFailuresAllInstances = 0;
+    boolean singleInstanceFailureLoopFound = false;
+    long multiInstanceStart = Long.MAX_VALUE;
     for (Map.Entry<Integer, List<Long>> entry : recentFailuresByInstance.entrySet()) {
-
+      List<Long> recent = entry.getValue().stream().filter((t) -> t > thresholdTime).collect(Collectors.toList());
+      if (recent.size() > 4) { // TODO - configurable?
+        if (!singleInstanceFailureLoopFound) {
+          long startTime = recent.stream().min(Comparator.comparingLong(Long::longValue)).get();
+          if (startTime < multiInstanceStart) {
+            multiInstanceStart = startTime;
+          }
+          active.add(new CrashLoopInfo(
+              deployStatistics.getRequestId(),
+              deployStatistics.getDeployId(),
+              startTime,
+              Optional.empty(),
+              CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP)
+          );
+          singleInstanceFailureLoopFound = true;
+        }
+      }
+      recentFailuresAllInstances += recent.size();
     }
 
-    /*
-     * Unexpected Exits. Too many task finished from a long-running type in X minutes
-     */
+    if (recentFailuresAllInstances >= Math.max(instanceCount / 2, 4)) { // TODO - percent of instances?? configurable?
+        active.add(new CrashLoopInfo(
+            deployStatistics.getRequestId(),
+            deployStatistics.getDeployId(),
+            multiInstanceStart,
+            Optional.empty(),
+            CrashLoopType.MULTI_INSTANCE_FAILURE)
+        );
+    }
+
+    if (maybeRequest.get().getRequest().isLongRunning()) {
+      /*
+       * Unexpected Exits. Too many task finished from a long-running type in X minutes
+       */
+      long thresholdUnexpectedExitTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable?
+      List<Long> recentUnexpectedExits = deployStatistics.getTaskFailureEvents()
+          .stream()
+          .filter((e) -> e.getType() == TaskFailureType.UNEXPECTED_EXIT && e.getTimestamp() > thresholdUnexpectedExitTime)
+          .map(TaskFailureEvent::getTimestamp)
+          .collect(Collectors.toList());
+      if (recentUnexpectedExits.size() > 4) { // TODO - configurable?
+        active.add(new CrashLoopInfo(
+            deployStatistics.getRequestId(),
+            deployStatistics.getDeployId(),
+            recentUnexpectedExits.stream().min(Comparator.comparingLong(Long::longValue)).get(),
+            Optional.empty(),
+            CrashLoopType.UNEXPECTED_EXITS)
+        );
+      }
+    }
 
     /*
      * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
