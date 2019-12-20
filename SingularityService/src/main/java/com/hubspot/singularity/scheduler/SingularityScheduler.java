@@ -623,8 +623,7 @@ public class SingularityScheduler {
       return Optional.empty();
     }
 
-    if (state.isSuccess() && requestState == RequestState.SYSTEM_COOLDOWN) {
-      // TODO send not cooldown anymore email
+    if (state.isSuccess() && !request.isLongRunning() && requestState == RequestState.SYSTEM_COOLDOWN) {
       LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
       requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty());
     }
@@ -745,6 +744,8 @@ public class SingularityScheduler {
             case OVERDUE_NEW_TASK:
             case UNHEALTHY_NEW_TASK:
               bldr.addTaskFailureEvent(new TaskFailureEvent(taskId.getInstanceNo(), timestamp, TaskFailureType.STARTUP_FAILURE));
+            default:
+              LOG.trace("{} is not a healthcheck cleanup type", maybeCleanupType.get());
           }
         }
       }

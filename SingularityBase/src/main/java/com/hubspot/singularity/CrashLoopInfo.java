@@ -9,7 +9,7 @@ public class CrashLoopInfo {
   private final String requestId;
   private final String deployId;
   private final long start;
-  private final Optional<Long> end;
+  private final Optional<Long> end; // Not included in equals/hashCode
   private final CrashLoopType type;
 
   @JsonCreator
@@ -65,9 +65,6 @@ public class CrashLoopInfo {
     if (deployId != null ? !deployId.equals(that.deployId) : that.deployId != null) {
       return false;
     }
-    if (end != null ? !end.equals(that.end) : that.end != null) {
-      return false;
-    }
     return type == that.type;
   }
 
@@ -76,7 +73,6 @@ public class CrashLoopInfo {
     int result = requestId != null ? requestId.hashCode() : 0;
     result = 31 * result + (deployId != null ? deployId.hashCode() : 0);
     result = 31 * result + (int) (start ^ (start >>> 32));
-    result = 31 * result + (end != null ? end.hashCode() : 0);
     result = 31 * result + (type != null ? type.hashCode() : 0);
     return result;
   }

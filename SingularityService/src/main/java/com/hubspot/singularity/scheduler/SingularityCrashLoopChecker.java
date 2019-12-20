@@ -88,7 +88,7 @@ public class SingularityCrashLoopChecker {
         continue;
       }
       // Remove outdated loops on new deploy
-      List<CrashLoopInfo> activeCrashLoops = requestManager.getCrashLoopsForRequest(request.getRequest().getId())
+      List<CrashLoopInfo> previouslyActive = requestManager.getCrashLoopsForRequest(request.getRequest().getId())
           .stream()
           .filter((l) -> {
             if (!l.getDeployId().equals(maybeDeployState.get().getActiveDeploy().get().getDeployId())) {
@@ -106,22 +106,29 @@ public class SingularityCrashLoopChecker {
       if (!maybeDeployStatistics.isPresent()) {
         continue;
       }
-      Set<CrashLoopInfo> newActiveCrashLoops = crashLoops.getActiveCrashLoops(maybeDeployStatistics.get());
-      // TODO - add end time to any open crash loops that are no longer in this list
-      if (!newActiveCrashLoops.isEmpty()) {
-        newActiveCrashLoops.forEach((l) -> {
-          if (!activeCrashLoops.contains(l)) {
+
+      Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(maybeDeployStatistics.get());
+
+      if (!active.isEmpty()) {
+        active.forEach((l) -> {
+          if (!previouslyActive.contains(l)) {
             LOG.info("New crash loop for {}: {}", request.getRequest().getId(), l);
             requestManager.saveCrashLoop(l);
-            activeCrashLoops.add(l);
           }
         });
       }
 
+      previouslyActive.forEach((l) -> {
+        if (!l.getEnd().isPresent() && !active.contains(l)) {
+          requestManager.saveCrashLoop(new CrashLoopInfo(l.getRequestId(), l.getDeployId(), l.getStart(), Optional.of(System.currentTimeMillis()), l.getType()));
+        }
+      });
+
       // Only keep the most recent 20 crash loop infos
-      activeCrashLoops.stream()
+      previouslyActive.stream()
+          .filter((l) -> l.getEnd().isPresent())
           .sorted(Comparator.comparingLong(CrashLoopInfo::getStart).reversed())
-          .skip(20)
+          .skip(10)
           .forEach(requestManager::deleteCrashLoop);
     }
 
