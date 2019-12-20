@@ -267,9 +267,12 @@ public class SingularitySlaveAndRackManager {
   }
 
   public boolean isSlavePreferredByCpuMemory(SingularityOfferHolder offerHolder, RequestUtilization requestUtilization) {
-    CpuMemoryPreference cpuMemoryPreferenceForSlave = slaveAndRackHelper.getCpuMemoryPreferenceForSlave(offerHolder);
-    CpuMemoryPreference cpuMemoryPreferenceForRequest = slaveAndRackHelper.getCpuMemoryPreferenceForRequest(requestUtilization);
-    return cpuMemoryPreferenceForSlave == cpuMemoryPreferenceForRequest;
+    if (requestUtilization != null) {
+      CpuMemoryPreference cpuMemoryPreferenceForSlave = slaveAndRackHelper.getCpuMemoryPreferenceForSlave(offerHolder);
+      CpuMemoryPreference cpuMemoryPreferenceForRequest = slaveAndRackHelper.getCpuMemoryPreferenceForRequest(requestUtilization);
+      return cpuMemoryPreferenceForSlave == cpuMemoryPreferenceForRequest;
+    }
+    return false;
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
