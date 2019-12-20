@@ -5,10 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +52,6 @@ public class SingularityUsageHelper {
   private final TaskManager taskManager;
   private final UsageManager usageManager;
 
-  private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
-
   @Inject
   public SingularityUsageHelper(
       MesosClient mesosClient,
@@ -72,8 +68,6 @@ public class SingularityUsageHelper {
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
     this.usageManager = usageManager;
-
-    this.requestLocks = new ConcurrentHashMap<>();
   }
 
   public List<SingularitySlave> getSlavesToTrackUsageFor() {
