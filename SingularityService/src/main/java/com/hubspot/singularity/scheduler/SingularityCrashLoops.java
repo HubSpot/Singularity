@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.TaskFailureEvent;
 import com.hubspot.singularity.TaskFailureType;
+import com.hubspot.singularity.config.CrashLoopConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -35,7 +36,7 @@ public class SingularityCrashLoops {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCrashLoops.class);
 
-  private final SingularityConfiguration configuration;
+  private final CrashLoopConfiguration configuration;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final RequestManager requestManager;
@@ -45,7 +46,7 @@ public class SingularityCrashLoops {
                                TaskManager taskManager,
                                DeployManager deployManager,
                                RequestManager requestManager) {
-    this.configuration = configuration;
+    this.configuration = configuration.getCrashLoopConfiguration();
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -64,15 +65,16 @@ public class SingularityCrashLoops {
   }
 
   private Optional<Long> cooldownStart(SingularityDeployStatistics deployStatistics, Optional<Long> recentFailureTimestamp) {
-    long threshold = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1);
+    long threshold = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(configuration.getEvaluateCooldownOverMinutes());
     List<Long> failureTimestamps = deployStatistics.getTaskFailureEvents().stream()
         .map(TaskFailureEvent::getTimestamp)
-        .collect(Collectors.toList());;
+        .collect(Collectors.toList());
+    ;
     recentFailureTimestamp.ifPresent(failureTimestamps::add);
     List<Long> pastThreshold = failureTimestamps.stream()
         .filter((t) -> t > threshold)
         .collect(Collectors.toList());
-    if (pastThreshold.size() >= 5) {
+    if (pastThreshold.size() >= configuration.getCooldownFailureThreshold()) {
       return pastThreshold.stream().max(Comparator.comparingLong(Long::longValue));
     }
     return Optional.empty();
@@ -156,13 +158,13 @@ public class SingularityCrashLoops {
      * b) multiple instances failing healthchecks too many times in X minutes
      */
     if (!hasStartupFailure) {
-      long startupFailThreshold = now - TimeUnit.MINUTES.toMillis(10); // TODO configurable
+      long startupFailThreshold = now - TimeUnit.MINUTES.toMillis(configuration.getEvaluateStartupLoopOverMinutes());
       List<Long> recentStartupFailTimestamps = recentStartupFailures.values()
           .stream()
           .flatMap(List::stream)
           .filter((t) -> t > startupFailThreshold)
           .collect(Collectors.toList());
-      if (recentStartupFailTimestamps.size() > 5) { // TODO - configurable?
+      if (recentStartupFailTimestamps.size() > configuration.getStartupFailureThreshold()) {
         active.add(new CrashLoopInfo(
             deployStatistics.getRequestId(),
             deployStatistics.getDeployId(),
@@ -176,14 +178,14 @@ public class SingularityCrashLoops {
     /*
      * OOM Danger. > X OOMs in Y minutes across all instances
      */
-    long thresholdOomTime = now - TimeUnit.MINUTES.toMillis(30); // TODO - configurable
+    long thresholdOomTime = now - TimeUnit.MINUTES.toMillis(configuration.getEvaluateOomsOverMinutes());
     List<Long> oomFailures = deployStatistics.getTaskFailureEvents()
         .stream()
         .filter((e) -> e.getType() == TaskFailureType.OOM && e.getTimestamp() > thresholdOomTime)
         .map(TaskFailureEvent::getTimestamp)
         .collect(Collectors.toList());
 
-    if (oomFailures.size() >= 3) { // TODO - configurable?
+    if (oomFailures.size() >= configuration.getOomFailureThreshold()) {
       active.add(new CrashLoopInfo(
           deployStatistics.getRequestId(),
           deployStatistics.getDeployId(),
@@ -206,8 +208,13 @@ public class SingularityCrashLoops {
         );
 
     for (Map.Entry<Integer, List<Long>> entry : recentFailuresByInstance.entrySet()) {
-      // TODO - configurable
-      Optional<Long> maybeCrashStart = getStartForFailuresInBuckets(now, entry.getValue(), TimeUnit.MINUTES.toMillis(5), 6, 0.8);
+      Optional<Long> maybeCrashStart = getStartForFailuresInBuckets(
+          now,
+          entry.getValue(),
+          TimeUnit.MINUTES.toMillis(configuration.getSingleInstanceFailureBucketSizeMinutes()),
+          configuration.getSingleInstanceFailureBuckets(),
+          configuration.getSingleInstanceFailureThreshold()
+      );
       if (maybeCrashStart.isPresent()) {
         active.add(new CrashLoopInfo(
             deployStatistics.getRequestId(),
@@ -223,9 +230,9 @@ public class SingularityCrashLoops {
     Optional<Long> maybeMultiCrashStart = getStartForFailuresInBuckets(
         now,
         recentFailuresByInstance.values().stream().flatMap(List::stream).collect(Collectors.toList()),
-        TimeUnit.MINUTES.toMillis(3),
-        5,
-        0.8
+        TimeUnit.MINUTES.toMillis(configuration.getMultiInstanceFailureBucketSizeMinutes()),
+        configuration.getMultiInstanceFailureBuckets(),
+        configuration.getMultiInstanceFailureThreshold()
     );
     if (maybeMultiCrashStart.isPresent()) {
       active.add(new CrashLoopInfo(
@@ -241,15 +248,20 @@ public class SingularityCrashLoops {
       /*
        * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
        */
-      getStartForFailuresInBuckets(now, recentFailuresByInstance, TimeUnit.MINUTES.toMillis(30), 15, 0.7)
-          .ifPresent((start) ->
-              active.add(new CrashLoopInfo(
-                  deployStatistics.getRequestId(),
-                  deployStatistics.getDeployId(),
-                  start,
-                  Optional.empty(),
-                  CrashLoopType.SLOW_FAILURES)
-              ));
+      getStartForFailuresInBuckets(
+          now,
+          recentFailuresByInstance,
+          TimeUnit.MINUTES.toMillis(configuration.getSlowFailureBucketSizeMinutes()),
+          configuration.getSlowFailureBuckets(),
+          configuration.getSlowFailureThreshold()
+      ).ifPresent((start) ->
+          active.add(new CrashLoopInfo(
+              deployStatistics.getRequestId(),
+              deployStatistics.getDeployId(),
+              start,
+              Optional.empty(),
+              CrashLoopType.SLOW_FAILURES)
+          ));
 
       getUnexpectedExitLoop(now, deployStatistics)
           .ifPresent(active::add);

@@ -153,7 +153,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     long now = System.currentTimeMillis();
     createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(1), TaskFailureType.BAD_EXIT_CODE);
-    createTaskFailure(2, now - TimeUnit.MINUTES.toMillis(3), TaskFailureType.OOM);
+    createTaskFailure(2, now - TimeUnit.MINUTES.toMillis(4), TaskFailureType.OOM);
     createTaskFailure(6, now - TimeUnit.MINUTES.toMillis(5), TaskFailureType.OUT_OF_DISK_SPACE);
     createTaskFailure(3, now - TimeUnit.MINUTES.toMillis(7), TaskFailureType.OUT_OF_DISK_SPACE);
     createTaskFailure(4, now - TimeUnit.MINUTES.toMillis(10), TaskFailureType.OOM);

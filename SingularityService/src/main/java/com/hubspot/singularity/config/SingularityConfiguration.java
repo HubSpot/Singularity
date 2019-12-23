@@ -399,6 +399,9 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
+  @JsonProperty("crashLoop")
+  private CrashLoopConfiguration crashLoopConfiguration = new CrashLoopConfiguration();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1688,5 +1691,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSqlFallBackToBytesFields(boolean sqlFallBackToBytesFields) {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
+  }
+
+  public CrashLoopConfiguration getCrashLoopConfiguration() {
+    return crashLoopConfiguration;
+  }
+
+  public void setCrashLoopConfiguration(CrashLoopConfiguration crashLoopConfiguration) {
+    this.crashLoopConfiguration = crashLoopConfiguration;
   }
 }
