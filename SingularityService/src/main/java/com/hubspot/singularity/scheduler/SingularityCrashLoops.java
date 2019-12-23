@@ -103,7 +103,6 @@ public class SingularityCrashLoops {
     long now = System.currentTimeMillis();
 
     // Check fast failures
-    boolean hasFastFailure = false;
     Optional<Long> maybeCooldownStart = cooldownStart(deployStatistics, Optional.empty());
     if (maybeCooldownStart.isPresent()) {
       active.add(new CrashLoopInfo(
@@ -113,7 +112,6 @@ public class SingularityCrashLoops {
           Optional.empty(),
           CrashLoopType.FAST_FAILURE_LOOP
       ));
-      hasFastFailure = true;
     }
 
     /*
@@ -185,7 +183,7 @@ public class SingularityCrashLoops {
         .map(TaskFailureEvent::getTimestamp)
         .collect(Collectors.toList());
 
-    if (oomFailures.size() > 3) { // TODO - configurable?
+    if (oomFailures.size() >= 3) { // TODO - configurable?
       active.add(new CrashLoopInfo(
           deployStatistics.getRequestId(),
           deployStatistics.getDeployId(),
@@ -207,10 +205,9 @@ public class SingularityCrashLoops {
             Collectors.mapping(TaskFailureEvent::getTimestamp, Collectors.toList()))
         );
 
-    boolean foundSingleInstanceLoop = false;
     for (Map.Entry<Integer, List<Long>> entry : recentFailuresByInstance.entrySet()) {
       // TODO - configurable
-      Optional<Long> maybeCrashStart = getStartForFailuresInBuckets(now, entry.getValue(), TimeUnit.MINUTES.toMillis(5), 6, 0.80);
+      Optional<Long> maybeCrashStart = getStartForFailuresInBuckets(now, entry.getValue(), TimeUnit.MINUTES.toMillis(5), 6, 0.8);
       if (maybeCrashStart.isPresent()) {
         active.add(new CrashLoopInfo(
             deployStatistics.getRequestId(),
@@ -219,19 +216,32 @@ public class SingularityCrashLoops {
             Optional.empty(),
             CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP)
         );
-        foundSingleInstanceLoop = true;
         break;
       }
     }
 
-    // TODO - better multi instance failure check
-
+    Optional<Long> maybeMultiCrashStart = getStartForFailuresInBuckets(
+        now,
+        recentFailuresByInstance.values().stream().flatMap(List::stream).collect(Collectors.toList()),
+        TimeUnit.MINUTES.toMillis(3),
+        5,
+        0.8
+    );
+    if (maybeMultiCrashStart.isPresent()) {
+      active.add(new CrashLoopInfo(
+          deployStatistics.getRequestId(),
+          deployStatistics.getDeployId(),
+          maybeMultiCrashStart.get(),
+          Optional.empty(),
+          CrashLoopType.MULTI_INSTANCE_FAILURE)
+      );
+    }
 
     if (maybeRequest.get().getRequest().isLongRunning()) {
       /*
        * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
        */
-      getStartForFailuresInBuckets(now, recentFailuresByInstance, TimeUnit.MINUTES.toMillis(30), 20, 0.8)
+      getStartForFailuresInBuckets(now, recentFailuresByInstance, TimeUnit.MINUTES.toMillis(30), 15, 0.7)
           .ifPresent((start) ->
               active.add(new CrashLoopInfo(
                   deployStatistics.getRequestId(),

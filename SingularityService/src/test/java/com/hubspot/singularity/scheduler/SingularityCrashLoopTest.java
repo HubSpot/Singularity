@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
@@ -48,7 +49,27 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
 
   @Test
   public void itDetectsSlowConsistentFailureLoops() {
+    initRequestWithType(RequestType.WORKER, false);
+    initFirstDeploy();
+    long now = System.currentTimeMillis();
 
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(30), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(60), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(90), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(120), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(150), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(180), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(210), TaskFailureType.BAD_EXIT_CODE);
+    // skip one
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(270), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(300), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(330), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(360), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(390), TaskFailureType.BAD_EXIT_CODE);
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
+    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    Assertions.assertEquals(1, active.size());
+    Assertions.assertEquals(CrashLoopType.SLOW_FAILURES, Iterables.getOnlyElement(active).getType());
   }
 
   @Test
@@ -56,6 +77,8 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.WORKER, false);
     initFirstDeploy();
     long now = System.currentTimeMillis();
+
+    // Five minutes ago, should have already cleared
     createTaskFailure(1, now - 1000 - 300000, TaskFailureType.BAD_EXIT_CODE);
     createTaskFailure(1, now - 10000 - 300000, TaskFailureType.BAD_EXIT_CODE);
     createTaskFailure(1, now - 20000 - 300000, TaskFailureType.BAD_EXIT_CODE);
@@ -94,17 +117,52 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
 
   @Test
   public void itDetectsTooManyOoms() {
+    initRequestWithType(RequestType.WORKER, false);
+    initFirstDeploy();
+    long now = System.currentTimeMillis();
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(10), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(15), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(20), TaskFailureType.OOM);
 
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
+    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    Assertions.assertEquals(1, active.size());
+    Assertions.assertEquals(CrashLoopType.OOM, Iterables.getOnlyElement(active).getType());
   }
 
   @Test
   public void itDetectsASingleInstanceFailureLoop() {
+    initRequestWithType(RequestType.WORKER, false);
+    initFirstDeploy();
+    long now = System.currentTimeMillis();
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(1), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(6), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(11), TaskFailureType.OUT_OF_DISK_SPACE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(16), TaskFailureType.OUT_OF_DISK_SPACE);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(21), TaskFailureType.OOM);
 
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
+    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    Assertions.assertEquals(1, active.size());
+    Assertions.assertEquals(CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP, Iterables.getOnlyElement(active).getType());
   }
 
   @Test
   public void itDetectsTooManyMultiInstanceFailures() {
+    initRequestWithType(RequestType.WORKER, false);
+    initFirstDeploy();
+    long now = System.currentTimeMillis();
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(1), TaskFailureType.BAD_EXIT_CODE);
+    createTaskFailure(2, now - TimeUnit.MINUTES.toMillis(3), TaskFailureType.OOM);
+    createTaskFailure(6, now - TimeUnit.MINUTES.toMillis(5), TaskFailureType.OUT_OF_DISK_SPACE);
+    createTaskFailure(3, now - TimeUnit.MINUTES.toMillis(7), TaskFailureType.OUT_OF_DISK_SPACE);
+    createTaskFailure(4, now - TimeUnit.MINUTES.toMillis(10), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(12), TaskFailureType.OUT_OF_DISK_SPACE);
 
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
+    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    Assertions.assertEquals(1, active.size());
+    Assertions.assertEquals(CrashLoopType.MULTI_INSTANCE_FAILURE, Iterables.getOnlyElement(active).getType());
   }
 
   private void createTaskFailure(int instanceNo, long timestamp, TaskFailureType failureType) {
@@ -129,7 +187,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
         statusUpdateWithReason(timestamp, task, TaskState.TASK_LOST, Reason.REASON_INVALID_OFFERS, Optional.empty());
         break;
       case OUT_OF_DISK_SPACE:
-        statusUpdateWithReason(timestamp, task, TaskState.TASK_LOST, Reason.REASON_CONTAINER_LIMITATION_DISK, Optional.empty());
+        statusUpdateWithReason(timestamp, task, TaskState.TASK_FAILED, Reason.REASON_CONTAINER_LIMITATION_DISK, Optional.empty());
         break;
       default:
         break;
