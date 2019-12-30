@@ -58,27 +58,24 @@ public class SingularityCrashLoopChecker {
     // cooldown reserved for fast loop, check crash loops separately
     final List<SingularityRequestWithState> cooldownRequests = Lists.newArrayList(requestManager.getCooldownRequests(false));
 
-    if (cooldownRequests.isEmpty()) {
-      LOG.trace("No cooldown requests");
-      return;
-    }
-
     AtomicInteger exitedCooldown = new AtomicInteger(0);
-
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new HashMap<>();
-    CompletableFutures.allOf(
-        cooldownRequests.stream()
-            .map((cooldownRequest) ->
-                CompletableFuture.runAsync(
-                    () ->
-                        lock.runWithRequestLock(() -> {
-                          if (checkCooldown(cooldownRequest, deployStatsCache)) {
-                            exitedCooldown.getAndIncrement();
-                          }
-                        }, cooldownRequest.getRequest().getId(), getClass().getSimpleName()),
-                    cooldownExecutor))
-            .collect(Collectors.toList())
-    ).join();
+
+    if (!cooldownRequests.isEmpty()) {
+      CompletableFutures.allOf(
+          cooldownRequests.stream()
+              .map((cooldownRequest) ->
+                  CompletableFuture.runAsync(
+                      () ->
+                          lock.runWithRequestLock(() -> {
+                            if (checkCooldown(cooldownRequest, deployStatsCache)) {
+                              exitedCooldown.getAndIncrement();
+                            }
+                          }, cooldownRequest.getRequest().getId(), getClass().getSimpleName()),
+                      cooldownExecutor))
+              .collect(Collectors.toList())
+      ).join();
+    }
 
     // Check for crash loops
     for (SingularityRequestWithState request : requestManager.getActiveRequests()) {
@@ -120,6 +117,7 @@ public class SingularityCrashLoopChecker {
 
       previouslyActive.forEach((l) -> {
         if (!l.getEnd().isPresent() && !active.contains(l)) {
+          LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
           requestManager.saveCrashLoop(new CrashLoopInfo(l.getRequestId(), l.getDeployId(), l.getStart(), Optional.of(System.currentTimeMillis()), l.getType()));
         }
       });
