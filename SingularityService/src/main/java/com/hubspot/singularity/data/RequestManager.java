@@ -559,6 +559,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveCrashLoop(CrashLoopInfo crashLoop) {
+    singularityEventListener.crashLoopEvent(crashLoop);
     return save(getCrashLoopPath(crashLoop.getRequestId(), crashLoop), crashLoop, crashLoopInfoTranscoder);
   }
 

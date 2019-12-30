@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
@@ -44,6 +45,10 @@ public class SnsWebhookRetryer extends AbstractWebhookChecker {
     for (SingularityRequestHistory requestHistory : webhookManager.getRequestUpdatesToRetry()) {
       snsWebhookManager.requestHistoryEvent(requestHistory);
       webhookManager.deleteRequestUpdateForRetry(requestHistory);
+    }
+    for (CrashLoopInfo crashLoopUpdate : webhookManager.getCrashLoopUpdatesToRetry()) {
+      snsWebhookManager.crashLoopEvent(crashLoopUpdate);
+      webhookManager.deleteCrashLoopUpdateForRetry(crashLoopUpdate);
     }
   }
 }
