@@ -10,13 +10,13 @@ public class CrashLoopConfiguration {
   private int evaluateOomsOverMinutes = 30;
   private int oomFailureThreshold = 3;
 
-  private int singleInstanceFailureBucketSizeMinutes = 5;
-  private int singleInstanceFailureBuckets = 6;
-  private double singleInstanceFailureThreshold = 0.8;
+  private int singleInstanceFailureBucketSizeMinutes = 3;
+  private int singleInstanceFailureBuckets = 10;
+  private double singleInstanceFailureThreshold = 0.25;
 
   private int multiInstanceFailureBucketSizeMinutes = 3;
-  private int multiInstanceFailureBuckets = 5;
-  private double multiInstanceFailureThreshold = 0.8;
+  private int multiInstanceFailureBuckets = 10;
+  private double multiInstanceFailureThreshold = 0.6;
 
   private int slowFailureBucketSizeMinutes = 30;
   private int slowFailureBuckets = 15;
