@@ -166,7 +166,7 @@ public class SingularitySlaveAndRackHelper {
     return cpuUsageForRequest/memUsageForRequest;
   }
 
-  private double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
+  public double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
     // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
     return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
   }

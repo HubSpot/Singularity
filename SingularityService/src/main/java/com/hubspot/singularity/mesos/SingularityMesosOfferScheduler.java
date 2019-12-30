@@ -472,7 +472,7 @@ public class SingularityMesosOfferScheduler {
       if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
         if (requestUtilizations.containsKey(taskId.getRequestId())) {
           RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
-          cpu += getEstimatedCpuUsageForRequest(utilization);
+          cpu += slaveAndRackHelper.getEstimatedCpuUsageForRequest(utilization);
           memBytes += utilization.getMaxMemBytesUsed();
           diskBytes += utilization.getMaxDiskBytesUsed();
         } else {
@@ -538,11 +538,6 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toList());
   }
 
-  private double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
-    // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
-    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
-  }
-
   private double score(SingularityOfferHolder offerHolder, SingularityTaskRequestHolder taskRequestHolder,
                        Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest,
                        RequestUtilization requestUtilization, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
@@ -552,7 +547,7 @@ public class SingularityMesosOfferScheduler {
 
     double estimatedCpusToAdd = taskRequestHolder.getTotalResources().getCpus();
     if (requestUtilization != null) {
-      estimatedCpusToAdd = getEstimatedCpuUsageForRequest(requestUtilization);
+      estimatedCpusToAdd = slaveAndRackHelper.getEstimatedCpuUsageForRequest(requestUtilization);
     }
     if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)) {
       LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}, already committed cpus: {}), ignoring offer",
