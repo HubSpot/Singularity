@@ -128,8 +128,7 @@ public class SingularityMesosStatusUpdateHandler {
     if (!previousTaskStatusHolder.isPresent() // Task was already removed from the active list
         && !taskState.isDone()
         && newTaskStatusHolder.getTaskStatus().isPresent()
-        && ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())
-        && reason == Reason.REASON_AGENT_REREGISTERED) {
+        && ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
       LOG.warn("Task {} recovered but may have already been replaced", newTaskStatusHolder.getTaskId());
       return true;
     }
@@ -245,7 +244,7 @@ public class SingularityMesosStatusUpdateHandler {
       LOG.info("Found recovery status update with reason {} for task {}", status.getReason(), taskId);
       final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(taskIdObj);
       if (!maybeTaskHistory.isPresent() || !maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {
-        LOG.warn("Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos");
+        LOG.warn("Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos", taskIdObj);
         return StatusUpdateResult.KILL_TASK;
       }
       boolean reactivated = taskManager.reactivateTask(taskIdObj, taskState, newTaskStatusHolder, Optional.ofNullable(status.getMessage()), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>empty());

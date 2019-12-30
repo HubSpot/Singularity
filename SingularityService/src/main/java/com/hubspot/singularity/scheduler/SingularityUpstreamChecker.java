@@ -99,11 +99,12 @@ public class SingularityUpstreamChecker {
   }
 
   private List<UpstreamInfo> getExtraUpstreamsInLoadBalancer(Collection<UpstreamInfo> upstreamsInLoadBalancerForService, Collection<UpstreamInfo> upstreamsInSingularityForService) {
+    List<UpstreamInfo>  extraUpstreams = new ArrayList<>(upstreamsInLoadBalancerForService);
     for (UpstreamInfo upstreamInSingularity : upstreamsInSingularityForService) {
       final Collection<UpstreamInfo> matches = getEqualUpstreams(upstreamInSingularity, upstreamsInLoadBalancerForService);
-      upstreamsInLoadBalancerForService.removeAll(matches);
+      extraUpstreams.removeAll(matches);
     }
-    return new ArrayList<>(upstreamsInLoadBalancerForService);
+    return extraUpstreams;
   }
 
   private Collection<UpstreamInfo> getLoadBalancerUpstreamsForServiceHelper(SingularityCheckingUpstreamsUpdate singularityCheckingUpstreamsUpdate, Optional<String> loadBalancerUpstreamGroup) {

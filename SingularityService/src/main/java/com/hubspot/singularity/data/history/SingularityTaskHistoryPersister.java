@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +63,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
         int transferred = 0;
         for (SingularityTaskId taskId : entry.getValue()) {
           if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
+            LOG.debug("Transferred task {}", taskId);
             transferred++;
           }
 
