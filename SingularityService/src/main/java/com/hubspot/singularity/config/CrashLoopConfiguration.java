@@ -16,7 +16,7 @@ public class CrashLoopConfiguration {
 
   private int multiInstanceFailureBucketSizeMinutes = 3;
   private int multiInstanceFailureBuckets = 10;
-  private double multiInstanceFailureThreshold = 0.6;
+  private double multiInstanceFailureThreshold = 0.4;
 
   private int slowFailureBucketSizeMinutes = 30;
   private int slowFailureBuckets = 15;

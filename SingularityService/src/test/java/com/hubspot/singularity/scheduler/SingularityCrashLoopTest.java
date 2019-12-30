@@ -126,8 +126,8 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
 
     SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
     Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
-    Assertions.assertEquals(1, active.size());
-    Assertions.assertEquals(CrashLoopType.OOM, Iterables.getOnlyElement(active).getType());
+    Assertions.assertTrue(active.size() > 1);
+    Assertions.assertTrue(active.stream().map(CrashLoopInfo::getType).anyMatch((l) -> l == CrashLoopType.OOM));
   }
 
   @Test
