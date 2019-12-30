@@ -158,6 +158,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     createTaskFailure(3, now - TimeUnit.MINUTES.toMillis(7), TaskFailureType.OUT_OF_DISK_SPACE);
     createTaskFailure(4, now - TimeUnit.MINUTES.toMillis(10), TaskFailureType.OOM);
     createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(12), TaskFailureType.OUT_OF_DISK_SPACE);
+    createTaskFailure(5, now - TimeUnit.MINUTES.toMillis(16), TaskFailureType.OOM);
 
     SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId).get();
     Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
