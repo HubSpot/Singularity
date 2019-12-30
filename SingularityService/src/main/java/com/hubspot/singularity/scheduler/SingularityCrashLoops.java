@@ -234,7 +234,8 @@ public class SingularityCrashLoops {
         configuration.getMultiInstanceFailureBuckets(),
         configuration.getMultiInstanceFailureThreshold()
     );
-    if (maybeMultiCrashStart.isPresent()) {
+
+    if (recentFailuresByInstance.size() > 1 && maybeMultiCrashStart.isPresent()) {
       active.add(new CrashLoopInfo(
           deployStatistics.getRequestId(),
           deployStatistics.getDeployId(),

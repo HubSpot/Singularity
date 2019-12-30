@@ -94,6 +94,7 @@ public class SingularityCrashLoopChecker {
             }
             return true;
           })
+          .filter((l) -> !l.getEnd().isPresent())
           .collect(Collectors.toList());
 
       Optional<SingularityDeployStatistics> maybeDeployStatistics = deployStatsCache.computeIfAbsent(
@@ -115,12 +116,14 @@ public class SingularityCrashLoopChecker {
         });
       }
 
-      previouslyActive.forEach((l) -> {
-        if (!l.getEnd().isPresent() && !active.contains(l)) {
-          LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
-          requestManager.saveCrashLoop(new CrashLoopInfo(l.getRequestId(), l.getDeployId(), l.getStart(), Optional.of(System.currentTimeMillis()), l.getType()));
-        }
-      });
+      if (!previouslyActive.isEmpty()) {
+        previouslyActive.forEach((l) -> {
+          if (!active.contains(l)) {
+            LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
+            requestManager.saveCrashLoop(new CrashLoopInfo(l.getRequestId(), l.getDeployId(), l.getStart(), Optional.of(System.currentTimeMillis()), l.getType()));
+          }
+        });
+      }
 
       // Only keep the most recent 20 crash loop infos
       previouslyActive.stream()

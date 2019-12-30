@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CrashLoopInfo {
   private final String requestId;
   private final String deployId;
-  private final long start;
+  private final long start; // Not included in equals/hashCode
   private final Optional<Long> end; // Not included in equals/hashCode
   private final CrashLoopType type;
 
@@ -56,9 +56,6 @@ public class CrashLoopInfo {
 
     CrashLoopInfo that = (CrashLoopInfo) o;
 
-    if (start != that.start) {
-      return false;
-    }
     if (requestId != null ? !requestId.equals(that.requestId) : that.requestId != null) {
       return false;
     }
@@ -72,7 +69,6 @@ public class CrashLoopInfo {
   public int hashCode() {
     int result = requestId != null ? requestId.hashCode() : 0;
     result = 31 * result + (deployId != null ? deployId.hashCode() : 0);
-    result = 31 * result + (int) (start ^ (start >>> 32));
     result = 31 * result + (type != null ? type.hashCode() : 0);
     return result;
   }
