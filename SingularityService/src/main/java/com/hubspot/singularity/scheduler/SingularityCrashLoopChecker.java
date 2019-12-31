@@ -1,12 +1,12 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -59,7 +59,7 @@ public class SingularityCrashLoopChecker {
     final List<SingularityRequestWithState> cooldownRequests = Lists.newArrayList(requestManager.getCooldownRequests(false));
 
     AtomicInteger exitedCooldown = new AtomicInteger(0);
-    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new HashMap<>();
+    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
 
     if (!cooldownRequests.isEmpty()) {
       CompletableFutures.allOf(
