@@ -145,6 +145,15 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   }
 
   @Test
+  public void itCorrectlyScalesScoresForPreferredHosts() {
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.PREFERRED_SLAVE));
+
+    assertValueIs(0.20, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(0.30, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.PREFERRED_SLAVE));
+  }
+
+  @Test
   public void itAccountsForExpectedTaskUsage() {
     initRequest();
     double cpuReserved = 2;
@@ -216,47 +225,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
         .empty()), SingularityUser.DEFAULT_USER);
 
     Assertions.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
-
-    Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
-    slaveAndRackManager.checkOffer(host2Offer);
-    Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
-    slaveAndRackManager.checkOffer(host3Offer);
-
-    singularityScheduler.drainPendingQueue();
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer), System.currentTimeMillis());
-    Assertions.assertEquals(2, offerHolders.size());
-
-    // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
-    for (SingularityOfferHolder offerHolder : offerHolders) {
-      Assertions.assertEquals(1, offerHolder.getAcceptedTasks().size());
-    }
-  }
-
-  @Test
-  public void itAccountsForPreferredHosts() {
-    initRequest();
-    double cpuReserved = 2;
-    double memMbReserved = 1000;
-    initFirstDeployWithResources(cpuReserved, memMbReserved);
-    saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(1)));
-    resourceOffers(3);
-
-    SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String t1 = taskId.getId();
-
-    // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10,(double) (taskId.getStartedAt() + 5000) / 1000, 1000);
-    mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
-    usagePoller.runActionOnPoll();
-    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
-
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host1"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
-
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.DEFAULT_USER);
-
-    Assertions.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
     slaveAndRackManager.checkOffer(host2Offer);
