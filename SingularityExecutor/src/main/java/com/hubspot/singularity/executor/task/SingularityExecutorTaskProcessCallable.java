@@ -147,10 +147,10 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
       retryer.call(() -> configPath.exists());
       healthchecks = objectMapper.readValue(configPath, HealthchecksV2.class);
     } catch (IOException e) {
-      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to read healthcheck config file.", e.getCause()), task.getLog());
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to read healthcheck config file. %s", e.getCause()), task.getLog());
       return false;
     } catch (ExecutionException | RetryException e) {
-      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to find healthcheck config file.", e.getCause()), task.getLog());
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to find healthcheck config file. %s", e.getCause()), task.getLog());
       return false;
     }
 
@@ -166,7 +166,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
     for (HealthcheckResult result : results) {
       HealthCheckStatus status = result.getStatus();
       if (status != HealthCheckStatus.PASSED) {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Healthcheck failed: {}", result.getMessage()), task.getLog());
+        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Healthcheck failed: %s", result.getMessage()), task.getLog());
         return false;
       }
     }
