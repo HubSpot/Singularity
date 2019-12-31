@@ -139,9 +139,18 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
 
     HealthchecksV2 healthchecks;
     try {
+      Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
+          .retryIfResult(x -> !x)
+          .withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
+          .withStopStrategy(StopStrategies.stopAfterAttempt(20))
+          .build();
+      retryer.call(() -> configPath.exists());
       healthchecks = objectMapper.readValue(configPath, HealthchecksV2.class);
     } catch (IOException e) {
-      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks: {}", e.getCause()), task.getLog());
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to read healthcheck config file.", e.getCause()), task.getLog());
+      return false;
+    } catch (ExecutionException | RetryException e) {
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Failed to run healthchecks. Failed to find healthcheck config file.", e.getCause()), task.getLog());
       return false;
     }
 
