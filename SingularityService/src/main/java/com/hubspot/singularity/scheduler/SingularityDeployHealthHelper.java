@@ -246,6 +246,12 @@ public class SingularityDeployHealthHelper {
         return DeployHealth.HEALTHY;
       }
     }
+    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getExpectHealthcheckConfigFile()) {
+      if (taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_RUNNING).isPresent()) {
+        LOG.debug("Task {} has task defined healthcheck and is in running state, marking healthy.", taskId);
+        return DeployHealth.HEALTHY;
+      }
+    }
     if (!healthcheckResult.isPresent()) {
       LOG.debug("No healthcheck present for {}", taskId);
       return DeployHealth.WAITING;

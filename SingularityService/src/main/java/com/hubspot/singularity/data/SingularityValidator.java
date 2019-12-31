@@ -320,7 +320,12 @@ public class SingularityValidator {
       HealthcheckOptions healthcheckOptions = deploy.getHealthcheck().get();
       boolean hasUri = healthcheckOptions.getUri().isPresent() && !Strings.isNullOrEmpty(healthcheckOptions.getUri().get());
       boolean hasHealthCheckResultFilePath = healthcheckOptions.getHealthcheckResultFilePath().isPresent();
-      checkBadRequest(hasUri || hasHealthCheckResultFilePath, "Must specify a uri or a healthcheck result file pathh when specifying health check parameters");
+      boolean hasTaskDefinedHealthcheck = healthcheckOptions.getExpectHealthcheckConfigFile();
+      checkBadRequest(
+          hasUri
+          || hasHealthCheckResultFilePath
+          || hasTaskDefinedHealthcheck,
+          "Must specify a uri, healthcheck result file path, or expectation of a task defined healthcheck config file when specifying health check parameters");
 
       if (hasUri && (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0)) {
         checkBadRequest(healthcheckOptions.getPortNumber().isPresent(),

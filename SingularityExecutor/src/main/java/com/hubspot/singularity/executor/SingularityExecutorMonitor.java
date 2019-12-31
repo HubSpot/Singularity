@@ -22,6 +22,7 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
@@ -65,6 +66,7 @@ public class SingularityExecutorMonitor {
   private final ExecutorUtils executorUtils;
   private final SingularityExecutorProcessKiller processKiller;
   private final SingularityExecutorThreadChecker threadChecker;
+  private final ObjectMapper objectMapper;
 
   private final Map<String, SingularityExecutorTask> tasks;
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
@@ -73,12 +75,19 @@ public class SingularityExecutorMonitor {
   private final Map<String, SingularityExecutorCgroupCfsChecker> cgroupCheckers;
 
   @Inject
-  public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
-      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorMonitor(
+      @Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown,
+      SingularityExecutorLogging logging,
+      ExecutorUtils executorUtils,
+      SingularityExecutorProcessKiller processKiller,
+      SingularityExecutorThreadChecker threadChecker,
+      SingularityExecutorConfiguration configuration,
+      ObjectMapper objectMapper) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
     this.processKiller = processKiller;
+    this.objectMapper = objectMapper;
     this.exitChecker = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorExitChecker-%d").build());
     this.threadChecker = threadChecker;
     this.threadChecker.start(this);
@@ -529,7 +538,7 @@ public class SingularityExecutorMonitor {
   }
 
   private SingularityExecutorTaskProcessCallable buildProcessCallable(final SingularityExecutorTask task, ProcessBuilder processBuilder) {
-    return new SingularityExecutorTaskProcessCallable(configuration, task, processBuilder, executorUtils);
+    return new SingularityExecutorTaskProcessCallable(configuration, task, processBuilder, executorUtils, objectMapper);
   }
 
   private SingularityExecutorTaskProcessCallable submitProcessMonitor(final SingularityExecutorTask task, ProcessBuilder processBuilder) {

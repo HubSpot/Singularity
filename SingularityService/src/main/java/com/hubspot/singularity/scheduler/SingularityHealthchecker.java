@@ -260,7 +260,8 @@ public class SingularityHealthchecker {
     }
     if (!task.getTaskRequest().getRequest().isLongRunning()
         || !task.getTaskRequest().getDeploy().getHealthcheck().isPresent()
-        || task.getTaskRequest().getDeploy().getHealthcheck().get().getHealthcheckResultFilePath().isPresent()) {
+        || task.getTaskRequest().getDeploy().getHealthcheck().get().getHealthcheckResultFilePath().isPresent()
+        || task.getTaskRequest().getDeploy().getHealthcheck().get().getExpectHealthcheckConfigFile()) {
       return false;
     }
 

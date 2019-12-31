@@ -27,6 +27,7 @@ public class HealthcheckOptions {
   private final Optional<Integer> maxRetries;
   private final Optional<List<Integer>> failureStatusCodes;
   private final Optional<String> healthcheckResultFilePath;
+  private final Boolean expectHealthcheckConfigFile;
 
   @JsonCreator
   public HealthcheckOptions(@JsonProperty("uri") Optional<String> uri,
@@ -41,7 +42,8 @@ public class HealthcheckOptions {
                             @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds,
                             @JsonProperty("maxRetries") Optional<Integer> maxRetries,
                             @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
-                            @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath) {
+                            @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath,
+                            @JsonProperty("expectHealthcheckConfigFile") Optional<Boolean> expectHealthcheckConfigFile) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -55,6 +57,7 @@ public class HealthcheckOptions {
     this.maxRetries = maxRetries;
     this.failureStatusCodes = failureStatusCodes;
     this.healthcheckResultFilePath = healthcheckResultFilePath;
+    this.expectHealthcheckConfigFile = expectHealthcheckConfigFile.orElse(false);
   }
 
   public HealthcheckOptions(String uri,
@@ -69,7 +72,8 @@ public class HealthcheckOptions {
                             Optional<Integer> responseTimeoutSeconds,
                             Optional<Integer> maxRetries,
                             Optional<List<Integer>> failureStatusCodes,
-                            Optional<String> healthcheckResultFilePath) {
+                            Optional<String> healthcheckResultFilePath,
+                            Optional<Boolean> expectHealthcheckConfigFile) {
     this.uri = Optional.of(uri);
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -83,6 +87,7 @@ public class HealthcheckOptions {
     this.maxRetries = maxRetries;
     this.failureStatusCodes = failureStatusCodes;
     this.healthcheckResultFilePath = healthcheckResultFilePath;
+    this.expectHealthcheckConfigFile = expectHealthcheckConfigFile.orElse(false);
   }
 
   @JsonIgnore
@@ -99,7 +104,8 @@ public class HealthcheckOptions {
       .setResponseTimeoutSeconds(responseTimeoutSeconds)
       .setMaxRetries(maxRetries)
       .setFailureStatusCodes(failureStatusCodes)
-      .setHealthcheckResultFilePath(healthcheckResultFilePath);
+      .setHealthcheckResultFilePath(healthcheckResultFilePath)
+      .setExpectHealthcheckConfigFile(Optional.of(expectHealthcheckConfigFile));
   }
 
   @Schema(required = true, description = "Healthcheck uri to hit")
@@ -167,6 +173,11 @@ public class HealthcheckOptions {
     return healthcheckResultFilePath;
   }
 
+  @Schema(description = "If true, requires task to write a healthcheck configuration file using `HealthcheckOptionsV2`. The configuration in that file will take precedence.")
+  public Boolean getExpectHealthcheckConfigFile() {
+    return expectHealthcheckConfigFile;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -188,12 +199,13 @@ public class HealthcheckOptions {
         Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
         Objects.equals(maxRetries, that.maxRetries) &&
         Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
-        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
+        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath) &&
+        Objects.equals(expectHealthcheckConfigFile, that.expectHealthcheckConfigFile);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
+    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath, expectHealthcheckConfigFile);
   }
 
   @Override
@@ -212,6 +224,7 @@ public class HealthcheckOptions {
         ", maxRetries=" + maxRetries +
         ", failureStatusCodes=" + failureStatusCodes +
         ", healthcheckResultFilePath=" + healthcheckResultFilePath +
+        ", expectHealthcheckConfigFile=" + expectHealthcheckConfigFile +
         '}';
   }
 }
