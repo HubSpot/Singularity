@@ -573,11 +573,7 @@ public class SingularityMesosOfferScheduler {
     final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache), requestUtilization);
 
     if (slaveMatchState.isMatchAllowed()) {
-      double score = score(offerHolder.getHostname(), maybeSlaveUsage);
-      if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
-        score *= configuration.getPreferredSlaveScaleFactor();
-      }
-      return score;
+      return score(offerHolder.getHostname(), maybeSlaveUsage, slaveMatchState);
     } else if (LOG.isTraceEnabled()) {
       LOG.trace("Ignoring offer on host {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getHostname(),
           offerHolder.getRoles(), offerHolder.getHostname(), pendingTaskId, matchesResources, slaveMatchState);
@@ -603,7 +599,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
+  double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, SlaveMatchState slaveMatchState) {
     if (!maybeSlaveUsage.isPresent() || maybeSlaveUsage.get().isMissingUsageData()) {
       if (mesosConfiguration.isOmitForMissingUsageData()) {
         LOG.info("Skipping slave {} with missing usage data ({})", hostname, maybeSlaveUsage);
@@ -616,11 +612,17 @@ public class SingularityMesosOfferScheduler {
 
     SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores = maybeSlaveUsage.get();
 
-    return calculateScore(
+    double calculatedScore = calculateScore(
         1 - slaveUsageWithScores.getMemAllocatedScore(), slaveUsageWithScores.getMemInUseScore(),
         1 - slaveUsageWithScores.getCpusAllocatedScore(), slaveUsageWithScores.getCpusInUseScore(),
         1 - slaveUsageWithScores.getDiskAllocatedScore(), slaveUsageWithScores.getDiskInUseScore(),
         mesosConfiguration.getInUseResourceWeight(), mesosConfiguration.getAllocatedResourceWeight());
+
+    if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
+      calculatedScore *= configuration.getPreferredSlaveScaleFactor();
+    }
+
+    return calculatedScore;
   }
 
   private double calculateScore(double memAllocatedScore, double memInUseScore, double cpusAllocatedScore, double cpusInUseScore, double diskAllocatedScore, double diskInUseScore, double inUseResourceWeight, double allocatedResourceWeight) {
