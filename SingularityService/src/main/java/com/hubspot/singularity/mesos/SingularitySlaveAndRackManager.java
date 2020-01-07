@@ -88,6 +88,10 @@ public class SingularitySlaveAndRackManager {
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
+    if (!configuration.getValidRackIds().contains(rackId)) {
+      return SlaveMatchState.RACK_INVALID;
+    }
+
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
     if (!maybeSlave.isPresent()) {
       return SlaveMatchState.RESOURCES_DO_NOT_MATCH;
