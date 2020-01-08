@@ -11,8 +11,7 @@ public enum SlaveMatchState {
   RACK_AFFINITY_NOT_MATCHING(false),
   SLAVE_ATTRIBUTES_DO_NOT_MATCH(false),
   SLAVE_FROZEN(false),
-  RACK_FROZEN(false),
-  RACK_INVALID(false);
+  RACK_FROZEN(false);
 
   private final boolean isMatchAllowed;
 

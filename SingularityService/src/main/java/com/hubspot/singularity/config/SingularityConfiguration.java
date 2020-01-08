@@ -412,7 +412,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
-  private Set<String> validRackIds = new HashSet<>(Arrays.asList("us-east-1a", "us-east-1b", "us-east-1e"));
+  private Set<String> expectedRacks = new HashSet<>(Arrays.asList("us-east-1a", "us-east-1b", "us-east-1e"));
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1753,8 +1753,8 @@ public class SingularityConfiguration extends Configuration {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 
-  public Set<String> getValidRackIds() {
-    return validRackIds;
+  public Set<String> getExpectedRacks() {
+    return expectedRacks;
   }
 
 }
