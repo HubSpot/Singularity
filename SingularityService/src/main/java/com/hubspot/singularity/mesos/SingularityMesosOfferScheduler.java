@@ -619,6 +619,7 @@ public class SingularityMesosOfferScheduler {
         mesosConfiguration.getInUseResourceWeight(), mesosConfiguration.getAllocatedResourceWeight());
 
     if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
+      LOG.info("Slave {} is preferred, will scale score by {}", hostname, configuration.getPreferredSlaveScaleFactor());
       calculatedScore *= configuration.getPreferredSlaveScaleFactor();
     }
 
