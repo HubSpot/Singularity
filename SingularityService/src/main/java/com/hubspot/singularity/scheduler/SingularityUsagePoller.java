@@ -1,11 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -196,11 +191,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       } else {
         shufflingForCpu = false;
         possibleTasksToShuffle = overLoadedHosts.get(overloadedSlave);
-        possibleTasksToShuffle.sort((u1, u2) ->
-            Double.compare(
-                u2.getUsage().getMemoryTotalBytes() / u2.getRequestedResources().getMemoryMb(),
-                u1.getUsage().getMemoryTotalBytes() / u1.getRequestedResources().getMemoryMb()
-            ));
+        possibleTasksToShuffle.sort(Comparator.comparingDouble(
+            task -> task.getUsage().getMemoryTotalBytes() / task.getRequestedResources().getMemoryMb())
+        );
       }
 
       for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
