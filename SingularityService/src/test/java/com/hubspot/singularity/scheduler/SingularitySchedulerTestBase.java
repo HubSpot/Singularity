@@ -146,7 +146,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   @Inject
-  protected SingularityCooldownChecker cooldownChecker;
+  protected SingularityCrashLoopChecker cooldownChecker;
   @Inject
   protected AsyncHttpClient httpClient;
   @Inject

@@ -80,7 +80,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private final JadeTemplate requestModifiedTemplate;
   private final JadeTemplate rateLimitedTemplate;
   private final JadeTemplate disastersTemplate;
-  private final JadeTemplate replacementTasksFailingTemplate;
 
   private final MetadataManager metadataManager;
 
@@ -108,8 +107,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
       @Named(SingularityMainModule.RATE_LIMITED_TEMPLATE) JadeTemplate rateLimitedTemplate,
-      @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate,
-      @Named(SingularityMainModule.REPLACEMENT_TASKS_FAILING_TEMPLATE) JadeTemplate replacementTasksFailingTemplate) {
+      @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate) {
 
     this.smtpSender = smtpSender;
     this.smtpConfiguration = configuration.getSmtpConfigurationOptional().get();
@@ -128,7 +126,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.rateLimitedTemplate = rateLimitedTemplate;
     this.disastersTemplate = disastersTemplate;
-    this.replacementTasksFailingTemplate = replacementTasksFailingTemplate;
     this.disasterManager = disasterManager;
     this.notificationsManager = notificationsManager;
 
@@ -512,42 +509,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
   }
 
   @Override
-  public void sendReplacementTasksFailingMail(final SingularityRequest request) {
-    mailPreparerExecutorService.submit(new Runnable() {
-
-      @Override
-      public void run() {
-        try {
-          prepareReplacementTaskFailedMail(request);
-        } catch (Throwable t) {
-          LOG.error("While preparing replacement task failed mail for {}", request);
-          exceptionNotifier.notify(String.format("Error preparing replacement task failed mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
-        }
-      }
-    });
-  }
-
-  private void prepareReplacementTaskFailedMail(SingularityRequest request) {
-    final List<SingularityEmailDestination> emailDestination = getDestination(request, SingularityEmailType.REPLACEMENT_TASKS_FAILING);
-
-    if (emailDestination.isEmpty()) {
-      LOG.debug("Not configured to send replacement tasks failing email for {}", request);
-      return;
-    }
-
-    final Map<String, Object> templateProperties = Maps.newHashMap();
-    populateRequestEmailProperties(templateProperties, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING);
-
-    final String subject = String.format("Replacement tasks for request %s are unhealthy — Singularity", request.getId());
-
-    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
-
-    final String body = Jade4J.render(replacementTasksFailingTemplate, templateProperties);
-
-    queueMail(emailDestination, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING, Optional.<String>empty(), subject, body);
-  }
-
-  @Override
   public void sendRequestInCooldownMail(final SingularityRequest request) {
     mailPreparerExecutorService.submit(new Runnable() {
 
@@ -576,9 +537,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
 
-    templateProperties.put("numFailures", configuration.getSlowFailureCooldownCount());
     templateProperties.put("cooldownDelayFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())));
-    templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getSlowCooldownExpiresMinutesWithoutFailure())));
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
 

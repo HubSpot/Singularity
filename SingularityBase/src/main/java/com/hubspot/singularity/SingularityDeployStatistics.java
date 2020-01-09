@@ -1,10 +1,12 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -19,11 +21,11 @@ public class SingularityDeployStatistics {
   private final int numSuccess;
   private final int numFailures;
   private final int numSequentialRetries;
-  private final ListMultimap<Integer, Long> instanceSequentialFailureTimestamps;
   private final Optional<Long> lastFinishAt;
   private final Optional<ExtendedTaskState> lastTaskState;
   private final Optional<Long> averageRuntimeMillis;
   private final Optional<Long> averageSchedulingDelayMillis;
+  private final List<TaskFailureEvent> taskFailureEvents;
 
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId,
@@ -36,7 +38,8 @@ public class SingularityDeployStatistics {
                                      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps,
                                      @JsonProperty("numTasks") int numTasks,
                                      @JsonProperty("averageRuntimeMillis") Optional<Long> averageRuntimeMillis,
-                                     @JsonProperty("averageSchedulingDelayMillis") Optional<Long> averageSchedulingDelayMillis) {
+                                     @JsonProperty("averageSchedulingDelayMillis") Optional<Long> averageSchedulingDelayMillis,
+                                     @JsonProperty("taskFailureEvents") List<TaskFailureEvent> taskFailureEvents) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -47,20 +50,20 @@ public class SingularityDeployStatistics {
     this.numTasks = numTasks;
     this.averageRuntimeMillis = averageRuntimeMillis;
     this.averageSchedulingDelayMillis = averageSchedulingDelayMillis;
-    this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps == null ?  ImmutableListMultimap.<Integer, Long> of() : ImmutableListMultimap.copyOf(instanceSequentialFailureTimestamps);
+    this.taskFailureEvents = taskFailureEvents == null ? Collections.emptyList() : taskFailureEvents;
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {
     return new SingularityDeployStatisticsBuilder(requestId, deployId)
-    .setLastFinishAt(lastFinishAt)
-    .setLastTaskState(lastTaskState)
-    .setNumSequentialRetries(numSequentialRetries)
-    .setNumFailures(numFailures)
-    .setNumSuccess(numSuccess)
-    .setNumTasks(numTasks)
-    .setAverageRuntimeMillis(averageRuntimeMillis)
-    .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
-    .setInstanceSequentialFailureTimestamps(ArrayListMultimap.create(instanceSequentialFailureTimestamps));
+        .setLastFinishAt(lastFinishAt)
+        .setLastTaskState(lastTaskState)
+        .setNumSequentialRetries(numSequentialRetries)
+        .setNumFailures(numFailures)
+        .setNumSuccess(numSuccess)
+        .setNumTasks(numTasks)
+        .setAverageRuntimeMillis(averageRuntimeMillis)
+        .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
+        .setTaskFailureEvents(new ArrayList<>(taskFailureEvents));
   }
 
   @Schema(description = "The number of tasks associated with this deploy")
@@ -114,8 +117,14 @@ public class SingularityDeployStatistics {
   }
 
   @Schema(description = "Timestamps of failed tasks by instance number")
+  @Deprecated
   public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
-    return instanceSequentialFailureTimestamps;
+    return ImmutableListMultimap.of();
+  }
+
+  @Schema(description = "Timestamps and descriptions of failed tasks by instance number")
+  public List<TaskFailureEvent> getTaskFailureEvents() {
+    return taskFailureEvents;
   }
 
   @Override
@@ -127,7 +136,6 @@ public class SingularityDeployStatistics {
         ", numSuccess=" + numSuccess +
         ", numFailures=" + numFailures +
         ", numSequentialRetries=" + numSequentialRetries +
-        ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps +
         ", lastFinishAt=" + lastFinishAt +
         ", lastTaskState=" + lastTaskState +
         ", averageRuntimeMillis=" + averageRuntimeMillis +

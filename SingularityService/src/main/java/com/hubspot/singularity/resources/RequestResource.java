@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +38,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -1144,5 +1146,28 @@ public class RequestResource extends AbstractRequestResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
+  }
+
+  @GET
+  @Path("/crashloops")
+  @Operation(summary = "Retrieve a map of all open crash loop details for all requests")
+  public Map<String, List<CrashLoopInfo>> getAllCrashLoops(
+      @Parameter(hidden = true) @Auth SingularityUser user) {
+    return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getAllCrashLoops(), CrashLoopInfo::getRequestId, SingularityAuthorizationScope.READ)
+        .stream()
+        .collect(
+            Collectors.groupingBy(CrashLoopInfo::getRequestId)
+        );
+  }
+
+  @GET
+  @Path("/request/{requestId}/crashloops")
+  @Operation(summary = "Retrieve a map of all open crash loop details for all requests")
+  public List<CrashLoopInfo> getCrashLoopsForRequest(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to fetch crash loops for") @PathParam("requestId") String requestId) {
+    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
+    return requestManager.getCrashLoopsForRequest(requestId);
   }
 }

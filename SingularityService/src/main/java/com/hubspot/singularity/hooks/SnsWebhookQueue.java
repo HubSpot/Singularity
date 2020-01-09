@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
@@ -29,5 +30,10 @@ public class SnsWebhookQueue implements SingularityEventSender {
   @Override
   public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     snsWebhookManager.deployHistoryEvent(deployUpdate);
+  }
+
+  @Override
+  public void crashLoopEvent(CrashLoopInfo crashLoopUpdate) {
+    snsWebhookManager.crashLoopEvent(crashLoopUpdate);
   }
 }
