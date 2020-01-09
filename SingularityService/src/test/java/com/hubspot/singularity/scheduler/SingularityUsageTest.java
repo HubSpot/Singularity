@@ -529,9 +529,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       usagePoller.runActionOnPoll();
 
-      // First task is cleaned up
-      Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType());
-      // Second task is not cleaned up because it is from the same request as task 1
+      // First task is not cleaned up because it uses the most memory
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId1.getId()).isPresent());
+
+      // Third task is cleaned up because it uses the least memory
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(taskId3.getId()).get().getCleanupType());
+
+      // Second task is not cleaned up because it is from the same request as task 3
       Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
