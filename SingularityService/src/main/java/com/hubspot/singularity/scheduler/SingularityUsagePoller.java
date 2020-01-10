@@ -117,6 +117,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       this.overusage = overusage;
       this.resourceType = resourceType;
     }
+
+    public static int prioritize(OverusedResource r1, OverusedResource r2) {
+      if (r1.resourceType == r2.resourceType) {
+        return Double.compare(r2.overusage, r1.overusage);
+      } else if (r1.resourceType == Type.MEMORY) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
   }
 
   private double getTargetMemoryUtilizationForHost(SingularitySlaveUsage usage) {
@@ -139,30 +149,31 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private void shuffleTasksOnOverloadedHosts(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts) {
-    List<SingularityTaskCleanup> shuffleCleanups = taskManager.getCleanupTasks()
+  private List<SingularityTaskCleanup> getInProgressShuffles() {
+    return taskManager.getCleanupTasks()
         .stream()
         .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE || taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_MEMORY_USAGE)
         .collect(Collectors.toList());
-    long currentShuffleCleanupsTotal = shuffleCleanups.size();
-    Set<String> requestsWithShuffledTasks = shuffleCleanups
-        .stream()
+  }
+
+  private Set<String> getAssociatedRequests(List<SingularityTaskCleanup> cleanups) {
+    return cleanups.stream()
         .map((taskCleanup) -> taskCleanup.getTaskId().getRequestId())
         .collect(Collectors.toSet());
+  }
+
+  private void shuffleTasksOnOverloadedHosts(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts) {
+    List<SingularityTaskCleanup> shuffleCleanups = getInProgressShuffles();
+    long currentShuffleCleanupsTotal = shuffleCleanups.size();
+
+    Set<String> requestsWithShuffledTasks = getAssociatedRequests(shuffleCleanups);
 
     List<SingularitySlaveUsage> overloadedSlavesByOverusage = overLoadedHosts.keySet().stream()
         .sorted((usage1, usage2) -> {
           OverusedResource mostOverusedResource1 = getMostOverusedResource(usage1, getSystemLoadForShuffle(usage1), usage1.getMemoryBytesUsed());
           OverusedResource mostOverusedResource2 = getMostOverusedResource(usage2, getSystemLoadForShuffle(usage2), usage2.getMemoryBytesUsed());
-          if (mostOverusedResource1.resourceType != mostOverusedResource2.resourceType) {
-            if (mostOverusedResource1.resourceType == Type.MEMORY) {
-              return -1;
-            } else {
-              return 1;
-            }
-          }
 
-          return Double.compare(mostOverusedResource2.overusage, mostOverusedResource1.overusage);
+          return OverusedResource.prioritize(mostOverusedResource1, mostOverusedResource2);
         })
         .collect(Collectors.toList());
 
@@ -174,12 +185,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       int shuffledTasksOnSlave = 0;
 
       double currentCpuLoad = getSystemLoadForShuffle(overloadedSlave);
-      double currentMemUsageBytes = overloadedSlave.getSystemMemTotalBytes() - overloadedSlave.getSystemMemFreeBytes();
+      double currentMemUsageBytes = overloadedSlave.getMemoryBytesUsed();
 
       OverusedResource mostOverusedResource = getMostOverusedResource(overloadedSlave, currentCpuLoad, currentMemUsageBytes);
 
       List<TaskIdWithUsage> possibleTasksToShuffle;
       boolean shufflingForCpu;
+
       if (mostOverusedResource.resourceType == Type.CPU) {
         shufflingForCpu = true;
         possibleTasksToShuffle = overLoadedHosts.get(overloadedSlave);
@@ -190,6 +202,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             ));
       } else {
         shufflingForCpu = false;
+
+        // prefer to shuffle low memory tasks, assuming they're doing less work
         possibleTasksToShuffle = overLoadedHosts.get(overloadedSlave);
         possibleTasksToShuffle.sort(Comparator.comparingDouble(
             task -> task.getUsage().getMemoryTotalBytes() / task.getRequestedResources().getMemoryMb())
