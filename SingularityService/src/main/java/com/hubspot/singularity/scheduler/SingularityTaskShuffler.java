@@ -181,13 +181,15 @@ public class SingularityTaskShuffler {
   }
 
   private void bounce(TaskIdWithUsage task, TaskCleanupType cleanupType, Optional<String> message) {
+    String actionId = UUID.randomUUID().toString();
+
     taskManager.createTaskCleanup(new SingularityTaskCleanup(
         Optional.empty(),
         cleanupType,
         System.currentTimeMillis(),
         task.getTaskId(),
         message,
-        Optional.of(UUID.randomUUID().toString()),
+        Optional.of(actionId),
         Optional.empty(), Optional.empty()
     ));
 
@@ -201,7 +203,7 @@ public class SingularityTaskShuffler {
         Optional.empty(),
         Optional.empty(),
         message,
-        Optional.of(UUID.randomUUID().toString())
+        Optional.of(actionId)
     ));
   }
 
