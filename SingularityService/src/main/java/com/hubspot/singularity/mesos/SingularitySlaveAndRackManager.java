@@ -135,7 +135,8 @@ public class SingularitySlaveAndRackManager {
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
-    Multiset<String> countPerRack = HashMultiset.create(slaveManager.getNumActive());
+    int activeRacksWithCapacityCount = configuration.getExpectedRacksCount().isPresent() ? configuration.getExpectedRacksCount().get() : rackManager.getNumActive();
+    Multiset<String> countPerRack = HashMultiset.create(activeRacksWithCapacityCount);
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numFromSameBounceOnSlave = 0;

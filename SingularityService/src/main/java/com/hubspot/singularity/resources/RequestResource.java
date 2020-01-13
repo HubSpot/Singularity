@@ -199,8 +199,8 @@ public class RequestResource extends AbstractRequestResource {
           }
         });
 
-
-        if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
+        int activeRacksWithCapacityCount = configuration.getExpectedRacksCount().isPresent() ? configuration.getExpectedRacksCount().get() : rackManager.getNumActive();
+        if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
             rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
           }
