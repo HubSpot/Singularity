@@ -255,7 +255,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   private boolean isRackExpected(String rackId) {
-    return configuration.getExpectedRacks().contains(rackId);
+    return rackId == "DEFAULT" || configuration.getExpectedRacks().contains(rackId);
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {

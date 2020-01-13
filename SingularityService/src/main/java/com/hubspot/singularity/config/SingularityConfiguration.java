@@ -1757,4 +1757,8 @@ public class SingularityConfiguration extends Configuration {
     return expectedRacks;
   }
 
+  public void setExpectedRacks(Set<String> expectedRacks) {
+    this.expectedRacks = expectedRacks;
+  }
+
 }
