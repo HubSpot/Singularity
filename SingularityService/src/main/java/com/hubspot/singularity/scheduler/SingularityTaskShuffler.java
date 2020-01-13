@@ -1,20 +1,25 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.hubspot.singularity.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityTaskShuffler.OverusedResource.Type;
-
 import io.dropwizard.util.SizeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class SingularityTaskShuffler {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskShuffler.class);
@@ -33,7 +38,9 @@ public class SingularityTaskShuffler {
   }
 
   static class OverusedResource {
-    enum Type {MEMORY, CPU};
+    enum Type {MEMORY, CPU}
+
+    ;
 
     double overusage;
     Type resourceType;
@@ -93,7 +100,7 @@ public class SingularityTaskShuffler {
       long shufflingTasksOnSlave = 0;
       double cpuUsage = getSystemLoadForShuffle(slave.usage);
       double memUsageBytes = slave.usage.getMemoryBytesUsed();
-      
+
       TaskCleanupType shuffleCleanupType = slave.resource.toTaskCleanupType();
       List<TaskIdWithUsage> shuffleCandidates = getPrioritizedShuffleCandidates(slave);
 

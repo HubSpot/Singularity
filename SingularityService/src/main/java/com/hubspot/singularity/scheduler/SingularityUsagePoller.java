@@ -2,7 +2,12 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
-import com.hubspot.singularity.*;
+import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityClusterUtilization;
+import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
+import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
