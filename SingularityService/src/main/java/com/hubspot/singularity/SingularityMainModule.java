@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -104,7 +102,6 @@ public class SingularityMainModule implements Module {
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
   public static final String DISASTERS_TEMPLATE = "disasters.template";
-  public static final String REPLACEMENT_TASKS_FAILING_TEMPLATE = "replacement.tasks.failing.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
@@ -365,13 +362,6 @@ public class SingularityMainModule implements Module {
   @Named(DISASTERS_TEMPLATE)
   public JadeTemplate getDisastersTemplate() throws IOException {
     return getJadeTemplate("disaster");
-  }
-
-  @Provides
-  @Singleton
-  @Named(REPLACEMENT_TASKS_FAILING_TEMPLATE)
-  public JadeTemplate getReplacementTasksFailingTemplate() throws IOException {
-    return getJadeTemplate("replacement_tasks_failing");
   }
 
   @Provides

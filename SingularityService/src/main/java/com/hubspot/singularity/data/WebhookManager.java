@@ -15,6 +15,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -39,11 +40,13 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String SNS_TASK_RETRY_ROOT = SNS_RETRY_ROOT + "/task";
   private static final String SNS_REQUEST_RETRY = SNS_RETRY_ROOT + "/request";
   private static final String SNS_DEPLOY_RETRY = SNS_RETRY_ROOT + "/deploy";
+  private static final String SNS_CRASH_LOOP_RETRY = SNS_RETRY_ROOT + "/crashloop";
 
   private final Transcoder<SingularityWebhook> webhookTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
+  private final Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder;
 
   private final Cache<WebhookType, List<SingularityWebhook>> activeWebhooksCache;
   private final Cache<String, Integer> childNodeCountCache;
@@ -51,13 +54,15 @@ public class WebhookManager extends CuratorAsyncManager {
 
   @Inject
   public WebhookManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularityWebhook> webhookTranscoder,
-      Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployUpdate> deployWebhookTranscoder) {
+                        Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployUpdate> deployWebhookTranscoder,
+                        Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder) {
     super(curator, configuration, metricRegistry);
 
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.deployWebhookTranscoder = deployWebhookTranscoder;
+    this.crashLoopUpdateTranscoder = crashLoopUpdateTranscoder;
 
     this.activeWebhooksCache = CacheBuilder.newBuilder()
         .expireAfterWrite(60, TimeUnit.SECONDS)
@@ -98,6 +103,10 @@ public class WebhookManager extends CuratorAsyncManager {
     return SingularityDeployKey.fromDeployMarker(deployUpdate.getDeployMarker()) + "-" + deployUpdate.getEventType().name();
   }
 
+  private String getCrashLoopUpdateId(CrashLoopInfo crashLoopUpdate) {
+    return String.format("%s-%s-%s-%s", crashLoopUpdate.getRequestId(), crashLoopUpdate.getDeployId(), crashLoopUpdate.getType(), crashLoopUpdate.getStart());
+  }
+
   private String getWebhookPath(String webhookId) {
     return ZKPaths.makePath(ACTIVE_PATH, webhookId);
   }
@@ -116,6 +125,10 @@ public class WebhookManager extends CuratorAsyncManager {
 
   private String getEnqueuePathForDeployUpdate(String webhookId, SingularityDeployUpdate deployUpdate) {
     return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.DEPLOY), getDeployUpdateId(deployUpdate));
+  }
+
+  private String getEnqueuePathForCrashLoopUpdate(String webhookId, CrashLoopInfo crashLoopUpdate) {
+    return ZKPaths.makePath(getEnqueuePathForWebhook(webhookId, WebhookType.CRASHLOOP), getCrashLoopUpdateId(crashLoopUpdate));
   }
 
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
@@ -142,6 +155,12 @@ public class WebhookManager extends CuratorAsyncManager {
     return delete(path);
   }
 
+  public SingularityDeleteResult deleteCrashLoopUpdate(SingularityWebhook webhook, CrashLoopInfo crashLoopUpdate) {
+    final String path = getEnqueuePathForCrashLoopUpdate(webhook.getId(), crashLoopUpdate);
+
+    return delete(path);
+  }
+
   public SingularityDeleteResult deleteRequestUpdate(SingularityWebhook webhook, SingularityRequestHistory requestUpdate) {
     final String path = getEnqueuePathForRequestUpdate(webhook.getId(), requestUpdate);
 
@@ -150,6 +169,10 @@ public class WebhookManager extends CuratorAsyncManager {
 
   public List<SingularityDeployUpdate> getQueuedDeployUpdatesForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.DEPLOY), deployWebhookTranscoder);
+  }
+
+  public List<CrashLoopInfo> getQueuedCrashLoopUpdatesForHook(String webhookId) {
+    return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.CRASHLOOP), crashLoopUpdateTranscoder);
   }
 
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesForHook(String webhookId) {
@@ -204,6 +227,18 @@ public class WebhookManager extends CuratorAsyncManager {
     }
   }
 
+  void saveCrashLoopEvent(CrashLoopInfo crashLoopUpdate) {
+    for (SingularityWebhook webhook : getActiveWebhooksByType(WebhookType.CRASHLOOP)) {
+      String parentPath = getEnqueuePathForWebhook(webhook.getId(), WebhookType.CRASHLOOP);
+      if (!isChildNodeCountSafe(parentPath)) {
+        LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+        return;
+      }
+      final String enqueuePath = getEnqueuePathForCrashLoopUpdate(webhook.getId(), crashLoopUpdate);
+      save(enqueuePath, crashLoopUpdate, crashLoopUpdateTranscoder);
+    }
+  }
+
   // Methods for use with sns poller
   public void saveTaskUpdateForRetry(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     String parentPath = ZKPaths.makePath(SNS_TASK_RETRY_ROOT, taskHistoryUpdate.getTaskId().getRequestId());
@@ -247,6 +282,24 @@ public class WebhookManager extends CuratorAsyncManager {
 
   public List<SingularityDeployUpdate> getDeployUpdatesToRetry() {
     return getAsyncChildren(SNS_DEPLOY_RETRY, deployWebhookTranscoder);
+  }
+
+  public void saveCrashLoopUpdateForRetry(CrashLoopInfo crashLoopUpdate) {
+    if (!isChildNodeCountSafe(SNS_CRASH_LOOP_RETRY)) {
+      LOG.warn("Too many queued webhooks for path {}, dropping", SNS_CRASH_LOOP_RETRY);
+      return;
+    }
+    String updatePath = ZKPaths.makePath(SNS_CRASH_LOOP_RETRY, getCrashLoopUpdateId(crashLoopUpdate));
+    save(updatePath, crashLoopUpdate, crashLoopUpdateTranscoder);
+  }
+
+  public void deleteCrashLoopUpdateForRetry(CrashLoopInfo crashLoopUpdate) {
+    String updatePath = ZKPaths.makePath(SNS_CRASH_LOOP_RETRY, getCrashLoopUpdateId(crashLoopUpdate));
+    delete(updatePath);
+  }
+
+  public List<CrashLoopInfo> getCrashLoopUpdatesToRetry() {
+    return getAsyncChildren(SNS_CRASH_LOOP_RETRY, crashLoopUpdateTranscoder);
   }
 
   public void saveRequestUpdateForRetry(SingularityRequestHistory requestHistory) {

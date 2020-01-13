@@ -7,12 +7,12 @@ import javax.inject.Singleton;
 import com.google.inject.Inject;
 
 @Singleton
-public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
+public class SingularityCrashLoopPoller extends SingularityLeaderOnlyPoller {
 
-  private final SingularityCooldownChecker checker;
+  private final SingularityCrashLoopChecker checker;
 
   @Inject
-  SingularityCooldownPoller(SingularityCooldownChecker checker) {
+  SingularityCrashLoopPoller(SingularityCrashLoopChecker checker) {
     super(1, TimeUnit.MINUTES);
     this.checker = checker;
   }

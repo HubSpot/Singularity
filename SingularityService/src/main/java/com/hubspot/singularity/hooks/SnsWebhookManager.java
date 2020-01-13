@@ -22,14 +22,13 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.WebhookType;
-import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookQueueConfiguration;
 import com.hubspot.singularity.data.WebhookManager;
@@ -107,6 +106,19 @@ public class SnsWebhookManager {
           LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
           try {
             webhookManager.saveDeployUpdateForRetry(deployUpdate);
+          } catch (Throwable t2) {
+            LOG.error("Could not save update to zk for retry, dropping", t2);
+          }
+          return null;
+        });
+  }
+
+  public void crashLoopEvent(CrashLoopInfo crashLoopUpdate) {
+    publish(WebhookType.CRASHLOOP, crashLoopUpdate)
+        .exceptionally((t) -> {
+          LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+          try {
+            webhookManager.saveCrashLoopUpdateForRetry(crashLoopUpdate);
           } catch (Throwable t2) {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }

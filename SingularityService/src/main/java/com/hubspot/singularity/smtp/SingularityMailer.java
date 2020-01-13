@@ -20,6 +20,5 @@ public interface SingularityMailer {
   void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user);
   void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message);
   void sendRequestInCooldownMail(final SingularityRequest request);
-  void sendReplacementTasksFailingMail(final SingularityRequest request);
   void sendDisasterMail(final SingularityDisastersData disastersData);
 }
