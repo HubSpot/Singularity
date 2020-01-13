@@ -706,53 +706,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     }
   }
 
-  protected void scheduleTask(String rqid, double requiredCpus, double requiredMemoryMb) {
-    Resources rs = new Resources(requiredCpus, requiredMemoryMb, 0);
-    SingularityRequest rq = new SingularityRequestBuilder(rqid, RequestType.WORKER)
-        .setInstances(Optional.of(1))
-        .build();
-
-    SingularityDeploy dp = new SingularityDeployBuilder(rq.getId(), "deployId1")
-        .setCommand(Optional.of("sleep 100"))
-        .setResources(Optional.of(rs))
-        .build();
-
-    SingularityDeployMarker marker = new SingularityDeployMarker(dp.getRequestId(), dp.getId(), System.currentTimeMillis(), Optional.empty(), Optional.empty());
-    SingularityPendingRequest pending = new SingularityPendingRequest(
-        rq.getId(),
-        dp.getId(),
-        System.currentTimeMillis(),
-        Optional.empty(),
-        SingularityPendingRequest.PendingType.UPDATED_REQUEST,
-        Optional.empty(),
-        Optional.empty()
-    );
-
-    requestManager.activate(rq, SingularityRequestHistory.RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.empty(), Optional.empty());
-    deployManager.saveDeploy(rq, marker, dp);
-    deployManager.deletePendingDeploy(marker.getRequestId());
-    deployManager.saveDeployResult(marker, Optional.of(dp), new SingularityDeployResult(DeployState.SUCCEEDED));
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.empty()));
-
-    requestManager.addToPendingQueue(pending);
-    scheduler.drainPendingQueue();
-  }
-
-  protected void startTask(SingularityTaskId task) {
-    statusUpdate(taskManager.getTask(task).get(), TaskState.TASK_STARTING, Optional.of(task.getStartedAt()));
-  }
-
-  protected Map<String, Map<String, SingularityTaskId>> getTaskIdMapByHostByRequest() {
-    Map<String, Map<String, SingularityTaskId>> taskIdMap = new HashMap<>();
-    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
-      String host = taskId.getSanitizedHost();
-      taskIdMap.putIfAbsent(host, new HashMap<>());
-      taskIdMap.get(host).put(taskId.getRequestId(), taskId);
-    }
-
-    return taskIdMap;
-  }
-
   @Test
   public void itPrioritizesLowUtilizationTasksForMemoryShuffle() {
     try {
@@ -947,6 +900,53 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
+  }
+
+  protected void scheduleTask(String rqid, double requiredCpus, double requiredMemoryMb) {
+    Resources rs = new Resources(requiredCpus, requiredMemoryMb, 0);
+    SingularityRequest rq = new SingularityRequestBuilder(rqid, RequestType.WORKER)
+        .setInstances(Optional.of(1))
+        .build();
+
+    SingularityDeploy dp = new SingularityDeployBuilder(rq.getId(), "deployId1")
+        .setCommand(Optional.of("sleep 100"))
+        .setResources(Optional.of(rs))
+        .build();
+
+    SingularityDeployMarker marker = new SingularityDeployMarker(dp.getRequestId(), dp.getId(), System.currentTimeMillis(), Optional.empty(), Optional.empty());
+    SingularityPendingRequest pending = new SingularityPendingRequest(
+        rq.getId(),
+        dp.getId(),
+        System.currentTimeMillis(),
+        Optional.empty(),
+        SingularityPendingRequest.PendingType.UPDATED_REQUEST,
+        Optional.empty(),
+        Optional.empty()
+    );
+
+    requestManager.activate(rq, SingularityRequestHistory.RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.empty(), Optional.empty());
+    deployManager.saveDeploy(rq, marker, dp);
+    deployManager.deletePendingDeploy(marker.getRequestId());
+    deployManager.saveDeployResult(marker, Optional.of(dp), new SingularityDeployResult(DeployState.SUCCEEDED));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.empty()));
+
+    requestManager.addToPendingQueue(pending);
+    scheduler.drainPendingQueue();
+  }
+
+  protected Map<String, Map<String, SingularityTaskId>> getTaskIdMapByHostByRequest() {
+    Map<String, Map<String, SingularityTaskId>> taskIdMap = new HashMap<>();
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+      String host = taskId.getSanitizedHost();
+      taskIdMap.putIfAbsent(host, new HashMap<>());
+      taskIdMap.get(host).put(taskId.getRequestId(), taskId);
+    }
+
+    return taskIdMap;
+  }
+
+  protected void startTask(SingularityTaskId task) {
+    statusUpdate(taskManager.getTask(task).get(), TaskState.TASK_STARTING, Optional.of(task.getStartedAt()));
   }
 
   private double getTimestampSeconds(SingularityTaskId taskId, long seconds) {
