@@ -360,8 +360,9 @@ public class SingularitySlaveAndRackManager {
 
   private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave) {
     int racksAccountedFor = countPerRack.elementSet().size();
-    double numPerRack = numDesiredInstances / (double) rackManager.getNumActive();
-    if (racksAccountedFor < rackManager.getNumActive()) {
+    int activeRacksWithCapacityCount = configuration.getExpectedRacksCount().isPresent() ? configuration.getExpectedRacksCount().get() : rackManager.getNumActive();
+    double numPerRack = numDesiredInstances / (double) activeRacksWithCapacityCount;
+    if (racksAccountedFor < activeRacksWithCapacityCount) {
       if (countPerRack.count(sanitizedRackId) < Math.max(numPerRack, 1)) {
         return true;
       }

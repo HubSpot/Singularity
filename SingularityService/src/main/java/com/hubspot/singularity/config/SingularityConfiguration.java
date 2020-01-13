@@ -411,7 +411,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
-  private int expectedRacksCount = 3;
+  private Optional<Integer> expectedRacksCount = Optional.empty();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1752,11 +1752,11 @@ public class SingularityConfiguration extends Configuration {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 
-  public int getExpectedRacksCount() {
+  public Optional<Integer> getExpectedRacksCount() {
     return expectedRacksCount;
   }
 
-  public void setExpectedRacksCount(int expectedRacksCount) {
+  public void setExpectedRacksCount(Optional<Integer> expectedRacksCount) {
     this.expectedRacksCount = expectedRacksCount;
   }
 }
