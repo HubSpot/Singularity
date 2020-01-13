@@ -22,11 +22,11 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 
 @Singleton
 public class RebalancingHelper {
@@ -35,20 +35,20 @@ public class RebalancingHelper {
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
-  private final SingularityConfiguration configuration;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   @Inject
   public RebalancingHelper(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager,
-                           RackManager rackManager, SingularityConfiguration configuration) {
+                           RackManager rackManager, SingularitySlaveAndRackManager slaveAndRackManager) {
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
-    this.configuration = configuration;
+    this.slaveAndRackManager = slaveAndRackManager;
   }
 
   public List<SingularityTaskId> rebalanceRacks(SingularityRequest request, List<SingularityTaskId> remainingActiveTasks, Optional<String> user) {
     List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
-    int activeRacksWithCapacityCount = configuration.getExpectedRacksCount().isPresent() ? configuration.getExpectedRacksCount().get() : rackManager.getNumActive();
+    int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
     double perRack = request.getInstancesSafe() / (double) activeRacksWithCapacityCount;
 
     Multiset<String> countPerRack = HashMultiset.create();
