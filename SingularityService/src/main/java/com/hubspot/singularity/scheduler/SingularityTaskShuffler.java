@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import com.hubspot.singularity.*;
@@ -11,11 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.scheduler.SingularityTaskShuffler.OverusedResource.Type;
 
 import io.dropwizard.util.SizeUnit;
@@ -78,118 +74,6 @@ public class SingularityTaskShuffler {
     }
   }
 
-  class Shuffle {
-    List<OverusedSlave> slaves;
-    long shuffledTasksOnCluster;
-    Set<String> shuffledRequests;
-
-    Shuffle(List<OverusedSlave> slaves) {
-      this.slaves = slaves;
-
-      List<SingularityTaskCleanup> shufflesInProgress = getInProgressShuffles();
-      this.shuffledTasksOnCluster = shufflesInProgress.size();
-      this.shuffledRequests = getAssociatedRequests(shufflesInProgress);
-    }
-
-    public void run() {
-      for (OverusedSlave slave : slaves) {
-        if (shuffledTasksOnCluster >= configuration.getMaxTasksToShuffleTotal()) {
-          LOG.debug("Not shuffling any more tasks (totalShuffleCleanups: {})", shuffledTasksOnCluster);
-          break;
-        }
-
-        shuffleSlave(slave);
-      }
-    }
-
-    private void shuffleSlave(OverusedSlave slave) {
-      long shuffledTasksOnSlave = 0;
-      double cpuUsage = getSystemLoadForShuffle(slave.usage);
-      double memUsageBytes = slave.usage.getMemoryBytesUsed();
-
-      TaskCleanupType cleanupType = slave.resource.toTaskCleanupType();
-
-      List<TaskIdWithUsage> shuffleCandidates = getShuffleCandidates(slave);
-
-      for (TaskIdWithUsage task : shuffleCandidates) {
-        if (shuffledRequests.contains(task.getTaskId().getRequestId())) {
-          LOG.debug("Request {} already has a shuffling task, skipping", task.getTaskId().getRequestId());
-          continue;
-        }
-
-        if (!isOverutilized(slave, cpuUsage, memUsageBytes) || isShufflingTooManyTasks(shuffledTasksOnSlave, shuffledTasksOnCluster)) {
-          LOG.debug("Not shuffling any more tasks on slave {} ({} overage : {}%, shuffledOnHost: {}, totalShuffleCleanups: {})", task.getTaskId().getSanitizedHost(), slave.resource.resourceType, slave.resource.overusage * 100, shuffledTasksOnSlave, shuffledTasksOnCluster);
-          break;
-        }
-
-        String message = getShuffleMessage(slave, task, cpuUsage, memUsageBytes);
-        bounce(task, cleanupType, Optional.of(message));
-
-        cpuUsage -= task.getUsage().getCpusUsed();
-        memUsageBytes -= task.getUsage().getMemoryTotalBytes();
-
-        shuffledTasksOnSlave++;
-        shuffledTasksOnCluster++;
-        shuffledRequests.add(task.getTaskId().getRequestId());
-      }
-    }
-
-    private boolean isOverutilized(OverusedSlave slave, double cpuUsage, double memUsageBytes) {
-      if (slave.resource.resourceType == Type.CPU) {
-        return cpuUsage > slave.usage.getSystemCpusTotal();
-      } else {
-        return memUsageBytes > getTargetMemoryUtilizationForHost(slave.usage);
-      }
-    }
-
-    private boolean isShufflingTooManyTasks(long shuffledOnSlave, long shuffledOnCluster) {
-      return shuffledOnSlave > configuration.getMaxTasksToShufflePerHost()
-          || shuffledOnCluster > configuration.getMaxTasksToShuffleTotal();
-    }
-
-    private String getShuffleMessage(OverusedSlave slave, TaskIdWithUsage task, double cpuUsage, double memUsageBytes) {
-      if (slave.resource.resourceType == Type.CPU) {
-        return String.format(
-            "Load on slave is %s / %s, shuffling task using %s / %s to less busy host",
-            cpuUsage,
-            slave.usage.getSystemCpusTotal(),
-            task.getUsage().getCpusUsed(),
-            task.getRequestedResources().getCpus()
-        );
-      } else {
-        return String.format(
-            "Mem usage on slave is %sMiB / %sMiB, shuffling task using %sMiB / %sMiB to less busy host",
-            SizeUnit.BYTES.toMegabytes(((long) memUsageBytes)),
-            SizeUnit.BYTES.toMegabytes(((long) slave.usage.getSystemMemTotalBytes())),
-            SizeUnit.BYTES.toMegabytes(task.getUsage().getMemoryTotalBytes()),
-            ((long) task.getRequestedResources().getMemoryMb())
-        );
-      }
-    }
-
-    private List<TaskIdWithUsage> getShuffleCandidates(OverusedSlave slave) {
-
-      // SingularityUsageHelper ensures that requests flagged as ineligible for shuffle have already been filtered out.
-      List<TaskIdWithUsage> out = slave.tasks.stream()
-          .filter((task) -> !shuffledRequests.contains(task.getTaskId().getRequestId()))
-          .collect(Collectors.toList());
-
-      if (slave.resource.resourceType == Type.CPU) {
-        out.sort((u1, u2) -> Double.compare(
-          u2.getUsage().getCpusUsed() / u2.getRequestedResources().getCpus(),
-          u1.getUsage().getCpusUsed() / u1.getRequestedResources().getCpus()
-        ));
-      } else {
-        out.sort((u1, u2) -> Double.compare(
-            getUtilizationScoreForMemoryShuffle(u1),
-            getUtilizationScoreForMemoryShuffle(u2)
-        ));
-      }
-
-      return out;
-    }
-  }
-
   public void shuffle(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overloadedHosts) {
     List<OverusedSlave> slavesToShuffle = overloadedHosts.entrySet().stream()
         .map((entry) -> new OverusedSlave(entry.getKey(), entry.getValue(), getMostOverusedResource(entry.getKey())))
@@ -197,7 +81,7 @@ public class SingularityTaskShuffler {
         .collect(Collectors.toList());
 
     List<SingularityTaskCleanup> shufflingTasks = getInProgressShuffles();
-    Set<String> shufflingRequests = getAssociatedRequests(shufflingTasks);
+    Set<String> shufflingRequests = getAssociatedRequestIds(shufflingTasks);
     long shufflingTasksOnCluster = shufflingTasks.size();
 
     for (OverusedSlave slave : slavesToShuffle) {
@@ -211,7 +95,7 @@ public class SingularityTaskShuffler {
       double memUsageBytes = slave.usage.getMemoryBytesUsed();
       
       TaskCleanupType shuffleCleanupType = slave.resource.toTaskCleanupType();
-      List<TaskIdWithUsage> shuffleCandidates = getShuffleCandidates(slave);
+      List<TaskIdWithUsage> shuffleCandidates = getPrioritizedShuffleCandidates(slave);
 
       for (TaskIdWithUsage task : shuffleCandidates) {
         if (shufflingRequests.contains(task.getTaskId().getRequestId())) {
@@ -246,8 +130,8 @@ public class SingularityTaskShuffler {
     }
   }
 
-  private List<TaskIdWithUsage> getShuffleCandidates(OverusedSlave slave) {
-    // SingularityUsageHelper ensures that requests flagged as ineligible for shuffle have already been filtered out.
+  private List<TaskIdWithUsage> getPrioritizedShuffleCandidates(OverusedSlave slave) {
+    // SingularityUsageHelper ensures that requests flagged as always ineligible for shuffling have been filtered out.
     List<TaskIdWithUsage> out = slave.tasks;
 
     if (slave.resource.resourceType == Type.CPU) {
@@ -355,16 +239,16 @@ public class SingularityTaskShuffler {
   private List<SingularityTaskCleanup> getInProgressShuffles() {
     return taskManager.getCleanupTasks()
         .stream()
-        .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE || taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_MEMORY_USAGE)
+        .filter(SingularityTaskShuffler::isShuffleCleanup)
         .collect(Collectors.toList());
   }
 
-  private static boolean isShuffle(SingularityTaskCleanup cleanup) {
+  private static boolean isShuffleCleanup(SingularityTaskCleanup cleanup) {
     TaskCleanupType type = cleanup.getCleanupType();
     return type == TaskCleanupType.REBALANCE_CPU_USAGE || type == TaskCleanupType.REBALANCE_MEMORY_USAGE;
   }
 
-  private Set<String> getAssociatedRequests(List<SingularityTaskCleanup> cleanups) {
+  private Set<String> getAssociatedRequestIds(List<SingularityTaskCleanup> cleanups) {
     return cleanups.stream()
         .map((taskCleanup) -> taskCleanup.getTaskId().getRequestId())
         .collect(Collectors.toSet());
