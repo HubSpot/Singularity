@@ -176,8 +176,8 @@ public class SingularityTaskShuffler {
   }
 
   private boolean isShufflingTooManyTasks(long shuffledOnSlave, long shuffledOnCluster) {
-    return shuffledOnSlave > configuration.getMaxTasksToShufflePerHost()
-        || shuffledOnCluster > configuration.getMaxTasksToShuffleTotal();
+    return shuffledOnSlave >= configuration.getMaxTasksToShufflePerHost()
+        || shuffledOnCluster >= configuration.getMaxTasksToShuffleTotal();
   }
 
   private void bounce(TaskIdWithUsage task, TaskCleanupType cleanupType, Optional<String> message) {
