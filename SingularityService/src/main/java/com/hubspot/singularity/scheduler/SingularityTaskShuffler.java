@@ -14,6 +14,7 @@ import io.dropwizard.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,6 +90,7 @@ public class SingularityTaskShuffler {
 
     List<SingularityTaskCleanup> shufflingTasks = getShufflingTasks();
     Set<String> shufflingRequests = getAssociatedRequestIds(shufflingTasks);
+    Map<String, Long> shufflingTasksPerHost = getShufflingTaskCountPerHost(shufflingTasks);
     long shufflingTasksOnCluster = shufflingTasks.size();
 
     for (OverusedSlave slave : slavesToShuffle) {
@@ -97,7 +99,7 @@ public class SingularityTaskShuffler {
         break;
       }
 
-      long shufflingTasksOnSlave = 0;
+      long shufflingTasksOnSlave = shufflingTasksPerHost.getOrDefault(getHostId(slave).orElse(""), 0L);
       double cpuUsage = getSystemLoadForShuffle(slave.usage);
       double memUsageBytes = slave.usage.getMemoryBytesUsed();
 
@@ -109,6 +111,8 @@ public class SingularityTaskShuffler {
           LOG.debug("Request {} already has a shuffling task, skipping", task.getTaskId().getRequestId());
           continue;
         }
+
+        long availableShufflesOnSlave = configuration.getMaxTasksToShufflePerHost() - shufflingTasksOnSlave;
 
         boolean resourceNotOverused = !isOverutilized(slave, cpuUsage, memUsageBytes);
         boolean tooManyShufflingTasks = isShufflingTooManyTasks(shufflingTasksOnSlave, shufflingTasksOnCluster);
@@ -254,6 +258,26 @@ public class SingularityTaskShuffler {
         .stream()
         .filter(SingularityTaskShuffler::isShuffleCleanup)
         .collect(Collectors.toList());
+  }
+
+  private Map<String, Long> getShufflingTaskCountPerHost(List<SingularityTaskCleanup> shufflingTasks) {
+    Map<String, Long> out = new HashMap<>();
+
+    for (SingularityTaskCleanup c : shufflingTasks) {
+      String host = c.getTaskId().getSanitizedHost();
+      out.replace(c.getTaskId().getSanitizedHost(), out.getOrDefault(host, 0L) + 1);
+    }
+
+    return out;
+  }
+
+  private Optional<String> getHostId(OverusedSlave slave) {
+    if (slave.tasks.size() <= 0) {
+      return Optional.empty();
+    }
+
+    // probably should add slave metadata to SingularitySlaveUsage
+    return Optional.of(slave.tasks.get(0).getTaskId().getSanitizedHost());
   }
 
   private static boolean isShuffleCleanup(SingularityTaskCleanup cleanup) {
