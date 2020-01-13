@@ -80,7 +80,7 @@ public class SingularityTaskShuffler {
         .sorted((s1, s2) -> OverusedResource.prioritize(s1.resource, s2.resource))
         .collect(Collectors.toList());
 
-    List<SingularityTaskCleanup> shufflingTasks = getInProgressShuffles();
+    List<SingularityTaskCleanup> shufflingTasks = getShufflingTasks();
     Set<String> shufflingRequests = getAssociatedRequestIds(shufflingTasks);
     long shufflingTasksOnCluster = shufflingTasks.size();
 
@@ -136,8 +136,8 @@ public class SingularityTaskShuffler {
 
     if (slave.resource.resourceType == Type.CPU) {
       out.sort((u1, u2) -> Double.compare(
-          u2.getUsage().getCpusUsed() / u2.getRequestedResources().getCpus(),
-          u1.getUsage().getCpusUsed() / u1.getRequestedResources().getCpus()
+          getUtilizationScoreForCPUShuffle(u2),
+          getUtilizationScoreForCPUShuffle(u1)
       ));
     } else {
       out.sort((u1, u2) -> Double.compare(
@@ -147,6 +147,10 @@ public class SingularityTaskShuffler {
     }
 
     return out;
+  }
+
+  private double getUtilizationScoreForCPUShuffle(TaskIdWithUsage task) {
+    return task.getUsage().getCpusUsed() / task.getRequestedResources().getCpus();
   }
 
   private double getUtilizationScoreForMemoryShuffle(TaskIdWithUsage task) {
@@ -236,7 +240,7 @@ public class SingularityTaskShuffler {
     }
   }
 
-  private List<SingularityTaskCleanup> getInProgressShuffles() {
+  private List<SingularityTaskCleanup> getShufflingTasks() {
     return taskManager.getCleanupTasks()
         .stream()
         .filter(SingularityTaskShuffler::isShuffleCleanup)
