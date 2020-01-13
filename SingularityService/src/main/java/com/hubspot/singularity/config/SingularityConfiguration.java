@@ -1,7 +1,6 @@
 package com.hubspot.singularity.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -412,7 +411,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
-  private Set<String> expectedRacks = new HashSet<>(Arrays.asList("us-east-1a", "us-east-1b", "us-east-1e"));
+  private int expectedRacksCount = 3;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1753,12 +1752,11 @@ public class SingularityConfiguration extends Configuration {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 
-  public Set<String> getExpectedRacks() {
-    return expectedRacks;
+  public int getExpectedRacksCount() {
+    return expectedRacksCount;
   }
 
-  public void setExpectedRacks(Set<String> expectedRacks) {
-    this.expectedRacks = expectedRacks;
+  public void setExpectedRacksCount(int expectedRacksCount) {
+    this.expectedRacksCount = expectedRacksCount;
   }
-
 }

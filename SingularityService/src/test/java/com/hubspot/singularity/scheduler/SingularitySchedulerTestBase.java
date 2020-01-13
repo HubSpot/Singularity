@@ -252,9 +252,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
-    if (rack.isPresent()) {
-      addRackToExpectedRacks(rack.get());
-    }
 
     AgentID slaveId = AgentID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
@@ -292,12 +289,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .addResources(MesosUtilsTest.buildPortRanges(portRanges))
         .addAllAttributes(attributesList)
         .build();
-  }
-
-  protected void addRackToExpectedRacks(String rack){
-      Set<String> expectedRacks = configuration.getExpectedRacks();
-      expectedRacks.add(rack);
-      configuration.setExpectedRacks(expectedRacks);
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {

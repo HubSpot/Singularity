@@ -88,10 +88,6 @@ public class SingularitySlaveAndRackManager {
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
-    if (!isRackExpected(rackId)) {
-      return SlaveMatchState.RACK_SATURATED;
-    }
-
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
     if (!maybeSlave.isPresent()) {
       return SlaveMatchState.RESOURCES_DO_NOT_MATCH;
@@ -252,10 +248,6 @@ public class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
-  }
-
-  private boolean isRackExpected(String rackId) {
-    return rackId == "DEFAULT" || configuration.getExpectedRacks().contains(rackId);
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
