@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -249,55 +248,6 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
 
     Assertions.assertEquals(CheckTaskState.UNHEALTHY_KILL_TASK, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
-  }
-
-  @Test
-  @Order(-1) // TODO - check why this is needed
-  public void testNewTaskCheckerCountsFailures() {
-    initRequest();
-
-    final String deployId = "new_task_healthcheck";
-
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(1)).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
-
-    SingularityDeploy deploy = initAndFinishDeploy(request, db, Optional.empty());
-
-    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
-
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(0, taskManager.getNumUnhealthyKills(requestId));
-
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(0, taskManager.getNumUnhealthyKills(requestId));
-
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(1, taskManager.getNumUnhealthyKills(requestId));
-
-    task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
-
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(1, taskManager.getNumUnhealthyKills(requestId));
-
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(1, taskManager.getNumUnhealthyKills(requestId));
-
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(2, taskManager.getNumUnhealthyKills(requestId));
-
-    task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
-
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(2, taskManager.getNumUnhealthyKills(requestId));
-
-    // Successful healthcheck response, so we should reset the count for this request.
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>empty(), Optional.<String>empty(), task.getTaskId(), Optional.<Boolean>empty()));
-    newTaskChecker.checkTask(task, requestManager.getRequest(requestId), healthchecker);
-    Assertions.assertEquals(0, taskManager.getNumUnhealthyKills(requestId));
   }
 
   @Test

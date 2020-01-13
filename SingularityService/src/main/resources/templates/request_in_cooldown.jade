@@ -31,8 +31,8 @@ html
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
-          p #{ requestId } finished unsuccessfully #{ numFailures } time(s) consecutively within #{ cooldownExpiresFormat }. Singularity has placed it into a system cooldown in order to protect cluster resources:
+          p #{ requestId } finished unsuccessfully 5 time(s) consecutively within 1 minute. Singularity has placed it into a system cooldown in order to protect cluster resources:
             ul
               li New tasks will <em>still be scheduled and executed</em>, but these tasks will be delayed by #{ cooldownDelayFormat }.
-              li This penalty will clear when either a task finishes successfully or less than #{ numFailures } tasks have failed, been killed or lost within a period of #{ cooldownExpiresFormat }.
+              li This penalty will clear when either a task finishes successfully or less than 5 tasks have failed, been killed or lost within a period of 1 minute.
               li You will not receive failure mails for #{ requestId } while it is in cooldown.

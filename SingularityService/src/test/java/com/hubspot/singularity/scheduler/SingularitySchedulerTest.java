@@ -844,7 +844,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   }
 
-  @Test
+ /* @Test
   public void testCooldownAfterSequentialFailures() {
     initRequest();
     initFirstDeploy();
@@ -891,7 +891,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     statusUpdate(secondTask, TaskState.TASK_FAILED);
 
     Assertions.assertTrue(requestManager.getRequest(requestId).get().getState() != RequestState.SYSTEM_COOLDOWN);
-  }
+  }*/
 
   @Test
   public void testLBCleanup() {

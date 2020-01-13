@@ -19,6 +19,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -54,6 +55,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
+  private final Transcoder<CrashLoopInfo> crashLoopInfoTranscoder;
 
   private final SingularityEventListener singularityEventListener;
 
@@ -67,6 +69,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
   private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
+  private static final String CRASH_LOOP_ROOT = REQUEST_ROOT + "/crashloops";
   private static final String BOUNCING_ROOT = REQUEST_ROOT + "/bouncing";
   private static final String EXPIRING_ACTION_PATH_ROOT = REQUEST_ROOT + "/expiring";
   private static final String EXPIRING_BOUNCE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/bounce";
@@ -88,7 +91,7 @@ public class RequestManager extends CuratorAsyncManager {
                         Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
                         Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
                         Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-                        SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
+                        SingularityWebCache webCache, SingularityLeaderCache leaderCache, Transcoder<CrashLoopInfo> crashLoopInfoTranscoder) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -96,6 +99,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
+    this.crashLoopInfoTranscoder = crashLoopInfoTranscoder;
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
@@ -539,5 +543,33 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult markBounceComplete(String requestId) {
     return delete(getIsBouncingPath(requestId));
+  }
+
+  private String getCrashLoopsPath(String requestId) {
+    return ZKPaths.makePath(CRASH_LOOP_ROOT, requestId);
+  }
+
+  private String getCrashLoopPath(String requestId, CrashLoopInfo crashLoop) {
+    String crashLoopKey = String.format("%s-%s-%d", crashLoop.getDeployId(), crashLoop.getType().name(), crashLoop.getStart());
+    return ZKPaths.makePath(CRASH_LOOP_ROOT, requestId, crashLoopKey);
+  }
+
+  public List<CrashLoopInfo> getCrashLoopsForRequest(String requestId) {
+    return getAsyncChildren(getCrashLoopsPath(requestId), crashLoopInfoTranscoder);
+  }
+
+  public SingularityCreateResult saveCrashLoop(CrashLoopInfo crashLoop) {
+    singularityEventListener.crashLoopEvent(crashLoop);
+    return save(getCrashLoopPath(crashLoop.getRequestId(), crashLoop), crashLoop, crashLoopInfoTranscoder);
+  }
+
+  public SingularityDeleteResult deleteCrashLoop(CrashLoopInfo crashLoop) {
+    return delete(getCrashLoopPath(crashLoop.getRequestId(), crashLoop));
+  }
+
+  public List<CrashLoopInfo> getAllCrashLoops() {
+    return getChildren(CRASH_LOOP_ROOT).stream()
+        .flatMap((r) -> getCrashLoopsForRequest(r).stream())
+        .collect(Collectors.toList());
   }
 }

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
@@ -69,6 +70,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     int taskUpdates = 0;
     int requestUpdates = 0;
     int deployUpdates = 0;
+    int crashLoopUpdates = 0;
 
     List<CompletableFuture<Response>> webhookFutures = new ArrayList<>();
 
@@ -84,6 +86,8 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
           case DEPLOY:
             deployUpdates += checkDeployUpdates(webhook, webhookFutures);
             break;
+          case CRASHLOOP:
+            crashLoopUpdates += checkCrashLoopUpdates(webhook, webhookFutures);
           default:
             break;
         }
@@ -96,7 +100,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
           return null;
         });
 
-    LOG.info("Sent {} task, {} request, and {} deploy updates in {}", taskUpdates, requestUpdates, deployUpdates, JavaUtils.duration(start));
+    LOG.info("Sent {} task, {} request, {} crashloop, and {} deploy updates in {}", taskUpdates, requestUpdates, crashLoopUpdates, deployUpdates, JavaUtils.duration(start));
   }
 
   private boolean shouldDeleteUpdateOnFailure(int numUpdates, long updateTimestamp) {
@@ -144,6 +148,24 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     return deployUpdates.size();
   }
 
+  private int checkCrashLoopUpdates(SingularityWebhook webhook, List<CompletableFuture<Response>> webhookFutures) {
+    final List<CrashLoopInfo> crashLoopUpdates = webhookManager.getQueuedCrashLoopUpdatesForHook(webhook.getId());
+
+    int numDeployUpdates = 0;
+
+    for (CrashLoopInfo crashLoopUpdate : crashLoopUpdates) {
+      String concreteUri = applyPlaceholders(webhook.getUri(), crashLoopUpdate);
+      webhookFutures.add(webhookSemaphore.call(() ->
+          executeWebhookAsync(
+              concreteUri,
+              crashLoopUpdate,
+              new SingularityCrashLoopWebhookAsyncHandler(webhookManager, webhook, crashLoopUpdate, shouldDeleteUpdateOnFailure(numDeployUpdates, crashLoopUpdate.getEnd().orElse(crashLoopUpdate.getStart()))))
+      ));
+    }
+
+    return crashLoopUpdates.size();
+  }
+
   private int checkTaskUpdates(SingularityWebhook webhook, List<CompletableFuture<Response>> webhookFutures) {
     final List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
 
@@ -180,6 +202,12 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     return uri
         .replaceAll("\\$REQUEST_ID", deployUpdate.getDeployMarker().getRequestId())
         .replaceAll("\\$DEPLOY_ID", deployUpdate.getDeployMarker().getDeployId());
+  }
+
+  private String applyPlaceholders(String uri, CrashLoopInfo crashLoopUpdate) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", crashLoopUpdate.getRequestId())
+        .replaceAll("\\$DEPLOY_ID", crashLoopUpdate.getDeployId());
   }
 
   private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {

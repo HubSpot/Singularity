@@ -39,6 +39,7 @@ import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.horizon.RetryStrategy;
 import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
@@ -189,6 +190,9 @@ public class SingularityClient {
   private static final String REQUEST_GROUPS_UPDATE_FORMAT = REQUESTS_FORMAT + "/request/%s/groups";
   private static final String REQUEST_GROUPS_UPDATE_AUTH_CHECK_FORMAT = REQUEST_GROUPS_UPDATE_FORMAT + "/auth-check";
 
+  private static final String CRASH_LOOPS = REQUESTS_FORMAT + "/crashloops";
+  private static final String REQUEST_CRASH_LOOPS = REQUEST_GET_FORMAT + "/crashloops";
+
   private static final String DEPLOYS_FORMAT = "%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
   private static final String UPDATE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/update";
@@ -244,6 +248,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityDisabledAction>> DISABLED_ACTIONS_COLLECTION = new TypeReference<Collection<SingularityDisabledAction>>() {};
   private static final TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>> PAGINATED_HISTORY = new TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<String>> STRING_COLLECTION = new TypeReference<Collection<String>>() {};
+  private static final TypeReference<Collection<CrashLoopInfo>> CRASH_LOOP_INFO_COLLECTION = new TypeReference<Collection<CrashLoopInfo>>() {};
+  private static final TypeReference<Map<String, List<CrashLoopInfo>>> CRASH_LOOP_MAP = new TypeReference<Map<String, List<CrashLoopInfo>>>() {};
 
 
   private final Random random;
@@ -346,6 +352,16 @@ public class SingularityClient {
     LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
 
     return Optional.ofNullable(response.getAs(clazz));
+  }
+
+  private <T> T getAs(Function<String, String> hostToUrl, String type, String id, Optional<Map<String, Object>> queryParams, TypeReference<T> ref) {
+    final long start = System.currentTimeMillis();
+    HttpResponse response = executeGetSingleWithParams(hostToUrl, type, id, queryParams);
+
+    checkResponse(type, response);
+    LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
+
+    return response.getAs(ref);
   }
 
   private <T> Optional<T> getSingleWithParams(Function<String, String> hostToUrl, String type, String id, Optional<Map<String, Object>> queryParams, TypeReference<T> typeReference) {
@@ -862,6 +878,16 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(REQUESTS_GET_CLEANUP_FORMAT, getApiBase(host));
 
     return getCollection(requestUri, "cleaning requests", CLEANUP_REQUESTS_COLLECTION);
+  }
+
+  public Map<String, List<CrashLoopInfo>> getAllCrashLoops() {
+    final Function<String, String> requestUri = (host) -> String.format(CRASH_LOOPS, getApiBase(host));
+    return getAs(requestUri, "crashloops", "crashloops", Optional.empty(), CRASH_LOOP_MAP);
+  }
+
+  public Collection<CrashLoopInfo> getCrashLoopsForRequest(String requestId) {
+    final Function<String, String> requestUri = (host) -> String.format(REQUEST_CRASH_LOOPS, getApiBase(host), requestId);
+    return getCollection(requestUri, "crashloops", CRASH_LOOP_INFO_COLLECTION);
   }
 
   //

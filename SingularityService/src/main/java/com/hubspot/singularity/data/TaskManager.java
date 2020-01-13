@@ -77,7 +77,6 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String FINISHED_TASK_MAIL_QUEUE = TASKS_ROOT + "/mailqueue";
   private static final String SHELL_REQUESTS_QUEUE_PATH_ROOT = TASKS_ROOT + "/shellqueue";
   private static final String PENDING_TASKS_TO_DELETE_PATH_ROOT = TASKS_ROOT + "/pendingdeletes";
-  private static final String UNHEALTHY_KILL_PATH_ROOT = TASKS_ROOT + "/unhealthyKill";
 
   private static final String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
 
@@ -268,14 +267,6 @@ public class TaskManager extends CuratorAsyncManager {
 
   private String getCleanupPath(String taskId) {
     return ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId);
-  }
-
-  private String getUnhealthyKillParentPath(String requestId) {
-    return ZKPaths.makePath(UNHEALTHY_KILL_PATH_ROOT, requestId);
-  }
-
-  private String getUnhealthyKillPath(SingularityTaskId taskId) {
-    return ZKPaths.makePath(getUnhealthyKillParentPath(taskId.getRequestId()), taskId.getId());
   }
 
   public int getNumCleanupTasks() {
@@ -661,18 +652,6 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return exists(getLastActiveTaskStatusPath(taskId));
-  }
-
-  public SingularityCreateResult markUnhealthyKill(SingularityTaskId taskId) {
-    return create(getUnhealthyKillPath(taskId));
-  }
-
-  public int getNumUnhealthyKills(String requestId) {
-    return getNumChildren(getUnhealthyKillParentPath(requestId));
-  }
-
-  public SingularityDeleteResult clearUnhealthyKills(String requestId) {
-    return delete(getUnhealthyKillParentPath(requestId));
   }
 
   public List<SingularityTaskId> getTaskIdsForRequest(String requestId) {

@@ -1,7 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class SingularityDeployStatisticsBuilder {
@@ -16,6 +18,7 @@ public class SingularityDeployStatisticsBuilder {
 
   private int numSequentialRetries;
 
+  // No longer used
   private ListMultimap<Integer, Long> instanceSequentialFailureTimestamps;
 
   private Optional<Long> lastFinishAt;
@@ -23,6 +26,8 @@ public class SingularityDeployStatisticsBuilder {
 
   private Optional<Long> averageRuntimeMillis;
   private Optional<Long> averageSchedulingDelayMillis; // Delta between between when each task was supposed to run vs. actually being submitted to Mesos
+
+  private List<TaskFailureEvent> taskFailureEvents;
 
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
@@ -35,13 +40,15 @@ public class SingularityDeployStatisticsBuilder {
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps, numTasks, averageRuntimeMillis, averageSchedulingDelayMillis);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, null, numTasks, averageRuntimeMillis, averageSchedulingDelayMillis, taskFailureEvents);
   }
 
+  @Deprecated
   public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
-    return instanceSequentialFailureTimestamps;
+    return ImmutableListMultimap.of();
   }
 
+  @Deprecated
   public SingularityDeployStatisticsBuilder setInstanceSequentialFailureTimestamps(ListMultimap<Integer, Long> instanceSequentialFailureTimestamps) {
     this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps;
     return this;
@@ -125,6 +132,20 @@ public class SingularityDeployStatisticsBuilder {
 
   public String getDeployId() {
     return deployId;
+  }
+
+  public List<TaskFailureEvent> getTaskFailureEvents() {
+    return taskFailureEvents;
+  }
+
+  public SingularityDeployStatisticsBuilder setTaskFailureEvents(List<TaskFailureEvent> taskFailureEvents) {
+    this.taskFailureEvents = taskFailureEvents;
+    return this;
+  }
+
+  public SingularityDeployStatisticsBuilder addTaskFailureEvent(TaskFailureEvent taskFailureEvent) {
+    taskFailureEvents.add(taskFailureEvent);
+    return this;
   }
 
   @Override
