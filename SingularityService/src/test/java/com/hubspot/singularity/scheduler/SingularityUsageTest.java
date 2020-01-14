@@ -1013,16 +1013,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       System.out.println(taskManager.getActiveTaskIds());
 
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
+      SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
+      SingularityTaskId task2 = taskIdMap.get("host1").get(t2id);
+      SingularityTaskId task3 = taskIdMap.get("host1").get(t3id);
+      SingularityTaskId task4 = taskIdMap.get("host1").get(t4id);
+
       for (String host : taskIdMap.keySet()) {
         for (String request : taskIdMap.get(host).keySet()) {
           startTask(taskIdMap.get(host).get(request));
         }
       }
-
-      SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
-      SingularityTaskId task2 = taskIdMap.get("host1").get(t2id);
-      SingularityTaskId task3 = taskIdMap.get("host1").get(t3id);
-      SingularityTaskId task4 = taskIdMap.get("host1").get(t4id);
 
       // not actually necessary to trigger shuffle, but worth leaving in case that changes
       SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(1, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 100000, 1000, 10, 10, 10, 10, 0, 107374182);
@@ -1086,7 +1086,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       )).join();
 
       taskIdMap = getTaskIdMapByHostByRequest();
-
       Assertions.assertNotNull(taskIdMap.get("host4").get(t1id));
       Assertions.assertNotNull(taskIdMap.get("host4").get(t4id));
     } finally {
@@ -1125,7 +1124,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         Optional.empty()
     );
 
-    requestManager.activate(rq, SingularityRequestHistory.RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.empty(), Optional.empty());
+    saveRequest(rq);
     deployManager.saveDeploy(rq, marker, dp);
     deployManager.deletePendingDeploy(marker.getRequestId());
     deployManager.saveDeployResult(marker, Optional.of(dp), new SingularityDeployResult(DeployState.SUCCEEDED));
