@@ -124,8 +124,8 @@ public class SingularityTaskShuffler {
 
       long shufflingTasksOnSlave = shufflingTasksPerHost.getOrDefault(getHostId(slave).orElse(""), 0L);
       long availableTasksOnSlave = shuffleCandidates.size();
-      double cpuUsage = getSystemLoadForShuffle(slave.usage);
-      double memUsageBytes = slave.usage.getMemoryBytesUsed();
+      double cpuUsage = getSystemCpuLoadForShuffle(slave.usage);
+      double memUsageBytes = getSystemMemLoadForShuffle(slave.usage);
 
       for (TaskIdWithUsage task : shuffleCandidates) {
         availableTasksOnSlave--;
@@ -273,7 +273,7 @@ public class SingularityTaskShuffler {
   }
 
   private OverusedResource getMostOverusedResource(SingularitySlaveUsage overloadedSlave) {
-    double currentCpuLoad = getSystemLoadForShuffle(overloadedSlave);
+    double currentCpuLoad = getSystemCpuLoadForShuffle(overloadedSlave);
     double currentMemUsageBytes = overloadedSlave.getMemoryBytesUsed();
 
     double targetCpuUsage = overloadedSlave.getSystemCpusTotal();
@@ -329,7 +329,7 @@ public class SingularityTaskShuffler {
         .collect(Collectors.toSet());
   }
 
-  private double getSystemLoadForShuffle(SingularitySlaveUsage usage) {
+  private double getSystemCpuLoadForShuffle(SingularitySlaveUsage usage) {
     switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
       case LOAD_1:
         return usage.getSystemLoad1Min();
@@ -339,5 +339,10 @@ public class SingularityTaskShuffler {
       default:
         return usage.getSystemLoad15Min();
     }
+  }
+
+  private double getSystemMemLoadForShuffle(SingularitySlaveUsage usage) {
+    // usage.getMemoryBytesUsed() does not take external memory pressure into account
+    return usage.getSystemMemTotalBytes() - usage.getSystemMemFreeBytes();
   }
 }
