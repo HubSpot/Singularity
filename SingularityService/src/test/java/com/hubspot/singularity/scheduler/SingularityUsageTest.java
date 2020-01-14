@@ -874,7 +874,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       MesosTaskMonitorObject t1u1 = getTaskMonitor(task1.getId(), 2, TimeUnit.MILLISECONDS.toSeconds(task1.getStartedAt()) + 5, 87000);
       MesosTaskMonitorObject t2u1 = getTaskMonitor(task2.getId(), 2, TimeUnit.MILLISECONDS.toSeconds(task2.getStartedAt()) + 5, 9000);
       MesosTaskMonitorObject t3u1 = getTaskMonitor(task3.getId(), 2, TimeUnit.MILLISECONDS.toSeconds(task3.getStartedAt()) + 5, 1100);
-      MesosTaskMonitorObject t4u1 = getTaskMonitor(task4.getId(), 2, TimeUnit.MILLISECONDS.toSeconds(task3.getStartedAt()) + 5, 1000);
+      MesosTaskMonitorObject t4u1 = getTaskMonitor(task4.getId(), 2, TimeUnit.MILLISECONDS.toSeconds(task4.getStartedAt()) + 5, 1000);
 
       mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
       mesosClient.setSlaveMetricsSnapshot(
@@ -901,6 +901,76 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
   }
+
+  @Test
+  public void itWillConsiderCPUUtilizationForMemoryShuffle() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
+      configuration.setMaxTasksToShufflePerHost(2);
+      configuration.setMaxTasksToShuffleTotal(5);
+      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+
+      String t1id = "test-request-1";
+      String t2id = "test-request-2";
+      String t3id = "test-request-3";
+      String t4id = "test-request-4";
+
+      scheduleTask(t1id, 1, 100000);
+      scheduleTask(t2id, 1, 100000);
+      scheduleTask(t3id, 1, 100000);
+      scheduleTask(t4id, 1, 100000);
+
+      sms.resourceOffers(ImmutableList.of(
+          createOffer(10, 100000 * 4, 100000, "slave1", "host1")
+      )).join();
+
+      System.out.println(taskManager.getActiveTaskIds());
+
+      Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
+      SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
+      SingularityTaskId task2 = taskIdMap.get("host1").get(t2id);
+      SingularityTaskId task3 = taskIdMap.get("host1").get(t3id);
+      SingularityTaskId task4 = taskIdMap.get("host1").get(t4id);
+
+      startTask(task1);
+      startTask(task2);
+      startTask(task3);
+      startTask(task4);
+
+      // not actually necessary to trigger shuffle, but worth leaving in case that changes
+      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(1, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 100000, 1000, 10, 10, 10, 10, 0, 107374182);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highMemUsage, "host1"));
+
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(task1.getId(), 0.5, TimeUnit.MILLISECONDS.toSeconds(task1.getStartedAt()) + 5, 85000);
+      MesosTaskMonitorObject t2u1 = getTaskMonitor(task2.getId(), 2.5, TimeUnit.MILLISECONDS.toSeconds(task2.getStartedAt()) + 5, 4000);
+      MesosTaskMonitorObject t3u1 = getTaskMonitor(task3.getId(), 1.5, TimeUnit.MILLISECONDS.toSeconds(task3.getStartedAt()) + 5, 5000);
+      MesosTaskMonitorObject t4u1 = getTaskMonitor(task4.getId(), 0.5, TimeUnit.MILLISECONDS.toSeconds(task4.getStartedAt()) + 5, 5000);
+
+      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 1, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 100000, 0, 1000, 0, 0, 0, 10, 0, 0, 0, 0)
+      );
+
+      usagePoller.runActionOnPoll();
+
+      System.out.println(taskManager.getCleanupTaskIds().toString());
+
+      // First task is not cleaned up, due to relatively high utilization.
+      Assertions.assertFalse(taskManager.getTaskCleanup(task1.getId()).isPresent());
+
+      // Second task is not cleaned up, despite low memory utilization, due to high CPU utilization.
+      Assertions.assertFalse(taskManager.getTaskCleanup(task2.getId()).isPresent());
+
+      // 3rd/4th tasks are cleaned up to reach threshold.
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(task4.getId()).get().getCleanupType());
+      Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, taskManager.getTaskCleanup(task4.getId()).get().getCleanupType());
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+    }
+  }
+
 
   protected void scheduleTask(String rqid, double requiredCpus, double requiredMemoryMb) {
     Resources rs = new Resources(requiredCpus, requiredMemoryMb, 0);
