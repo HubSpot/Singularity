@@ -21,6 +21,8 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.data.TaskManager;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -971,11 +973,140 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     }
   }
 
+  @Test
+  public void itWillHandleMultiHostMemoryShuffle() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
+      configuration.setMaxTasksToShufflePerHost(2);
+      configuration.setMaxTasksToShuffleTotal(5);
+      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+
+      String t1id = "test-request-1";
+      String t2id = "test-request-2";
+      String t3id = "test-request-3";
+      String t4id = "test-request-4";
+
+      scheduleTask(t1id, 1, 100000, 1);
+      scheduleTask(t2id, 1, 100000, 1);
+      scheduleTask(t3id, 1, 100000, 1);
+      scheduleTask(t4id, 1, 100000, 1);
+
+      sms.resourceOffers(ImmutableList.of(
+          createOffer(10, 100000 * 4, 100000, "slave1", "host1")
+      )).join();
+
+      scheduleTask(t1id, 1, 100000, 2);
+      scheduleTask(t2id, 1, 100000, 2);
+      scheduleTask(t3id, 1, 100000, 2);
+      scheduleTask(t4id, 1, 100000, 2);
+
+      sms.resourceOffers(ImmutableList.of(
+          createOffer(10, 100000 * 4, 100000, "slave2", "host2")
+      )).join();
+
+      scheduleTask(t1id, 1, 100000, 3);
+      sms.resourceOffers(ImmutableList.of(
+          createOffer(10, 100000, 100000, "slave3", "host3")
+      )).join();
+
+      System.out.println(taskManager.getActiveTaskIds());
+
+      Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
+      for (String host : taskIdMap.keySet()) {
+        for (String request : taskIdMap.get(host).keySet()) {
+          startTask(taskIdMap.get(host).get(request));
+        }
+      }
+
+      SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
+      SingularityTaskId task2 = taskIdMap.get("host1").get(t2id);
+      SingularityTaskId task3 = taskIdMap.get("host1").get(t3id);
+      SingularityTaskId task4 = taskIdMap.get("host1").get(t4id);
+
+      // not actually necessary to trigger shuffle, but worth leaving in case that changes
+      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(1, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 100000, 1000, 10, 10, 10, 10, 0, 107374182);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highMemUsage, "host1"));
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highMemUsage, "host2"));
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highMemUsage, "host3"));
+
+      for (String host : taskIdMap.keySet()) {
+        List<MesosTaskMonitorObject> usages = new ArrayList<>();
+
+        for (String request : taskIdMap.get(host).keySet()) {
+          SingularityTaskId task = taskIdMap.get(host).get(request);
+          MesosTaskMonitorObject usage = null;
+
+          if (request.equals(t1id)) {
+            usage = getTaskMonitor(task.getId(), 1, TimeUnit.MILLISECONDS.toSeconds(task1.getStartedAt()) + 5, 95000);
+          } else if (request.equals(t2id)) {
+            usage = getTaskMonitor(task.getId(), 1, TimeUnit.MILLISECONDS.toSeconds(task2.getStartedAt()) + 5, 92000);
+          } else if (request.equals(t3id)) {
+            usage = getTaskMonitor(task.getId(), 1, TimeUnit.MILLISECONDS.toSeconds(task3.getStartedAt()) + 5, 90000);
+          } else if (request.equals(t4id)) {
+            usage = getTaskMonitor(task.getId(), 1, TimeUnit.MILLISECONDS.toSeconds(task4.getStartedAt()) + 5, 88000);
+          }
+
+          usages.add(usage);
+        }
+
+        mesosClient.setSlaveResourceUsage(host, usages);
+      }
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 1, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 400000, 0, 10000, 0, 0, 0, 10, 0, 0, 0, 0)
+      );
+      mesosClient.setSlaveMetricsSnapshot(
+          "host2",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 1, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 400000, 0, 50000, 0, 0, 0, 10, 0, 0, 0, 0)
+      );
+      mesosClient.setSlaveMetricsSnapshot(
+          "host3",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 1, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 100000, 0, 9000, 0, 0, 0, 10, 0, 0, 0, 0)
+      );
+
+      // host 1 should shuffle
+      // host 2 shouldn't shuffle
+      // host 3 should shuffle
+      // host 4 should receive shuffled tasks
+      usagePoller.runActionOnPoll();
+
+      System.out.println(taskManager.getCleanupTaskIds().toString());
+
+      Assertions.assertFalse(taskManager.getTaskCleanup(task1.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(task2.getId()).isPresent());
+      Assertions.assertFalse(taskManager.getTaskCleanup(task3.getId()).isPresent());
+      assertMemShuffle(taskIdMap, "host1", t4id);
+      assertMemShuffle(taskIdMap, "host3", t1id);
+
+      // should receive shuffled tasks from hosts 1/3
+      scheduler.drainPendingQueue();
+      sms.resourceOffers(ImmutableList.of(
+          createOffer(10, 100000 * 4, 100000, "slave4", "host4")
+      )).join();
+
+      taskIdMap = getTaskIdMapByHostByRequest();
+
+      Assertions.assertNotNull(taskIdMap.get("host4").get(t1id));
+      Assertions.assertNotNull(taskIdMap.get("host4").get(t4id));
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+    }
+  }
+
+  protected void assertMemShuffle(Map<String, Map<String, SingularityTaskId>> taskIdMap, String host, String request) {
+    Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskIdMap.get(host).get(request).getId());
+    Assertions.assertEquals(TaskCleanupType.REBALANCE_MEMORY_USAGE, cleanup.get().getCleanupType());
+  }
 
   protected void scheduleTask(String rqid, double requiredCpus, double requiredMemoryMb) {
+    scheduleTask(rqid, requiredCpus, requiredMemoryMb, 1);
+  }
+
+  protected void scheduleTask(String rqid, double requiredCpus, double requiredMemoryMb, int instances) {
     Resources rs = new Resources(requiredCpus, requiredMemoryMb, 0);
     SingularityRequest rq = new SingularityRequestBuilder(rqid, RequestType.WORKER)
-        .setInstances(Optional.of(1))
+        .setInstances(Optional.of(instances))
         .build();
 
     SingularityDeploy dp = new SingularityDeployBuilder(rq.getId(), "deployId1")
