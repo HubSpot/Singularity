@@ -103,6 +103,11 @@ public class SingularityTaskShuffler {
   }
 
   public void shuffle(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overloadedHosts) {
+    if (overloadedHosts.size() <= 0) {
+      return;
+    }
+
+    LOG.debug("Beginning task shuffle for {} slaves", overloadedHosts.size());
     List<OverusedSlave> slavesToShuffle = overloadedHosts.entrySet().stream()
         .map((entry) -> new OverusedSlave(entry.getKey(), entry.getValue(), getMostOverusedResource(entry.getKey())))
         .sorted((s1, s2) -> OverusedResource.prioritize(s1.resource, s2.resource))
@@ -111,7 +116,9 @@ public class SingularityTaskShuffler {
     List<SingularityTaskCleanup> shufflingTasks = getShufflingTasks();
     Set<String> shufflingRequests = getAssociatedRequestIds(shufflingTasks);
     Map<String, Long> shufflingTasksPerHost = getShufflingTaskCountPerHost(shufflingTasks);
+
     long shufflingTasksOnCluster = shufflingTasks.size();
+    LOG.debug("{} tasks currently shuffling on cluster", shufflingTasksOnCluster);
 
     for (OverusedSlave slave : slavesToShuffle) {
       if (shufflingTasksOnCluster >= configuration.getMaxTasksToShuffleTotal()) {
@@ -176,6 +183,8 @@ public class SingularityTaskShuffler {
         shufflingRequests.add(task.getTaskId().getRequestId());
       }
     }
+
+    LOG.debug("Completed task shuffle for {} slaves", overloadedHosts.size());
   }
 
   private List<TaskIdWithUsage> getPrioritizedShuffleCandidates(OverusedSlave slave) {
