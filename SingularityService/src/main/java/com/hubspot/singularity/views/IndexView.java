@@ -2,9 +2,16 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
+import java.util.Map;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.io.Resources;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
@@ -66,6 +73,10 @@ public class IndexView extends View {
   private final String authTokenKey;
   private final String quickLinks;
   private final String navTitleLinks;
+
+  private final String appJsPath;
+  private final String appCssPath;
+  private final String vendorJsPath;
 
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -144,6 +155,18 @@ public class IndexView extends View {
       this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getNavTitleLinks());
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
+    }
+
+    try {
+      Map<String, String> revManifest = mapper.readValue(
+          Resources.getResource("assets/static/rev-manifest.json"),
+          new TypeReference<Map<String, String>>(){}
+      );
+      this.appCssPath = revManifest.get("css/app.css");
+      this.appJsPath = revManifest.get("js/app.bundle.js");
+      this.vendorJsPath = revManifest.get("js/vendor.bundle.js");
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
     }
   }
 
@@ -291,6 +314,18 @@ public class IndexView extends View {
     return navTitleLinks;
   }
 
+  public String getAppJsPath() {
+    return appJsPath;
+  }
+
+  public String getAppCssPath() {
+    return appCssPath;
+  }
+
+  public String getVendorJsPath() {
+    return vendorJsPath;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -330,6 +365,9 @@ public class IndexView extends View {
         ", authTokenKey='" + authTokenKey + '\'' +
         ", quickLinks='" + quickLinks + '\'' +
         ", navTitleLinks='" + navTitleLinks + '\'' +
+        ", appJsPath='" + appJsPath + '\'' +
+        ", appCssPath='" + appCssPath + '\'' +
+        ", vendorJsPath='" + vendorJsPath + '\'' +
         "} " + super.toString();
   }
 }

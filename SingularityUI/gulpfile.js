@@ -5,7 +5,7 @@ var fs = require('fs');
 var del = require('del');
 
 var mustache = require('gulp-mustache');
-
+const rev = require('gulp-rev');
 var concat = require('gulp-concat');
 
 // we used the wrong variable here, in the next version we will remove SINGULARITY_BASE_URI
@@ -71,12 +71,6 @@ gulp.task('static', ['clean'], function() {
     .pipe(gulp.dest(dest + '/static'));
 })
 
-gulp.task('html', ['static'], function () {
-  return gulp.src('app/assets/index.mustache')
-    .pipe(mustache(templateData, {extension: '.html'}))
-    .pipe(gulp.dest(dest));
-});
-
 gulp.task('debug-html', ['static'], function () {
   templateData.isDebug = true;
   return gulp.src('app/assets/index.mustache')
@@ -84,10 +78,25 @@ gulp.task('debug-html', ['static'], function () {
     .pipe(gulp.dest(dest));
 });
 
-gulp.task('build', ['html'], function () {
+gulp.task('build-static', ['static'], function () {
   return gulp.src('app')
     .pipe(webpackStream(require('./webpack.config')))
+    .pipe(gulp.dest(dest + '/static'))
+    .pipe(rev())
+    .pipe(gulp.dest(dest + '/static'))
+    .pipe(rev.manifest())
     .pipe(gulp.dest(dest + '/static'));
+});
+
+gulp.task('build', ['build-static'], function () {
+  var data = fs.readFileSync(dest + '/static/rev-manifest.json', 'utf8');
+  var manifest = JSON.parse(data);
+  templateData['appJsPath'] = manifest['js/app.bundle.js']
+  templateData['appCssPath'] = manifest['css/app.css']
+  templateData['vendorJsPath'] = manifest['js/vendor.bundle.js']
+  return gulp.src('app/assets/index.mustache')
+    .pipe(mustache(templateData, {extension: '.html'}))
+    .pipe(gulp.dest(dest));
 });
 
 gulp.task('serve', ['debug-html'], function () {
