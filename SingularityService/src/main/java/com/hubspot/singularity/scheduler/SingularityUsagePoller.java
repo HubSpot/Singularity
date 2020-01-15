@@ -92,7 +92,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
     if (configuration.isShuffleTasksForOverloadedSlaves() && !disasterManager.isDisabled(SingularityAction.TASK_SHUFFLE)) {
+      LOG.debug("Shuffling?");
       taskShuffler.shuffle(overLoadedHosts);
+    } else {
+      LOG.debug("Not shuffling?");
     }
   }
 
