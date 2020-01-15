@@ -103,11 +103,12 @@ public class SingularityTaskShuffler {
   }
 
   public void shuffle(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overloadedHosts) {
+    LOG.debug("Beginning task shuffle for {} slaves", overloadedHosts.size());
+
     if (overloadedHosts.size() <= 0) {
       return;
     }
 
-    LOG.debug("Beginning task shuffle for {} slaves", overloadedHosts.size());
     List<OverusedSlave> slavesToShuffle = overloadedHosts.entrySet().stream()
         .map((entry) -> new OverusedSlave(entry.getKey(), entry.getValue(), getMostOverusedResource(entry.getKey())))
         .sorted((s1, s2) -> OverusedResource.prioritize(s1.resource, s2.resource))
