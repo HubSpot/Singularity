@@ -1171,43 +1171,4 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
     return requestManager.getCrashLoopsForRequest(requestId);
   }
-
-  @GET
-  @Path("/request/{requestId}/shuffle/config")
-  @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(
-      summary = "Set whether tasks associated with a request should not be shuffled, if possible.",
-      responses = {
-          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-      })
-  public SingularityPerRequestShuffleConfiguration getShuffleConfiguration(
-      @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(required = true, description = "The Request ID to configure") @PathParam("requestId") String requestId,
-      @Context HttpServletRequest requestContext) {
-    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
-    return requestManager.getShuffleCfg(requestId);
-  }
-
-  @PUT
-  @Path("/request/{requestId}/shuffle/config")
-  @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(
-      summary = "Set whether tasks associated with a request should not be shuffled, if possible.",
-      responses = {
-          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-      })
-  public SingularityPerRequestShuffleConfiguration setShuffleConfiguration(
-      @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(required = true, description = "The Request ID to configure") @PathParam("requestId") String requestId,
-      @Context HttpServletRequest requestContext,
-      @RequestBody(description = "Request level shuffle options") SingularityPerRequestShuffleConfiguration config) {
-    return maybeProxyToLeader(requestContext, SingularityPerRequestShuffleConfiguration.class, config, () -> avoidShuffle(requestId, config, user));
-  }
-  public SingularityPerRequestShuffleConfiguration avoidShuffle(String requestId, SingularityPerRequestShuffleConfiguration config, SingularityUser user) {
-    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
-    requestManager.saveShuffleCfg(requestId, config);
-    return config;
-  }
 }
