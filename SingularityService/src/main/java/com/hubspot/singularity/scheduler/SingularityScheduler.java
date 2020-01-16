@@ -858,7 +858,7 @@ public class SingularityScheduler {
       Optional<SingularityTaskHistoryUpdate> taskHistoryUpdate = taskManager.getTaskHistoryUpdate(task.get().getTaskId(), ExtendedTaskState.TASK_CLEANING);
 
       if (taskHistoryUpdate.isPresent()
-          && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.ONEOFF
+          && request.getRequestType() == RequestType.ON_DEMAND
           && taskHistoryUpdate.get().getStatusMessage().orElse("").contains("USER_REQUESTED")) {
         return false; // don't retry one-off launches of on-demand jobs if they were killed by the user
       }
