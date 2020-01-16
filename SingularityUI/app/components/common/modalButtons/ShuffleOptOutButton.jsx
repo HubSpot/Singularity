@@ -1,18 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 
-import { Glyphicon } from 'react-bootstrap';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
-
+import { Button } from 'react-bootstrap';
 import { getClickComponent } from '../modal/ModalWrapper';
 
-import PauseModal from './PauseModal';
-
-const pauseTooltip = (
-  <ToolTip id="pause">
-    Pause
-  </ToolTip>
-);
+import ShuffleOptOutModal from './ShuffleOptOutModal';
 
 export default class ShuffleOptOutButton extends Component {
 
@@ -23,24 +14,19 @@ export default class ShuffleOptOutButton extends Component {
     then: PropTypes.func
   };
 
-  static defaultProps = {
-    children: (
-      <OverlayTrigger placement="top" id="view-pause-overlay" overlay={pauseTooltip}>
-        <a>
-          <Glyphicon glyph="pause" />
-        </a>
-      </OverlayTrigger>
-    )
-  };
+  renderButton() {
+    return (
+      <Button bsStyle="primary">Shufflability</Button>
+    );
+  }
 
   render() {
     return (
       <span>
-        {getClickComponent(this)}
-        <PauseModal
+        {getClickComponent(this.renderButton())}
+        <ShuffleOptOutModal
           ref="modal"
           requestId={this.props.requestId}
-          isScheduled={this.props.isScheduled}
           then={this.props.then}
         />
       </span>

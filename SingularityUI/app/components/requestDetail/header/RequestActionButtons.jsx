@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
 
-import { FetchRequest, FetchRequestShuffleOptOut } from '../../../actions/api/requests';
+import { FetchRequest } from '../../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
   FetchRequestHistory
@@ -26,11 +26,10 @@ import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthch
 import Utils from '../../../utils';
 import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
-const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestShuffleOptOut, fetchRequestHistory, fetchActiveTasks, router}) => {
+const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
     return Promise.all([
       fetchRequest(),
-      fetchRequestShuffleOptOut(),
       fetchActiveTasks(),
       fetchRequestHistory(5, 1),
     ]);
@@ -165,6 +164,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestShuffleO
   const shuffleOptOutButton = (
     <ShuffleOptOutButton
       requestId={request.id}
+      then={fetchRequestAndHistory}
       isOptedOut={Utils.request.shuffleDisabled(requestParent)}
     />
   );

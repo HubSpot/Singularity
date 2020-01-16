@@ -1,16 +1,17 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { PauseRequest } from '../../../actions/api/requests';
+import { EnableShuffleOptOut, DisableShuffleOptOut } from '../../../actions/api/requests';
 
 import FormModal from '../modal/FormModal';
 
-class PauseModal extends Component {
+class ShuffleOptOutModal extends Component {
 
   static propTypes = {
     requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
-    isScheduled: PropTypes.bool,
-    pauseRequest: PropTypes.func.isRequired,
+    isOptedOut: PropTypes.bool.isRequired,
+    enableShuffleOptOut: PropTypes.func.isRequired,
+    disableShuffleOptOut: PropTypes.func.isRequired,
     then: PropTypes.func
   };
 
@@ -74,20 +75,15 @@ class PauseModal extends Component {
 
     return (
       <FormModal
-        name="Pause Request"
-        ref="pauseModal"
-        action="Pause Request"
+        name="Shuffle Opt Out"
+        ref="shuffleOptOutModal"
+        action="Opt Out of Request Shuffle"
         onConfirm={(data) => {
-          if (data.runShellCommand) {
-            data.runShellCommandBeforeKill = {name: data.runShellCommandBeforeKill};
-          } else {
-            delete data.runShellCommandBeforeKill;
-          }
           this.confirm(data)
         }}
         buttonStyle="primary"
         formElements={formElements}>
-        <p>Are you sure you want to pause {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
+        <p>Are you sure you want Singularity to avoid shuffling this request?</p>
         <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );
@@ -95,7 +91,7 @@ class PauseModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  pauseRequest: (requestId, data, catchStatusCodes) => dispatch(PauseRequest.trigger(requestId, data, catchStatusCodes)).then((response) => ownProps.then && ownProps.then(response)),
+  enableShuffleOptOut: (requestId, data) => dispatch(PauseRequest.trigger(requestId, data, catchStatusCodes)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(
@@ -103,4 +99,4 @@ export default connect(
   mapDispatchToProps,
   null,
   { withRef: true }
-)(PauseModal);
+)(Shuff);
