@@ -462,6 +462,9 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
+    shuffleDisabled: (requestParent) => {
+      
+    },
   },
 
   isImmediateCleanup: (cleanupType, longRunning) => {

@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
 
-import { FetchRequest } from '../../../actions/api/requests';
+import { FetchRequest, FetchRequestShuffleOptOut } from '../../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
   FetchRequestHistory
@@ -24,21 +24,23 @@ import EnableHealthchecksButton from '../../common/modalButtons/EnableHealthchec
 import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthchecksButton';
 
 import Utils from '../../../utils';
+import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
-const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
+const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestShuffleOptOut, fetchRequestHistory, fetchActiveTasks, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
-    const promises = [];
-    promises.push(fetchRequest())
-    promises.push(fetchActiveTasks())
-    promises.push(fetchRequestHistory(5, 1))
-    return Promise.all(promises);
+    return Promise.all([
+      fetchRequest(),
+      fetchRequestShuffleOptOut(),
+      fetchActiveTasks(),
+      fetchRequestHistory(5, 1),
+    ]);
   }
 
   let fetchRequestAndHistory = () => {
-    const promises = [];
-    promises.push(fetchRequest())
-    promises.push(fetchRequestHistory(5, 1))
-    return Promise.all(promises);
+    return Promise.all([
+      fetchRequest(),
+      fetchRequestHistory(5, 1),
+    ]);
   }
 
   if (!requestParent || !requestParent.request) {
@@ -160,6 +162,13 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     }
   }
 
+  const shuffleOptOutButton = (
+    <ShuffleOptOutButton
+      requestId={request.id}
+      isOptedOut={Utils.request.shuffleDisabled(requestParent)}
+    />
+  );
+
   const removeButton = (
     <RemoveButton
       requestId={request.id}
@@ -201,6 +210,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
       {togglePauseButton}
       {maybeBounceButton}
       {maybeEditButton}
+      {shuffleOptOutButton}
       {maybeToggleHealthchecksButton}
       {removeButton}
       {quickLinks.length > 0 &&
@@ -226,6 +236,7 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true)),
+  fetchRequestShuffleOptOut: () => dispatch(FetchRequestShuffleOptOut.trigger(ownProps.requestId)),
   fetchRequestHistory: (count, page) => dispatch(FetchRequestHistory.trigger(ownProps.requestId, count, page)),
   fetchActiveTasks: () => dispatch(FetchActiveTasksForRequest.trigger(ownProps.requestId))
 });

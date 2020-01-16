@@ -24,6 +24,7 @@ public class SingularityRequestParent {
   private final Optional<SingularityExpiringPause> expiringPause;
   private final Optional<SingularityExpiringScale> expiringScale;
   private final Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks;
+  private final Optional<Boolean> shuffleOptOut;
   private final Optional<SingularityTaskIdsByStatus> taskIds;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
@@ -31,21 +32,24 @@ public class SingularityRequestParent {
   }
 
   public SingularityRequestParent(SingularityRequest request, RequestState state, Optional<SingularityRequestDeployState> requestDeployState) {
-    this(request, state, requestDeployState, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    this(request, state, requestDeployState, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
-  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request,
-                                  @JsonProperty("state") RequestState state,
-                                  @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState,
-                                  @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy,
-                                  @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
-                                  @JsonProperty("pendingDeployState") Optional<SingularityPendingDeploy> pendingDeployState,
-                                  @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
-                                  @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
-                                  @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
-                                  @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
-                                  @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds) {
+  public SingularityRequestParent(
+      @JsonProperty("request") SingularityRequest request,
+      @JsonProperty("state") RequestState state,
+      @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState,
+      @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy,
+      @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
+      @JsonProperty("pendingDeployState") Optional<SingularityPendingDeploy> pendingDeployState,
+      @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
+      @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
+      @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
+      @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+      @JsonProperty("shuffleOptOut") Optional<Boolean> shuffleOptOut,
+      @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds
+  ) {
     this.request = request;
     this.state = state;
     this.requestDeployState = requestDeployState;
@@ -56,9 +60,9 @@ public class SingularityRequestParent {
     this.expiringPause = expiringPause;
     this.expiringScale = expiringScale;
     this.expiringSkipHealthchecks = expiringSkipHealthchecks;
+    this.shuffleOptOut = shuffleOptOut;
     this.taskIds = taskIds;
   }
-
 
   @Schema(description = "Current state of the request")
   public RequestState getState() {
@@ -108,6 +112,11 @@ public class SingularityRequestParent {
   @Schema(description = "Details about a skip healthchecks action that will eventually revert", nullable = true)
   public Optional<SingularityExpiringSkipHealthchecks> getExpiringSkipHealthchecks() {
     return expiringSkipHealthchecks;
+  }
+
+  @Schema(description = "Whether the request has opted out of shuffling.", nullable = true)
+  public Optional<Boolean> getShuffleOptOut() {
+    return shuffleOptOut;
   }
 
   @Schema(description = "A list of active and pending task ids, separated by status", nullable = true)

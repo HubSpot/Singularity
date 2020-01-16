@@ -17,12 +17,12 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     return new SingularityPendingRequestParent(singularityRequestParent.getRequest(), singularityRequestParent.getState(), singularityRequestParent.getRequestDeployState(),
         singularityRequestParent.getActiveDeploy(), singularityRequestParent.getPendingDeploy(), singularityRequestParent.getPendingDeployState(), pendingRequest,
         singularityRequestParent.getExpiringBounce(), singularityRequestParent.getExpiringPause(), singularityRequestParent.getExpiringScale(),
-        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds());
+        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getShuffleOptOut(), singularityRequestParent.getTaskIds());
   }
 
   public static SingularityPendingRequestParent minimalFromRequestWithState(SingularityRequestWithState requestWithState, SingularityPendingRequest pendingRequest) {
     return new SingularityPendingRequestParent(requestWithState.getRequest(), requestWithState.getState(), Optional.empty(), Optional.empty(),
-        Optional.empty(), Optional.empty(), pendingRequest, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        Optional.empty(), Optional.empty(), pendingRequest, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
@@ -37,8 +37,9 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
                                          @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
                                          @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
                                          @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+                                         @JsonProperty("shuffleOptOut") Optional<Boolean> shuffleOptOut,
                                          @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds) {
-    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds);
+    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, shuffleOptOut, taskIds);
     this.pendingRequest = pendingRequest;
   }
 

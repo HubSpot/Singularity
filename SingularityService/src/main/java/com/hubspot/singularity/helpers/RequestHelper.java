@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import com.hubspot.singularity.data.ShuffleConfigurationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final ShuffleConfigurationManager shuffleCfgManager;
   private final TaskHistoryHelper taskHistoryHelper;
 
   @Inject
@@ -70,6 +72,7 @@ public class RequestHelper {
                        UserManager userManager,
                        TaskManager taskManager,
                        SingularityDeployHealthHelper deployHealthHelper,
+                       ShuffleConfigurationManager shuffleCfgManager,
                        TaskHistoryHelper taskHistoryHelper) {
     this.requestManager = requestManager;
     this.mailer = mailer;
@@ -78,6 +81,7 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
+    this.shuffleCfgManager = shuffleCfgManager;
     this.taskHistoryHelper = taskHistoryHelper;
   }
 
@@ -269,16 +273,21 @@ public class RequestHelper {
             CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture.supplyAsync(() -> requestManager.getExpiringPause(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
             CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture.supplyAsync(() -> requestManager.getExpiringScale(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
             CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.empty());
+            CompletableFuture<Optional<Boolean>> maybeShuffleOptOut = CompletableFuture.supplyAsync(() -> getShuffleOptOutForRequest(requestWithState.getRequest().getId()));
+
             return new SingularityRequestParent(
                 requestWithState.getRequest(), requestWithState.getState(),
                 Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
                 Optional.empty(), Optional.empty(), Optional.empty(), // full deploy data not provided
-                maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(),
+                maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(), maybeShuffleOptOut.join(),
                 maybeTaskIdsByStatus.join());
           } else {
             return new SingularityRequestParent(
-                requestWithState.getRequest(), requestWithState.getState(), Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
-                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+                requestWithState.getRequest(), requestWithState.getState(),
+                Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
+                Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty());
           }
         })
         .collect(Collectors.toList());
@@ -288,6 +297,10 @@ public class RequestHelper {
     // Most recent history is stored in zk, don't need to check mysql
     List<SingularityRequestHistory> requestHistory = requestManager.getRequestHistory(requestId);
     return JavaUtils.getFirst(requestHistory);
+  }
+
+  public Optional<Boolean> getShuffleOptOutForRequest(String requestId) {
+    return Optional.of(shuffleCfgManager.isOnShuffleBlacklist(requestId));
   }
 
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(String requestId) {
