@@ -462,8 +462,11 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
-    shuffleDisabled: (requestParent) => {
-      
+    shuffleOptOut: (requestParent) => {
+      const expiringShuffle = Utils.maybe(requestParent, 'expiringShuffleOptOut');
+      return expiringShuffle
+        ? (expiringShuffle.startMillis + expiringShuffle.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+        : false;
     },
   },
 

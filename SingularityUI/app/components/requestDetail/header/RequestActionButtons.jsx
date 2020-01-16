@@ -236,7 +236,6 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true)),
-  fetchRequestShuffleOptOut: () => dispatch(FetchRequestShuffleOptOut.trigger(ownProps.requestId)),
   fetchRequestHistory: (count, page) => dispatch(FetchRequestHistory.trigger(ownProps.requestId, count, page)),
   fetchActiveTasks: () => dispatch(FetchActiveTasksForRequest.trigger(ownProps.requestId))
 });
