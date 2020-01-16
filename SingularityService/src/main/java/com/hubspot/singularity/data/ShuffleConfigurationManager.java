@@ -4,9 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.api.SingularityPerRequestShuffleConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.transcoders.Transcoder;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
@@ -24,8 +22,7 @@ public class ShuffleConfigurationManager extends CuratorAsyncManager {
   public ShuffleConfigurationManager(
       CuratorFramework curator,
       SingularityConfiguration configuration,
-      MetricRegistry metricRegistry,
-      Transcoder<SingularityPerRequestShuffleConfiguration> shuffleCfgTranscoder
+      MetricRegistry metricRegistry
   ) {
     super(curator, configuration, metricRegistry);
   }
