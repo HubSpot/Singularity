@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.hubspot.singularity.api.SingularityPerRequestShuffleConfiguration;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
   private final Transcoder<CrashLoopInfo> crashLoopInfoTranscoder;
+  private final Transcoder<SingularityPerRequestShuffleConfiguration> shuffleCfgTranscoder;
 
   private final SingularityEventListener singularityEventListener;
 
@@ -71,6 +73,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
   private static final String CRASH_LOOP_ROOT = REQUEST_ROOT + "/crashloops";
   private static final String BOUNCING_ROOT = REQUEST_ROOT + "/bouncing";
+  private static final String SHUFFLE_CFG_ROOT = REQUEST_ROOT + "/shuffle";
   private static final String EXPIRING_ACTION_PATH_ROOT = REQUEST_ROOT + "/expiring";
   private static final String EXPIRING_BOUNCE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/bounce";
   private static final String EXPIRING_PAUSE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/pause";
@@ -91,7 +94,7 @@ public class RequestManager extends CuratorAsyncManager {
                         Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
                         Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
                         Transcoder<SingularityExpiringScale> expiringScaleTranscoder, Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
-                        SingularityWebCache webCache, SingularityLeaderCache leaderCache, Transcoder<CrashLoopInfo> crashLoopInfoTranscoder) {
+                        SingularityWebCache webCache, SingularityLeaderCache leaderCache, Transcoder<CrashLoopInfo> crashLoopInfoTranscoder, Transcoder<SingularityPerRequestShuffleConfiguration> shuffleCfgTranscoder) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -100,6 +103,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
     this.crashLoopInfoTranscoder = crashLoopInfoTranscoder;
+    this.shuffleCfgTranscoder = shuffleCfgTranscoder;
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
@@ -571,5 +575,25 @@ public class RequestManager extends CuratorAsyncManager {
     return getChildren(CRASH_LOOP_ROOT).stream()
         .flatMap((r) -> getCrashLoopsForRequest(r).stream())
         .collect(Collectors.toList());
+  }
+
+  private String getShuffleCfgPath(String requestId) {
+    return ZKPaths.makePath(SHUFFLE_CFG_ROOT, requestId);
+  }
+
+  public SingularityPerRequestShuffleConfiguration getShuffleCfg(String requestId) {
+    return getData(getShuffleCfgPath(requestId), shuffleCfgTranscoder).orElse(SingularityPerRequestShuffleConfiguration.DEFAULT);
+  }
+
+  public boolean shouldAvoidShuffle(String requestId) {
+    return getShuffleCfg(requestId).getAvoidShuffle();
+  }
+
+  public SingularityCreateResult saveShuffleCfg(String requestId, SingularityPerRequestShuffleConfiguration config) {
+    return save(getShuffleCfgPath(requestId), config, shuffleCfgTranscoder);
+  }
+
+  public SingularityDeleteResult deleteShuffleCfg(String requestId) {
+    return delete(getShuffleCfgPath(requestId));
   }
 }

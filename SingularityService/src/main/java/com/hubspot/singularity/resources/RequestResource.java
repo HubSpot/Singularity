@@ -28,6 +28,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.hubspot.singularity.api.SingularityPerRequestShuffleConfiguration;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,7 +143,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
-      Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest, SingularityUser user) {
+                             Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest, SingularityUser user) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
@@ -414,11 +415,11 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityPendingRequestParent scheduleImmediately(
-        @Parameter(hidden = true) @Auth SingularityUser user,
-        @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
-        @Parameter(hidden = true) @Context HttpServletRequest requestContext,
-        @QueryParam("minimal") Boolean minimalReturn,
-        @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
+      @Parameter(hidden = true) @Context HttpServletRequest requestContext,
+      @QueryParam("minimal") Boolean minimalReturn,
+      @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
     if (runNowRequest != null) {
       runNowRequest.getEnvOverrides().forEach((k, v) -> {
         checkBadRequest(!k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"), "Cannot override STARTED_BY_USER in env");
@@ -667,7 +668,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Immediately exits cooldown, scheduling new tasks immediately",
       responses = {
-        @ApiResponse(responseCode = "409", description = "Request is not in cooldown")
+          @ApiResponse(responseCode = "409", description = "Request is not in cooldown")
       }
   )
   public SingularityRequestParent exitCooldown(
@@ -815,10 +816,10 @@ public class RequestResource extends AbstractRequestResource {
   public List<SingularityRequestParent> getFinishedRequests(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
-                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                            @QueryParam("limit") Integer limit,
-                                                            @QueryParam("requestType") List<RequestType> requestTypes) {
+      @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @QueryParam("limit") Integer limit,
+      @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.ofNullable(limit), requestTypes);
@@ -874,7 +875,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Retrieve a specific Request by ID",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
       }
   )
   public SingularityRequestParent getRequest(
@@ -909,7 +910,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Delete a specific Request by ID and return the deleted Request",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
       }
   )
   public SingularityRequest deleteRequest(
@@ -949,7 +950,7 @@ public class RequestResource extends AbstractRequestResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   @Operation(summary = "Scale the number of instances up or down for a specific Request",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
       }
   )
   public SingularityRequestParent scale(
@@ -1026,7 +1027,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Delete/cancel the expiring scale. This makes the scale request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring scale request for that ID")
+          @ApiResponse(responseCode = "404", description = "No Request or expiring scale request for that ID")
       }
   )
   public SingularityRequestParent deleteExpiringScale(
@@ -1055,7 +1056,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID")
+          @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID")
       }
   )
   public SingularityRequestParent deleteExpiringSkipHealthchecks(
@@ -1068,8 +1069,8 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/pause")
   @Operation(summary = "Delete/cancel the expiring pause. This makes the pause request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring pause request for that ID"),
-  })
+          @ApiResponse(responseCode = "404", description = "No Request or expiring pause request for that ID"),
+      })
   public SingularityRequestParent deleteExpiringPause(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
@@ -1080,8 +1081,8 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/bounce")
   @Operation(summary = "Delete/cancel the expiring bounce. This makes the bounce request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring bounce request for that ID"),
-  })
+          @ApiResponse(responseCode = "404", description = "No Request or expiring bounce request for that ID"),
+      })
   public SingularityRequestParent deleteExpiringBounce(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
@@ -1112,8 +1113,8 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Update the skipHealthchecks field for the request, possibly temporarily",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-  })
+          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
+      })
   public SingularityRequestParent skipHealthchecks(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to skip healthchecks for") @PathParam("requestId") String requestId,
@@ -1169,5 +1170,44 @@ public class RequestResource extends AbstractRequestResource {
     final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
     return requestManager.getCrashLoopsForRequest(requestId);
+  }
+
+  @GET
+  @Path("/request/{requestId}/shuffle/config")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @Operation(
+      summary = "Set whether tasks associated with a request should not be shuffled, if possible.",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
+      })
+  public SingularityPerRequestShuffleConfiguration getShuffleConfiguration(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to configure") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext) {
+    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
+    return requestManager.getShuffleCfg(requestId);
+  }
+
+  @PUT
+  @Path("/request/{requestId}/shuffle/config")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @Operation(
+      summary = "Set whether tasks associated with a request should not be shuffled, if possible.",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
+      })
+  public SingularityPerRequestShuffleConfiguration setShuffleConfiguration(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to configure") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "Request level shuffle options") SingularityPerRequestShuffleConfiguration config) {
+    return maybeProxyToLeader(requestContext, SingularityPerRequestShuffleConfiguration.class, config, () -> avoidShuffle(requestId, config, user));
+  }
+  public SingularityPerRequestShuffleConfiguration avoidShuffle(String requestId, SingularityPerRequestShuffleConfiguration config, SingularityUser user) {
+    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+    requestManager.saveShuffleCfg(requestId, config);
+    return config;
   }
 }
