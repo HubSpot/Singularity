@@ -1647,6 +1647,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
 
+    Assertions.assertEquals(0, taskManager.getPendingTaskIds().size());
     Assertions.assertEquals(MesosTaskState.TASK_KILLED, deployStatistics.getLastTaskState().get().toTaskState().get());
     Assertions.assertEquals(0, deployStatistics.getNumFailures());
     Assertions.assertEquals(0, deployStatistics.getNumSequentialRetries());
