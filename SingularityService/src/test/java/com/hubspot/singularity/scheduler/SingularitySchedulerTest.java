@@ -1620,6 +1620,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testRunNowOnDemandJobsDoNotRetryAfterUserRequestedKill() {
+    initRequestWithType(RequestType.ON_DEMAND, false);
+    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
+    requestResource.postRequest(newRequest, singularityUser);
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().setMessage("foo bar").build());
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    SingularityTask task = taskManager.getActiveTasks().get(0);
+    taskManager.saveTaskCleanup(new SingularityTaskCleanup(
+        Optional.of(singularityUser.getId()),
+        TaskCleanupType.USER_REQUESTED,
+        System.currentTimeMillis(),
+        task.getTaskId(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty())
+    );
+    cleaner.drainCleanupQueue();
+    statusUpdate(task, TaskState.TASK_KILLED);
+    scheduler.drainPendingQueue();
+
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
+
+    Assertions.assertEquals(MesosTaskState.TASK_KILLED, deployStatistics.getLastTaskState().get().toTaskState().get());
+    Assertions.assertEquals(0, deployStatistics.getNumFailures());
+    Assertions.assertEquals(0, deployStatistics.getNumSequentialRetries());
+  }
+
+  @Test
   public void testOnDemandRunNowJobRespectsSpecifiedRunAtTime() {
     initOnDemandRequest();
     initFirstDeploy();
