@@ -76,8 +76,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
     return new SingularityRequestParent(newRequestData.orElse(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
         requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
-        requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getShuffleOptOutForRequest(requestId),
-        requestHelper.getTaskIdsByStatusForRequest(requestId));
+        requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getTaskIdsByStatusForRequest(requestId));
   }
 
   protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {
