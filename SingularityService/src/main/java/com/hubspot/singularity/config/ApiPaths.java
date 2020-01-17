@@ -15,6 +15,7 @@ public class ApiPaths {
   public static final String REQUEST_RESOURCE_PATH = API_BASE_PATH + "/requests";
   public static final String S3_LOG_RESOURCE_PATH = API_BASE_PATH + "/logs";
   public static final String SANDBOX_RESOURCE_PATH = API_BASE_PATH + "/sandbox";
+  public static final String SHUFFLE_RESOURCE_PATH = API_BASE_PATH + "/shuffle";
   public static final String SLAVE_RESOURCE_PATH = API_BASE_PATH + "/slaves";
   public static final String STATE_RESOURCE_PATH = API_BASE_PATH + "/state";
   public static final String TASK_RESOURCE_PATH = API_BASE_PATH + "/tasks";

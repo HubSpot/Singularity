@@ -161,14 +161,6 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     }
   }
 
-  const shuffleOptOutButton = (
-    <ShuffleOptOutButton
-      requestId={request.id}
-      then={fetchRequestAndHistory}
-      isOptedOut={Utils.request.shuffleDisabled(requestParent)}
-    />
-  );
-
   const removeButton = (
     <RemoveButton
       requestId={request.id}
@@ -210,7 +202,6 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
       {togglePauseButton}
       {maybeBounceButton}
       {maybeEditButton}
-      {shuffleOptOutButton}
       {maybeToggleHealthchecksButton}
       {removeButton}
       {quickLinks.length > 0 &&

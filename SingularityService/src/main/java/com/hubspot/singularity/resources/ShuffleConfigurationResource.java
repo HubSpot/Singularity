@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Optional;
 
-@Path(ApiPaths.STATE_RESOURCE_PATH)
+@Path(ApiPaths.SHUFFLE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Manages shuffle configuration of Singularity.")
 @Tags({@Tag(name = "Shuffle")})
@@ -75,7 +75,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/shuffle/config/blacklist")
+  @Path("/blacklist")
   @Operation(summary = "Retrieve the set of request IDs that should not be shuffled.")
   public List<String> getShuffleBlacklist(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkReadAuthorization(user);
@@ -83,7 +83,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/shuffle/config/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}}")
   @Operation(summary = "Check if a request ID is on the shuffle blacklist.")
   public boolean isOnShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,
@@ -94,7 +94,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @POST
-  @Path("/shuffle/config/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}}")
   @Operation(summary = "Add a request ID to the shuffle blacklist. No effect if already present.")
   public void addToShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,
@@ -105,7 +105,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @DELETE
-  @Path("/shuffle/config/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}}")
   @Operation(summary = "Remove a request ID from the shuffle blacklist. No effect if not present.")
   public void removeFromShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,
