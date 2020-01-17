@@ -12,7 +12,7 @@ import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 import MapInputFormGroup from '../common/formItems/formGroups/MapInputFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
-import { SaveRequest, FetchRequest } from '../../actions/api/requests';
+import { SaveRequest, FetchRequest, FetchRequestShuffleOptOut } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
 import { Form, Row, Col, Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
@@ -21,6 +21,8 @@ import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 import { FetchRacks } from '../../actions/api/racks';
 import { refresh } from '../../actions/ui/requestForm';
+import { EnableRequestShuffleOptOut } from '../../actions/api/requests.es6';
+import { DisableRequestShuffleOptOut } from '../../actions/api/requests.es6';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
@@ -747,8 +749,17 @@ RequestForm.propTypes = {
   router: PropTypes.object.isRequired
 };
 
+function selectRequestFromState(state, ownProps) {
+  const requestId = ownProps.params.requestId;
+  return requestId && Object.assign({
+    data: {
+      avoidShuffle: false,
+    },
+  }, state.api.request[requestId]);
+}
+
 function mapStateToProps(state, ownProps) {
-  const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
+  const request = selectRequestFromState(state, ownProps);
   return {
     notFound: request && request.statusCode === 404,
     pathname: ownProps.location.pathname,
@@ -768,14 +779,36 @@ function mapDispatchToProps(dispatch, ownProps) {
       dispatch(ClearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveRequest.trigger(requestBody)).then((response) => {
+      console.log(requestBody);
+      debugger;
+
+      const SaveRequestShuffleOptOut = requestBody.avoidShuffle
+        ? EnableRequestShuffleOptOut
+        : DisableRequestShuffleOptOut;
+
+      Promise.all([
+        dispatch(SaveRequest.trigger(requestBody)),
+        dispatch(SaveRequestShuffleOptOut.trigger(requestBody)),
+      ]).then((responses) => {
+        console.log(responses);
+        debugger;
+
+        const response = responses[0];
+
         if (response.type === 'SAVE_REQUEST_SUCCESS') {
           ownProps.router.push(`request/${response.data.request.id}`);
         }
       });
+
+      // dispatch(SaveRequest.trigger(requestBody)).then((response) => {
+      //   if (response.type === 'SAVE_REQUEST_SUCCESS') {
+      //     ownProps.router.push(`request/${response.data.request.id}`);
+      //   }
+      // });
     },
     fetchRequest(requestId) {
       dispatch(FetchRequest.trigger(requestId, true));
+      dispatch(FetchRequestShuffleOptOut.trigger(requestId));
     },
     fetchRacks() {
       dispatch(FetchRacks.trigger());
