@@ -24,7 +24,6 @@ import EnableHealthchecksButton from '../../common/modalButtons/EnableHealthchec
 import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthchecksButton';
 
 import Utils from '../../../utils';
-import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
 const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {

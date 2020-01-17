@@ -628,6 +628,15 @@ const RequestForm = (props) => {
     />
   );
 
+  const avoidShuffle = (
+    <CheckboxFormGroup
+      id="avoid-shuffle"
+      label="Avoid shuffling"
+      checked={getValue('avoidShuffle') || false}
+      onChange={(newValue) => updateField('avoidShuffle', newValue)}
+    />
+  );
+
   const saveButton = (
     <div id="button-row">
       <span>
@@ -693,6 +702,7 @@ const RequestForm = (props) => {
                   { shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }
                   { shouldRenderField('skipHealthchecks') && skipHealthchecks }
                   { shouldRenderField('bounceAfterScale') && bounceAfterScale }
+                  { shouldRenderField('avoidShuffle') && avoidShuffle }
                 </fieldset>
               </div>
             )}
