@@ -285,7 +285,7 @@ public class SingularityUsageHelper {
 
   private List<SingularityTaskUsage> getFullListOfTaskUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0 , 0, 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0, 0, 0)); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
@@ -296,11 +296,8 @@ public class SingularityUsageHelper {
   private boolean isEligibleForShuffle(SingularityTaskId task, Set<String> requestBlacklist) {
     Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
 
-    // requestBlacklist = dynamic list from zookeeper
-    // configuration = constant list from yaml file
     return (
         !requestBlacklist.contains(task.getRequestId())
-            && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
             && isLongRunning(task)
             && (
             configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
@@ -335,13 +332,13 @@ public class SingularityUsageHelper {
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
-      RequestUtilization previous,
-      List<SingularityTaskUsage> pastTaskUsages,
-      SingularityTaskUsage latestUsage,
-      SingularityTaskId task,
-      double memoryMbReservedForTask,
-      double cpuReservedForTask,
-      double diskMbReservedForTask) {
+                                        RequestUtilization previous,
+                                        List<SingularityTaskUsage> pastTaskUsages,
+                                        SingularityTaskUsage latestUsage,
+                                        SingularityTaskId task,
+                                        double memoryMbReservedForTask,
+                                        double cpuReservedForTask,
+                                        double diskMbReservedForTask) {
     String requestId = task.getRequestId();
     RequestUtilization newRequestUtilization = utilizationPerRequestId.getOrDefault(requestId, new RequestUtilization(requestId, task.getDeployId()));
     // Take the previous request utilization into account to better measure 24 hour max/min values
