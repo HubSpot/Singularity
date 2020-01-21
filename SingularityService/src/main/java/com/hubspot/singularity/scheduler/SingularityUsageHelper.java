@@ -297,7 +297,7 @@ public class SingularityUsageHelper {
     Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
 
     return (
-        !requestBlacklist.contains(task.getRequestId())
+        (!requestBlacklist.contains(task.getRequestId()) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId()))
             && isLongRunning(task)
             && (
             configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
