@@ -25,4 +25,3 @@ public class ShuffleBlacklistMigration extends ZkDataMigration {
     }
   }
 }
-a
