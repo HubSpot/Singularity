@@ -751,11 +751,24 @@ RequestForm.propTypes = {
 
 function selectRequestFromState(state, ownProps) {
   const requestId = ownProps.params.requestId;
-  return requestId && Object.assign({
+  const requestState = state.api.request[requestId];
+  const shuffleState = state.api.shuffleOptOut[requestId];
+
+  if (!requestState || !shuffleState) {
+    return requestId;
+  }
+  
+  // need to monkeypatch avoidShuffle property, as it comes from different API endpoint.
+  return {
+    ...requestState,
     data: {
-      avoidShuffle: Boolean(state.api.shuffle[requestId]),
-    },
-  }, state.api.request[requestId]);
+      ...requestState.data,
+      request: {
+        ...requestState.data.request,
+        avoidShuffle: shuffleState.data,
+      }
+    }
+  };
 }
 
 function mapStateToProps(state, ownProps) {
@@ -788,7 +801,7 @@ function mapDispatchToProps(dispatch, ownProps) {
         dispatch(SaveRequestShuffleOptOut.trigger(requestBody.id)),
       ]).then((responses) => {
         if (responses.every(response => response.type.includes('SUCCESS'))) {
-          ownProps.router.push(`request/${response.data.request.id}`);
+          ownProps.router.push(`request/${requestBody.id}`);
         }
       });
     },

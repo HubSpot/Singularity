@@ -1,6 +1,6 @@
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { FetchRacks } from '../../actions/api/racks';
-import { SaveRequest, FetchRequest } from '../../actions/api/requests';
+import { SaveRequest, FetchRequest, FetchRequestShuffleOptOut } from '../../actions/api/requests';
 
 export const refresh = (requestId, formId) => (dispatch) => {
 	const promises = []
@@ -9,6 +9,7 @@ export const refresh = (requestId, formId) => (dispatch) => {
 
 	if (requestId) {
 		promises.push(dispatch(FetchRequest.trigger(requestId)));
+		promises.push(dispatch(FetchRequestShuffleOptOut.trigger(requestId)));
 	} else {
 		promises.push(dispatch(FetchRequest.clearData()));
 	}

@@ -168,11 +168,12 @@ export const CancelRequestBounce = buildJsonApiAction(
   })
 );
 
-export const FetchRequestShuffleOptOut = buildJsonApiAction(
+export const FetchRequestShuffleOptOut = buildApiAction(
   'FETCH_REQUEST_SHUFFLE_OPT_OUT',
-  'GET',
-  (requestId) => ({
+  (requestId, renderNotFoundIf404) => ({
     url: `/shuffle/blacklist/${requestId}`,
+    renderNotFoundIf404,
+    catchStatusCodes: [404]
   }),
   (requestId) => requestId
 );
