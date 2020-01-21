@@ -25,11 +25,6 @@ public class ShuffleConfigurationManager extends CuratorAsyncManager {
       MetricRegistry metricRegistry
   ) {
     super(curator, configuration, metricRegistry);
-
-    // preload hardcoded configuration blacklist
-    for (String requestId : configuration.getDoNotShuffleRequests()) {
-      addToShuffleBlacklist(requestId);
-    }
   }
 
   private String getShuffleBlacklistPath(String requestId) {

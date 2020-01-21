@@ -26,7 +26,10 @@ public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBas
 
   @Inject
   public ShuffleConfigurationManagerTest() {
-    super(false);
+    super(false, (cfg) -> {
+      cfg.setDoNotShuffleRequests(Arrays.asList("no-shuffle"));
+      return null;
+    });
   }
 
   @Test
@@ -50,15 +53,7 @@ public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBas
 
   @Test
   public void itPreloadsBlacklistFromConfiguration() {
-    // The customCfg constructor only allows primitives to be set,
-    // so attempting to set the blacklist there causes opaque injector exceptions, hence this awkward workaround.
-    List<String> original = configuration.getDoNotShuffleRequests();
-    configuration.setDoNotShuffleRequests(Arrays.asList("do-not-shuffle"));
-
-    ShuffleConfigurationManager tmp = new ShuffleConfigurationManager(shuffleCfgManager.curator, configuration, metricRegistry);
-    Assertions.assertTrue(tmp.isOnShuffleBlacklist("do-not-shuffle"));
-
-    configuration.setDoNotShuffleRequests(original);
+    Assertions.assertTrue(shuffleCfgManager.isOnShuffleBlacklist("no-shuffle"));
   }
 
   @Test
