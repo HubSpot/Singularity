@@ -81,7 +81,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}")
   @Operation(summary = "Check if a request ID is on the shuffle blacklist.")
   public boolean isOnShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,
@@ -92,7 +92,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @POST
-  @Path("/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}")
   @Operation(summary = "Add a request ID to the shuffle blacklist. No effect if already present.")
   public void addToShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,
@@ -103,7 +103,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   }
 
   @DELETE
-  @Path("/blacklist/{requestId}}")
+  @Path("/blacklist/{requestId}")
   @Operation(summary = "Remove a request ID from the shuffle blacklist. No effect if not present.")
   public void removeFromShuffleBlacklist(
       @Parameter(hidden = true) @Auth SingularityUser user,

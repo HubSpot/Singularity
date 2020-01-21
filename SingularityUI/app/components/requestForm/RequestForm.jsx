@@ -779,9 +779,6 @@ function mapDispatchToProps(dispatch, ownProps) {
       dispatch(ClearForm(formId));
     },
     save(requestBody) {
-      console.log(requestBody);
-      debugger;
-
       const SaveRequestShuffleOptOut = requestBody.avoidShuffle
         ? EnableRequestShuffleOptOut
         : DisableRequestShuffleOptOut;
@@ -790,21 +787,10 @@ function mapDispatchToProps(dispatch, ownProps) {
         dispatch(SaveRequest.trigger(requestBody)),
         dispatch(SaveRequestShuffleOptOut.trigger(requestBody.id)),
       ]).then((responses) => {
-        console.log(responses);
-        debugger;
-
-        const response = responses[0];
-
-        if (response.type === 'SAVE_REQUEST_SUCCESS') {
+        if (responses.every(response => response.type.includes('SUCCESS'))) {
           ownProps.router.push(`request/${response.data.request.id}`);
         }
       });
-
-      // dispatch(SaveRequest.trigger(requestBody)).then((response) => {
-      //   if (response.type === 'SAVE_REQUEST_SUCCESS') {
-      //     ownProps.router.push(`request/${response.data.request.id}`);
-      //   }
-      // });
     },
     fetchRequest(requestId) {
       dispatch(FetchRequest.trigger(requestId, true));
