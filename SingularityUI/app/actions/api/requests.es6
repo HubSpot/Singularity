@@ -173,7 +173,8 @@ export const FetchRequestShuffleOptOut = buildJsonApiAction(
   'GET',
   (requestId) => ({
     url: `/shuffle/blacklist/${requestId}`,
-  })
+  }),
+  (requestId) => requestId
 );
 
 export const EnableRequestShuffleOptOut = buildJsonApiAction(

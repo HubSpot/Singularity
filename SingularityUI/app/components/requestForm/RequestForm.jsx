@@ -753,7 +753,7 @@ function selectRequestFromState(state, ownProps) {
   const requestId = ownProps.params.requestId;
   return requestId && Object.assign({
     data: {
-      avoidShuffle: false,
+      avoidShuffle: Boolean(state.api.shuffle[requestId]),
     },
   }, state.api.request[requestId]);
 }
@@ -788,7 +788,7 @@ function mapDispatchToProps(dispatch, ownProps) {
 
       Promise.all([
         dispatch(SaveRequest.trigger(requestBody)),
-        dispatch(SaveRequestShuffleOptOut.trigger(requestBody)),
+        dispatch(SaveRequestShuffleOptOut.trigger(requestBody.id)),
       ]).then((responses) => {
         console.log(responses);
         debugger;

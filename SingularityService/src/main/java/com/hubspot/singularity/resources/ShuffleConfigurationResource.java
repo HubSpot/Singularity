@@ -69,8 +69,6 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
 
     if (request.isPresent()) {
       authorizationHelper.checkForAuthorization(request.get().getRequest(), user, scope);
-    } else {
-      throw WebExceptions.notFound("No request matching id %s", requestId);
     }
   }
 
