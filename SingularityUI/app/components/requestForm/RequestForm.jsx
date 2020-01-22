@@ -12,7 +12,7 @@ import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 import MapInputFormGroup from '../common/formItems/formGroups/MapInputFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
-import { SaveRequest, FetchRequest, FetchRequestShuffleOptOut } from '../../actions/api/requests';
+import { SaveRequest, FetchRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
 import { Form, Row, Col, Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
@@ -21,8 +21,6 @@ import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 import { FetchRacks } from '../../actions/api/racks';
 import { refresh } from '../../actions/ui/requestForm';
-import { EnableRequestShuffleOptOut } from '../../actions/api/requests.es6';
-import { DisableRequestShuffleOptOut } from '../../actions/api/requests.es6';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
@@ -630,15 +628,6 @@ const RequestForm = (props) => {
     />
   );
 
-  const avoidShuffle = (
-    <CheckboxFormGroup
-      id="avoid-shuffle"
-      label="Avoid shuffling"
-      checked={getValue('avoidShuffle') || false}
-      onChange={(newValue) => updateField('avoidShuffle', newValue)}
-    />
-  );
-
   const saveButton = (
     <div id="button-row">
       <span>
@@ -704,7 +693,6 @@ const RequestForm = (props) => {
                   { shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }
                   { shouldRenderField('skipHealthchecks') && skipHealthchecks }
                   { shouldRenderField('bounceAfterScale') && bounceAfterScale }
-                  { shouldRenderField('avoidShuffle') && avoidShuffle }
                 </fieldset>
               </div>
             )}
@@ -749,30 +737,8 @@ RequestForm.propTypes = {
   router: PropTypes.object.isRequired
 };
 
-function selectRequestFromState(state, ownProps) {
-  const requestId = ownProps.params.requestId;
-  const requestState = state.api.request[requestId];
-  const shuffleState = state.api.shuffleOptOut[requestId];
-
-  if (!requestState || !shuffleState) {
-    return requestId;
-  }
-  
-  // need to monkeypatch avoidShuffle property, as it comes from different API endpoint.
-  return {
-    ...requestState,
-    data: {
-      ...requestState.data,
-      request: {
-        ...requestState.data.request,
-        avoidShuffle: shuffleState.data,
-      }
-    }
-  };
-}
-
 function mapStateToProps(state, ownProps) {
-  const request = selectRequestFromState(state, ownProps);
+  const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
   return {
     notFound: request && request.statusCode === 404,
     pathname: ownProps.location.pathname,
@@ -792,22 +758,14 @@ function mapDispatchToProps(dispatch, ownProps) {
       dispatch(ClearForm(formId));
     },
     save(requestBody) {
-      const SaveRequestShuffleOptOut = requestBody.avoidShuffle
-        ? EnableRequestShuffleOptOut
-        : DisableRequestShuffleOptOut;
-
-      Promise.all([
-        dispatch(SaveRequest.trigger(requestBody)),
-        dispatch(SaveRequestShuffleOptOut.trigger(requestBody.id)),
-      ]).then((responses) => {
-        if (responses.every(response => response.type.includes('SUCCESS'))) {
-          ownProps.router.push(`request/${requestBody.id}`);
+      dispatch(SaveRequest.trigger(requestBody)).then((response) => {
+        if (response.type === 'SAVE_REQUEST_SUCCESS') {
+          ownProps.router.push(`request/${response.data.request.id}`);
         }
       });
     },
     fetchRequest(requestId) {
       dispatch(FetchRequest.trigger(requestId, true));
-      dispatch(FetchRequestShuffleOptOut.trigger(requestId));
     },
     fetchRacks() {
       dispatch(FetchRacks.trigger());

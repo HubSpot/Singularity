@@ -63,7 +63,6 @@ export const FIELDS_BY_REQUEST_TYPE = {
       }
     },
     {id: 'skipHealthchecks', type: 'bool'},
-    {id: 'avoidShuffle', type: 'bool'},
     {
       id: 'emailConfigurationOverrides',
       type: {
