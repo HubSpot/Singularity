@@ -40,36 +40,17 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
 
   private final ShuffleConfigurationManager shuffleCfgManager;
   private final SingularityAuthorizationHelper authorizationHelper;
-  private final RequestManager requestManager;
 
   @Inject
   public ShuffleConfigurationResource(
       AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper,
       ShuffleConfigurationManager shuffleCfgManager,
-      SingularityAuthorizationHelper authorizationHelper,
-      RequestManager requestManager
+      SingularityAuthorizationHelper authorizationHelper
   ) {
     super(httpClient, leaderLatch, objectMapper);
 
     this.shuffleCfgManager = shuffleCfgManager;
     this.authorizationHelper = authorizationHelper;
-    this.requestManager = requestManager;
-  }
-
-  private void checkReadAuthorization(SingularityUser user, String requestId) {
-    checkRequestAuthorization(user, requestId, SingularityAuthorizationScope.READ);
-  }
-
-  private void checkWriteAuthorization(SingularityUser user, String requestId) {
-    checkRequestAuthorization(user, requestId, SingularityAuthorizationScope.WRITE);
-  }
-
-  private void checkRequestAuthorization(SingularityUser user, String requestId, SingularityAuthorizationScope scope) {
-    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId);
-
-    if (request.isPresent()) {
-      authorizationHelper.checkForAuthorization(request.get().getRequest(), user, scope);
-    }
   }
 
   @GET
@@ -87,7 +68,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to fetch crash loops for") @PathParam("requestId") String requestId
   ) {
-    checkReadAuthorization(user, requestId);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     return shuffleCfgManager.isOnShuffleBlacklist(requestId);
   }
 
@@ -98,7 +79,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to fetch crash loops for") @PathParam("requestId") String requestId
   ) {
-    checkWriteAuthorization(user, requestId);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.WRITE);
     shuffleCfgManager.addToShuffleBlacklist(requestId);
   }
 
@@ -109,7 +90,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to fetch crash loops for") @PathParam("requestId") String requestId
   ) {
-    checkWriteAuthorization(user, requestId);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.WRITE);
     shuffleCfgManager.removeFromShuffleBlacklist(requestId);
   }
 }
