@@ -41,6 +41,10 @@ class ShuffleOptOutButton extends Component {
 }
 
 function mapStateToProps(state, ownProps) {
+  if (ownProps.isOptedOut !== undefined) {
+    return {};
+  }
+  
   return {
     isOptedOut: state.api.shuffleOptOut[ownProps.requestId].data,
   };

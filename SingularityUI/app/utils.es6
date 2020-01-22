@@ -478,6 +478,10 @@ const Utils = {
     }
   },
 
+  isShuffleCleanup: (cleanupType) => {
+    return (cleanupType === 'REBALANCE_MEMORY_USAGE' || cleanupType === 'REBALANCE_CPU_USAGE');
+  },
+
   isActiveSlave(slaveInfo) {
     return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
