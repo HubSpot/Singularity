@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
 
-import { FetchRequest } from '../../../actions/api/requests';
+import { FetchRequest, FetchRequestShuffleOptOut } from '../../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
   FetchRequestHistory
@@ -26,12 +26,13 @@ import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthch
 import Utils from '../../../utils';
 import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
-const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
+const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchRequest, fetchRequestHistory, fetchActiveTasks, fetchRequestShuffleOptOut, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
     return Promise.all([
       fetchRequest(),
       fetchActiveTasks(),
       fetchRequestHistory(5, 1),
+      fetchRequestShuffleOptOut(),
     ]);
   }
 
@@ -39,10 +40,11 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     return Promise.all([
       fetchRequest(),
       fetchRequestHistory(5, 1),
+      fetchRequestShuffleOptOut(),
     ]);
   }
 
-  if (!requestParent || !requestParent.request) {
+  if (!requestParent || !requestParent.request || fetchingShuffleOptOut) {
     return <div></div>;
   }
   const {request, state} = requestParent;
@@ -227,13 +229,15 @@ RequestActionButtons.propTypes = {
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data'])
+  requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+  fetchingShuffleOptOut: Utils.maybe(state.api.shuffleOptOut, [ownProps.requestId, 'isFetching'], true),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true)),
   fetchRequestHistory: (count, page) => dispatch(FetchRequestHistory.trigger(ownProps.requestId, count, page)),
-  fetchActiveTasks: () => dispatch(FetchActiveTasksForRequest.trigger(ownProps.requestId))
+  fetchActiveTasks: () => dispatch(FetchActiveTasksForRequest.trigger(ownProps.requestId)),
+  fetchRequestShuffleOptOut: () => dispatch(FetchRequestShuffleOptOut.trigger(ownProps.requestId)),
 });
 
 export default withRouter(connect(

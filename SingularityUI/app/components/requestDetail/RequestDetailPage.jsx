@@ -28,6 +28,7 @@ import RequestUtilization from './RequestUtilization';
 import Utils from '../../utils';
 
 import { refresh } from '../../actions/ui/requestDetail';
+import { FetchRequestShuffleOptOut } from '../../actions/api/requests.es6';
 
 class RequestDetailPage extends Component {
   componentDidMount() {
@@ -94,8 +95,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     FetchRequest.trigger(ownProps.params.requestId, true),
     FetchTaskCleanups.trigger(),
     FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
-    FetchScheduledTasksForRequest.trigger(ownProps.params.requestId)
+    FetchScheduledTasksForRequest.trigger(ownProps.params.requestId),
   ];
+
   return {
     refresh: () => {
       dispatch(RefreshActions.BeginAutoRefresh(
@@ -118,4 +120,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), true)));
+)(rootComponent(
+  RequestDetailPage,
+  (props) => refresh(props.params.requestId),
+  true,
+)));

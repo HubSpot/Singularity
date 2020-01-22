@@ -26,27 +26,26 @@ class ShuffleOptOutModal extends Component {
 
   renderActionText() {
     if (this.props.isOptedOut) {
-      return <strong>on</strong>
+      return <strong>Enable</strong>
     } else {
-      return <strong>off</strong>
+      return <strong>Disable</strong>
     }
   }
 
   render() {
     const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    const { isOptedOut } = this.props;
 
     return (
       <FormModal
-        name="Shuffle Opt Out"
+        name={isOptedOut ? "Enable Shuffling For Request" : "Disable Shuffling For Request"}
         ref="shuffleOptOutModal"
-        action="Opt Out of Request Shuffle"
+        action={isOptedOut ? "Enable Shuffling" : "Disable Shuffling"}
         onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={[]}>
-        <p>
-          Turn {this.renderActionText()} shuffling for {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?
-          Note that Singularity may still bounce your tasks if necessary, such as when the host itself fails.
-        </p>
+        <p>{this.renderActionText()} shuffling for {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
+        <p>Note that Singularity may still bounce your tasks if necessary, such as during host failures.</p>
         <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );

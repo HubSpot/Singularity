@@ -17,18 +17,18 @@ class ShuffleOptOutButton extends Component {
 
   renderButton() {
     if (this.props.isOptedOut) {
-      return <Button bsStyle="primary">Enable Shuffling</Button>
+      return 'Enable Shuffling';
     }
 
-    return (
-      <Button bsStyle="primary">Disable Shuffling</Button>
-    );
+    return 'Disable Shuffling';
   }
 
   render() {
     return (
       <span>
-        {getClickComponent(this.renderButton())}
+        <Button bsStyle="primary" onClick={() => this.refs.modal.getWrappedInstance().show()}>
+          {this.renderButton()}
+        </Button>
         <ShuffleOptOutModal
           ref="modal"
           requestId={this.props.requestId}
@@ -42,7 +42,7 @@ class ShuffleOptOutButton extends Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    isOptedOut: state.api.shuffleOptOut[ownProps.requestId],
+    isOptedOut: state.api.shuffleOptOut[ownProps.requestId].data,
   };
 }
 
