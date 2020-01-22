@@ -46,8 +46,9 @@ public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBas
   @Test
   public void itSupportsRemovingBlacklistedRequestIds() {
     shuffleCfgManager.addToShuffleBlacklist(r1);
-    shuffleCfgManager.removeFromShuffleBlacklist(r1);
+    Assertions.assertTrue(shuffleCfgManager.isOnShuffleBlacklist(r1));
 
+    shuffleCfgManager.removeFromShuffleBlacklist(r1);
     Assertions.assertFalse(shuffleCfgManager.isOnShuffleBlacklist(r1));
   }
 
