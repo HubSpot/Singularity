@@ -24,6 +24,7 @@ import EnableHealthchecksButton from '../../common/modalButtons/EnableHealthchec
 import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthchecksButton';
 
 import Utils from '../../../utils';
+import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
 const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
@@ -160,6 +161,10 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     }
   }
 
+  const shuffleOptOutButton = (
+    <ShuffleOptOutButton requestId={request.id} then={fetchRequestAndHistory} />
+  );
+
   const removeButton = (
     <RemoveButton
       requestId={request.id}
@@ -202,6 +207,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
       {maybeBounceButton}
       {maybeEditButton}
       {maybeToggleHealthchecksButton}
+      {shuffleOptOutButton}
       {removeButton}
       {quickLinks.length > 0 &&
         <DropdownButton bsStyle="default" title="Quick Links" pullRight>
