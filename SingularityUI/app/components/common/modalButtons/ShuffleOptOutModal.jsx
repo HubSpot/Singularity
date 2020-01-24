@@ -32,6 +32,15 @@ class ShuffleOptOutModal extends Component {
     }
   }
 
+  renderRequestText() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    if (requestIds.length > 1) {
+      return 'these requests';
+    } else {
+      return 'this request';
+    }
+  }
+
   render() {
     const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     const { isOptedOut } = this.props;
@@ -44,8 +53,8 @@ class ShuffleOptOutModal extends Component {
         onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={[]}>
-        <p>{this.renderActionText()} shuffling for {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
-        <p>Note that Singularity may still bounce your tasks if necessary, such as during host failures.</p>
+        <p>{this.renderActionText()} task shuffling due to memory pressure or CPU overusage for {this.renderRequestText()}?</p>
+        <p>Note that this will not prevent all restarts of your task. A task may still be bounced or shuffled for events such as host decommissions.</p>
         <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );
