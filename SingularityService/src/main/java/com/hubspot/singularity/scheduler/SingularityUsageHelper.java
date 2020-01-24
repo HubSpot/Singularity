@@ -205,8 +205,8 @@ public class SingularityUsageHelper {
         if (pastTaskUsages.isEmpty()) {
           Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
           if (maybeStartingUpdate.isPresent()) {
-            long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
-            double usedCpusSinceStart = latestUsage.getCpuSeconds() / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - startTimestampSeconds);
+            long startTimestamp = maybeStartingUpdate.get().getTimestamp();
+            double usedCpusSinceStart = latestUsage.getCpuSeconds() / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - startTimestamp);
             currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), (long) taskUsage.getStatistics().getTimestamp() * 1000, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
 
             cpusUsedOnSlave += usedCpusSinceStart;
