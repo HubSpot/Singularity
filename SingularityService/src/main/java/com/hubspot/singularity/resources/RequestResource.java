@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -94,7 +95,6 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -124,25 +124,13 @@ public class RequestResource extends AbstractRequestResource {
   private final RackManager rackManager;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator,
-                         DeployManager deployManager,
-                         TaskManager taskManager,
-                         RebalancingHelper rebalancingHelper,
-                         RequestManager requestManager,
-                         SingularityMailer mailer,
-                         SingularityAuthorizationHelper authorizationHelper,
-                         RequestHelper requestHelper,
-                         LeaderLatch leaderLatch,
-                         SlaveManager slaveManager,
-                         AsyncHttpClient httpClient,
-                         @Singularity ObjectMapper objectMapper,
-                         RackManager rackManager,
-                         SingularityConfiguration configuration,
-                         SingularityExceptionNotifier exceptionNotifier,
-                         SingularitySlaveAndRackManager slaveAndRackManager) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
+                         RequestManager requestManager, SingularityMailer mailer,
+                         SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, @Singularity ObjectMapper objectMapper,
+                         RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
@@ -152,7 +140,6 @@ public class RequestResource extends AbstractRequestResource {
     this.rackManager = rackManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
-    this.slaveAndRackManager = slaveAndRackManager;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -213,8 +200,7 @@ public class RequestResource extends AbstractRequestResource {
           }
         });
 
-        int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
-        if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
+        if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
             rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
           }
