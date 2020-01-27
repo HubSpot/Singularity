@@ -101,6 +101,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final StatusUpdateQueue queuedUpdates;
+  private final ExecutorService reconnectExecutor;
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
@@ -139,7 +140,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.subscribeExecutor = threadPoolFactory.getSingleThreaded("subscribe-scheduler");
     this.state = new SchedulerState();
     this.configuration = configuration;
-
+    this.reconnectExecutor = threadPoolFactory.getSingleThreaded("reconnect-scheduler");
   }
 
   @Override
@@ -383,6 +384,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void reconnectMesos() {
+    // Done on a separate thread so that possibly interrupting the subscriber thread will not loop around to call
+    // this method again on the same thread, causing an InterruptException
+    CompletableFuture.runAsync(this::reconnectMesosSync, reconnectExecutor);
+  }
+
+  public void reconnectMesosSync() {
     callWithStateLock(() -> {
       state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
       LOG.info("Paused scheduler actions, closing existing mesos connection");
