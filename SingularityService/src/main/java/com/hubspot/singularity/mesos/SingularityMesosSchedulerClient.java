@@ -276,6 +276,7 @@ public class SingularityMesosSchedulerClient {
     if (subscriberThread != null) {
       try {
         if (!subscriberThread.isInterrupted()) {
+          LOG.info("Interrupting current subscriber thread");
           subscriberThread.interrupt();
         }
         subscriberThread.join(10000);
