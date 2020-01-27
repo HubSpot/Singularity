@@ -137,7 +137,7 @@ public abstract class SingularityMesosScheduler {
   /**
    * Called when an uncaught exception occurs while attempting to connect to the mesos master
    */
-  public abstract void onConnectException(Throwable t);
+  public abstract void onSubscribeException(Throwable t);
 
   /**
    * Singularity-specific methods used elsewhere in the code to determine scheduler

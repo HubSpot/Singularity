@@ -12,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -104,8 +103,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final StatusUpdateQueue queuedUpdates;
   private final ExecutorService reconnectExecutor;
-  private final AtomicInteger reconnectAttempts;
   private final AtomicBoolean restartInProgress = new AtomicBoolean(false);
+  private final AtomicReference<Throwable> reconnectException = new AtomicReference<>(null);
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
@@ -145,7 +144,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.state = new SchedulerState();
     this.configuration = configuration;
     this.reconnectExecutor = threadPoolFactory.getSingleThreaded("reconnect-scheduler");
-    this.reconnectAttempts = new AtomicInteger(0);
   }
 
   @Override
@@ -155,7 +153,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           MasterInfo newMasterInfo = subscribed.getMasterInfo();
           masterInfo.set(newMasterInfo);
           Preconditions.checkState(state.getMesosSchedulerState() != MesosSchedulerState.SUBSCRIBED, "Asked to startup - but in invalid state: %s", state.getMesosSchedulerState());
-
           double advertisedHeartbeatIntervalSeconds = subscribed.getHeartbeatIntervalSeconds();
           if (advertisedHeartbeatIntervalSeconds > 0) {
             heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
@@ -169,7 +166,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           startup.startup(newMasterInfo);
           state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
           restartInProgress.set(false);
-          reconnectAttempts.set(0);
           handleQueuedStatusUpdates();
         }, "subscribed", false),
         subscribeExecutor);
@@ -294,9 +290,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void onUncaughtException(Throwable t) {
-    LOG.error("uncaught exception", t);
+    if (t instanceof PrematureChannelClosureException) {
+      LOG.warn("PrematureChannelClosureException, will attempt restart");
+    } else {
+      LOG.error("uncaught exception", t);
+    }
     callWithStateLock(() -> {
       if (t instanceof PrematureChannelClosureException) {
+        state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
         reconnectMesos();
       } else {
         LOG.error("Aborting due to error: {}", t.getMessage(), t);
@@ -307,9 +308,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void onConnectException(Throwable t) {
+  public void onSubscribeException(Throwable t) {
     LOG.warn("Received {} ({}), checking for reconnect", t.getClass(), t.getMessage());
-    restartInProgress.set(false);
+    if (!state.isRunning()) {
+      reconnectException.set(t);
+    }
     reconnectMesos();
   }
 
@@ -395,19 +398,13 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void reconnectMesos() {
     // Done on a separate thread so that possibly interrupting the subscriber thread will not loop around to call
     // this method again on the same thread, causing an InterruptException
+    if (!restartInProgress.compareAndSet(false, true)) {
+      return;
+    }
     CompletableFuture.runAsync(this::reconnectMesosSync, reconnectExecutor);
   }
 
   public void reconnectMesosSync() {
-    callWithStateLock(() -> {
-      if (!restartInProgress.compareAndSet(false, true)) {
-        LOG.info("Skipping reconnect, attempt already in progress");
-        return;
-      }
-      state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
-      LOG.info("Paused scheduler actions, closing existing mesos connection");
-    }, "reconnectMesos", false);
-
     try {
       Retryer<Boolean> startRetryer = RetryerBuilder.<Boolean>newBuilder()
           .retryIfException()
@@ -421,8 +418,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         LOG.info("Closed existing mesos connection");
         start();
         long start = System.currentTimeMillis();
-        while (restartInProgress.get() && System.currentTimeMillis() - start < 30000) {
-          Thread.sleep(1000);
+        while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
+          Thread.sleep(500);
+          if (reconnectException.get() != null) {
+            LOG.warn("Exception during reconnect", reconnectException.getAndSet(null));
+            return false;
+          }
         }
         return state.isRunning();
       });

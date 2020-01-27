@@ -34,7 +34,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
-import com.hubspot.mesos.rx.java.Mesos4xxException;
 import com.hubspot.mesos.rx.java.MesosClient;
 import com.hubspot.mesos.rx.java.MesosClientBuilder;
 import com.hubspot.mesos.rx.java.SinkOperation;
@@ -106,7 +105,7 @@ public class SingularityMesosSchedulerClient {
           } catch (RuntimeException|URISyntaxException e) {
             if (!Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof InterruptedException)) {
               LOG.error("Could not connect: ", e);
-              scheduler.onConnectException(e);
+              scheduler.onSubscribeException(e);
             } else {
               LOG.warn("Interruped stream from mesos on subscriber thread, closing");
             }
@@ -218,15 +217,7 @@ public class SingularityMesosSchedulerClient {
               subscribed -> {
                 this.frameworkId = subscribed.getFrameworkId();
                 scheduler.subscribed(subscribed);
-              },
-              (t) -> {
-                if (t instanceof Mesos4xxException) {
-                  // This can be thrown when connecting too quickly after a master restart and reconnect should be tried
-                  scheduler.onConnectException(t);
-                } else {
-                  scheduler.onUncaughtException(t);
-                }
-              }
+              }, scheduler::onSubscribeException
           );
 
       events.filter(event -> event.getType() == Event.Type.UPDATE)
