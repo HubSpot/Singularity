@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -102,6 +103,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final StatusUpdateQueue queuedUpdates;
   private final ExecutorService reconnectExecutor;
+  private final AtomicInteger reconnectAttempts;
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
@@ -141,12 +143,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.state = new SchedulerState();
     this.configuration = configuration;
     this.reconnectExecutor = threadPoolFactory.getSingleThreaded("reconnect-scheduler");
+    this.reconnectAttempts = new AtomicInteger(0);
   }
 
   @Override
   public CompletableFuture<Void> subscribed(Subscribed subscribed) {
     return CompletableFuture.runAsync(() ->
         callWithStateLock(() -> {
+          reconnectAttempts.set(0);
           MasterInfo newMasterInfo = subscribed.getMasterInfo();
           masterInfo.set(newMasterInfo);
           Preconditions.checkState(state.getMesosSchedulerState() != MesosSchedulerState.SUBSCRIBED, "Asked to startup - but in invalid state: %s", state.getMesosSchedulerState());
@@ -396,6 +400,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       mesosSchedulerClient.close();
       LOG.info("Closed existing mesos connection");
       try {
+        if (reconnectAttempts.getAndIncrement() > 0) {
+          Thread.sleep(reconnectAttempts.get() * 3000);
+        }
         Retryer<Void> startRetryer = RetryerBuilder.<Void>newBuilder()
             .retryIfException()
             .retryIfRuntimeException()
