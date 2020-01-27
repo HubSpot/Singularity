@@ -292,6 +292,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onUncaughtException(Throwable t) {
     if (t instanceof PrematureChannelClosureException) {
       LOG.warn("PrematureChannelClosureException, will attempt restart");
+    } else if (t instanceof IllegalStateException && restartInProgress.get()) {
+      onSubscribeException(t);
     } else {
       LOG.error("uncaught exception", t);
     }
@@ -419,7 +421,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         start();
         long start = System.currentTimeMillis();
         while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
-          Thread.sleep(500);
+          Thread.sleep(50);
           if (reconnectException.get() != null) {
             LOG.warn("Exception during reconnect", reconnectException.getAndSet(null));
             return false;
