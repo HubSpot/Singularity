@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 public enum SlaveMatchState {
   OK(true),
+  PREFERRED_SLAVE(true),
   NOT_RACK_OR_SLAVE_PARTICULAR(true),
   RESOURCES_DO_NOT_MATCH(false),
   RACK_SATURATED(false),

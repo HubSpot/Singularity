@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -100,11 +101,11 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
-    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty()));
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty(), SlaveMatchState.OK));
 
     // NLR - no deployStatistics -> default weights
     setRequestType(RequestType.ON_DEMAND);
-    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5,  5, 10, 5, 5, 10, 5))));
+    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5,  5, 10, 5, 5, 10, 5)), SlaveMatchState.OK));
   }
 
   @Test
@@ -112,35 +113,44 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // new slave (no resources used) -> perfect score
-    assertValueIs(1, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 0,10, 0, 0, 10, 0))));
+    assertValueIs(1, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 0,10, 0, 0, 10, 0)), SlaveMatchState.OK));
 
     // cpu used, no mem used, no disk used
-    assertValueIs(0.85, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0))));
-    assertValueIs(0.76, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0))));
+    assertValueIs(0.85, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(0.76, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0)), SlaveMatchState.OK));
 
     // no cpu used, mem used, no disk used
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0))));
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0))));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0)), SlaveMatchState.OK));
 
     // no cpu used, no mem used, disk used
-    assertValueIs(0.90, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5))));
-    assertValueIs(0.84, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8))));
+    assertValueIs(0.90, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.84, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8)), SlaveMatchState.OK));
 
     // cpu used, mem used, no disk used
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0))));
-    assertValueIs(0.36, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0))));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(0.36, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0)), SlaveMatchState.OK));
 
     // no cpu used, mem used, disk used
-    assertValueIs(0.65, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 0, 10,0, 5, 10, 5))));
-    assertValueIs(0.44, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 0,10, 0, 8, 10, 8))));
+    assertValueIs(0.65, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 0, 10,0, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.44, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 0,10, 0, 8, 10, 8)), SlaveMatchState.OK));
 
     // cpu used, no mem used, disk used
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 5,10, 5, 5, 10, 5))));
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 8,10, 8, 8, 10, 8))));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
 
     // cpu used, mem used, disk used
-    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5))));
-    assertValueIs(0.2, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8))));
+    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.2, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
+  }
+
+  @Test
+  public void itCorrectlyScalesScoresForPreferredHosts() {
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.PREFERRED_SLAVE));
+
+    assertValueIs(0.20, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(0.30, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.PREFERRED_SLAVE));
   }
 
   @Test
