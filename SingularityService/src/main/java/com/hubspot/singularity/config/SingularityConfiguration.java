@@ -93,6 +93,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksToShufflePerHost = 2;
 
+  @Deprecated
   private List<String> doNotShuffleRequests = new ArrayList<>();
 
   private int minutesBeforeNewTaskEligibleForShuffle = 15;

@@ -2,12 +2,15 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hubspot.singularity.data.ShuffleConfigurationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +54,7 @@ public class SingularityUsageHelper {
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
   private final UsageManager usageManager;
+  private final ShuffleConfigurationManager shuffleConfigurationManager;
 
   @Inject
   public SingularityUsageHelper(
@@ -60,7 +64,8 @@ public class SingularityUsageHelper {
       RequestManager requestManager,
       SlaveManager slaveManager,
       TaskManager taskManager,
-      UsageManager usageManager) {
+      UsageManager usageManager,
+      ShuffleConfigurationManager shuffleConfigurationManager) {
     this.mesosClient = mesosClient;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
@@ -68,6 +73,7 @@ public class SingularityUsageHelper {
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
     this.usageManager = usageManager;
+    this.shuffleConfigurationManager = shuffleConfigurationManager;
   }
 
   public List<SingularitySlave> getSlavesToTrackUsageFor() {
@@ -153,6 +159,7 @@ public class SingularityUsageHelper {
       boolean slaveOverloadedForCpu = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
       boolean slaveExperiencingHighMemUsage = ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) > configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
+      Set<String> shuffleBlacklist = new HashSet<>(shuffleConfigurationManager.getShuffleBlacklist());
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
         if (!taskUsage.getFrameworkId().equals(configuration.getMesosConfiguration().getFrameworkId())) {
@@ -214,7 +221,7 @@ public class SingularityUsageHelper {
         }
 
         if (currentUsage != null && currentUsage.getCpusUsed() > 0) {
-          if (isEligibleForShuffle(task)) {
+          if (isEligibleForShuffle(task, shuffleBlacklist)) {
             Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
             if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
               LOG.trace("Task {} already being cleaned up to spread cpu or mem usage, skipping", taskId);
@@ -278,7 +285,7 @@ public class SingularityUsageHelper {
 
   private List<SingularityTaskUsage> getFullListOfTaskUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0 , 0, 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0, 0, 0)); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
@@ -286,11 +293,11 @@ public class SingularityUsageHelper {
   }
 
 
-  private boolean isEligibleForShuffle(SingularityTaskId task) {
+  private boolean isEligibleForShuffle(SingularityTaskId task, Set<String> requestBlacklist) {
     Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
 
     return (
-        !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
+        (!requestBlacklist.contains(task.getRequestId()) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId()))
             && isLongRunning(task)
             && (
             configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
@@ -325,13 +332,13 @@ public class SingularityUsageHelper {
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
-      RequestUtilization previous,
-      List<SingularityTaskUsage> pastTaskUsages,
-      SingularityTaskUsage latestUsage,
-      SingularityTaskId task,
-      double memoryMbReservedForTask,
-      double cpuReservedForTask,
-      double diskMbReservedForTask) {
+                                        RequestUtilization previous,
+                                        List<SingularityTaskUsage> pastTaskUsages,
+                                        SingularityTaskUsage latestUsage,
+                                        SingularityTaskId task,
+                                        double memoryMbReservedForTask,
+                                        double cpuReservedForTask,
+                                        double diskMbReservedForTask) {
     String requestId = task.getRequestId();
     RequestUtilization newRequestUtilization = utilizationPerRequestId.getOrDefault(requestId, new RequestUtilization(requestId, task.getDeployId()));
     // Take the previous request utilization into account to better measure 24 hour max/min values

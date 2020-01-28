@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import com.hubspot.singularity.data.ShuffleConfigurationManager;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestType;
@@ -58,6 +59,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected TestingMesosClient mesosClient;
+
+  @Inject
+  protected ShuffleConfigurationManager shuffleCfgManager;
 
   public SingularityUsageTest() {
     super(false);
@@ -705,6 +709,53 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
       configuration.setMaxTasksToShuffleTotal(6);
+    }
+  }
+
+  @Test
+  public void itDoesNotShuffleBlacklistedTasks() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
+      shuffleCfgManager.addToShuffleBlacklist(requestId);
+
+      initRequest();
+      initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
+      saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
+      resourceOffers(1);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 200000, 30000, 10, 15, 15, 15, 0, 107374182);
+      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(highUsage, "host1"));
+
+      SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
+      String t1 = taskId1.getId();
+      SingularityTaskId taskId2 = taskManager.getActiveTaskIds().get(1);
+      String t2 = taskId2.getId();
+      SingularityTaskId taskId3 = taskManager.getActiveTaskIds().get(2);
+      String t3 = taskId3.getId();
+      statusUpdate(taskManager.getTask(taskId1).get(), TaskState.TASK_STARTING, Optional.of(taskId1.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId2).get(), TaskState.TASK_STARTING, Optional.of(taskId2.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId3).get(), TaskState.TASK_STARTING, Optional.of(taskId3.getStartedAt()));
+      // task 1 using 3 cpus
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 15, TimeUnit.MILLISECONDS.toSeconds(taskId1.getStartedAt()) + 5, 1024);
+      // task 2 using 2 cpus
+      MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, TimeUnit.MILLISECONDS.toSeconds(taskId2.getStartedAt()) + 5, 1024);
+      // task 3 using 1 cpus
+      MesosTaskMonitorObject t3u1 = getTaskMonitor(t3, 5, TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5, 1024);
+      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 200000, 0, 30000, 0, 0, 0, 15, 0, 0, 0, 0)
+      );
+
+      usagePoller.runActionOnPoll();
+
+      // First task is not cleaned up because it is a blacklisted request ID
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId1.getId()).isPresent());
+      // Second task is not cleaned up because it is from the same request as task 1
+      Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+      shuffleCfgManager.removeFromShuffleBlacklist(requestId);
     }
   }
 

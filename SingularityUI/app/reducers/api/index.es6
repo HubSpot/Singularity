@@ -47,7 +47,8 @@ import {
   PauseRequest,
   UnpauseRequest,
   ExitRequestCooldown,
-  FetchRequestsInState
+  FetchRequestsInState,
+  FetchRequestShuffleOptOut,
 } from '../../actions/api/requests';
 
 import { FetchTaskFiles } from '../../actions/api/sandbox';
@@ -151,6 +152,7 @@ const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 const utilization = buildApiActionReducer(FetchUtilization, {});
 const requestUtilizations = buildApiActionReducer(FetchRequestUtilizations, []);
 const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilization, {});
+const shuffleOptOut = buildKeyedApiActionReducer(FetchRequestShuffleOptOut, {});
 
 export default combineReducers({
   user,
@@ -208,5 +210,6 @@ export default combineReducers({
   inactiveHosts,
   utilization,
   requestUtilizations,
-  requestUtilization
+  requestUtilization,
+  shuffleOptOut,
 });

@@ -1,4 +1,4 @@
-import { FetchRequest } from '../api/requests';
+import { FetchRequest, FetchRequestShuffleOptOut } from '../api/requests';
 import {
   FetchActiveTasksForRequest,
   FetchDeploysForRequest,
@@ -10,7 +10,8 @@ import { FetchRequestUtilization } from '../api/utilization';
 export const refresh = (requestId) => (dispatch, getState) => {
   const requiredPromises = Promise.all([
     dispatch(FetchRequest.trigger(requestId)),
-    dispatch(FetchRequestHistory.trigger(requestId, 5, 1))
+    dispatch(FetchRequestHistory.trigger(requestId, 5, 1)),
+    dispatch(FetchRequestShuffleOptOut.trigger(requestId)),
   ])
 
   dispatch(FetchActiveTasksForRequest.trigger(requestId));

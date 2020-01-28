@@ -32,6 +32,7 @@ public class SingularityZkMigrationsModule implements Module {
     dataMigrations.addBinding().to(NamespacePendingTasksMigration.class);
     dataMigrations.addBinding().to(NamespaceActiveTasksMigration.class);
     dataMigrations.addBinding().to(ClearUsagesMigration.class);
+    dataMigrations.addBinding().to(ShuffleBlacklistMigration.class);
   }
 
   @Provides
