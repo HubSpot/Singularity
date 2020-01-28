@@ -422,8 +422,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         long start = System.currentTimeMillis();
         while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
           Thread.sleep(50);
-          if (reconnectException.get() != null) {
-            LOG.warn("Exception during reconnect", reconnectException.getAndSet(null));
+          Throwable t = reconnectException.getAndSet(null);
+          if (t != null) {
+            if (t instanceof IllegalStateException) {
+              // Mesos master's redirect endpoint will return a 301 with empty location if a leader is not elected
+              // This results in an IllegalStateException from MesosClient
+              LOG.warn("IllegalStateException from MesosClient, mesos is likely in process of leader election, will retry");
+            } else {
+              LOG.warn("Exception during reconnect", t);
+            }
             return false;
           }
         }
