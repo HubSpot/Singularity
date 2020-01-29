@@ -163,7 +163,7 @@ module.exports = function(options) {
   // Optimize the bundle in release (production) mode
   if (!isDebug) {
     config.plugins.push(new webpack.optimize.DedupePlugin());
-    config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
+    // config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
     config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
     config.plugins.push(new webpack.optimize.CommonsChunkPlugin('js/vendor', 'js/vendor.bundle.js'));
   }

@@ -46,6 +46,7 @@ import TaskHealthchecks from './TaskHealthchecks';
 import TaskState from './TaskState';
 import TaskStatus from './TaskStatus';
 import ShuffleOptOutButton from '../common/modalButtons/ShuffleOptOutButton';
+import TaskLogTailer from './TaskLogTailer';
 
 const RECENTLY_MODIFIED_SECONDS = 60;
 
@@ -506,6 +507,7 @@ class TaskDetail extends Component {
         <TaskEnvVars executor={this.props.task.task.mesosTask.executor} />
         <TaskHealthchecks task={this.props.task.task} healthcheckResults={this.props.task.healthcheckResults} ports={this.props.task.ports} />
         {this.renderShellCommands()}
+        <TaskLogTailer />
       </div>
     );
   }
