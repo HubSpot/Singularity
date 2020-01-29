@@ -29,8 +29,6 @@ export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
 
-    console.log('blame1')
-
     this.state = {
       visible: false,
       formState: getDefaultFormState(props),
@@ -69,7 +67,6 @@ export default class FormModal extends React.Component {
   };
 
   hide() {
-    console.log('blame2')
     this.setState({
       visible: false
     });
@@ -151,7 +148,6 @@ export default class FormModal extends React.Component {
           formState[formElement.name] = formElement.defaultValue;
         });
       }
-      console.log('blame3')
       this.setState({
         visible: false,
         errors: {},
@@ -461,10 +457,6 @@ export default class FormModal extends React.Component {
         {inputs}
       </form>
     );
-  }
-
-  componentWillUnmount() {
-    console.log('will unmount');
   }
 
   render() {
