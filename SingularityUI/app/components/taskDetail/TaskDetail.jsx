@@ -45,6 +45,7 @@ import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
 import TaskState from './TaskState';
 import TaskStatus from './TaskStatus';
+import ShuffleOptOutButton from '../common/modalButtons/ShuffleOptOutButton';
 
 const RECENTLY_MODIFIED_SECONDS = 60;
 
@@ -261,6 +262,13 @@ class TaskDetail extends Component {
       }
     }
 
+    let maybeShuffleOptOutButton = null;
+    if (Utils.isShuffleCleanup(cleanupType)) {
+      maybeShuffleOptOutButton = (
+        <ShuffleOptOutButton requestId={this.props.task.task.taskId.requestId} isOptedOut={false} />
+      );
+    }
+
     const refreshHistoryAndCleanups = () => {
       const promises = [];
       promises.push(this.props.fetchTaskCleanups());
@@ -323,6 +331,7 @@ class TaskDetail extends Component {
         <div className="row">
           {taskState}
           <div className={`col-xs-${taskState ? '6' : '12'} button-container`}>
+            {maybeShuffleOptOutButton}
             <JSONButton object={this.props.task} linkClassName="btn btn-default">
               JSON
             </JSONButton>

@@ -167,3 +167,31 @@ export const CancelRequestBounce = buildJsonApiAction(
     url: `/requests/request/${requestId}/bounce`
   })
 );
+
+export const FetchRequestShuffleOptOut = buildApiAction(
+  'FETCH_REQUEST_SHUFFLE_OPT_OUT',
+  (requestId, renderNotFoundIf404) => ({
+    url: `/shuffle/blacklist/${requestId}`,
+    renderNotFoundIf404,
+    catchStatusCodes: [404]
+  }),
+  (requestId) => requestId
+);
+
+export const EnableRequestShuffleOptOut = buildJsonApiAction(
+  'ENABLE_REQUEST_SHUFFLE_OPT_OUT',
+  'POST',
+  (requestId) => ({
+    url: `/shuffle/blacklist/${requestId}`,
+  })
+);
+
+export const DisableRequestShuffleOptOut = buildJsonApiAction(
+  'DISABLE_REQUEST_SHUFFLE_OPT_OUT',
+  'DELETE',
+  (requestId) => ({
+    url: `/shuffle/blacklist/${requestId}`,
+  })
+);
+
+

@@ -462,6 +462,12 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
+    shuffleOptOut: (requestParent) => {
+      const expiringShuffle = Utils.maybe(requestParent, 'expiringShuffleOptOut');
+      return expiringShuffle
+        ? (expiringShuffle.startMillis + expiringShuffle.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+        : false;
+    },
   },
 
   isImmediateCleanup: (cleanupType, longRunning) => {
@@ -470,6 +476,10 @@ const Utils = {
     } else {
       return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
+  },
+
+  isShuffleCleanup: (cleanupType) => {
+    return (cleanupType === 'REBALANCE_MEMORY_USAGE' || cleanupType === 'REBALANCE_CPU_USAGE');
   },
 
   isActiveSlave(slaveInfo) {

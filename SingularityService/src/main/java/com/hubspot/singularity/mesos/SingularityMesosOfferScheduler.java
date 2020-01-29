@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -473,7 +472,7 @@ public class SingularityMesosOfferScheduler {
       if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
         if (requestUtilizations.containsKey(taskId.getRequestId())) {
           RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
-          cpu += getEstimatedCpuUsageForRequest(utilization);
+          cpu += slaveAndRackHelper.getEstimatedCpuUsageForRequest(utilization);
           memBytes += utilization.getMaxMemBytesUsed();
           diskBytes += utilization.getMaxDiskBytesUsed();
         } else {
@@ -539,11 +538,6 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toList());
   }
 
-  private double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
-    // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
-    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
-  }
-
   private double score(SingularityOfferHolder offerHolder, SingularityTaskRequestHolder taskRequestHolder,
                        Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest,
                        RequestUtilization requestUtilization, Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache) {
@@ -553,7 +547,7 @@ public class SingularityMesosOfferScheduler {
 
     double estimatedCpusToAdd = taskRequestHolder.getTotalResources().getCpus();
     if (requestUtilization != null) {
-      estimatedCpusToAdd = getEstimatedCpuUsageForRequest(requestUtilization);
+      estimatedCpusToAdd = slaveAndRackHelper.getEstimatedCpuUsageForRequest(requestUtilization);
     }
     if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)) {
       LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}, already committed cpus: {}), ignoring offer",
@@ -576,10 +570,10 @@ public class SingularityMesosOfferScheduler {
     if (!matchesResources) {
       return 0;
     }
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache));
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest, deployStatsCache), requestUtilization);
 
     if (slaveMatchState.isMatchAllowed()) {
-      return score(offerHolder.getHostname(), maybeSlaveUsage);
+      return score(offerHolder.getHostname(), maybeSlaveUsage, slaveMatchState);
     } else if (LOG.isTraceEnabled()) {
       LOG.trace("Ignoring offer on host {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getHostname(),
           offerHolder.getRoles(), offerHolder.getHostname(), pendingTaskId, matchesResources, slaveMatchState);
@@ -605,7 +599,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
+  double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, SlaveMatchState slaveMatchState) {
     if (!maybeSlaveUsage.isPresent() || maybeSlaveUsage.get().isMissingUsageData()) {
       if (mesosConfiguration.isOmitForMissingUsageData()) {
         LOG.info("Skipping slave {} with missing usage data ({})", hostname, maybeSlaveUsage);
@@ -618,11 +612,18 @@ public class SingularityMesosOfferScheduler {
 
     SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores = maybeSlaveUsage.get();
 
-    return calculateScore(
+    double calculatedScore = calculateScore(
         1 - slaveUsageWithScores.getMemAllocatedScore(), slaveUsageWithScores.getMemInUseScore(),
         1 - slaveUsageWithScores.getCpusAllocatedScore(), slaveUsageWithScores.getCpusInUseScore(),
         1 - slaveUsageWithScores.getDiskAllocatedScore(), slaveUsageWithScores.getDiskInUseScore(),
         mesosConfiguration.getInUseResourceWeight(), mesosConfiguration.getAllocatedResourceWeight());
+
+    if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
+      LOG.info("Slave {} is preferred, will scale score by {}", hostname, configuration.getPreferredSlaveScaleFactor());
+      calculatedScore *= configuration.getPreferredSlaveScaleFactor();
+    }
+
+    return calculatedScore;
   }
 
   private double calculateScore(double memAllocatedScore, double memInUseScore, double cpusAllocatedScore, double cpusInUseScore, double diskAllocatedScore, double diskInUseScore, double inUseResourceWeight, double allocatedResourceWeight) {

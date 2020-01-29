@@ -28,6 +28,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -46,6 +47,7 @@ import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackHelper.CpuMemoryPreference;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -83,7 +85,7 @@ public class SingularitySlaveAndRackManager {
     this.leaderCache = leaderCache;
   }
 
-  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemptibleTask) {
+  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemptibleTask, RequestUtilization requestUtilization) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
@@ -248,7 +250,34 @@ public class SingularitySlaveAndRackManager {
       case GREEDY:
     }
 
+    if (isSlavePreferred(offerHolder, taskRequest, requestUtilization)) {
+      LOG.info("Slave {} is preferred", offerHolder.getHostname());
+      return SlaveMatchState.PREFERRED_SLAVE;
+    }
+
     return SlaveMatchState.OK;
+  }
+
+  private boolean isSlavePreferred(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, RequestUtilization requestUtilization) {
+    return isSlavePreferredByAllowedAttributes(offerHolder, taskRequest) || isSlavePreferredByCpuMemory(offerHolder, requestUtilization);
+  }
+
+  private boolean isSlavePreferredByAllowedAttributes(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
+    Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
+    Map<String, String> hostAttributes = offerHolder.getTextAttributes();
+    boolean containsAtLeastOneMatchingAttribute = slaveAndRackHelper.containsAtLeastOneMatchingAttribute(hostAttributes, allowedAttributes);
+    LOG.info("is slave {} by allowed attributes? {}", offerHolder.getHostname(), containsAtLeastOneMatchingAttribute);
+    return containsAtLeastOneMatchingAttribute;
+  }
+
+  public boolean isSlavePreferredByCpuMemory(SingularityOfferHolder offerHolder, RequestUtilization requestUtilization) {
+    if (requestUtilization != null) {
+      CpuMemoryPreference cpuMemoryPreferenceForSlave = slaveAndRackHelper.getCpuMemoryPreferenceForSlave(offerHolder);
+      CpuMemoryPreference cpuMemoryPreferenceForRequest = slaveAndRackHelper.getCpuMemoryPreferenceForRequest(requestUtilization);
+      LOG.info("CpuMemoryPreference for slave {} is {}, CpuMemoryPreference for request {} is {}", offerHolder.getHostname(), cpuMemoryPreferenceForSlave.toString(), requestUtilization.getRequestId(), cpuMemoryPreferenceForRequest.toString());
+      return cpuMemoryPreferenceForSlave == cpuMemoryPreferenceForRequest;
+    }
+    return false;
   }
 
   private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
@@ -289,7 +318,6 @@ public class SingularitySlaveAndRackManager {
     }
 
     return true;
-
   }
 
   private Map<String, String> getRequiredAttributes(SingularityTaskRequest taskRequest) {

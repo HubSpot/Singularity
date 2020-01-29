@@ -849,10 +849,19 @@ public class SingularityScheduler {
       return false;
     }
 
-    if (task.isPresent()
-        && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE
-        && request.getRequestType() == RequestType.SCHEDULED) {
-      return false; // don't retry UI triggered scheduled jobs (UI triggered on-demand jobs are okay to retry though)
+    if (task.isPresent()) {
+      if (task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE
+          && request.getRequestType() == RequestType.SCHEDULED) {
+        return false; // don't retry UI triggered scheduled jobs (UI triggered on-demand jobs are okay to retry though)
+      }
+
+      Optional<SingularityTaskHistoryUpdate> taskHistoryUpdate = taskManager.getTaskHistoryUpdate(task.get().getTaskId(), ExtendedTaskState.TASK_CLEANING);
+
+      if (taskHistoryUpdate.isPresent()
+          && request.getRequestType() == RequestType.ON_DEMAND
+          && taskHistoryUpdate.get().getStatusMessage().orElse("").contains("USER_REQUESTED")) {
+        return false; // don't retry one-off launches of on-demand jobs if they were killed by the user
+      }
     }
 
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();

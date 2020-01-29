@@ -11,8 +11,10 @@ import org.apache.mesos.v1.Protos.Attribute;
 import org.apache.mesos.v1.Protos.Offer;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.helpers.MesosUtils;
 
 @Singleton
 public class SingularitySlaveAndRackHelper {
@@ -114,6 +116,59 @@ public class SingularitySlaveAndRackHelper {
       }
     }
     return true;
+  }
+
+  public boolean containsAtLeastOneMatchingAttribute(Map<String, String> attributes, Map<String, String> otherAttributes) {
+    for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
+      if ((attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public enum CpuMemoryPreference {
+    AVERAGE,
+    HIGH_MEMORY,
+    HIGH_CPU
+  }
+
+  public CpuMemoryPreference getCpuMemoryPreferenceForRequest(RequestUtilization requestUtilization) {
+    double cpuMemoryRatioForRequest = getCpuMemoryRatioForRequest(requestUtilization);
+
+    if (cpuMemoryRatioForRequest > configuration.getHighCpuSlaveCutOff()) {
+      return CpuMemoryPreference.HIGH_CPU;
+    } else if (cpuMemoryRatioForRequest < configuration.getHighMemorySlaveCutOff()) {
+      return CpuMemoryPreference.HIGH_MEMORY;
+    }
+    return CpuMemoryPreference.AVERAGE;
+  }
+
+  public CpuMemoryPreference getCpuMemoryPreferenceForSlave(SingularityOfferHolder offerHolder) {
+    double cpuMemoryRatioForSlave = getCpuMemoryRatioForSlave(offerHolder);
+    if (cpuMemoryRatioForSlave > configuration.getHighCpuSlaveCutOff()) {
+      return CpuMemoryPreference.HIGH_CPU;
+    } else if (cpuMemoryRatioForSlave < configuration.getHighMemorySlaveCutOff()) {
+      return CpuMemoryPreference.HIGH_MEMORY;
+    }
+    return CpuMemoryPreference.AVERAGE;
+  }
+
+  private double getCpuMemoryRatioForSlave(SingularityOfferHolder offerHolder) {
+    double memory = MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty());
+    double cpus = MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.empty());
+    return memory/cpus;
+  }
+
+  private double getCpuMemoryRatioForRequest(RequestUtilization requestUtilization) {
+    double cpuUsageForRequest = getEstimatedCpuUsageForRequest(requestUtilization);
+    double memUsageForRequest = requestUtilization.getAvgMemBytesUsed();
+    return cpuUsageForRequest/memUsageForRequest;
+  }
+
+  public double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
+    // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
+    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
   }
 
 }
