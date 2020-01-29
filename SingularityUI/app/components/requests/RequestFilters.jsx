@@ -85,7 +85,7 @@ export default class RequestFilters extends React.Component {
       filter: _.extend({}, this.props.filter),
     };
 
-    this.onFilterChange = _.debounce(this.props.onFilterChange, 250);
+    this.debouncedOnFilterChange = _.debounce(this.props.onFilterChange, 250);
   }
 
   handleStatusSelect(selectedKey) {
@@ -99,7 +99,7 @@ export default class RequestFilters extends React.Component {
   handleSearchChange(event) {
     const update = _.extend({}, this.props.filter, {searchFilter: event.target.value})
     this.setState({ filter: update })
-    this.onFilterChange(update);
+    this.debouncedOnFilterChange(update);
   }
 
   toggleRequestType(requestType) {
