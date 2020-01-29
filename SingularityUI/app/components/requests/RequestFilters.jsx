@@ -78,6 +78,16 @@ export default class RequestFilters extends React.Component {
     }
   ];
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      filter: _.extend({}, this.props.filter),
+    };
+
+    this.onFilterChange = _.debounce(this.props.onFilterChange, 250);
+  }
+
   handleStatusSelect(selectedKey) {
     this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
   }
@@ -87,7 +97,9 @@ export default class RequestFilters extends React.Component {
   }
 
   handleSearchChange(event) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: event.target.value}));
+    const update = _.extend({}, this.props.filter, {searchFilter: event.target.value})
+    this.setState({ filter: update })
+    this.onFilterChange(update);
   }
 
   toggleRequestType(requestType) {
@@ -147,7 +159,7 @@ export default class RequestFilters extends React.Component {
           ref="search"
           className="big-search-box"
           placeholder="Filter requests"
-          value={this.props.filter.searchFilter}
+          value={this.state.filter.searchFilter}
           onChange={(...args) => this.handleSearchChange(...args)}
           maxLength="128"
           onFocus={function(e) {
