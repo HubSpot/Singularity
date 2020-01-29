@@ -82,7 +82,6 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -121,7 +120,6 @@ public class RequestResource extends AbstractRequestResource {
   private final RebalancingHelper rebalancingHelper;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
-  private final RackManager rackManager;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
@@ -139,7 +137,6 @@ public class RequestResource extends AbstractRequestResource {
                          SlaveManager slaveManager,
                          AsyncHttpClient httpClient,
                          @Singularity ObjectMapper objectMapper,
-                         RackManager rackManager,
                          SingularityConfiguration configuration,
                          SingularityExceptionNotifier exceptionNotifier,
                          SingularitySlaveAndRackManager slaveAndRackManager) {
@@ -149,7 +146,6 @@ public class RequestResource extends AbstractRequestResource {
     this.rebalancingHelper = rebalancingHelper;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
-    this.rackManager = rackManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.slaveAndRackManager = slaveAndRackManager;

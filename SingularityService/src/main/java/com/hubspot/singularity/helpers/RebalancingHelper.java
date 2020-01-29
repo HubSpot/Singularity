@@ -22,8 +22,6 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.RackManager;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
@@ -34,15 +32,12 @@ public class RebalancingHelper {
 
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
-  private final RackManager rackManager;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   @Inject
-  public RebalancingHelper(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager,
-                           RackManager rackManager, SingularitySlaveAndRackManager slaveAndRackManager) {
+  public RebalancingHelper(TaskManager taskManager, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager) {
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
-    this.rackManager = rackManager;
     this.slaveAndRackManager = slaveAndRackManager;
   }
 
