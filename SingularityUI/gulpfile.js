@@ -72,6 +72,9 @@ gulp.task('static', ['clean'], function() {
 })
 
 gulp.task('debug-html', ['static'], function () {
+  templateData['appJsPath'] = 'js/app.bundle.js'
+  templateData['appCssPath'] = 'css/app.css'
+  templateData['vendorJsPath'] = 'js/vendor.bundle.js'
   templateData.isDebug = true;
   return gulp.src('app/assets/index.mustache')
     .pipe(mustache(templateData, {extension: '.html'}))
