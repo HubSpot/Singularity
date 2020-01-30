@@ -250,7 +250,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (isSlavePreferred(offerHolder, taskRequest, requestUtilization)) {
-      LOG.info("Slave {} is preferred", offerHolder.getHostname());
+      LOG.debug("Slave {} is preferred", offerHolder.getHostname());
       return SlaveMatchState.PREFERRED_SLAVE;
     }
 
