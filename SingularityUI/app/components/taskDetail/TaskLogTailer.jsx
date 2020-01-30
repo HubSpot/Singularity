@@ -1,9 +1,6 @@
 import React, { PropTypes, Component } from 'react';
-import Utils from '../../utils';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
-import { Glyphicon, Tooltip } from 'react-bootstrap';
 
+import 'xterm-css';
 import { Terminal } from 'xterm';
 import { AttachAddon } from 'xterm-addon-attach';
 
@@ -12,7 +9,8 @@ class TaskLogTailer extends Component {
     super(props);
 
     this.terminal = new Terminal();
-    this.ws = new WebSocket('ws://localhost:3000/api/exec/less');
+
+    this.ws = new WebSocket('ws://localhost:3000/api/exec/less/attach?dist/index.js');
     this.wsAttach = new AttachAddon(this.ws);
   }
 
