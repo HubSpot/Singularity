@@ -148,7 +148,7 @@ module.exports = function(options) {
       alias: {
         'bootstrap': 'bootstrap/dist/js/bootstrap.js',
         'messenger$': 'messenger/build/js/messenger.js',
-        'xterm-css': 'xterm/css/xterm.css'
+        'xterm.css': 'xterm/css/xterm.css'
       },
     },
 
