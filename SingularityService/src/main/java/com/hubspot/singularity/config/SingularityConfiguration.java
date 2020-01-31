@@ -400,6 +400,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean proxyRunNowToLeader = true;
 
+  private Optional<Integer> expectedRacksCount = Optional.empty();
+
   private double preferredSlaveScaleFactor = 1.5;
 
   // high cpu slave, based on cpu to memory ratio
@@ -1724,6 +1726,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHighMemorySlaveCutOff(double highMemorySlaveCutOff) {
     this.highMemorySlaveCutOff = highMemorySlaveCutOff;
+  }
+
+  public Optional<Integer> getExpectedRacksCount() {
+    return expectedRacksCount;
+  }
+
+  public void setExpectedRacksCount(Optional<Integer> expectedRacksCount) {
+    this.expectedRacksCount = expectedRacksCount;
   }
 
   public CrashLoopConfiguration getCrashLoopConfiguration() {

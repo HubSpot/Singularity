@@ -82,7 +82,6 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -94,6 +93,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -120,25 +120,35 @@ public class RequestResource extends AbstractRequestResource {
   private final RebalancingHelper rebalancingHelper;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
-  private final RackManager rackManager;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RebalancingHelper rebalancingHelper,
-                         RequestManager requestManager, SingularityMailer mailer,
-                         SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, AsyncHttpClient httpClient, @Singularity ObjectMapper objectMapper,
-                         RackManager rackManager, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier) {
+  public RequestResource(SingularityValidator validator,
+                         DeployManager deployManager,
+                         TaskManager taskManager,
+                         RebalancingHelper rebalancingHelper,
+                         RequestManager requestManager,
+                         SingularityMailer mailer,
+                         SingularityAuthorizationHelper authorizationHelper,
+                         RequestHelper requestHelper,
+                         LeaderLatch leaderLatch,
+                         SlaveManager slaveManager,
+                         AsyncHttpClient httpClient,
+                         @Singularity ObjectMapper objectMapper,
+                         SingularityConfiguration configuration,
+                         SingularityExceptionNotifier exceptionNotifier,
+                         SingularitySlaveAndRackManager slaveAndRackManager) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.rebalancingHelper = rebalancingHelper;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
-    this.rackManager = rackManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
+    this.slaveAndRackManager = slaveAndRackManager;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -199,7 +209,8 @@ public class RequestResource extends AbstractRequestResource {
           }
         });
 
-        if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
+        int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
+        if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
             rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, user.getEmail());
           }

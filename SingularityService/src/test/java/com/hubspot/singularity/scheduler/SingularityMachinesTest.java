@@ -880,6 +880,43 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testItRespectsExpectedRackConfiguration() {
+    Optional<Integer> original = configuration.getExpectedRacksCount();
+
+    try {
+      // Tell Singularity to expect 2 racks
+      configuration.setExpectedRacksCount(Optional.of(2));
+
+      // Set up 4 active racks
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave4", "host4", Optional.of("rack4")))).join();
+
+      initRequest();
+      initFirstDeploy();
+      saveAndSchedule(request.toBuilder()
+          .setInstances(Optional.of(7))
+          .setRackSensitive(Optional.of(true))
+      );
+
+      // tasks per rack = ceil(7 / 2), not ceil(7 / 4)
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2", Optional.of("rack2")))).join();
+      sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave3", "host3", Optional.of("rack3")))).join();
+
+      // everything should be scheduled
+      Assertions.assertEquals(7, taskManager.getActiveTaskIds().size());
+    } finally {
+      configuration.setExpectedRacksCount(original);
+    }
+  }
+
+  @Test
   public void testPlacementOfBounceTasks() {
     // Set up 1 active rack
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1")))).join();

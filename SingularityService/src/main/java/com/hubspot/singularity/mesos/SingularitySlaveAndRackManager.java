@@ -137,7 +137,8 @@ public class SingularitySlaveAndRackManager {
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
-    Multiset<String> countPerRack = HashMultiset.create(slaveManager.getNumActive());
+    int activeRacksWithCapacityCount = getActiveRacksWithCapacityCount();
+    Multiset<String> countPerRack = HashMultiset.create(activeRacksWithCapacityCount);
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numFromSameBounceOnSlave = 0;
@@ -388,8 +389,9 @@ public class SingularitySlaveAndRackManager {
 
   private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave) {
     int racksAccountedFor = countPerRack.elementSet().size();
-    double numPerRack = numDesiredInstances / (double) rackManager.getNumActive();
-    if (racksAccountedFor < rackManager.getNumActive()) {
+    int activeRacksWithCapacityCount = getActiveRacksWithCapacityCount();
+    double numPerRack = numDesiredInstances / (double) activeRacksWithCapacityCount;
+    if (racksAccountedFor < activeRacksWithCapacityCount) {
       if (countPerRack.count(sanitizedRackId) < Math.max(numPerRack, 1)) {
         return true;
       }
@@ -622,6 +624,10 @@ public class SingularitySlaveAndRackManager {
     }
 
     return false;
+  }
+
+  public int getActiveRacksWithCapacityCount () {
+    return configuration.getExpectedRacksCount().isPresent() ? configuration.getExpectedRacksCount().get() : rackManager.getNumActive();
   }
 
 }
