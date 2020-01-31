@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -233,6 +234,15 @@ public class SingularityMesosSchedulerClient {
 
       // This is the observable that is responsible for sending calls to mesos master.
       PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
+
+      // Retry any operations currently in the pipe if the mesos master temporarily stpos responding
+      p.retry((i, t) -> Throwables.getCausalChain(t).stream().anyMatch((th) -> th instanceof ConnectException));
+
+      // Don't let the publisher stop emitting if it hits an error
+      p.onErrorResumeNext((throwable -> {
+        LOG.error("Could not send call", throwable);
+        return Observable.empty();
+      }));
 
       // toSerialised handles the fact that we can add calls on different threads.
       publisher = p.toSerialized();
