@@ -1066,5 +1066,11 @@ public class SingularityScheduler {
             LOG.warn("Could not find full content for task {}", taskId);
           }
         });
+    Set<SingularityTaskId> toRemove = requestedReconciles.keySet()
+        .stream()
+        .filter((t) -> t.getStartedAt() < now - TimeUnit.MINUTES.toMillis(15))
+        .collect(Collectors.toSet());
+    toRemove.forEach(requestedReconciles::remove);
+
   }
 }

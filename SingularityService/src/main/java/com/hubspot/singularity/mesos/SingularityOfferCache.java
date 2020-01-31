@@ -77,7 +77,6 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   public void rescindOffer(OfferID offerId) {
     CachedOffer maybeCached = offerCache.getIfPresent(offerId.getValue());
     if (maybeCached != null) {
-      maybeCached.expire();
       LOG.info("Offer {} on {} rescinded", offerId.getValue(), maybeCached.getOffer().getHostname());
     } else {
       LOG.info("Offer {} rescinded (not in cache)", offerId.getValue());
