@@ -11,7 +11,7 @@ class TaskLessTerminal extends Component {
 
     this.terminal = new Terminal();
 
-    this.ws = new WebSocket(`ws://localhost:3000/api/exec/less/attach?${this.props.file}`);
+    this.ws = new WebSocket(`wss://localhost:3000/api/exec/less/attach?${this.props.file}`);
     this.wsAttach = new AttachAddon(this.ws);
 
     console.log(this.ws);
