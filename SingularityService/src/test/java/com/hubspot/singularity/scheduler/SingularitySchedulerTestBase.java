@@ -252,6 +252,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory, double disk, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
+
     AgentID slaveId = AgentID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 

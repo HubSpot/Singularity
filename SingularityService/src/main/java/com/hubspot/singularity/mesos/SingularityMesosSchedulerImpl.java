@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -101,6 +102,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final StatusUpdateQueue queuedUpdates;
+  private final ExecutorService reconnectExecutor;
+  private final AtomicBoolean restartInProgress = new AtomicBoolean(false);
+  private final AtomicReference<Throwable> reconnectException = new AtomicReference<>(null);
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
@@ -139,7 +143,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.subscribeExecutor = threadPoolFactory.getSingleThreaded("subscribe-scheduler");
     this.state = new SchedulerState();
     this.configuration = configuration;
-
+    this.reconnectExecutor = threadPoolFactory.getSingleThreaded("reconnect-scheduler");
   }
 
   @Override
@@ -149,7 +153,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           MasterInfo newMasterInfo = subscribed.getMasterInfo();
           masterInfo.set(newMasterInfo);
           Preconditions.checkState(state.getMesosSchedulerState() != MesosSchedulerState.SUBSCRIBED, "Asked to startup - but in invalid state: %s", state.getMesosSchedulerState());
-
           double advertisedHeartbeatIntervalSeconds = subscribed.getHeartbeatIntervalSeconds();
           if (advertisedHeartbeatIntervalSeconds > 0) {
             heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
@@ -162,6 +165,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           }
           startup.startup(newMasterInfo);
           state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
+          restartInProgress.set(false);
           handleQueuedStatusUpdates();
         }, "subscribed", false),
         subscribeExecutor);
@@ -286,9 +290,17 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void onUncaughtException(Throwable t) {
-    LOG.error("uncaught exception", t);
+    if (t instanceof PrematureChannelClosureException) {
+      LOG.warn("PrematureChannelClosureException, will attempt restart");
+    } else if (t instanceof IllegalStateException && restartInProgress.get()) {
+      onSubscribeException(t);
+    } else {
+      LOG.error("uncaught exception", t);
+    }
     callWithStateLock(() -> {
       if (t instanceof PrematureChannelClosureException) {
+        state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
+        offerCache.invalidateAll();
         reconnectMesos();
       } else {
         LOG.error("Aborting due to error: {}", t.getMessage(), t);
@@ -299,7 +311,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void onConnectException(Throwable t) {
+  public void onSubscribeException(Throwable t) {
+    LOG.warn("Received {} ({}), checking for reconnect", t.getClass(), t.getMessage());
+    if (!state.isRunning()) {
+      reconnectException.set(t);
+    }
     reconnectMesos();
   }
 
@@ -383,35 +399,56 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void reconnectMesos() {
-    callWithStateLock(() -> {
-      state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
-      offerCache.invalidateAll();
-      LOG.info("Paused scheduler actions, closing existing mesos connection");
-      mesosSchedulerClient.close();
-      LOG.info("Closed existing mesos connection");
-      try {
-        Retryer<Void> startRetryer = RetryerBuilder.<Void>newBuilder()
-            .retryIfException()
-            .retryIfRuntimeException()
-            .withWaitStrategy(WaitStrategies.exponentialWait())
-            .withStopStrategy(StopStrategies.stopAfterDelay(configuration.getMesosConfiguration().getReconnectTimeoutMillis(), TimeUnit.MILLISECONDS))
-            .build();
-        startRetryer.call(() -> {
-          start();
-          return null;
-        });
-      } catch (RetryException re) {
-        if (re.getLastFailedAttempt().getExceptionCause() != null) {
-          LOG.error("Unable to retry mesos master connection", re.getLastFailedAttempt().getExceptionCause());
-          notifyStopping();
-          abort.abort(AbortReason.MESOS_ERROR, Optional.of(re.getLastFailedAttempt().getExceptionCause()));
+    // Done on a separate thread so that possibly interrupting the subscriber thread will not loop around to call
+    // this method again on the same thread, causing an InterruptException
+    if (!restartInProgress.compareAndSet(false, true)) {
+      return;
+    }
+    CompletableFuture.runAsync(this::reconnectMesosSync, reconnectExecutor);
+  }
+
+  public void reconnectMesosSync() {
+    try {
+      Retryer<Boolean> startRetryer = RetryerBuilder.<Boolean>newBuilder()
+          .retryIfException()
+          .retryIfRuntimeException()
+          .retryIfResult((r) -> r == null || !r)
+          .withWaitStrategy(WaitStrategies.exponentialWait())
+          .withStopStrategy(StopStrategies.stopAfterDelay(configuration.getMesosConfiguration().getReconnectTimeoutMillis(), TimeUnit.MILLISECONDS))
+          .build();
+      startRetryer.call(() -> {
+        mesosSchedulerClient.close();
+        LOG.info("Closed existing mesos connection");
+        start();
+        long start = System.currentTimeMillis();
+        while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
+          Thread.sleep(50);
+          Throwable t = reconnectException.getAndSet(null);
+          if (t != null) {
+            if (t instanceof IllegalStateException) {
+              // Mesos master's redirect endpoint will return a 301 with empty location if a leader is not elected
+              // This results in an IllegalStateException from MesosClient
+              LOG.warn("IllegalStateException from MesosClient, mesos is likely in process of leader election, will retry");
+            } else {
+              LOG.warn("Exception during reconnect", t);
+            }
+            return false;
+          }
         }
-      } catch (Throwable t) {
-        LOG.error("Unable to retry mesos master connection", t);
+        return state.isRunning();
+      });
+    } catch (RetryException re) {
+      if (re.getLastFailedAttempt().getExceptionCause() != null) {
+        LOG.error("Unable to retry mesos master connection", re.getLastFailedAttempt().getExceptionCause());
         notifyStopping();
-        abort.abort(AbortReason.MESOS_ERROR, Optional.of(t));
+        abort.abort(AbortReason.MESOS_ERROR, Optional.of(re.getLastFailedAttempt().getExceptionCause()));
       }
-    }, "reconnectMesos", false);
+    } catch (Throwable t) {
+      LOG.error("Unable to retry mesos master connection", t);
+      notifyStopping();
+      abort.abort(AbortReason.MESOS_ERROR, Optional.of(t));
+    }
+
   }
 
   public void setZkConnectionState(ConnectionState connectionState) {

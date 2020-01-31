@@ -27,8 +27,7 @@ import RequestUtilization from './RequestUtilization';
 
 import Utils from '../../utils';
 
-import { refresh } from '../../actions/ui/requestDetail';
-import { FetchRequestShuffleOptOut } from '../../actions/api/requests.es6';
+import { refresh, initialize } from '../../actions/ui/requestDetail';
 
 class RequestDetailPage extends Component {
   componentDidMount() {
@@ -124,4 +123,6 @@ export default withRouter(connect(
   RequestDetailPage,
   (props) => refresh(props.params.requestId),
   true,
+  true,
+  (props) => initialize(props.params.requestId),
 )));

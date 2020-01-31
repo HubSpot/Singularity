@@ -22,10 +22,9 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.RackManager;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 
 @Singleton
 public class RebalancingHelper {
@@ -33,26 +32,25 @@ public class RebalancingHelper {
 
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
-  private final RackManager rackManager;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
 
   @Inject
-  public RebalancingHelper(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager,
-      RackManager rackManager) {
+  public RebalancingHelper(TaskManager taskManager, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager) {
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
-    this.rackManager = rackManager;
+    this.slaveAndRackManager = slaveAndRackManager;
   }
 
   public List<SingularityTaskId> rebalanceRacks(SingularityRequest request, List<SingularityTaskId> remainingActiveTasks, Optional<String> user) {
     List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
-    int numActiveRacks = rackManager.getNumActive();
-    double perRack = request.getInstancesSafe() / (double) numActiveRacks;
+    int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
+    double perRack = request.getInstancesSafe() / (double) activeRacksWithCapacityCount;
 
     Multiset<String> countPerRack = HashMultiset.create();
     for (SingularityTaskId taskId : remainingActiveTasks) {
       countPerRack.add(taskId.getRackId());
       LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
-      if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2 && taskId.getInstanceNo() > 1) {
+      if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < activeRacksWithCapacityCount / 2 && taskId.getInstanceNo() > 1) {
         extraCleanedTasks.add(taskId);
         LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
         taskManager.createTaskCleanup(new SingularityTaskCleanup(user, TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(),

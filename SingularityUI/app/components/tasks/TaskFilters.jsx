@@ -39,12 +39,24 @@ export default class TaskFilters extends React.Component {
     return ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
   }
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      filter: _.extend({}, this.props.filter),
+    };
+
+    this.debouncedOnFilterChange = _.debounce(this.props.onFilterChange, 250);
+  }
+
   handleStatusSelect(selectedKey) {
     this.props.onFilterChange(_.extend({}, this.props.filter, {taskStatus: TaskFilters.TASK_STATES[selectedKey].filterVal}));
   }
 
   handleSearchChange(event) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: event.target.value}));
+    const update = _.extend({}, this.props.filter, {filterText: event.target.value})
+    this.setState({ filter: update })
+    this.debouncedOnFilterChange(update);
   }
 
   clearSearch() {
@@ -100,7 +112,7 @@ export default class TaskFilters extends React.Component {
           ref="search"
           className="big-search-box"
           placeholder="Filter tasks"
-          value={this.props.filter.filterText}
+          value={this.state.filter.filterText}
           onChange={(...args) => this.handleSearchChange(...args)}
           maxLength="128"
         />
