@@ -491,6 +491,8 @@ class TaskDetail extends Component {
     const topLevelFiles = this.props.files[`${this.props.params.taskId}/`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/`].data);
     const filesAvailable = topLevelFiles && !_.isEmpty(topLevelFiles.files);
 
+    console.log(this.props.files);
+
     return (
       <div className="task-detail detail-view">
         {this.renderHeader(cleanup)}
