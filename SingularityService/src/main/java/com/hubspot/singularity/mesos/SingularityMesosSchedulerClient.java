@@ -105,7 +105,7 @@ public class SingularityMesosSchedulerClient {
           } catch (RuntimeException|URISyntaxException e) {
             if (!Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof InterruptedException)) {
               LOG.error("Could not connect: ", e);
-              scheduler.onConnectException(e);
+              scheduler.onSubscribeException(e);
             } else {
               LOG.warn("Interruped stream from mesos on subscriber thread, closing");
             }
@@ -213,10 +213,11 @@ public class SingularityMesosSchedulerClient {
 
       events.filter(event -> event.getType() == Event.Type.SUBSCRIBED)
           .map(Event::getSubscribed)
-          .subscribe(subscribed -> {
+          .subscribe(
+              subscribed -> {
                 this.frameworkId = subscribed.getFrameworkId();
                 scheduler.subscribed(subscribed);
-              }, scheduler::onUncaughtException
+              }, scheduler::onSubscribeException
           );
 
       events.filter(event -> event.getType() == Event.Type.UPDATE)
@@ -266,6 +267,7 @@ public class SingularityMesosSchedulerClient {
     if (subscriberThread != null) {
       try {
         if (!subscriberThread.isInterrupted()) {
+          LOG.info("Interrupting current subscriber thread");
           subscriberThread.interrupt();
         }
         subscriberThread.join(10000);

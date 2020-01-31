@@ -77,7 +77,7 @@ public class MesosConfiguration {
   private Optional<String> mesosUsername = Optional.empty();
   private Optional<String> mesosPassword = Optional.empty();
 
-  private long reconnectTimeoutMillis = 60000;
+  private long reconnectTimeoutMillis = 120000;
   // Set to a value at least a few seconds below the configured mesos offer timeout
   private long offerTimeout = 45000;
   private long offerLockTimeout = 1000;
