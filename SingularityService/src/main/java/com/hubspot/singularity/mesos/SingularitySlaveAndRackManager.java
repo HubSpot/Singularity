@@ -251,7 +251,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (isSlavePreferred(offerHolder, taskRequest, requestUtilization)) {
-      LOG.info("Slave {} is preferred", offerHolder.getHostname());
+      LOG.debug("Slave {} is preferred", offerHolder.getHostname());
       return SlaveMatchState.PREFERRED_SLAVE;
     }
 
@@ -266,7 +266,7 @@ public class SingularitySlaveAndRackManager {
     Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
     Map<String, String> hostAttributes = offerHolder.getTextAttributes();
     boolean containsAtLeastOneMatchingAttribute = slaveAndRackHelper.containsAtLeastOneMatchingAttribute(hostAttributes, allowedAttributes);
-    LOG.info("is slave {} by allowed attributes? {}", offerHolder.getHostname(), containsAtLeastOneMatchingAttribute);
+    LOG.trace("is slave {} by allowed attributes? {}", offerHolder.getHostname(), containsAtLeastOneMatchingAttribute);
     return containsAtLeastOneMatchingAttribute;
   }
 
@@ -274,7 +274,7 @@ public class SingularitySlaveAndRackManager {
     if (requestUtilization != null) {
       CpuMemoryPreference cpuMemoryPreferenceForSlave = slaveAndRackHelper.getCpuMemoryPreferenceForSlave(offerHolder);
       CpuMemoryPreference cpuMemoryPreferenceForRequest = slaveAndRackHelper.getCpuMemoryPreferenceForRequest(requestUtilization);
-      LOG.info("CpuMemoryPreference for slave {} is {}, CpuMemoryPreference for request {} is {}", offerHolder.getHostname(), cpuMemoryPreferenceForSlave.toString(), requestUtilization.getRequestId(), cpuMemoryPreferenceForRequest.toString());
+      LOG.trace("CpuMemoryPreference for slave {} is {}, CpuMemoryPreference for request {} is {}", offerHolder.getHostname(), cpuMemoryPreferenceForSlave.toString(), requestUtilization.getRequestId(), cpuMemoryPreferenceForRequest.toString());
       return cpuMemoryPreferenceForSlave == cpuMemoryPreferenceForRequest;
     }
     return false;
