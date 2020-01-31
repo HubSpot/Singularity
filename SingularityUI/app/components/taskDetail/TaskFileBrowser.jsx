@@ -146,7 +146,7 @@ function TaskFileBrowser (props) {
               </OverlayTrigger>
             );
             const less = (
-              <TaskLessButton file={"dist/index.js"} />
+              <TaskLessButton file={file.fullPath} />
             );
 
             return (
