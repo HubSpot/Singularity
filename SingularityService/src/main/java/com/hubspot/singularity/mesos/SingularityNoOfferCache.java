@@ -46,6 +46,11 @@ public class SingularityNoOfferCache implements OfferCache {
   }
 
   @Override
+  public void invalidateAll() {
+    // no-op
+  }
+
+  @Override
   public List<Offer> peekOffers() {
     return Collections.emptyList();
   }

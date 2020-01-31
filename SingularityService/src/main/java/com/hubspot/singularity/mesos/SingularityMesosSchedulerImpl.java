@@ -385,6 +385,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void reconnectMesos() {
     callWithStateLock(() -> {
       state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
+      offerCache.invalidateAll();
       LOG.info("Paused scheduler actions, closing existing mesos connection");
       mesosSchedulerClient.close();
       LOG.info("Closed existing mesos connection");

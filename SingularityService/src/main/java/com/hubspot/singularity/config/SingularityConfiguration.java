@@ -408,6 +408,8 @@ public class SingularityConfiguration extends Configuration {
   // high memory slave, based on cpu to memory ratio
   private double highMemorySlaveCutOff = 0.5; //TODO
 
+  private long reconcileLaunchAfterMillis = TimeUnit.MINUTES.toMillis(3);
+
   @JsonProperty("crashLoop")
   private CrashLoopConfiguration crashLoopConfiguration = new CrashLoopConfiguration();
 
@@ -1732,5 +1734,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCrashLoopConfiguration(CrashLoopConfiguration crashLoopConfiguration) {
     this.crashLoopConfiguration = crashLoopConfiguration;
+  }
+
+  public long getReconcileLaunchAfterMillis() {
+    return reconcileLaunchAfterMillis;
+  }
+
+  public void setReconcileLaunchAfterMillis(long reconcileLaunchAfterMillis) {
+    this.reconcileLaunchAfterMillis = reconcileLaunchAfterMillis;
   }
 }

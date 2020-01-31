@@ -53,7 +53,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       }
 
       scheduler.drainPendingQueue();
-
+      scheduler.checkForStalledTaskLaunches();
       // Check against only cached offers
       offerScheduler.resourceOffers(Collections.emptyList());
     }, "SingularitySchedulerPoller");
