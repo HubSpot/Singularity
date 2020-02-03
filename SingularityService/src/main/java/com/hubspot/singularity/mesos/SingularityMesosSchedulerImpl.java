@@ -424,6 +424,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           .withStopStrategy(StopStrategies.stopAfterDelay(configuration.getMesosConfiguration().getReconnectTimeoutMillis(), TimeUnit.MILLISECONDS))
           .build();
       startRetryer.call(() -> {
+        AtomicBoolean connected = new AtomicBoolean();
+        callWithStateLock(() -> connected.set(state.getMesosSchedulerState() == MesosSchedulerState.SUBSCRIBED), "reconnectMesosSync", false);
+        if (connected.get()) {
+          restartInProgress.set(false);
+          return true;
+        }
         mesosSchedulerClient.close();
         LOG.info("Closed existing mesos connection");
         start();
