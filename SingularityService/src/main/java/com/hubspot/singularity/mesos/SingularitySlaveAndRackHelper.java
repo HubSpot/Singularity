@@ -155,15 +155,15 @@ public class SingularitySlaveAndRackHelper {
   }
 
   private double getCpuMemoryRatioForSlave(SingularityOfferHolder offerHolder) {
-    double memory = MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty());
+    double memoryGB = MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()) / 1024;
     double cpus = MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.empty());
-    return memory/cpus;
+    return cpus/memoryGB;
   }
 
   private double getCpuMemoryRatioForRequest(RequestUtilization requestUtilization) {
     double cpuUsageForRequest = getEstimatedCpuUsageForRequest(requestUtilization);
-    double memUsageForRequest = requestUtilization.getAvgMemBytesUsed();
-    return cpuUsageForRequest/memUsageForRequest;
+    double memUsageGBForRequest = requestUtilization.getAvgMemBytesUsed() / 1024 / 1024;
+    return cpuUsageForRequest/memUsageGBForRequest;
   }
 
   public double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
