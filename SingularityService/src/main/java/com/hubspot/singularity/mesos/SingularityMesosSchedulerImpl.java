@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -292,7 +293,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onUncaughtException(Throwable t) {
     if (t instanceof PrematureChannelClosureException) {
       LOG.warn("PrematureChannelClosureException, will attempt restart");
-    } else if (t instanceof IllegalStateException && restartInProgress.get()) {
+    } else if ((t instanceof IllegalStateException || isConnectException(t)) && restartInProgress.get()) {
       onSubscribeException(t);
     } else {
       LOG.error("uncaught exception", t);
@@ -308,6 +309,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         abort.abort(AbortReason.MESOS_ERROR, Optional.of(t));
       }
     }, "errorUncaughtException", true);
+  }
+
+  private boolean isConnectException(Throwable t) {
+    return Throwables.getCausalChain(t)
+        .stream()
+        .anyMatch((th) -> th instanceof ConnectException);
   }
 
   @Override
@@ -422,7 +429,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         start();
         long start = System.currentTimeMillis();
         while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
-          Thread.sleep(50);
+          Thread.sleep(10);
           Throwable t = reconnectException.getAndSet(null);
           if (t != null) {
             if (t instanceof IllegalStateException) {
