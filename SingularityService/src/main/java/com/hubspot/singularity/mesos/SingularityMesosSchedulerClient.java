@@ -159,6 +159,7 @@ public class SingularityMesosSchedulerClient {
         .mesosUri(mesosMasterURI)
         .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"))
         .onSendEventBackpressureBuffer()
+        .onSendErrorRetry()
         .onBackpressureBuffer(
             scheduler.getEventBufferSize(),
             () -> {
