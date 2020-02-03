@@ -2,8 +2,8 @@ import React, { PropTypes, Component } from 'react';
 
 import { Terminal } from 'xterm';
 import { AttachAddon } from 'xterm-addon-attach';
-
 import 'xterm.css';
+import Utils from '../../utils';
 
 class TaskLessTerminal extends Component {
   constructor(props) {
@@ -11,7 +11,7 @@ class TaskLessTerminal extends Component {
 
     this.terminal = new Terminal();
 
-    this.ws = new WebSocket(`wss://localhost:3000/api/exec/less/attach?${this.props.file}`);
+    this.ws = new WebSocket(`wss://${this.props.host}:4141/api/exec/less/attach?${this.props.file}`, ['Bearer', Utils.getAuthToken()]);
     this.wsAttach = new AttachAddon(this.ws);
 
     console.log(this.ws);
@@ -45,6 +45,7 @@ class TaskLessTerminal extends Component {
 
 TaskLessTerminal.propTypes = {
   file: PropTypes.string.isRequired,
+  host: PropTypes.string.isRequired,
   onClose: PropTypes.func,
 };
 
