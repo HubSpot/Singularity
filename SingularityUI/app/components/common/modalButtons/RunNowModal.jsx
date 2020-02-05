@@ -59,7 +59,10 @@ class RunNowModal extends Component {
       data.runAt = runAt;
     }
 
-    if (data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value) localStorage.setItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME, data.fileToTail);
+    if (data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value) {
+      localStorage.setItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME, data.fileToTail);
+    }
+
     this.props.runNow(data).then((response) => {
       let requestFetchResponse = response || {};
       if (_.isArray(response) && response.length > 0) {
@@ -156,5 +159,5 @@ export default connect(
   null,
   mapDispatchToProps,
   null,
-  { withRef: true }
+  { withRef: true, forwardRef: true }
 )(RunNowModal);

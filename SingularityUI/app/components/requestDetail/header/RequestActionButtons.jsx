@@ -32,7 +32,6 @@ const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchReques
       fetchRequest(),
       fetchActiveTasks(),
       fetchRequestHistory(5, 1),
-      fetchRequestShuffleOptOut(),
     ]);
   }
 
@@ -40,7 +39,6 @@ const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchReques
     return Promise.all([
       fetchRequest(),
       fetchRequestHistory(5, 1),
-      fetchRequestShuffleOptOut(),
     ]);
   }
 
@@ -164,7 +162,7 @@ const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchReques
   }
 
   const shuffleOptOutButton = (
-    <ShuffleOptOutButton requestId={request.id} then={fetchRequestAndHistory} />
+    <ShuffleOptOutButton requestId={request.id} then={fetchRequestShuffleOptOut} />
   );
 
   const removeButton = (
