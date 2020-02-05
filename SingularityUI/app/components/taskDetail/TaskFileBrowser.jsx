@@ -145,8 +145,8 @@ function TaskFileBrowser (props) {
                 </a>
               </OverlayTrigger>
             );
-            const less = (
-              <TaskLessButton file={file.fullPath} />
+            const less = config.shellsocket && (
+              <TaskLessButton host={props.host} file={file.fullPath} />
             );
 
             return (

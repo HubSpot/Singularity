@@ -11,6 +11,7 @@ import TaskLessTerminal from './TaskLessTerminal';
 export default class TaskLessButton extends Component {
 
   static propTypes = {
+    host: PropTypes.string.isRequired,
     file: PropTypes.string.isRequired,
     children: PropTypes.node,
     then: PropTypes.func
@@ -34,7 +35,7 @@ export default class TaskLessButton extends Component {
         </OverlayTrigger>
         <SimplestModal ref="modal" bsSize="lg">
           <Modal.Body style={{ padding: 0 }}>
-            <TaskLessTerminal file={this.props.file} onClose={() => { this.refs.modal.hide() }} />
+            <TaskLessTerminal host={this.props.host} file={this.props.file} onClose={() => { this.refs.modal.hide() }} />
           </Modal.Body>
         </SimplestModal>
       </span>
