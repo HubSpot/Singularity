@@ -48,7 +48,8 @@ var templateData = {
   authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
   authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
   quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}',
-  navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '{}'
+  navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '{}',
+  shellsocket: process.env.SINGULARITY_ENABLE_SHELLSOCKET || 'true',
 };
 
 var dest = path.resolve(__dirname, 'dist');
