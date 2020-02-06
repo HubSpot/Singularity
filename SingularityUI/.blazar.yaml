@@ -1,29 +1,2 @@
-cache:
-  - ./node_modules
-
-before:
-  - description: Pull down and Configure the variables for our Singularity Deployment
-    commands:
-       - git clone git@git.hubteam.com:HubSpot/SingularityBuildConfig.git custom-build-config
-       - custom-build-config/setup-ui-env.py
-
-after:
-  onSuccess:
-    - description:
-      name: copyindex
-      commands:
-        - cp dist/index.html dist/static/index.html
-    - description:
-      name: publish
-      activeByDefault: false
-      commands:
-        - /bin/bash custom-build-config/publish-ui.sh
-
-buildType: GENERIC_SINGULARITY
-
-stepActivation:
-  publish:
-    branches: [hs_staging, hs_qa, hs_stable, master]
-
 env:
   SET_VERSION_OVERRIDE: "1.2.0-$GIT_BRANCH-SNAPSHOT"
