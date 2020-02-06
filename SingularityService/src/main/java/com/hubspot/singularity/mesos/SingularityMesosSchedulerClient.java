@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -158,6 +159,7 @@ public class SingularityMesosSchedulerClient {
         .mesosUri(mesosMasterURI)
         .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"))
         .onSendEventBackpressureBuffer()
+        .onSendErrorRetry()
         .onBackpressureBuffer(
             scheduler.getEventBufferSize(),
             () -> {

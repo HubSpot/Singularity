@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -292,7 +293,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onUncaughtException(Throwable t) {
     if (t instanceof PrematureChannelClosureException) {
       LOG.warn("PrematureChannelClosureException, will attempt restart");
-    } else if (t instanceof IllegalStateException && restartInProgress.get()) {
+    } else if ((t instanceof IllegalStateException || isConnectException(t)) && restartInProgress.get()) {
       onSubscribeException(t);
     } else {
       LOG.error("uncaught exception", t);
@@ -300,6 +301,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     callWithStateLock(() -> {
       if (t instanceof PrematureChannelClosureException) {
         state.setMesosSchedulerState(MesosSchedulerState.PAUSED_FOR_MESOS_RECONNECT);
+        offerCache.invalidateAll();
         reconnectMesos();
       } else {
         LOG.error("Aborting due to error: {}", t.getMessage(), t);
@@ -307,6 +309,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         abort.abort(AbortReason.MESOS_ERROR, Optional.of(t));
       }
     }, "errorUncaughtException", true);
+  }
+
+  private boolean isConnectException(Throwable t) {
+    return Throwables.getCausalChain(t)
+        .stream()
+        .anyMatch((th) -> th instanceof ConnectException);
   }
 
   @Override
@@ -416,12 +424,21 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           .withStopStrategy(StopStrategies.stopAfterDelay(configuration.getMesosConfiguration().getReconnectTimeoutMillis(), TimeUnit.MILLISECONDS))
           .build();
       startRetryer.call(() -> {
+        reconnectException.set(null);
+        AtomicBoolean connected = new AtomicBoolean();
+        callWithStateLock(() -> connected.set(state.getMesosSchedulerState() == MesosSchedulerState.SUBSCRIBED), "reconnectMesosSync", false);
+        if (connected.get()) {
+          restartInProgress.set(false);
+          reconnectException.set(null);
+          LOG.info("Already connected, cancelling reconnect attempt");
+          return true;
+        }
         mesosSchedulerClient.close();
         LOG.info("Closed existing mesos connection");
         start();
         long start = System.currentTimeMillis();
         while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
-          Thread.sleep(50);
+          Thread.sleep(10);
           Throwable t = reconnectException.getAndSet(null);
           if (t != null) {
             if (t instanceof IllegalStateException) {

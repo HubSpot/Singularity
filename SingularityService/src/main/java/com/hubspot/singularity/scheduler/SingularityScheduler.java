@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,7 +22,10 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
+import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile.Task;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -81,6 +85,7 @@ import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.helpers.RebalancingHelper;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -102,12 +107,16 @@ public class SingularityScheduler {
   private final SingularityLeaderCache leaderCache;
   private final SingularitySchedulerLock lock;
   private final ExecutorService schedulerExecutorService;
+  private final SingularityMesosSchedulerClient mesosSchedulerClient;
+
+  private final Map<SingularityTaskId, Long> requestedReconciles;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCrashLoops crashLoops, DeployManager deployManager,
                               TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
                               RackManager rackManager, SingularityMailer mailer,
-                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, SingularityManagedThreadPoolFactory threadPoolFactory) {
+                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock, SingularityManagedThreadPoolFactory threadPoolFactory,
+                              SingularityMesosSchedulerClient mesosSchedulerClient) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -121,6 +130,8 @@ public class SingularityScheduler {
     this.leaderCache = leaderCache;
     this.lock = lock;
     this.schedulerExecutorService = threadPoolFactory.get("scheduler", configuration.getCoreThreadpoolSize());
+    this.mesosSchedulerClient = mesosSchedulerClient;
+    this.requestedReconciles = new HashMap<>();
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -1026,5 +1037,40 @@ public class SingularityScheduler {
     } else {
       return currentRequest.getRequest();
     }
+  }
+
+  public void checkForStalledTaskLaunches() {
+    long now = System.currentTimeMillis();
+    taskManager.getLaunchingTasks()
+        .stream()
+        .filter((t) -> {
+          if (t.getStartedAt() < now - configuration.getReconcileLaunchAfterMillis()) {
+            Long maybeLastReconcileTime = requestedReconciles.get(t);
+            // Don't overwhelm ourselves with status updates, only reconcile each task every 15s
+            return maybeLastReconcileTime == null || now - maybeLastReconcileTime > 15000;
+          } else {
+            return false;
+          }
+        })
+        .forEach((taskId) -> {
+          Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+          if (maybeTask.isPresent()) {
+            mesosSchedulerClient.reconcile(Collections.singletonList(
+                Task.newBuilder()
+                    .setTaskId(TaskID.newBuilder().setValue(taskId.toString()).build())
+                    .setAgentId(AgentID.newBuilder().setValue(maybeTask.get().getAgentId().getValue()).build())
+                    .build()
+            ));
+            LOG.info("Requested explicit reconcile of task {}", taskId);
+          } else {
+            LOG.warn("Could not find full content for task {}", taskId);
+          }
+        });
+    Set<SingularityTaskId> toRemove = requestedReconciles.keySet()
+        .stream()
+        .filter((t) -> t.getStartedAt() < now - TimeUnit.MINUTES.toMillis(15))
+        .collect(Collectors.toSet());
+    toRemove.forEach(requestedReconciles::remove);
+
   }
 }

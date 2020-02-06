@@ -35,6 +35,9 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +93,7 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.helpers.RequestHelper;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -127,11 +131,13 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final DisasterManager disasterManager;
   private final RequestHelper requestHelper;
   private final MimetypesFileTypeMap fileTypeMap;
+  private final SingularityMesosSchedulerClient mesosSchedulerClient;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
                       SingularityAuthorizationHelper authorizationHelper, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
-                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, RequestHelper requestHelper, MesosConfiguration configuration) {
+                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, @Singularity ObjectMapper objectMapper, RequestHelper requestHelper, MesosConfiguration configuration,
+                      SingularityMesosSchedulerClient mesosSchedulerClient) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
@@ -146,6 +152,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.httpClient = httpClient;
     this.configuration = configuration;
     this.fileTypeMap = new MimetypesFileTypeMap();
+    this.mesosSchedulerClient = mesosSchedulerClient;
   }
 
   @GET
@@ -737,6 +744,33 @@ public class TaskResource extends AbstractLeaderAwareResource {
       } else {
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  @POST
+  @Path("/reconcile/{taskId}")
+  @Operation(summary = "Force a reconciliation with the mesos master state for this task")
+  public Response forceReconcile(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "Id of the task") @PathParam("taskId") String taskId,
+      @Context HttpServletRequest requestContext
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(requestContext, Response.class, null, () -> performForceReconcile(taskId));
+  }
+
+  private Response performForceReconcile(String taskId) {
+    Optional<SingularityTask> maybeTask = taskManager.getTask(SingularityTaskId.valueOf(taskId));
+    if (maybeTask.isPresent()) {
+      mesosSchedulerClient.reconcile(Collections.singletonList(
+          Task.newBuilder()
+              .setTaskId(TaskID.newBuilder().setValue(taskId).build())
+              .setAgentId(AgentID.newBuilder().setValue(maybeTask.get().getAgentId().getValue()).build())
+              .build()
+      ));
+      return Response.ok().build();
+    } else {
+      return Response.status(404).build();
     }
   }
 
