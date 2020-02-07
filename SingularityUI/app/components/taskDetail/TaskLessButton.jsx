@@ -46,7 +46,7 @@ export default class TaskLessButton extends Component {
           <Modal.Body style={{ padding: 0 }}>
             <TaskLessTerminal
               host={this.props.host}
-              port={4141}
+              port={config.lessTerminalPort}
               task={this.props.task}
               path={this.props.file.fullPath}
               onClose={() => { this.refs.modal.hide() }}
