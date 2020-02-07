@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 
 import { Terminal } from 'xterm';
-import { AttachAddon } from 'xterm-addon-attach';
+import { AttachAddon } from './TaskLessAttachAddon';
 import 'xterm.css';
 import Utils from '../../utils';
 
