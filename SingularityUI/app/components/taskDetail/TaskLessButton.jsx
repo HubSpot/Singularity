@@ -12,7 +12,16 @@ export default class TaskLessButton extends Component {
 
   static propTypes = {
     host: PropTypes.string.isRequired,
-    file: PropTypes.string.isRequired,
+    task: PropTypes.string.isRequired,
+    file: PropTypes.shape({
+      isDirectory: PropTypes.bool,
+      isTailable: PropTypes.bool,
+      name: PropTypes.string,
+      downloadLink: PropTypes.string,
+      size: PropTypes.number,
+      mtime: PropTypes.number
+    }).isRequired,
+
     children: PropTypes.node,
     then: PropTypes.func
   };
@@ -20,7 +29,7 @@ export default class TaskLessButton extends Component {
   renderTooltip() {
     return (
       <ToolTip id="less">
-        Less {this.props.file}
+        Less {this.props.file.name}
       </ToolTip>
     );
   }
@@ -35,7 +44,13 @@ export default class TaskLessButton extends Component {
         </OverlayTrigger>
         <SimplestModal ref="modal" bsSize="lg">
           <Modal.Body style={{ padding: 0 }}>
-            <TaskLessTerminal host={this.props.host} file={this.props.file} onClose={() => { this.refs.modal.hide() }} />
+            <TaskLessTerminal
+              host={this.props.host}
+              port={4141}
+              task={this.props.task}
+              path={this.props.file.fullPath}
+              onClose={() => { this.refs.modal.hide() }}
+            />
           </Modal.Body>
         </SimplestModal>
       </span>
