@@ -11,7 +11,7 @@ class TaskLessTerminal extends Component {
 
     this.terminal = new Terminal();
 
-    this.ws = new WebSocket(`wss://${this.props.host}:4141/api/exec/less/attach?${this.props.file}`, ['Bearer', Utils.getAuthToken()]);
+    this.ws = new WebSocket(`wss://${this.props.host}:${this.props.port}/api/v1/tasks/${this.props.task}/exec/less?command=${this.props.path}`, ['Bearer', Utils.getAuthToken()]);
     this.wsAttach = new AttachAddon(this.ws);
 
     console.log(this.ws);
@@ -44,8 +44,10 @@ class TaskLessTerminal extends Component {
 }
 
 TaskLessTerminal.propTypes = {
-  file: PropTypes.string.isRequired,
+  path: PropTypes.string.isRequired,
   host: PropTypes.string.isRequired,
+  port: PropTypes.number.isRequired,
+  task: PropTypes.string.isRequired,
   onClose: PropTypes.func,
 };
 
