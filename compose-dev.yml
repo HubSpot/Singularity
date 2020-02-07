@@ -1,68 +1,79 @@
-zk:
-  image: bobrik/zookeeper
-  net: host
-  environment:
-    ZK_CONFIG: tickTime=2000,initLimit=10,syncLimit=5,maxClientCnxns=128,forceSync=no,clientPort=2181
-    ZK_ID: 1
+version: '3.3'
+services:
+  zk:
+    image: bobrik/zookeeper
+    network_mode: host
+    environment:
+      ZK_CONFIG: tickTime=2000,initLimit=10,syncLimit=5,maxClientCnxns=128,forceSync=no,clientPort=2181
+      ZK_ID: 1
 
-master:
-  image: mesosphere/mesos-master:1.7.1
-  net: host
-  environment:
-    MESOS_ZK: zk://localhost:2181/mesos
-    MESOS_HOSTNAME: ${DOCKER_IP}
-    MESOS_IP: ${DOCKER_IP}
-    MESOS_QUORUM: 1
-    MESOS_CLUSTER: docker-compose
-    MESOS_WORK_DIR: /var/lib/mesos
-    MESOS_ROLES: "OPS"
+  master:
+    image: mesosphere/mesos-master:1.7.1
+    network_mode: host
+    environment:
+      MESOS_ZK: zk://localhost:2181/mesos
+      MESOS_HOSTNAME: ${DOCKER_IP}
+      MESOS_IP: ${DOCKER_IP}
+      MESOS_QUORUM: 1
+      MESOS_CLUSTER: docker-compose
+      MESOS_WORK_DIR: /var/lib/mesos
+      MESOS_ROLES: "OPS"
 
-slave:
-  image: hubspot/singularityexecutorslave:1.2.0-SNAPSHOT
-  command: mesos-slave
-  net: host
-  environment:
-    MESOS_MASTER: zk://localhost:2181/mesos
-    MESOS_HOSTNAME: localhost
-    MESOS_IP: 127.0.0.1
-    MESOS_CONTAINERIZERS: docker,mesos
-    MESOS_ROLES: "OPS"
-    MESOS_RESOURCES: "cpus(OPS):1;cpus(*):1;mem(OPS):512;mem(*):1024"
-    MESOS_ATTRIBUTES: "example:value;myNumber:1"
-    MESOS_ISOLATION: cgroups/cpu,cgroups/mem
-    MESOS_WORK_DIR: /var/lib/mesos/agent
-    MESOS_SYSTEMD_ENABLE_SUPPORT: "false"
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - /sys:/sys
+  slave:
+    image: hubspot/singularityexecutorslave:1.2.0-SNAPSHOT
+    command: mesos-slave
+    network_mode: host
+    environment:
+      MESOS_MASTER: zk://localhost:2181/mesos
+      MESOS_HOSTNAME: localhost
+      MESOS_IP: 127.0.0.1
+      MESOS_CONTAINERIZERS: docker,mesos
+      MESOS_ROLES: "OPS"
+      MESOS_RESOURCES: "cpus(OPS):1;cpus(*):1;mem(OPS):512;mem(*):1024"
+      MESOS_ATTRIBUTES: "example:value;myNumber:1"
+      MESOS_ISOLATION: cgroups/cpu,cgroups/mem
+      MESOS_WORK_DIR: /var/lib/mesos/agent
+      MESOS_SYSTEMD_ENABLE_SUPPORT: "false"
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: /sys
+        target: /sys
+      - type: bind
+        source: /var/lib/mesos
+        target: /var/lib/mesos
+        bind:
+          propagation: shared
 
-scheduler:
-  image: hubspot/singularityservice:1.2.0-SNAPSHOT
-  net: host
-  environment:
-    - DOCKER_HOST
-    - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
-    - SINGULARITY_SMTP_HOST=localhost
-    - SINGULARITY_SMTP_PORT=1025
-    - SINGULARITY_MESOS_FRAMEWORK_ROLE=OPS
-    - SINGULARITY_MESOS_MASTER=${DOCKER_IP}:5050
+  scheduler:
+    image: hubspot/singularityservice:1.2.0-SNAPSHOT
+    network_mode: host
+    environment:
+      - DOCKER_HOST
+      - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
+      - SINGULARITY_SMTP_HOST=localhost
+      - SINGULARITY_SMTP_PORT=1025
+      - SINGULARITY_MESOS_FRAMEWORK_ROLE=OPS
+      - SINGULARITY_MESOS_MASTER=${DOCKER_IP}:5050
 
-baragonservice:
-  image: hubspot/baragonservice:0.8.0
-  net: host
-  environment:
-    - DOCKER_HOST
-    - BARAGON_PORT=8080
-    - BARAGON_UI_BASE=/baragon/v2
+  baragonservice:
+    image: hubspot/baragonservice:0.8.0
+    network_mode: host
+    environment:
+      - DOCKER_HOST
+      - BARAGON_PORT=8080
+      - BARAGON_UI_BASE=/baragon/v2
 
-baragonagent:
-  image: hubspot/baragonagent:0.8.0
-  net: host
-  environment:
-    NGINX_PORT: 80
-    BARAGON_PORT: 8882
-    BARAGON_AGENT_GROUP: test
+  baragonagent:
+    image: hubspot/baragonagent:0.8.0
+    network_mode: host
+    environment:
+      NGINX_PORT: 80
+      BARAGON_PORT: 8882
+      BARAGON_AGENT_GROUP: test
 
-mailhog:
-  image: mailhog/mailhog
-  net: host
+  mailhog:
+    image: mailhog/mailhog
+    network_mode: host
