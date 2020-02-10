@@ -29,6 +29,7 @@ class TaskLessTerminal extends Component {
   componentDidMount() {
     this.terminal.loadAddon(this.wsAttach);
     this.terminal.open(this.refs.terminal);
+    this.terminal.focus();
   }
 
   componentWillUnmount() {
