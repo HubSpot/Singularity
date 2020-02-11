@@ -522,7 +522,7 @@ export const LoadBalancerState = (
         } else {
           glyph = "minus";
           colorClass = "color-info";
-          message = "not serving traffic"
+          message = "not serving traffic";
         }
         const tooltip = (
           <ToolTip id="view-lb-state">
