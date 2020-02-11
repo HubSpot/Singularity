@@ -57,7 +57,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
     }
     return {
       ...task,
-      health: health
+      health: health,
       activeInLb: _.contains(loadBalancedTaskIds, task.taskId.id)
     }
   });
