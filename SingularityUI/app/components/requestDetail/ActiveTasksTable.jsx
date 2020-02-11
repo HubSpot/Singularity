@@ -11,6 +11,7 @@ import Utils from '../../utils';
 import UITable from '../common/table/UITable';
 import {
   Health,
+  LoadBalancerState,
   InstanceNumberWithHostname,
   Host,
   LastTaskState,
@@ -45,38 +46,19 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
 
   const tasksWithHealth = _.map(tasks, (task) => {
     let health;
-    if (request.request.loadBalanced) {
-      if (_.contains(healthyTaskIds, task.taskId.id)) {
-        if (_.contains(loadBalancedTaskIds, task.taskId.id)) {
-          health = 'healthy, in load balancer';
-        } else {
-          health = 'healthy, awaiting load balancer';
-        }
-      } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
-        if (_.contains(loadBalancedTaskIds, task.taskId.id)) {
-          health = 'cleaning, in load balancer';
-        } else {
-          health = 'cleaning, removed from load balancer';
-        }
-      } else if (_.contains(killedTaskIds, task.taskId.id)) {
-        health = 'terminating'
-      } else {
-        health = 'not yet healthy'
-      }
+    if (_.contains(healthyTaskIds, task.taskId.id)) {
+      health = 'healthy';
+    } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
+      health = 'cleaning';
+    } else if (_.contains(killedTaskIds, task.taskId.id)) {
+      health = 'terminating'
     } else {
-      if (_.contains(healthyTaskIds, task.taskId.id)) {
-        health = 'healthy';
-      } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
-        health = 'cleaning';
-      } else if (_.contains(killedTaskIds, task.taskId.id)) {
-        health = 'terminating'
-      } else {
-        health = 'not yet healthy'
-      }
+      health = 'not yet healthy'
     }
     return {
       ...task,
       health: health
+      activeInLb: _.contains(loadBalancedTaskIds, task.taskId.id)
     }
   });
   const title = <span>Running instances {maybeAggregateTailButton}</span>;
@@ -91,6 +73,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         triggerOnDataSizeChange={fetchTaskHistoryForRequest}
       >
         {Health}
+        {request.request.loadBalanced && LoadBalancerState}
         {InstanceNumberWithHostname}
         {LastTaskState}
         {DeployId}

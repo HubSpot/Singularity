@@ -460,7 +460,7 @@ export const InstanceNumberWithHostname = (
 
 export const Health = (
   <Column
-    label=""
+    label="Health"
     id="health"
     key="health"
     cellData={
@@ -471,24 +471,12 @@ export const Health = (
         let glyph;
         let colorClass;
 
-        if (cellData === "healthy, awaiting load balancer") {
-          glyph = "heart";
-          colorClass = "color-success";
-        } else if (cellData === "healthy, in load balancer") {
-          glyph = "check";
-          colorClass = "color-success";
-        } else if (cellData === "healthy") {
+        if (cellData === "healthy") {
           glyph = "ok";
           colorClass = "color-success";
         } else if (cellData === "not yet healthy") {
           glyph = "hourglass";
           colorClass = "color-info"
-        } else if (cellData === "cleaning, in load balancer") {
-          glyph = "check";
-          colorClass = "color-info";
-        } else if (cellData === "cleaning, removed from load balancer") {
-          glyph = "minus";
-          colorClass = "color-info";
         } else if (cellData === "cleaning") {
           glyph = "minus";
           colorClass = "color-info";
@@ -511,5 +499,39 @@ export const Health = (
       }
     }
     sortable={true}
+  />
+);
+
+export const LoadBalancerState = (
+  <Column
+    label="In Load Balancer"
+    id="lbState"
+    key="lbState"
+    cellData={
+      (rowData) => rowData.activeInLb
+    }
+    cellRender={
+      (cellData) => {
+        let glyph;
+        let colorClass;
+        if (cellData) {
+          glyph = "ok";
+          colorClass = "color-success";
+        } else {
+          glyph = "minus";
+          colorClass = "color-info";
+        }
+        const tooltip = (
+          <ToolTip id="view-lb-state">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-lb-state-overlay" overlay={tooltip}>
+            <Glyphicon className={colorClass} glyph={glyph} />
+          </OverlayTrigger>
+        );
+      }
+    }
   />
 );
