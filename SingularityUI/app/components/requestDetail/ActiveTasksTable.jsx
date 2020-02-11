@@ -25,7 +25,7 @@ import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds,loadBalancedTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
@@ -45,12 +45,30 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
 
   const tasksWithHealth = _.map(tasks, (task) => {
     let health;
-    if (_.contains(healthyTaskIds, task.taskId.id)) {
-      health = 'healthy';
-    } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
-      health = 'cleaning';
+    if (request.loadBalanced) {
+      if (_.contains(healthyTaskIds, task.taskId.id)) {
+        if (_.contains(loadBalancedTaskIds, task.taskId.id)) {
+          health = 'healthy, in load balancer';
+        } else {
+          health = 'healthy, awaiting load balancer';
+        }
+      } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
+        if (_.contains(loadBalancedTaskIds, task.taskId.id)) {
+          health = 'cleaning, in load balancer';
+        } else {
+          health = 'cleaning, removed from load balancer';
+        }
+      } else {
+        health = 'not yet healthy'
+      }
     } else {
-      health = 'not yet healthy'
+      if (_.contains(healthyTaskIds, task.taskId.id)) {
+        health = 'healthy';
+      } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
+        health = 'cleaning';
+      } else {
+        health = 'not yet healthy'
+      }
     }
     return {
       ...task,
@@ -86,6 +104,7 @@ ActiveTasksTable.propTypes = {
   tasksAPI: PropTypes.object.isRequired,
   healthyTaskIds: PropTypes.array.isRequired,
   cleaningTaskIds: PropTypes.array.isRequired,
+  loadBalancedTaskIds: PropTypes.array.isRequired,
   fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
 
@@ -100,7 +119,10 @@ const mapStateToProps = (state, ownProps) => {
   healthyTaskIds: _.map(Utils.maybe(request, ['taskIds', 'healthy'], []), (task) => {
     return task.id;
   }),
-  cleaningTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'cleaning'], []), (task) => {
+  cleaningTaskIds: _.map(Utils.maybe(request, ['taskIds', 'cleaning'], []), (task) => {
+    return task.id;
+  }),
+  loadBalancedTaskIds: _.map(Utils.maybe(request, ['taskIds', 'loadBalanced'], []), (task) => {
     return task.id;
   })
 }};

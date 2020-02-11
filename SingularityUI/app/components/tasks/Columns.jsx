@@ -470,14 +470,30 @@ export const Health = (
       (cellData) => {
         let glyph;
         let colorClass;
-        if (cellData === "healthy" || cellData === "cleaning") {
+
+        if (cellData === "healthy, awaiting load balancer") {
+          glyph = "heart";
+          colorClass = "color-success";
+        } else if (cellData === "healthy, in load balancer") {
+          glyph = "check";
+          colorClass = "color-success";
+        } else if (cellData === "healthy") {
           glyph = "ok";
           colorClass = "color-success";
-        } else if (cellData === "pending") {
-          glyph = "question-sign";
-        } else {
+        } else if (cellData === "not yet healthy") {
           glyph = "hourglass";
           colorClass = "color-info"
+        } else if (cellData === "cleaning, in load balancer") {
+          glyph = "check";
+          colorClass = "color-info";
+        } else if (cellData === "cleaning, removed from load balancer") {
+          glyph = "stop";
+          colorClass = "color-info";
+        } else if (cellData === "cleaning") {
+          glyph = "stop";
+          colorClass = "color-info";
+        } else {
+          glyph = "question-sign";
         }
         const tooltip = (
           <ToolTip id="view-task-health">
