@@ -514,16 +514,19 @@ export const LoadBalancerState = (
       (cellData) => {
         let glyph;
         let colorClass;
+        let message;
         if (cellData) {
           glyph = "ok";
           colorClass = "color-success";
+          message = "active and serving traffic";
         } else {
           glyph = "minus";
           colorClass = "color-info";
+          message = "not serving traffic"
         }
         const tooltip = (
           <ToolTip id="view-lb-state">
-            {cellData}
+            {message}
           </ToolTip>
         )
         return (
