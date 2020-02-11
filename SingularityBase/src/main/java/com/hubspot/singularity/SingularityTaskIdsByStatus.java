@@ -16,25 +16,28 @@ public class SingularityTaskIdsByStatus {
   private List<SingularityPendingTaskId> pending;
   private List<SingularityTaskId> cleaning;
   private List<SingularityTaskId> loadBalanced;
+  private List<SingularityTaskId> killed;
 
   @JsonCreator
   public SingularityTaskIdsByStatus(@JsonProperty("healthy") List<SingularityTaskId> healthy,
                                     @JsonProperty("notYetHealthy") List<SingularityTaskId> notYetHealthy,
                                     @JsonProperty("pending") List<SingularityPendingTaskId> pending,
                                     @JsonProperty("cleaning") List<SingularityTaskId> cleaning,
-                                    @JsonProperty("loadBalanced") List<SingularityTaskId> loadBalanced) {
+                                    @JsonProperty("loadBalanced") List<SingularityTaskId> loadBalanced,
+                                    @JsonProperty("killed") List<SingularityTaskId> killed) {
     this.healthy = healthy;
     this.notYetHealthy = notYetHealthy;
     this.pending = pending;
     this.cleaning = cleaning;
     this.loadBalanced = loadBalanced != null ? loadBalanced : Collections.emptyList();
+    this.killed = killed != null ? killed : Collections.emptyList();
   }
 
   public SingularityTaskIdsByStatus(List<SingularityTaskId> healthy,
                                     List<SingularityTaskId> notYetHealthy,
                                     List<SingularityPendingTaskId> pending,
                                     List<SingularityTaskId> cleaning) {
-    this(healthy, notYetHealthy, pending, cleaning, Collections.emptyList());
+    this(healthy, notYetHealthy, pending, cleaning, Collections.emptyList(), Collections.emptyList());
   }
 
   @Schema(description = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully")
@@ -60,6 +63,11 @@ public class SingularityTaskIdsByStatus {
   @Schema(description = "Tasks that are currently active in the load balancer")
   public List<SingularityTaskId> getLoadBalanced() {
     return loadBalanced;
+  }
+
+  @Schema(description = "Tasks which have been sent a kill signal")
+  public List<SingularityTaskId> getKilled() {
+    return killed;
   }
 
   @Override

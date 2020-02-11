@@ -487,11 +487,14 @@ export const Health = (
           glyph = "check";
           colorClass = "color-info";
         } else if (cellData === "cleaning, removed from load balancer") {
-          glyph = "stop";
+          glyph = "minus";
           colorClass = "color-info";
         } else if (cellData === "cleaning") {
-          glyph = "stop";
+          glyph = "minus";
           colorClass = "color-info";
+        } else if (cellData === "terminating") {
+          glyph = "stop";
+          colorClass = "color-warning";
         } else {
           glyph = "question-sign";
         }

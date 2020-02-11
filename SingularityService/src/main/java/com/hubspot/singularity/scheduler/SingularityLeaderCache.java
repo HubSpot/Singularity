@@ -395,6 +395,10 @@ public class SingularityLeaderCache {
     return new ArrayList<>(killedTasks.values());
   }
 
+  public Optional<SingularityKilledTaskIdRecord> getKilledTaskRecord(SingularityTaskId taskId) {
+    return Optional.ofNullable(killedTasks.get(taskId));
+  }
+
   public void addKilledTask(SingularityKilledTaskIdRecord killedTask) {
     if (!active) {
       LOG.warn("addKilledTask {}, but not active", killedTask.getTaskId().getId());
