@@ -237,7 +237,6 @@ public class RequestHelper {
           Long lastActionTime = null;
           if (includeFullRequestData) {
             lastActionTime = getLastActionTimeForRequest(
-                request.getRequest(),
                 requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.empty()),
                 Optional.ofNullable(deployStates.get(request.getRequest().getId()))
             );
@@ -327,7 +326,17 @@ public class RequestHelper {
       }
     }
 
-    return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
+    List<SingularityTaskId> loadBalanced = new ArrayList<>();
+    if (requestWithState.getRequest().isLoadBalanced()) {
+      healthyTaskIds.stream()
+          .filter(taskManager::isInLoadBalancer)
+          .forEach(loadBalanced::add);
+      cleaningTaskIds.stream()
+          .filter(taskManager::isInLoadBalancer)
+          .forEach(loadBalanced::add);
+    }
+
+    return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds, loadBalanced));
   }
 
   private boolean userAssociatedWithDeploy(Optional<SingularityRequestDeployState> deployState, SingularityUser user) {
@@ -345,7 +354,7 @@ public class RequestHelper {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
   }
 
-  private long getLastActionTimeForRequest(SingularityRequest request, Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
+  private long getLastActionTimeForRequest(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
     long lastUpdate = 0;
     if (lastHistory.isPresent()) {
       lastUpdate = lastHistory.get().getCreatedAt();

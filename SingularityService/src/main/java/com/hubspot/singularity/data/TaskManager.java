@@ -836,6 +836,14 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
 
+  public boolean isInLoadBalancer(SingularityTaskId taskId) {
+    if (exists(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.REMOVE))) {
+      return false;
+    }
+    return exists(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.ADD))
+        || exists(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.DEPLOY));
+  }
+
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
     if (leaderCache.active()) {
       return leaderCache.getPendingTask(pendingTaskId);
