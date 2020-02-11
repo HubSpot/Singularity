@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,16 +15,26 @@ public class SingularityTaskIdsByStatus {
   private List<SingularityTaskId> notYetHealthy;
   private List<SingularityPendingTaskId> pending;
   private List<SingularityTaskId> cleaning;
+  private List<SingularityTaskId> loadBalanced;
 
   @JsonCreator
   public SingularityTaskIdsByStatus(@JsonProperty("healthy") List<SingularityTaskId> healthy,
                                     @JsonProperty("notYetHealthy") List<SingularityTaskId> notYetHealthy,
                                     @JsonProperty("pending") List<SingularityPendingTaskId> pending,
-                                    @JsonProperty("cleaning") List<SingularityTaskId> cleaning) {
+                                    @JsonProperty("cleaning") List<SingularityTaskId> cleaning,
+                                    @JsonProperty("loadBalanced") List<SingularityTaskId> loadBalanced) {
     this.healthy = healthy;
     this.notYetHealthy = notYetHealthy;
     this.pending = pending;
     this.cleaning = cleaning;
+    this.loadBalanced = loadBalanced != null ? loadBalanced : Collections.emptyList();
+  }
+
+  public SingularityTaskIdsByStatus(List<SingularityTaskId> healthy,
+                                    List<SingularityTaskId> notYetHealthy,
+                                    List<SingularityPendingTaskId> pending,
+                                    List<SingularityTaskId> cleaning) {
+    this(healthy, notYetHealthy, pending, cleaning, Collections.emptyList());
   }
 
   @Schema(description = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully")
@@ -44,6 +55,11 @@ public class SingularityTaskIdsByStatus {
   @Schema(description = "Active tasks in a cleaning state")
   public List<SingularityTaskId> getCleaning() {
     return cleaning;
+  }
+
+  @Schema(description = "Tasks that are currently active in the load balancer")
+  public List<SingularityTaskId> getLoadBalanced() {
+    return loadBalanced;
   }
 
   @Override
