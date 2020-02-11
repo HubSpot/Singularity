@@ -25,7 +25,7 @@ import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds,loadBalancedTaskIds, fetchTaskHistoryForRequest}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds,loadBalancedTaskIds, killedTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
@@ -58,6 +58,8 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         } else {
           health = 'cleaning, removed from load balancer';
         }
+      } else if (_.contains(killedTaskIds, task.taskId.id)) {
+        health = 'terminating'
       } else {
         health = 'not yet healthy'
       }
@@ -66,6 +68,8 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         health = 'healthy';
       } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
         health = 'cleaning';
+      } else if (_.contains(killedTaskIds, task.taskId.id)) {
+        health = 'terminating'
       } else {
         health = 'not yet healthy'
       }
@@ -105,6 +109,7 @@ ActiveTasksTable.propTypes = {
   healthyTaskIds: PropTypes.array.isRequired,
   cleaningTaskIds: PropTypes.array.isRequired,
   loadBalancedTaskIds: PropTypes.array.isRequired,
+  killedTaskIds: PropTypes.array.isRequired,
   fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
 
@@ -123,6 +128,9 @@ const mapStateToProps = (state, ownProps) => {
     return task.id;
   }),
   loadBalancedTaskIds: _.map(Utils.maybe(request, ['taskIds', 'loadBalanced'], []), (task) => {
+    return task.id;
+  }),
+  killedTaskIds: _.map(Utils.maybe(request, ['taskIds', 'killed'], []), (task) => {
     return task.id;
   })
 }};
