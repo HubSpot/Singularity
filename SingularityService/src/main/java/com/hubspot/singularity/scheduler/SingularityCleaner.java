@@ -975,7 +975,7 @@ public class SingularityCleaner {
       case FAILED:
       case CANCELED:
         LOG.error("LB delete request {} ({}) got unexpected response {}", lbDeleteUpdate, loadBalancerRequestId, lbDeleteUpdate.getLoadBalancerState());
-        exceptionNotifier.notify(String.format("LB delete failed for %s", lbDeleteUpdate.getLoadBalancerRequestId().toString()),
+        exceptionNotifier.notify("LB delete failed",
             ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:

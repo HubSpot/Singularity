@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -245,9 +246,14 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           toRemove.add(entry.getKey());
         }
       } catch (Throwable t) {
-        metrics.error();
-        LOG.error("Waiting on future", t);
-        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        if (t instanceof TimeoutException) {
+          // fuser or another check likely timed out and will retry
+          LOG.warn("Timeout exception waiting on future", t);
+        } else {
+          metrics.error();
+          LOG.error("Waiting on future", t);
+          exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        }
         toRetry.add(entry.getKey());
       }
     }
@@ -357,9 +363,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       try {
         returnValue = uploader.upload(finished);
       } catch (Throwable t) {
-        metrics.error();
-        LOG.error("Error while processing uploader {}", uploader, t);
-        exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        if (t instanceof NoSuchFileException) {
+          LOG.warn("File not found for upload", t);
+        } else {
+          metrics.error();
+          LOG.error("Error while processing uploader {}", uploader, t);
+          exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        }
         if (immediate) {
           return -1;
         }
