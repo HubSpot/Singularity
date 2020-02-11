@@ -45,7 +45,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
 
   const tasksWithHealth = _.map(tasks, (task) => {
     let health;
-    if (request.loadBalanced) {
+    if (request.request.loadBalanced) {
       if (_.contains(healthyTaskIds, task.taskId.id)) {
         if (_.contains(loadBalancedTaskIds, task.taskId.id)) {
           health = 'healthy, in load balancer';
