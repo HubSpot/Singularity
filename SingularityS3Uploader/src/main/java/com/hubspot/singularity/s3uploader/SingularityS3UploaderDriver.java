@@ -360,17 +360,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private Supplier<Integer> performUploadSupplier(final SingularityUploader uploader, final boolean finished, final boolean immediate) {
     return () -> {
-      Integer returnValue = 0;
+      int returnValue = 0;
       try {
         returnValue = uploader.upload(finished);
-      } catch (Throwable t) {
-        if (t instanceof NoSuchFileException) {
-          LOG.warn("File not found for upload", t);
-        } else {
-          metrics.error();
-          LOG.error("Error while processing uploader {}", uploader, t);
-          exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+      } catch (NoSuchFileException nsfe) {
+        LOG.warn("File not found for upload", nsfe);
+        if (immediate) {
+          return -1;
         }
+      } catch (Throwable t) {
+        metrics.error();
+        LOG.error("Error while processing uploader {}", uploader, t);
+        exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
         if (immediate) {
           return -1;
         }
