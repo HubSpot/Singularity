@@ -33,13 +33,6 @@ public class SingularityTaskIdsByStatus {
     this.killed = killed != null ? killed : Collections.emptyList();
   }
 
-  public SingularityTaskIdsByStatus(List<SingularityTaskId> healthy,
-                                    List<SingularityTaskId> notYetHealthy,
-                                    List<SingularityPendingTaskId> pending,
-                                    List<SingularityTaskId> cleaning) {
-    this(healthy, notYetHealthy, pending, cleaning, Collections.emptyList(), Collections.emptyList());
-  }
-
   @Schema(description = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully")
   public List<SingularityTaskId> getHealthy() {
     return healthy;
@@ -71,23 +64,43 @@ public class SingularityTaskIdsByStatus {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    if (obj instanceof SingularityTaskIdsByStatus) {
-      final SingularityTaskIdsByStatus that = (SingularityTaskIdsByStatus) obj;
-      return Objects.equals(this.healthy, that.healthy) &&
-          Objects.equals(this.notYetHealthy, that.notYetHealthy) &&
-          Objects.equals(this.pending, that.pending) &&
-          Objects.equals(this.cleaning, that.cleaning);
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
-    return false;
+
+    SingularityTaskIdsByStatus that = (SingularityTaskIdsByStatus) o;
+
+    if (healthy != null ? !healthy.equals(that.healthy) : that.healthy != null) {
+      return false;
+    }
+    if (notYetHealthy != null ? !notYetHealthy.equals(that.notYetHealthy) : that.notYetHealthy != null) {
+      return false;
+    }
+    if (pending != null ? !pending.equals(that.pending) : that.pending != null) {
+      return false;
+    }
+    if (cleaning != null ? !cleaning.equals(that.cleaning) : that.cleaning != null) {
+      return false;
+    }
+    if (loadBalanced != null ? !loadBalanced.equals(that.loadBalanced) : that.loadBalanced != null) {
+      return false;
+    }
+    return killed != null ? killed.equals(that.killed) : that.killed == null;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(healthy, notYetHealthy, pending, cleaning);
+    int result = healthy != null ? healthy.hashCode() : 0;
+    result = 31 * result + (notYetHealthy != null ? notYetHealthy.hashCode() : 0);
+    result = 31 * result + (pending != null ? pending.hashCode() : 0);
+    result = 31 * result + (cleaning != null ? cleaning.hashCode() : 0);
+    result = 31 * result + (loadBalanced != null ? loadBalanced.hashCode() : 0);
+    result = 31 * result + (killed != null ? killed.hashCode() : 0);
+    return result;
   }
 
   @Override
@@ -97,6 +110,8 @@ public class SingularityTaskIdsByStatus {
         ", notYetHealthy=" + notYetHealthy +
         ", pending=" + pending +
         ", cleaning=" + cleaning +
+        ", loadBalanced=" + loadBalanced +
+        ", killed=" + killed +
         '}';
   }
 }
