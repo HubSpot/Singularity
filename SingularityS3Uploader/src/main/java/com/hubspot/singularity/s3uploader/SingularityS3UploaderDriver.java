@@ -334,7 +334,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           LOG.warn("Timeout exception waiting on future", t);
         } else if (t instanceof NoSuchFileException) {
           LOG.warn("File not found to upload", t);
-        } {
+        } else {
           metrics.error();
           LOG.error("Waiting on future", t);
           exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
