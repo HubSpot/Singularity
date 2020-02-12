@@ -245,14 +245,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           totesUploads += uploadedFiles;
           toRemove.add(entry.getKey());
         }
+      } catch (NoSuchFileException nsfe) {
+        LOG.warn("File not found to upload", nsfe);
+        toRetry.add(entry.getKey());
       } catch (Throwable t) {
-        if (t instanceof NoSuchFileException) {
-          LOG.warn("File not found to upload", t);
-        } else {
-          metrics.error();
-          LOG.error("Waiting on future", t);
-          exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
-        }
+        metrics.error();
+        LOG.error("Waiting on future", t);
+        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
         toRetry.add(entry.getKey());
       }
     }
@@ -328,17 +327,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         }
 
         totesUploads += foundFiles;
+      } catch (TimeoutException te) {
+        // fuser or another check likely timed out and will retry
+        LOG.warn("Timeout exception waiting on future", te);
       } catch (Throwable t) {
-        if (t instanceof TimeoutException) {
-          // fuser or another check likely timed out and will retry
-          LOG.warn("Timeout exception waiting on future", t);
-        } else if (t instanceof NoSuchFileException) {
-          LOG.warn("File not found to upload", t);
-        } else {
-          metrics.error();
-          LOG.error("Waiting on future", t);
-          exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
-        }
+        metrics.error();
+        LOG.error("Waiting on future", t);
+        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
       }
     }
 
@@ -365,17 +360,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private Supplier<Integer> performUploadSupplier(final SingularityUploader uploader, final boolean finished, final boolean immediate) {
     return () -> {
-      Integer returnValue = 0;
+      int returnValue = 0;
       try {
         returnValue = uploader.upload(finished);
-      } catch (Throwable t) {
-        if (t instanceof NoSuchFileException) {
-          LOG.warn("File not found for upload", t);
-        } else {
-          metrics.error();
-          LOG.error("Error while processing uploader {}", uploader, t);
-          exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+      } catch (NoSuchFileException nsfe) {
+        LOG.warn("File not found for upload", nsfe);
+        if (immediate) {
+          return -1;
         }
+      } catch (Throwable t) {
+        metrics.error();
+        LOG.error("Error while processing uploader {}", uploader, t);
+        exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
         if (immediate) {
           return -1;
         }
