@@ -162,6 +162,9 @@ setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile
 
 {{{ runContext.extraScriptContent }}}
 
+# Print out information about the image we are about to use
+docker image inspect $DOCKER_IMAGE > docker_image.json
+
 # Start up the container
 env_args=({{#each envContext.env}}{{#ifHasNewLinesOrBackticks value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLinesOrBackticks}}{{/each}})
 cmd=(docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
