@@ -108,7 +108,7 @@ public class SingularityAuthorizationHelper {
       if (!userIsAdmin) {
         checkForbidden(
             userIsPartOfRequiredGroups,
-            "%s must be part of one or more read only or jita groups: %s,%s", user.getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
+            "%s must be part of one or more read only or jita groups: %s", user.getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
       }
     }
   }
