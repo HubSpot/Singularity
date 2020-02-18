@@ -107,8 +107,15 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
         return true;
       } else {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
-        return false;
+        if (!process.isAlive() && process.exitValue() == 0) {
+          LOG.info("Task already exited with code 0, considering healthcheck a success and sending running/finished update");
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
+          return true;
+        } else {
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo()
+              .getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
+          return false;
+        }
       }
     } catch (ExecutionException | RetryException e) {
       executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
