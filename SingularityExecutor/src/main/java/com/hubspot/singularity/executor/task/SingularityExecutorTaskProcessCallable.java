@@ -107,7 +107,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
         executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
         return true;
       } else {
-        if (process.exitValue() == 0) {
+        if (!process.isAlive() && process.exitValue() == 0) {
           LOG.info("Task already exited with code 0, considering healthcheck a success and sending running/finished update");
           executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
           return true;
