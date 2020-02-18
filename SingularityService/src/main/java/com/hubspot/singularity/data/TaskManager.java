@@ -364,24 +364,6 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents("getAllTaskIds", paths, taskIdTranscoder);
   }
 
-  private List<SingularityTaskId> getTaskIds(String root) {
-    return getChildrenAsIds(root, taskIdTranscoder);
-  }
-
-  public List<String> getActiveTaskIdsAsStrings() {
-    if (leaderCache.active()) {
-      return leaderCache.getActiveTaskIdsAsStrings();
-    }
-
-    List<String> results = new ArrayList<>();
-
-    for (String requestId : getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT)) {
-      results.addAll(getChildren(getLastActiveTaskParent(requestId)));
-    }
-
-    return results;
-  }
-
   public List<SingularityTaskId> getActiveTaskIds() {
     return getActiveTaskIds(false);
   }
@@ -836,6 +818,13 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getLoadBalancerStatePath(taskId, requestType), taskLoadBalancerUpdateTranscoder);
   }
 
+  public boolean isInLoadBalancer(SingularityTaskId taskId) {
+    if (exists(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.REMOVE))) {
+      return false;
+    }
+    return exists(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.ADD));
+  }
+
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
     if (leaderCache.active()) {
       return leaderCache.getPendingTask(pendingTaskId);
@@ -1025,6 +1014,13 @@ public class TaskManager extends CuratorAsyncManager {
     return save(getKilledPath(killedTaskIdRecord.getTaskId()), killedTaskIdRecord, killedTaskIdRecordTranscoder);
   }
 
+  public boolean isKilledTask(SingularityTaskId taskId) {
+    if (leaderCache.active()) {
+      return leaderCache.getKilledTaskRecord(taskId).isPresent();
+    }
+    return exists(getKilledPath(taskId));
+  }
+
   public List<SingularityKilledTaskIdRecord> getKilledTaskIdRecords() {
     if (leaderCache.active()) {
       return leaderCache.getKilledTasks();
@@ -1181,10 +1177,6 @@ public class TaskManager extends CuratorAsyncManager {
         }
       }
     }
-  }
-
-  public SingularityDeleteResult deleteRequestId(String requestId) {
-    return delete(getRequestPath(requestId));
   }
 
   public long getTaskStatusBytes() {

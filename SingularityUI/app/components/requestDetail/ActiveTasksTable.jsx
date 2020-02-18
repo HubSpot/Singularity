@@ -11,6 +11,7 @@ import Utils from '../../utils';
 import UITable from '../common/table/UITable';
 import {
   Health,
+  LoadBalancerState,
   InstanceNumberWithHostname,
   Host,
   LastTaskState,
@@ -25,7 +26,7 @@ import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds,loadBalancedTaskIds, killedTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
@@ -49,12 +50,15 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
       health = 'healthy';
     } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
       health = 'cleaning';
+    } else if (_.contains(killedTaskIds, task.taskId.id)) {
+      health = 'terminating'
     } else {
       health = 'not yet healthy'
     }
     return {
       ...task,
-      health: health
+      health: health,
+      activeInLb: _.contains(loadBalancedTaskIds, task.taskId.id)
     }
   });
   const title = <span>Running instances {maybeAggregateTailButton}</span>;
@@ -69,6 +73,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         triggerOnDataSizeChange={fetchTaskHistoryForRequest}
       >
         {Health}
+        {request.request.loadBalanced && LoadBalancerState}
         {InstanceNumberWithHostname}
         {LastTaskState}
         {DeployId}
@@ -86,6 +91,8 @@ ActiveTasksTable.propTypes = {
   tasksAPI: PropTypes.object.isRequired,
   healthyTaskIds: PropTypes.array.isRequired,
   cleaningTaskIds: PropTypes.array.isRequired,
+  loadBalancedTaskIds: PropTypes.array.isRequired,
+  killedTaskIds: PropTypes.array.isRequired,
   fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
 
@@ -100,7 +107,13 @@ const mapStateToProps = (state, ownProps) => {
   healthyTaskIds: _.map(Utils.maybe(request, ['taskIds', 'healthy'], []), (task) => {
     return task.id;
   }),
-  cleaningTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'cleaning'], []), (task) => {
+  cleaningTaskIds: _.map(Utils.maybe(request, ['taskIds', 'cleaning'], []), (task) => {
+    return task.id;
+  }),
+  loadBalancedTaskIds: _.map(Utils.maybe(request, ['taskIds', 'loadBalanced'], []), (task) => {
+    return task.id;
+  }),
+  killedTaskIds: _.map(Utils.maybe(request, ['taskIds', 'killed'], []), (task) => {
     return task.id;
   })
 }};

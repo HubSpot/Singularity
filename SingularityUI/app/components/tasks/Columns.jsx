@@ -460,7 +460,7 @@ export const InstanceNumberWithHostname = (
 
 export const Health = (
   <Column
-    label=""
+    label="Health"
     id="health"
     key="health"
     cellData={
@@ -470,14 +470,21 @@ export const Health = (
       (cellData) => {
         let glyph;
         let colorClass;
-        if (cellData === "healthy" || cellData === "cleaning") {
+
+        if (cellData === "healthy") {
           glyph = "ok";
           colorClass = "color-success";
-        } else if (cellData === "pending") {
-          glyph = "question-sign";
-        } else {
+        } else if (cellData === "not yet healthy") {
           glyph = "hourglass";
           colorClass = "color-info"
+        } else if (cellData === "cleaning") {
+          glyph = "minus";
+          colorClass = "color-info";
+        } else if (cellData === "terminating") {
+          glyph = "stop";
+          colorClass = "color-warning";
+        } else {
+          glyph = "question-sign";
         }
         const tooltip = (
           <ToolTip id="view-task-health">
@@ -492,5 +499,42 @@ export const Health = (
       }
     }
     sortable={true}
+  />
+);
+
+export const LoadBalancerState = (
+  <Column
+    label="In Load Balancer"
+    id="lbState"
+    key="lbState"
+    cellData={
+      (rowData) => rowData.activeInLb
+    }
+    cellRender={
+      (cellData) => {
+        let glyph;
+        let colorClass;
+        let message;
+        if (cellData) {
+          glyph = "ok";
+          colorClass = "color-success";
+          message = "active and serving traffic";
+        } else {
+          glyph = "minus";
+          colorClass = "color-info";
+          message = "not serving traffic";
+        }
+        const tooltip = (
+          <ToolTip id="view-lb-state">
+            {message}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-lb-state-overlay" overlay={tooltip}>
+            <Glyphicon className={colorClass} glyph={glyph} />
+          </OverlayTrigger>
+        );
+      }
+    }
   />
 );

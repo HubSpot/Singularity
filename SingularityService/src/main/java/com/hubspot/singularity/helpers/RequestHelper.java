@@ -9,9 +9,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -41,7 +38,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UserManager;
-import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
@@ -51,8 +47,6 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class RequestHelper {
-  private static final Logger LOG = LoggerFactory.getLogger(RequestHelper.class);
-
   private final RequestManager requestManager;
   private final SingularityMailer mailer;
   private final DeployManager deployManager;
@@ -60,7 +54,6 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
-  private final TaskHistoryHelper taskHistoryHelper;
 
   @Inject
   public RequestHelper(RequestManager requestManager,
@@ -69,8 +62,7 @@ public class RequestHelper {
                        SingularityValidator validator,
                        UserManager userManager,
                        TaskManager taskManager,
-                       SingularityDeployHealthHelper deployHealthHelper,
-                       TaskHistoryHelper taskHistoryHelper) {
+                       SingularityDeployHealthHelper deployHealthHelper) {
     this.requestManager = requestManager;
     this.mailer = mailer;
     this.deployManager = deployManager;
@@ -78,7 +70,6 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
-    this.taskHistoryHelper = taskHistoryHelper;
   }
 
   public long unpause(SingularityRequest request, Optional<String> user, Optional<String> message, Optional<Boolean> skipHealthchecks) {
@@ -237,7 +228,6 @@ public class RequestHelper {
           Long lastActionTime = null;
           if (includeFullRequestData) {
             lastActionTime = getLastActionTimeForRequest(
-                request.getRequest(),
                 requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.empty()),
                 Optional.ofNullable(deployStates.get(request.getRequest().getId()))
             );
@@ -309,6 +299,7 @@ public class RequestHelper {
     activeTaskIds.removeAll(cleaningTaskIds);
 
     List<SingularityTaskId> healthyTaskIds = new ArrayList<>();
+    List<SingularityTaskId> killedTaskIds = new ArrayList<>();
     List<SingularityTaskId> notYetHealthyTaskIds = new ArrayList<>();
     Map<String, List<SingularityTaskId>> taskIdsByDeployId = activeTaskIds.stream().collect(Collectors.groupingBy(SingularityTaskId::getDeployId));
     for (Map.Entry<String, List<SingularityTaskId>> entry : taskIdsByDeployId.entrySet()) {
@@ -319,7 +310,9 @@ public class RequestHelper {
           entry.getValue(),
           pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(entry.getKey()));
       for (SingularityTaskId taskId : entry.getValue()) {
-        if (healthyTasksIdsForDeploy.contains(taskId)) {
+        if (taskManager.isKilledTask(taskId)) {
+          killedTaskIds.add(taskId);
+        } else if (healthyTasksIdsForDeploy.contains(taskId)) {
           healthyTaskIds.add(taskId);
         } else {
           notYetHealthyTaskIds.add(taskId);
@@ -327,7 +320,17 @@ public class RequestHelper {
       }
     }
 
-    return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
+    List<SingularityTaskId> loadBalanced = new ArrayList<>();
+    if (requestWithState.getRequest().isLoadBalanced()) {
+      healthyTaskIds.stream()
+          .filter(taskManager::isInLoadBalancer)
+          .forEach(loadBalanced::add);
+      cleaningTaskIds.stream()
+          .filter(taskManager::isInLoadBalancer)
+          .forEach(loadBalanced::add);
+    }
+
+    return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds, loadBalanced, killedTaskIds));
   }
 
   private boolean userAssociatedWithDeploy(Optional<SingularityRequestDeployState> deployState, SingularityUser user) {
@@ -345,7 +348,7 @@ public class RequestHelper {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
   }
 
-  private long getLastActionTimeForRequest(SingularityRequest request, Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
+  private long getLastActionTimeForRequest(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
     long lastUpdate = 0;
     if (lastHistory.isPresent()) {
       lastUpdate = lastHistory.get().getCreatedAt();
