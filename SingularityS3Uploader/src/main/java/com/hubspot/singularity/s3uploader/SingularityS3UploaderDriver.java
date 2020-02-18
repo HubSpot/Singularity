@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -244,6 +245,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           totesUploads += uploadedFiles;
           toRemove.add(entry.getKey());
         }
+      } catch (NoSuchFileException nsfe) {
+        LOG.warn("File not found to upload", nsfe);
+        toRetry.add(entry.getKey());
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Waiting on future", t);
@@ -323,6 +327,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         }
 
         totesUploads += foundFiles;
+      } catch (TimeoutException te) {
+        // fuser or another check likely timed out and will retry
+        LOG.warn("Timeout exception waiting on future", te);
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Waiting on future", t);
@@ -353,9 +360,14 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private Supplier<Integer> performUploadSupplier(final SingularityUploader uploader, final boolean finished, final boolean immediate) {
     return () -> {
-      Integer returnValue = 0;
+      int returnValue = 0;
       try {
         returnValue = uploader.upload(finished);
+      } catch (NoSuchFileException nsfe) {
+        LOG.warn("File not found for upload", nsfe);
+        if (immediate) {
+          return -1;
+        }
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Error while processing uploader {}", uploader, t);
