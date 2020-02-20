@@ -2,7 +2,9 @@ import React, { PropTypes, Component } from 'react';
 
 import { Terminal } from 'xterm';
 import { AttachAddon } from './TaskLessAttachAddon';
+import { FitAddon } from 'xterm-addon-fit';
 import 'xterm.css';
+
 import Utils from '../../utils';
 
 class TaskLessTerminal extends Component {
@@ -13,9 +15,10 @@ class TaskLessTerminal extends Component {
 
     this.ws = new WebSocket(`wss://${this.props.host}:${this.props.port}/api/v1/tasks/${this.props.task}/exec/less?command=${this.props.path}`, ['Bearer', Utils.getAuthToken()]);
     this.wsAttach = new AttachAddon(this.ws);
+    this.wsFit = new FitAddon();
 
-    console.log(this.ws);
-    console.log(this.terminal);
+    console.debug(this.ws);
+    console.debug(this.terminal);
 
     this.ws.addEventListener('close', event => {
       this.terminal.dispose();
@@ -24,11 +27,18 @@ class TaskLessTerminal extends Component {
         this.props.onClose(event);
       }
     });
+
+    this.ws.addEventListener('error', event => {
+      console.error(event);
+    });
   }
 
   componentDidMount() {
     this.terminal.loadAddon(this.wsAttach);
+    this.terminal.loadAddon(this.wsFit);
     this.terminal.open(this.refs.terminal);
+
+    this.wsFit.fit();
     this.terminal.focus();
   }
 
