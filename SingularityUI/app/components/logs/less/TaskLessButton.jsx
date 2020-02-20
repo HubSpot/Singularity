@@ -5,7 +5,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import SimplestModal from '../../common/modal/SimplestModal';
-import LessTerminal from './LessTerminal';
+import TaskLessTerminal from './TaskLessTerminal';
 
 export default class TaskLessButton extends Component {
 
@@ -43,8 +43,8 @@ export default class TaskLessButton extends Component {
         </OverlayTrigger>
         <SimplestModal ref="modal" bsSize="lg">
           <Modal.Body style={{ padding: 0 }}>
-            <LessTerminal
-              task={this.props.task}
+            <TaskLessTerminal
+              taskId={this.props.task}
               path={this.props.file.fullPath}
               onClose={() => { this.refs.modal.hide() }}
             />
