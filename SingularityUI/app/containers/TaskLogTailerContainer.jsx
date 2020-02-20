@@ -20,6 +20,7 @@ class TaskLogTailerContainer extends React.Component {
   }
 
   render() {
+    console.log('TaskLogTailerContainer', this.props);
     return (<LogTailerContainer />);
   }
 };

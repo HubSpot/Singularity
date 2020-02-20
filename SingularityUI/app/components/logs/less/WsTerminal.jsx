@@ -1,19 +1,17 @@
 import React, { PropTypes, Component } from 'react';
 
 import { Terminal } from 'xterm';
-import { AttachAddon } from './TaskLessAttachAddon';
+import { AttachAddon } from './AttachAddon';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm.css';
 
-import Utils from '../../utils';
-
-class TaskLessTerminal extends Component {
+class WsTerminal extends Component {
   constructor(props) {
     super(props);
 
     this.terminal = new Terminal();
 
-    this.ws = new WebSocket(`wss://${this.props.host}:${this.props.port}/api/v1/tasks/${this.props.task}/exec/less?command=${this.props.path}`, ['Bearer', Utils.getAuthToken()]);
+    this.ws = new WebSocket(this.props.url, this.props.protocols);
     this.wsAttach = new AttachAddon(this.ws);
     this.wsFit = new FitAddon();
 
@@ -49,17 +47,15 @@ class TaskLessTerminal extends Component {
 
   render() {
     return (
-      <div ref="terminal" />
+      <div ref="terminal" style={{height: '100%'}} />
     )
   }
 }
 
-TaskLessTerminal.propTypes = {
-  path: PropTypes.string.isRequired,
-  host: PropTypes.string.isRequired,
-  port: PropTypes.number.isRequired,
-  task: PropTypes.string.isRequired,
+WsTerminal.propTypes = {
+  url: PropTypes.string.isRequired,
+  protocols: PropTypes.array.isRequired,
   onClose: PropTypes.func,
 };
 
-export default TaskLessTerminal;
+export default WsTerminal;

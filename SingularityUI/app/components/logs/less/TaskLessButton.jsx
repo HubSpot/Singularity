@@ -4,7 +4,7 @@ import { Glyphicon, Modal } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import SimplestModal from '../common/modal/SimplestModal';
+import SimplestModal from '../../common/modal/SimplestModal';
 
 import TaskLessTerminal from './TaskLessTerminal';
 
