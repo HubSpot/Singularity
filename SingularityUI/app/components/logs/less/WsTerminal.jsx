@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 
 import { Terminal } from 'xterm';
-import { AttachAddon } from './AttachAddon';
+import { AttachAddon } from 'xterm-addon-attach';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm.css';
 
@@ -47,7 +47,7 @@ class WsTerminal extends Component {
 
   render() {
     return (
-      <div ref="terminal" style={{height: '100%'}} />
+      <div ref="terminal" style={{ height: '100%' }} />
     )
   }
 }
@@ -55,6 +55,8 @@ class WsTerminal extends Component {
 WsTerminal.propTypes = {
   url: PropTypes.string.isRequired,
   protocols: PropTypes.array.isRequired,
+
+  key: PropTypes.string,
   onClose: PropTypes.func,
 };
 

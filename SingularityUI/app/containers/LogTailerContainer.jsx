@@ -12,7 +12,7 @@ import { Glyphicon } from 'react-bootstrap';
 import Utils from '../utils';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound, clearNotFound } from '../actions/tailer';
-import LessTailer from '../components/logs/less/LessTailer';
+import LessTerminal from '../components/logs/less/LessTerminal';
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
@@ -81,7 +81,7 @@ class LogTailerContainer extends React.PureComponent {
               onExpand={() => this.props.pickTailerGroup(key)}
               onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
               onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
-            <LessTailer taskId={taskId} path={path} />
+            <LessTerminal taskId={taskId} path={path} />
           </section>
         );
       } else {
