@@ -3,7 +3,7 @@ import React, { Component, PropTypes } from 'react';
 import Utils from '../../../utils';
 import WsTerminal from './WsTerminal';
 
-class LessTerminal extends Component {
+class TaskLessTerminal extends Component {
   render() {
     const task = Utils.getTaskDataFromTaskId(this.props.taskId);
     const host = task.host.replace(/_/g, '-');
@@ -18,13 +18,13 @@ class LessTerminal extends Component {
   }
 }
 
-LessTerminal.propTypes = {
+TaskLessTerminal.propTypes = {
   taskId: PropTypes.string.isRequired,
   path: PropTypes.string.isRequired,
   onClose: PropTypes.func
 };
 
-LessTerminal.defaultProps = {
+TaskLessTerminal.defaultProps = {
 };
 
-export default LessTerminal;
+export default TaskLessTerminal;

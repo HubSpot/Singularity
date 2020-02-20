@@ -15,19 +15,31 @@ class WsTerminal extends Component {
     this.wsAttach = new AttachAddon(this.ws);
     this.wsFit = new FitAddon();
 
-    console.debug(this.ws);
-    console.debug(this.terminal);
+    console.log(this.ws);
+    console.log(this.terminal);
+
+    // in the typical cannot connect to agent case, error is fired before close
+    this.ws.addEventListener('error', event => {
+      console.error(event);
+    });
 
     this.ws.addEventListener('close', event => {
-      this.terminal.dispose();
+      console.log(event);
+      // this.terminal.dispose();
+
+      if (event.wasClean) {
+        this.terminal.writeln(`Session closed successfully.`);
+        this.terminal.writeln(`Websocket closed with code: ${event.code}`);
+        this.terminal.writeln(event.reason);
+      } else {
+        this.terminal.writeln(`Session could not be created or closed unexpectedly.`);
+        this.terminal.writeln(`Websocket closed with code: ${event.code}`);
+        this.terminal.writeln(event.reason);
+      }
       
       if (this.props.onClose) {
         this.props.onClose(event);
       }
-    });
-
-    this.ws.addEventListener('error', event => {
-      console.error(event);
     });
   }
 
@@ -56,7 +68,6 @@ WsTerminal.propTypes = {
   url: PropTypes.string.isRequired,
   protocols: PropTypes.array.isRequired,
 
-  key: PropTypes.string,
   onClose: PropTypes.func,
 };
 

@@ -4,7 +4,7 @@ import { TailerProvider, SandboxTailer } from 'singularityui-tailer';
 import NewTaskGroupHeader from '../components/logs/NewTaskGroupHeader';
 import NewHeader from '../components/logs/NewHeader';
 import FileNotFound from '../components/logs/FileNotFound';
-import { Link } from 'react-router';
+import { Link, withRouter } from 'react-router';
 import { connect } from 'react-redux';
 import ReactDOM from 'react-dom';
 import { actions as tailerActions } from 'singularityui-tailer';
@@ -12,7 +12,7 @@ import { Glyphicon } from 'react-bootstrap';
 import Utils from '../utils';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound, clearNotFound } from '../actions/tailer';
-import LessTerminal from '../components/logs/less/LessTerminal';
+import TaskLessTerminal from '../components/logs/less/TaskLessTerminal';
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
@@ -81,7 +81,7 @@ class LogTailerContainer extends React.PureComponent {
               onExpand={() => this.props.pickTailerGroup(key)}
               onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
               onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
-            <LessTerminal taskId={taskId} path={path} />
+            <TaskLessTerminal taskId={taskId} path={path}  />
           </section>
         );
       } else {
@@ -121,7 +121,7 @@ class LogTailerContainer extends React.PureComponent {
   }
 }
 
-export default connect((state) => ({
+export default withRouter(connect((state) => ({
   tailerGroups: state.tailerView.tailerGroups,
   requestIds: state.tailerView.requestIds,
   color: state.tailerView.color,
@@ -134,4 +134,4 @@ export default connect((state) => ({
   jumpToTop,
   markNotFound,
   clearNotFound
-})(LogTailerContainer);
+})(LogTailerContainer));
