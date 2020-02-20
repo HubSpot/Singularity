@@ -12,6 +12,7 @@ import { Glyphicon } from 'react-bootstrap';
 import Utils from '../utils';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound, clearNotFound } from '../actions/tailer';
+import LessTailer from '../components/logs/less/LessTailer';
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
@@ -40,6 +41,7 @@ class LogTailerContainer extends React.PureComponent {
   render() {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
+      const useLessTailer = new URLSearchParams(window.location.search).get('less') !== null;
 
       if (Utils.maybe(this.props.notFound, [taskId], false)) {
         const fileName = Utils.fileName(path);
@@ -68,26 +70,43 @@ class LogTailerContainer extends React.PureComponent {
               </div>
           </div>
         </section>);
+      } else if (window.config && window.config.lessTerminalPort && useLessTailer) {
+        return (
+          <section className="log-pane" key={key}>
+            <NewTaskGroupHeader
+              taskId={taskId}
+              showRequestId={this.props.requestIds.length > 1}
+              showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
+              onClose={() => this.props.removeTailerGroup(key)}
+              onExpand={() => this.props.pickTailerGroup(key)}
+              onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
+              onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
+            <LessTailer taskId={taskId} path={path} />
+          </section>
+        );
       } else {
-
-        return (<section className="log-pane" key={key}>
-          <NewTaskGroupHeader
-            taskId={taskId}
-            showRequestId={this.props.requestIds.length > 1}
-            showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
-            onClose={() => this.props.removeTailerGroup(key)}
-            onExpand={() => this.props.pickTailerGroup(key)}
-            onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
-            onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
-          <SandboxTailer
-            goToOffset={parseInt(offset)}
-            tailerId={tailerId}
-            taskId={taskId}
-            path={path.replace('$TASK_ID', taskId)}
-            lineLinkRenderer={prefixedLineLinkRenderer(taskId, path)} />
-        </section>);
+        return (
+          <section className="log-pane" key={key}>
+            <NewTaskGroupHeader
+              taskId={taskId}
+              showRequestId={this.props.requestIds.length > 1}
+              showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
+              onClose={() => this.props.removeTailerGroup(key)}
+              onExpand={() => this.props.pickTailerGroup(key)}
+              onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
+              onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
+            <SandboxTailer
+              goToOffset={parseInt(offset)}
+              tailerId={tailerId}
+              taskId={taskId}
+              path={path.replace('$TASK_ID', taskId)}
+              lineLinkRenderer={prefixedLineLinkRenderer(taskId, path)} />
+          </section>
+        );
       }
     };
+
+    console.log('LogTailerContainer', this.props);
 
     return (
       <TailerProvider getTailerState={(state) => state.tailer}>

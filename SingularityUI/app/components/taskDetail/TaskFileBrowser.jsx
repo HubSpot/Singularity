@@ -8,7 +8,7 @@ import Breadcrumbs from '../common/Breadcrumbs';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
-import TaskLessButton from './TaskLessButton';
+import TaskLessButton from '../logs/less/TaskLessButton';
 
 function makeComparator(attribute) {
   return (file1, file2) => {
