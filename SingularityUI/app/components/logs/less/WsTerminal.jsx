@@ -5,6 +5,14 @@ import { AttachAddon } from 'xterm-addon-attach';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm.css';
 
+const THEMES = {
+  DEFAULT: null,
+  LIGHT: {
+    background: '#ffffff',
+    foreground: '#000000',
+  },
+}
+
 class WsTerminal extends Component {
   constructor(props) {
     super(props);
@@ -16,6 +24,7 @@ class WsTerminal extends Component {
     this.wsFit = new FitAddon();
 
     console.log(this.ws);
+    console.log(this.wsFit);
     console.log(this.terminal);
 
     // in the typical cannot connect to agent case, error is fired before close
@@ -27,7 +36,7 @@ class WsTerminal extends Component {
       console.log(event);
       // this.terminal.dispose();
 
-      if (event.wasClean) {
+      if (event.code === 1000) {
         this.terminal.writeln(`Session closed successfully.`);
         this.terminal.writeln(`Websocket closed with code: ${event.code}`);
         this.terminal.writeln(event.reason);
@@ -48,8 +57,20 @@ class WsTerminal extends Component {
     this.terminal.loadAddon(this.wsFit);
     this.terminal.open(this.refs.terminal);
 
+    console.log(this.terminal.rows);
+    console.log(this.terminal.cols);
     this.wsFit.fit();
-    this.terminal.focus();
+    // this.terminal.resize(120, 20)
+    console.log(this.terminal.rows);
+    console.log(this.terminal.cols)
+
+    // setTimeout(() => this.terminal.loadAddon(this.wsAttach), 1000)
+
+    // this.terminal.loadAddon(this.wsAttach);
+
+    if (this.props.focus) {
+      this.terminal.focus();
+    }
   }
 
   componentWillUnmount() {
@@ -68,7 +89,12 @@ WsTerminal.propTypes = {
   url: PropTypes.string.isRequired,
   protocols: PropTypes.array.isRequired,
 
+  focus: PropTypes.bool,
   onClose: PropTypes.func,
+};
+
+WsTerminal.defaultProps = {
+  focus: true,
 };
 
 export default WsTerminal;
