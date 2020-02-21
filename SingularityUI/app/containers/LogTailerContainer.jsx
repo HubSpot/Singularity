@@ -70,7 +70,7 @@ class LogTailerContainer extends React.PureComponent {
               </div>
           </div>
         </section>);
-      } else if (window.config && window.config.lessTerminalPort && useLessTailer) {
+      } else if (window.config && window.config.lessTerminalPort && this.props.route && this.props.route.path.includes('less')) {
         return (
           <section className="log-pane" key={key}>
             <NewTaskGroupHeader
@@ -111,7 +111,7 @@ class LogTailerContainer extends React.PureComponent {
     return (
       <TailerProvider getTailerState={(state) => state.tailer}>
         <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
-          <NewHeader />
+          <NewHeader route={this.props.route} />
           <div className="row tail-row">
             {this.props.tailerGroups.map(renderTailerPane)}
           </div>
@@ -121,7 +121,7 @@ class LogTailerContainer extends React.PureComponent {
   }
 }
 
-export default withRouter(connect((state) => ({
+export default (connect((state) => ({
   tailerGroups: state.tailerView.tailerGroups,
   requestIds: state.tailerView.requestIds,
   color: state.tailerView.color,
