@@ -43,11 +43,11 @@ class Header extends React.Component {
   renderSwitchToNewTailer() {
     if (!this.props.taskGroupHasMultipleTasks) {
       if ((this.props.taskGroupCount === 1)) {
-        return (<Link to={`/task/${this.props.firstTaskId}/tail/${this.props.path}`}>
+        return (<Link to={`/task/${this.props.firstTaskId}/less/${this.props.path}`}>
           <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
         </Link>);
       } else if ((this.props.taskGroupCount > 1)) {
-        return (<Link to={`/request/${this.props.requestId}/tail/${this.props.path}`}>
+        return (<Link to={`/request/${this.props.requestId}/less/${this.props.path}`}>
           <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
         </Link>);
       }
