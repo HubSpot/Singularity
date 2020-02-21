@@ -62,12 +62,15 @@ class NewHeader extends React.Component {
   }
 
   renderSwitchToOldTailer() {
+    const usingLess = this.props.route && this.props.route.path.includes('less');
+    const oldTailer = usingLess ? 'tail' : 'old-tail'
+
     if ((this.props.tailerGroupCount === 1)) {
-      return (<Link to={`/task/${this.props.taskIds[0]}/old-tail/${this.props.paths[0]}`}>
+      return (<Link to={`/task/${this.props.taskIds[0]}/${oldTailer}/${this.props.paths[0]}`}>
         <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
       </Link>);
     } else if ((this.props.tailerGroupCount > 1)) {
-      return (<Link to={`/request/${this.props.requestIds[0]}/old-tail/${this.props.paths[0]}`}>
+      return (<Link to={`/request/${this.props.requestIds[0]}/${oldTailer}/${this.props.paths[0]}`}>
         <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
       </Link>);
     }

@@ -14,17 +14,26 @@ const THEMES = {
 }
 
 class WsTerminal extends Component {
-  constructor(props) {
-    super(props);
-
+  componentDidMount() {
     this.terminal = new Terminal();
+    this.fitAddon = new FitAddon();
 
-    this.ws = new WebSocket(this.props.url, this.props.protocols);
+    this.terminal.open(this.refs.terminal);
+
+    this.terminal.loadAddon(this.fitAddon);
+    this.fitAddon.fit();
+
+    if (this.props.openWebSocket) {
+      this.ws = this.props.openWebSocket(this.terminal);
+    } else {
+      this.ws = new WebSocket(this.props.url, this.props.protocols);
+    }
+
     this.wsAttach = new AttachAddon(this.ws);
-    this.wsFit = new FitAddon();
+    this.terminal.loadAddon(this.wsAttach);
 
     console.log(this.ws);
-    console.log(this.wsFit);
+    console.log(this.fitAddon);
     console.log(this.terminal);
 
     // in the typical cannot connect to agent case, error is fired before close
@@ -38,11 +47,11 @@ class WsTerminal extends Component {
 
       if (event.code === 1000) {
         this.terminal.writeln(`Session closed successfully.`);
-        this.terminal.writeln(`Websocket closed with code: ${event.code}`);
+        this.terminal.writeln(`WebSocket closed with code: ${event.code}`);
         this.terminal.writeln(event.reason);
       } else {
-        this.terminal.writeln(`Session could not be created or closed unexpectedly.`);
-        this.terminal.writeln(`Websocket closed with code: ${event.code}`);
+        this.terminal.writeln(`Session could not be opened, or closed unexpectedly.`);
+        this.terminal.writeln(`WebSocket closed with code: ${event.code}`);
         this.terminal.writeln(event.reason);
       }
       
@@ -50,23 +59,6 @@ class WsTerminal extends Component {
         this.props.onClose(event);
       }
     });
-  }
-
-  componentDidMount() {
-    this.terminal.loadAddon(this.wsAttach);
-    this.terminal.loadAddon(this.wsFit);
-    this.terminal.open(this.refs.terminal);
-
-    console.log(this.terminal.rows);
-    console.log(this.terminal.cols);
-    this.wsFit.fit();
-    // this.terminal.resize(120, 20)
-    console.log(this.terminal.rows);
-    console.log(this.terminal.cols)
-
-    // setTimeout(() => this.terminal.loadAddon(this.wsAttach), 1000)
-
-    // this.terminal.loadAddon(this.wsAttach);
 
     if (this.props.focus) {
       this.terminal.focus();
@@ -78,6 +70,12 @@ class WsTerminal extends Component {
     this.ws.close();
   }
 
+  openWebSocket() {
+    if (this.props.openWebSocket) {
+      return this.props.openWebSocket(this.terminal);
+    }
+  }
+
   render() {
     return (
       <div ref="terminal" style={{ height: '100%' }} />
@@ -86,8 +84,9 @@ class WsTerminal extends Component {
 }
 
 WsTerminal.propTypes = {
-  url: PropTypes.string.isRequired,
-  protocols: PropTypes.array.isRequired,
+  open: PropTypes.func,
+  url: PropTypes.string,
+  protocols: PropTypes.array,
 
   focus: PropTypes.bool,
   onClose: PropTypes.func,

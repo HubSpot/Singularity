@@ -57,6 +57,7 @@ const routes = (
       <Route path=":taskId(/files**)" component={TaskDetail} title={(params) => params.taskId} />
       <Route path=":taskId/old-tail/**" component={Tail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":taskId/tail/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <Route path=":taskId/less/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <IndexRoute component={NotFound} title="Not Found" />
     </Route>
     <Route path="tail/**" component={CustomLogTailerContainer} title="Tailer" />

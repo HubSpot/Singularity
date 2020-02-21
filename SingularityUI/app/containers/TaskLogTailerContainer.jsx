@@ -21,7 +21,7 @@ class TaskLogTailerContainer extends React.Component {
 
   render() {
     console.log('TaskLogTailerContainer', this.props);
-    return (<LogTailerContainer />);
+    return (<LogTailerContainer route={this.props.route} />);
   }
 };
 
