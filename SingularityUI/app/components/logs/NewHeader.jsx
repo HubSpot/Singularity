@@ -114,6 +114,8 @@ NewHeader.propTypes = {
   switchViewMode: React.PropTypes.func.isRequired,
   jumpAllToTop: React.PropTypes.func.isRequired,
   jumpAllToBottom: React.PropTypes.func.isRequired,
+
+  route: React.PropTypes.object,
 };
 
 export default connect((state) => ({
