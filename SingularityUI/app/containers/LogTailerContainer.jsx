@@ -81,7 +81,7 @@ class LogTailerContainer extends React.PureComponent {
               onExpand={() => this.props.pickTailerGroup(key)}
               onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
               onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
-            <TaskLessTerminal taskId={taskId} path={path}  />
+            <TaskLessTerminal taskId={taskId} path={path} offset={parseInt(offset)} />
           </section>
         );
       } else {
