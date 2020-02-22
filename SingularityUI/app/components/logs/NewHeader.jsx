@@ -62,15 +62,12 @@ class NewHeader extends React.Component {
   }
 
   renderSwitchToOldTailer() {
-    const usingLess = this.props.route && this.props.route.path.includes('less');
-    const oldTailer = usingLess ? 'tail' : 'old-tail'
-
     if ((this.props.tailerGroupCount === 1)) {
-      return (<Link to={`/task/${this.props.taskIds[0]}/${oldTailer}/${this.props.paths[0]}`}>
+      return (<Link to={`/task/${this.props.taskIds[0]}/${this.props.oldTail}/${this.props.paths[0]}`}>
         <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
       </Link>);
     } else if ((this.props.tailerGroupCount > 1)) {
-      return (<Link to={`/request/${this.props.requestIds[0]}/${oldTailer}/${this.props.paths[0]}`}>
+      return (<Link to={`/request/${this.props.requestIds[0]}/${this.props.oldTail}/${this.props.paths[0]}`}>
         <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
       </Link>);
     }
@@ -115,8 +112,16 @@ NewHeader.propTypes = {
   jumpAllToTop: React.PropTypes.func.isRequired,
   jumpAllToBottom: React.PropTypes.func.isRequired,
 
-  route: React.PropTypes.object,
+  oldTail: React.PropTypes.string,
 };
+
+NewHeader.defaultProps = {
+  oldTail: 'old-tail',
+};
+
+function mergeProps(stateProps, dispatchProps, ownProps) {
+  return Object.assign(stateProps, dispatchProps, ownProps);
+}
 
 export default connect((state) => ({
   tailerGroupCount: state.tailerView.tailerGroups.length,
@@ -133,4 +138,4 @@ export default connect((state) => ({
   jumpAllToBottom,
   setColor,
   toggleTailerGroup,
-})(NewHeader);
+}, mergeProps)(NewHeader);

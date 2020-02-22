@@ -8,7 +8,6 @@ import Breadcrumbs from '../common/Breadcrumbs';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
-import TaskLessButton from '../logs/less/TaskLessButton';
 
 function makeComparator(attribute) {
   return (file1, file2) => {
@@ -149,14 +148,10 @@ function TaskFileBrowser (props) {
                 </a>
               </OverlayTrigger>
             );
-            const less = config.lessTerminalPort && !file.isDirectory && (
-              <TaskLessButton host={props.host} task={props.taskId} file={file} />
-            );
 
             return (
               <div>
                 {open}
-                {less}
                 {download}
               </div>
             );

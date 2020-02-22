@@ -5,17 +5,9 @@ import { AttachAddon } from 'xterm-addon-attach';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm.css';
 
-const THEMES = {
-  DEFAULT: null,
-  LIGHT: {
-    background: '#ffffff',
-    foreground: '#000000',
-  },
-}
-
 class WsTerminal extends Component {
   componentDidMount() {
-    this.terminal = new Terminal();
+    this.terminal = this.props.terminal || new Terminal();
     this.fitAddon = new FitAddon();
 
     this.terminal.open(this.refs.terminal);
@@ -23,12 +15,7 @@ class WsTerminal extends Component {
     this.terminal.loadAddon(this.fitAddon);
     this.fitAddon.fit();
 
-    if (this.props.openWebSocket) {
-      this.ws = this.props.openWebSocket(this.terminal);
-    } else {
-      this.ws = new WebSocket(this.props.url, this.props.protocols);
-    }
-
+    this.ws = this.props.terminalToWebSocket(this.terminal);
     this.wsAttach = new AttachAddon(this.ws);
     this.terminal.loadAddon(this.wsAttach);
 
@@ -70,12 +57,6 @@ class WsTerminal extends Component {
     this.ws.close();
   }
 
-  openWebSocket() {
-    if (this.props.openWebSocket) {
-      return this.props.openWebSocket(this.terminal);
-    }
-  }
-
   render() {
     return (
       <div ref="terminal" style={{ height: '100%' }} />
@@ -84,9 +65,8 @@ class WsTerminal extends Component {
 }
 
 WsTerminal.propTypes = {
-  open: PropTypes.func,
-  url: PropTypes.string,
-  protocols: PropTypes.array,
+  terminal: PropTypes.instanceOf(Terminal),
+  terminalToWebSocket: PropTypes.func.isRequired,
 
   focus: PropTypes.bool,
   onClose: PropTypes.func,

@@ -1,14 +1,11 @@
 import React from 'react';
-
 import { connect } from 'react-redux';
 
-import { setTailerGroups } from '../actions/tailer';
-
-import LogTailerContainer from './LogTailerContainer';
-
-import { FetchActiveTasksForRequest } from '../actions/api/history';
-
 import _ from 'underscore';
+import { FetchActiveTasksForRequest } from '../actions/api/history';
+import { setTailerGroups } from '../actions/tailer';
+import LessTailerContainer from './LessTailerContainer';
+import LogTailerContainer from './LogTailerContainer';
 
 class RequestLogTailerContainer extends React.Component {
   componentWillMount() {
@@ -38,6 +35,10 @@ class RequestLogTailerContainer extends React.Component {
   }
 
   render() {
+    if (window.config && window.config.lessTerminalPort && this.props.route && this.props.route.path.includes('less')) {
+      return (<LessTailerContainer />);
+    }
+
     return (<LogTailerContainer />);
   }
 };

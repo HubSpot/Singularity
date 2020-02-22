@@ -10,6 +10,8 @@ export const PICK_TAILER_GROUP = "TAILER_PICK_TAILER_GROUP";
 export const TOGGLE_TAILER_GROUP = "TAILER_TOGGLE_TAILER_GROUP";
 export const SET_COLOR = "TAILER_SET_COLOR";
 export const TAILER_SET_NOT_FOUND = "TAILER_SET_NOT_FOUND";
+export const TAILER_JUMP_TO_BOTTOM = "TAILER_JUMP_TO_BOTTOM";
+export const TAILER_JUMP_TO_TOP = "TAILER_JUMP_TO_TOP";
 
 export const buildTailerGroupInfo = (taskId, path, offset=-1) => ({taskId, path, offset});
 
@@ -43,6 +45,10 @@ export const clearNotFound = () => (dispatch, getState) => {
 export const jumpToBottom = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
+  dispatch({
+    type: TAILER_JUMP_TO_BOTTOM,
+  });
+
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchTail(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config))
   dispatch(tailerActions.startTailing(id));
@@ -58,6 +64,10 @@ export const jumpAllToBottom = () => (dispatch, getState) => {
 
 export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
+
+  dispatch({
+    type: TAILER_JUMP_TO_TOP,
+  });
 
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config)).then((lengthAction) => {
