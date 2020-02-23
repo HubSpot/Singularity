@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import Messenger from 'messenger';
 
 import Utils from '../utils';
 import WsTerminal, { makeWsTerminal } from './WsTerminal';
@@ -44,68 +45,21 @@ class TaskLessTerminal extends Component {
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    terminal.element.addEventListener('contextmenu', (event) => {
-      console.log('contextmenu', event);
-      // event.preventDefault();
-      event.stopImmediatePropagation();
-    });
-
-    document.addEventListener('contextmenu', event => {
-      console.log('document/contextmenu', event);
-    });
-
+    // setup line number link support
     terminal.registerLinkMatcher(/^\s*(\d+)/, (event, match) => {
-      console.log(event);
-      console.log(match);
+      const line = match.trim();
 
-      // const line = match.trim();
+      const search = new URLSearchParams(window.location.search);
+      search.set('offset', line);
 
-      // const a = document.createElement('a');
-      // // document.body.appendChild(a);
-
-      // const search = new URLSearchParams(window.location.search);
-      // search.set('offset', line);
-      // a.href = `${window.location.origin}${window.location.pathname}?${search}`;
-      // a.innerText = 'hi';
-      // document.appendChild(a);
+      const url = `${window.location.origin}${window.location.pathname}?${search}`;
+      navigator.clipboard.writeText(url);
       
-      // // const clone = new Event(event.type, Object.assign({}, event, { target: a }));
-      // const clone = new MouseEvent('contextmenu', Object.assign({ detail: { custom: true } }, event));
-      // event.preventDefault();
-      // event.stopImmediatePropagation();
-      // a.dispatchEvent(clone);
-    }, {
-      tooltipCallback: (event, uri, location) => {
-        console.log('tooltipCallback', event);
-        return true;
-      },
-      willLinkActivate: (event, match) => {
-        console.log('willLinkActivate', event);
-        console.log(match);
-
-        const line = match.trim();
-
-        const a = document.createElement('a');
-        // document.body.appendChild(a);
-
-        const search = new URLSearchParams(window.location.search);
-        search.set('offset', line);
-        a.href = `${window.location.origin}${window.location.pathname}?${search}`;
-        a.addEventListener('click', event => {
-          debugger;
-        });
-        // a.innerText = 'hi';
-        // document.appendChild(a);
-        
-        // const clone = new Event(event.type, Object.assign({}, event, { target: a }));
-        const clone = new MouseEvent('click', event);
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        a.dispatchEvent(clone);
-
-        return true;
-      },
-    });
+      Messenger().info({
+        message: `Copied link to line ${line} to clipboard.`,
+        hideAfter: 3,
+      });
+    }, {});
   }
 
   render() {
