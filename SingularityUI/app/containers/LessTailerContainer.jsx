@@ -29,15 +29,6 @@ class LessTailerContainer extends React.Component {
       });
     });
 
-    terminals.forEach(terminal => {
-      terminal.registerLinkMatcher(/^\s*(\d+)/, (event, match) => {
-        console.log(event);
-        console.log(match);
-
-        const line = match.trim();
-      });
-    });
-
     this.state = {
       terminals,
     };
