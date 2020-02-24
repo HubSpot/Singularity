@@ -48,7 +48,6 @@ class LessTailerContainer extends React.Component {
   }
 
   render() {
-    console.log('LessTailerContainer', this.props);
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
       const terminal = this.state.terminals[key]

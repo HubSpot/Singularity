@@ -21,8 +21,6 @@ class TaskLogTailerContainer extends React.Component {
   }
 
   render() {
-    console.log('TaskLogTailerContainer', this.props);
-
     if (window.config && window.config.lessTerminalPort && this.props.route && this.props.route.path.includes('less')) {
       return (<LessTailerContainer />);
     }

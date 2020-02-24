@@ -35,7 +35,6 @@ class TaskLessTerminal extends Component {
     base.push(`command=-N`);
 
     if (this.props.offset >= 1) {
-      console.log(this.props.offset);
       base.push(`command=${encodeURIComponent(`+${this.props.offset}`)}`);
     }
 
