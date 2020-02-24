@@ -20,7 +20,6 @@ class WsTerminal extends Component {
     this.terminal.loadAddon(this.wsAttach);
 
     console.log(this.ws);
-    console.log(this.fitAddon);
     console.log(this.terminal);
 
     // in the typical cannot connect to agent case, error is fired before close
@@ -29,7 +28,6 @@ class WsTerminal extends Component {
     });
 
     this.ws.addEventListener('close', event => {
-      console.log(event);
       // this.terminal.dispose();
 
       if (event.code === 1000) {
