@@ -3,17 +3,22 @@ import React, { PropTypes, Component } from 'react';
 import { Terminal } from 'xterm';
 import { AttachAddon } from 'xterm-addon-attach';
 import { FitAddon } from 'xterm-addon-fit';
+import { WebglAddon } from 'xterm-addon-webgl';
 import 'xterm.css';
 
 class WsTerminal extends Component {
   componentDidMount() {
+    /** @type {Terminal} */
     this.terminal = this.props.terminal || new Terminal();
-    this.fitAddon = new FitAddon();
-
     this.terminal.open(this.refs.terminal);
 
+    this.webglAddon = new WebglAddon();
+    this.terminal.loadAddon(this.webglAddon);
+
+    this.fitAddon = new FitAddon();
     this.terminal.loadAddon(this.fitAddon);
     this.fitAddon.fit();
+    // this.terminal.resize(2048, this.terminal.rows);
 
     this.ws = this.props.terminalToWebSocket(this.terminal);
     this.wsAttach = new AttachAddon(this.ws);

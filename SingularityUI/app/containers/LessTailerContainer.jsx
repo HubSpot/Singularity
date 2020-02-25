@@ -86,8 +86,8 @@ class LessTailerContainer extends React.Component {
           <section className="log-pane" key={key} style={{
             height: '100%',
             padding: 0,
-            background: 'default',
-            color: 'default',
+            background: 'default !important',
+            color: 'default !important',
           }}>
             <NewTaskGroupHeader
               taskId={taskId}
