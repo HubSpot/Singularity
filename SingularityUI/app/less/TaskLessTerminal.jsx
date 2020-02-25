@@ -1,10 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import Messenger from 'messenger';
+import { Terminal } from 'xterm';
 
 import Utils from '../utils';
 import WsTerminal from './WsTerminal';
-import { sigint } from '../less/commands';
-import { Terminal } from 'xterm';
+import { disableLineNumbers, chain, toggleLineWrapping } from './commands';
+
 
 class TaskLessTerminal extends Component {
   
@@ -50,29 +51,22 @@ class TaskLessTerminal extends Component {
       console.log('key', key.domEvent.co);
     });
 
+    const lineNumberRegex = /^\s*(\d+)/;
+
     terminal.onSelectionChange(() => {
       const selection = terminal.getSelection();
       const sp = terminal.getSelectionPosition();
       console.log(selection);
       console.log(sp);
 
-      if (sp && sp.endColumn - sp.startColumn === terminal.cols) {
+      if (sp && sp.endColumn - sp.startColumn === terminal.cols && lineNumberRegex.test(selection)) {
         console.log('we got a line to copy');
-
-        // sigint(terminal);
-        // terminal.paste('\r-S');
-
-        // terminal.write('\rhi')
-
-        // while (selection.length === terminal.cols && selection[selection.length - 1] === '>') {
-        //   // terminal.paste('OC');
-        //   // terminal.write('\x1b[D');
-        // }
+        chain(terminal, [disableLineNumbers, toggleLineWrapping]);
       }
     });
 
     // setup line number link support
-    terminal.registerLinkMatcher(/^\s*(\d+)/, (event, match) => {
+    terminal.registerLinkMatcher(lineNumberRegex, (event, match) => {
       const line = match.trim();
 
       const search = new URLSearchParams(window.location.search);
