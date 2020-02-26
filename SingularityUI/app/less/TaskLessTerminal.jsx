@@ -47,10 +47,6 @@ class TaskLessTerminal extends Component {
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    terminal.onKey(key => {
-      console.log('key', key.domEvent.co);
-    });
-
     const lineNumberRegex = /^\s*(\d+)/;
 
     terminal.onSelectionChange(() => {
