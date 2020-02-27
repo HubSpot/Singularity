@@ -61,6 +61,16 @@ class NewHeader extends React.Component {
     }
   }
 
+  renderSwitchToNewTailer() {
+    if (window.config.lessTerminalPort && this.props.oldTail === 'old-tail') {
+      return (
+        <Link to={`/task/${this.props.taskIds[0]}/less/${this.props.paths[0]}`}>
+          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
+        </Link>
+      );
+    }
+  }
+
   renderSwitchToOldTailer() {
     if ((this.props.tailerGroupCount === 1)) {
       return (<Link to={`/task/${this.props.taskIds[0]}/${this.props.oldTail}/${this.props.paths[0]}`}>
@@ -92,6 +102,7 @@ class NewHeader extends React.Component {
             </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
+            {this.renderSwitchToNewTailer()}
             {this.renderSwitchToOldTailer()}
             {this.renderTasksDropdown()}
             <NewColorDropdown activeColor={this.props.activeColor} onSetColor={this.props.setColor} />

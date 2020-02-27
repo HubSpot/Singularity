@@ -1,9 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import Messenger from 'messenger';
+import { Terminal } from 'xterm';
 
 import Utils from '../utils';
-import WsTerminal, { makeWsTerminal } from './WsTerminal';
-import { Terminal } from 'xterm';
+import WsTerminal from './WsTerminal';
+import { disableLineNumbers, chain, toggleLineWrapping } from './commands';
+
 
 class TaskLessTerminal extends Component {
   
@@ -22,30 +24,83 @@ class TaskLessTerminal extends Component {
     return new WebSocket(url, protocols);
   }
 
+  /** @param {Terminal} terminal */
   getArguments(terminal) {
-    const base = [`cols=${terminal.cols}`, `rows=${terminal.rows}`];
+    const search = new URLSearchParams(window.location.search);
+    search.set('cols', terminal.cols);
+    search.set('rows', terminal.rows);
 
-    // start tailing by default
-    // base.push(`command=${encodeURIComponent(`+F`)}`);
+    const commands = search.getAll('command');
 
     // disable line folding/wrapping
-    base.push(`command=-S`);
-
-    // enable line numbering
-    base.push(`command=-N`);
-
-    if (this.props.offset >= 1) {
-      base.push(`command=${encodeURIComponent(`+${this.props.offset}`)}`);
+    if (!commands.includes('-s')) {
+      commands.push('-S');
     }
 
-    base.push(`command=${this.props.path}`);
-    return base.join('&');
+    // enable visible line numbering, if line calculation is enabled
+    // TODO - automatically disable line numbering for large files
+    if (!commands.includes('-n')) {
+      commands.push('-N');
+    }
+
+    // custom prompt, so we actually have enough data to kinda link to things
+    // line/percent/byte
+    // line will be '?' if the -n flag was specified
+    // byte should be present as long as we're tailing a file
+    // percent is always calculated by bytes, because this is enough of a pain as is
+    commands.push('-P');
+    commands.push('?eEND .%lt/%pt\\%/%btb');
+
+    if (search.get('byteOffset')) {
+      commands.push(`+${search.get('byteOffset')}P`);
+    } else if (this.props.offset >= 1) {
+      commands.push(`+${this.props.offset}`);
+    }
+
+    commands.push(this.props.path);
+    
+    for (let i = 0; i < commands.length; i++) {
+      search.append('command', commands[i]);
+    }
+
+    return search.toString();
   }
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    // setup line number link support
-    terminal.registerLinkMatcher(/^\s*(\d+)/, (event, match) => {
+    const inlineNumberRegex = /^\s*(\d+)/;
+    const promptRegex = /^([?\d]+)\/([?\d]+)%\/(\d+)b/;
+
+    // terminal.onSelectionChange(() => {
+    //   const selection = terminal.getSelection();
+    //   const sp = terminal.getSelectionPosition();
+    //   console.log(selection);
+    //   console.log(sp);
+
+    //   if (sp && sp.endColumn - sp.startColumn === terminal.cols && inlineNumberRegex.test(selection)) {
+    //     console.log('we got a line to copy');
+    //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
+    //   }
+    // });
+
+    // setup prompt link
+    terminal.registerLinkMatcher(promptRegex, (event, match) => {
+      const byteOffset = promptRegex.exec(match)[3];
+
+      const search = new URLSearchParams(window.location.search);
+      search.set('byteOffset', byteOffset);
+
+      const url = `${window.location.origin}${window.location.pathname}?${search}`;
+      navigator.clipboard.writeText(url);
+      
+      Messenger().info({
+        message: `Copied link to current top line to clipboard.`,
+        hideAfter: 3,
+      });
+    });
+
+    // setup line number links
+    terminal.registerLinkMatcher(inlineNumberRegex, (event, match) => {
       const line = match.trim();
 
       const search = new URLSearchParams(window.location.search);
