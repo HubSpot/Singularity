@@ -50,7 +50,7 @@ class TaskLessTerminal extends Component {
     // byte should be present as long as we're tailing a file
     // percent is always calculated by bytes, because this is enough of a pain as is
     commands.push('-P');
-    commands.push('%lt/%pt\\%/%btb');
+    commands.push('?eEND .%lt/%pt\\%/%btb');
 
     if (search.get('byteOffset')) {
       commands.push(`+${search.get('byteOffset')}P`);
@@ -59,6 +59,7 @@ class TaskLessTerminal extends Component {
     }
 
     commands.push(this.props.path);
+    
     for (let i = 0; i < commands.length; i++) {
       search.append('command', commands[i]);
     }
