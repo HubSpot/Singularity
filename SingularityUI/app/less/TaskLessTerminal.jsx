@@ -19,7 +19,6 @@ class TaskLessTerminal extends Component {
     const host = task.host.replace(/_/g, '-');
 
     const url = `wss://${host}:${window.config.lessTerminalPort}/api/v1/tasks/${this.props.taskId}/exec/less?${this.getArguments(terminal)}`;
-    console.log(Utils.getAuthToken())
     const protocols = ['Bearer', Utils.getAuthToken()];
 
     return new WebSocket(url, protocols);
@@ -72,23 +71,20 @@ class TaskLessTerminal extends Component {
     const inlineNumberRegex = /^\s*(\d+)/;
     const promptRegex = /^([?\d]+)\/([?\d]+)%\/(\d+)b/;
 
-    terminal.onSelectionChange(() => {
-      const selection = terminal.getSelection();
-      const sp = terminal.getSelectionPosition();
-      console.log(selection);
-      console.log(sp);
+    // terminal.onSelectionChange(() => {
+    //   const selection = terminal.getSelection();
+    //   const sp = terminal.getSelectionPosition();
+    //   console.log(selection);
+    //   console.log(sp);
 
-      if (sp && sp.endColumn - sp.startColumn === terminal.cols && inlineNumberRegex.test(selection)) {
-        console.log('we got a line to copy');
-        chain(terminal, [disableLineNumbers, toggleLineWrapping]);
-      }
-    });
+    //   if (sp && sp.endColumn - sp.startColumn === terminal.cols && inlineNumberRegex.test(selection)) {
+    //     console.log('we got a line to copy');
+    //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
+    //   }
+    // });
 
     // setup prompt link
     terminal.registerLinkMatcher(promptRegex, (event, match) => {
-      console.log(event);
-      console.log(match);
-
       const byteOffset = promptRegex.exec(match)[3];
 
       const search = new URLSearchParams(window.location.search);
