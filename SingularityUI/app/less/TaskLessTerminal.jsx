@@ -25,24 +25,45 @@ class TaskLessTerminal extends Component {
     return new WebSocket(url, protocols);
   }
 
+  /** @param {Terminal} terminal */
   getArguments(terminal) {
-    const base = [`cols=${terminal.cols}`, `rows=${terminal.rows}`];
+    const search = new URLSearchParams(window.location.search);
+    search.set('cols', terminal.cols);
+    search.set('rows', terminal.rows);
 
-    // start tailing by default
-    // base.push(`command=${encodeURIComponent(`+F`)}`);
+    const commands = search.getAll('command');
 
     // disable line folding/wrapping
-    base.push(`command=-S`);
-
-    // enable line numbering
-    base.push(`command=-N`);
-
-    if (this.props.offset >= 1) {
-      base.push(`command=${encodeURIComponent(`+${this.props.offset}`)}`);
+    if (!commands.includes('-s')) {
+      commands.push('-S');
     }
 
-    base.push(`command=${this.props.path}`);
-    return base.join('&');
+    // enable visible line numbering, if line calculation is enabled
+    // TODO - automatically disable line numbering for large files
+    if (!commands.includes('-n')) {
+      commands.push('-N');
+    }
+
+    // custom prompt, so we actually have enough data to kinda link to things
+    // line/percent/byte
+    // line will be '?' if the -n flag was specified
+    // byte should be present as long as we're tailing a file
+    // percent is always calculated by bytes, because this is enough of a pain as is
+    commands.push('-P');
+    commands.push('%lt/%pt\\%/%btb');
+
+    if (search.get('byteOffset')) {
+      commands.push(`+${search.get('byteOffset')}P`);
+    } else if (this.props.offset >= 1) {
+      commands.push(`+${this.props.offset}`);
+    }
+
+    commands.push(this.props.path);
+    for (let i = 0; i < commands.length; i++) {
+      search.append('command', commands[i]);
+    }
+
+    return search.toString();
   }
   
   /** @param {Terminal} terminal */
