@@ -68,7 +68,8 @@ class TaskLessTerminal extends Component {
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    const lineNumberRegex = /^\s*(\d+)/;
+    const inlineNumberRegex = /^\s*(\d+)/;
+    const promptRegex = /^([?\d]+)\/([?\d]+)%\/(\d+)b/;
 
     terminal.onSelectionChange(() => {
       const selection = terminal.getSelection();
@@ -76,14 +77,33 @@ class TaskLessTerminal extends Component {
       console.log(selection);
       console.log(sp);
 
-      if (sp && sp.endColumn - sp.startColumn === terminal.cols && lineNumberRegex.test(selection)) {
+      if (sp && sp.endColumn - sp.startColumn === terminal.cols && inlineNumberRegex.test(selection)) {
         console.log('we got a line to copy');
         chain(terminal, [disableLineNumbers, toggleLineWrapping]);
       }
     });
 
-    // setup line number link support
-    terminal.registerLinkMatcher(lineNumberRegex, (event, match) => {
+    // setup prompt link
+    terminal.registerLinkMatcher(promptRegex, (event, match) => {
+      console.log(event);
+      console.log(match);
+
+      const byteOffset = promptRegex.exec(match)[3];
+
+      const search = new URLSearchParams(window.location.search);
+      search.set('byteOffset', byteOffset);
+
+      const url = `${window.location.origin}${window.location.pathname}?${search}`;
+      navigator.clipboard.writeText(url);
+      
+      Messenger().info({
+        message: `Copied link to current top line to clipboard.`,
+        hideAfter: 3,
+      });
+    });
+
+    // setup line number links
+    terminal.registerLinkMatcher(inlineNumberRegex, (event, match) => {
       const line = match.trim();
 
       const search = new URLSearchParams(window.location.search);
