@@ -84,7 +84,7 @@ class TaskLessTerminal extends Component {
 
     // setup prompt link
     terminal.registerLinkMatcher(promptRegex, (event, match) => {
-      const byteOffset = promptRegex.exec(match)[3];
+      const byteOffset = promptRegex.exec(match)[4];
 
       const search = new URLSearchParams(window.location.search);
       search.set('byteOffset', byteOffset);
