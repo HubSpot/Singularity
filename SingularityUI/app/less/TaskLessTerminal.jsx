@@ -37,14 +37,13 @@ class TaskLessTerminal extends Component {
       commands.push('-S');
     }
 
-    // enable visible line numbering, if line calculation is enabled
-    // TODO - automatically disable line numbering for large files
-    if (!commands.includes('-n')) {
-      commands.push('-N');
-    }
+    // enable line numbering, if line calculation is enabled
+    // if (!commands.includes('-n')) {
+    //   commands.push('-N');
+    // }
 
     // custom prompt, so we actually have enough data to kinda link to things
-    // line/percent/byte
+    // line/percent/byte (all of top line)
     // line will be '?' if the -n flag was specified
     // byte should be present as long as we're tailing a file
     // percent is always calculated by bytes, because this is enough of a pain as is
@@ -69,7 +68,7 @@ class TaskLessTerminal extends Component {
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
     const inlineNumberRegex = /^\s*(\d+)/;
-    const promptRegex = /^([?\d]+)\/([?\d]+)%\/(\d+)b/;
+    const promptRegex = /^(END )?([?\d]+)\/([?\d]+)%\/(\d+)b/;
 
     // terminal.onSelectionChange(() => {
     //   const selection = terminal.getSelection();

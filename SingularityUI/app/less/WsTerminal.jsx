@@ -4,6 +4,7 @@ import { Terminal } from 'xterm';
 import { AttachAddon } from 'xterm-addon-attach';
 import { FitAddon } from 'xterm-addon-fit';
 import { WebglAddon } from 'xterm-addon-webgl';
+import { WebLinksAddon } from 'xterm-addon-web-links';
 import 'xterm.css';
 
 class WsTerminal extends Component {
@@ -14,6 +15,9 @@ class WsTerminal extends Component {
 
     this.webglAddon = new WebglAddon();
     this.terminal.loadAddon(this.webglAddon);
+
+    this.weblinkAddon = new WebLinksAddon();
+    this.terminal.loadAddon(this.weblinkAddon);
 
     this.fitAddon = new FitAddon();
     this.terminal.loadAddon(this.fitAddon);
