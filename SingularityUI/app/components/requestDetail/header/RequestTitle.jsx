@@ -48,9 +48,6 @@ const RequestTitle = ({requestId, requestAPI, deleted}) => {
       <h4>
         {maybeInfo}
       </h4>
-      <h2>
-        {Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId}
-      </h2>
     </div>
   );
 };
