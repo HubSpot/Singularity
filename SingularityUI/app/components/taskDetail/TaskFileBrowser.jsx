@@ -147,7 +147,7 @@ function TaskFileBrowser (props) {
 
             const less = !file.isDirectory && window.config.lessTerminalPort && (
               <OverlayTrigger placement="left" overlay={<ToolTip id={`lessFile${file.name}`}>Less {file.name}</ToolTip>}>
-                <Link to={`task/${props.taskId}/less/${file.uiPath}?command=${file.size >= 2**20 * 10 ? '-n' : '-N'}`}>
+                <Link to={`task/${props.taskId}/less/${file.uiPath}?${file.size >= 2**20 * 10 ? 'command=-n' : ''}`}>
                   <Glyphicon glyph="film" />
                 </Link>
               </OverlayTrigger>
