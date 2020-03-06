@@ -8,7 +8,6 @@ import Breadcrumbs from '../common/Breadcrumbs';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
-import TaskLessButton from './TaskLessButton';
 
 function makeComparator(attribute) {
   return (file1, file2) => {
@@ -96,11 +95,7 @@ function TaskFileBrowser (props) {
           cellData={(file) => {
             const icon = <Glyphicon glyph={file.isDirectory ? 'folder-open' : 'file'} />;
             if (file.isTailable) {
-              if (window.config.lessTerminalPort) {
-                return <Link to={`task/${props.taskId}/less/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
-              } else {
-                return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
-              }
+              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
             }
             if (!file.isTailable && !file.isDirectory) {
               return <span>{icon}<span className="file-name">{file.name.trim()}</span></span>;
