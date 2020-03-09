@@ -21,7 +21,8 @@ class TaskLessTerminal extends Component {
     const url = `wss://${host}:${window.config.lessTerminalPort}/api/v1/tasks/${this.props.taskId}/exec/less?${this.getArguments(terminal)}`;
     const protocols = ['Bearer', Utils.getAuthToken()];
 
-    return new WebSocket(url, protocols);
+    const ws = new WebSocket(url, protocols);
+    return ws;
   }
 
   /** @param {Terminal} terminal */
@@ -67,7 +68,7 @@ class TaskLessTerminal extends Component {
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    const inlineNumberRegex = /^\s*(\d+)/;
+    const inlineNumberRegex = /^\s+(\d+)/;
     const promptRegex = /^(END )?([?\d]+)\/([?\d]+)%\/(\d+)b/;
 
     // terminal.onSelectionChange(() => {
