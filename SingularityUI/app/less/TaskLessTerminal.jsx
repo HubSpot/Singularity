@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { withRouter } from 'react-router';
 import Messenger from 'messenger';
 import { Terminal } from 'xterm';
 
@@ -22,6 +23,15 @@ class TaskLessTerminal extends Component {
     const protocols = ['Bearer', Utils.getAuthToken()];
 
     const ws = new WebSocket(url, protocols);
+    ws.addEventListener('close', (event) => {
+      this.props.router.push(`/task/${this.props.taskId}`);
+
+      Messenger().info({
+        message: `Websocket session closed successfully.`,
+        hideAfter: 3,
+      });
+    });
+
     return ws;
   }
 
@@ -139,4 +149,4 @@ TaskLessTerminal.propTypes = {
 TaskLessTerminal.defaultProps = {
 };
 
-export default TaskLessTerminal;
+export default withRouter(TaskLessTerminal);
