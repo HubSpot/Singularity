@@ -23,14 +23,20 @@ class TaskLessTerminal extends Component {
     const protocols = ['Bearer', Utils.getAuthToken()];
 
     const ws = new WebSocket(url, protocols);
-    ws.addEventListener('close', (event) => {
+    const wsRedirect = (event) => {
       this.props.router.push(`/task/${this.props.taskId}`);
 
       Messenger().info({
         message: `Websocket session closed successfully.`,
         hideAfter: 3,
       });
+    };
+    
+    // order of these two statements ensures the redirect isn't removed on pageload
+    this.props.router.listen((location, action) => {
+      ws.removeEventListener('close', wsRedirect);
     });
+    ws.addEventListener('close', wsRedirect);
 
     return ws;
   }
