@@ -84,6 +84,10 @@ const Utils = {
     return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`;
   },
 
+  requestTailerPath(requestId, logpath) {
+    return `request/${requestId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`
+  },
+
   getPreferredTailer() {
     const saved = window.localStorage.getItem('logTailer');
     return saved || 'tail';

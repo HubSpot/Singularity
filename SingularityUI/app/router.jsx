@@ -50,7 +50,7 @@ const routes = (
       <Route path=":requestId/old-tail/**" component={AggregateTail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":requestId/tail/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       {window.config.lessTerminalPort
-        ? <Route path=":requestId/less/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+        ? <Route path=":requestId/less/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
         : <Redirect from=":requestId/less/**" to=":requestId/tail/**" />}
       <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
       <IndexRoute component={NotFound} title="Not Found" />

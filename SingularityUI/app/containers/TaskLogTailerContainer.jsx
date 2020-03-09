@@ -23,8 +23,6 @@ class TaskLogTailerContainer extends React.Component {
   render() {
     if (this.props.route.path.includes('less')) {
       Utils.setPreferredTailer('less');
-    } else if (this.props.route.path.includes('old-tail')) {
-      Utils.setPreferredTailer('old-tail');
     } else {
       Utils.setPreferredTailer('tail');
     }
