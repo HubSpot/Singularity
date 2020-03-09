@@ -81,7 +81,20 @@ const Utils = {
   },
 
   tailerPath(taskId, logpath) {
-    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
+    return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`;
+  },
+
+  getPreferredTailer() {
+    const saved = window.localStorage.getItem('logTailer');
+    return saved || 'tail';
+  },
+
+  setPreferredTailer(tailer) {
+    window.localStorage.setItem('logTailer', tailer);
+  },
+
+  isLessEnabled() {
+    return Boolean(window.config.lessTerminalPort);
   },
 
   substituteTaskId(value, taskId) {

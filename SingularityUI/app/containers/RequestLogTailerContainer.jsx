@@ -6,6 +6,7 @@ import { FetchActiveTasksForRequest } from '../actions/api/history';
 import { setTailerGroups } from '../actions/tailer';
 import LessTailerContainer from './LessTailerContainer';
 import LogTailerContainer from './LogTailerContainer';
+import Utils from '../utils';
 
 class RequestLogTailerContainer extends React.Component {
   componentWillMount() {
@@ -35,7 +36,15 @@ class RequestLogTailerContainer extends React.Component {
   }
 
   render() {
-    if (window.config && window.config.lessTerminalPort && this.props.route && this.props.route.path.includes('less')) {
+    if (this.props.route.path.includes('less')) {
+      Utils.setPreferredTailer('less');
+    } else if (this.props.route.path.includes('old-tail')) {
+      Utils.setPreferredTailer('old-tail');
+    } else {
+      Utils.setPreferredTailer('tail');
+    }
+    
+    if (Utils.isLessEnabled() && this.props.route && this.props.route.path.includes('less')) {
       return (<LessTailerContainer />);
     }
 
