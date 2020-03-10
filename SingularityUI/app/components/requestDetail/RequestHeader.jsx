@@ -24,11 +24,18 @@ const RequestHeader = ({requestId, group, deleted, showBreadcrumbs = true}) => {
     <header className="detail-header">
       {breadcrumbs}
       <Row>
-        <Col md={7} lg={6}>
+        <Col md={6} lg={6}>
           <RequestTitle requestId={requestId} deleted={deleted} />
         </Col>
-        <Col md={5} lg={6} className="button-container">
+        <Col md={6} lg={6} className="button-container">
           <RequestActionButtons requestId={requestId} />
+        </Col>
+      </Row>
+      <Row>
+        <Col md={12}>
+          <h2 className="request-title">
+            {requestId}
+          </h2>
         </Col>
       </Row>
       <Row>
