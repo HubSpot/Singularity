@@ -24,12 +24,14 @@ class TaskLessTerminal extends Component {
 
     const ws = new WebSocket(url, protocols);
     const wsRedirect = (event) => {
-      this.props.router.push(`/task/${this.props.taskId}`);
+      if (event.code === 1000) {
+        this.props.router.push(`/task/${this.props.taskId}`);
 
-      Messenger().info({
-        message: `Websocket session closed successfully.`,
-        hideAfter: 3,
-      });
+        Messenger().info({
+          message: `Websocket session closed successfully.`,
+          hideAfter: 3,
+        });
+      }
     };
     
     // order of these two statements ensures the redirect isn't removed on pageload
@@ -51,8 +53,10 @@ class TaskLessTerminal extends Component {
 
     // disable line folding/wrapping
     if (!commands.includes('-s')) {
-      commands.push('-S');
+      commands.unshift('-S');
     }
+
+    commands.unshift('+F');
 
     // enable line numbering, if line calculation is enabled
     // if (!commands.includes('-n')) {
@@ -64,8 +68,8 @@ class TaskLessTerminal extends Component {
     // line will be '?' if the -n flag was specified
     // byte should be present as long as we're tailing a file
     // percent is always calculated by bytes, because this is enough of a pain as is
-    commands.push('-P');
-    commands.push('?eEND .%lt/%pt\\%/%btb');
+    commands.unshift('?eEND .%lt/%pt\\%/%btb');
+    commands.unshift('-P');
 
     if (search.get('byteOffset')) {
       commands.push(`+${search.get('byteOffset')}P`);
@@ -98,6 +102,11 @@ class TaskLessTerminal extends Component {
     //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
     //   }
     // });
+
+    // horizontal scroll with mouse
+    terminal.element.addEventListener('mousedown', event => {
+      console.log(event);
+    });
 
     // setup prompt link
     terminal.registerLinkMatcher(promptRegex, (event, match) => {
