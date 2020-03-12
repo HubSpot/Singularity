@@ -79,28 +79,24 @@ public class SingularityExecutorTaskCleanup {
     }
 
     boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    boolean logTearDownSuccess = taskLogManager.teardown();
 
-    log.info("Cleaned up task app directory ({})", cleanupTaskAppDirectorySuccess);
+    log.info("Cleaned up task app directory ({}) and rotated logs ({})", cleanupTaskAppDirectorySuccess, logTearDownSuccess);
 
     if (!cleanupLogs) {
       log.info("Not finishing cleanup because log files will be preserved for 15 minutes after task termination");
       return TaskCleanupResult.WAITING;
     }
 
-    boolean logTearDownSuccess = taskLogManager.teardown();
-    checkForLogrotateAdditionalFilesToDelete(taskDefinition);
+    boolean rotatedLogfileDeleteSuccess = checkForLogrotateAdditionalFilesToDelete(taskDefinition);
 
-    log.info("Cleaned up logs ({})", logTearDownSuccess);
+    log.info("Deleted rotated logfiles ({})", rotatedLogfileDeleteSuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
       return finishTaskCleanup(dockerCleanSuccess);
     } else {
       return TaskCleanupResult.ERROR;
     }
-  }
-
-  public void cleanUpLogs() {
-    taskLogManager.teardown();
   }
 
   private TaskCleanupResult finishTaskCleanup(boolean dockerCleanSuccess) {
@@ -152,11 +148,11 @@ public class SingularityExecutorTaskCleanup {
     return false;
   }
 
-  private void checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
-    configuration.getLogrotateAdditionalFiles()
+  private boolean checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
+    return configuration.getLogrotateAdditionalFiles()
         .stream()
         .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
-        .forEach(toDelete -> {
+        .allMatch(toDelete -> {
           String glob = String.format("glob:%s/%s", taskDefinition.getTaskDirectoryPath().toAbsolutePath(), toDelete.getFilename());
 
           log.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
@@ -167,8 +163,11 @@ public class SingularityExecutorTaskCleanup {
               Files.delete(match);
               log.debug("Deleted {}", match);
             }
+
+            return true;
           } catch (IOException e) {
             log.error("Unable to list files while trying to delete for {}", toDelete);
+            return false;
           }
         });
   }
