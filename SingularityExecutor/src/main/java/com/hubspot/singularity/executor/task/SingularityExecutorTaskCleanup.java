@@ -72,22 +72,25 @@ public class SingularityExecutorTaskCleanup {
       return finishTaskCleanup(dockerCleanSuccess);
     }
 
-    boolean logTearDownSuccess = taskLogManager.teardown();
 
     if (!cleanupTaskAppDirectory) {
       log.info("Not finishing cleanup because taskApp directory is being preserved");
       return TaskCleanupResult.WAITING;
     }
 
+    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+
+    log.info("Cleaned up task app directory ({})", cleanupTaskAppDirectorySuccess);
+
     if (!cleanupLogs) {
-      log.info("Not finishing cleanup because log files have not been cleaned yet");
+      log.info("Not finishing cleanup because log files will be preserved for 15 minutes after task termination");
       return TaskCleanupResult.WAITING;
     }
 
-    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    boolean logTearDownSuccess = taskLogManager.teardown();
     checkForLogrotateAdditionalFilesToDelete(taskDefinition);
 
-    log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
+    log.info("Cleaned up logs ({})", logTearDownSuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
       return finishTaskCleanup(dockerCleanSuccess);
