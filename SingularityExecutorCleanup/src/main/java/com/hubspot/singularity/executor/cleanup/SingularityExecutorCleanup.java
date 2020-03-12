@@ -351,7 +351,6 @@ public class SingularityExecutorCleanup {
       if (lastUpdate.isPresent()) {
         if (taskDefinition.getTaskDirectoryPath().toFile().exists() && lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
           LOG.info("Task {} is done for > 15 minutes, removing logrotate files", taskDefinition.getTaskId());
-          taskCleanup.cleanUpLogs();
           checkForLogrotateAdditionalFilesToDelete(taskDefinition);
         }
         if (lastUpdate.get().getTaskState().isFailed()) {
