@@ -32,7 +32,8 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
 
   enum HealthCheckResult {
     PASSED,
-    FAILED,
+    PASSED_EXITED,
+    FAILED_EXITED,
     WAITING;
   }
 
@@ -99,16 +100,32 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
           return HealthCheckResult.PASSED;
         } else if (process.isAlive()) {
           return HealthCheckResult.WAITING;
+        } else {
+          if (process.exitValue() == 0) {
+            return HealthCheckResult.PASSED_EXITED;
+          } else {
+            return HealthCheckResult.FAILED_EXITED;
+          }
         }
-        return HealthCheckResult.FAILED;
       });
 
-      if (result == HealthCheckResult.PASSED) {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
-        return true;
-      } else {
-        executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
-        return false;
+      switch (result) {
+        case PASSED:
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
+          return true;
+        case PASSED_EXITED:
+          LOG.info("Task already exited with code 0, considering healthcheck a success and sending running/finished update");
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s (health check file found successfully).", getCurrentProcessToString()), task.getLog());
+          return true;
+        case FAILED_EXITED:
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo()
+              .getTaskId(), TaskState.TASK_FAILED, String.format("Process failed with code %d", process.exitValue()), task.getLog());
+          return false;
+        case WAITING:
+        default:
+          executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo()
+              .getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
+          return false;
       }
     } catch (ExecutionException | RetryException e) {
       executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_FAILED, String.format("Task timed out on health checks after %d seconds (health check file not found).", maxDelay), task.getLog());
