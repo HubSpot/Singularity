@@ -7,14 +7,11 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -50,7 +47,6 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.Sin
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
@@ -66,8 +62,6 @@ import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SingularityExecutorCleanup {
 
@@ -340,6 +334,7 @@ public class SingularityExecutorCleanup {
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerUtils);
 
     boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
+    boolean cleanupLogs = true;
 
     if (taskDefinition.shouldLogrotateLogFile()) {
       checkForUncompressedLogrotatedFile(taskDefinition);
@@ -350,9 +345,12 @@ public class SingularityExecutorCleanup {
 
       if (lastUpdate.isPresent()) {
         if (taskDefinition.getTaskDirectoryPath().toFile().exists() && lastUpdate.get().getTaskState().isDone() && System.currentTimeMillis() - lastUpdate.get().getTimestamp() > TimeUnit.MINUTES.toMillis(15)) {
-          LOG.info("Task {} is done for > 15 minutes, removing logrotate files", taskDefinition.getTaskId());
-          checkForLogrotateAdditionalFilesToDelete(taskDefinition);
+          LOG.info("Task {} is done for > 15 minutes, deleting files that we were logrotating during the lifetime of the task", taskDefinition.getTaskId());
+        } else {
+          // We have recent information for this task, and it tells us that it hasn't been 15 minutes since the task terminated. Don't delete logs yet.
+          cleanupLogs = false;
         }
+
         if (lastUpdate.get().getTaskState().isFailed()) {
           final long delta = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
 
@@ -362,63 +360,14 @@ public class SingularityExecutorCleanup {
             cleanupTaskAppDirectory = false;
           }
         }
-      } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
-        // No information is available, the task data has probably aged out of storage. Clean logrotateAdditionalFiles we've been asked to delete.
-        checkForLogrotateAdditionalFilesToDelete(taskDefinition);
       }
-    } else if (taskDefinition.getTaskDirectoryPath().toFile().exists()) {
-      // Same as above
-      checkForLogrotateAdditionalFilesToDelete(taskDefinition);
     }
 
     boolean isDocker = (taskHistory.isPresent()
         && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().isPresent()
         && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().get().getType() == SingularityContainerType.DOCKER);
 
-    return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
-  }
-
-  private void checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
-    executorConfiguration.getLogrotateAdditionalFiles()
-        .stream()
-        .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
-        .forEach(toDelete -> {
-          String glob = String.format("glob:%s/%s", taskDefinition.getTaskDirectoryPath().toAbsolutePath(), toDelete.getFilename());
-
-          LOG.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
-
-          try {
-            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob));
-            for (Path match : matches) {
-              Files.delete(match);
-              LOG.debug("Deleted {}", match);
-            }
-          } catch (IOException e) {
-            LOG.error("Unable to list files while trying to delete for {}", toDelete);
-          }
-        });
-  }
-
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
-  private List<Path> findGlob(Path path, PathMatcher matcher) throws IOException {
-    Deque<Path> stack = new ArrayDeque<>();
-    List<Path> matched = new ArrayList<>();
-
-    stack.push(path);
-
-    while (!stack.isEmpty()) {
-      try (DirectoryStream<Path> stream = Files.newDirectoryStream(stack.pop())) {
-        for (Path entry : stream) {
-          if (Files.isDirectory(entry)) {
-            stack.push(entry);
-          } else if (matcher.matches(entry)) {
-            matched.add(entry);
-          }
-        }
-      }
-    }
-
-    return matched;
+    return taskCleanup.cleanup(cleanupTaskAppDirectory, cleanupLogs, isDocker);
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
