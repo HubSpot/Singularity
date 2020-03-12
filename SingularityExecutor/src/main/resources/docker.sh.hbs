@@ -116,6 +116,7 @@ DOCKER_OPTIONS+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
 echo "MESOS_SANDBOX=/mnt/mesos/sandbox" >> docker.env
 echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
 echo "MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}" >> docker.env
+echo "HOST_SANDBOX_DIR=$CURRENT_DIR" >> docker.env
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
 DOCKER_OPTIONS+=( -v "{{#if hostPath}}{{{ hostPath }}}:{{{ containerPath }}}{{else}}{{{ containerPath }}}:{{{ containerPath }}}{{/if}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}" )
