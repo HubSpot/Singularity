@@ -84,10 +84,11 @@ public class SingularityExecutorTask {
     ExtendedTaskState extendedTaskState = MesosUtils.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString()));
 
     boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
+    boolean cleanupLogs = false; // Task has just died, so we don't want to delete logs yet.
 
     boolean isDocker = (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker());
 
-    taskCleanup.cleanup(cleanupAppTaskDirectory, isDocker);
+    taskCleanup.cleanup(cleanupAppTaskDirectory, cleanupLogs, isDocker);
   }
 
   public Path getArtifactPath(Artifact artifact, Path defaultPath) {
