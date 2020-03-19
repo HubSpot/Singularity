@@ -111,7 +111,7 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
         return false;
       }
 
-      LOG.info("Queing new downloader for {} ({} handlers, {} active threads, {} queue size, {} max) after {}", artifactDownloadRequest, downloadRequestToHandler.size(),
+      LOG.trace("Queing new downloader for {} ({} handlers, {} active threads, {} queue size, {} max) after {}", artifactDownloadRequest, downloadRequestToHandler.size(),
           downloadService.getActiveCount(), downloadService.getQueue().size(), configuration.getNumDownloaderThreads(), JavaUtils.duration(start));
 
       ListenableFuture<?> future = listeningDownloadWrapper.submit(newHandler);

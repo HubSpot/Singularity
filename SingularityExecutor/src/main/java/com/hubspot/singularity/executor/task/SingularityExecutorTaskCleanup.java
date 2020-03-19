@@ -72,25 +72,24 @@ public class SingularityExecutorTaskCleanup {
       return finishTaskCleanup(dockerCleanSuccess);
     }
 
-
-    if (!cleanupTaskAppDirectory) {
-      log.info("Not finishing cleanup because taskApp directory is being preserved");
-      return TaskCleanupResult.WAITING;
-    }
-
-    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
     boolean logTearDownSuccess = taskLogManager.teardown();
-
-    log.info("Cleaned up task app directory ({}) and rotated logs ({})", cleanupTaskAppDirectorySuccess, logTearDownSuccess);
+    log.info("Rotated and marked logs for upload for {} ({})", taskDirectory, logTearDownSuccess);
 
     if (!cleanupLogs) {
-      log.info("Not finishing cleanup because log files will be preserved for 15 minutes after task termination");
+      log.debug("Not finishing cleanup because log files will be preserved for 15 minutes after task termination");
       return TaskCleanupResult.WAITING;
     }
 
     boolean rotatedLogfileDeleteSuccess = checkForLogrotateAdditionalFilesToDelete(taskDefinition);
-
     log.info("Deleted rotated logfiles ({})", rotatedLogfileDeleteSuccess);
+
+    if (!cleanupTaskAppDirectory) {
+      log.debug("Not finishing cleanup because taskApp directory is being preserved");
+      return TaskCleanupResult.WAITING;
+    }
+
+    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    log.info("Cleaned up task app directory ({})", cleanupTaskAppDirectorySuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
       return finishTaskCleanup(dockerCleanSuccess);
@@ -112,12 +111,12 @@ public class SingularityExecutorTaskCleanup {
   public boolean cleanTaskDefinitionFile() {
     Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
 
-    log.info("Successful cleanup, deleting file {}", taskDefinitionPath);
+    log.debug("Successful cleanup, deleting file {}", taskDefinitionPath);
 
     try {
       boolean deleted = Files.deleteIfExists(taskDefinitionPath);
 
-      log.info("File deleted ({})", deleted);
+      log.debug("File deleted ({})", deleted);
 
       return true;
     } catch (IOException e) {
@@ -129,7 +128,7 @@ public class SingularityExecutorTaskCleanup {
   private boolean cleanupTaskAppDirectory() {
     final String pathToDelete = taskDefinition.getTaskAppDirectory();
 
-    log.info("Deleting: {}", pathToDelete);
+    log.debug("Deleting: {}", pathToDelete);
 
     try {
       final List<String> cmd = ImmutableList.of(

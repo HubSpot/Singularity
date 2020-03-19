@@ -47,10 +47,10 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
   }
 
   private boolean download() throws Exception {
-    LOG.info("Beginning download {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
+    LOG.trace("Beginning download {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
 
     if (continuation.isExpired()) {
-      LOG.info("Continuation expired for {}, aborting...", artifactDownloadRequest.getTargetDirectory());
+      LOG.trace("Continuation expired for {}, aborting...", artifactDownloadRequest.getTargetDirectory());
       return false;
     }
 
@@ -71,7 +71,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
       artifactManager.copy(fetched, targetDirectory, artifactDownloadRequest.getS3Artifact().getFilename());
     }
 
-    LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
+    LOG.debug("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
 
     getResponse().getOutputStream().close();
 

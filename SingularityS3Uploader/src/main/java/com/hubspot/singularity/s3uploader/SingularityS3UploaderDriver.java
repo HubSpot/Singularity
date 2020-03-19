@@ -306,7 +306,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       futures.put(uploader, CompletableFuture.supplyAsync(performUploadSupplier(uploader, isFinished, false), executorService));
     }
 
-    LOG.info("Waiting on {} future(s)", futures.size());
+    LOG.debug("Waiting on {} future(s)", futures.size());
 
     final long now = System.currentTimeMillis();
     final Set<SingularityUploader> expiredUploaders = Sets.newHashSetWithExpectedSize(initialExpectedSize);

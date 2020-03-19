@@ -111,7 +111,7 @@ public abstract class WatchServiceHelper implements Closeable {
       WatchEvent.Kind<?> kind = event.kind();
 
       if (!watchEvents.contains(kind)) {
-        LOG.trace("Ignoring an {} event to {}", event.context());
+        LOG.trace("Ignoring an {} event to {}", event.kind(), event.context());
         continue;
       }
 
