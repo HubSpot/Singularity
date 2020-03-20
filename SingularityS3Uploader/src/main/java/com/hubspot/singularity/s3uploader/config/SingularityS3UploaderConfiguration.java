@@ -32,6 +32,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private long checkUploadsEverySeconds = 600;
 
+  @Min(60)
+  @JsonProperty
+  private long recheckFilesEverySeconds = 600;
+
   @Min(1)
   @JsonProperty
   private long stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(168);
@@ -102,6 +106,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public void setCheckUploadsEverySeconds(long checkUploadsEverySeconds) {
     this.checkUploadsEverySeconds = checkUploadsEverySeconds;
+  }
+
+  public long getRecheckFilesEverySeconds() {
+    return recheckFilesEverySeconds;
+  }
+
+  public void setRecheckFilesEverySeconds(long recheckFilesEverySeconds) {
+    this.recheckFilesEverySeconds = recheckFilesEverySeconds;
   }
 
   public long getStopCheckingAfterMillisWithoutNewFile() {
