@@ -1,12 +1,14 @@
 package com.hubspot.singularity.s3uploader;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -114,7 +116,7 @@ public abstract class SingularityUploader {
           context.stop();
         }
       } else {
-        LOG.info("{} is in use by another process, will retry upload later", file);
+        LOG.debug("{} is in use by another process, will retry upload later", file);
       }
     }
 
@@ -156,6 +158,8 @@ public abstract class SingularityUploader {
           throw new RuntimeException(ioe);
         }
       });
+    } catch (UncheckedIOException|NoSuchFileException nsfe) {
+      LOG.debug("Parent file {} did not exist, skipping", directory);
     }
     return toUpload;
   }

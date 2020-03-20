@@ -30,7 +30,7 @@ public class JsonObjectFileHelper {
   public <T> Optional<T> read(Path file, Logger log, Class<T> clazz) throws IOException {
     final long start = System.currentTimeMillis();
 
-    log.info("Reading {}", file);
+    log.trace("Reading {}", file);
 
     byte[] bytes = new byte[0];
 
