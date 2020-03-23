@@ -98,7 +98,7 @@ const Utils = {
   },
 
   isLessEnabled() {
-    return Boolean(window.config.lessTerminalPort);
+    return Boolean(window.config.lessTerminalPath);
   },
 
   substituteTaskId(value, taskId) {

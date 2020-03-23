@@ -49,7 +49,8 @@ var templateData = {
   authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
   quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}',
   navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '{}',
-  lessTerminalPort: process.env.SINGULARITY_LESS_TERMINAL_PORT || 0,
+
+  lessTerminalPath: process.env.SINGULARITY_LESS_TERMINAL_PATH || ''
 };
 
 var dest = path.resolve(__dirname, 'dist');

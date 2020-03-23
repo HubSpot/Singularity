@@ -19,7 +19,8 @@ class TaskLessTerminal extends Component {
     // hyphens in hostnames appear to have been converted to underscores
     const host = task.host.replace(/_/g, '-');
 
-    const url = `wss://${host}:${window.config.lessTerminalPort}/api/v1/tasks/${this.props.taskId}/exec/less?${this.getArguments(terminal)}`;
+    const api = window.config.lessTerminalPath.replace('$HOST', host).replace('$TASK', this.props.taskId);
+    const url = `${api}?${this.getArguments(terminal)}`;
     const protocols = ['Bearer', Utils.getAuthToken()];
 
     const ws = new WebSocket(url, protocols);
