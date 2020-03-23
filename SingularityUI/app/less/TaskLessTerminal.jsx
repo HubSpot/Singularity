@@ -5,7 +5,7 @@ import { Terminal } from 'xterm';
 
 import Utils from '../utils';
 import WsTerminal from './WsTerminal';
-import { disableLineNumbers, chain, toggleLineWrapping } from './commands';
+import { disableLineNumbers, chain, toggleLineWrapping, horizontalScroll } from './commands';
 
 
 class TaskLessTerminal extends Component {
@@ -105,8 +105,8 @@ class TaskLessTerminal extends Component {
     // });
 
     // horizontal scroll with mouse
-    terminal.element.addEventListener('mousedown', event => {
-      console.log(event);
+    terminal.element.addEventListener('wheel', event => {
+      horizontalScroll(terminal, event);
     });
 
     // setup prompt link
