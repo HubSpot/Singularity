@@ -82,6 +82,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final Map<S3UploadMetadata, CompletableFuture<Integer>> immediateUploadersFutures;
 
   private ScheduledFuture<?> future;
+  private ScheduledFuture<?> fileSyncFuture;
 
   @Inject
   public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration,
@@ -187,6 +188,17 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       }
     }, configuration.getCheckUploadsEverySeconds(), configuration.getCheckUploadsEverySeconds(), TimeUnit.SECONDS);
 
+    fileSyncFuture = scheduler.scheduleAtFixedRate(() -> {
+      runLock.lock();
+      try {
+        readInitialFiles();
+      } catch (Throwable t) {
+        throw new RuntimeException(t);
+      } finally {
+        runLock.unlock();
+      }
+    }, configuration.getRecheckFilesEverySeconds(), configuration.getRecheckFilesEverySeconds(), TimeUnit.SECONDS);
+
     try {
       super.watch();
     } catch (Throwable t) {
@@ -207,6 +219,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       }
     } finally {
       runLock.unlock();
+    }
+
+    if (fileSyncFuture != null) {
+      fileSyncFuture.cancel(true);
     }
 
     if (future != null) {
