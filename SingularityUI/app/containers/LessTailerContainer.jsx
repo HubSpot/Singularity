@@ -26,6 +26,7 @@ class LessTailerContainer extends React.Component {
     const terminals = this.props.tailerGroups.map(group => {
       return new Terminal({
         theme: THEMES[this.props.color],
+        fontSize: 12
       });
     });
 
