@@ -8,7 +8,7 @@ import { Link, withRouter } from 'react-router';
 import { connect } from 'react-redux';
 import ReactDOM from 'react-dom';
 import { actions as tailerActions } from 'singularityui-tailer';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Modal } from 'react-bootstrap';
 import Utils from '../utils';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, markNotFound, clearNotFound } from '../actions/tailer';
@@ -32,6 +32,7 @@ class LessTailerContainer extends React.Component {
 
     this.state = {
       terminals,
+      showHelp: false,
     };
   }
 
@@ -46,6 +47,46 @@ class LessTailerContainer extends React.Component {
         terminal.setOption('theme', THEMES[this.props.color])
       });
     }
+  }
+
+  renderHelpComponent() {
+    return (
+      <a className="action-link" onClick={() => this.setState({ showHelp: true })} title="Help">
+        <Glyphicon glyph="question-sign" />
+        <Modal show={this.state.showHelp} onHide={() => this.setState({ showHelp: false })}>
+          <Modal.Body>
+            <h4>
+              Less help
+            </h4>
+            <p>
+              Copy a link to the top line of your terminal by clicking on the prompt, if not currently tailing.
+            </p>
+            <h5>
+              Common commands (see <a href="https://linux.die.net/man/1/less">man pages</a> for more):
+            </h5>
+            <ul>
+              {this.renderHelpCommand('g', 'Scroll to top')}
+              {this.renderHelpCommand('G', 'Scroll to bottom')}
+              {this.renderHelpCommand('+50p', 'Jump to 50% through the file (by file size, not line count)')}
+              {this.renderHelpCommand('/', 'Search forward')}
+              {this.renderHelpCommand('?', 'Search backward')}
+              {this.renderHelpCommand('&', 'Enable match-only search (pass an empty search string to disable)')}
+              {this.renderHelpCommand('n', 'Jump to next match')}
+              {this.renderHelpCommand('N', 'Jump to previous match')}
+              {this.renderHelpCommand('-S', 'Toggle line wrapping (allows copy/paste of long lines)')}
+              {this.renderHelpCommand('-N', 'Toggle visible line numbers')}
+              {this.renderHelpCommand('+F', 'Tail the file')}
+            </ul>
+          </Modal.Body>
+        </Modal>
+      </a>
+    );
+  }
+
+  renderHelpCommand(command, description) {
+    return (
+      <li><code>{command}</code> {description}</li>
+    );
   }
 
   render() {
@@ -98,6 +139,7 @@ class LessTailerContainer extends React.Component {
               onExpand={() => this.props.pickTailerGroup(key)}
               onJumpToTop={() => jumpToTop(terminal)}
               onJumpToBottom={() => jumpToBottom(terminal)}
+              helpComponent={this.renderHelpComponent()}
             />
             <TaskLessTerminal terminal={terminal} taskId={taskId} path={path} offset={parseInt(offset)} />
           </section>
