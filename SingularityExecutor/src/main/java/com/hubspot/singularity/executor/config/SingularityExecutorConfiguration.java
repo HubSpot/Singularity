@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -164,7 +165,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   @NotNull
-  private Set<String> dockerInheritVariables = new HashSet<>();
+  private List<String> dockerInheritVariables = new ArrayList<>();
 
   @NotEmpty
   @JsonProperty
@@ -417,11 +418,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return dockerStopTimeout;
   }
 
-  public Set<String> getDockerInheritVariables() {
+  public List<String> getDockerInheritVariables() {
     return dockerInheritVariables;
   }
 
-  public void setDockerInheritVariables(Set<String> dockerInheritVariables) {
+  public void setDockerInheritVariables(List<String> dockerInheritVariables) {
     this.dockerInheritVariables = dockerInheritVariables;
   }
 
