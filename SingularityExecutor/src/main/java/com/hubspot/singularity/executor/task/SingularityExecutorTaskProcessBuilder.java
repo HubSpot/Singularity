@@ -189,9 +189,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
     if (isDocker) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
-      task.getLog().info("Inherit vars: {}", configuration.getDockerInheritVariables());
       templateManager.writeDockerScript(getPath("runner.sh"),
-          new DockerContext(new DockerEnvironmentContext(task.getLog(), taskInfo, configuration.getDockerInheritVariables()), runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
+          new DockerContext(new DockerEnvironmentContext(taskInfo, configuration.getDockerInheritVariables()), runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(taskInfo));
 
