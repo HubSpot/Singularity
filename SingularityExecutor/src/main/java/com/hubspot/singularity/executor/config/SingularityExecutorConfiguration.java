@@ -4,8 +4,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -159,6 +161,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @Min(5)
   @JsonProperty
   private int dockerStopTimeout = 15;
+
+  @JsonProperty
+  @NotNull
+  private Set<String> dockerInheritVariables = new HashSet<>();
 
   @NotEmpty
   @JsonProperty
@@ -409,6 +415,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public int getDockerStopTimeout() {
     return dockerStopTimeout;
+  }
+
+  public Set<String> getDockerInheritVariables() {
+    return dockerInheritVariables;
+  }
+
+  public void setDockerInheritVariables(Set<String> dockerInheritVariables) {
+    this.dockerInheritVariables = dockerInheritVariables;
   }
 
   @JsonIgnore

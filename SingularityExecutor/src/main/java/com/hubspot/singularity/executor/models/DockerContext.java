@@ -1,18 +1,22 @@
 package com.hubspot.singularity.executor.models;
 
+import java.util.Set;
+
 public class DockerContext {
   private final EnvironmentContext envContext;
   private final RunnerContext runContext;
   private final String prefix;
   private final int stopTimeout;
   private final boolean privileged;
+  private final Set<String> inheritVariables;
 
-  public DockerContext(EnvironmentContext envContext, RunnerContext runContext, String prefix, int stopTimeout, boolean privileged) {
+  public DockerContext(EnvironmentContext envContext, RunnerContext runContext, String prefix, int stopTimeout, boolean privileged, Set<String> inheritVariables) {
     this.envContext = envContext;
     this.runContext = runContext;
     this.prefix = prefix;
     this.stopTimeout = stopTimeout;
     this.privileged = privileged;
+    this.inheritVariables = inheritVariables;
   }
 
   public EnvironmentContext getEnvContext() {
@@ -35,6 +39,10 @@ public class DockerContext {
     return privileged;
   }
 
+  public Set<String> getInheritVariables() {
+    return inheritVariables;
+  }
+
   @Override
   public String toString() {
     return "DockerContext{" +
@@ -43,6 +51,7 @@ public class DockerContext {
         ", prefix='" + prefix + '\'' +
         ", stopTimeout=" + stopTimeout +
         ", privileged=" + privileged +
+        ", inheritVariables=" + inheritVariables +
         '}';
   }
 }
