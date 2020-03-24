@@ -12,14 +12,17 @@ import com.google.common.base.Strings;
 
 public class EnvironmentContext {
 
-  private final TaskInfo taskInfo;
+  protected final TaskInfo taskInfo;
 
   public EnvironmentContext(TaskInfo taskInfo) {
     this.taskInfo = taskInfo;
   }
 
   public List<Variable> getEnv() {
-    return taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList();
+    return taskInfo.getExecutor()
+        .getCommand()
+        .getEnvironment()
+        .getVariablesList();
   }
 
   public Protos.ContainerInfo.DockerInfo getDockerInfo() {
