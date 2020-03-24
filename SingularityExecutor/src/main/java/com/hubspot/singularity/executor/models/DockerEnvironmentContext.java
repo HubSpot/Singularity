@@ -26,9 +26,9 @@ public class DockerEnvironmentContext extends EnvironmentContext {
     Set<String> keys = new HashSet<>();
 
     inheritVariables.forEach((v) -> {
+      taskLogger.info("Inherit var {} has value {}", v, System.getenv(v));
       if (!keys.contains(v)) {
         String val = System.getenv(v);
-        taskLogger.info("Inherit var {} has value {}", v, val);
         if (val != null) {
           variables.add(Variable.newBuilder().setName(v).setValue(val).build());
           keys.add(v);
