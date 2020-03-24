@@ -2,7 +2,16 @@ import React from 'react';
 import { Link } from 'react-router';
 import Utils from '../../utils';
 
-const NewTaskGroupHeader = ({showCloseAndExpandButtons, showRequestId, taskId, onClose, onExpand, onJumpToTop, onJumpToBottom}) => {
+const NewTaskGroupHeader = ({
+  showCloseAndExpandButtons,
+  showRequestId,
+  taskId,
+  onClose,
+  onExpand,
+  onJumpToTop,
+  onJumpToBottom,
+  helpComponent
+}) => {
   const closeComponent = (<a className="action-link" onClick={onClose} title="Close Task">
     <span className="glyphicon glyphicon-remove" />
   </a>);
@@ -29,6 +38,7 @@ const NewTaskGroupHeader = ({showCloseAndExpandButtons, showRequestId, taskId, o
         </span>
         { /* this.renderTaskLegend() */ }
         <span className="right-buttons">
+          {helpComponent}
           <a className="action-link" onClick={onJumpToBottom} title="Scroll to bottom">
             <span className="glyphicon glyphicon-chevron-down" />
           </a>

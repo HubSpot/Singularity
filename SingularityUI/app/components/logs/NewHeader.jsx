@@ -62,7 +62,7 @@ class NewHeader extends React.Component {
   }
 
   renderSwitchToNewTailer() {
-    if (window.config.lessTerminalPort && this.props.oldTail === 'old-tail') {
+    if (window.config.lessTerminalPath && this.props.oldTail === 'old-tail') {
       return (
         <Link to={`/task/${this.props.taskIds[0]}/less/${this.props.paths[0]}`}>
           <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>

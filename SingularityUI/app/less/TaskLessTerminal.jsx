@@ -5,7 +5,7 @@ import { Terminal } from 'xterm';
 
 import Utils from '../utils';
 import WsTerminal from './WsTerminal';
-import { disableLineNumbers, chain, toggleLineWrapping } from './commands';
+import { disableLineNumbers, chain, toggleLineWrapping, horizontalScroll } from './commands';
 
 
 class TaskLessTerminal extends Component {
@@ -19,17 +19,20 @@ class TaskLessTerminal extends Component {
     // hyphens in hostnames appear to have been converted to underscores
     const host = task.host.replace(/_/g, '-');
 
-    const url = `wss://${host}:${window.config.lessTerminalPort}/api/v1/tasks/${this.props.taskId}/exec/less?${this.getArguments(terminal)}`;
+    const api = window.config.lessTerminalPath.replace('$HOST', host).replace('$TASK', this.props.taskId);
+    const url = `${api}?${this.getArguments(terminal)}`;
     const protocols = ['Bearer', Utils.getAuthToken()];
 
     const ws = new WebSocket(url, protocols);
     const wsRedirect = (event) => {
-      this.props.router.push(`/task/${this.props.taskId}`);
+      if (event.code === 1000) {
+        this.props.router.push(`/task/${this.props.taskId}`);
 
-      Messenger().info({
-        message: `Websocket session closed successfully.`,
-        hideAfter: 3,
-      });
+        Messenger().info({
+          message: `Websocket session closed successfully.`,
+          hideAfter: 3,
+        });
+      }
     };
     
     // order of these two statements ensures the redirect isn't removed on pageload
@@ -51,8 +54,10 @@ class TaskLessTerminal extends Component {
 
     // disable line folding/wrapping
     if (!commands.includes('-s')) {
-      commands.push('-S');
+      commands.unshift('-S');
     }
+
+    commands.unshift('+F');
 
     // enable line numbering, if line calculation is enabled
     // if (!commands.includes('-n')) {
@@ -64,8 +69,8 @@ class TaskLessTerminal extends Component {
     // line will be '?' if the -n flag was specified
     // byte should be present as long as we're tailing a file
     // percent is always calculated by bytes, because this is enough of a pain as is
-    commands.push('-P');
-    commands.push('?eEND .%lt/%pt\\%/%btb');
+    commands.unshift('?eEND .%lt/%pt\\%/%btb');
+    commands.unshift('-P');
 
     if (search.get('byteOffset')) {
       commands.push(`+${search.get('byteOffset')}P`);
@@ -98,6 +103,11 @@ class TaskLessTerminal extends Component {
     //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
     //   }
     // });
+
+    // horizontal scroll with mouse
+    terminal.element.addEventListener('wheel', event => {
+      horizontalScroll(terminal, event);
+    });
 
     // setup prompt link
     terminal.registerLinkMatcher(promptRegex, (event, match) => {
