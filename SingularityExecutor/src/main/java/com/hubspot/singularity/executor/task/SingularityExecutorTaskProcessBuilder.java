@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.DockerContext;
+import com.hubspot.singularity.executor.models.DockerEnvironmentContext;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.SingularityExecutorTaskArtifactFetcher;
@@ -186,14 +187,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         configuration.getDefaultCfsPeriod(),
         isDocker ? configuration.getExtraDockerScriptContent() : configuration.getExtraScriptContent());
 
-    EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
-
     if (isDocker) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
       templateManager.writeDockerScript(getPath("runner.sh"),
-          new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
+          new DockerContext(new DockerEnvironmentContext(taskInfo, configuration.getDockerInheritVariables()), runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
     } else {
-      templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
+      templateManager.writeEnvironmentScript(getPath("deploy.env"), new EnvironmentContext(taskInfo));
 
       task.getLog().info("Writing a runner script to execute {} with {}", cmd, runnerContext);
 
