@@ -91,6 +91,10 @@ echo "{{{name}}}=${{{name}}}" >> docker.env
 {{/ifHasNewLinesOrBackticks}}
 {{/each}}
 
+{{#each inheritVariables}}
+echo "{{{this}}}=${{{this}}}" >> docker.env
+{{/each}}
+
 # Create log directory for logrotate runs
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
   echo "Creating log directory ({{{ runContext.logDir }}})..."
