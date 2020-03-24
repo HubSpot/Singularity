@@ -7,16 +7,13 @@ import java.util.Set;
 
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.TaskInfo;
-import org.slf4j.Logger;
 
 public class DockerEnvironmentContext extends EnvironmentContext {
-  private final Logger taskLogger;
 
   private final List<String> inheritVariables;
 
-  public DockerEnvironmentContext(Logger taskLogger, TaskInfo taskInfo, List<String> inheritVariables) {
+  public DockerEnvironmentContext(TaskInfo taskInfo, List<String> inheritVariables) {
     super(taskInfo);
-    this.taskLogger = taskLogger;
     this.inheritVariables = inheritVariables;
   }
 
@@ -26,7 +23,6 @@ public class DockerEnvironmentContext extends EnvironmentContext {
     Set<String> keys = new HashSet<>();
 
     inheritVariables.forEach((v) -> {
-      taskLogger.info("Inherit var {} has value {}", v, System.getenv(v));
       if (!keys.contains(v)) {
         String val = System.getenv(v);
         if (val != null) {
