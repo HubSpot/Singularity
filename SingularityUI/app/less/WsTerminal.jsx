@@ -22,7 +22,7 @@ class WsTerminal extends Component {
     this.fitAddon = new FitAddon();
     this.terminal.loadAddon(this.fitAddon);
     this.fitAddon.fit();
-    // this.terminal.resize(2048, this.terminal.rows);
+    // this.terminal.resize(1024, this.terminal.rows);
 
     this.ws = this.props.terminalToWebSocket(this.terminal);
     this.wsAttach = new AttachAddon(this.ws);

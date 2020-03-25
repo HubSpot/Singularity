@@ -56,13 +56,13 @@ class LessTailerContainer extends React.Component {
         <Modal show={this.state.showHelp} onHide={() => this.setState({ showHelp: false })}>
           <Modal.Body>
             <h4>
-              Less help
+              Help: less
             </h4>
             <p>
               Copy a link to the top line of your terminal by clicking on the prompt, if not currently tailing.
             </p>
             <h5>
-              Common commands (see <a href="https://linux.die.net/man/1/less">man pages</a> for more):
+              Common commands (see <a href="https://linux.die.net/man/1/less">man pages</a> for better documentation):
             </h5>
             <ul>
               {this.renderHelpCommand('g', 'Scroll to top')}
