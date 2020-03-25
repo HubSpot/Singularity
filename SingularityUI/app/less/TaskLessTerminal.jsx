@@ -57,7 +57,8 @@ class TaskLessTerminal extends Component {
       commands.unshift('-S');
     }
 
-    commands.unshift('+F');
+    // +F makes the terminal unusable on mobile
+    commands.unshift('+G');
 
     // enable line numbering, if line calculation is enabled
     // if (!commands.includes('-n')) {
@@ -103,6 +104,10 @@ class TaskLessTerminal extends Component {
     //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
     //   }
     // });
+
+    terminal.onKey(e => {
+      console.log(e);
+    });
 
     // horizontal scroll with mouse
     terminal.element.addEventListener('wheel', event => {

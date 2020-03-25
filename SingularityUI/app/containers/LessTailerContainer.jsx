@@ -56,18 +56,18 @@ class LessTailerContainer extends React.Component {
         <Modal show={this.state.showHelp} onHide={() => this.setState({ showHelp: false })}>
           <Modal.Body>
             <h4>
-              Less help
+              Help: less
             </h4>
             <p>
               Copy a link to the top line of your terminal by clicking on the prompt, if not currently tailing.
             </p>
             <h5>
-              Common commands (see <a href="https://linux.die.net/man/1/less">man pages</a> for more):
+              Common commands (see <a href="https://linux.die.net/man/1/less">man pages</a> for better documentation):
             </h5>
             <ul>
               {this.renderHelpCommand('g', 'Scroll to top')}
               {this.renderHelpCommand('G', 'Scroll to bottom')}
-              {this.renderHelpCommand('+50p', 'Jump to 50% through the file (by file size, not line count)')}
+              {this.renderHelpCommand('50p', 'Jump to 50% through the file (by file size, not line count)')}
               {this.renderHelpCommand('/', 'Search forward')}
               {this.renderHelpCommand('?', 'Search backward')}
               {this.renderHelpCommand('&', 'Enable match-only search (pass an empty search string to disable)')}
@@ -75,7 +75,7 @@ class LessTailerContainer extends React.Component {
               {this.renderHelpCommand('N', 'Jump to previous match')}
               {this.renderHelpCommand('-S', 'Toggle line wrapping (allows copy/paste of long lines)')}
               {this.renderHelpCommand('-N', 'Toggle visible line numbers')}
-              {this.renderHelpCommand('+F', 'Tail the file')}
+              {this.renderHelpCommand('F', 'Tail the file')}
             </ul>
           </Modal.Body>
         </Modal>
