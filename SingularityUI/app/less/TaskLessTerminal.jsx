@@ -57,14 +57,6 @@ class TaskLessTerminal extends Component {
       commands.unshift('-S');
     }
 
-    // +F makes the terminal unusable on mobile
-    commands.unshift('+G');
-
-    // enable line numbering, if line calculation is enabled
-    // if (!commands.includes('-n')) {
-    //   commands.push('-N');
-    // }
-
     // custom prompt, so we actually have enough data to kinda link to things
     // line/percent/byte (all of top line)
     // line will be '?' if the -n flag was specified
@@ -77,6 +69,9 @@ class TaskLessTerminal extends Component {
       commands.push(`+${search.get('byteOffset')}P`);
     } else if (this.props.offset >= 1) {
       commands.push(`+${this.props.offset}`);
+    } else {
+      // +F makes the terminal unusable on mobile
+      commands.push('+G')
     }
 
     commands.push(this.props.path);
@@ -104,10 +99,6 @@ class TaskLessTerminal extends Component {
     //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
     //   }
     // });
-
-    terminal.onKey(e => {
-      console.log(e);
-    });
 
     // horizontal scroll with mouse
     terminal.element.addEventListener('wheel', event => {
