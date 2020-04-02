@@ -5,7 +5,7 @@ import { Terminal } from 'xterm';
 
 import Utils from '../utils';
 import WsTerminal from './WsTerminal';
-import { disableLineNumbers, chain, toggleLineWrapping, horizontalScroll } from './commands';
+import { disableLineNumbers, chain, toggleLineWrapping, sigint, horizontalScroll } from './commands';
 
 
 class TaskLessTerminal extends Component {
@@ -70,8 +70,12 @@ class TaskLessTerminal extends Component {
     } else if (this.props.offset >= 1) {
       commands.push(`+${this.props.offset}`);
     } else {
-      // +F makes the terminal unusable on mobile
-      commands.push('+G')
+      commands.push('+F');
+
+      // +F otherwise makes the terminal unusable on mobile
+      terminal.element.addEventListener('touchstart', () => {
+        sigint(terminal);
+      });
     }
 
     commands.push(this.props.path);
