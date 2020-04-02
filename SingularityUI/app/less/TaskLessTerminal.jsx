@@ -73,9 +73,11 @@ class TaskLessTerminal extends Component {
       commands.push('+F');
 
       // +F otherwise makes the terminal unusable on mobile
-      terminal.element.addEventListener('touchstart', () => {
+      const cancelTailOnce = () => {
         sigint(terminal);
-      });
+        terminal.element.removeEventListener('click', cancelTailOnce);
+      };
+      terminal.element.addEventListener('click', cancelTailOnce);
     }
 
     commands.push(this.props.path);
