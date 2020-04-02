@@ -56,7 +56,7 @@ export function jumpToBottom(terminal) {
 export function horizontalScroll(terminal, event) {
   event.preventDefault();
 
-  if (event.deltaX === 0) {
+  if (Math.abs(event.deltaX) <= 2) {
     return;
   } else if (event.deltaX > 0) {
     terminal.paste(`${event.deltaX}\x1bOC`);
