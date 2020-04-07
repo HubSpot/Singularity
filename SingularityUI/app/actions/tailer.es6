@@ -28,10 +28,11 @@ export const setSearch = (search) => ({
 export const markNotFound = (taskId) => (dispatch, getState) => {
   const { tailerView } = getState();
   const notFound = tailerView.notFound;
-  notFound[taskId] = true;
+  const updated = Object.assign({}, notFound, { [taskId]: true });
+
   dispatch({
     type: TAILER_SET_NOT_FOUND,
-    notFound: notFound
+    notFound: updated
   });
 }
 

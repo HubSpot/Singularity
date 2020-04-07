@@ -2,10 +2,12 @@ import React, { Component, PropTypes } from 'react';
 import { withRouter } from 'react-router';
 import Messenger from 'messenger';
 import { Terminal } from 'xterm';
+import { markNotFound } from '../actions/tailer';
 
 import Utils from '../utils';
 import WsTerminal from './WsTerminal';
-import { disableLineNumbers, chain, toggleLineWrapping, sigint, horizontalScroll } from './commands';
+import { getTerminalText, sigint, horizontalScroll } from './commands';
+import { connect } from 'react-redux';
 
 
 class TaskLessTerminal extends Component {
@@ -32,6 +34,11 @@ class TaskLessTerminal extends Component {
           message: `Websocket session closed successfully.`,
           hideAfter: 3,
         });
+      } else if (event.code === 1011) {
+        const text = getTerminalText(terminal);
+        if (text.includes('No such file')) {
+          this.props.markNotFound(this.props.taskId);
+        }
       }
     };
     
@@ -167,4 +174,9 @@ TaskLessTerminal.propTypes = {
 TaskLessTerminal.defaultProps = {
 };
 
-export default withRouter(TaskLessTerminal);
+export default withRouter(connect(
+  null,
+  {
+    markNotFound,
+  }
+)(TaskLessTerminal));

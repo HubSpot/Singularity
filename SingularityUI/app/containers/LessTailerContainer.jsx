@@ -92,7 +92,7 @@ class LessTailerContainer extends React.Component {
   render() {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
-      const terminal = this.state.terminals[key]
+      const terminal = this.state.terminals[key];
 
       if (Utils.maybe(this.props.notFound, [taskId], false)) {
         const fileName = Utils.fileName(path);

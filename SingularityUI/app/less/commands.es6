@@ -49,6 +49,19 @@ export function jumpToBottom(terminal) {
   terminal.paste('\rG');
 }
 
+/** @param {Terminal} terminal */
+export function getTerminalText(terminal) {
+  let text = '';
+  for (let i = 0; i < terminal.buffer.length; i++) {
+    const line = terminal.buffer.getLine(i);
+    for (let j = 0; j < line.length; j++) {
+      const cell = line.getCell(j);
+      text += cell.getChars();
+    }
+  }
+  return text;
+}
+
 /**
  * @param {Terminal} terminal
  * @param {WheelEvent} event
