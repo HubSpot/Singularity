@@ -99,6 +99,7 @@ class TaskLessTerminal extends Component {
     this.terminalHorizontalScrollSetup(terminal);
     this.terminalPromptLinkSetup(terminal);
     this.terminalLineLinkSetup(terminal);
+    this.terminalCtrlCSetup(terminal);
   }
 
   /** @param {Terminal} terminal */
@@ -177,6 +178,19 @@ class TaskLessTerminal extends Component {
     terminal.element.addEventListener('wheel', cancelTailOnce);
   }
 
+  /** @param {Terminal} terminal */
+  terminalCtrlCSetup(terminal) {
+    terminal.attachCustomKeyEventHandler(event => {
+      // support ctrl-c copy/paste on normal computers, instead of just sending SIGINT
+      if (event.ctrlKey && event.key === "c" && terminal.getSelection()) {
+        navigator.clipboard.writeText(terminal.getSelection());
+        return false;
+      }
+
+      return true;
+    });
+  }
+  
   render() {
     return (
       <WsTerminal
