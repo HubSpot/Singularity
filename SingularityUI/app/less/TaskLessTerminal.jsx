@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { withRouter } from 'react-router';
 import Messenger from 'messenger';
 import { Terminal } from 'xterm';
+import { once } from 'underscore';
 import { markNotFound } from '../actions/tailer';
 
 import Utils from '../utils';
@@ -35,6 +36,7 @@ class TaskLessTerminal extends Component {
           hideAfter: 3,
         });
       } else if (event.code === 1011) {
+        // handle config.runningTaskLogPath => config.finishedTaskLogPath on load
         const text = getTerminalText(terminal);
         if (text.includes('No such file')) {
           this.props.markNotFound(this.props.taskId);
@@ -80,11 +82,7 @@ class TaskLessTerminal extends Component {
       commands.push('+F');
 
       // +F otherwise makes the terminal unusable on mobile
-      const cancelTailOnce = () => {
-        sigint(terminal);
-        terminal.element.removeEventListener('click', cancelTailOnce);
-      };
-      terminal.element.addEventListener('click', cancelTailOnce);
+      this.terminalCancelTailSetup(terminal);
     }
 
     commands.push(this.props.path);
@@ -98,25 +96,30 @@ class TaskLessTerminal extends Component {
   
   /** @param {Terminal} terminal */
   terminalEtcSetup(terminal) {
-    const inlineNumberRegex = /^\s+(\d+)/;
+    this.terminalHorizontalScrollSetup(terminal);
+    this.terminalPromptLinkSetup(terminal);
+    this.terminalLineLinkSetup(terminal);
+  }
+
+  /** @param {Terminal} terminal */
+  terminalPromptLinkSetup(terminal) {
     const promptRegex = /^(END )?([?\d]+)\/([?\d]+)%\/(\d+)b/;
+    const options = {};
 
-    // terminal.onSelectionChange(() => {
-    //   const selection = terminal.getSelection();
-    //   const sp = terminal.getSelectionPosition();
-    //   console.log(selection);
-    //   console.log(sp);
+    // handle config.runningTaskLogPath => config.finishedTaskLogPath while tailing
+    if (Utils.substituteTaskId(config.runningTaskLogPath, this.props.taskId) === this.props.path) {
+      options.validationCallback = (uri, callback) => {
+        const re = promptRegex.exec(uri);
+        const end = re[1];
+        const byteOffset = re[4];
 
-    //   if (sp && sp.endColumn - sp.startColumn === terminal.cols && inlineNumberRegex.test(selection)) {
-    //     console.log('we got a line to copy');
-    //     chain(terminal, [disableLineNumbers, toggleLineWrapping]);
-    //   }
-    // });
-
-    // horizontal scroll with mouse
-    terminal.element.addEventListener('wheel', event => {
-      horizontalScroll(terminal, event);
-    });
+        if (end && byteOffset === '0') {
+          this.props.markNotFound(this.props.taskId);
+        } else {
+          callback(true);
+        }
+      }
+    }
 
     // setup prompt link
     terminal.registerLinkMatcher(promptRegex, (event, match) => {
@@ -132,7 +135,20 @@ class TaskLessTerminal extends Component {
         message: `Copied link to current top line to clipboard.`,
         hideAfter: 3,
       });
+    }, options);
+  }
+
+  /** @param {Terminal} terminal */
+  terminalHorizontalScrollSetup(terminal) {
+    // horizontal scroll with mouse
+    terminal.element.addEventListener('wheel', event => {
+      horizontalScroll(terminal, event);
     });
+  }
+
+  /** @param {Terminal} terminal */
+  terminalLineLinkSetup(terminal) {
+    const inlineNumberRegex = /^\s+(\d+)/;
 
     // setup line number links
     terminal.registerLinkMatcher(inlineNumberRegex, (event, match) => {
@@ -149,6 +165,16 @@ class TaskLessTerminal extends Component {
         hideAfter: 3,
       });
     }, {});
+  }
+
+  /** @param {Terminal} terminal */
+  terminalCancelTailSetup(terminal) {
+    const cancelTailOnce = once(() => {
+      sigint(terminal);
+    });
+
+    terminal.element.addEventListener('click', cancelTailOnce);
+    terminal.element.addEventListener('wheel', cancelTailOnce);
   }
 
   render() {
@@ -168,7 +194,8 @@ TaskLessTerminal.propTypes = {
   path: PropTypes.string.isRequired,
   offset: PropTypes.number,
 
-  onClose: PropTypes.func
+  onClose: PropTypes.func,
+  markNotFound: PropTypes.func.isRequired,
 };
 
 TaskLessTerminal.defaultProps = {
