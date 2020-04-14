@@ -112,9 +112,11 @@ class TaskLessTerminal extends Component {
       options.validationCallback = (uri, callback) => {
         const re = promptRegex.exec(uri);
         const end = re[1];
+        const bytePercent = re[3];
         const byteOffset = re[4];
 
-        if (end && byteOffset === '0') {
+        // need to check both, otherwise tailing logs shorter than the terminal will incorrectly redirect
+        if (end && bytePercent === '?' && byteOffset === '0') {
           this.props.markNotFound(this.props.taskId);
         } else {
           callback(true);
