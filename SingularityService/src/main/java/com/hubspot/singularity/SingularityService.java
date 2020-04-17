@@ -22,6 +22,7 @@ import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 
 import io.dropwizard.Application;

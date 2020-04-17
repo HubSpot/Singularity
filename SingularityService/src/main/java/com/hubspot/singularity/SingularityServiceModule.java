@@ -1,7 +1,9 @@
 package com.hubspot.singularity;
 
+import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
@@ -10,6 +12,7 @@ import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
+import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
@@ -22,6 +25,16 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
 
 public class SingularityServiceModule extends DropwizardAwareModule<SingularityConfiguration> {
 
+  private final Function<SingularityConfiguration, Module> dbModuleProvider;
+
+  public SingularityServiceModule() {
+    this.dbModuleProvider = SingularityDbModule::new;
+  }
+
+  public SingularityServiceModule(Function<SingularityConfiguration, Module> dbModuleProvider) {
+    this.dbModuleProvider = dbModuleProvider;
+  }
+
   @Override
   public void configure(Binder binder) {
     binder.install(new SingularityMainModule(getConfiguration()));
@@ -29,7 +42,8 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularitySchedulerModule());
     binder.install(new SingularityResourceModule(getConfiguration().getUiConfiguration()));
     binder.install(new SingularityTranscoderModule());
-    binder.install(new SingularityHistoryModule(getConfiguration()));
+    binder.install(new SingularityHistoryModule());
+    binder.install(dbModuleProvider.apply(getConfiguration()));
     binder.install(new SingularityMesosModule());
     binder.install(new SingularityZkMigrationsModule());
     binder.install(new SingularityMesosClientModule());
