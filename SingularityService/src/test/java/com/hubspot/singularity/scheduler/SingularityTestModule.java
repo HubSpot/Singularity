@@ -205,7 +205,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityDataModule(configuration));
     mainBinder.install(new SingularitySchedulerModule());
     mainBinder.install(new SingularityTranscoderModule());
-    mainBinder.install(new SingularityHistoryModule(configuration));
+    mainBinder.install(new SingularityHistoryModule());
     mainBinder.install(new SingularityZkMigrationsModule());
 
     mainBinder.install(new SingularityEventModule(configuration.getWebhookQueueConfiguration()));
