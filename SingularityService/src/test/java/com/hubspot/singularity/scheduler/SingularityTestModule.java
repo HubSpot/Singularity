@@ -48,6 +48,7 @@ import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
+import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
@@ -206,6 +207,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularitySchedulerModule());
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule());
+    mainBinder.install(new SingularityDbModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
 
     mainBinder.install(new SingularityEventModule(configuration.getWebhookQueueConfiguration()));
