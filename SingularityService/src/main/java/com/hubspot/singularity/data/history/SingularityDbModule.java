@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.ColumnMapper;
