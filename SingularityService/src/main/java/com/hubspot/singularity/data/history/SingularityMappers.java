@@ -266,6 +266,6 @@ public class SingularityMappers {
 
   // In Postgres "user" is a reserved word - hence we cannot use it.
   static String getUserColumn(SingularityConfiguration singularityConfiguration) {
-     return  SingularityHistoryModule.isPostgres(singularityConfiguration.getDatabaseConfiguration()) ? "f_user" : "user";
+     return  SingularityDbModule.isPostgres(singularityConfiguration.getDatabaseConfiguration()) ? "f_user" : "user";
   }
 }
