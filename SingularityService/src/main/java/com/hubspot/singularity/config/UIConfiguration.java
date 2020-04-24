@@ -115,6 +115,9 @@ public class UIConfiguration {
   @JsonProperty
   private Map<String, String> navTitleLinks = Collections.emptyMap();
 
+  @JsonProperty
+  private Optional<String> lessTerminalPath = Optional.empty();
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -305,5 +308,13 @@ public class UIConfiguration {
 
   public void setNavTitleLinks(Map<String, String> navTitleLinks) {
     this.navTitleLinks = navTitleLinks;
+  }
+
+  public Optional<String> getLessTerminalPath() {
+    return lessTerminalPath;
+  }
+
+  public void setLessTerminalPath(Optional<String> lessTerminalPath) {
+    this.lessTerminalPath = lessTerminalPath;
   }
 }

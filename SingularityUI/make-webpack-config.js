@@ -142,11 +142,13 @@ module.exports = function(options) {
       root: [
         path.resolve('./app'),
         path.resolve('node_modules/bootstrap-sass/assets/fonts/bootstrap'),
+        path.resolve('node_modules/xterm/css/xterm.css')
       ],
       extensions: ['', '.js', '.es6', '.jsx', '.scss', '.styl', '.css'],
       alias: {
         'bootstrap': 'bootstrap/dist/js/bootstrap.js',
         'messenger$': 'messenger/build/js/messenger.js',
+        'xterm.css': 'xterm/css/xterm.css'
       },
     },
 

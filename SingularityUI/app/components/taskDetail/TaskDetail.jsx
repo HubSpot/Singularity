@@ -218,6 +218,7 @@ class TaskDetail extends Component {
       <Section title="Files">
         <TaskFileBrowser
           taskId={this.props.taskId}
+          host={files.slaveHostname}
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {

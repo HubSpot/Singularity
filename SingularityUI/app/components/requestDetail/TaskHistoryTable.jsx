@@ -181,7 +181,7 @@ class TaskHistoryTable extends Component {
             cellData={(task) => (
               <span>
                 <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
-                  <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                  <Link to={Utils.tailerPath(task.taskId.id, config.finishedTaskLogPath)}>
                     <Glyphicon glyph="file" />
                   </Link>
                 </OverlayTrigger>

@@ -81,7 +81,24 @@ const Utils = {
   },
 
   tailerPath(taskId, logpath) {
-    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
+    return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`;
+  },
+
+  requestTailerPath(requestId, logpath) {
+    return `request/${requestId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`
+  },
+
+  getPreferredTailer() {
+    const saved = window.localStorage.getItem('logTailer');
+    return saved || 'tail';
+  },
+
+  setPreferredTailer(tailer) {
+    window.localStorage.setItem('logTailer', tailer);
+  },
+
+  isLessEnabled() {
+    return Boolean(window.config.lessTerminalPath);
   },
 
   substituteTaskId(value, taskId) {
@@ -531,17 +548,21 @@ const Utils = {
     return array.join('&');
   },
 
-  getAuthTokenHeader() {
+  getAuthToken() {
     if (!config.authCookieName) {
       return null;
     }
+
     const encodedKey = encodeURIComponent(config.authCookieName).replace(/[\-\.\+\*]/g, '\\$&');
     const authCookie = decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodedKey}\\s*\\=\\s*([^;]*).*$)|^.*$`), '$1')) || null;
     if (!authCookie) {
       return '';
     }
-    const authToken = JSON.parse(authCookie)[config.authTokenKey];
-    return `Bearer ${ authToken }`;
+    return JSON.parse(authCookie)[config.authTokenKey];
+  },
+
+  getAuthTokenHeader() {
+    return `Bearer ${ this.getAuthToken() }`;
   },
 
   template(template, data) {

@@ -95,7 +95,7 @@ function TaskFileBrowser (props) {
           cellData={(file) => {
             const icon = <Glyphicon glyph={file.isDirectory ? 'folder-open' : 'file'} />;
             if (file.isTailable) {
-              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
+              return <Link to={Utils.tailerPath(props.taskId, file.uiPath)}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
             }
             if (!file.isTailable && !file.isDirectory) {
               return <span>{icon}<span className="file-name">{file.name.trim()}</span></span>;
@@ -143,10 +143,20 @@ function TaskFileBrowser (props) {
                   <Glyphicon glyph="open-file" />
                 </a>
               </OverlayTrigger>
-            )
+            );
+
+            const less = !file.isDirectory && window.config.lessTerminalPath && (
+              <OverlayTrigger placement="left" overlay={<ToolTip id={`lessFile${file.name}`}>Less {file.name}</ToolTip>}>
+                <Link to={`task/${props.taskId}/less/${file.uiPath}?${file.size >= 2**20 * 10 ? 'command=-n' : ''}`}>
+                  <Glyphicon glyph="film" />
+                </Link>
+              </OverlayTrigger>
+            );
+
             return (
               <div>
                 {open}
+                {less}
                 {download}
               </div>
             );

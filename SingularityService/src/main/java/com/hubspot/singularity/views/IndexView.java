@@ -71,6 +71,7 @@ public class IndexView extends View {
   private final String authTokenKey;
   private final String quickLinks;
   private final String navTitleLinks;
+  private final String lessTerminalPath;
 
   private final String appJsPath;
   private final String appCssPath;
@@ -154,6 +155,8 @@ public class IndexView extends View {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
+
+    this.lessTerminalPath = uiConfiguration.getLessTerminalPath().orElse("");
 
     try {
       Map<String, String> revManifest = mapper.readValue(
@@ -312,6 +315,10 @@ public class IndexView extends View {
     return navTitleLinks;
   }
 
+  public String getLessTerminalPath() {
+    return lessTerminalPath;
+  }
+
   public String getAppJsPath() {
     return appJsPath;
   }
@@ -363,6 +370,7 @@ public class IndexView extends View {
         ", authTokenKey='" + authTokenKey + '\'' +
         ", quickLinks='" + quickLinks + '\'' +
         ", navTitleLinks='" + navTitleLinks + '\'' +
+        ", lessTerminalPath='" + lessTerminalPath + '\'' +
         ", appJsPath='" + appJsPath + '\'' +
         ", appCssPath='" + appCssPath + '\'' +
         ", vendorJsPath='" + vendorJsPath + '\'' +

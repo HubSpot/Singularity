@@ -1,6 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRedirect, IndexRoute } from 'react-router';
+import { Router, Route, IndexRedirect, IndexRoute, Redirect } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 
 import Application from './components/common/Application';
@@ -49,6 +49,9 @@ const routes = (
       <Route path=":requestId/deploy/:deployId" component={DeployDetail} title={(params) => `Deploy ${params.deployId}`} />
       <Route path=":requestId/old-tail/**" component={AggregateTail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":requestId/tail/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      {window.config.lessTerminalPath
+        ? <Route path=":requestId/less/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+        : <Redirect from=":requestId/less/**" to=":requestId/tail/**" />}
       <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
       <IndexRoute component={NotFound} title="Not Found" />
     </Route>
@@ -57,6 +60,9 @@ const routes = (
       <Route path=":taskId(/files**)" component={TaskDetail} title={(params) => params.taskId} />
       <Route path=":taskId/old-tail/**" component={Tail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":taskId/tail/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      {window.config.lessTerminalPath
+        ? <Route path=":taskId/less/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+        : <Redirect from=":taskId/less/**" to=":taskId/tail/**" />}
       <IndexRoute component={NotFound} title="Not Found" />
     </Route>
     <Route path="tail/**" component={CustomLogTailerContainer} title="Tailer" />
