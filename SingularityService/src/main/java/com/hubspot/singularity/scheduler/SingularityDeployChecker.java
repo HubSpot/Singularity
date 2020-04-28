@@ -181,7 +181,7 @@ public class SingularityDeployChecker {
     }
 
     SingularityDeployResult deployResult =
-      getDeployResult(request, requestWithState.getState(), cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
+      getDeployResultSafe(request, requestWithState.getState(), cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
 
     LOG.info("Deploy {} had result {} after {}", pendingDeployMarker, deployResult, JavaUtils.durationFromMillis(System.currentTimeMillis() - pendingDeployMarker.getTimestamp()));
 
@@ -630,6 +630,17 @@ public class SingularityDeployChecker {
     return new LoadBalancerRequestId(
       String.format("%s-%s-%s", pendingDeploy.getDeployMarker().getRequestId(), pendingDeploy.getDeployMarker().getDeployId(), pendingDeploy.getDeployProgress().get().getTargetActiveInstances()),
       LoadBalancerRequestType.DEPLOY, Optional.<Integer>empty());
+  }
+
+  private SingularityDeployResult getDeployResultSafe(final SingularityRequest request, final RequestState requestState, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,
+                                                      final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks,
+                                                      final Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
+    try {
+      return getDeployResult(request, requestState, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployActiveTasks, otherActiveTasks, inactiveDeployMatchingTasks);
+    } catch (Exception e) {
+      LOG.error("Uncaught exception processing deploy {} - {}", pendingDeploy.getDeployMarker().getRequestId(), pendingDeploy.getDeployMarker().getDeployId(), e);
+      return new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, String.format("Uncaught exception: %s", e.getMessage()));
+    }
   }
 
   private SingularityDeployResult getDeployResult(final SingularityRequest request, final RequestState requestState, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,
