@@ -1,24 +1,38 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Describes a task that is waiting to be launched")
 public class SingularityPendingRequest {
 
   @Schema
   public enum PendingType {
-    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED, DEPLOY_FINISHED, TASK_RECOVERED;
+    IMMEDIATE,
+    ONEOFF,
+    BOUNCE,
+    NEW_DEPLOY,
+    NEXT_DEPLOY_STEP,
+    UNPAUSED,
+    RETRY,
+    UPDATED_REQUEST,
+    DECOMISSIONED_SLAVE_OR_RACK,
+    TASK_DONE,
+    STARTUP,
+    CANCEL_BOUNCE,
+    TASK_BOUNCE,
+    DEPLOY_CANCELLED,
+    DEPLOY_FAILED,
+    DEPLOY_FINISHED,
+    TASK_RECOVERED
   }
 
   private final String requestId;
@@ -40,34 +54,98 @@ public class SingularityPendingRequest {
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
-  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>>empty(), Optional.<String>empty(), skipHealthchecks, message, Optional.<String>empty(), Optional.<Resources>empty(), Collections.emptyList(), Optional.empty(), null, null, null, null, Optional.<Long>empty());
+  public SingularityPendingRequest(
+    String requestId,
+    String deployId,
+    long timestamp,
+    Optional<String> user,
+    PendingType pendingType,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> message
+  ) {
+    this(
+      requestId,
+      deployId,
+      timestamp,
+      user,
+      pendingType,
+      Optional.<List<String>>empty(),
+      Optional.<String>empty(),
+      skipHealthchecks,
+      message,
+      Optional.<String>empty(),
+      Optional.<Resources>empty(),
+      Collections.emptyList(),
+      Optional.empty(),
+      null,
+      null,
+      null,
+      null,
+      Optional.<Long>empty()
+    );
   }
 
-  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
-    Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>empty(), Collections.emptyList(), Optional.empty(), null, null, null, null, Optional.<Long>empty());
+  public SingularityPendingRequest(
+    String requestId,
+    String deployId,
+    long timestamp,
+    Optional<String> user,
+    PendingType pendingType,
+    Optional<List<String>> cmdLineArgsList,
+    Optional<String> runId,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> message,
+    Optional<String> actionId
+  ) {
+    this(
+      requestId,
+      deployId,
+      timestamp,
+      user,
+      pendingType,
+      cmdLineArgsList,
+      runId,
+      skipHealthchecks,
+      message,
+      actionId,
+      Optional.<Resources>empty(),
+      Collections.emptyList(),
+      Optional.empty(),
+      null,
+      null,
+      null,
+      null,
+      Optional.<Long>empty()
+    );
   }
 
   @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId,
-                                   @JsonProperty("deployId") String deployId,
-                                   @JsonProperty("timestamp") long timestamp,
-                                   @JsonProperty("user") Optional<String> user,
-                                   @JsonProperty("pendingType") PendingType pendingType,
-                                   @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-                                   @JsonProperty("runId") Optional<String> runId,
-                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                   @JsonProperty("message") Optional<String> message,
-                                   @JsonProperty("actionId") Optional<String> actionId,
-                                   @JsonProperty("resources") Optional<Resources> resources,
-                                   @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-                                   @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
-                                   @JsonProperty("envOverrides") Map<String, String> envOverrides,
-                                   @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
-                                   @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
-                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-                                   @JsonProperty("runAt") Optional<Long> runAt) {
+  public SingularityPendingRequest(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") String deployId,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("pendingType") PendingType pendingType,
+    @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+    @JsonProperty("runId") Optional<String> runId,
+    @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("actionId") Optional<String> actionId,
+    @JsonProperty("resources") Optional<Resources> resources,
+    @JsonProperty(
+      "s3UploaderAdditionalFiles"
+    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
+    @JsonProperty("envOverrides") Map<String, String> envOverrides,
+    @JsonProperty(
+      "requiredSlaveAttributeOverrides"
+    ) Map<String, String> requiredSlaveAttributeOverrides,
+    @JsonProperty(
+      "allowedSlaveAttributeOverrides"
+    ) Map<String, String> allowedSlaveAttributeOverrides,
+    @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+    @JsonProperty("runAt") Optional<Long> runAt
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -183,32 +261,53 @@ public class SingularityPendingRequest {
     return extraArtifacts;
   }
 
-
   public Optional<Long> getRunAt() {
     return runAt;
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingRequest{" +
-        "requestId='" + requestId + '\'' +
-        ", deployId='" + deployId + '\'' +
-        ", timestamp=" + timestamp +
-        ", pendingType=" + pendingType +
-        ", user=" + user +
-        ", cmdLineArgsList=" + cmdLineArgsList +
-        ", runId=" + runId +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", message=" + message +
-        ", actionId=" + actionId +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts=" + extraArtifacts +
-        ", runAt=" + runAt +
-        '}';
+    return (
+      "SingularityPendingRequest{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", deployId='" +
+      deployId +
+      '\'' +
+      ", timestamp=" +
+      timestamp +
+      ", pendingType=" +
+      pendingType +
+      ", user=" +
+      user +
+      ", cmdLineArgsList=" +
+      cmdLineArgsList +
+      ", runId=" +
+      runId +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", message=" +
+      message +
+      ", actionId=" +
+      actionId +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runAsUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts=" +
+      extraArtifacts +
+      ", runAt=" +
+      runAt +
+      '}'
+    );
   }
 }

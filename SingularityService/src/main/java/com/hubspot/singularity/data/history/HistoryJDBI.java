@@ -1,11 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import org.jdbi.v3.sqlobject.SqlObject;
-
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -14,15 +8,43 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import org.jdbi.v3.sqlobject.SqlObject;
 
 public interface HistoryJDBI extends SqlObject {
+  void insertRequestHistory(
+    String requestId,
+    SingularityRequest request,
+    Date createdAt,
+    String requestState,
+    String user,
+    String message
+  );
 
-  void insertRequestHistory(String requestId, SingularityRequest request, Date createdAt, String requestState, String user, String message);
+  void insertDeployHistory(
+    String requestId,
+    String deployId,
+    Date createdAt,
+    String user,
+    String message,
+    Date deployStateAt,
+    String deployState,
+    SingularityDeployHistory deployHistory
+  );
 
-  void insertDeployHistory(String requestId, String deployId, Date createdAt, String user, String message, Date deployStateAt, String deployState, SingularityDeployHistory deployHistory);
-
-  void insertTaskHistory(String requestId, String taskId, SingularityTaskHistory taskHistory, Date updatedAt,
-                         String lastTaskStatus, String runId, String deployId, String host, Date startedAt);
+  void insertTaskHistory(
+    String requestId,
+    String taskId,
+    SingularityTaskHistory taskHistory,
+    Date updatedAt,
+    String lastTaskStatus,
+    String runId,
+    String deployId,
+    String host,
+    Date startedAt
+  );
 
   SingularityTaskHistory getTaskHistoryForTask(String taskId);
 
@@ -30,23 +52,44 @@ public interface HistoryJDBI extends SqlObject {
 
   SingularityDeployHistory getDeployHistoryForDeploy(String requestId, String deployId);
 
-  List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
+  List<SingularityDeployHistory> getDeployHistoryForRequest(
+    String requestId,
+    Integer limitStart,
+    Integer limitCount
+  );
 
   int getDeployHistoryForRequestCount(String requestId);
 
-  List<SingularityRequestHistory> getRequestHistory(String requestId, String orderDirection, Integer limitStart, Integer limitCount);
+  List<SingularityRequestHistory> getRequestHistory(
+    String requestId,
+    String orderDirection,
+    Integer limitStart,
+    Integer limitCount
+  );
 
   int getRequestHistoryCount(String requestId);
 
-  List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
+  List<String> getRequestHistoryLike(
+    String requestIdLike,
+    Integer limitStart,
+    Integer limitCount
+  );
 
   List<SingularityRequestIdCount> getRequestIdCounts(Date updatedAt);
 
   Date getMinUpdatedAtWithLimitForRequest(String requestId, Integer limit);
 
-  void updateTaskHistoryNullBytesForRequestBefore(String requestId, Date updatedAtBefore, Integer purgeLimitPerQuery);
+  void updateTaskHistoryNullBytesForRequestBefore(
+    String requestId,
+    Date updatedAtBefore,
+    Integer purgeLimitPerQuery
+  );
 
-  void deleteTaskHistoryForRequestBefore(String requestId, Date updatedAtBefore, Integer purgeLimitPerQuery);
+  void deleteTaskHistoryForRequestBefore(
+    String requestId,
+    Date updatedAtBefore,
+    Integer purgeLimitPerQuery
+  );
 
   List<String> getRequestIdsInTaskHistory();
 
@@ -54,13 +97,32 @@ public interface HistoryJDBI extends SqlObject {
 
   void close();
 
-  List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
-                                                  Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
-                                                  Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount);
+  List<SingularityTaskIdHistory> getTaskIdHistory(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter,
+    Optional<OrderDirection> orderDirection,
+    Optional<Integer> limitStart,
+    Integer limitCount
+  );
 
-  int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
-                            Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
-                            Optional<Long> updatedAfter);
+  int getTaskIdHistoryCount(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  );
 
   @Deprecated
   byte[] getTaskHistoryBytesForTask(String taskId);
@@ -81,7 +143,11 @@ public interface HistoryJDBI extends SqlObject {
 
   List<byte[]> getDeploysWithBytes(String requestId, int limit);
 
-  void setDeployJson(String requestId, String deployId, SingularityDeployHistory deployHistory);
+  void setDeployJson(
+    String requestId,
+    String deployId,
+    SingularityDeployHistory deployHistory
+  );
 
   List<String> getRequestIdsWithHistory();
 

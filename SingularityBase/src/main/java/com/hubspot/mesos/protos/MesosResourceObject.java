@@ -1,15 +1,14 @@
 package com.hubspot.mesos.protos;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MesosResourceObject {
   private final Optional<String> name;
@@ -17,9 +16,10 @@ public class MesosResourceObject {
   private final Map<String, Object> allOtherFields;
 
   @JsonCreator
-
-  public MesosResourceObject(@JsonProperty("name") Optional<String> name,
-                             @JsonProperty("ranges") Optional<MesosRangesObject> ranges) {
+  public MesosResourceObject(
+    @JsonProperty("name") Optional<String> name,
+    @JsonProperty("ranges") Optional<MesosRangesObject> ranges
+  ) {
     this.name = name;
     this.ranges = ranges;
     this.allOtherFields = new HashMap<>();
@@ -61,9 +61,11 @@ public class MesosResourceObject {
     }
     if (obj instanceof MesosResourceObject) {
       final MesosResourceObject that = (MesosResourceObject) obj;
-      return Objects.equals(this.name, that.name) &&
-          Objects.equals(this.ranges, that.ranges) &&
-          Objects.equals(this.allOtherFields, that.allOtherFields);
+      return (
+        Objects.equals(this.name, that.name) &&
+        Objects.equals(this.ranges, that.ranges) &&
+        Objects.equals(this.allOtherFields, that.allOtherFields)
+      );
     }
     return false;
   }
@@ -75,10 +77,15 @@ public class MesosResourceObject {
 
   @Override
   public String toString() {
-    return "MesosResourceObject{" +
-        "name=" + name +
-        ", ranges=" + ranges +
-        ", allOtherFields=" + allOtherFields +
-        '}';
+    return (
+      "MesosResourceObject{" +
+      "name=" +
+      name +
+      ", ranges=" +
+      ranges +
+      ", allOtherFields=" +
+      allOtherFields +
+      '}'
+    );
   }
 }

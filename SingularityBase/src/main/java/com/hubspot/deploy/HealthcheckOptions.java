@@ -1,18 +1,18 @@
 package com.hubspot.deploy;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
-@Schema(description = "Describes health check behavior for tasks associated with a deploy")
+@Schema(
+  description = "Describes health check behavior for tasks associated with a deploy"
+)
 public class HealthcheckOptions {
   private final Optional<String> uri;
   private final Optional<Integer> portIndex;
@@ -29,19 +29,21 @@ public class HealthcheckOptions {
   private final Optional<String> healthcheckResultFilePath;
 
   @JsonCreator
-  public HealthcheckOptions(@JsonProperty("uri") Optional<String> uri,
-                            @JsonProperty("portIndex") Optional<Integer> portIndex,
-                            @JsonProperty("portNumber") Optional<Long> portNumber,
-                            @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
-                            @JsonProperty("method") Optional<HealthcheckMethod> method,
-                            @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds,
-                            @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds,
-                            @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
-                            @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds,
-                            @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds,
-                            @JsonProperty("maxRetries") Optional<Integer> maxRetries,
-                            @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
-                            @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath) {
+  public HealthcheckOptions(
+    @JsonProperty("uri") Optional<String> uri,
+    @JsonProperty("portIndex") Optional<Integer> portIndex,
+    @JsonProperty("portNumber") Optional<Long> portNumber,
+    @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
+    @JsonProperty("method") Optional<HealthcheckMethod> method,
+    @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds,
+    @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds,
+    @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
+    @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds,
+    @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds,
+    @JsonProperty("maxRetries") Optional<Integer> maxRetries,
+    @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes,
+    @JsonProperty("healthcheckResultFilePath") Optional<String> healthcheckResultFilePath
+  ) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -57,19 +59,21 @@ public class HealthcheckOptions {
     this.healthcheckResultFilePath = healthcheckResultFilePath;
   }
 
-  public HealthcheckOptions(String uri,
-                            Optional<Integer> portIndex,
-                            Optional<Long> portNumber,
-                            Optional<HealthcheckProtocol> protocol,
-                            Optional<HealthcheckMethod> method,
-                            Optional<Integer> startupTimeoutSeconds,
-                            Optional<Integer> startupDelaySeconds,
-                            Optional<Integer> startupIntervalSeconds,
-                            Optional<Integer> intervalSeconds,
-                            Optional<Integer> responseTimeoutSeconds,
-                            Optional<Integer> maxRetries,
-                            Optional<List<Integer>> failureStatusCodes,
-                            Optional<String> healthcheckResultFilePath) {
+  public HealthcheckOptions(
+    String uri,
+    Optional<Integer> portIndex,
+    Optional<Long> portNumber,
+    Optional<HealthcheckProtocol> protocol,
+    Optional<HealthcheckMethod> method,
+    Optional<Integer> startupTimeoutSeconds,
+    Optional<Integer> startupDelaySeconds,
+    Optional<Integer> startupIntervalSeconds,
+    Optional<Integer> intervalSeconds,
+    Optional<Integer> responseTimeoutSeconds,
+    Optional<Integer> maxRetries,
+    Optional<List<Integer>> failureStatusCodes,
+    Optional<String> healthcheckResultFilePath
+  ) {
     this.uri = Optional.of(uri);
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -107,27 +111,35 @@ public class HealthcheckOptions {
     return uri;
   }
 
-  @Schema(description = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port); defaults to first port")
+  @Schema(
+    description = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port); defaults to first port"
+  )
   public Optional<Integer> getPortIndex() {
     return portIndex;
   }
 
-  @Schema(description = "Perform healthcheck on this port (portIndex cannot also be used when using this setting)")
+  @Schema(
+    description = "Perform healthcheck on this port (portIndex cannot also be used when using this setting)"
+  )
   public Optional<Long> getPortNumber() {
     return portNumber;
   }
 
-  @Schema(description = "Healthcheck protocol - HTTP or HTTPS for HTTP/1, HTTP2 or HTTPS2 for HTTP/2")
+  @Schema(
+    description = "Healthcheck protocol - HTTP or HTTPS for HTTP/1, HTTP2 or HTTPS2 for HTTP/2"
+  )
   public Optional<HealthcheckProtocol> getProtocol() {
     return protocol;
   }
 
-  @Schema(description ="Healthcheck HTTP method - GET or POST; GET by default")
+  @Schema(description = "Healthcheck HTTP method - GET or POST; GET by default")
   public Optional<HealthcheckMethod> getMethod() {
     return method;
   }
 
-  @Schema(description = "Consider the task unhealthy/failed if the app has not started responding to healthchecks in this amount of time")
+  @Schema(
+    description = "Consider the task unhealthy/failed if the app has not started responding to healthchecks in this amount of time"
+  )
   public Optional<Integer> getStartupTimeoutSeconds() {
     return startupTimeoutSeconds;
   }
@@ -137,12 +149,16 @@ public class HealthcheckOptions {
     return startupDelaySeconds;
   }
 
-  @Schema(description = "Time to wait after a failed healthcheck to try again in seconds.")
+  @Schema(
+    description = "Time to wait after a failed healthcheck to try again in seconds."
+  )
   public Optional<Integer> getStartupIntervalSeconds() {
     return startupIntervalSeconds;
   }
 
-  @Schema(description = "Time to wait after a valid but failed healthcheck response to try again in seconds.")
+  @Schema(
+    description = "Time to wait after a valid but failed healthcheck response to try again in seconds."
+  )
   public Optional<Integer> getIntervalSeconds() {
     return intervalSeconds;
   }
@@ -152,12 +168,16 @@ public class HealthcheckOptions {
     return responseTimeoutSeconds;
   }
 
-  @Schema(description = "Maximum number of times to retry an individual healthcheck before failing the deploy.")
+  @Schema(
+    description = "Maximum number of times to retry an individual healthcheck before failing the deploy."
+  )
   public Optional<Integer> getMaxRetries() {
     return maxRetries;
   }
 
-  @Schema(description = "Fail the healthcheck with no further retries if one of these status codes is returned")
+  @Schema(
+    description = "Fail the healthcheck with no further retries if one of these status codes is returned"
+  )
   public Optional<List<Integer>> getFailureStatusCodes() {
     return failureStatusCodes;
   }
@@ -176,42 +196,74 @@ public class HealthcheckOptions {
       return false;
     }
     HealthcheckOptions that = (HealthcheckOptions) o;
-    return Objects.equals(uri, that.uri) &&
-        Objects.equals(portIndex, that.portIndex) &&
-        Objects.equals(portNumber, that.portNumber) &&
-        Objects.equals(protocol, that.protocol) &&
-        Objects.equals(method, that.method) &&
-        Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
-        Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
-        Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
-        Objects.equals(intervalSeconds, that.intervalSeconds) &&
-        Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
-        Objects.equals(maxRetries, that.maxRetries) &&
-        Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
-        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
+    return (
+      Objects.equals(uri, that.uri) &&
+      Objects.equals(portIndex, that.portIndex) &&
+      Objects.equals(portNumber, that.portNumber) &&
+      Objects.equals(protocol, that.protocol) &&
+      Objects.equals(method, that.method) &&
+      Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
+      Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
+      Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
+      Objects.equals(intervalSeconds, that.intervalSeconds) &&
+      Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
+      Objects.equals(maxRetries, that.maxRetries) &&
+      Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
+      Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
+    return Objects.hash(
+      uri,
+      portIndex,
+      portNumber,
+      protocol,
+      method,
+      startupTimeoutSeconds,
+      startupDelaySeconds,
+      startupIntervalSeconds,
+      intervalSeconds,
+      responseTimeoutSeconds,
+      maxRetries,
+      failureStatusCodes,
+      healthcheckResultFilePath
+    );
   }
 
   @Override
   public String toString() {
-    return "HealthcheckOptions{" +
-        "uri='" + uri + '\'' +
-        ", portIndex=" + portIndex +
-        ", portNumber=" + portNumber +
-        ", protocol=" + protocol +
-        ", method=" + method +
-        ", startupTimeoutSeconds=" + startupTimeoutSeconds +
-        ", startupDelaySeconds=" + startupDelaySeconds +
-        ", startupIntervalSeconds=" + startupIntervalSeconds +
-        ", intervalSeconds=" + intervalSeconds +
-        ", responseTimeoutSeconds=" + responseTimeoutSeconds +
-        ", maxRetries=" + maxRetries +
-        ", failureStatusCodes=" + failureStatusCodes +
-        ", healthcheckResultFilePath=" + healthcheckResultFilePath +
-        '}';
+    return (
+      "HealthcheckOptions{" +
+      "uri='" +
+      uri +
+      '\'' +
+      ", portIndex=" +
+      portIndex +
+      ", portNumber=" +
+      portNumber +
+      ", protocol=" +
+      protocol +
+      ", method=" +
+      method +
+      ", startupTimeoutSeconds=" +
+      startupTimeoutSeconds +
+      ", startupDelaySeconds=" +
+      startupDelaySeconds +
+      ", startupIntervalSeconds=" +
+      startupIntervalSeconds +
+      ", intervalSeconds=" +
+      intervalSeconds +
+      ", responseTimeoutSeconds=" +
+      responseTimeoutSeconds +
+      ", maxRetries=" +
+      maxRetries +
+      ", failureStatusCodes=" +
+      failureStatusCodes +
+      ", healthcheckResultFilePath=" +
+      healthcheckResultFilePath +
+      '}'
+    );
   }
 }

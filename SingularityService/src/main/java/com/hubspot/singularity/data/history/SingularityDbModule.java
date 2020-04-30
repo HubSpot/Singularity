@@ -2,15 +2,6 @@ package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Optional;
-import java.util.Set;
-
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.mapper.ColumnMapper;
-import org.jdbi.v3.core.mapper.RowMapper;
-import org.jdbi.v3.jackson2.Jackson2Config;
-import org.jdbi.v3.jackson2.Jackson2Plugin;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -26,13 +17,18 @@ import com.hubspot.singularity.data.usage.PostgresTaskUsageJDBI;
 import com.hubspot.singularity.data.usage.TaskUsageJDBI;
 import com.hubspot.singularity.data.usage.TaskUsageManager;
 import com.hubspot.singularity.data.usage.ZkTaskUsageManager;
-
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jdbi3.JdbiFactory;
 import io.dropwizard.setup.Environment;
+import java.util.Optional;
+import java.util.Set;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.jackson2.Jackson2Config;
+import org.jdbi.v3.jackson2.Jackson2Plugin;
 
 public class SingularityDbModule extends AbstractModule {
-
   private final Optional<DataSourceFactory> configuration;
 
   public SingularityDbModule(SingularityConfiguration configuration) {
@@ -56,14 +52,24 @@ public class SingularityDbModule extends AbstractModule {
 
   private void bindSpecificDatabase() {
     if (isPostgres(configuration)) {
-      bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
-      bind(TaskUsageJDBI.class).toProvider(PostgresTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(HistoryJDBI.class)
+        .toProvider(PostgresHistoryJDBIProvider.class)
+        .in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class)
+        .toProvider(PostgresTaskUsageJDBIProvider.class)
+        .in(Scopes.SINGLETON);
       // Currently many unit tests use h2
     } else if (isMySQL(configuration) || isH2(configuration)) {
-      bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
-      bind(TaskUsageJDBI.class).toProvider(MySQLTaskUsageJDBIProvider.class).in(Scopes.SINGLETON);
+      bind(HistoryJDBI.class)
+        .toProvider(MySQLHistoryJDBIProvider.class)
+        .in(Scopes.SINGLETON);
+      bind(TaskUsageJDBI.class)
+        .toProvider(MySQLTaskUsageJDBIProvider.class)
+        .in(Scopes.SINGLETON);
     } else {
-      throw new IllegalStateException("Unknown driver class present " + configuration.get().getDriverClass());
+      throw new IllegalStateException(
+        "Unknown driver class present " + configuration.get().getDriverClass()
+      );
     }
   }
 
@@ -77,13 +83,24 @@ public class SingularityDbModule extends AbstractModule {
     private ObjectMapper objectMapper;
 
     @Inject
-    DBIProvider(final Environment environment, final SingularityConfiguration singularityConfiguration) throws ClassNotFoundException {
+    DBIProvider(
+      final Environment environment,
+      final SingularityConfiguration singularityConfiguration
+    )
+      throws ClassNotFoundException {
       this.environment = environment;
-      this.dataSourceFactory = checkNotNull(singularityConfiguration, "singularityConfiguration is null").getDatabaseConfiguration().get();
+      this.dataSourceFactory =
+        checkNotNull(singularityConfiguration, "singularityConfiguration is null")
+          .getDatabaseConfiguration()
+          .get();
     }
 
     @Inject(optional = true)
-    void setMappers(Set<RowMapper<?>> rowMappers, Set<ColumnMapper<?>> columnMappers, @Singularity ObjectMapper objectMapper) {
+    void setMappers(
+      Set<RowMapper<?>> rowMappers,
+      Set<ColumnMapper<?>> columnMappers,
+      @Singularity ObjectMapper objectMapper
+    ) {
       checkNotNull(rowMappers, "resultSetMappers is null");
       this.rowMappers = ImmutableSet.copyOf(rowMappers);
       this.columnMappers = ImmutableSet.copyOf(columnMappers);
@@ -122,7 +139,6 @@ public class SingularityDbModule extends AbstractModule {
     public MySQLHistoryJDBI get() {
       return dbi.onDemand(MySQLHistoryJDBI.class);
     }
-
   }
 
   static class PostgresHistoryJDBIProvider implements Provider<HistoryJDBI> {
@@ -137,7 +153,6 @@ public class SingularityDbModule extends AbstractModule {
     public PostgresHistoryJDBI get() {
       return dbi.onDemand(PostgresHistoryJDBI.class);
     }
-
   }
 
   static class MySQLTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
@@ -152,7 +167,6 @@ public class SingularityDbModule extends AbstractModule {
     public MySQLTaskUsageJDBI get() {
       return dbi.onDemand(MySQLTaskUsageJDBI.class);
     }
-
   }
 
   static class PostgresTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
@@ -167,7 +181,6 @@ public class SingularityDbModule extends AbstractModule {
     public PostgresTaskUsageJDBI get() {
       return dbi.onDemand(PostgresTaskUsageJDBI.class);
     }
-
   }
 
   // Convenience methods for determining which database is configured
@@ -183,8 +196,14 @@ public class SingularityDbModule extends AbstractModule {
     return driverConfigured(dataSourceFactoryOptional, "org.postgresql.Driver");
   }
 
-  private static boolean driverConfigured(Optional<DataSourceFactory> dataSourceFactoryOptional, String jdbcDriverclass) {
-    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
-        jdbcDriverclass.equals(dataSourceFactoryOptional.get().getDriverClass());
+  private static boolean driverConfigured(
+    Optional<DataSourceFactory> dataSourceFactoryOptional,
+    String jdbcDriverclass
+  ) {
+    return (
+      dataSourceFactoryOptional != null &&
+      dataSourceFactoryOptional.isPresent() &&
+      jdbcDriverclass.equals(dataSourceFactoryOptional.get().getDriverClass())
+    );
   }
 }

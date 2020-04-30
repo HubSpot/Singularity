@@ -1,25 +1,22 @@
 package com.hubspot.singularity.data;
 
-import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTokenResponse;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Optional;
+import java.util.UUID;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthTokenManager extends CuratorManager {
   private static final Logger LOG = LoggerFactory.getLogger(AuthTokenManager.class);
@@ -30,20 +27,24 @@ public class AuthTokenManager extends CuratorManager {
   private final Transcoder<SingularityUser> userTranscoder;
 
   @Inject
-  public AuthTokenManager(CuratorFramework curator,
-                          SingularityConfiguration configuration,
-                          MetricRegistry metricRegistry,
-                          Transcoder<SingularityUser> userTranscoder) {
+  public AuthTokenManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    Transcoder<SingularityUser> userTranscoder
+  ) {
     super(curator, configuration, metricRegistry);
     this.userTranscoder = userTranscoder;
   }
 
-  public SingularityTokenResponse generateToken(SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  public SingularityTokenResponse generateToken(SingularityUser userData)
+    throws NoSuchAlgorithmException, InvalidKeySpecException {
     String newToken = UUID.randomUUID().toString();
     return saveToken(newToken, userData);
   }
 
-  public SingularityTokenResponse saveToken(String newToken, SingularityUser userData) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  public SingularityTokenResponse saveToken(String newToken, SingularityUser userData)
+    throws NoSuchAlgorithmException, InvalidKeySpecException {
     String hashed = generateTokenHash(newToken);
     writeToken(hashed, userData);
     return new SingularityTokenResponse(newToken, userData);
@@ -70,7 +71,10 @@ public class AuthTokenManager extends CuratorManager {
     for (String hashed : getChildren(TOKEN_ROOT)) {
       try {
         if (validateToken(token, hashed)) {
-          Optional<SingularityUser> maybeUser = getData(getTokenPath(hashed), userTranscoder);
+          Optional<SingularityUser> maybeUser = getData(
+            getTokenPath(hashed),
+            userTranscoder
+          );
           if (maybeUser.isPresent()) {
             return maybeUser.get();
           }
@@ -88,13 +92,19 @@ public class AuthTokenManager extends CuratorManager {
   }
 
   // Implementation of PBKDF2WithHmacSHA1
-  private static boolean validateToken(String originalToken, String storedToken) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  private static boolean validateToken(String originalToken, String storedToken)
+    throws NoSuchAlgorithmException, InvalidKeySpecException {
     String[] parts = storedToken.split(":");
     int iterations = Integer.parseInt(parts[0]);
     byte[] salt = fromHex(parts[1]);
     byte[] hash = fromHex(parts[2]);
 
-    PBEKeySpec spec = new PBEKeySpec(originalToken.toCharArray(), salt, iterations, hash.length * 8);
+    PBEKeySpec spec = new PBEKeySpec(
+      originalToken.toCharArray(),
+      salt,
+      iterations,
+      hash.length * 8
+    );
     SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
     byte[] testHash = skf.generateSecret(spec).getEncoded();
 
@@ -113,7 +123,8 @@ public class AuthTokenManager extends CuratorManager {
     return bytes;
   }
 
-  private static String generateTokenHash(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+  private static String generateTokenHash(String password)
+    throws NoSuchAlgorithmException, InvalidKeySpecException {
     int iterations = 1000;
     char[] chars = password.toCharArray();
     byte[] salt = getSalt();
@@ -141,5 +152,4 @@ public class AuthTokenManager extends CuratorManager {
       return hex;
     }
   }
-
 }

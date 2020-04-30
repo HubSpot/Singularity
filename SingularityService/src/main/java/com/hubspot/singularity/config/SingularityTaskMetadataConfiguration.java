@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class SingularityTaskMetadataConfiguration {
-
   private long waitToSendTaskCompletedMailBufferMillis = 0;
 
   private Optional<List<String>> allowedMetadataTypes = Optional.empty();
@@ -19,8 +18,11 @@ public class SingularityTaskMetadataConfiguration {
     return waitToSendTaskCompletedMailBufferMillis;
   }
 
-  public void setWaitToSendTaskCompletedMailBufferMillis(long waitToSendTaskCompletedMailBufferMillis) {
-    this.waitToSendTaskCompletedMailBufferMillis = waitToSendTaskCompletedMailBufferMillis;
+  public void setWaitToSendTaskCompletedMailBufferMillis(
+    long waitToSendTaskCompletedMailBufferMillis
+  ) {
+    this.waitToSendTaskCompletedMailBufferMillis =
+      waitToSendTaskCompletedMailBufferMillis;
   }
 
   public Optional<List<String>> getAllowedMetadataTypes() {
@@ -35,8 +37,11 @@ public class SingularityTaskMetadataConfiguration {
     return sendTaskCompletedMailOnceMetadataTypeIsAvailable;
   }
 
-  public void setSendTaskCompletedMailOnceMetadataTypeIsAvailable(Optional<String> sendTaskCompletedMailOnceMetadataTypeIsAvailable) {
-    this.sendTaskCompletedMailOnceMetadataTypeIsAvailable = sendTaskCompletedMailOnceMetadataTypeIsAvailable;
+  public void setSendTaskCompletedMailOnceMetadataTypeIsAvailable(
+    Optional<String> sendTaskCompletedMailOnceMetadataTypeIsAvailable
+  ) {
+    this.sendTaskCompletedMailOnceMetadataTypeIsAvailable =
+      sendTaskCompletedMailOnceMetadataTypeIsAvailable;
   }
 
   public long getMaxMetadataMessageLength() {

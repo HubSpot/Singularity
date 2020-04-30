@@ -1,11 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -13,9 +7,13 @@ import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class SingularityDeployBuilder {
-
   private String requestId;
 
   private String id;
@@ -50,31 +48,37 @@ public class SingularityDeployBuilder {
    */
   @Deprecated
   private Optional<String> healthcheckUri;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
   @Deprecated
   private Optional<Long> healthcheckIntervalSeconds;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
   @Deprecated
   private Optional<Long> healthcheckTimeoutSeconds;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
   @Deprecated
   private Optional<Integer> healthcheckPortIndex;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
   @Deprecated
   private Optional<HealthcheckProtocol> healthcheckProtocol;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
   @Deprecated
   private Optional<Integer> healthcheckMaxRetries;
+
   /**
    * @deprecated use {@link #healthcheck}
    */
@@ -160,10 +164,57 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
-      env, taskEnv, runImmediately, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user, s3UploaderAdditionalFiles);
+    return new SingularityDeploy(
+      requestId,
+      id,
+      command,
+      arguments,
+      containerInfo,
+      customExecutorCmd,
+      customExecutorId,
+      customExecutorSource,
+      customExecutorResources,
+      resources,
+      env,
+      taskEnv,
+      runImmediately,
+      uris,
+      metadata,
+      executorData,
+      version,
+      timestamp,
+      labels,
+      mesosLabels,
+      taskLabels,
+      mesosTaskLabels,
+      deployHealthTimeoutSeconds,
+      healthcheckUri,
+      healthcheckIntervalSeconds,
+      healthcheckTimeoutSeconds,
+      healthcheckPortIndex,
+      healthcheckMaxRetries,
+      healthcheckMaxTotalTimeoutSeconds,
+      healthcheck,
+      serviceBasePath,
+      loadBalancerGroups,
+      loadBalancerPortIndex,
+      considerHealthyAfterRunningForSeconds,
+      loadBalancerOptions,
+      loadBalancerDomains,
+      loadBalancerAdditionalRoutes,
+      loadBalancerTemplate,
+      loadBalancerServiceIdOverride,
+      loadBalancerUpstreamGroup,
+      skipHealthchecksOnDeploy,
+      healthcheckProtocol,
+      deployInstanceCountPerStep,
+      deployStepWaitTimeMs,
+      autoAdvanceDeploySteps,
+      maxTaskRetries,
+      shell,
+      user,
+      s3UploaderAdditionalFiles
+    );
   }
 
   public String getRequestId() {
@@ -188,7 +239,9 @@ public class SingularityDeployBuilder {
     return considerHealthyAfterRunningForSeconds;
   }
 
-  public SingularityDeployBuilder setConsiderHealthyAfterRunningForSeconds(Optional<Long> considerHealthyAfterRunningForSeconds) {
+  public SingularityDeployBuilder setConsiderHealthyAfterRunningForSeconds(
+    Optional<Long> considerHealthyAfterRunningForSeconds
+  ) {
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
     return this;
   }
@@ -224,7 +277,9 @@ public class SingularityDeployBuilder {
     return containerInfo;
   }
 
-  public SingularityDeployBuilder setContainerInfo(Optional<SingularityContainerInfo> containerInfo) {
+  public SingularityDeployBuilder setContainerInfo(
+    Optional<SingularityContainerInfo> containerInfo
+  ) {
     this.containerInfo = containerInfo;
     return this;
   }
@@ -233,7 +288,9 @@ public class SingularityDeployBuilder {
     return customExecutorCmd;
   }
 
-  public SingularityDeployBuilder setCustomExecutorCmd(Optional<String> customExecutorCmd) {
+  public SingularityDeployBuilder setCustomExecutorCmd(
+    Optional<String> customExecutorCmd
+  ) {
     this.customExecutorCmd = customExecutorCmd;
     return this;
   }
@@ -251,7 +308,9 @@ public class SingularityDeployBuilder {
     return customExecutorSource;
   }
 
-  public SingularityDeployBuilder setCustomExecutorSource(Optional<String> customExecutorSource) {
+  public SingularityDeployBuilder setCustomExecutorSource(
+    Optional<String> customExecutorSource
+  ) {
     this.customExecutorSource = customExecutorSource;
     return this;
   }
@@ -260,7 +319,9 @@ public class SingularityDeployBuilder {
     return customExecutorResources;
   }
 
-  public SingularityDeployBuilder setCustomExecutorResources(Optional<Resources> customExecutorResources) {
+  public SingularityDeployBuilder setCustomExecutorResources(
+    Optional<Resources> customExecutorResources
+  ) {
     this.customExecutorResources = customExecutorResources;
     return this;
   }
@@ -269,7 +330,9 @@ public class SingularityDeployBuilder {
     return deployHealthTimeoutSeconds;
   }
 
-  public SingularityDeployBuilder setDeployHealthTimeoutSeconds(Optional<Long> deployHealthTimeoutSeconds) {
+  public SingularityDeployBuilder setDeployHealthTimeoutSeconds(
+    Optional<Long> deployHealthTimeoutSeconds
+  ) {
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
     return this;
   }
@@ -314,7 +377,9 @@ public class SingularityDeployBuilder {
     return taskEnv;
   }
 
-  public SingularityDeployBuilder setTaskEnv(Optional<Map<Integer, Map<String, String>>> taskEnv) {
+  public SingularityDeployBuilder setTaskEnv(
+    Optional<Map<Integer, Map<String, String>>> taskEnv
+  ) {
     this.taskEnv = taskEnv;
     return this;
   }
@@ -323,7 +388,9 @@ public class SingularityDeployBuilder {
     return runImmediately;
   }
 
-  public SingularityDeployBuilder setRunImmediately(Optional<SingularityRunNowRequest> runImmediately) {
+  public SingularityDeployBuilder setRunImmediately(
+    Optional<SingularityRunNowRequest> runImmediately
+  ) {
     this.runImmediately = runImmediately;
     return this;
   }
@@ -359,7 +426,9 @@ public class SingularityDeployBuilder {
     return healthcheckIntervalSeconds;
   }
 
-  public SingularityDeployBuilder setHealthcheckIntervalSeconds(Optional<Long> healthcheckIntervalSeconds) {
+  public SingularityDeployBuilder setHealthcheckIntervalSeconds(
+    Optional<Long> healthcheckIntervalSeconds
+  ) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     return this;
   }
@@ -368,7 +437,9 @@ public class SingularityDeployBuilder {
     return healthcheckTimeoutSeconds;
   }
 
-  public SingularityDeployBuilder setHealthcheckTimeoutSeconds(Optional<Long> healthcheckTimeoutSeconds) {
+  public SingularityDeployBuilder setHealthcheckTimeoutSeconds(
+    Optional<Long> healthcheckTimeoutSeconds
+  ) {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
     return this;
   }
@@ -377,7 +448,9 @@ public class SingularityDeployBuilder {
     return healthcheckPortIndex;
   }
 
-  public SingularityDeployBuilder setHealthcheckPortIndex(Optional<Integer> healthcheckPortIndex) {
+  public SingularityDeployBuilder setHealthcheckPortIndex(
+    Optional<Integer> healthcheckPortIndex
+  ) {
     this.healthcheckPortIndex = healthcheckPortIndex;
     return this;
   }
@@ -395,7 +468,9 @@ public class SingularityDeployBuilder {
     return loadBalancerGroups;
   }
 
-  public SingularityDeployBuilder setLoadBalancerGroups(Optional<Set<String>> loadBalancerGroups) {
+  public SingularityDeployBuilder setLoadBalancerGroups(
+    Optional<Set<String>> loadBalancerGroups
+  ) {
     this.loadBalancerGroups = loadBalancerGroups;
     return this;
   }
@@ -404,7 +479,9 @@ public class SingularityDeployBuilder {
     return loadBalancerPortIndex;
   }
 
-  public SingularityDeployBuilder setLoadBalancerPortIndex(Optional<Integer> loadBalancerPortIndex) {
+  public SingularityDeployBuilder setLoadBalancerPortIndex(
+    Optional<Integer> loadBalancerPortIndex
+  ) {
     this.loadBalancerPortIndex = loadBalancerPortIndex;
     return this;
   }
@@ -413,7 +490,9 @@ public class SingularityDeployBuilder {
     return loadBalancerOptions;
   }
 
-  public SingularityDeployBuilder setLoadBalancerOptions(Optional<Map<String, Object>> loadBalancerOptions) {
+  public SingularityDeployBuilder setLoadBalancerOptions(
+    Optional<Map<String, Object>> loadBalancerOptions
+  ) {
     this.loadBalancerOptions = loadBalancerOptions;
     return this;
   }
@@ -422,7 +501,9 @@ public class SingularityDeployBuilder {
     return loadBalancerDomains;
   }
 
-  public SingularityDeployBuilder setLoadBalancerDomains(Optional<Set<String>> loadBalancerDomains) {
+  public SingularityDeployBuilder setLoadBalancerDomains(
+    Optional<Set<String>> loadBalancerDomains
+  ) {
     this.loadBalancerDomains = loadBalancerDomains;
     return this;
   }
@@ -431,7 +512,9 @@ public class SingularityDeployBuilder {
     return loadBalancerAdditionalRoutes;
   }
 
-  public SingularityDeployBuilder setLoadBalancerAdditionalRoutes(Optional<List<String>> loadBalancerAdditionalRoutes) {
+  public SingularityDeployBuilder setLoadBalancerAdditionalRoutes(
+    Optional<List<String>> loadBalancerAdditionalRoutes
+  ) {
     this.loadBalancerAdditionalRoutes = loadBalancerAdditionalRoutes;
     return this;
   }
@@ -440,7 +523,9 @@ public class SingularityDeployBuilder {
     return loadBalancerTemplate;
   }
 
-  public SingularityDeployBuilder setLoadBalancerTemplate(Optional<String> loadBalancerTemplate) {
+  public SingularityDeployBuilder setLoadBalancerTemplate(
+    Optional<String> loadBalancerTemplate
+  ) {
     this.loadBalancerTemplate = loadBalancerTemplate;
     return this;
   }
@@ -460,7 +545,9 @@ public class SingularityDeployBuilder {
     return mesosLabels;
   }
 
-  public SingularityDeployBuilder setMesosLabels(Optional<List<SingularityMesosTaskLabel>> mesosLabels) {
+  public SingularityDeployBuilder setMesosLabels(
+    Optional<List<SingularityMesosTaskLabel>> mesosLabels
+  ) {
     this.mesosLabels = mesosLabels;
     return this;
   }
@@ -471,7 +558,9 @@ public class SingularityDeployBuilder {
   }
 
   @Deprecated
-  public SingularityDeployBuilder setTaskLabels(Optional<Map<Integer, Map<String, String>>> taskLabels) {
+  public SingularityDeployBuilder setTaskLabels(
+    Optional<Map<Integer, Map<String, String>>> taskLabels
+  ) {
     this.taskLabels = taskLabels;
     return this;
   }
@@ -480,7 +569,9 @@ public class SingularityDeployBuilder {
     return mesosTaskLabels;
   }
 
-  public SingularityDeployBuilder setMesosTaskLabels(Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels) {
+  public SingularityDeployBuilder setMesosTaskLabels(
+    Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels
+  ) {
     this.mesosTaskLabels = mesosTaskLabels;
     return this;
   }
@@ -489,7 +580,9 @@ public class SingularityDeployBuilder {
     return skipHealthchecksOnDeploy;
   }
 
-  public SingularityDeployBuilder setSkipHealthchecksOnDeploy(Optional<Boolean> skipHealthchecksOnDeploy) {
+  public SingularityDeployBuilder setSkipHealthchecksOnDeploy(
+    Optional<Boolean> skipHealthchecksOnDeploy
+  ) {
     this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
     return this;
   }
@@ -498,7 +591,9 @@ public class SingularityDeployBuilder {
     return healthcheckProtocol;
   }
 
-  public SingularityDeployBuilder setHealthcheckProtocol(Optional<HealthcheckProtocol> healthcheckProtocol) {
+  public SingularityDeployBuilder setHealthcheckProtocol(
+    Optional<HealthcheckProtocol> healthcheckProtocol
+  ) {
     this.healthcheckProtocol = healthcheckProtocol;
     return this;
   }
@@ -511,12 +606,16 @@ public class SingularityDeployBuilder {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
-  public SingularityDeployBuilder setHealthcheckMaxRetries(Optional<Integer> healthcheckMaxRetries) {
+  public SingularityDeployBuilder setHealthcheckMaxRetries(
+    Optional<Integer> healthcheckMaxRetries
+  ) {
     this.healthcheckMaxRetries = healthcheckMaxRetries;
     return this;
   }
 
-  public SingularityDeployBuilder setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+  public SingularityDeployBuilder setHealthcheckMaxTotalTimeoutSeconds(
+    Optional<Long> healthcheckMaxTotalTimeoutSeconds
+  ) {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
     return this;
   }
@@ -525,7 +624,9 @@ public class SingularityDeployBuilder {
     return healthcheck;
   }
 
-  public SingularityDeployBuilder setHealthcheck(Optional<HealthcheckOptions> healthcheck) {
+  public SingularityDeployBuilder setHealthcheck(
+    Optional<HealthcheckOptions> healthcheck
+  ) {
     this.healthcheck = healthcheck;
     return this;
   }
@@ -534,7 +635,9 @@ public class SingularityDeployBuilder {
     return deployInstanceCountPerStep;
   }
 
-  public SingularityDeployBuilder setDeployInstanceCountPerStep(Optional<Integer> deployInstanceCountPerStep) {
+  public SingularityDeployBuilder setDeployInstanceCountPerStep(
+    Optional<Integer> deployInstanceCountPerStep
+  ) {
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     return this;
   }
@@ -543,7 +646,9 @@ public class SingularityDeployBuilder {
     return deployStepWaitTimeMs;
   }
 
-  public SingularityDeployBuilder setDeployStepWaitTimeMs(Optional<Integer> deployStepWaitTimeMs) {
+  public SingularityDeployBuilder setDeployStepWaitTimeMs(
+    Optional<Integer> deployStepWaitTimeMs
+  ) {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     return this;
   }
@@ -552,7 +657,9 @@ public class SingularityDeployBuilder {
     return autoAdvanceDeploySteps;
   }
 
-  public SingularityDeployBuilder setAutoAdvanceDeploySteps(Optional<Boolean> autoAdvanceDeploySteps) {
+  public SingularityDeployBuilder setAutoAdvanceDeploySteps(
+    Optional<Boolean> autoAdvanceDeploySteps
+  ) {
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     return this;
   }
@@ -588,7 +695,9 @@ public class SingularityDeployBuilder {
     return loadBalancerServiceIdOverride;
   }
 
-  public SingularityDeployBuilder setLoadBalancerServiceIdOverride(Optional<String> loadBalancerServiceIdOverride) {
+  public SingularityDeployBuilder setLoadBalancerServiceIdOverride(
+    Optional<String> loadBalancerServiceIdOverride
+  ) {
     this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
     return this;
   }
@@ -597,7 +706,9 @@ public class SingularityDeployBuilder {
     return loadBalancerUpstreamGroup;
   }
 
-  public SingularityDeployBuilder setLoadBalancerUpstreamGroup(Optional<String> loadBalancerUpstreamGroup) {
+  public SingularityDeployBuilder setLoadBalancerUpstreamGroup(
+    Optional<String> loadBalancerUpstreamGroup
+  ) {
     this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
     return this;
   }
@@ -606,63 +717,118 @@ public class SingularityDeployBuilder {
     return s3UploaderAdditionalFiles;
   }
 
-  public SingularityDeployBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public SingularityDeployBuilder setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     return this;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployBuilder{" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", containerInfo=" + containerInfo +
-        ", customExecutorCmd=" + customExecutorCmd +
-        ", customExecutorId=" + customExecutorId +
-        ", customExecutorSource=" + customExecutorSource +
-        ", customExecutorResources=" + customExecutorResources +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", arguments=" + arguments +
-        ", env=" + env +
-        ", taskEnv=" + taskEnv +
-        ", runImmediately=" + runImmediately +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", labels=" + labels +
-        ", mesosLabels=" + mesosLabels +
-        ", taskLabels=" + taskLabels +
-        ", mesosTaskLabels=" + mesosTaskLabels +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", healthcheckPortIndex=" + healthcheckPortIndex +
-        ", healthcheckProtocol=" + healthcheckProtocol +
-        ", healthcheckMaxRetries=" + healthcheckMaxRetries +
-        ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
-        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-        ", healthcheck=" + healthcheck +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-        ", serviceBasePath=" + serviceBasePath +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ", loadBalancerPortIndex=" + loadBalancerPortIndex +
-        ", loadBalancerOptions=" + loadBalancerOptions +
-        ", loadBalancerDomains=" + loadBalancerDomains +
-        ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
-        ", loadBalancerTemplate=" + loadBalancerTemplate +
-        ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
-        ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
-        ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
-        ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
-        ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
-        ", maxTaskRetries=" + maxTaskRetries +
-        ", shell=" + shell +
-        ", user=" + user +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        '}';
+    return (
+      "SingularityDeployBuilder{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", id='" +
+      id +
+      '\'' +
+      ", version=" +
+      version +
+      ", timestamp=" +
+      timestamp +
+      ", metadata=" +
+      metadata +
+      ", containerInfo=" +
+      containerInfo +
+      ", customExecutorCmd=" +
+      customExecutorCmd +
+      ", customExecutorId=" +
+      customExecutorId +
+      ", customExecutorSource=" +
+      customExecutorSource +
+      ", customExecutorResources=" +
+      customExecutorResources +
+      ", resources=" +
+      resources +
+      ", command=" +
+      command +
+      ", arguments=" +
+      arguments +
+      ", env=" +
+      env +
+      ", taskEnv=" +
+      taskEnv +
+      ", runImmediately=" +
+      runImmediately +
+      ", uris=" +
+      uris +
+      ", executorData=" +
+      executorData +
+      ", labels=" +
+      labels +
+      ", mesosLabels=" +
+      mesosLabels +
+      ", taskLabels=" +
+      taskLabels +
+      ", mesosTaskLabels=" +
+      mesosTaskLabels +
+      ", healthcheckUri=" +
+      healthcheckUri +
+      ", healthcheckIntervalSeconds=" +
+      healthcheckIntervalSeconds +
+      ", healthcheckTimeoutSeconds=" +
+      healthcheckTimeoutSeconds +
+      ", healthcheckPortIndex=" +
+      healthcheckPortIndex +
+      ", healthcheckProtocol=" +
+      healthcheckProtocol +
+      ", healthcheckMaxRetries=" +
+      healthcheckMaxRetries +
+      ", healthcheckMaxTotalTimeoutSeconds=" +
+      healthcheckMaxTotalTimeoutSeconds +
+      ", skipHealthchecksOnDeploy=" +
+      skipHealthchecksOnDeploy +
+      ", healthcheck=" +
+      healthcheck +
+      ", deployHealthTimeoutSeconds=" +
+      deployHealthTimeoutSeconds +
+      ", considerHealthyAfterRunningForSeconds=" +
+      considerHealthyAfterRunningForSeconds +
+      ", serviceBasePath=" +
+      serviceBasePath +
+      ", loadBalancerGroups=" +
+      loadBalancerGroups +
+      ", loadBalancerPortIndex=" +
+      loadBalancerPortIndex +
+      ", loadBalancerOptions=" +
+      loadBalancerOptions +
+      ", loadBalancerDomains=" +
+      loadBalancerDomains +
+      ", loadBalancerAdditionalRoutes=" +
+      loadBalancerAdditionalRoutes +
+      ", loadBalancerTemplate=" +
+      loadBalancerTemplate +
+      ", loadBalancerServiceIdOverride=" +
+      loadBalancerServiceIdOverride +
+      ", loadBalancerUpstreamGroup=" +
+      loadBalancerUpstreamGroup +
+      ", deployInstanceCountPerStep=" +
+      deployInstanceCountPerStep +
+      ", deployStepWaitTimeMs=" +
+      deployStepWaitTimeMs +
+      ", autoAdvanceDeploySteps=" +
+      autoAdvanceDeploySteps +
+      ", maxTaskRetries=" +
+      maxTaskRetries +
+      ", shell=" +
+      shell +
+      ", user=" +
+      user +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      '}'
+    );
   }
 }

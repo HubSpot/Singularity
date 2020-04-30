@@ -1,18 +1,5 @@
 package com.hubspot.singularity.helpers;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.mesos.v1.Protos.AgentID;
-import org.apache.mesos.v1.Protos.ExecutorID;
-import org.apache.mesos.v1.Protos.FrameworkID;
-import org.apache.mesos.v1.Protos.Offer;
-import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.TaskID;
-import org.apache.mesos.v1.Protos.TaskInfo;
-import org.apache.mesos.v1.Protos.TaskState;
-import org.apache.mesos.v1.Protos.TaskStatus;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.protos.MesosOfferObject;
@@ -22,6 +9,17 @@ import com.hubspot.mesos.protos.MesosTaskObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.Singularity;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.ExecutorID;
+import org.apache.mesos.v1.Protos.FrameworkID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
 
 public class MesosProtosUtils {
   private final ObjectMapper objectMapper;
@@ -56,9 +54,10 @@ public class MesosProtosUtils {
   }
 
   public List<Resource> toResourceList(List<MesosResourceObject> resourceObjects) {
-    return resourceObjects.stream()
-        .map((r) -> objectMapper.convertValue(r, Resource.class))
-        .collect(Collectors.toList());
+    return resourceObjects
+      .stream()
+      .map(r -> objectMapper.convertValue(r, Resource.class))
+      .collect(Collectors.toList());
   }
 
   public MesosTaskStatusObject taskStatusFromProtos(TaskStatus status) {

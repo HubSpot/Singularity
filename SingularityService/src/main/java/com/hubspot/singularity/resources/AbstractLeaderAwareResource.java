@@ -1,17 +1,5 @@
 package com.hubspot.singularity.resources;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
-
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -19,15 +7,30 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AbstractLeaderAwareResource {
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractLeaderAwareResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    AbstractLeaderAwareResource.class
+  );
 
   protected final AsyncHttpClient httpClient;
   protected final LeaderLatch leaderLatch;
   protected final ObjectMapper objectMapper;
 
-  public AbstractLeaderAwareResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+  public AbstractLeaderAwareResource(
+    AsyncHttpClient httpClient,
+    LeaderLatch leaderLatch,
+    ObjectMapper objectMapper
+  ) {
     this.httpClient = httpClient;
     this.leaderLatch = leaderLatch;
     this.objectMapper = objectMapper;
@@ -37,7 +40,12 @@ public class AbstractLeaderAwareResource {
     return leaderLatch.hasLeadership();
   }
 
-  protected <T, Q> T maybeProxyToLeader(HttpServletRequest request, Class<T> clazz, Q body, Supplier<T> runnable) {
+  protected <T, Q> T maybeProxyToLeader(
+    HttpServletRequest request,
+    Class<T> clazz,
+    Q body,
+    Supplier<T> runnable
+  ) {
     if (leaderLatch.hasLeadership()) {
       return runnable.get();
     }
@@ -50,7 +58,9 @@ public class AbstractLeaderAwareResource {
     }
 
     if (leaderUri.equals(leaderLatch.getId())) {
-      LOG.warn("Got own leader id when not the leader! There is likely no leader, will not proxy");
+      LOG.warn(
+        "Got own leader id when not the leader! There is likely no leader, will not proxy"
+      );
       return runnable.get();
     }
 
@@ -69,7 +79,10 @@ public class AbstractLeaderAwareResource {
         requestBuilder = httpClient.prepareDelete(url);
         break;
       default:
-        throw new WebApplicationException(String.format("Not meant to proxy request of method %s", request.getMethod()), 400);
+        throw new WebApplicationException(
+          String.format("Not meant to proxy request of method %s", request.getMethod()),
+          400
+        );
     }
 
     try {
@@ -89,31 +102,41 @@ public class AbstractLeaderAwareResource {
     try {
       LOG.trace("Sending request to leader: {}", httpRequest);
       response = httpClient.executeRequest(httpRequest).get();
-    } catch (ExecutionException|InterruptedException e) {
+    } catch (ExecutionException | InterruptedException e) {
       LOG.error("Could not proxy request {} to leader", e);
       throw new WebApplicationException(e, 500);
     }
 
     try {
       if (clazz.isAssignableFrom(javax.ws.rs.core.Response.class)) {
-        return (T) javax.ws.rs.core.Response.status(response.getStatusCode())
-            .entity(response.getResponseBody())
-            .build();
+        return (T) javax
+          .ws.rs.core.Response.status(response.getStatusCode())
+          .entity(response.getResponseBody())
+          .build();
       }
 
       if (response.getStatusCode() > 399) {
-        throw new WebApplicationException(response.getResponseBody(Charsets.UTF_8.toString()), response.getStatusCode());
+        throw new WebApplicationException(
+          response.getResponseBody(Charsets.UTF_8.toString()),
+          response.getStatusCode()
+        );
       } else {
         return objectMapper.readValue(response.getResponseBodyAsStream(), clazz);
       }
     } catch (IOException ioe) {
-      String message = String.format("Request to leader succeeded with status %s, but could not interpret response", response.getStatusCode());
+      String message = String.format(
+        "Request to leader succeeded with status %s, but could not interpret response",
+        response.getStatusCode()
+      );
       LOG.error(message, ioe);
       throw new WebApplicationException(message, ioe, 500);
     }
   }
 
-  private void copyHeadersAndParams(BoundRequestBuilder requestBuilder, HttpServletRequest request) {
+  private void copyHeadersAndParams(
+    BoundRequestBuilder requestBuilder,
+    HttpServletRequest request
+  ) {
     Enumeration<String> headerNames = request.getHeaderNames();
     if (headerNames != null) {
       while (headerNames.hasMoreElements()) {
@@ -127,7 +150,11 @@ public class AbstractLeaderAwareResource {
       while (parameterNames.hasMoreElements()) {
         String parameterName = parameterNames.nextElement();
         requestBuilder.addQueryParam(parameterName, request.getParameter(parameterName));
-        LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
+        LOG.trace(
+          "Copied query param {}={}",
+          parameterName,
+          request.getParameter(parameterName)
+        );
       }
     }
   }

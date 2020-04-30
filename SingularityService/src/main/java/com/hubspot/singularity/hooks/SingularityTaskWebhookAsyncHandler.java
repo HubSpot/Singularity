@@ -4,13 +4,17 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.data.WebhookManager;
 
-public class SingularityTaskWebhookAsyncHandler extends AbstractSingularityWebhookAsyncHandler<SingularityTaskHistoryUpdate>  {
-
+public class SingularityTaskWebhookAsyncHandler
+  extends AbstractSingularityWebhookAsyncHandler<SingularityTaskHistoryUpdate> {
   private final WebhookManager webhookManager;
 
-  public SingularityTaskWebhookAsyncHandler(WebhookManager webhookManager, SingularityWebhook webhook, SingularityTaskHistoryUpdate taskUpdate, boolean shouldDeleteUpdateDueToQueueAboveCapacity) {
+  public SingularityTaskWebhookAsyncHandler(
+    WebhookManager webhookManager,
+    SingularityWebhook webhook,
+    SingularityTaskHistoryUpdate taskUpdate,
+    boolean shouldDeleteUpdateDueToQueueAboveCapacity
+  ) {
     super(webhook, taskUpdate, shouldDeleteUpdateDueToQueueAboveCapacity);
-
     this.webhookManager = webhookManager;
   }
 
@@ -18,5 +22,4 @@ public class SingularityTaskWebhookAsyncHandler extends AbstractSingularityWebho
   public void deleteWebhookUpdate() {
     webhookManager.deleteTaskUpdate(webhook, update);
   }
-
 }

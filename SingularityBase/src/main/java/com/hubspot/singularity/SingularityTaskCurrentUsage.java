@@ -2,22 +2,22 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "A description of the current resource usage of a task")
 public class SingularityTaskCurrentUsage {
-
   private final long memoryTotalBytes;
   private final long timestamp;
   private final double cpusUsed;
   private final long diskTotalBytes;
 
   @JsonCreator
-  public SingularityTaskCurrentUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
-                                     @JsonProperty("long") long timestamp,
-                                     @JsonProperty("cpusUsed") double cpusUsed,
-                                     @JsonProperty("diskTotalBytes") long diskTotalBytes) {
+  public SingularityTaskCurrentUsage(
+    @JsonProperty("memoryTotalBytes") long memoryTotalBytes,
+    @JsonProperty("long") long timestamp,
+    @JsonProperty("cpusUsed") double cpusUsed,
+    @JsonProperty("diskTotalBytes") long diskTotalBytes
+  ) {
     this.memoryTotalBytes = memoryTotalBytes;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
@@ -46,11 +46,17 @@ public class SingularityTaskCurrentUsage {
 
   @Override
   public String toString() {
-    return "SingularityTaskCurrentUsage{" +
-        "memoryTotalBytes=" + memoryTotalBytes +
-        ", timestamp=" + timestamp +
-        ", cpusUsed=" + cpusUsed +
-        ", diskTotalBytes=" + diskTotalBytes +
-        '}';
+    return (
+      "SingularityTaskCurrentUsage{" +
+      "memoryTotalBytes=" +
+      memoryTotalBytes +
+      ", timestamp=" +
+      timestamp +
+      ", cpusUsed=" +
+      cpusUsed +
+      ", diskTotalBytes=" +
+      diskTotalBytes +
+      '}'
+    );
   }
 }

@@ -1,7 +1,9 @@
 package com.hubspot.singularity.runner.base.shared;
 
 public enum Signal {
-  SIGTERM(15), SIGKILL(9), CHECK(0);
+  SIGTERM(15),
+  SIGKILL(9),
+  CHECK(0);
 
   private final int code;
 
@@ -12,5 +14,4 @@ public enum Signal {
   public int getCode() {
     return code;
   }
-
 }

@@ -1,13 +1,11 @@
 package com.hubspot.singularity.api;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.SingularityAction;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "Notes related to a particular disabled action")
 public class SingularityDisabledActionRequest {
@@ -15,7 +13,10 @@ public class SingularityDisabledActionRequest {
   private final Optional<String> message;
 
   @JsonCreator
-  public SingularityDisabledActionRequest(@JsonProperty("type") SingularityAction type, @JsonProperty("message") Optional<String> message) {
+  public SingularityDisabledActionRequest(
+    @JsonProperty("type") SingularityAction type,
+    @JsonProperty("message") Optional<String> message
+  ) {
     this.type = type;
     this.message = message;
   }
@@ -39,8 +40,7 @@ public class SingularityDisabledActionRequest {
       return false;
     }
     SingularityDisabledActionRequest that = (SingularityDisabledActionRequest) o;
-    return type == that.type &&
-        Objects.equals(message, that.message);
+    return type == that.type && Objects.equals(message, that.message);
   }
 
   @Override
@@ -50,9 +50,8 @@ public class SingularityDisabledActionRequest {
 
   @Override
   public String toString() {
-    return "SingularityDisabledActionRequest{" +
-        "type=" + type +
-        ", message=" + message +
-        '}';
+    return (
+      "SingularityDisabledActionRequest{" + "type=" + type + ", message=" + message + '}'
+    );
   }
 }

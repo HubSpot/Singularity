@@ -2,17 +2,18 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "A webhook sent for a task status update")
 public class SingularityTaskWebhook {
-
   private final SingularityTask task;
   private final SingularityTaskHistoryUpdate taskUpdate;
 
   @JsonCreator
-  public SingularityTaskWebhook(@JsonProperty("task") SingularityTask task, @JsonProperty("taskUpdate") SingularityTaskHistoryUpdate taskUpdate) {
+  public SingularityTaskWebhook(
+    @JsonProperty("task") SingularityTask task,
+    @JsonProperty("taskUpdate") SingularityTaskHistoryUpdate taskUpdate
+  ) {
     this.task = task;
     this.taskUpdate = taskUpdate;
   }
@@ -29,9 +30,8 @@ public class SingularityTaskWebhook {
 
   @Override
   public String toString() {
-    return "SingularityTaskWebhook{" +
-        "task=" + task +
-        ", taskUpdate=" + taskUpdate +
-        '}';
+    return (
+      "SingularityTaskWebhook{" + "task=" + task + ", taskUpdate=" + taskUpdate + '}'
+    );
   }
 }

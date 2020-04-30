@@ -1,16 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
@@ -37,10 +26,18 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
-
   private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
   private final SingularityEventListener singularityEventListener;
@@ -74,12 +71,23 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
-  public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
-                       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
-                       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
-                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, ZkCache<SingularityDeploy> deploysCache, SingularityLeaderCache leaderCache) {
+  public DeployManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    SingularityEventListener singularityEventListener,
+    Transcoder<SingularityDeploy> deployTranscoder,
+    Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder,
+    Transcoder<SingularityPendingDeploy> pendingDeployTranscoder,
+    Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
+    Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder,
+    Transcoder<SingularityDeployResult> deployStateTranscoder,
+    IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
+    Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder,
+    ZkCache<SingularityDeploy> deploysCache,
+    SingularityLeaderCache leaderCache
+  ) {
     super(curator, configuration, metricRegistry);
-
     this.singularityEventListener = singularityEventListener;
     this.pendingDeployTranscoder = pendingDeployTranscoder;
     this.deployTranscoder = deployTranscoder;
@@ -109,7 +117,9 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   @Timed
-  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(Collection<String> requestIds) {
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
+    Collection<String> requestIds
+  ) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
     }
@@ -117,21 +127,25 @@ public class DeployManager extends CuratorAsyncManager {
     return fetchDeployStatesByRequestIds(requestIds);
   }
 
-  public Map<String, SingularityRequestDeployState> fetchDeployStatesByRequestIds(Collection<String> requestIds) {
+  public Map<String, SingularityRequestDeployState> fetchDeployStatesByRequestIds(
+    Collection<String> requestIds
+  ) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
 
     for (String requestId : requestIds) {
       paths.add(getRequestDeployStatePath(requestId));
     }
 
-    return Maps.uniqueIndex(getAsync("getRequestDeployStatesByRequestIds", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
+    return Maps.uniqueIndex(
+      getAsync("getRequestDeployStatesByRequestIds", paths, requestDeployStateTranscoder),
+      new Function<SingularityRequestDeployState, String>() {
 
-      @Override
-      public String apply(SingularityRequestDeployState input) {
-        return input.getRequestId();
+        @Override
+        public String apply(SingularityRequestDeployState input) {
+          return input.getRequestId();
+        }
       }
-
-    });
+    );
   }
 
   @Timed
@@ -157,7 +171,10 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   private String getDeployStatisticsPath(String requestId, String deployId) {
-    return ZKPaths.makePath(getDeployParentPath(requestId, deployId), DEPLOY_STATISTICS_KEY);
+    return ZKPaths.makePath(
+      getDeployParentPath(requestId, deployId),
+      DEPLOY_STATISTICS_KEY
+    );
   }
 
   private String getDeployResultPath(String requestId, String deployId) {
@@ -169,7 +186,10 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   private String getDeployParentPath(String requestId, String deployId) {
-    return ZKPaths.makePath(getDeployIdPath(requestId), new SingularityDeployKey(requestId, deployId).getId());
+    return ZKPaths.makePath(
+      getDeployIdPath(requestId),
+      new SingularityDeployKey(requestId, deployId).getId()
+    );
   }
 
   private String getDeployDataPath(String requestId, String deployId) {
@@ -184,37 +204,73 @@ public class DeployManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getRequestDeployPath(requestId), REQUEST_DEPLOY_STATE_KEY);
   }
 
-  public Map<SingularityDeployKey, SingularityDeploy> getDeploysForKeys(Collection<SingularityDeployKey> deployKeys) {
+  public Map<SingularityDeployKey, SingularityDeploy> getDeploysForKeys(
+    Collection<SingularityDeployKey> deployKeys
+  ) {
     final List<String> paths = Lists.newArrayListWithCapacity(deployKeys.size());
 
     for (SingularityDeployKey deployKey : deployKeys) {
       paths.add(getDeployDataPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
 
-    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder, deploysCache);
+    final List<SingularityDeploy> deploys = getAsync(
+      "getDeploysForKeys",
+      paths,
+      deployTranscoder,
+      deploysCache
+    );
 
-    final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
-      @Override
-      public SingularityDeployKey apply(SingularityDeploy input) {
-        return SingularityDeployKey.fromDeploy(input);
+    final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(
+      deploys,
+      new Function<SingularityDeploy, SingularityDeployKey>() {
+
+        @Override
+        public SingularityDeployKey apply(SingularityDeploy input) {
+          return SingularityDeployKey.fromDeploy(input);
+        }
       }
-    });
+    );
 
     return deployKeyToDeploy;
   }
 
-  public SingularityCreateResult saveDeploy(SingularityRequest request, SingularityDeployMarker deployMarker, SingularityDeploy deploy) {
-    final SingularityCreateResult deploySaveResult = create(getDeployDataPath(deploy.getRequestId(), deploy.getId()), deploy, deployTranscoder);
+  public SingularityCreateResult saveDeploy(
+    SingularityRequest request,
+    SingularityDeployMarker deployMarker,
+    SingularityDeploy deploy
+  ) {
+    final SingularityCreateResult deploySaveResult = create(
+      getDeployDataPath(deploy.getRequestId(), deploy.getId()),
+      deploy,
+      deployTranscoder
+    );
 
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
-      LOG.info("Deploy object for {} already existed (new marker: {})", deploy, deployMarker);
+      LOG.info(
+        "Deploy object for {} already existed (new marker: {})",
+        deploy,
+        deployMarker
+      );
     }
 
-    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>empty()));
+    singularityEventListener.deployHistoryEvent(
+      new SingularityDeployUpdate(
+        deployMarker,
+        Optional.of(deploy),
+        DeployEventType.STARTING,
+        Optional.<SingularityDeployResult>empty()
+      )
+    );
 
-    create(getDeployMarkerPath(deploy.getRequestId(), deploy.getId()), deployMarker, deployMarkerTranscoder);
+    create(
+      getDeployMarkerPath(deploy.getRequestId(), deploy.getId()),
+      deployMarker,
+      deployMarkerTranscoder
+    );
 
-    final Optional<SingularityRequestDeployState> currentState = getRequestDeployState(deploy.getRequestId());
+    final Optional<SingularityRequestDeployState> currentState = getRequestDeployState(
+      deploy.getRequestId()
+    );
 
     Optional<SingularityDeployMarker> activeDeploy = Optional.empty();
     Optional<SingularityDeployMarker> pendingDeploy = Optional.empty();
@@ -228,13 +284,24 @@ public class DeployManager extends CuratorAsyncManager {
       activeDeploy = Optional.of(deployMarker);
     }
 
-    final SingularityRequestDeployState newState = new SingularityRequestDeployState(deploy.getRequestId(), activeDeploy, pendingDeploy);
+    final SingularityRequestDeployState newState = new SingularityRequestDeployState(
+      deploy.getRequestId(),
+      activeDeploy,
+      pendingDeploy
+    );
 
     return saveNewRequestDeployState(newState);
   }
 
-  public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId, boolean loadEntireHistory) {
-    Optional<SingularityDeployMarker> deployMarker = getData(getDeployMarkerPath(requestId, deployId), deployMarkerTranscoder);
+  public Optional<SingularityDeployHistory> getDeployHistory(
+    String requestId,
+    String deployId,
+    boolean loadEntireHistory
+  ) {
+    Optional<SingularityDeployMarker> deployMarker = getData(
+      getDeployMarkerPath(requestId, deployId),
+      deployMarkerTranscoder
+    );
 
     if (!deployMarker.isPresent()) {
       return Optional.empty();
@@ -243,7 +310,14 @@ public class DeployManager extends CuratorAsyncManager {
     Optional<SingularityDeployResult> deployState = getDeployResult(requestId, deployId);
 
     if (!loadEntireHistory) {
-      return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), Optional.<SingularityDeploy>empty(), Optional.<SingularityDeployStatistics>empty()));
+      return Optional.of(
+        new SingularityDeployHistory(
+          deployState,
+          deployMarker.get(),
+          Optional.<SingularityDeploy>empty(),
+          Optional.<SingularityDeployStatistics>empty()
+        )
+      );
     }
 
     Optional<SingularityDeploy> deploy = getDeploy(requestId, deployId);
@@ -252,9 +326,19 @@ public class DeployManager extends CuratorAsyncManager {
       return Optional.empty();
     }
 
-    Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(requestId, deployId);
+    Optional<SingularityDeployStatistics> deployStatistics = getDeployStatistics(
+      requestId,
+      deployId
+    );
 
-    return Optional.of(new SingularityDeployHistory(deployState, deployMarker.get(), deploy, deployStatistics));
+    return Optional.of(
+      new SingularityDeployHistory(
+        deployState,
+        deployMarker.get(),
+        deploy,
+        deployStatistics
+      )
+    );
   }
 
   public Optional<SingularityDeploy> getDeploy(String requestId, String deployId) {
@@ -264,19 +348,34 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public Optional<String> getInUseDeployId(String requestId) {
-    Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
+    Optional<SingularityRequestDeployState> deployState = getRequestDeployState(
+      requestId
+    );
 
-    if (!deployState.isPresent() || (!deployState.get().getActiveDeploy().isPresent() && !deployState.get().getPendingDeploy().isPresent())) {
+    if (
+      !deployState.isPresent() ||
+      (
+        !deployState.get().getActiveDeploy().isPresent() &&
+        !deployState.get().getPendingDeploy().isPresent()
+      )
+    ) {
       return Optional.empty();
     }
 
-    SingularityDeployMarker maybeDeployMarker = (deployState.get().getActiveDeploy().isPresent() ? deployState.get().getActiveDeploy() : deployState.get().getPendingDeploy()).get();
+    SingularityDeployMarker maybeDeployMarker =
+      (
+        deployState.get().getActiveDeploy().isPresent()
+          ? deployState.get().getActiveDeploy()
+          : deployState.get().getPendingDeploy()
+      ).get();
 
     return Optional.of(maybeDeployMarker.getDeployId());
   }
 
   public Optional<String> getActiveDeployId(String requestId) {
-    Optional<SingularityRequestDeployState> deployState = getRequestDeployState(requestId);
+    Optional<SingularityRequestDeployState> deployState = getRequestDeployState(
+      requestId
+    );
 
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
       return Optional.empty();
@@ -291,20 +390,41 @@ public class DeployManager extends CuratorAsyncManager {
     return getData(getRequestDeployStatePath(requestId), requestDeployStateTranscoder);
   }
 
-  public SingularityCreateResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState) {
+  public SingularityCreateResult saveNewRequestDeployState(
+    SingularityRequestDeployState newDeployState
+  ) {
     if (leaderCache.active()) {
       leaderCache.putRequestDeployState(newDeployState);
     }
 
-    return save(getRequestDeployStatePath(newDeployState.getRequestId()), newDeployState, requestDeployStateTranscoder);
+    return save(
+      getRequestDeployStatePath(newDeployState.getRequestId()),
+      newDeployState,
+      requestDeployStateTranscoder
+    );
   }
 
-  public Optional<SingularityDeployStatistics> getDeployStatistics(String requestId, String deployId) {
-    return getData(getDeployStatisticsPath(requestId, deployId), deployStatisticsTranscoder);
+  public Optional<SingularityDeployStatistics> getDeployStatistics(
+    String requestId,
+    String deployId
+  ) {
+    return getData(
+      getDeployStatisticsPath(requestId, deployId),
+      deployStatisticsTranscoder
+    );
   }
 
-  public SingularityCreateResult saveDeployStatistics(SingularityDeployStatistics newDeployStatistics) {
-    return save(getDeployStatisticsPath(newDeployStatistics.getRequestId(), newDeployStatistics.getDeployId()), newDeployStatistics, deployStatisticsTranscoder);
+  public SingularityCreateResult saveDeployStatistics(
+    SingularityDeployStatistics newDeployStatistics
+  ) {
+    return save(
+      getDeployStatisticsPath(
+        newDeployStatistics.getRequestId(),
+        newDeployStatistics.getDeployId()
+      ),
+      newDeployStatistics,
+      deployStatisticsTranscoder
+    );
   }
 
   private String getPendingDeployPath(String requestId) {
@@ -312,11 +432,20 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   private String getCancelDeployPath(SingularityDeployMarker deployMarker) {
-    return ZKPaths.makePath(CANCEL_ROOT, String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId()));
+    return ZKPaths.makePath(
+      CANCEL_ROOT,
+      String.format("%s-%s", deployMarker.getRequestId(), deployMarker.getDeployId())
+    );
   }
 
-  public SingularityCreateResult createCancelDeployRequest(SingularityDeployMarker deployMarker) {
-    return create(getCancelDeployPath(deployMarker), deployMarker, deployMarkerTranscoder);
+  public SingularityCreateResult createCancelDeployRequest(
+    SingularityDeployMarker deployMarker
+  ) {
+    return create(
+      getCancelDeployPath(deployMarker),
+      deployMarker,
+      deployMarkerTranscoder
+    );
   }
 
   public SingularityDeleteResult deleteRequestDeployState(String requestId) {
@@ -334,42 +463,87 @@ public class DeployManager extends CuratorAsyncManager {
     return delete(getPendingDeployPath(requestId));
   }
 
-  public SingularityDeleteResult deleteCancelDeployRequest(SingularityDeployMarker deployMarker) {
+  public SingularityDeleteResult deleteCancelDeployRequest(
+    SingularityDeployMarker deployMarker
+  ) {
     LOG.debug("Removing cancel deploy request {}", deployMarker);
     return delete(getCancelDeployPath(deployMarker));
   }
 
-  public SingularityCreateResult createPendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    return create(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
+  public SingularityCreateResult createPendingDeploy(
+    SingularityPendingDeploy pendingDeploy
+  ) {
+    return create(
+      getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()),
+      pendingDeploy,
+      pendingDeployTranscoder
+    );
   }
 
-  public SingularityCreateResult savePendingDeploy(SingularityPendingDeploy pendingDeploy) {
-    return save(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
+  public SingularityCreateResult savePendingDeploy(
+    SingularityPendingDeploy pendingDeploy
+  ) {
+    return save(
+      getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()),
+      pendingDeploy,
+      pendingDeployTranscoder
+    );
   }
 
   public Optional<SingularityPendingDeploy> getPendingDeploy(String requestId) {
     return getData(getPendingDeployPath(requestId), pendingDeployTranscoder);
   }
 
-  public SingularityCreateResult saveDeployResult(SingularityDeployMarker deployMarker, Optional<SingularityDeploy> deploy, SingularityDeployResult result) {
-    singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, deploy, DeployEventType.FINISHED, Optional.of(result)));
+  public SingularityCreateResult saveDeployResult(
+    SingularityDeployMarker deployMarker,
+    Optional<SingularityDeploy> deploy,
+    SingularityDeployResult result
+  ) {
+    singularityEventListener.deployHistoryEvent(
+      new SingularityDeployUpdate(
+        deployMarker,
+        deploy,
+        DeployEventType.FINISHED,
+        Optional.of(result)
+      )
+    );
 
-    return save(getDeployResultPath(deployMarker.getRequestId(), deployMarker.getDeployId()), result, deployStateTranscoder);
+    return save(
+      getDeployResultPath(deployMarker.getRequestId(), deployMarker.getDeployId()),
+      result,
+      deployStateTranscoder
+    );
   }
 
-  public Optional<SingularityDeployResult> getDeployResult(String requestId, String deployId) {
+  public Optional<SingularityDeployResult> getDeployResult(
+    String requestId,
+    String deployId
+  ) {
     return getData(getDeployResultPath(requestId, deployId), deployStateTranscoder);
   }
 
-  private String getUpdatePendingDeployPath(SingularityUpdatePendingDeployRequest updateRequest) {
-    return ZKPaths.makePath(UPDATE_ROOT, String.format("%s-%s", updateRequest.getRequestId(), updateRequest.getDeployId()));
+  private String getUpdatePendingDeployPath(
+    SingularityUpdatePendingDeployRequest updateRequest
+  ) {
+    return ZKPaths.makePath(
+      UPDATE_ROOT,
+      String.format("%s-%s", updateRequest.getRequestId(), updateRequest.getDeployId())
+    );
   }
 
-  public SingularityCreateResult createUpdatePendingDeployRequest(SingularityUpdatePendingDeployRequest updateRequest) {
-    return create(getUpdatePendingDeployPath(updateRequest), updateRequest, updateRequestTranscoder);
+  public SingularityCreateResult createUpdatePendingDeployRequest(
+    SingularityUpdatePendingDeployRequest updateRequest
+  ) {
+    return create(
+      getUpdatePendingDeployPath(updateRequest),
+      updateRequest,
+      updateRequestTranscoder
+    );
   }
 
-  public SingularityDeleteResult deleteUpdatePendingDeployRequest(SingularityUpdatePendingDeployRequest updateRequest) {
+  public SingularityDeleteResult deleteUpdatePendingDeployRequest(
+    SingularityUpdatePendingDeployRequest updateRequest
+  ) {
     LOG.debug("Removing request to update pending deploy {}", updateRequest);
     return delete(getUpdatePendingDeployPath(updateRequest));
   }
@@ -384,7 +558,11 @@ public class DeployManager extends CuratorAsyncManager {
       if (!activeRequestIds.contains(requestId)) {
         String path = getRequestDeployPath(requestId);
         Optional<Stat> maybeStat = checkExists(path);
-        if (maybeStat.isPresent() && maybeStat.get().getMtime() < deleteBeforeTime && !getChildren(path).contains(REQUEST_DEPLOY_STATE_KEY)) {
+        if (
+          maybeStat.isPresent() &&
+          maybeStat.get().getMtime() < deleteBeforeTime &&
+          !getChildren(path).contains(REQUEST_DEPLOY_STATE_KEY)
+        ) {
           delete(path);
         }
       }

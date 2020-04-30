@@ -15,14 +15,24 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 public class SingularityTestLeaderController extends SingularityLeaderController {
 
   @Inject
-  public SingularityTestLeaderController(StateManager stateManager,
-                                         SingularityConfiguration configuration,
-                                         SingularityAbort abort,
-                                         SingularityExceptionNotifier exceptionNotifier,
-                                         @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
-                                         SingularityMesosScheduler scheduler,
-                                         OfferCache offerCache) {
-    super(stateManager, configuration, abort, exceptionNotifier, hostAndPort, scheduler, offerCache);
+  public SingularityTestLeaderController(
+    StateManager stateManager,
+    SingularityConfiguration configuration,
+    SingularityAbort abort,
+    SingularityExceptionNotifier exceptionNotifier,
+    @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
+    SingularityMesosScheduler scheduler,
+    OfferCache offerCache
+  ) {
+    super(
+      stateManager,
+      configuration,
+      abort,
+      exceptionNotifier,
+      hostAndPort,
+      scheduler,
+      offerCache
+    );
   }
 
   @Override

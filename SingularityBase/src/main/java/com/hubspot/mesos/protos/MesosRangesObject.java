@@ -1,19 +1,20 @@
 package com.hubspot.mesos.protos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class MesosRangesObject {
   private final Optional<List<MesosRangeObject>> range;
 
   @JsonCreator
-  public MesosRangesObject(@JsonProperty("range") Optional<List<MesosRangeObject>> range) {
+  public MesosRangesObject(
+    @JsonProperty("range") Optional<List<MesosRangeObject>> range
+  ) {
     this.range = range;
   }
 
@@ -50,8 +51,6 @@ public class MesosRangesObject {
 
   @Override
   public String toString() {
-    return "MesosRangesObject{" +
-        "range=" + range +
-        '}';
+    return "MesosRangesObject{" + "range=" + range + '}';
   }
 }

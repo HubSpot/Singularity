@@ -33,7 +33,9 @@ public class S3ObjectSummaryHolder {
     if (group != null ? !group.equals(that.group) : that.group != null) {
       return false;
     }
-    return objectSummary != null ? objectSummary.equals(that.objectSummary) : that.objectSummary == null;
+    return objectSummary != null
+      ? objectSummary.equals(that.objectSummary)
+      : that.objectSummary == null;
   }
 
   @Override
@@ -45,9 +47,14 @@ public class S3ObjectSummaryHolder {
 
   @Override
   public String toString() {
-    return "S3ObjectSummaryHolder{" +
-        "group='" + group + '\'' +
-        ", objectSummary=" + objectSummary +
-        '}';
+    return (
+      "S3ObjectSummaryHolder{" +
+      "group='" +
+      group +
+      '\'' +
+      ", objectSummary=" +
+      objectSummary +
+      '}'
+    );
   }
 }

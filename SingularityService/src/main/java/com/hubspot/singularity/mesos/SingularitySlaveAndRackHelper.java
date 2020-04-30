@@ -1,24 +1,20 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.inject.Singleton;
-
-import org.apache.mesos.v1.Protos.Attribute;
-import org.apache.mesos.v1.Protos.Offer;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.helpers.MesosUtils;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.inject.Singleton;
+import org.apache.mesos.v1.Protos.Attribute;
+import org.apache.mesos.v1.Protos.Offer;
 
 @Singleton
 public class SingularitySlaveAndRackHelper {
-
   private final String rackIdAttributeKey;
   private final String defaultRackId;
 
@@ -32,13 +28,17 @@ public class SingularitySlaveAndRackHelper {
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
-
   }
 
   public String getMaybeTruncatedHost(String hostname) {
     if (configuration.getCommonHostnameSuffixToOmit().isPresent()) {
       if (hostname.endsWith(configuration.getCommonHostnameSuffixToOmit().get())) {
-        hostname = hostname.substring(0, hostname.length() - configuration.getCommonHostnameSuffixToOmit().get().length());
+        hostname =
+          hostname.substring(
+            0,
+            hostname.length() -
+            configuration.getCommonHostnameSuffixToOmit().get().length()
+          );
       }
     }
     return hostname;
@@ -87,9 +87,15 @@ public class SingularitySlaveAndRackHelper {
         if (attribute.hasText()) {
           textAttributes.put(attribute.getName(), attribute.getText().getValue());
         } else if (attribute.hasScalar()) {
-          textAttributes.put(attribute.getName(), Double.toString(attribute.getScalar().getValue()));
+          textAttributes.put(
+            attribute.getName(),
+            Double.toString(attribute.getScalar().getValue())
+          );
         } else if (attribute.hasRanges()) {
-          textAttributes.put(attribute.getName(), attribute.getRanges().getRangeList().toString());
+          textAttributes.put(
+            attribute.getName(),
+            attribute.getRanges().getRangeList().toString()
+          );
         }
       }
     }
@@ -99,9 +105,14 @@ public class SingularitySlaveAndRackHelper {
   public Map<String, String> getReservedSlaveAttributes(Offer offer) {
     Map<String, String> reservedAttributes = new HashMap<>();
     Map<String, String> offerTextAttributes = getTextAttributes(offer);
-    for (Map.Entry<String, List<String>> entry : configuration.getReserveSlavesWithAttributes().entrySet()) {
+    for (Map.Entry<String, List<String>> entry : configuration
+      .getReserveSlavesWithAttributes()
+      .entrySet()) {
       for (String attr : entry.getValue()) {
-        if (offerTextAttributes.containsKey(entry.getKey()) && offerTextAttributes.get(entry.getKey()).equals(attr)) {
+        if (
+          offerTextAttributes.containsKey(entry.getKey()) &&
+          offerTextAttributes.get(entry.getKey()).equals(attr)
+        ) {
           reservedAttributes.put(entry.getKey(), attr);
         }
       }
@@ -109,18 +120,34 @@ public class SingularitySlaveAndRackHelper {
     return reservedAttributes;
   }
 
-  public boolean containsAllAttributes(Map<String, String> attributes, Map<String, String> otherAttributes) {
+  public boolean containsAllAttributes(
+    Map<String, String> attributes,
+    Map<String, String> otherAttributes
+  ) {
     for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
-      if (!(attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
+      if (
+        !(
+          attributes.containsKey(entry.getKey()) &&
+          attributes.get(entry.getKey()).equals(entry.getValue())
+        )
+      ) {
         return false;
       }
     }
     return true;
   }
 
-  public boolean containsAtLeastOneMatchingAttribute(Map<String, String> attributes, Map<String, String> otherAttributes) {
+  public boolean containsAtLeastOneMatchingAttribute(
+    Map<String, String> attributes,
+    Map<String, String> otherAttributes
+  ) {
     for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
-      if ((attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
+      if (
+        (
+          attributes.containsKey(entry.getKey()) &&
+          attributes.get(entry.getKey()).equals(entry.getValue())
+        )
+      ) {
         return true;
       }
     }
@@ -133,7 +160,9 @@ public class SingularitySlaveAndRackHelper {
     HIGH_CPU
   }
 
-  public CpuMemoryPreference getCpuMemoryPreferenceForRequest(RequestUtilization requestUtilization) {
+  public CpuMemoryPreference getCpuMemoryPreferenceForRequest(
+    RequestUtilization requestUtilization
+  ) {
     double cpuMemoryRatioForRequest = getCpuMemoryRatioForRequest(requestUtilization);
 
     if (cpuMemoryRatioForRequest > configuration.getHighCpuSlaveCutOff()) {
@@ -144,7 +173,9 @@ public class SingularitySlaveAndRackHelper {
     return CpuMemoryPreference.AVERAGE;
   }
 
-  public CpuMemoryPreference getCpuMemoryPreferenceForSlave(SingularityOfferHolder offerHolder) {
+  public CpuMemoryPreference getCpuMemoryPreferenceForSlave(
+    SingularityOfferHolder offerHolder
+  ) {
     double cpuMemoryRatioForSlave = getCpuMemoryRatioForSlave(offerHolder);
     if (cpuMemoryRatioForSlave > configuration.getHighCpuSlaveCutOff()) {
       return CpuMemoryPreference.HIGH_CPU;
@@ -155,20 +186,27 @@ public class SingularitySlaveAndRackHelper {
   }
 
   private double getCpuMemoryRatioForSlave(SingularityOfferHolder offerHolder) {
-    double memoryGB = MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()) / 1024;
-    double cpus = MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.empty());
-    return cpus/memoryGB;
+    double memoryGB =
+      MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()) / 1024;
+    double cpus = MesosUtils.getNumCpus(
+      offerHolder.getCurrentResources(),
+      Optional.empty()
+    );
+    return cpus / memoryGB;
   }
 
   private double getCpuMemoryRatioForRequest(RequestUtilization requestUtilization) {
     double cpuUsageForRequest = getEstimatedCpuUsageForRequest(requestUtilization);
     double memUsageGBForRequest = requestUtilization.getAvgMemBytesUsed() / 1024 / 1024;
-    return cpuUsageForRequest/memUsageGBForRequest;
+    return cpuUsageForRequest / memUsageGBForRequest;
   }
 
   public double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
     // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
-    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
+    return (
+      (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) *
+      requestUtilization.getCpuBurstRating() +
+      requestUtilization.getAvgCpuUsed()
+    );
   }
-
 }

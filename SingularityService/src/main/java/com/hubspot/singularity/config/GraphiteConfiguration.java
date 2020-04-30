@@ -1,17 +1,14 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class GraphiteConfiguration {
-
   @JsonProperty
   private boolean enabled = false;
 

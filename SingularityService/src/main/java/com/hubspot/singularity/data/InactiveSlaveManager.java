@@ -1,25 +1,25 @@
 package com.hubspot.singularity.data;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.data.Stat;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.data.Stat;
 
 @Singleton
 public class InactiveSlaveManager extends CuratorManager {
   private static final String ROOT_PATH = "/inactiveSlaves";
 
   @Inject
-  public InactiveSlaveManager(CuratorFramework curator,
-                              SingularityConfiguration configuration,
-                              MetricRegistry metricRegistry) {
+  public InactiveSlaveManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry
+  ) {
     super(curator, configuration, metricRegistry);
   }
 

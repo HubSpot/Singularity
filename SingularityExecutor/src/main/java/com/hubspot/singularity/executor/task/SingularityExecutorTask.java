@@ -1,17 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
-
+import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
@@ -24,11 +13,18 @@ import com.hubspot.singularity.executor.utils.MesosUtils;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-
-import ch.qos.logback.classic.Logger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
+import org.apache.mesos.ExecutorDriver;
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
 
 public class SingularityExecutorTask {
-
   private final ExecutorDriver driver;
   private final Protos.TaskInfo taskInfo;
   private final Logger log;
@@ -46,20 +42,21 @@ public class SingularityExecutorTask {
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
   public SingularityExecutorTask(
-      ExecutorDriver driver,
-      ExecutorUtils executorUtils,
-      SingularityRunnerBaseConfiguration baseConfiguration,
-      SingularityExecutorConfiguration executorConfiguration,
-      SingularityExecutorTaskDefinition taskDefinition,
-      String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher,
-      Protos.TaskInfo taskInfo,
-      TemplateManager templateManager,
-      Logger log,
-      JsonObjectFileHelper jsonObjectFileHelper,
-      DockerUtils dockerUtils,
-      SingularityS3Configuration s3Configuration,
-      ObjectMapper objectMapper) {
+    ExecutorDriver driver,
+    ExecutorUtils executorUtils,
+    SingularityRunnerBaseConfiguration baseConfiguration,
+    SingularityExecutorConfiguration executorConfiguration,
+    SingularityExecutorTaskDefinition taskDefinition,
+    String executorPid,
+    SingularityExecutorArtifactFetcher artifactFetcher,
+    Protos.TaskInfo taskInfo,
+    TemplateManager templateManager,
+    Logger log,
+    JsonObjectFileHelper jsonObjectFileHelper,
+    DockerUtils dockerUtils,
+    SingularityS3Configuration s3Configuration,
+    ObjectMapper objectMapper
+  ) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -74,16 +71,56 @@ public class SingularityExecutorTask {
 
     this.taskDefinition = taskDefinition;
 
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper, executorConfiguration.getMaxServiceLogSizeMb().isPresent());
-    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerUtils);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerUtils, objectMapper);
-    this.artifactVerifier = new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration, s3Configuration);
+    this.taskLogManager =
+      new SingularityExecutorTaskLogManager(
+        taskDefinition,
+        templateManager,
+        baseConfiguration,
+        executorConfiguration,
+        log,
+        jsonObjectFileHelper,
+        executorConfiguration.getMaxServiceLogSizeMb().isPresent()
+      );
+    this.taskCleanup =
+      new SingularityExecutorTaskCleanup(
+        taskLogManager,
+        executorConfiguration,
+        taskDefinition,
+        log,
+        dockerUtils
+      );
+    this.processBuilder =
+      new SingularityExecutorTaskProcessBuilder(
+        this,
+        executorUtils,
+        artifactFetcher,
+        templateManager,
+        executorConfiguration,
+        taskDefinition.getExecutorData(),
+        executorPid,
+        dockerUtils,
+        objectMapper
+      );
+    this.artifactVerifier =
+      new SingularityExecutorArtifactVerifier(
+        taskDefinition,
+        log,
+        executorConfiguration,
+        s3Configuration
+      );
   }
 
   public void cleanup(TaskState state) {
-    ExtendedTaskState extendedTaskState = MesosUtils.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString()));
+    ExtendedTaskState extendedTaskState = MesosUtils.fromTaskState(
+      org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString())
+    );
 
-    boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
+    boolean cleanupAppTaskDirectory =
+      !extendedTaskState.isFailed() &&
+      !taskDefinition
+        .getExecutorData()
+        .getPreserveTaskSandboxAfterFinish()
+        .orElse(Boolean.FALSE);
     boolean cleanupLogs = false; // Task has just died, so we don't want to delete logs yet.
 
     boolean isDocker = (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker());
@@ -97,7 +134,12 @@ public class SingularityExecutorTask {
       if (!relativePath.isAbsolute()) {
         return getTaskDefinition().getTaskDirectoryPath().resolve(relativePath);
       } else {
-        getLog().warn("Absolute targetFolderRelativeToTask {} ignored for artifact {}", relativePath, artifact);
+        getLog()
+          .warn(
+            "Absolute targetFolderRelativeToTask {} ignored for artifact {}",
+            relativePath,
+            artifact
+          );
       }
     }
 
@@ -201,7 +243,14 @@ public class SingularityExecutorTask {
 
   @Override
   public String toString() {
-    return "SingularityExecutorTask [taskInfo=" + taskInfo + ", killed=" + killed + ", getTaskId()=" + getTaskId() + "]";
+    return (
+      "SingularityExecutorTask [taskInfo=" +
+      taskInfo +
+      ", killed=" +
+      killed +
+      ", getTaskId()=" +
+      getTaskId() +
+      "]"
+    );
   }
-
 }

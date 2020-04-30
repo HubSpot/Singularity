@@ -19,20 +19,23 @@ public class IndexViewConfiguration {
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
   private final boolean generateAuthHeader;
 
-  public IndexViewConfiguration(UIConfiguration uiConfiguration,
-                                Integer defaultMemory,
-                                Integer defaultCpus,
-                                Integer defaultDisk,
-                                Integer slaveHttpPort,
-                                Optional<Integer> slaveHttpsPort,
-                                int bounceExpirationMinutes,
-                                long healthcheckIntervalSeconds,
-                                long healthcheckTimeoutSeconds,
-                                Optional<Integer> healthcheckMaxRetries,
-                                int startupTimeoutSeconds,
-                                boolean loadBalancingEnabled,
-                                Optional<String> commonHostnameSuffixToOmit, Integer warnIfScheduledJobIsRunningPastNextRunPct,
-                                boolean generateAuthHeader) {
+  public IndexViewConfiguration(
+    UIConfiguration uiConfiguration,
+    Integer defaultMemory,
+    Integer defaultCpus,
+    Integer defaultDisk,
+    Integer slaveHttpPort,
+    Optional<Integer> slaveHttpsPort,
+    int bounceExpirationMinutes,
+    long healthcheckIntervalSeconds,
+    long healthcheckTimeoutSeconds,
+    Optional<Integer> healthcheckMaxRetries,
+    int startupTimeoutSeconds,
+    boolean loadBalancingEnabled,
+    Optional<String> commonHostnameSuffixToOmit,
+    Integer warnIfScheduledJobIsRunningPastNextRunPct,
+    boolean generateAuthHeader
+  ) {
     this.uiConfiguration = uiConfiguration;
     this.defaultMemory = defaultMemory;
     this.defaultCpus = defaultCpus;
@@ -46,7 +49,8 @@ public class IndexViewConfiguration {
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     this.loadBalancingEnabled = loadBalancingEnabled;
     this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
-    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
+    this.warnIfScheduledJobIsRunningPastNextRunPct =
+      warnIfScheduledJobIsRunningPastNextRunPct;
     this.generateAuthHeader = generateAuthHeader;
   }
 

@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
-import java.util.Collection;
-import java.util.Map;
-
-import javax.annotation.Nonnull;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.JavaUtils;
+import java.util.Collection;
+import java.util.Map;
+import javax.annotation.Nonnull;
 
 public class SingularityDeployKey extends SingularityId {
-
   private final String requestId;
   private final String deployId;
 
@@ -19,40 +16,63 @@ public class SingularityDeployKey extends SingularityId {
   }
 
   public static SingularityDeployKey fromPendingTask(SingularityPendingTask pendingTask) {
-    return new SingularityDeployKey(pendingTask.getPendingTaskId().getRequestId(), pendingTask.getPendingTaskId().getDeployId());
+    return new SingularityDeployKey(
+      pendingTask.getPendingTaskId().getRequestId(),
+      pendingTask.getPendingTaskId().getDeployId()
+    );
   }
 
-  public static SingularityDeployKey fromDeployMarker(SingularityDeployMarker deployMarker) {
-    return new SingularityDeployKey(deployMarker.getRequestId(), deployMarker.getDeployId());
+  public static SingularityDeployKey fromDeployMarker(
+    SingularityDeployMarker deployMarker
+  ) {
+    return new SingularityDeployKey(
+      deployMarker.getRequestId(),
+      deployMarker.getDeployId()
+    );
   }
 
   public static SingularityDeployKey fromTaskId(SingularityTaskId taskId) {
     return new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
   }
 
-  public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(Collection<SingularityDeploy> deploys) {
-    return Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
-      @Override
-      public SingularityDeployKey apply(@Nonnull SingularityDeploy input) {
-        return SingularityDeployKey.fromDeploy(input);
+  public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(
+    Collection<SingularityDeploy> deploys
+  ) {
+    return Maps.uniqueIndex(
+      deploys,
+      new Function<SingularityDeploy, SingularityDeployKey>() {
+
+        @Override
+        public SingularityDeployKey apply(@Nonnull SingularityDeploy input) {
+          return SingularityDeployKey.fromDeploy(input);
+        }
       }
-    });
+    );
   }
 
-  public static Map<SingularityPendingTask, SingularityDeployKey> fromPendingTasks(Collection<SingularityPendingTask> pendingTasks) {
-    return Maps.toMap(pendingTasks, new Function<SingularityPendingTask, SingularityDeployKey>() {
-      @Override
-      public SingularityDeployKey apply(@Nonnull SingularityPendingTask input) {
-        return SingularityDeployKey.fromPendingTask(input);
+  public static Map<SingularityPendingTask, SingularityDeployKey> fromPendingTasks(
+    Collection<SingularityPendingTask> pendingTasks
+  ) {
+    return Maps.toMap(
+      pendingTasks,
+      new Function<SingularityPendingTask, SingularityDeployKey>() {
+
+        @Override
+        public SingularityDeployKey apply(@Nonnull SingularityPendingTask input) {
+          return SingularityDeployKey.fromPendingTask(input);
+        }
       }
-    });
+    );
   }
 
-  public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(Collection<SingularityPendingDeploy> pendingDeploys) {
+  public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(
+    Collection<SingularityPendingDeploy> pendingDeploys
+  ) {
     return Maps.toMap(pendingDeploys, FROM_PENDING_TO_DEPLOY_KEY);
   }
 
   public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
+
     @Override
     public SingularityDeployKey apply(@Nonnull SingularityPendingDeploy input) {
       return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());

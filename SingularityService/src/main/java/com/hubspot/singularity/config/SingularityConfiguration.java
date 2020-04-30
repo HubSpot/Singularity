@@ -1,5 +1,14 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SlavePlacement;
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -8,26 +17,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SlavePlacement;
-
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
-
   private boolean allowRequestsWithoutOwners = true;
 
   private boolean allowTestResourceCalls = false;
@@ -148,7 +144,9 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxMachineHistoryEntries = 10;
 
-  private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+  private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(
+    14
+  );
 
   private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.empty();
 
@@ -200,7 +198,9 @@ public class SingularityConfiguration extends Configuration {
 
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
 
-  private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(24);
+  private long killNonLongRunningTasksInCleanupAfterSeconds = TimeUnit.HOURS.toSeconds(
+    24
+  );
 
   private int listenerThreadpoolSize = 3;
 
@@ -255,7 +255,9 @@ public class SingularityConfiguration extends Configuration {
 
   private int newTaskCheckerBaseDelaySeconds = 1;
 
-  private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
+  private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(
+    10
+  );
 
   private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(2);
 
@@ -333,7 +335,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("webhookQueue")
   @Valid
- private WebhookQueueConfiguration webhookQueueConfiguration = new WebhookQueueConfiguration();
+  private WebhookQueueConfiguration webhookQueueConfiguration = new WebhookQueueConfiguration();
 
   private int maxConcurrentWebhooks = 100;
 
@@ -362,7 +364,12 @@ public class SingularityConfiguration extends Configuration {
   private double defaultTaskPriorityLevel = 0.3;
 
   @NotNull
-  private Map<RequestType, Double> defaultTaskPriorityLevelForRequestType = ImmutableMap.of(RequestType.WORKER, 0.5, RequestType.SERVICE, 0.7);
+  private Map<RequestType, Double> defaultTaskPriorityLevelForRequestType = ImmutableMap.of(
+    RequestType.WORKER,
+    0.5,
+    RequestType.SERVICE,
+    0.7
+  );
 
   @Min(0)
   private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
@@ -500,8 +507,11 @@ public class SingularityConfiguration extends Configuration {
     this.cacheForWebForMillis = cacheForWebForMillis;
   }
 
-  public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
-    this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
+  public void setPendingDeployHoldTaskDuringDecommissionMillis(
+    long pendingDeployHoldTaskDuringDecommissionMillis
+  ) {
+    this.pendingDeployHoldTaskDuringDecommissionMillis =
+      pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
   public long getDebugCuratorCallOverMillis() {
@@ -692,7 +702,9 @@ public class SingularityConfiguration extends Configuration {
     return loadBalancerRemovalGracePeriodMillis;
   }
 
-  public void setLoadBalancerRemovalGracePeriodMillis(long loadBalancerRemovalGracePeriodMillis) {
+  public void setLoadBalancerRemovalGracePeriodMillis(
+    long loadBalancerRemovalGracePeriodMillis
+  ) {
     this.loadBalancerRemovalGracePeriodMillis = loadBalancerRemovalGracePeriodMillis;
   }
 
@@ -740,7 +752,9 @@ public class SingularityConfiguration extends Configuration {
     return skipDNSPreResolutionForRequests;
   }
 
-  public void setSkipDNSPreResolutionForRequests(Set<String> skipDNSPreResolutionForRequests) {
+  public void setSkipDNSPreResolutionForRequests(
+    Set<String> skipDNSPreResolutionForRequests
+  ) {
     this.skipDNSPreResolutionForRequests = skipDNSPreResolutionForRequests;
   }
 
@@ -806,7 +820,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   @JsonIgnore
-  public Optional<SentryConfiguration> getSentryConfigurationOptional(){
+  public Optional<SentryConfiguration> getSentryConfigurationOptional() {
     return Optional.ofNullable(sentryConfiguration);
   }
 
@@ -883,7 +897,9 @@ public class SingularityConfiguration extends Configuration {
     return storeAllMesosTaskInfoForDebugging;
   }
 
-  public void setStoreAllMesosTaskInfoForDebugging(boolean storeAllMesosTaskInfoForDebugging) {
+  public void setStoreAllMesosTaskInfoForDebugging(
+    boolean storeAllMesosTaskInfoForDebugging
+  ) {
     this.storeAllMesosTaskInfoForDebugging = storeAllMesosTaskInfoForDebugging;
   }
 
@@ -920,7 +936,9 @@ public class SingularityConfiguration extends Configuration {
     this.allowTestResourceCalls = allowTestResourceCalls;
   }
 
-  public void setAskDriverToKillTasksAgainAfterMillis(long askDriverToKillTasksAgainAfterMillis) {
+  public void setAskDriverToKillTasksAgainAfterMillis(
+    long askDriverToKillTasksAgainAfterMillis
+  ) {
     this.askDriverToKillTasksAgainAfterMillis = askDriverToKillTasksAgainAfterMillis;
   }
 
@@ -940,7 +958,9 @@ public class SingularityConfiguration extends Configuration {
     this.checkNewTasksScheduledThreads = checkNewTasksScheduledThreads;
   }
 
-  public void setCheckReconcileWhenRunningEveryMillis(long checkReconcileWhenRunningEveryMillis) {
+  public void setCheckReconcileWhenRunningEveryMillis(
+    long checkReconcileWhenRunningEveryMillis
+  ) {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
@@ -976,8 +996,11 @@ public class SingularityConfiguration extends Configuration {
     this.compressLargeDataObjects = compressLargeDataObjects;
   }
 
-  public void setConsiderTaskHealthyAfterRunningForSeconds(long considerTaskHealthyAfterRunningForSeconds) {
-    this.considerTaskHealthyAfterRunningForSeconds = considerTaskHealthyAfterRunningForSeconds;
+  public void setConsiderTaskHealthyAfterRunningForSeconds(
+    long considerTaskHealthyAfterRunningForSeconds
+  ) {
+    this.considerTaskHealthyAfterRunningForSeconds =
+      considerTaskHealthyAfterRunningForSeconds;
   }
 
   public void setCooldownMinScheduleSeconds(long cooldownMinScheduleSeconds) {
@@ -992,7 +1015,9 @@ public class SingularityConfiguration extends Configuration {
     this.createDeployIds = createDeployIds;
   }
 
-  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+  public void setCustomExecutorConfiguration(
+    CustomExecutorConfiguration customExecutorConfiguration
+  ) {
     this.customExecutorConfiguration = customExecutorConfiguration;
   }
 
@@ -1008,27 +1033,43 @@ public class SingularityConfiguration extends Configuration {
     this.placementLeniency = placementLeniency;
   }
 
-  public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
-    this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
+  public void setDefaultValueForKillTasksOfPausedRequests(
+    boolean defaultValueForKillTasksOfPausedRequests
+  ) {
+    this.defaultValueForKillTasksOfPausedRequests =
+      defaultValueForKillTasksOfPausedRequests;
   }
 
-  public void setDeleteDeploysFromZkWhenNoDatabaseAfterHours(long deleteDeploysFromZkWhenNoDatabaseAfterHours) {
-    this.deleteDeploysFromZkWhenNoDatabaseAfterHours = deleteDeploysFromZkWhenNoDatabaseAfterHours;
+  public void setDeleteDeploysFromZkWhenNoDatabaseAfterHours(
+    long deleteDeploysFromZkWhenNoDatabaseAfterHours
+  ) {
+    this.deleteDeploysFromZkWhenNoDatabaseAfterHours =
+      deleteDeploysFromZkWhenNoDatabaseAfterHours;
   }
 
-  public void setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours) {
-    this.deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
+  public void setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(
+    long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours
+  ) {
+    this.deleteStaleRequestsFromZkWhenNoDatabaseAfterHours =
+      deleteStaleRequestsFromZkWhenNoDatabaseAfterHours;
   }
 
-  public void setDeleteTasksFromZkWhenNoDatabaseAfterHours(long deleteTasksFromZkWhenNoDatabaseAfterHours) {
-    this.deleteTasksFromZkWhenNoDatabaseAfterHours = deleteTasksFromZkWhenNoDatabaseAfterHours;
+  public void setDeleteTasksFromZkWhenNoDatabaseAfterHours(
+    long deleteTasksFromZkWhenNoDatabaseAfterHours
+  ) {
+    this.deleteTasksFromZkWhenNoDatabaseAfterHours =
+      deleteTasksFromZkWhenNoDatabaseAfterHours;
   }
 
-  public void setDeleteUndeliverableWebhooksAfterHours(long deleteUndeliverableWebhooksAfterHours) {
+  public void setDeleteUndeliverableWebhooksAfterHours(
+    long deleteUndeliverableWebhooksAfterHours
+  ) {
     this.deleteUndeliverableWebhooksAfterHours = deleteUndeliverableWebhooksAfterHours;
   }
 
-  public void setDeltaAfterWhichTasksAreLateMillis(long deltaAfterWhichTasksAreLateMillis) {
+  public void setDeltaAfterWhichTasksAreLateMillis(
+    long deltaAfterWhichTasksAreLateMillis
+  ) {
     this.deltaAfterWhichTasksAreLateMillis = deltaAfterWhichTasksAreLateMillis;
   }
 
@@ -1060,11 +1101,15 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckMaxRetries = healthcheckMaxRetries;
   }
 
-  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Integer> healthcheckMaxTotalTimeoutSeconds) {
+  public void setHealthcheckMaxTotalTimeoutSeconds(
+    Optional<Integer> healthcheckMaxTotalTimeoutSeconds
+  ) {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
   }
 
-  public SingularityConfiguration setKillTaskIfNotHealthyAfterSeconds(long killTaskIfNotHealthyAfterSeconds) {
+  public SingularityConfiguration setKillTaskIfNotHealthyAfterSeconds(
+    long killTaskIfNotHealthyAfterSeconds
+  ) {
     this.killTaskIfNotHealthyAfterSeconds = killTaskIfNotHealthyAfterSeconds;
     return this;
   }
@@ -1073,7 +1118,9 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckFailureStatusCodes;
   }
 
-  public void setHealthcheckFailureStatusCodes(List<Integer> healthcheckFailureStatusCodes) {
+  public void setHealthcheckFailureStatusCodes(
+    List<Integer> healthcheckFailureStatusCodes
+  ) {
     this.healthcheckFailureStatusCodes = healthcheckFailureStatusCodes;
   }
 
@@ -1081,12 +1128,17 @@ public class SingularityConfiguration extends Configuration {
     this.hostname = hostname;
   }
 
-  public void setKillAfterTasksDoNotRunDefaultSeconds(long killAfterTasksDoNotRunDefaultSeconds) {
+  public void setKillAfterTasksDoNotRunDefaultSeconds(
+    long killAfterTasksDoNotRunDefaultSeconds
+  ) {
     this.killAfterTasksDoNotRunDefaultSeconds = killAfterTasksDoNotRunDefaultSeconds;
   }
 
-  public void setKillNonLongRunningTasksInCleanupAfterSeconds(long killNonLongRunningTasksInCleanupAfterSeconds) {
-    this.killNonLongRunningTasksInCleanupAfterSeconds = killNonLongRunningTasksInCleanupAfterSeconds;
+  public void setKillNonLongRunningTasksInCleanupAfterSeconds(
+    long killNonLongRunningTasksInCleanupAfterSeconds
+  ) {
+    this.killNonLongRunningTasksInCleanupAfterSeconds =
+      killNonLongRunningTasksInCleanupAfterSeconds;
   }
 
   public void setListenerThreadpoolSize(int listenerThreadpoolSize) {
@@ -1150,7 +1202,9 @@ public class SingularityConfiguration extends Configuration {
     this.newTaskCheckerBaseDelaySeconds = newTaskCheckerBaseDelaySeconds;
   }
 
-  public void setDispatchTaskShellCommandsEverySeconds(int dispatchTaskShellCommandsEverySeconds) {
+  public void setDispatchTaskShellCommandsEverySeconds(
+    int dispatchTaskShellCommandsEverySeconds
+  ) {
     this.dispatchTaskShellCommandsEverySeconds = dispatchTaskShellCommandsEverySeconds;
   }
 
@@ -1182,7 +1236,7 @@ public class SingularityConfiguration extends Configuration {
     this.saveStateEverySeconds = saveStateEverySeconds;
   }
 
-  public void setSentryConfiguration(SentryConfiguration sentryConfiguration){
+  public void setSentryConfiguration(SentryConfiguration sentryConfiguration) {
     this.sentryConfiguration = sentryConfiguration;
   }
 
@@ -1202,17 +1256,25 @@ public class SingularityConfiguration extends Configuration {
     this.waitForListeners = waitForListeners;
   }
 
-  public void setWarnIfScheduledJobIsRunningForAtLeastMillis(long warnIfScheduledJobIsRunningForAtLeastMillis) {
-    this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
+  public void setWarnIfScheduledJobIsRunningForAtLeastMillis(
+    long warnIfScheduledJobIsRunningForAtLeastMillis
+  ) {
+    this.warnIfScheduledJobIsRunningForAtLeastMillis =
+      warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
-  public SingularityConfiguration setTaskExecutionTimeLimitMillis(Optional<Long> taskExecutionTimeLimitMillis) {
+  public SingularityConfiguration setTaskExecutionTimeLimitMillis(
+    Optional<Long> taskExecutionTimeLimitMillis
+  ) {
     this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
     return this;
   }
 
-  public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
-    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
+  public void setWarnIfScheduledJobIsRunningPastNextRunPct(
+    int warnIfScheduledJobIsRunningPastNextRunPct
+  ) {
+    this.warnIfScheduledJobIsRunningPastNextRunPct =
+      warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
   public void setZookeeperAsyncTimeout(long zookeeperAsyncTimeout) {
@@ -1292,7 +1354,9 @@ public class SingularityConfiguration extends Configuration {
     return webhookAuthConfiguration;
   }
 
-  public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+  public void setWebhookAuthConfiguration(
+    WebhookAuthConfiguration webhookAuthConfiguration
+  ) {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
@@ -1300,7 +1364,9 @@ public class SingularityConfiguration extends Configuration {
     return webhookQueueConfiguration;
   }
 
-  public void setWebhookQueueConfiguration(WebhookQueueConfiguration webhookQueueConfiguration) {
+  public void setWebhookQueueConfiguration(
+    WebhookQueueConfiguration webhookQueueConfiguration
+  ) {
     this.webhookQueueConfiguration = webhookQueueConfiguration;
   }
 
@@ -1324,7 +1390,9 @@ public class SingularityConfiguration extends Configuration {
     return checkExpiringUserActionEveryMillis;
   }
 
-  public void setCheckExpiringUserActionEveryMillis(long checkExpiringUserActionEveryMillis) {
+  public void setCheckExpiringUserActionEveryMillis(
+    long checkExpiringUserActionEveryMillis
+  ) {
     this.checkExpiringUserActionEveryMillis = checkExpiringUserActionEveryMillis;
   }
 
@@ -1336,7 +1404,9 @@ public class SingularityConfiguration extends Configuration {
     return historyPurgingConfiguration;
   }
 
-  public void setHistoryPurgingConfiguration(HistoryPurgingConfiguration historyPurgingConfiguration) {
+  public void setHistoryPurgingConfiguration(
+    HistoryPurgingConfiguration historyPurgingConfiguration
+  ) {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
@@ -1344,7 +1414,9 @@ public class SingularityConfiguration extends Configuration {
     return reserveSlavesWithAttributes;
   }
 
-  public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
+  public void setReserveSlavesWithAttributes(
+    Map<String, List<String>> reserveSlavesWithAttributes
+  ) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
@@ -1352,7 +1424,9 @@ public class SingularityConfiguration extends Configuration {
     return taskMetadataConfiguration;
   }
 
-  public void setTaskMetadataConfiguration(SingularityTaskMetadataConfiguration taskMetadataConfiguration) {
+  public void setTaskMetadataConfiguration(
+    SingularityTaskMetadataConfiguration taskMetadataConfiguration
+  ) {
     this.taskMetadataConfiguration = taskMetadataConfiguration;
   }
 
@@ -1368,7 +1442,9 @@ public class SingularityConfiguration extends Configuration {
     return deleteRemovedRequestsFromLoadBalancer;
   }
 
-  public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
+  public void setDeleteRemovedRequestsFromLoadBalancer(
+    boolean deleteRemovedRequestsFromLoadBalancer
+  ) {
     this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
   }
 
@@ -1376,24 +1452,33 @@ public class SingularityConfiguration extends Configuration {
     return maxStaleDeploysPerRequestInZkWhenNoDatabase;
   }
 
-  public void setMaxStaleDeploysPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase) {
-    this.maxStaleDeploysPerRequestInZkWhenNoDatabase = maxStaleDeploysPerRequestInZkWhenNoDatabase;
+  public void setMaxStaleDeploysPerRequestInZkWhenNoDatabase(
+    Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase
+  ) {
+    this.maxStaleDeploysPerRequestInZkWhenNoDatabase =
+      maxStaleDeploysPerRequestInZkWhenNoDatabase;
   }
 
   public Optional<Integer> getMaxRequestsWithHistoryInZkWhenNoDatabase() {
     return maxRequestsWithHistoryInZkWhenNoDatabase;
   }
 
-  public void setMaxRequestsWithHistoryInZkWhenNoDatabase(Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase) {
-    this.maxRequestsWithHistoryInZkWhenNoDatabase = maxRequestsWithHistoryInZkWhenNoDatabase;
+  public void setMaxRequestsWithHistoryInZkWhenNoDatabase(
+    Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase
+  ) {
+    this.maxRequestsWithHistoryInZkWhenNoDatabase =
+      maxRequestsWithHistoryInZkWhenNoDatabase;
   }
 
   public Optional<Integer> getMaxStaleTasksPerRequestInZkWhenNoDatabase() {
     return maxStaleTasksPerRequestInZkWhenNoDatabase;
   }
 
-  public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
-    this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
+  public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(
+    Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase
+  ) {
+    this.maxStaleTasksPerRequestInZkWhenNoDatabase =
+      maxStaleTasksPerRequestInZkWhenNoDatabase;
   }
 
   public boolean isTaskHistoryQueryUsesZkFirst() {
@@ -1408,7 +1493,9 @@ public class SingularityConfiguration extends Configuration {
     return taskLabelForLoadBalancerUpstreamGroup;
   }
 
-  public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
+  public void setTaskLabelForLoadBalancerUpstreamGroup(
+    Optional<String> taskLabelForLoadBalancerUpstreamGroup
+  ) {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
@@ -1432,7 +1519,9 @@ public class SingularityConfiguration extends Configuration {
     return defaultTaskPriorityLevelForRequestType;
   }
 
-  public void setDefaultTaskPriorityLevelForRequestType(Map<RequestType, Double> defaultTaskPriorityLevelForRequestType) {
+  public void setDefaultTaskPriorityLevelForRequestType(
+    Map<RequestType, Double> defaultTaskPriorityLevelForRequestType
+  ) {
     this.defaultTaskPriorityLevelForRequestType = defaultTaskPriorityLevelForRequestType;
   }
 
@@ -1464,7 +1553,9 @@ public class SingularityConfiguration extends Configuration {
     return allowBounceToSameHost;
   }
 
-  public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
+  public SingularityConfiguration setAllowBounceToSameHost(
+    boolean allowBounceToSameHost
+  ) {
     this.allowBounceToSameHost = allowBounceToSameHost;
     return this;
   }
@@ -1481,7 +1572,9 @@ public class SingularityConfiguration extends Configuration {
     return checkMesosMasterHeartbeatEverySeconds;
   }
 
-  public void setCheckMesosMasterHeartbeatEverySeconds(long checkMesosMasterHeartbeatEverySeconds) {
+  public void setCheckMesosMasterHeartbeatEverySeconds(
+    long checkMesosMasterHeartbeatEverySeconds
+  ) {
     this.checkMesosMasterHeartbeatEverySeconds = checkMesosMasterHeartbeatEverySeconds;
   }
 
@@ -1513,7 +1606,9 @@ public class SingularityConfiguration extends Configuration {
     return shuffleTasksForOverloadedSlaves;
   }
 
-  public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
+  public void setShuffleTasksForOverloadedSlaves(
+    boolean shuffleTasksForOverloadedSlaves
+  ) {
     this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
   }
 
@@ -1521,8 +1616,11 @@ public class SingularityConfiguration extends Configuration {
     return shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
   }
 
-  public void setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds) {
-    this.shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
+  public void setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(
+    double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds
+  ) {
+    this.shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds =
+      shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
   }
 
   public int getMaxTasksToShuffleTotal() {
@@ -1545,7 +1643,9 @@ public class SingularityConfiguration extends Configuration {
     return minutesBeforeNewTaskEligibleForShuffle;
   }
 
-  public void setMinutesBeforeNewTaskEligibleForShuffle(int minutesBeforeNewTaskEligibleForShuffle) {
+  public void setMinutesBeforeNewTaskEligibleForShuffle(
+    int minutesBeforeNewTaskEligibleForShuffle
+  ) {
     this.minutesBeforeNewTaskEligibleForShuffle = minutesBeforeNewTaskEligibleForShuffle;
   }
 
@@ -1613,7 +1713,9 @@ public class SingularityConfiguration extends Configuration {
     this.spreadAllSlavesEnabled = spreadAllSlavesEnabled;
   }
 
-  public void setCheckAutoSpreadAllSlavesEverySeconds(long checkAutoSpreadAllSlavesEverySeconds) {
+  public void setCheckAutoSpreadAllSlavesEverySeconds(
+    long checkAutoSpreadAllSlavesEverySeconds
+  ) {
     this.checkAutoSpreadAllSlavesEverySeconds = checkAutoSpreadAllSlavesEverySeconds;
   }
 
@@ -1653,7 +1755,9 @@ public class SingularityConfiguration extends Configuration {
     return cpuHardLimitScaleFactor;
   }
 
-  public SingularityConfiguration setCpuHardLimitScaleFactor(double cpuHardLimitScaleFactor) {
+  public SingularityConfiguration setCpuHardLimitScaleFactor(
+    double cpuHardLimitScaleFactor
+  ) {
     this.cpuHardLimitScaleFactor = cpuHardLimitScaleFactor;
     return this;
   }
@@ -1662,7 +1766,9 @@ public class SingularityConfiguration extends Configuration {
     return preemptibleTasksOnlyMachineAttributes;
   }
 
-  public void setPreemptibleTasksOnlyMachineAttributes(Map<String, String> preemptibleTasksOnlyMachineAttributes) {
+  public void setPreemptibleTasksOnlyMachineAttributes(
+    Map<String, String> preemptibleTasksOnlyMachineAttributes
+  ) {
     this.preemptibleTasksOnlyMachineAttributes = preemptibleTasksOnlyMachineAttributes;
   }
 
@@ -1670,7 +1776,9 @@ public class SingularityConfiguration extends Configuration {
     return preemptibleTaskMaxExpectedRuntimeMs;
   }
 
-  public void setPreemptibleTaskMaxExpectedRuntimeMs(long preemptibleTaskMaxExpectedRuntimeMs) {
+  public void setPreemptibleTaskMaxExpectedRuntimeMs(
+    long preemptibleTaskMaxExpectedRuntimeMs
+  ) {
     this.preemptibleTaskMaxExpectedRuntimeMs = preemptibleTaskMaxExpectedRuntimeMs;
   }
 
@@ -1686,7 +1794,9 @@ public class SingularityConfiguration extends Configuration {
     return reCheckMetricsForLargeNewTaskCount;
   }
 
-  public void setReCheckMetricsForLargeNewTaskCount(boolean reCheckMetricsForLargeNewTaskCount) {
+  public void setReCheckMetricsForLargeNewTaskCount(
+    boolean reCheckMetricsForLargeNewTaskCount
+  ) {
     this.reCheckMetricsForLargeNewTaskCount = reCheckMetricsForLargeNewTaskCount;
   }
 

@@ -1,14 +1,12 @@
 package com.hubspot.singularity;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Schema(description = "Describes the current state of a task")
 public class SingularityTaskState {
@@ -20,12 +18,14 @@ public class SingularityTaskState {
   private final boolean pending;
 
   @JsonCreator
-  public SingularityTaskState(@JsonProperty("taskId") Optional<SingularityTaskId> taskId,
-                              @JsonProperty("pendingTaskId") Optional<SingularityPendingTaskId> pendingTaskId,
-                              @JsonProperty("runId") Optional<String> runId,
-                              @JsonProperty("currentState") Optional<ExtendedTaskState> currentState,
-                              @JsonProperty("taskHistory") List<SingularityTaskHistoryUpdate> taskHistory,
-                              @JsonProperty("pending") boolean pending) {
+  public SingularityTaskState(
+    @JsonProperty("taskId") Optional<SingularityTaskId> taskId,
+    @JsonProperty("pendingTaskId") Optional<SingularityPendingTaskId> pendingTaskId,
+    @JsonProperty("runId") Optional<String> runId,
+    @JsonProperty("currentState") Optional<ExtendedTaskState> currentState,
+    @JsonProperty("taskHistory") List<SingularityTaskHistoryUpdate> taskHistory,
+    @JsonProperty("pending") boolean pending
+  ) {
     this.taskId = taskId;
     this.pendingTaskId = pendingTaskId;
     this.runId = runId;
@@ -35,33 +35,42 @@ public class SingularityTaskState {
   }
 
   @Deprecated
-  public SingularityTaskState(Optional<SingularityTaskId> taskId, SingularityPendingTaskId pendingTaskId, Optional<String> runId, Optional<ExtendedTaskState> currentState, List<SingularityTaskHistoryUpdate> taskHistory, boolean pending) {
-   this(taskId, Optional.of(pendingTaskId), runId, currentState, taskHistory, pending);
+  public SingularityTaskState(
+    Optional<SingularityTaskId> taskId,
+    SingularityPendingTaskId pendingTaskId,
+    Optional<String> runId,
+    Optional<ExtendedTaskState> currentState,
+    List<SingularityTaskHistoryUpdate> taskHistory,
+    boolean pending
+  ) {
+    this(taskId, Optional.of(pendingTaskId), runId, currentState, taskHistory, pending);
   }
 
   public static SingularityTaskState fromTaskHistory(SingularityTaskHistory taskHistory) {
     return new SingularityTaskState(
-        Optional.of(taskHistory.getTask().getTaskId()),
-        Optional.of(taskHistory.getTask().getTaskRequest().getPendingTask().getPendingTaskId()),
-        taskHistory.getTask().getTaskRequest().getPendingTask().getRunId(),
-        Optional.of(taskHistory.getLastTaskUpdate().get().getTaskState()),
-        taskHistory.getTaskUpdates(),
-        false
+      Optional.of(taskHistory.getTask().getTaskId()),
+      Optional.of(
+        taskHistory.getTask().getTaskRequest().getPendingTask().getPendingTaskId()
+      ),
+      taskHistory.getTask().getTaskRequest().getPendingTask().getRunId(),
+      Optional.of(taskHistory.getLastTaskUpdate().get().getTaskState()),
+      taskHistory.getTaskUpdates(),
+      false
     );
   }
 
   @Schema(
-      title = "The unique id for this task",
-      nullable = true,
-      description = "Will be present if `pending` is `false` (i.e. the task has been assigned an id and launched)"
+    title = "The unique id for this task",
+    nullable = true,
+    description = "Will be present if `pending` is `false` (i.e. the task has been assigned an id and launched)"
   )
   public Optional<SingularityTaskId> getTaskId() {
     return taskId;
   }
 
   @Schema(
-      title = "A unique id describing a task that is waiting to launch",
-      nullable = true
+    title = "A unique id describing a task that is waiting to launch",
+    nullable = true
   )
   public SingularityPendingTaskId getPendingTaskId() {
     return pendingTaskId.orElse(null);
@@ -73,25 +82,25 @@ public class SingularityTaskState {
   }
 
   @Schema(
-      title = "The run id associated with this task if one is present",
-      nullable = true
+    title = "The run id associated with this task if one is present",
+    nullable = true
   )
   public Optional<String> getRunId() {
     return runId;
   }
 
   @Schema(
-      title = "The current state of this task",
-      description = "Present if the task has already been launched",
-      nullable = true
+    title = "The current state of this task",
+    description = "Present if the task has already been launched",
+    nullable = true
   )
   public Optional<ExtendedTaskState> getCurrentState() {
     return currentState;
   }
 
   @Schema(
-      title = "A list of state updates for this task",
-      description = "Empty if the task has not yet been launched"
+    title = "A list of state updates for this task",
+    description = "Empty if the task has not yet been launched"
   )
   public List<SingularityTaskHistoryUpdate> getTaskHistory() {
     return taskHistory;
@@ -134,16 +143,26 @@ public class SingularityTaskState {
     if (taskId != null ? !taskId.equals(that.taskId) : that.taskId != null) {
       return false;
     }
-    if (pendingTaskId != null ? !pendingTaskId.equals(that.pendingTaskId) : that.pendingTaskId != null) {
+    if (
+      pendingTaskId != null
+        ? !pendingTaskId.equals(that.pendingTaskId)
+        : that.pendingTaskId != null
+    ) {
       return false;
     }
     if (runId != null ? !runId.equals(that.runId) : that.runId != null) {
       return false;
     }
-    if (currentState != null ? !currentState.equals(that.currentState) : that.currentState != null) {
+    if (
+      currentState != null
+        ? !currentState.equals(that.currentState)
+        : that.currentState != null
+    ) {
       return false;
     }
-    return taskHistory != null ? taskHistory.equals(that.taskHistory) : that.taskHistory == null;
+    return taskHistory != null
+      ? taskHistory.equals(that.taskHistory)
+      : that.taskHistory == null;
   }
 
   @Override
@@ -159,13 +178,21 @@ public class SingularityTaskState {
 
   @Override
   public String toString() {
-    return "SingularityTaskState{" +
-        "taskId=" + taskId +
-        ", pendingTaskId=" + pendingTaskId +
-        ", runId=" + runId +
-        ", currentState=" + currentState +
-        ", taskHistory=" + taskHistory +
-        ", pending=" + pending +
-        '}';
+    return (
+      "SingularityTaskState{" +
+      "taskId=" +
+      taskId +
+      ", pendingTaskId=" +
+      pendingTaskId +
+      ", runId=" +
+      runId +
+      ", currentState=" +
+      currentState +
+      ", taskHistory=" +
+      taskHistory +
+      ", pending=" +
+      pending +
+      '}'
+    );
   }
 }

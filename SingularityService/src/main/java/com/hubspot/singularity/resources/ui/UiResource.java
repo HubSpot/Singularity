@@ -1,10 +1,5 @@
 package com.hubspot.singularity.resources.ui;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,6 +8,10 @@ import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.views.IndexView;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Serves as the base for the UI, returns the mustache view for the actual GUI.
@@ -20,7 +19,6 @@ import com.hubspot.singularity.views.IndexView;
 @Singleton
 @Path(UiResource.UI_RESOURCE_LOCATION + "{uiPath:.*}")
 public class UiResource {
-
   public static final String UI_RESOURCE_LOCATION = "/ui/";
 
   private final IndexViewConfiguration configuration;
@@ -28,7 +26,11 @@ public class UiResource {
   private final ObjectMapper mapper;
 
   @Inject
-  public UiResource(@Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, @Singularity ObjectMapper mapper) {
+  public UiResource(
+    @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase,
+    IndexViewConfiguration configuration,
+    @Singularity ObjectMapper mapper
+  ) {
     this.configuration = configuration;
     this.singularityUriBase = singularityUriBase;
     this.mapper = mapper;

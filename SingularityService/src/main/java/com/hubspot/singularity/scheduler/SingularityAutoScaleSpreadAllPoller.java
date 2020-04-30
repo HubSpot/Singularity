@@ -1,13 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
@@ -20,11 +12,17 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPoller {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityAutoScaleSpreadAllPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityAutoScaleSpreadAllPoller.class
+  );
 
   private final SlaveManager slaveManager;
   private final RequestManager requestManager;
@@ -34,7 +32,13 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
   private final SingularitySchedulerLock lock;
 
   @Inject
-  SingularityAutoScaleSpreadAllPoller(SingularityConfiguration configuration, SlaveManager slaveManager, RequestManager requestManager, RequestHelper requestHelper, SingularitySchedulerLock lock) {
+  SingularityAutoScaleSpreadAllPoller(
+    SingularityConfiguration configuration,
+    SlaveManager slaveManager,
+    RequestManager requestManager,
+    RequestHelper requestHelper,
+    SingularitySchedulerLock lock
+  ) {
     super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS);
     this.slaveManager = slaveManager;
     this.requestManager = requestManager;
@@ -49,38 +53,74 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
 
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
-      lock.runWithRequestLock(() -> {
-        SingularityRequest request = requestWithState.getRequest();
-        SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
+      lock.runWithRequestLock(
+        () -> {
+          SingularityRequest request = requestWithState.getRequest();
+          SlavePlacement placement = request
+            .getSlavePlacement()
+            .orElse(defaultSlavePlacement);
 
-        if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
-          return;
-        }
+          if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
+            return;
+          }
 
-        int requestInstanceCount = request.getInstancesSafe();
+          int requestInstanceCount = request.getInstancesSafe();
 
-        if (requestInstanceCount == currentActiveSlaveCount) {
-          LOG.trace("Active Request {} is already spread to all {} available slaves", request.getId(), currentActiveSlaveCount);
-        } else {
-          LOG.info("Scaling request {} from {} instances to {} available slaves", request.getId(), requestInstanceCount, currentActiveSlaveCount);
-          submitScaleRequest(requestWithState, currentActiveSlaveCount);
-        }
-      }, requestWithState.getRequest().getId(), getClass().getSimpleName());
+          if (requestInstanceCount == currentActiveSlaveCount) {
+            LOG.trace(
+              "Active Request {} is already spread to all {} available slaves",
+              request.getId(),
+              currentActiveSlaveCount
+            );
+          } else {
+            LOG.info(
+              "Scaling request {} from {} instances to {} available slaves",
+              request.getId(),
+              requestInstanceCount,
+              currentActiveSlaveCount
+            );
+            submitScaleRequest(requestWithState, currentActiveSlaveCount);
+          }
+        },
+        requestWithState.getRequest().getId(),
+        getClass().getSimpleName()
+      );
     }
   }
 
-  private void submitScaleRequest(SingularityRequestWithState oldRequestWithState, Integer newRequestedInstances) {
+  private void submitScaleRequest(
+    SingularityRequestWithState oldRequestWithState,
+    Integer newRequestedInstances
+  ) {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
-    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(Optional.of((newRequestedInstances))).build();
-    Optional<SingularityRequestHistory.RequestHistoryType> historyType = Optional.of(SingularityRequestHistory.RequestHistoryType.SCALED);
-    Optional<String> message = Optional.of(String.format("Auto scale number of instances to spread to all %d available slaves", newRequestedInstances));
+    SingularityRequest newRequest = oldRequest
+      .toBuilder()
+      .setInstances(Optional.of((newRequestedInstances)))
+      .build();
+    Optional<SingularityRequestHistory.RequestHistoryType> historyType = Optional.of(
+      SingularityRequestHistory.RequestHistoryType.SCALED
+    );
+    Optional<String> message = Optional.of(
+      String.format(
+        "Auto scale number of instances to spread to all %d available slaves",
+        newRequestedInstances
+      )
+    );
 
-    requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.<String>empty(), oldRequest.getSkipHealthchecks(), message, Optional.<SingularityBounceRequest>empty());
+    requestHelper.updateRequest(
+      newRequest,
+      Optional.of(oldRequest),
+      oldRequestWithState.getState(),
+      historyType,
+      Optional.<String>empty(),
+      oldRequest.getSkipHealthchecks(),
+      message,
+      Optional.<SingularityBounceRequest>empty()
+    );
   }
 
   @Override
   public boolean isEnabled() {
     return spreadAllSlavesEnabled;
   }
-
 }

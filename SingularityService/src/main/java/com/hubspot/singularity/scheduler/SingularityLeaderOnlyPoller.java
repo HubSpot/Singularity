@@ -2,16 +2,6 @@ package com.hubspot.singularity.scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-import org.apache.zookeeper.KeeperException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -20,10 +10,19 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SingularityLeaderOnlyPoller {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderOnlyPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityLeaderOnlyPoller.class
+  );
 
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
@@ -41,11 +40,13 @@ public abstract class SingularityLeaderOnlyPoller {
   }
 
   @Inject
-  void injectPollerDependencies(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-                                LeaderLatch leaderLatch,
-                                SingularityExceptionNotifier exceptionNotifier,
-                                SingularityAbort abort,
-                                SingularityMesosScheduler mesosScheduler) {
+  void injectPollerDependencies(
+    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+    LeaderLatch leaderLatch,
+    SingularityExceptionNotifier exceptionNotifier,
+    SingularityAbort abort,
+    SingularityMesosScheduler mesosScheduler
+  ) {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
@@ -64,20 +65,32 @@ public abstract class SingularityLeaderOnlyPoller {
     }
 
     if (pollDelay < 1) {
-      LOG.warn("Not running {} due to delay value of {}", getClass().getSimpleName(), pollDelay);
+      LOG.warn(
+        "Not running {} due to delay value of {}",
+        getClass().getSimpleName(),
+        pollDelay
+      );
       return;
     }
 
-    LOG.info("Starting a {} with a {} delay", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
+    LOG.info(
+      "Starting a {} with a {} delay",
+      getClass().getSimpleName(),
+      JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay))
+    );
 
-    executorService.scheduleWithFixedDelay(new Runnable() {
+    executorService.scheduleWithFixedDelay(
+      new Runnable() {
 
-      @Override
-      public void run() {
-        runActionIfLeaderAndMesosIsRunning();
-      }
-
-    }, pollDelay, pollDelay, pollTimeUnit);
+        @Override
+        public void run() {
+          runActionIfLeaderAndMesosIsRunning();
+        }
+      },
+      pollDelay,
+      pollDelay,
+      pollTimeUnit
+    );
   }
 
   private void runActionIfLeaderAndMesosIsRunning() {
@@ -85,35 +98,65 @@ public abstract class SingularityLeaderOnlyPoller {
     final boolean schedulerRunning = mesosScheduler.isRunning();
 
     if (!leadership || !schedulerRunning || !isEnabled()) {
-      LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {}, enabled: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership,
-          schedulerRunning, isEnabled());
+      LOG.trace(
+        "Skipping {} (period: {}) (leadership: {}, mesos running: {}, enabled: {})",
+        getClass().getSimpleName(),
+        JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)),
+        leadership,
+        schedulerRunning,
+        isEnabled()
+      );
       return;
     }
 
     if (stopped.get()) {
-      LOG.info("Singularity shutting down, will not run {} poller", getClass().getSimpleName());
+      LOG.info(
+        "Singularity shutting down, will not run {} poller",
+        getClass().getSimpleName()
+      );
       return;
     }
 
-    LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
+    LOG.trace(
+      "Running {} (period: {})",
+      getClass().getSimpleName(),
+      JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay))
+    );
 
     long start = System.currentTimeMillis();
 
     try {
       runActionOnPoll();
     } catch (Throwable t) {
-      boolean isZkException = Throwables.getCausalChain(t).stream().anyMatch((throwable) -> throwable instanceof KeeperException);
+      boolean isZkException = Throwables
+        .getCausalChain(t)
+        .stream()
+        .anyMatch(throwable -> throwable instanceof KeeperException);
       if (isZkException) {
-        LOG.error("Uncaught zk exception in {}, not aborting", getClass().getSimpleName(), t);
+        LOG.error(
+          "Uncaught zk exception in {}, not aborting",
+          getClass().getSimpleName(),
+          t
+        );
       } else {
         LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
-        exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
+        exceptionNotifier.notify(
+          String.format(
+            "Caught an exception while running %s",
+            getClass().getSimpleName()
+          ),
+          t
+        );
         if (abortsOnError()) {
           abort.abort(AbortReason.ERROR_IN_LEADER_ONLY_POLLER, Optional.of(t));
         }
       }
     } finally {
-      LOG.debug("Ran poller {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
+      LOG.debug(
+        "Ran poller {} in {}",
+        getClass().getSimpleName(),
+        JavaUtils.duration(start)
+      );
     }
   }
 

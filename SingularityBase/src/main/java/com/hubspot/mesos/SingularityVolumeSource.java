@@ -1,14 +1,12 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "The source of a docker volume")
@@ -18,8 +16,9 @@ public class SingularityVolumeSource {
 
   @JsonCreator
   public SingularityVolumeSource(
-      @JsonProperty("type") SingularityVolumeSourceType type,
-      @JsonProperty("dockerVolume") Optional<SingularityDockerVolume> dockerVolume) {
+    @JsonProperty("type") SingularityVolumeSourceType type,
+    @JsonProperty("dockerVolume") Optional<SingularityDockerVolume> dockerVolume
+  ) {
     this.type = MoreObjects.firstNonNull(type, SingularityVolumeSourceType.UNKNOWN);
     this.dockerVolume = dockerVolume;
   }
@@ -43,8 +42,9 @@ public class SingularityVolumeSource {
       return false;
     }
     SingularityVolumeSource that = (SingularityVolumeSource) o;
-    return Objects.equals(type, that.type) &&
-        Objects.equals(dockerVolume, that.dockerVolume);
+    return (
+      Objects.equals(type, that.type) && Objects.equals(dockerVolume, that.dockerVolume)
+    );
   }
 
   @Override
@@ -54,9 +54,14 @@ public class SingularityVolumeSource {
 
   @Override
   public String toString() {
-    return "SingularityVolumeSource{" +
-        "type='" + type + '\'' +
-        ", dockerVolume=" + dockerVolume +
-        '}';
+    return (
+      "SingularityVolumeSource{" +
+      "type='" +
+      type +
+      '\'' +
+      ", dockerVolume=" +
+      dockerVolume +
+      '}'
+    );
   }
 }

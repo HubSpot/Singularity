@@ -3,17 +3,21 @@ package com.hubspot.singularity.config;
 import javax.validation.constraints.NotNull;
 
 public class ZooKeeperConfiguration {
-
   @NotNull
   private String quorum;
+
   @NotNull
   private int sessionTimeoutMillis = 600_000;
+
   @NotNull
   private int connectTimeoutMillis = 60_000;
+
   @NotNull
   private int retryBaseSleepTimeMilliseconds = 1_000;
+
   @NotNull
   private int retryMaxTries = 3;
+
   @NotNull
   private String zkNamespace;
 
@@ -71,7 +75,9 @@ public class ZooKeeperConfiguration {
     return abortAfterConnectionLostForMillis;
   }
 
-  public void setAbortAfterConnectionLostForMillis(long abortAfterConnectionLostForMillis) {
+  public void setAbortAfterConnectionLostForMillis(
+    long abortAfterConnectionLostForMillis
+  ) {
     this.abortAfterConnectionLostForMillis = abortAfterConnectionLostForMillis;
   }
 }

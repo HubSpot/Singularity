@@ -1,25 +1,29 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "Describes a completed deploy")
-public class SingularityDeployHistory implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
-
+public class SingularityDeployHistory
+  implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
   private final Optional<SingularityDeployResult> deployResult;
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityDeploy> deploy;
   private final Optional<SingularityDeployStatistics> deployStatistics;
 
   @JsonCreator
-  public SingularityDeployHistory(@JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult, @JsonProperty("deployMarker") SingularityDeployMarker deployMarker,
-      @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("deployStatistics") Optional<SingularityDeployStatistics> deployStatistics) {
+  public SingularityDeployHistory(
+    @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult,
+    @JsonProperty("deployMarker") SingularityDeployMarker deployMarker,
+    @JsonProperty("deploy") Optional<SingularityDeploy> deploy,
+    @JsonProperty(
+      "deployStatistics"
+    ) Optional<SingularityDeployStatistics> deployStatistics
+  ) {
     this.deployResult = deployResult;
     this.deployMarker = deployMarker;
     this.deploy = deploy;
@@ -66,10 +70,12 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
       return false;
     }
     SingularityDeployHistory that = (SingularityDeployHistory) o;
-    return Objects.equals(deployResult, that.deployResult) &&
-        Objects.equals(deployMarker, that.deployMarker) &&
-        Objects.equals(deploy, that.deploy) &&
-        Objects.equals(deployStatistics, that.deployStatistics);
+    return (
+      Objects.equals(deployResult, that.deployResult) &&
+      Objects.equals(deployMarker, that.deployMarker) &&
+      Objects.equals(deploy, that.deploy) &&
+      Objects.equals(deployStatistics, that.deployStatistics)
+    );
   }
 
   @Override
@@ -79,11 +85,17 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
 
   @Override
   public String toString() {
-    return "SingularityDeployHistory{" +
-        "deployResult=" + deployResult +
-        ", deployMarker=" + deployMarker +
-        ", deploy=" + deploy +
-        ", deployStatistics=" + deployStatistics +
-        '}';
+    return (
+      "SingularityDeployHistory{" +
+      "deployResult=" +
+      deployResult +
+      ", deployMarker=" +
+      deployMarker +
+      ", deploy=" +
+      deploy +
+      ", deployStatistics=" +
+      deployStatistics +
+      '}'
+    );
   }
 }

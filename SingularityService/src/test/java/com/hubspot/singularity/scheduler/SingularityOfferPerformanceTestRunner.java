@@ -1,5 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SlavePlacement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -9,16 +15,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskState;
-
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
 
 public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerTestBase {
 
@@ -39,7 +37,10 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     Iterator<Double> diskIterator = r.doubles(30, 50000).iterator();
 
     for (int i = 0; i < numRequests; i++) {
-      SingularityRequestBuilder bldr = new SingularityRequestBuilder("request-" + i, RequestType.SERVICE);
+      SingularityRequestBuilder bldr = new SingularityRequestBuilder(
+        "request-" + i,
+        RequestType.SERVICE
+      );
 
       bldr.setInstances(Optional.of(5));
       bldr.setSlavePlacement(Optional.of(SlavePlacement.GREEDY));
@@ -51,7 +52,15 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     List<Offer> offers = new ArrayList<>(numOffers);
 
     for (int i = 0; i < numOffers; i++) {
-      offers.add(createOffer(cpuIterator.next(), memoryIterator.next(), diskIterator.next(), "slave-" + i, "host-" + i));
+      offers.add(
+        createOffer(
+          cpuIterator.next(),
+          memoryIterator.next(),
+          diskIterator.next(),
+          "slave-" + i,
+          "host-" + i
+        )
+      );
     }
 
     System.out.println("Starting after " + JavaUtils.duration(start));
@@ -64,39 +73,73 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
 
     int activeTasks = taskManager.getActiveTaskIds().size();
 
-    System.out.println(String.format("Launched %s tasks on %s offers in %s", activeTasks, numOffers, JavaUtils.durationFromMillis(duration)));
+    System.out.println(
+      String.format(
+        "Launched %s tasks on %s offers in %s",
+        activeTasks,
+        numOffers,
+        JavaUtils.durationFromMillis(duration)
+      )
+    );
 
     start = System.currentTimeMillis();
 
     ExecutorService statusUpadtes = Executors.newFixedThreadPool(100);
-    CompletableFuture<Void>[] updateFutures = new CompletableFuture[taskManager.getActiveTaskIds().size()*5];
+    CompletableFuture<Void>[] updateFutures = new CompletableFuture[taskManager
+      .getActiveTaskIds()
+      .size() *
+    5];
     AtomicInteger i = new AtomicInteger(0);
     for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
-      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
-        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STAGING);
-        return null;
-      }, statusUpadtes);
-      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
-        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STARTING);
-        return null;
-      }, statusUpadtes);
-      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
-        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
-        return null;
-      }, statusUpadtes);
-      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
-        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
-        return null;
-      }, statusUpadtes);
-      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
-        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
-        return null;
-      }, statusUpadtes);
+      updateFutures[i.getAndIncrement()] =
+        CompletableFuture.supplyAsync(
+          () -> {
+            statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STAGING);
+            return null;
+          },
+          statusUpadtes
+        );
+      updateFutures[i.getAndIncrement()] =
+        CompletableFuture.supplyAsync(
+          () -> {
+            statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STARTING);
+            return null;
+          },
+          statusUpadtes
+        );
+      updateFutures[i.getAndIncrement()] =
+        CompletableFuture.supplyAsync(
+          () -> {
+            statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
+            return null;
+          },
+          statusUpadtes
+        );
+      updateFutures[i.getAndIncrement()] =
+        CompletableFuture.supplyAsync(
+          () -> {
+            statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
+            return null;
+          },
+          statusUpadtes
+        );
+      updateFutures[i.getAndIncrement()] =
+        CompletableFuture.supplyAsync(
+          () -> {
+            statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
+            return null;
+          },
+          statusUpadtes
+        );
     }
     CompletableFuture.allOf(updateFutures).join();
 
-    System.out.println(String.format("Ran %s status updates in %s", activeTasks * 5, JavaUtils.durationFromMillis(System.currentTimeMillis() - start)));
+    System.out.println(
+      String.format(
+        "Ran %s status updates in %s",
+        activeTasks * 5,
+        JavaUtils.durationFromMillis(System.currentTimeMillis() - start)
+      )
+    );
   }
-
-
 }

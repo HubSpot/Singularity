@@ -8,7 +8,11 @@ public class ExecutorAndQueue {
   private final LinkedBlockingQueue<Runnable> queue;
   private final int queueLimit;
 
-  public ExecutorAndQueue(ExecutorService executorService, LinkedBlockingQueue<Runnable> queue, int queueLimit) {
+  public ExecutorAndQueue(
+    ExecutorService executorService,
+    LinkedBlockingQueue<Runnable> queue,
+    int queueLimit
+  ) {
     this.executorService = executorService;
     this.queue = queue;
     this.queueLimit = queueLimit;

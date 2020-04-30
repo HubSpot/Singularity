@@ -1,30 +1,31 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityDeployPoller.class
+  );
 
   private final SingularityDeployChecker deployChecker;
   private final DisasterManager disasterManager;
 
   @Inject
-  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, DisasterManager disasterManager) {
+  SingularityDeployPoller(
+    SingularityDeployChecker deployChecker,
+    SingularityConfiguration configuration,
+    DisasterManager disasterManager
+  ) {
     super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
-
     this.deployChecker = deployChecker;
     this.disasterManager = disasterManager;
   }

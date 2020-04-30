@@ -1,17 +1,14 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "An updated to load balancer configuration")
 public class SingularityLoadBalancerUpdate {
-
   private final BaragonRequestState loadBalancerState;
   private final Optional<String> message;
   private final long timestamp;
@@ -21,13 +18,22 @@ public class SingularityLoadBalancerUpdate {
 
   @Schema
   public enum LoadBalancerMethod {
-    PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL, DELETE;
+    PRE_ENQUEUE,
+    ENQUEUE,
+    CHECK_STATE,
+    CANCEL,
+    DELETE
   }
 
   @JsonCreator
-  public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId,
+  public SingularityLoadBalancerUpdate(
+    @JsonProperty("state") BaragonRequestState loadBalancerState,
+    @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId,
     @JsonProperty("message") Optional<String> message,
-    @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") Optional<String> uri) {
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("method") LoadBalancerMethod method,
+    @JsonProperty("uri") Optional<String> uri
+  ) {
     this.loadBalancerState = loadBalancerState;
     this.message = message;
     this.timestamp = timestamp;
@@ -36,7 +42,9 @@ public class SingularityLoadBalancerUpdate {
     this.loadBalancerRequestId = loadBalancerRequestId;
   }
 
-  @Schema(description = "The current state of the request to update load balancer configuration")
+  @Schema(
+    description = "The current state of the request to update load balancer configuration"
+  )
   public BaragonRequestState getLoadBalancerState() {
     return loadBalancerState;
   }
@@ -66,20 +74,36 @@ public class SingularityLoadBalancerUpdate {
     return loadBalancerRequestId;
   }
 
-  public static SingularityLoadBalancerUpdate preEnqueue(LoadBalancerRequestId lbRequestId) {
-    return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String>empty(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE,
-      Optional.<String>empty());
+  public static SingularityLoadBalancerUpdate preEnqueue(
+    LoadBalancerRequestId lbRequestId
+  ) {
+    return new SingularityLoadBalancerUpdate(
+      BaragonRequestState.UNKNOWN,
+      lbRequestId,
+      Optional.<String>empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.PRE_ENQUEUE,
+      Optional.<String>empty()
+    );
   }
 
   @Override
   public String toString() {
-    return "SingularityLoadBalancerUpdate{" +
-        "loadBalancerState=" + loadBalancerState +
-        ", message=" + message +
-        ", timestamp=" + timestamp +
-        ", uri=" + uri +
-        ", method=" + method +
-        ", loadBalancerRequestId=" + loadBalancerRequestId +
-        '}';
+    return (
+      "SingularityLoadBalancerUpdate{" +
+      "loadBalancerState=" +
+      loadBalancerState +
+      ", message=" +
+      message +
+      ", timestamp=" +
+      timestamp +
+      ", uri=" +
+      uri +
+      ", method=" +
+      method +
+      ", loadBalancerRequestId=" +
+      loadBalancerRequestId +
+      '}'
+    );
   }
 }

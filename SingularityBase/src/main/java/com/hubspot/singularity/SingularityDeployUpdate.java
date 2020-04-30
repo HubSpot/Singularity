@@ -1,18 +1,17 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "A webhook event representing an update to deploy data")
 public class SingularityDeployUpdate {
 
   @Schema
   public enum DeployEventType {
-    STARTING, FINISHED;
+    STARTING,
+    FINISHED
   }
 
   private final SingularityDeployMarker deployMarker;
@@ -21,7 +20,12 @@ public class SingularityDeployUpdate {
   private final Optional<SingularityDeployResult> deployResult;
 
   @JsonCreator
-  public SingularityDeployUpdate(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("deploy") Optional<SingularityDeploy> deploy, @JsonProperty("eventType") DeployEventType eventType, @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult) {
+  public SingularityDeployUpdate(
+    @JsonProperty("deployMarker") SingularityDeployMarker deployMarker,
+    @JsonProperty("deploy") Optional<SingularityDeploy> deploy,
+    @JsonProperty("eventType") DeployEventType eventType,
+    @JsonProperty("deployResult") Optional<SingularityDeployResult> deployResult
+  ) {
     this.deployMarker = deployMarker;
     this.deploy = deploy;
     this.eventType = eventType;
@@ -50,11 +54,17 @@ public class SingularityDeployUpdate {
 
   @Override
   public String toString() {
-    return "SingularityDeployUpdate{" +
-        "deployMarker=" + deployMarker +
-        ", deploy=" + deploy +
-        ", eventType=" + eventType +
-        ", deployResult=" + deployResult +
-        '}';
+    return (
+      "SingularityDeployUpdate{" +
+      "deployMarker=" +
+      deployMarker +
+      ", deploy=" +
+      deploy +
+      ", eventType=" +
+      eventType +
+      ", deployResult=" +
+      deployResult +
+      '}'
+    );
   }
 }

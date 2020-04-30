@@ -1,22 +1,27 @@
 package com.hubspot.deploy;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "An artifact identified by url")
 public class ExternalArtifact extends RemoteArtifact {
-
   private final String url;
 
   @JsonCreator
-  public ExternalArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum,
-      @JsonProperty("url") String url, @JsonProperty("filesize") Optional<Long> filesize, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask,
-      @JsonProperty("isArtifactList") Optional<Boolean> isArtifactList) {
+  public ExternalArtifact(
+    @JsonProperty("name") String name,
+    @JsonProperty("filename") String filename,
+    @JsonProperty("md5sum") Optional<String> md5sum,
+    @JsonProperty("url") String url,
+    @JsonProperty("filesize") Optional<Long> filesize,
+    @JsonProperty(
+      "targetFolderRelativeToTask"
+    ) Optional<String> targetFolderRelativeToTask,
+    @JsonProperty("isArtifactList") Optional<Boolean> isArtifactList
+  ) {
     super(name, filename, md5sum, filesize, targetFolderRelativeToTask, isArtifactList);
     this.url = url;
   }
@@ -49,8 +54,6 @@ public class ExternalArtifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return "ExternalArtifact{" +
-        "url='" + url + '\'' +
-        "} " + super.toString();
+    return "ExternalArtifact{" + "url='" + url + '\'' + "} " + super.toString();
   }
 }

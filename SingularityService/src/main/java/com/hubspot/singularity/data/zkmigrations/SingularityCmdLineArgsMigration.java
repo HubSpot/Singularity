@@ -1,16 +1,5 @@
 package com.hubspot.singularity.data.zkmigrations;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Singleton;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,11 +13,20 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import javax.inject.Singleton;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityCmdLineArgsMigration extends ZkDataMigration {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityCmdLineArgsMigration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityCmdLineArgsMigration.class
+  );
 
   private final CuratorFramework curator;
   private final TaskManager taskManager;
@@ -36,7 +34,12 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
 
   @Inject
-  public SingularityCmdLineArgsMigration(CuratorFramework curator, TaskManager taskManager, @Singularity ObjectMapper objectMapper, Transcoder<SingularityPendingRequest> pendingRequestTranscoder) {
+  public SingularityCmdLineArgsMigration(
+    CuratorFramework curator,
+    TaskManager taskManager,
+    @Singularity ObjectMapper objectMapper,
+    Transcoder<SingularityPendingRequest> pendingRequestTranscoder
+  ) {
     super(4);
     this.curator = curator;
     this.taskManager = taskManager;
@@ -45,7 +48,6 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   static class SingularityPendingRequestPrevious {
-
     private final String requestId;
     private final String deployId;
     private final long timestamp;
@@ -54,8 +56,14 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     private final Optional<String> cmdLineArgs;
 
     @JsonCreator
-    public SingularityPendingRequestPrevious(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
-        @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs) {
+    public SingularityPendingRequestPrevious(
+      @JsonProperty("requestId") String requestId,
+      @JsonProperty("deployId") String deployId,
+      @JsonProperty("timestamp") long timestamp,
+      @JsonProperty("user") Optional<String> user,
+      @JsonProperty("pendingType") PendingType pendingType,
+      @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs
+    ) {
       this.requestId = requestId;
       this.deployId = deployId;
       this.timestamp = timestamp;
@@ -87,9 +95,6 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     public Optional<String> getCmdLineArgs() {
       return cmdLineArgs;
     }
-
-
-
   }
 
   static final String TASK_PENDING_PATH = "/tasks/scheduled";
@@ -102,7 +107,6 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   private void checkPendingRequests() {
-
     try {
       if (curator.checkExists().forPath(REQUEST_PENDING_PATH) == null) {
         return;
@@ -113,13 +117,33 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
 
     try {
       for (String pendingRequest : curator.getChildren().forPath(REQUEST_PENDING_PATH)) {
-        SingularityPendingRequestPrevious previous = objectMapper.readValue(curator.getData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest)), SingularityPendingRequestPrevious.class);
-        SingularityPendingRequest newRequest = new SingularityPendingRequest(previous.requestId, previous.deployId, previous.timestamp, previous.user, previous.pendingType,
-            getCmdLineArgs(previous.cmdLineArgs), Optional.<String>empty(), Optional.<Boolean>empty(), Optional.<String>empty(), Optional.<String>empty());
+        SingularityPendingRequestPrevious previous = objectMapper.readValue(
+          curator
+            .getData()
+            .forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest)),
+          SingularityPendingRequestPrevious.class
+        );
+        SingularityPendingRequest newRequest = new SingularityPendingRequest(
+          previous.requestId,
+          previous.deployId,
+          previous.timestamp,
+          previous.user,
+          previous.pendingType,
+          getCmdLineArgs(previous.cmdLineArgs),
+          Optional.<String>empty(),
+          Optional.<Boolean>empty(),
+          Optional.<String>empty(),
+          Optional.<String>empty()
+        );
 
         LOG.info("Re-saving {}", newRequest);
 
-        curator.setData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest), pendingRequestTranscoder.toBytes(newRequest));
+        curator
+          .setData()
+          .forPath(
+            ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest),
+            pendingRequestTranscoder.toBytes(newRequest)
+          );
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -127,7 +151,6 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   private void checkPendingTasks() {
-
     try {
       if (curator.checkExists().forPath(TASK_PENDING_PATH) == null) {
         return;
@@ -137,15 +160,14 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     }
 
     try {
-
       for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
         Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
         SingularityCreateResult result = taskManager.savePendingTask(
-            new SingularityPendingTaskBuilder()
-                .setPendingTaskId(pendingTaskId)
-                .setCmdLineArgsList(getCmdLineArgs(cmdLineArgs))
-                .build()
+          new SingularityPendingTaskBuilder()
+            .setPendingTaskId(pendingTaskId)
+            .setCmdLineArgsList(getCmdLineArgs(cmdLineArgs))
+            .build()
         );
 
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
@@ -156,11 +178,16 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   private Optional<List<String>> getCmdLineArgs(Optional<String> cmdLineArgs) {
-    return cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>>empty();
+    return cmdLineArgs.isPresent()
+      ? Optional.of(Collections.singletonList(cmdLineArgs.get()))
+      : Optional.<List<String>>empty();
   }
 
-  private Optional<String> getCmdLineArgs(SingularityPendingTaskId pendingTaskId) throws Exception {
-    byte[] data = curator.getData().forPath(ZKPaths.makePath(TASK_PENDING_PATH, pendingTaskId.getId()));
+  private Optional<String> getCmdLineArgs(SingularityPendingTaskId pendingTaskId)
+    throws Exception {
+    byte[] data = curator
+      .getData()
+      .forPath(ZKPaths.makePath(TASK_PENDING_PATH, pendingTaskId.getId()));
 
     if (data != null && data.length > 0) {
       return Optional.of(StringTranscoder.INSTANCE.fromBytes(data));
@@ -168,6 +195,4 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
 
     return Optional.empty();
   }
-
-
 }

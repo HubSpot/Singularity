@@ -1,14 +1,12 @@
 package com.hubspot.singularity.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
@@ -22,35 +20,57 @@ public class SingularityS3SearchRequest {
   private final Optional<Integer> maxPerPage;
   private final Map<String, ContinuationToken> continuationTokens;
 
-  public SingularityS3SearchRequest(Map<String, List<String>> requestsAndDeploys,
-                                    List<String> taskIds,
-                                    Optional<Long> start,
-                                    Optional<Long> end,
-                                    boolean excludeMetadata,
-                                    boolean listOnly,
-                                    Optional<Integer> maxPerPage, Map<String, ContinuationToken> continuationTokens) {
-    this(requestsAndDeploys, null, taskIds, start, end, excludeMetadata, listOnly, maxPerPage, continuationTokens);
+  public SingularityS3SearchRequest(
+    Map<String, List<String>> requestsAndDeploys,
+    List<String> taskIds,
+    Optional<Long> start,
+    Optional<Long> end,
+    boolean excludeMetadata,
+    boolean listOnly,
+    Optional<Integer> maxPerPage,
+    Map<String, ContinuationToken> continuationTokens
+  ) {
+    this(
+      requestsAndDeploys,
+      null,
+      taskIds,
+      start,
+      end,
+      excludeMetadata,
+      listOnly,
+      maxPerPage,
+      continuationTokens
+    );
   }
 
   @JsonCreator
-  public SingularityS3SearchRequest(@JsonProperty("requestsAndDeploys") Map<String, List<String>> requestsAndDeploys,
-                                    @JsonProperty("fileNamePrefixWhitelist") List<String> fileNamePrefixWhitelist,
-                                    @JsonProperty("taskIds") List<String> taskIds,
-                                    @JsonProperty("start") Optional<Long> start,
-                                    @JsonProperty("end") Optional<Long> end,
-                                    @JsonProperty("excludeMetadata") boolean excludeMetadata,
-                                    @JsonProperty("listOnly") boolean listOnly,
-                                    @JsonProperty("maxPerPage") Optional<Integer> maxPerPage,
-                                    @JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens) {
-    this.requestsAndDeploys = requestsAndDeploys != null ? requestsAndDeploys : Collections.<String, List<String>>emptyMap();
-    this.fileNamePrefixWhitelist = fileNamePrefixWhitelist != null ? fileNamePrefixWhitelist : Collections.emptyList();
+  public SingularityS3SearchRequest(
+    @JsonProperty("requestsAndDeploys") Map<String, List<String>> requestsAndDeploys,
+    @JsonProperty("fileNamePrefixWhitelist") List<String> fileNamePrefixWhitelist,
+    @JsonProperty("taskIds") List<String> taskIds,
+    @JsonProperty("start") Optional<Long> start,
+    @JsonProperty("end") Optional<Long> end,
+    @JsonProperty("excludeMetadata") boolean excludeMetadata,
+    @JsonProperty("listOnly") boolean listOnly,
+    @JsonProperty("maxPerPage") Optional<Integer> maxPerPage,
+    @JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens
+  ) {
+    this.requestsAndDeploys =
+      requestsAndDeploys != null
+        ? requestsAndDeploys
+        : Collections.<String, List<String>>emptyMap();
+    this.fileNamePrefixWhitelist =
+      fileNamePrefixWhitelist != null ? fileNamePrefixWhitelist : Collections.emptyList();
     this.taskIds = taskIds != null ? taskIds : Collections.<String>emptyList();
     this.start = start;
     this.end = end;
     this.excludeMetadata = excludeMetadata;
     this.listOnly = listOnly;
     this.maxPerPage = maxPerPage;
-    this.continuationTokens = continuationTokens != null ? continuationTokens : Collections.<String, ContinuationToken>emptyMap();
+    this.continuationTokens =
+      continuationTokens != null
+        ? continuationTokens
+        : Collections.<String, ContinuationToken>emptyMap();
   }
 
   @Schema(description = "A map of request IDs to a list of deploy ids to search")
@@ -78,12 +98,18 @@ public class SingularityS3SearchRequest {
     return end;
   }
 
-  @Schema(description = "if true, do not query for custom start/end time metadata", defaultValue = "false")
+  @Schema(
+    description = "if true, do not query for custom start/end time metadata",
+    defaultValue = "false"
+  )
   public boolean isExcludeMetadata() {
     return excludeMetadata;
   }
 
-  @Schema(description = "If true, do not generate download/get urls, only list objects", defaultValue = "false")
+  @Schema(
+    description = "If true, do not generate download/get urls, only list objects",
+    defaultValue = "false"
+  )
   public boolean isListOnly() {
     return listOnly;
   }
@@ -97,22 +123,34 @@ public class SingularityS3SearchRequest {
     return maxPerPage;
   }
 
-  @Schema(description = "S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
+  @Schema(
+    description = "S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results"
+  )
   public Map<String, ContinuationToken> getContinuationTokens() {
     return continuationTokens;
   }
 
   @Override
   public String toString() {
-    return "SingularityS3SearchRequest{" +
-        "requestsAndDeploys=" + requestsAndDeploys +
-        ", taskIds=" + taskIds +
-        ", start=" + start +
-        ", end=" + end +
-        ", excludeMetadata=" + excludeMetadata +
-        ", listOnly=" + listOnly +
-        ", maxPerPage=" + maxPerPage +
-        ", continuationTokens=" + continuationTokens +
-        '}';
+    return (
+      "SingularityS3SearchRequest{" +
+      "requestsAndDeploys=" +
+      requestsAndDeploys +
+      ", taskIds=" +
+      taskIds +
+      ", start=" +
+      start +
+      ", end=" +
+      end +
+      ", excludeMetadata=" +
+      excludeMetadata +
+      ", listOnly=" +
+      listOnly +
+      ", maxPerPage=" +
+      maxPerPage +
+      ", continuationTokens=" +
+      continuationTokens +
+      '}'
+    );
   }
 }

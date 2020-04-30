@@ -1,13 +1,11 @@
 package com.hubspot.singularity;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ComparisonChain;
 import java.util.Comparator;
 import java.util.Optional;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ComparisonChain;
-
 public class SingularityTaskHistoryQuery {
-
   private final Optional<String> requestId;
   private final Optional<String> deployId;
   private final Optional<String> runId;
@@ -20,12 +18,32 @@ public class SingularityTaskHistoryQuery {
   private final Optional<OrderDirection> orderDirection;
 
   public SingularityTaskHistoryQuery(String requestId) {
-    this(Optional.of(requestId), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<ExtendedTaskState>empty(), Optional.<Long>empty(), Optional.<Long>empty(),
-        Optional.<Long>empty(), Optional.<Long>empty(), Optional.<OrderDirection>empty());
+    this(
+      Optional.of(requestId),
+      Optional.<String>empty(),
+      Optional.<String>empty(),
+      Optional.<String>empty(),
+      Optional.<ExtendedTaskState>empty(),
+      Optional.<Long>empty(),
+      Optional.<Long>empty(),
+      Optional.<Long>empty(),
+      Optional.<Long>empty(),
+      Optional.<OrderDirection>empty()
+    );
   }
 
-  public SingularityTaskHistoryQuery(Optional<String> requestId, Optional<String> deployId,  Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
-      Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection) {
+  public SingularityTaskHistoryQuery(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter,
+    Optional<OrderDirection> orderDirection
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.runId = runId;
@@ -129,7 +147,6 @@ public class SingularityTaskHistoryQuery {
 
         return true;
       }
-
     };
   }
 
@@ -148,25 +165,38 @@ public class SingularityTaskHistoryQuery {
           chain = chain.compare(o2.getUpdatedAt(), o1.getUpdatedAt());
         }
 
-        return chain.compare(o1.getTaskId().getRequestId(), o2.getTaskId().getRequestId()).result();
+        return chain
+          .compare(o1.getTaskId().getRequestId(), o2.getTaskId().getRequestId())
+          .result();
       }
-
     };
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskHistoryQuery{" +
-        "requestId=" + requestId +
-        ", deployId=" + deployId +
-        ", runId=" + runId +
-        ", host=" + host +
-        ", lastTaskStatus=" + lastTaskStatus +
-        ", startedBefore=" + startedBefore +
-        ", startedAfter=" + startedAfter +
-        ", updatedBefore=" + updatedBefore +
-        ", updatedAfter=" + updatedAfter +
-        ", orderDirection=" + orderDirection +
-        '}';
+    return (
+      "SingularityTaskHistoryQuery{" +
+      "requestId=" +
+      requestId +
+      ", deployId=" +
+      deployId +
+      ", runId=" +
+      runId +
+      ", host=" +
+      host +
+      ", lastTaskStatus=" +
+      lastTaskStatus +
+      ", startedBefore=" +
+      startedBefore +
+      ", startedAfter=" +
+      startedAfter +
+      ", updatedBefore=" +
+      updatedBefore +
+      ", updatedAfter=" +
+      updatedAfter +
+      ", orderDirection=" +
+      orderDirection +
+      '}'
+    );
   }
 }

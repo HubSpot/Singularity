@@ -1,5 +1,11 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.hubspot.singularity.SingularityEmailDestination;
+import com.hubspot.singularity.SingularityEmailType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -7,18 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityEmailDestination;
-import com.hubspot.singularity.SingularityEmailType;
-
 public class SMTPConfiguration {
-
   @JsonProperty
   private String username;
 
@@ -90,28 +87,106 @@ public class SMTPConfiguration {
   private Optional<String> uiBaseUrl = Optional.empty();
 
   @JsonProperty("emails")
-  private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
-      .put(SingularityEmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
-      .put(SingularityEmailType.REPLACEMENT_TASKS_FAILING, ImmutableList.of(SingularityEmailDestination.OWNERS))
-      .put(SingularityEmailType.SINGULARITY_ABORTING, ImmutableList.of(SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_FAILED, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_LOST, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_PAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
-      .put(SingularityEmailType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
-      .build());
+  private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(
+    ImmutableMap
+      .<SingularityEmailType, List<SingularityEmailDestination>>builder()
+      .put(
+        SingularityEmailType.REQUEST_IN_COOLDOWN,
+        ImmutableList.of(
+          SingularityEmailDestination.ADMINS,
+          SingularityEmailDestination.OWNERS
+        )
+      )
+      .put(
+        SingularityEmailType.REPLACEMENT_TASKS_FAILING,
+        ImmutableList.of(SingularityEmailDestination.OWNERS)
+      )
+      .put(
+        SingularityEmailType.SINGULARITY_ABORTING,
+        ImmutableList.of(SingularityEmailDestination.ADMINS)
+      )
+      .put(
+        SingularityEmailType.TASK_FAILED,
+        ImmutableList.of(
+          SingularityEmailDestination.ADMINS,
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ACTION_TAKER
+        )
+      )
+      .put(
+        SingularityEmailType.TASK_LOST,
+        ImmutableList.of(
+          SingularityEmailDestination.ADMINS,
+          SingularityEmailDestination.ACTION_TAKER
+        )
+      )
+      .put(
+        SingularityEmailType.TASK_FINISHED_LONG_RUNNING,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.TASK_FINISHED_ON_DEMAND,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ACTION_TAKER
+        )
+      )
+      .put(
+        SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.TASK_KILLED_UNHEALTHY,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.REQUEST_PAUSED,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.REQUEST_REMOVED,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.REQUEST_UNPAUSED,
+        ImmutableList.of(
+          SingularityEmailDestination.OWNERS,
+          SingularityEmailDestination.ADMINS
+        )
+      )
+      .put(
+        SingularityEmailType.REQUEST_SCALED,
+        ImmutableList.of(SingularityEmailDestination.OWNERS)
+      )
+      .put(
+        SingularityEmailType.DISASTER_DETECTED,
+        ImmutableList.of(SingularityEmailDestination.ADMINS)
+      )
+      .build()
+  );
 
   public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
   }
 
-  public void setEmailConfiguration(Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration) {
+  public void setEmailConfiguration(
+    Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration
+  ) {
     this.emailConfiguration.putAll(emailConfiguration);
   }
 
@@ -243,17 +318,31 @@ public class SMTPConfiguration {
     this.mailerTimeZone = mailerTimeZone;
   }
 
-  public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
+  public Optional<String> getTaskLogErrorRegex() {
+    return taskLogErrorRegex;
+  }
 
-  public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+  public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) {
+    this.taskLogErrorRegex = taskLogErrorRegex;
+  }
 
-  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
+  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() {
+    return taskLogErrorRegexCaseSensitive;
+  }
 
-  public void setTaskLogErrorRegexCaseSensitive(Optional<Boolean> taskLogErrorRegexCaseSensitive) { this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive; }
+  public void setTaskLogErrorRegexCaseSensitive(
+    Optional<Boolean> taskLogErrorRegexCaseSensitive
+  ) {
+    this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive;
+  }
 
-  public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
+  public Long getMaxTaskLogSearchOffset() {
+    return maxTaskLogSearchOffset;
+  }
 
-  public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) { this.maxTaskLogSearchOffset = maxTaskLogSearchOffset; }
+  public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) {
+    this.maxTaskLogSearchOffset = maxTaskLogSearchOffset;
+  }
 
   public Optional<String> getSubjectPrefix() {
     return subjectPrefix;

@@ -1,19 +1,16 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.hubspot.mesos.JavaUtils;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.hubspot.mesos.JavaUtils;
-
 public abstract class SafeProcessManager {
-
   private final Logger log;
   private final Lock processLock;
 
@@ -80,7 +77,10 @@ public abstract class SafeProcessManager {
 
     try {
       Preconditions.checkState(!killed.get(), "Can not start new process, killed is set");
-      Preconditions.checkState(!currentProcess.isPresent(), "Can not start new process, already had process");
+      Preconditions.checkState(
+        !currentProcess.isPresent(),
+        "Can not start new process, already had process"
+      );
 
       currentProcessStart = Optional.of(System.currentTimeMillis());
 
@@ -91,7 +91,6 @@ public abstract class SafeProcessManager {
       currentProcessCmd = Optional.of(cmd);
 
       log.debug("Started process {}", getCurrentProcessToString());
-
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {
@@ -114,9 +113,18 @@ public abstract class SafeProcessManager {
     try {
       if (currentProcessCmd.isPresent() && currentProcessStart.isPresent()) {
         if (exitCode.isPresent()) {
-          log.debug("Process {} exited with {} after {}", currentProcessCmd.get(), exitCode.get(), JavaUtils.duration(currentProcessStart.get()));
+          log.debug(
+            "Process {} exited with {} after {}",
+            currentProcessCmd.get(),
+            exitCode.get(),
+            JavaUtils.duration(currentProcessStart.get())
+          );
         } else {
-          log.debug("Process {} abandoned after {}", currentProcessCmd.get(), JavaUtils.duration(currentProcessStart.get()));
+          log.debug(
+            "Process {} abandoned after {}",
+            currentProcessCmd.get(),
+            JavaUtils.duration(currentProcessStart.get())
+          );
         }
       } else {
         log.warn("Process finished called on an empty process manager");
@@ -133,7 +141,11 @@ public abstract class SafeProcessManager {
   }
 
   public String getCurrentProcessToString() {
-    return String.format("%s - (pid: %s)", currentProcessCmd.orElse("<none>"), currentProcessPid.orElse(0));
+    return String.format(
+      "%s - (pid: %s)",
+      currentProcessCmd.orElse("<none>"),
+      currentProcessPid.orElse(0)
+    );
   }
 
   public void signalTermToProcessIfActive() {
@@ -159,6 +171,4 @@ public abstract class SafeProcessManager {
       this.processLock.unlock();
     }
   }
-
-
 }

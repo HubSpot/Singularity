@@ -1,10 +1,9 @@
 package com.hubspot.mesos.protos;
 
-import java.util.List;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.Objects;
 
 public class MesosLabels {
   private final List<MesosParameter> labels;
@@ -37,8 +36,6 @@ public class MesosLabels {
 
   @Override
   public String toString() {
-    return "MesosLabels{" +
-        "labels=" + labels +
-        '}';
+    return "MesosLabels{" + "labels=" + labels + '}';
   }
 }

@@ -1,13 +1,13 @@
 package com.hubspot.singularity.auth.datastore;
 
-import java.util.Optional;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
+import java.util.Optional;
 
 @Singleton
 public class SingularityDisabledAuthDatastore implements SingularityAuthDatastore {
+
   @Inject
   public SingularityDisabledAuthDatastore() {}
 

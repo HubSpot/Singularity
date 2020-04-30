@@ -1,12 +1,10 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+import java.util.Objects;
 
 @Schema(description = "Information about currently active disasters")
 public class SingularityDisastersData {
@@ -15,9 +13,11 @@ public class SingularityDisastersData {
   private final boolean automatedActionDisabled;
 
   @JsonCreator
-  public SingularityDisastersData(@JsonProperty("stats") List<SingularityDisasterDataPoint> stats,
-                                  @JsonProperty("disasterStates") List<SingularityDisaster> disasters,
-                                  @JsonProperty("automatedActionDisabled") boolean automatedActionDisabled) {
+  public SingularityDisastersData(
+    @JsonProperty("stats") List<SingularityDisasterDataPoint> stats,
+    @JsonProperty("disasterStates") List<SingularityDisaster> disasters,
+    @JsonProperty("automatedActionDisabled") boolean automatedActionDisabled
+  ) {
     this.stats = stats;
     this.disasters = disasters;
     this.automatedActionDisabled = automatedActionDisabled;
@@ -47,9 +47,11 @@ public class SingularityDisastersData {
       return false;
     }
     SingularityDisastersData that = (SingularityDisastersData) o;
-    return automatedActionDisabled == that.automatedActionDisabled &&
-        Objects.equals(stats, that.stats) &&
-        Objects.equals(disasters, that.disasters);
+    return (
+      automatedActionDisabled == that.automatedActionDisabled &&
+      Objects.equals(stats, that.stats) &&
+      Objects.equals(disasters, that.disasters)
+    );
   }
 
   @Override
@@ -59,10 +61,15 @@ public class SingularityDisastersData {
 
   @Override
   public String toString() {
-    return "SingularityDisastersData{" +
-        "stats=" + stats +
-        ", disasters=" + disasters +
-        ", automatedActionDisabled=" + automatedActionDisabled +
-        '}';
+    return (
+      "SingularityDisastersData{" +
+      "stats=" +
+      stats +
+      ", disasters=" +
+      disasters +
+      ", automatedActionDisabled=" +
+      automatedActionDisabled +
+      '}'
+    );
   }
 }

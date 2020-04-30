@@ -5,7 +5,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.annotation.Nullable;
 
 public class StringTranscoder implements Transcoder<String> {
-
   public static final StringTranscoder INSTANCE = new StringTranscoder();
 
   private static final byte[] EMPTY_BYTES = new byte[0];

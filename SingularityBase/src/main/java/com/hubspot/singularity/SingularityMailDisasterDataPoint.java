@@ -12,7 +12,10 @@ public class SingularityMailDisasterDataPoint {
   private final int numLostSlaves;
 
   @JsonCreator
-  public SingularityMailDisasterDataPoint(String humanizedTimestamp, SingularityDisasterDataPoint dataPoint) {
+  public SingularityMailDisasterDataPoint(
+    String humanizedTimestamp,
+    SingularityDisasterDataPoint dataPoint
+  ) {
     this.time = humanizedTimestamp;
     this.numActiveTasks = dataPoint.getNumActiveTasks();
     this.numPendingTasks = dataPoint.getNumPendingTasks();

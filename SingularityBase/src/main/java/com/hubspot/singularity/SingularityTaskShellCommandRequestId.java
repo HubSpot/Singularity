@@ -5,14 +5,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityTaskShellCommandRequestId {
-
   private final SingularityTaskId taskId;
   private final String name;
   private final String safeName;
   private final long timestamp;
 
   @JsonCreator
-  public SingularityTaskShellCommandRequestId(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("name") String name, @JsonProperty("timestamp") long timestamp) {
+  public SingularityTaskShellCommandRequestId(
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("name") String name,
+    @JsonProperty("timestamp") long timestamp
+  ) {
     this.taskId = taskId;
     this.timestamp = timestamp;
     this.name = name;
@@ -63,11 +66,20 @@ public class SingularityTaskShellCommandRequestId {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandRequestId{" +
-        "taskId=" + taskId +
-        ", name='" + name + '\'' +
-        ", safeName='" + safeName + '\'' +
-        ", timestamp=" + timestamp +
-        "} " + super.toString();
+    return (
+      "SingularityTaskShellCommandRequestId{" +
+      "taskId=" +
+      taskId +
+      ", name='" +
+      name +
+      '\'' +
+      ", safeName='" +
+      safeName +
+      '\'' +
+      ", timestamp=" +
+      timestamp +
+      "} " +
+      super.toString()
+    );
   }
 }

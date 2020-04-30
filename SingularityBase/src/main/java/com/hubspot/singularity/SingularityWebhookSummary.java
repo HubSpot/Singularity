@@ -1,11 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 @Schema
 public class SingularityWebhookSummary {
@@ -13,7 +11,10 @@ public class SingularityWebhookSummary {
   private final int queueSize;
 
   @JsonCreator
-  public SingularityWebhookSummary(@JsonProperty("webhook") SingularityWebhook webhook, @JsonProperty("queueSize") int queueSize) {
+  public SingularityWebhookSummary(
+    @JsonProperty("webhook") SingularityWebhook webhook,
+    @JsonProperty("queueSize") int queueSize
+  ) {
     this.webhook = webhook;
     this.queueSize = queueSize;
   }
@@ -23,11 +24,12 @@ public class SingularityWebhookSummary {
     return webhook;
   }
 
-  @Schema(description = "The number of pending webhook sends in the queue for this webhook destination")
+  @Schema(
+    description = "The number of pending webhook sends in the queue for this webhook destination"
+  )
   public int getQueueSize() {
     return queueSize;
   }
-
 
   @Override
   public boolean equals(Object o) {
@@ -38,8 +40,7 @@ public class SingularityWebhookSummary {
       return false;
     }
     SingularityWebhookSummary that = (SingularityWebhookSummary) o;
-    return queueSize == that.queueSize &&
-        Objects.equals(webhook, that.webhook);
+    return queueSize == that.queueSize && Objects.equals(webhook, that.webhook);
   }
 
   @Override
@@ -49,9 +50,13 @@ public class SingularityWebhookSummary {
 
   @Override
   public String toString() {
-    return "SingularityWebhookSummary{" +
-        "webhook=" + webhook +
-        ", queueSize=" + queueSize +
-        '}';
+    return (
+      "SingularityWebhookSummary{" +
+      "webhook=" +
+      webhook +
+      ", queueSize=" +
+      queueSize +
+      '}'
+    );
   }
 }

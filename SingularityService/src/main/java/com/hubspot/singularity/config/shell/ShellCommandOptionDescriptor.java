@@ -1,11 +1,9 @@
 package com.hubspot.singularity.config.shell;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class ShellCommandOptionDescriptor {
-
   @NotEmpty
   @JsonProperty
   private String name;
@@ -33,7 +31,8 @@ public class ShellCommandOptionDescriptor {
 
   @Override
   public String toString() {
-    return "ShellCommandOptionDescriptor [name=" + name + ", description=" + description + "]";
+    return (
+      "ShellCommandOptionDescriptor [name=" + name + ", description=" + description + "]"
+    );
   }
-
 }

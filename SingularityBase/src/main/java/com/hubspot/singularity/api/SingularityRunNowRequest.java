@@ -1,22 +1,19 @@
 package com.hubspot.singularity.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.singularity.SingularityS3UploaderFile;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
-import com.hubspot.singularity.SingularityS3UploaderFile;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Settings for a specific run of a request")
 public class SingularityRunNowRequest {
-
   private final Optional<String> message;
   private final Optional<String> runId;
   private final Optional<List<String>> commandLineArgs;
@@ -31,38 +28,74 @@ public class SingularityRunNowRequest {
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
-      Optional<String> message,
-      Optional<Boolean> skipHealthchecks,
-      Optional<String> runId,
-      Optional<List<String>> commandLineArgs,
-      Optional<Resources> resources
+    Optional<String> message,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> runId,
+    Optional<List<String>> commandLineArgs,
+    Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.empty(), null, null, null, null, Optional.empty());
+    this(
+      message,
+      skipHealthchecks,
+      runId,
+      commandLineArgs,
+      resources,
+      Collections.emptyList(),
+      Optional.empty(),
+      null,
+      null,
+      null,
+      null,
+      Optional.empty()
+    );
   }
 
   @Deprecated
-  public SingularityRunNowRequest(Optional<String> message,
-                                  Optional<Boolean> skipHealthchecks,
-                                  Optional<String> runId,
-                                  Optional<List<String>> commandLineArgs,
-                                  Optional<Resources> resources,
-                                  Optional<Long> runAt) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.empty(), null, null, null, null, runAt);
+  public SingularityRunNowRequest(
+    Optional<String> message,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> runId,
+    Optional<List<String>> commandLineArgs,
+    Optional<Resources> resources,
+    Optional<Long> runAt
+  ) {
+    this(
+      message,
+      skipHealthchecks,
+      runId,
+      commandLineArgs,
+      resources,
+      Collections.emptyList(),
+      Optional.empty(),
+      null,
+      null,
+      null,
+      null,
+      runAt
+    );
   }
 
   @JsonCreator
-  public SingularityRunNowRequest(@JsonProperty("message") Optional<String> message,
-                                  @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                  @JsonProperty("runId") Optional<String> runId,
-                                  @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
-                                  @JsonProperty("resources") Optional<Resources> resources,
-                                  @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-                                  @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
-                                  @JsonProperty("envOverrides") Map<String, String> envOverrides,
-                                  @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
-                                  @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
-                                  @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-                                  @JsonProperty("runAt") Optional<Long> runAt) {
+  public SingularityRunNowRequest(
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+    @JsonProperty("runId") Optional<String> runId,
+    @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
+    @JsonProperty("resources") Optional<Resources> resources,
+    @JsonProperty(
+      "s3UploaderAdditionalFiles"
+    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
+    @JsonProperty("envOverrides") Map<String, String> envOverrides,
+    @JsonProperty(
+      "requiredSlaveAttributeOverrides"
+    ) Map<String, String> requiredSlaveAttributeOverrides,
+    @JsonProperty(
+      "allowedSlaveAttributeOverrides"
+    ) Map<String, String> allowedSlaveAttributeOverrides,
+    @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+    @JsonProperty("runAt") Optional<Long> runAt
+  ) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
@@ -104,27 +137,42 @@ public class SingularityRunNowRequest {
     this.runAt = runAt;
   }
 
-  @Schema(description = "A message to show to users about why this action was taken", nullable = true)
+  @Schema(
+    description = "A message to show to users about why this action was taken",
+    nullable = true
+  )
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(description = "An id to associate with this request which will be associated with the corresponding launched tasks", nullable = true)
+  @Schema(
+    description = "An id to associate with this request which will be associated with the corresponding launched tasks",
+    nullable = true
+  )
   public Optional<String> getRunId() {
     return runId;
   }
 
-  @Schema(description = "Command line arguments to be passed to the task", nullable = true)
+  @Schema(
+    description = "Command line arguments to be passed to the task",
+    nullable = true
+  )
   public Optional<List<String>> getCommandLineArgs() {
     return commandLineArgs;
   }
 
-  @Schema(description = "If set to true, healthchecks will be skipped for this task run", nullable = true)
+  @Schema(
+    description = "If set to true, healthchecks will be skipped for this task run",
+    nullable = true
+  )
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
-  @Schema(description = "Override the resources from the active deploy for this run", nullable = true)
+  @Schema(
+    description = "Override the resources from the active deploy for this run",
+    nullable = true
+  )
   public Optional<Resources> getResources() {
     return resources;
   }
@@ -134,7 +182,10 @@ public class SingularityRunNowRequest {
     return s3UploaderAdditionalFiles;
   }
 
-  @Schema(description = "Override the user under which this task's command will be launched", nullable = true)
+  @Schema(
+    description = "Override the user under which this task's command will be launched",
+    nullable = true
+  )
   public Optional<String> getRunAsUserOverride() {
     return runAsUserOverride;
   }
@@ -166,19 +217,33 @@ public class SingularityRunNowRequest {
 
   @Override
   public String toString() {
-    return "SingularityRunNowRequest{" +
-        "message=" + message +
-        ", runId=" + runId +
-        ", commandLineArgs=" + commandLineArgs +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts=" + extraArtifacts +
-        ", runAt=" + runAt +
-        '}';
+    return (
+      "SingularityRunNowRequest{" +
+      "message=" +
+      message +
+      ", runId=" +
+      runId +
+      ", commandLineArgs=" +
+      commandLineArgs +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runAsUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts=" +
+      extraArtifacts +
+      ", runAt=" +
+      runAt +
+      '}'
+    );
   }
 }

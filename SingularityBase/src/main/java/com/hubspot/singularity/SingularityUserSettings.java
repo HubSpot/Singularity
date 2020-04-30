@@ -1,21 +1,22 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes the settings for a particular user")
 public class SingularityUserSettings {
   private final Set<String> starredRequestIds;
 
   @JsonCreator
-  public SingularityUserSettings(@JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.starredRequestIds = starredRequestIds != null ? starredRequestIds : Collections.emptySet();
+  public SingularityUserSettings(
+    @JsonProperty("starredRequestIds") Set<String> starredRequestIds
+  ) {
+    this.starredRequestIds =
+      starredRequestIds != null ? starredRequestIds : Collections.emptySet();
   }
 
   public static SingularityUserSettings empty() {
@@ -32,7 +33,9 @@ public class SingularityUserSettings {
     return this;
   }
 
-  public SingularityUserSettings deleteStarredRequestIds(Set<String> oldStarredRequestIds) {
+  public SingularityUserSettings deleteStarredRequestIds(
+    Set<String> oldStarredRequestIds
+  ) {
     starredRequestIds.removeAll(oldStarredRequestIds);
     return this;
   }
@@ -56,8 +59,6 @@ public class SingularityUserSettings {
 
   @Override
   public String toString() {
-    return "SingularityUserSettings{" +
-        "starredRequestIds=" + starredRequestIds +
-        '}';
+    return "SingularityUserSettings{" + "starredRequestIds=" + starredRequestIds + '}';
   }
 }

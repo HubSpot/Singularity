@@ -1,17 +1,15 @@
 package com.hubspot.mesos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes how a docker image should be launched")
 public class SingularityDockerInfo {
@@ -24,34 +22,89 @@ public class SingularityDockerInfo {
   private final List<SingularityDockerParameter> dockerParameters;
 
   @JsonCreator
-  public SingularityDockerInfo(@JsonProperty("image") String image,
-                               @JsonProperty("privileged") boolean privileged,
-                               @JsonProperty("network") SingularityDockerNetworkType network,
-                               @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings,
-                               @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
-                               @JsonProperty("parameters") Optional<Map<String, String>> parameters,
-                               @JsonProperty("dockerParameters") Optional<List<SingularityDockerParameter>> dockerParameters) {
+  public SingularityDockerInfo(
+    @JsonProperty("image") String image,
+    @JsonProperty("privileged") boolean privileged,
+    @JsonProperty("network") SingularityDockerNetworkType network,
+    @JsonProperty(
+      "portMappings"
+    ) Optional<List<SingularityDockerPortMapping>> portMappings,
+    @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
+    @JsonProperty("parameters") Optional<Map<String, String>> parameters,
+    @JsonProperty(
+      "dockerParameters"
+    ) Optional<List<SingularityDockerParameter>> dockerParameters
+  ) {
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.ofNullable(network);
-    this.portMappings = portMappings.orElse(Collections.<SingularityDockerPortMapping>emptyList());
+    this.portMappings =
+      portMappings.orElse(Collections.<SingularityDockerPortMapping>emptyList());
     this.forcePullImage = forcePullImage.orElse(false);
     this.parameters = parameters;
-    this.dockerParameters = dockerParameters.orElse(parameters.isPresent() ? SingularityDockerParameter.parametersFromMap(parameters.get()) : Collections.<SingularityDockerParameter>emptyList());
+    this.dockerParameters =
+      dockerParameters.orElse(
+        parameters.isPresent()
+          ? SingularityDockerParameter.parametersFromMap(parameters.get())
+          : Collections.<SingularityDockerParameter>emptyList()
+      );
   }
 
-  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, List<SingularityDockerParameter> dockerParameters) {
-    this(image, privileged, network, portMappings, forcePullImage, Optional.<Map<String,String>>empty(), Optional.of(dockerParameters));
+  public SingularityDockerInfo(
+    String image,
+    boolean privileged,
+    SingularityDockerNetworkType network,
+    Optional<List<SingularityDockerPortMapping>> portMappings,
+    Optional<Boolean> forcePullImage,
+    List<SingularityDockerParameter> dockerParameters
+  ) {
+    this(
+      image,
+      privileged,
+      network,
+      portMappings,
+      forcePullImage,
+      Optional.<Map<String, String>>empty(),
+      Optional.of(dockerParameters)
+    );
   }
 
   @Deprecated
-  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, Optional<Map<String, String>> parameters) {
-    this(image, privileged, network, portMappings, forcePullImage, parameters, Optional.<List<SingularityDockerParameter>>empty());
+  public SingularityDockerInfo(
+    String image,
+    boolean privileged,
+    SingularityDockerNetworkType network,
+    Optional<List<SingularityDockerPortMapping>> portMappings,
+    Optional<Boolean> forcePullImage,
+    Optional<Map<String, String>> parameters
+  ) {
+    this(
+      image,
+      privileged,
+      network,
+      portMappings,
+      forcePullImage,
+      parameters,
+      Optional.<List<SingularityDockerParameter>>empty()
+    );
   }
 
   @Deprecated
-  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
-    this(image, privileged, network, portMappings, Optional.<Boolean>empty(), Optional.<Map<String, String>>empty(), Optional.<List<SingularityDockerParameter>>empty());
+  public SingularityDockerInfo(
+    String image,
+    boolean privileged,
+    SingularityDockerNetworkType network,
+    Optional<List<SingularityDockerPortMapping>> portMappings
+  ) {
+    this(
+      image,
+      privileged,
+      network,
+      portMappings,
+      Optional.<Boolean>empty(),
+      Optional.<Map<String, String>>empty(),
+      Optional.<List<SingularityDockerParameter>>empty()
+    );
   }
 
   @Schema(required = true, description = "Docker image name")
@@ -60,8 +113,7 @@ public class SingularityDockerInfo {
   }
 
   @Schema(required = true, description = "Controls use of the docker --privleged flag")
-  public boolean isPrivileged()
-  {
+  public boolean isPrivileged() {
     return privileged;
   }
 
@@ -96,7 +148,10 @@ public class SingularityDockerInfo {
     return literalHostPorts;
   }
 
-  @Schema(description = "Always run docker pull even if the image already exists locally", defaultValue = "false")
+  @Schema(
+    description = "Always run docker pull even if the image already exists locally",
+    defaultValue = "false"
+  )
   public boolean isForcePullImage() {
     return forcePullImage;
   }
@@ -111,7 +166,6 @@ public class SingularityDockerInfo {
     return dockerParameters;
   }
 
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -121,30 +175,50 @@ public class SingularityDockerInfo {
       return false;
     }
     SingularityDockerInfo that = (SingularityDockerInfo) o;
-    return privileged == that.privileged &&
-        forcePullImage == that.forcePullImage &&
-        Objects.equals(image, that.image) &&
-        Objects.equals(network, that.network) &&
-        Objects.equals(portMappings, that.portMappings) &&
-        Objects.equals(parameters, that.parameters) &&
-        Objects.equals(dockerParameters, that.dockerParameters);
+    return (
+      privileged == that.privileged &&
+      forcePullImage == that.forcePullImage &&
+      Objects.equals(image, that.image) &&
+      Objects.equals(network, that.network) &&
+      Objects.equals(portMappings, that.portMappings) &&
+      Objects.equals(parameters, that.parameters) &&
+      Objects.equals(dockerParameters, that.dockerParameters)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(image, privileged, network, portMappings, forcePullImage, parameters, dockerParameters);
+    return Objects.hash(
+      image,
+      privileged,
+      network,
+      portMappings,
+      forcePullImage,
+      parameters,
+      dockerParameters
+    );
   }
 
   @Override
   public String toString() {
-    return "SingularityDockerInfo{" +
-        "image='" + image + '\'' +
-        ", privileged=" + privileged +
-        ", network=" + network +
-        ", portMappings=" + portMappings +
-        ", forcePullImage=" + forcePullImage +
-        ", parameters=" + parameters +
-        ", dockerParameters=" + dockerParameters +
-        '}';
+    return (
+      "SingularityDockerInfo{" +
+      "image='" +
+      image +
+      '\'' +
+      ", privileged=" +
+      privileged +
+      ", network=" +
+      network +
+      ", portMappings=" +
+      portMappings +
+      ", forcePullImage=" +
+      forcePullImage +
+      ", parameters=" +
+      parameters +
+      ", dockerParameters=" +
+      dockerParameters +
+      '}'
+    );
   }
 }

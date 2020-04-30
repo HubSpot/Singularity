@@ -1,17 +1,17 @@
 package com.hubspot.singularity.async;
 
+import com.google.common.base.Suppliers;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
-
-import com.google.common.base.Suppliers;
 
 class PermitSource {
   private final com.google.common.base.Supplier<Integer> concurrentRequestLimit;
   private final AtomicInteger concurrentRequests;
 
   public PermitSource(Supplier<Integer> concurrentRequestLimit) {
-    this.concurrentRequestLimit = Suppliers.memoizeWithExpiration(concurrentRequestLimit::get, 1, TimeUnit.MINUTES);;
+    this.concurrentRequestLimit =
+      Suppliers.memoizeWithExpiration(concurrentRequestLimit::get, 1, TimeUnit.MINUTES);
     this.concurrentRequests = new AtomicInteger();
   }
 

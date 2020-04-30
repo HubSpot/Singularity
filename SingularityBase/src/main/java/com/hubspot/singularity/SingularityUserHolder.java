@@ -1,11 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Describes the attributes of a Singularity user")
 public class SingularityUserHolder {
@@ -15,10 +13,12 @@ public class SingularityUserHolder {
   private final boolean authEnabled;
 
   @JsonCreator
-  public SingularityUserHolder(@JsonProperty("user") Optional<SingularityUser> user,
-                               @JsonProperty("settings") Optional<SingularityUserSettings> settings,
-                               @JsonProperty("authenticated") boolean authenticated,
-                               @JsonProperty("authEnabled") boolean authEnabled) {
+  public SingularityUserHolder(
+    @JsonProperty("user") Optional<SingularityUser> user,
+    @JsonProperty("settings") Optional<SingularityUserSettings> settings,
+    @JsonProperty("authenticated") boolean authenticated,
+    @JsonProperty("authEnabled") boolean authEnabled
+  ) {
     this.user = user;
     this.settings = settings;
     this.authenticated = authenticated;
@@ -47,11 +47,17 @@ public class SingularityUserHolder {
 
   @Override
   public String toString() {
-    return "SingularityUserHolder{" +
-        "user=" + user +
-        ", settings=" + settings +
-        ", authenticated=" + authenticated +
-        ", authEnabled=" + authEnabled +
-        '}';
+    return (
+      "SingularityUserHolder{" +
+      "user=" +
+      user +
+      ", settings=" +
+      settings +
+      ", authenticated=" +
+      authenticated +
+      ", authEnabled=" +
+      authEnabled +
+      '}'
+    );
   }
 }

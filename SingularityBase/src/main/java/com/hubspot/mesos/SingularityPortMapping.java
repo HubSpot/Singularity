@@ -1,13 +1,11 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Represents a docker port mapping")
@@ -16,20 +14,28 @@ public class SingularityPortMapping {
   private final Optional<String> protocol;
 
   @JsonCreator
-  public SingularityPortMapping(@JsonProperty("hostPort") int hostPort,
-      @JsonProperty("containerPort") int containerPort,
-      @JsonProperty("protocol") Optional<String> protocol) {
+  public SingularityPortMapping(
+    @JsonProperty("hostPort") int hostPort,
+    @JsonProperty("containerPort") int containerPort,
+    @JsonProperty("protocol") Optional<String> protocol
+  ) {
     this.hostPort = hostPort;
     this.containerPort = containerPort;
     this.protocol = protocol;
   }
 
-  @Schema(required = true, description = "the port to map from on the host network interface")
+  @Schema(
+    required = true,
+    description = "the port to map from on the host network interface"
+  )
   public int getHostPort() {
     return hostPort;
   }
 
-  @Schema(required = true, description = "the port to map to on the container network interface")
+  @Schema(
+    required = true,
+    description = "the port to map to on the container network interface"
+  )
   public int getContainerPort() {
     return containerPort;
   }
@@ -48,9 +54,11 @@ public class SingularityPortMapping {
       return false;
     }
     SingularityPortMapping that = (SingularityPortMapping) o;
-    return hostPort == that.hostPort &&
-        this.containerPort == that.containerPort &&
-        Objects.equals(protocol, that.protocol);
+    return (
+      hostPort == that.hostPort &&
+      this.containerPort == that.containerPort &&
+      Objects.equals(protocol, that.protocol)
+    );
   }
 
   @Override
@@ -60,10 +68,16 @@ public class SingularityPortMapping {
 
   @Override
   public String toString() {
-    return "SingularityPortMapping{" +
-        "hostPort='" + hostPort + '\'' +
-        ", containerPort=" + containerPort +
-        ", protocol=" + protocol +
-        '}';
+    return (
+      "SingularityPortMapping{" +
+      "hostPort='" +
+      hostPort +
+      '\'' +
+      ", containerPort=" +
+      containerPort +
+      ", protocol=" +
+      protocol +
+      '}'
+    );
   }
 }

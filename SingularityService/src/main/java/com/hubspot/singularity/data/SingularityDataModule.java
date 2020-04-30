@@ -12,7 +12,6 @@ import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
-
   private final SingularityConfiguration configuration;
 
   public SingularityDataModule(final SingularityConfiguration configuration) {
@@ -54,13 +53,31 @@ public class SingularityDataModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public ZkCache<SingularityTask> taskCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), configuration.getCacheTasksForMillis(), registry, "tasks");
+  public ZkCache<SingularityTask> taskCache(
+    SingularityConfiguration configuration,
+    MetricRegistry registry
+  ) {
+    return new ZkCache<>(
+      configuration.getCacheTasksMaxSize(),
+      configuration.getCacheTasksInitialSize(),
+      configuration.getCacheTasksForMillis(),
+      registry,
+      "tasks"
+    );
   }
 
   @Provides
   @Singleton
-  public ZkCache<SingularityDeploy> deployCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<>(configuration.getCacheDeploysMaxSize(), configuration.getCacheDeploysInitialSize(), configuration.getCacheDeploysForMillis(), registry, "deploys");
+  public ZkCache<SingularityDeploy> deployCache(
+    SingularityConfiguration configuration,
+    MetricRegistry registry
+  ) {
+    return new ZkCache<>(
+      configuration.getCacheDeploysMaxSize(),
+      configuration.getCacheDeploysInitialSize(),
+      configuration.getCacheDeploysForMillis(),
+      registry,
+      "deploys"
+    );
   }
 }

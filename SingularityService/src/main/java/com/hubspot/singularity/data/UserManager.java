@@ -1,11 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Optional;
-import java.util.Set;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
@@ -13,9 +7,12 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import java.util.Optional;
+import java.util.Set;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 
 public class UserManager extends CuratorManager {
-
   private final Transcoder<SingularityUserSettings> settingsTranscoder;
   private final SingularityValidator validator;
 
@@ -23,8 +20,13 @@ public class UserManager extends CuratorManager {
   private static final String SETTINGS_ROOT = USER_ROOT + "/settings";
 
   @Inject
-  public UserManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry,
-                     Transcoder<SingularityUserSettings> settingsTranscoder, SingularityValidator validator) {
+  public UserManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    Transcoder<SingularityUserSettings> settingsTranscoder,
+    SingularityValidator validator
+  ) {
     super(curator, configuration, metricRegistry);
     this.settingsTranscoder = settingsTranscoder;
     this.validator = validator;
@@ -62,7 +64,11 @@ public class UserManager extends CuratorManager {
     if (!settings.isPresent()) {
       return;
     }
-    save(path, settings.get().deleteStarredRequestIds(starredRequestIds), settingsTranscoder);
+    save(
+      path,
+      settings.get().deleteStarredRequestIds(starredRequestIds),
+      settingsTranscoder
+    );
   }
 
   public Optional<SingularityUserSettings> getUserSettings(String userId) {
@@ -72,5 +78,4 @@ public class UserManager extends CuratorManager {
   public void deleteUserSettings(String userId) {
     delete(getUserSettingsPath(userId));
   }
-
 }

@@ -1,17 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Optional;
-
-import org.apache.mesos.v1.Protos.TaskState;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
+import java.util.Optional;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase {
 
@@ -26,7 +24,19 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     SingularityTask taskOne = startTask(firstDeploy);
 
-    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.empty(), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty())), singularityUser);
+    requestResource.pause(
+      requestId,
+      Optional.of(
+        new SingularityPauseRequest(
+          Optional.empty(),
+          Optional.of(1L),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+      ),
+      singularityUser
+    );
 
     cleaner.drainCleanupQueue();
 
@@ -38,13 +48,18 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     Assertions.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assertions.assertEquals(0, taskManager.getPendingTasks().size());
-    Assertions.assertEquals(RequestState.PAUSED, requestManager.getRequest(requestId).get().getState());
-    Assertions.assertEquals(requestId, requestManager.getPausedRequests(false).iterator().next().getRequest().getId());
+    Assertions.assertEquals(
+      RequestState.PAUSED,
+      requestManager.getRequest(requestId).get().getState()
+    );
+    Assertions.assertEquals(
+      requestId,
+      requestManager.getPausedRequests(false).iterator().next().getRequest().getId()
+    );
 
     try {
       Thread.sleep(2);
-    } catch (InterruptedException ie){
-    }
+    } catch (InterruptedException ie) {}
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -54,8 +69,14 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
     Assertions.assertEquals(0, taskManager.getPendingTasks().size());
 
-    Assertions.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
-    Assertions.assertEquals(requestId, requestManager.getActiveRequests(false).iterator().next().getRequest().getId());
+    Assertions.assertEquals(
+      RequestState.ACTIVE,
+      requestManager.getRequest(requestId).get().getState()
+    );
+    Assertions.assertEquals(
+      requestId,
+      requestManager.getActiveRequests(false).iterator().next().getRequest().getId()
+    );
   }
 
   @Test
@@ -65,8 +86,20 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     startTask(firstDeploy, 1);
 
-    requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.of(false), Optional.empty(), Optional.of(1L), Optional.empty(), Optional.of("msg"), Optional.empty())), singularityUser);
+    requestResource.bounce(
+      requestId,
+      Optional.of(
+        new SingularityBounceRequest(
+          Optional.of(false),
+          Optional.empty(),
+          Optional.of(1L),
+          Optional.empty(),
+          Optional.of("msg"),
+          Optional.empty()
+        )
+      ),
+      singularityUser
+    );
 
     cleaner.drainCleanupQueue();
     scheduler.drainPendingQueue();
@@ -85,11 +118,28 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   public void testExpiringNonIncrementalBounce() {
     initWithTasks(3);
 
-    requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.empty(), Optional.empty(), Optional.of(1L), Optional.of("aid"), Optional.empty(), Optional.empty())), singularityUser);
+    requestResource.bounce(
+      requestId,
+      Optional.of(
+        new SingularityBounceRequest(
+          Optional.empty(),
+          Optional.empty(),
+          Optional.of(1L),
+          Optional.of("aid"),
+          Optional.empty(),
+          Optional.empty()
+        )
+      ),
+      singularityUser
+    );
 
-    Assertions.assertTrue(!requestManager.getCleanupRequests().get(0).getMessage().isPresent());
-    Assertions.assertEquals("aid", requestManager.getCleanupRequests().get(0).getActionId().get());
+    Assertions.assertTrue(
+      !requestManager.getCleanupRequests().get(0).getMessage().isPresent()
+    );
+    Assertions.assertEquals(
+      "aid",
+      requestManager.getCleanupRequests().get(0).getActionId().get()
+    );
 
     // creates cleanup tasks:
     cleaner.drainCleanupQueue();
@@ -110,8 +160,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     try {
       Thread.sleep(1);
-    } catch (InterruptedException ie) {
-    }
+    } catch (InterruptedException ie) {}
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -132,7 +181,20 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   public void testExpiringIncrementalBounce() {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
+    requestResource.scale(
+      requestId,
+      new SingularityScaleRequest(
+        Optional.of(3),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
 
     initFirstDeploy();
 
@@ -140,12 +202,29 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     startTask(firstDeploy, 2);
     startTask(firstDeploy, 3);
 
-    requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.empty(), Optional.of(1L), Optional.empty(), Optional.of("msg"), Optional.empty())), singularityUser);
+    requestResource.bounce(
+      requestId,
+      Optional.of(
+        new SingularityBounceRequest(
+          Optional.of(true),
+          Optional.empty(),
+          Optional.of(1L),
+          Optional.empty(),
+          Optional.of("msg"),
+          Optional.empty()
+        )
+      ),
+      singularityUser
+    );
 
     Assertions.assertTrue(requestManager.cleanupRequestExists(requestId));
-    Assertions.assertEquals("msg", requestManager.getCleanupRequests().get(0).getMessage().get());
-    Assertions.assertTrue(requestManager.getCleanupRequests().get(0).getActionId().isPresent());
+    Assertions.assertEquals(
+      "msg",
+      requestManager.getCleanupRequests().get(0).getMessage().get()
+    );
+    Assertions.assertTrue(
+      requestManager.getCleanupRequests().get(0).getActionId().isPresent()
+    );
 
     String actionId = requestManager.getCleanupRequests().get(0).getActionId().get();
 
@@ -154,8 +233,14 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assertions.assertTrue(!requestManager.cleanupRequestExists(requestId));
     Assertions.assertTrue(taskManager.getCleanupTaskIds().size() == 3);
 
-    Assertions.assertEquals("msg", taskManager.getCleanupTasks().get(0).getMessage().get());
-    Assertions.assertEquals(actionId, taskManager.getCleanupTasks().get(0).getActionId().get());
+    Assertions.assertEquals(
+      "msg",
+      taskManager.getCleanupTasks().get(0).getMessage().get()
+    );
+    Assertions.assertEquals(
+      actionId,
+      taskManager.getCleanupTasks().get(0).getActionId().get()
+    );
 
     startTask(firstDeploy, 4);
     //    launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
@@ -190,13 +275,24 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
+    requestResource.scale(
+      requestId,
+      new SingularityScaleRequest(
+        Optional.of(5),
+        Optional.of(1L),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
 
     try {
       Thread.sleep(2);
-    } catch (InterruptedException e) {
-
-    }
+    } catch (InterruptedException e) {}
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -221,13 +317,24 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     Assertions.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
 
-    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.empty(), Optional.empty()), singularityUser);
+    requestResource.skipHealthchecks(
+      requestId,
+      new SingularitySkipHealthchecksRequest(
+        Optional.of(true),
+        Optional.of(1L),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
 
     statusUpdate(firstTask, TaskState.TASK_FAILED);
 
     SingularityTask secondTask = startTask(firstDeploy);
 
-    Assertions.assertFalse(healthchecker.cancelHealthcheck(secondTask.getTaskId().getId()));
+    Assertions.assertFalse(
+      healthchecker.cancelHealthcheck(secondTask.getTaskId().getId())
+    );
 
     statusUpdate(secondTask, TaskState.TASK_FAILED);
 
@@ -243,9 +350,25 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initRequest();
     initFirstDeploy();
 
-    requestResource.postRequest(request.toBuilder().setBounceAfterScale(Optional.of(true)).build(), singularityUser);
+    requestResource.postRequest(
+      request.toBuilder().setBounceAfterScale(Optional.of(true)).build(),
+      singularityUser
+    );
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
+    requestResource.scale(
+      requestId,
+      new SingularityScaleRequest(
+        Optional.of(5),
+        Optional.of(1L),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
 
     Assertions.assertEquals(1, requestManager.getCleanupRequests().size());
     cleaner.drainCleanupQueue();
@@ -261,12 +384,9 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     killKilledTasks();
     Assertions.assertEquals(5, taskManager.getNumActiveTasks());
 
-
     try {
       Thread.sleep(2);
-    } catch (InterruptedException e) {
-
-    }
+    } catch (InterruptedException e) {}
 
     expiringUserActionPoller.runActionOnPoll();
     Assertions.assertEquals(1, requestManager.getCleanupRequests().size());

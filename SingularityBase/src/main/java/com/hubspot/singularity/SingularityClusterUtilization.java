@@ -46,37 +46,47 @@ public class SingularityClusterUtilization {
   private final long timestamp;
 
   @JsonCreator
-  public SingularityClusterUtilization(@JsonProperty("numRequestsWithUnderUtilizedCpu") int numRequestsWithUnderUtilizedCpu,
-                                       @JsonProperty("numRequestsWithOverUtilizedCpu") int numRequestsWithOverUtilizedCpu,
-                                       @JsonProperty("numRequestsWithUnderUtilizedMemBytes") int numRequestsWithUnderUtilizedMemBytes,
-                                       @JsonProperty("numRequestsWithUnderUtilizedDiskBytes") int numRequestsWithUnderUtilizedDiskBytes,
-                                       @JsonProperty("totalUnderUtilizedCpu") double totalUnderUtilizedCpu,
-                                       @JsonProperty("totalOverUtilizedCpu") double totalOverUtilizedCpu,
-                                       @JsonProperty("totalUnderUtilizedMemBytes") long totalUnderUtilizedMemBytes,
-                                       @JsonProperty("totalUnderUtilizedDiskBytes") long totalUnderUtilizedDiskBytes,
-                                       @JsonProperty("avgUnderUtilizedCpu") double avgUnderUtilizedCpu,
-                                       @JsonProperty("avgOverUtilizedCpu") double avgOverUtilizedCpu,
-                                       @JsonProperty("avgUnderUtilizedMemBytes") long avgUnderUtilizedMemBytes,
-                                       @JsonProperty("avgUnderUtilizedDiskBytes") long avgUnderUtilizedDiskBytes,
-                                       @JsonProperty("maxUnderUtilizedCpu") double maxUnderUtilizedCpu,
-                                       @JsonProperty("maxOverUtilizedCpu") double maxOverUtilizedCpu,
-                                       @JsonProperty("maxUnderUtilizedMemBytes") long maxUnderUtilizedMemBytes,
-                                       @JsonProperty("maxUnderUtilizedDiskBytes") long maxUnderUtilizedDiskBytes,
-                                       @JsonProperty("maxUnderUtilizedCpuRequestId") String maxUnderUtilizedCpuRequestId,
-                                       @JsonProperty("maxOverUtilizedCpuRequestId") String maxOverUtilizedCpuRequestId,
-                                       @JsonProperty("maxUnderUtilizedMemBytesRequestId") String maxUnderUtilizedMemBytesRequestId,
-                                       @JsonProperty("maxUnderUtilizedDiskBytesRequestId") String maxUnderUtilizedDiskBytesRequestId,
-                                       @JsonProperty("minUnderUtilizedCpu") double minUnderUtilizedCpu,
-                                       @JsonProperty("minOverUtilizedCpu") double minOverUtilizedCpu,
-                                       @JsonProperty("minUnderUtilizedMemBytes") long minUnderUtilizedMemBytes,
-                                       @JsonProperty("minUnderUtilizedDiskBytes") long minUnderUtilizedDiskBytes,
-                                       @JsonProperty("totalMemBytesUsed") long totalMemBytesUsed,
-                                       @JsonProperty("totalMemBytesAvailable") long totalMemBytesAvailable,
-                                       @JsonProperty("totalDiskBytesUsed") long totalDiskBytesUsed,
-                                       @JsonProperty("totalDiskBytesAvailable") long totalDiskBytesAvailable,
-                                       @JsonProperty("totalCpuUsed") double totalCpuUsed,
-                                       @JsonProperty("totalCpuAvailable") double totalCpuAvailable,
-                                       @JsonProperty("timestamp") long timestamp) {
+  public SingularityClusterUtilization(
+    @JsonProperty("numRequestsWithUnderUtilizedCpu") int numRequestsWithUnderUtilizedCpu,
+    @JsonProperty("numRequestsWithOverUtilizedCpu") int numRequestsWithOverUtilizedCpu,
+    @JsonProperty(
+      "numRequestsWithUnderUtilizedMemBytes"
+    ) int numRequestsWithUnderUtilizedMemBytes,
+    @JsonProperty(
+      "numRequestsWithUnderUtilizedDiskBytes"
+    ) int numRequestsWithUnderUtilizedDiskBytes,
+    @JsonProperty("totalUnderUtilizedCpu") double totalUnderUtilizedCpu,
+    @JsonProperty("totalOverUtilizedCpu") double totalOverUtilizedCpu,
+    @JsonProperty("totalUnderUtilizedMemBytes") long totalUnderUtilizedMemBytes,
+    @JsonProperty("totalUnderUtilizedDiskBytes") long totalUnderUtilizedDiskBytes,
+    @JsonProperty("avgUnderUtilizedCpu") double avgUnderUtilizedCpu,
+    @JsonProperty("avgOverUtilizedCpu") double avgOverUtilizedCpu,
+    @JsonProperty("avgUnderUtilizedMemBytes") long avgUnderUtilizedMemBytes,
+    @JsonProperty("avgUnderUtilizedDiskBytes") long avgUnderUtilizedDiskBytes,
+    @JsonProperty("maxUnderUtilizedCpu") double maxUnderUtilizedCpu,
+    @JsonProperty("maxOverUtilizedCpu") double maxOverUtilizedCpu,
+    @JsonProperty("maxUnderUtilizedMemBytes") long maxUnderUtilizedMemBytes,
+    @JsonProperty("maxUnderUtilizedDiskBytes") long maxUnderUtilizedDiskBytes,
+    @JsonProperty("maxUnderUtilizedCpuRequestId") String maxUnderUtilizedCpuRequestId,
+    @JsonProperty("maxOverUtilizedCpuRequestId") String maxOverUtilizedCpuRequestId,
+    @JsonProperty(
+      "maxUnderUtilizedMemBytesRequestId"
+    ) String maxUnderUtilizedMemBytesRequestId,
+    @JsonProperty(
+      "maxUnderUtilizedDiskBytesRequestId"
+    ) String maxUnderUtilizedDiskBytesRequestId,
+    @JsonProperty("minUnderUtilizedCpu") double minUnderUtilizedCpu,
+    @JsonProperty("minOverUtilizedCpu") double minOverUtilizedCpu,
+    @JsonProperty("minUnderUtilizedMemBytes") long minUnderUtilizedMemBytes,
+    @JsonProperty("minUnderUtilizedDiskBytes") long minUnderUtilizedDiskBytes,
+    @JsonProperty("totalMemBytesUsed") long totalMemBytesUsed,
+    @JsonProperty("totalMemBytesAvailable") long totalMemBytesAvailable,
+    @JsonProperty("totalDiskBytesUsed") long totalDiskBytesUsed,
+    @JsonProperty("totalDiskBytesAvailable") long totalDiskBytesAvailable,
+    @JsonProperty("totalCpuUsed") double totalCpuUsed,
+    @JsonProperty("totalCpuAvailable") double totalCpuAvailable,
+    @JsonProperty("timestamp") long timestamp
+  ) {
     this.numRequestsWithUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu;
     this.numRequestsWithOverUtilizedCpu = numRequestsWithOverUtilizedCpu;
     this.numRequestsWithUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes;
@@ -236,30 +246,55 @@ public class SingularityClusterUtilization {
 
   @Override
   public String toString() {
-    return "SingularityClusterUtilization [" +
-        ", numRequestsWithUnderUtilizedCpu=" + numRequestsWithUnderUtilizedCpu +
-        ", numRequestsWithOverUtilizedCpu=" + numRequestsWithOverUtilizedCpu +
-        ", numRequestsWithUnderUtilizedMemBytes=" + numRequestsWithUnderUtilizedMemBytes +
-        ", totalUnderUtilizedCpu=" + totalUnderUtilizedCpu +
-        ", totalOverUtilizedCpu=" + totalOverUtilizedCpu +
-        ", totalUnderUtilizedMemBytes=" + totalUnderUtilizedMemBytes +
-        ", avgUnderUtilizedCpu=" + avgUnderUtilizedCpu +
-        ", avgOverUtilizedCpu=" + avgOverUtilizedCpu +
-        ", avgUnderUtilizedMemBytes=" + avgUnderUtilizedMemBytes +
-        ", maxUnderUtilizedCpu=" + maxUnderUtilizedCpu +
-        ", maxOverUtilizedCpu=" + maxOverUtilizedCpu +
-        ", maxUnderUtilizedMemBytes=" + maxUnderUtilizedMemBytes +
-        ", maxUnderUtilizedCpuRequestId=" + maxUnderUtilizedCpuRequestId +
-        ", maxOverUtilizedCpuRequestId=" + maxOverUtilizedCpuRequestId +
-        ", maxUnderUtilizedMemBytesRequestId=" + maxUnderUtilizedMemBytesRequestId +
-        ", minUnderUtilizedCpu=" + minUnderUtilizedCpu +
-        ", minOverUtilizedCpu=" + minOverUtilizedCpu +
-        ", minUnderUtilizedMemBytes=" + minUnderUtilizedMemBytes +
-        ", totalMemBytesUsed=" + totalMemBytesUsed +
-        ", totalMemBytesAvailable=" + totalMemBytesAvailable +
-        ", totalCpuUsed=" + totalCpuUsed +
-        ", totalCpuAvailable=" + totalCpuAvailable +
-        ", timestamp=" + timestamp +
-        "]";
+    return (
+      "SingularityClusterUtilization [" +
+      ", numRequestsWithUnderUtilizedCpu=" +
+      numRequestsWithUnderUtilizedCpu +
+      ", numRequestsWithOverUtilizedCpu=" +
+      numRequestsWithOverUtilizedCpu +
+      ", numRequestsWithUnderUtilizedMemBytes=" +
+      numRequestsWithUnderUtilizedMemBytes +
+      ", totalUnderUtilizedCpu=" +
+      totalUnderUtilizedCpu +
+      ", totalOverUtilizedCpu=" +
+      totalOverUtilizedCpu +
+      ", totalUnderUtilizedMemBytes=" +
+      totalUnderUtilizedMemBytes +
+      ", avgUnderUtilizedCpu=" +
+      avgUnderUtilizedCpu +
+      ", avgOverUtilizedCpu=" +
+      avgOverUtilizedCpu +
+      ", avgUnderUtilizedMemBytes=" +
+      avgUnderUtilizedMemBytes +
+      ", maxUnderUtilizedCpu=" +
+      maxUnderUtilizedCpu +
+      ", maxOverUtilizedCpu=" +
+      maxOverUtilizedCpu +
+      ", maxUnderUtilizedMemBytes=" +
+      maxUnderUtilizedMemBytes +
+      ", maxUnderUtilizedCpuRequestId=" +
+      maxUnderUtilizedCpuRequestId +
+      ", maxOverUtilizedCpuRequestId=" +
+      maxOverUtilizedCpuRequestId +
+      ", maxUnderUtilizedMemBytesRequestId=" +
+      maxUnderUtilizedMemBytesRequestId +
+      ", minUnderUtilizedCpu=" +
+      minUnderUtilizedCpu +
+      ", minOverUtilizedCpu=" +
+      minOverUtilizedCpu +
+      ", minUnderUtilizedMemBytes=" +
+      minUnderUtilizedMemBytes +
+      ", totalMemBytesUsed=" +
+      totalMemBytesUsed +
+      ", totalMemBytesAvailable=" +
+      totalMemBytesAvailable +
+      ", totalCpuUsed=" +
+      totalCpuUsed +
+      ", totalCpuAvailable=" +
+      totalCpuAvailable +
+      ", timestamp=" +
+      timestamp +
+      "]"
+    );
   }
 }

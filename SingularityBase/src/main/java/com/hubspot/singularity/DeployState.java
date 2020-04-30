@@ -25,9 +25,10 @@ public enum DeployState {
     return isDeployFinished;
   }
 
-  @Schema(description = "The type of task cleanup created for tasks related to this deploy (if failed), or an older deploy (if succeeded)")
+  @Schema(
+    description = "The type of task cleanup created for tasks related to this deploy (if failed), or an older deploy (if succeeded)"
+  )
   public TaskCleanupType getCleanupType() {
     return cleanupType;
   }
-
 }

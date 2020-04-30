@@ -1,21 +1,23 @@
 package com.hubspot.deploy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Represents an artifact for a task")
 public abstract class Artifact {
-
   private final String name;
   private final String filename;
   private final Optional<String> md5sum;
   private final Optional<String> targetFolderRelativeToTask;
 
-  public Artifact(String name, String filename, Optional<String> md5sum, Optional<String> targetFolderRelativeToTask) {
+  public Artifact(
+    String name,
+    String filename,
+    Optional<String> md5sum,
+    Optional<String> targetFolderRelativeToTask
+  ) {
     this.name = name;
     this.filename = filename;
     this.md5sum = md5sum;
@@ -46,7 +48,9 @@ public abstract class Artifact {
     return md5sum;
   }
 
-  @Schema(description = "Target folder for the file, relative to the task sandbox directory")
+  @Schema(
+    description = "Target folder for the file, relative to the task sandbox directory"
+  )
   public Optional<String> getTargetFolderRelativeToTask() {
     return targetFolderRelativeToTask;
   }
@@ -67,19 +71,29 @@ public abstract class Artifact {
 
     Artifact that = (Artifact) other;
 
-    return Objects.equals(this.name, that.name)
-        && Objects.equals(this.filename, that.filename)
-        && Objects.equals(this.md5sum, that.md5sum)
-        && Objects.equals(this.targetFolderRelativeToTask, that.targetFolderRelativeToTask);
+    return (
+      Objects.equals(this.name, that.name) &&
+      Objects.equals(this.filename, that.filename) &&
+      Objects.equals(this.md5sum, that.md5sum) &&
+      Objects.equals(this.targetFolderRelativeToTask, that.targetFolderRelativeToTask)
+    );
   }
 
   @Override
   public String toString() {
-    return "Artifact{" +
-        "name='" + name + '\'' +
-        ", filename='" + filename + '\'' +
-        ", md5sum=" + md5sum +
-        ", targetFolderRelativeToTask=" + targetFolderRelativeToTask +
-        '}';
+    return (
+      "Artifact{" +
+      "name='" +
+      name +
+      '\'' +
+      ", filename='" +
+      filename +
+      '\'' +
+      ", md5sum=" +
+      md5sum +
+      ", targetFolderRelativeToTask=" +
+      targetFolderRelativeToTask +
+      '}'
+    );
   }
 }

@@ -1,18 +1,16 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "Describes an update or action on a Singularity request")
-public class SingularityRequestHistory implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
-
+public class SingularityRequestHistory
+  implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
   private final long createdAt;
   private final Optional<String> user;
   private final RequestHistoryType eventType;
@@ -21,13 +19,29 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
 
   @Schema
   public enum RequestHistoryType {
-    CREATED, UPDATED, DELETING, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED, SCALED, SCALE_REVERTED;
+    CREATED,
+    UPDATED,
+    DELETING,
+    DELETED,
+    PAUSED,
+    UNPAUSED,
+    ENTERED_COOLDOWN,
+    EXITED_COOLDOWN,
+    FINISHED,
+    DEPLOYED_TO_UNPAUSE,
+    BOUNCED,
+    SCALED,
+    SCALE_REVERTED
   }
 
   @JsonCreator
-  public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user,
-                                   @JsonProperty("eventType") RequestHistoryType eventType, @JsonProperty("request") SingularityRequest request,
-                                   @JsonProperty("message") Optional<String> message) {
+  public SingularityRequestHistory(
+    @JsonProperty("createdAt") long createdAt,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("eventType") RequestHistoryType eventType,
+    @JsonProperty("request") SingularityRequest request,
+    @JsonProperty("message") Optional<String> message
+  ) {
     this.createdAt = createdAt;
     this.user = user;
     this.eventType = eventType;
@@ -38,10 +52,10 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
   @Override
   public int compareTo(SingularityRequestHistory o) {
     return ComparisonChain
-        .start()
-        .compare(o.getCreatedAt(), createdAt)
-        .compare(request.getId(), o.getRequest().getId())
-        .result();
+      .start()
+      .compare(o.getCreatedAt(), createdAt)
+      .compare(request.getId(), o.getRequest().getId())
+      .result();
   }
 
   @Schema(description = "The time the request update occured")
@@ -91,11 +105,13 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
       return false;
     }
     SingularityRequestHistory that = (SingularityRequestHistory) o;
-    return createdAt == that.createdAt &&
-        Objects.equals(user, that.user) &&
-        eventType == that.eventType &&
-        Objects.equals(request, that.request) &&
-        Objects.equals(message, that.message);
+    return (
+      createdAt == that.createdAt &&
+      Objects.equals(user, that.user) &&
+      eventType == that.eventType &&
+      Objects.equals(request, that.request) &&
+      Objects.equals(message, that.message)
+    );
   }
 
   @Override
@@ -105,12 +121,19 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
 
   @Override
   public String toString() {
-    return "SingularityRequestHistory{" +
-        "createdAt=" + createdAt +
-        ", user=" + user +
-        ", eventType=" + eventType +
-        ", request=" + request +
-        ", message=" + message +
-        '}';
+    return (
+      "SingularityRequestHistory{" +
+      "createdAt=" +
+      createdAt +
+      ", user=" +
+      user +
+      ", eventType=" +
+      eventType +
+      ", request=" +
+      request +
+      ", message=" +
+      message +
+      '}'
+    );
   }
 }

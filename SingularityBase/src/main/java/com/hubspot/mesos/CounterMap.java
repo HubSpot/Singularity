@@ -1,5 +1,7 @@
 package com.hubspot.mesos;
 
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Longs;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,11 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.collect.Maps;
-import com.google.common.primitives.Longs;
-
 public class CounterMap<K> {
-
   private final Map<K, Counter> map;
 
   public CounterMap() {
@@ -92,22 +90,22 @@ public class CounterMap<K> {
       entries.add(entry);
     }
 
-    Collections.sort(entries, new Comparator<Entry<K, Counter>>() {
+    Collections.sort(
+      entries,
+      new Comparator<Entry<K, Counter>>() {
 
-      @Override
-      public int compare(Entry<K, Counter> o1, Entry<K, Counter> o2) {
-        return Longs.compare(o2.getValue().getCount(), o1.getValue().getCount());
+        @Override
+        public int compare(Entry<K, Counter> o1, Entry<K, Counter> o2) {
+          return Longs.compare(o2.getValue().getCount(), o1.getValue().getCount());
+        }
       }
-
-    });
+    );
 
     return entries;
   }
 
   @Override
   public String toString() {
-    return "CounterMap{" +
-        "map=" + map +
-        '}';
+    return "CounterMap{" + "map=" + map + '}';
   }
 }

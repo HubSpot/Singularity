@@ -1,28 +1,30 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class SingularityHistoryPersister<T extends SingularityHistoryItem> extends SingularityLeaderOnlyPoller {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
+public abstract class SingularityHistoryPersister<T extends SingularityHistoryItem>
+  extends SingularityLeaderOnlyPoller {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityHistoryPersister.class
+  );
 
   protected final SingularityConfiguration configuration;
   protected final ReentrantLock persisterLock;
 
-  public SingularityHistoryPersister(SingularityConfiguration configuration, ReentrantLock persisterLock) {
+  public SingularityHistoryPersister(
+    SingularityConfiguration configuration,
+    ReentrantLock persisterLock
+  ) {
     super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS);
-
     this.configuration = configuration;
     this.persisterLock = persisterLock;
   }
@@ -38,7 +40,11 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   @Override
   protected boolean isEnabled() {
-    return persistsHistoryInsteadOfPurging() || getMaxAgeInMillisOfItem() > 0 || getMaxNumberOfItems().isPresent();
+    return (
+      persistsHistoryInsteadOfPurging() ||
+      getMaxAgeInMillisOfItem() > 0 ||
+      getMaxNumberOfItems().isPresent()
+    );
   }
 
   protected abstract long getMaxAgeInMillisOfItem();
@@ -54,7 +60,13 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
     if (moveToHistoryOrCheckForPurgeAndShouldDelete(object, index)) {
       SingularityDeleteResult deleteResult = purgeFromZk(object);
-      LOG.debug("{} {} (deleted: {}) in {}", persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged", object, deleteResult, JavaUtils.duration(start));
+      LOG.debug(
+        "{} {} (deleted: {}) in {}",
+        persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged",
+        object,
+        deleteResult,
+        JavaUtils.duration(start)
+      );
       return true;
     }
 
@@ -66,19 +78,29 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
       return moveToHistory(object);
     }
 
-    final long age = System.currentTimeMillis() - object.getCreateTimestampForCalculatingHistoryAge();
+    final long age =
+      System.currentTimeMillis() - object.getCreateTimestampForCalculatingHistoryAge();
 
     if (age > getMaxAgeInMillisOfItem()) {
-      LOG.trace("Deleting {} because it is {} old (max : {})", object, JavaUtils.durationFromMillis(age), JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem()));
+      LOG.trace(
+        "Deleting {} because it is {} old (max : {})",
+        object,
+        JavaUtils.durationFromMillis(age),
+        JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem())
+      );
       return true;
     }
 
     if (getMaxNumberOfItems().isPresent() && index >= getMaxNumberOfItems().get()) {
-      LOG.trace("Deleting {} because it is item number {} (max: {})", object, index, getMaxNumberOfItems().get());
+      LOG.trace(
+        "Deleting {} because it is item number {} (max: {})",
+        object,
+        index,
+        getMaxNumberOfItems().get()
+      );
       return true;
     }
 
     return false;
   }
-
 }

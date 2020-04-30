@@ -1,13 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -16,11 +8,17 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularitySchedulerPoller.class
+  );
 
   private final SingularityMesosOfferScheduler offerScheduler;
   private final TaskManager taskManager;
@@ -29,10 +27,15 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final SingularitySchedulerLock lock;
 
   @Inject
-  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, TaskManager taskManager, SingularityScheduler scheduler,
-                             SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
+  SingularitySchedulerPoller(
+    SingularityMesosOfferScheduler offerScheduler,
+    TaskManager taskManager,
+    SingularityScheduler scheduler,
+    SingularityConfiguration configuration,
+    SingularitySchedulerLock lock,
+    DisasterManager disasterManager
+  ) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS);
-
     this.offerScheduler = offerScheduler;
     this.taskManager = taskManager;
     this.scheduler = scheduler;
@@ -47,15 +50,26 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       return;
     }
 
-    lock.runWithOffersLock(() -> {
-      for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
-        lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers -> pendingTaskDeletes"));
-      }
+    lock.runWithOffersLock(
+      () -> {
+        for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
+          lock.runWithRequestLock(
+            () -> taskManager.deletePendingTask(taskId),
+            taskId.getRequestId(),
+            String.format(
+              "%s#%s",
+              getClass().getSimpleName(),
+              "checkOffers -> pendingTaskDeletes"
+            )
+          );
+        }
 
-      scheduler.drainPendingQueue();
-      scheduler.checkForStalledTaskLaunches();
-      // Check against only cached offers
-      offerScheduler.resourceOffers(Collections.emptyList());
-    }, "SingularitySchedulerPoller");
+        scheduler.drainPendingQueue();
+        scheduler.checkForStalledTaskLaunches();
+        // Check against only cached offers
+        offerScheduler.resourceOffers(Collections.emptyList());
+      },
+      "SingularitySchedulerPoller"
+    );
   }
 }

@@ -2,29 +2,38 @@ package com.hubspot.singularity.runner.base.shared;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.hash.Hashing;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 
 public class TailMetadata {
-
   private final String filename;
   private final String tag;
   private final Map<String, String> extraFields;
   private final boolean finished;
   private final String filenameKey;
 
-  public static Path getTailMetadataPath(Path logMetadataDirectory, String logMetadataSuffix, TailMetadata tail) {
-    return logMetadataDirectory.resolve(Paths.get(tail.getFilenameKey() + logMetadataSuffix));
+  public static Path getTailMetadataPath(
+    Path logMetadataDirectory,
+    String logMetadataSuffix,
+    TailMetadata tail
+  ) {
+    return logMetadataDirectory.resolve(
+      Paths.get(tail.getFilenameKey() + logMetadataSuffix)
+    );
   }
 
   @JsonCreator
-  public TailMetadata(@JsonProperty("filename") String filename, @JsonProperty("tag") String tag, @JsonProperty("extraFields") Map<String, String> extraFields, @JsonProperty("finished") boolean finished) {
+  public TailMetadata(
+    @JsonProperty("filename") String filename,
+    @JsonProperty("tag") String tag,
+    @JsonProperty("extraFields") Map<String, String> extraFields,
+    @JsonProperty("finished") boolean finished
+  ) {
     this.filename = filename;
     this.tag = tag;
     this.extraFields = extraFields;
@@ -47,21 +56,21 @@ public class TailMetadata {
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
-        return true;
+      return true;
     }
     if (obj == null) {
-        return false;
+      return false;
     }
     if (getClass() != obj.getClass()) {
-        return false;
+      return false;
     }
     TailMetadata other = (TailMetadata) obj;
     if (filename == null) {
       if (other.filename != null) {
         return false;
-    }
+      }
     } else if (!filename.equals(other.filename)) {
-        return false;
+      return false;
     }
     return true;
   }
@@ -89,7 +98,18 @@ public class TailMetadata {
 
   @Override
   public String toString() {
-    return "TailMetadata [filename=" + filename + ", tag=" + tag + ", extraFields=" + extraFields + ", finished=" + finished + ", filenameKey=" + filenameKey + "]";
+    return (
+      "TailMetadata [filename=" +
+      filename +
+      ", tag=" +
+      tag +
+      ", extraFields=" +
+      extraFields +
+      ", finished=" +
+      finished +
+      ", filenameKey=" +
+      filenameKey +
+      "]"
+    );
   }
-
 }

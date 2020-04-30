@@ -1,15 +1,12 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Describes an in-progress deploy")
 public class SingularityPendingDeploy {
-
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate;
   private final DeployState currentDeployState;
@@ -17,8 +14,15 @@ public class SingularityPendingDeploy {
   private final Optional<SingularityRequest> updatedRequest;
 
   @JsonCreator
-  public SingularityPendingDeploy(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("lastLoadBalancerUpdate") Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate,
-      @JsonProperty("currentDeployState") DeployState currentDeployState, @JsonProperty("deployProgress") Optional<SingularityDeployProgress> deployProgress, @JsonProperty("updatedRequest") Optional<SingularityRequest> updatedRequest) {
+  public SingularityPendingDeploy(
+    @JsonProperty("deployMarker") SingularityDeployMarker deployMarker,
+    @JsonProperty(
+      "lastLoadBalancerUpdate"
+    ) Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate,
+    @JsonProperty("currentDeployState") DeployState currentDeployState,
+    @JsonProperty("deployProgress") Optional<SingularityDeployProgress> deployProgress,
+    @JsonProperty("updatedRequest") Optional<SingularityRequest> updatedRequest
+  ) {
     this.deployMarker = deployMarker;
     this.lastLoadBalancerUpdate = lastLoadBalancerUpdate;
     this.currentDeployState = currentDeployState;
@@ -31,7 +35,10 @@ public class SingularityPendingDeploy {
     return deployMarker;
   }
 
-  @Schema(description = "The latest load balancer update for this deploy (if a long running service with load balancing enabled)", nullable = true)
+  @Schema(
+    description = "The latest load balancer update for this deploy (if a long running service with load balancing enabled)",
+    nullable = true
+  )
   public Optional<SingularityLoadBalancerUpdate> getLastLoadBalancerUpdate() {
     return lastLoadBalancerUpdate;
   }
@@ -41,7 +48,10 @@ public class SingularityPendingDeploy {
     return currentDeployState;
   }
 
-  @Schema(description = "Describes the progress this deploy has made so far", nullable = true)
+  @Schema(
+    description = "Describes the progress this deploy has made so far",
+    nullable = true
+  )
   public Optional<SingularityDeployProgress> getDeployProgress() {
     return deployProgress;
   }
@@ -53,12 +63,19 @@ public class SingularityPendingDeploy {
 
   @Override
   public String toString() {
-    return "SingularityPendingDeploy{" +
-        "deployMarker=" + deployMarker +
-        ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate +
-        ", currentDeployState=" + currentDeployState +
-        ", deployProgress=" + deployProgress +
-        ", updatedRequest=" + updatedRequest +
-        '}';
+    return (
+      "SingularityPendingDeploy{" +
+      "deployMarker=" +
+      deployMarker +
+      ", lastLoadBalancerUpdate=" +
+      lastLoadBalancerUpdate +
+      ", currentDeployState=" +
+      currentDeployState +
+      ", deployProgress=" +
+      deployProgress +
+      ", updatedRequest=" +
+      updatedRequest +
+      '}'
+    );
   }
 }
