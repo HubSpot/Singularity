@@ -1,19 +1,18 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "A Healthcheck result for a particular task")
-public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder implements Comparable<SingularityTaskHealthcheckResult> {
-
+public class SingularityTaskHealthcheckResult
+  extends SingularityTaskIdHolder
+  implements Comparable<SingularityTaskHealthcheckResult> {
   private final Optional<Integer> statusCode;
   private final Optional<Long> durationMillis;
   private final Optional<String> responseBody;
@@ -22,15 +21,16 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   private final long timestamp;
 
   @JsonCreator
-  public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode,
-                                          @JsonProperty("duration") Optional<Long> durationMillis,
-                                          @JsonProperty("timestamp") long timestamp,
-                                          @JsonProperty("responseBody") Optional<String> responseBody,
-                                          @JsonProperty("errorMessage") Optional<String> errorMessage,
-                                          @JsonProperty("taskId") SingularityTaskId taskId,
-                                          @JsonProperty("startup") Optional<Boolean> startup) {
+  public SingularityTaskHealthcheckResult(
+    @JsonProperty("statusCode") Optional<Integer> statusCode,
+    @JsonProperty("duration") Optional<Long> durationMillis,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("responseBody") Optional<String> responseBody,
+    @JsonProperty("errorMessage") Optional<String> errorMessage,
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("startup") Optional<Boolean> startup
+  ) {
     super(taskId);
-
     this.statusCode = statusCode;
     this.errorMessage = errorMessage;
     this.durationMillis = durationMillis;
@@ -41,10 +41,11 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public int compareTo(SingularityTaskHealthcheckResult o) {
-    return ComparisonChain.start()
-        .compare(timestamp, o.getTimestamp())
-        .compare(o.getTaskId().getId(), getTaskId().getId())
-        .result();
+    return ComparisonChain
+      .start()
+      .compare(timestamp, o.getTimestamp())
+      .compare(o.getTaskId().getId(), getTaskId().getId())
+      .result();
   }
 
   @Override
@@ -56,17 +57,26 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
       return false;
     }
     SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) o;
-    return startup == that.startup &&
-        timestamp == that.timestamp &&
-        Objects.equals(statusCode, that.statusCode) &&
-        Objects.equals(durationMillis, that.durationMillis) &&
-        Objects.equals(responseBody, that.responseBody) &&
-        Objects.equals(errorMessage, that.errorMessage);
+    return (
+      startup == that.startup &&
+      timestamp == that.timestamp &&
+      Objects.equals(statusCode, that.statusCode) &&
+      Objects.equals(durationMillis, that.durationMillis) &&
+      Objects.equals(responseBody, that.responseBody) &&
+      Objects.equals(errorMessage, that.errorMessage)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
+    return Objects.hash(
+      statusCode,
+      durationMillis,
+      responseBody,
+      errorMessage,
+      startup,
+      timestamp
+    );
   }
 
   @Schema(description = "Status code if a response was received", nullable = true)
@@ -74,7 +84,10 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     return statusCode;
   }
 
-  @Schema(description = "Response time of the check if a response was received", nullable = true)
+  @Schema(
+    description = "Response time of the check if a response was received",
+    nullable = true
+  )
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }
@@ -101,18 +114,30 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @JsonIgnore
   public boolean isFailed() {
-    return getErrorMessage().isPresent() || (getStatusCode().isPresent() && !JavaUtils.isHttpSuccess(getStatusCode().get()));
+    return (
+      getErrorMessage().isPresent() ||
+      (getStatusCode().isPresent() && !JavaUtils.isHttpSuccess(getStatusCode().get()))
+    );
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskHealthcheckResult{" +
-        "statusCode=" + statusCode +
-        ", durationMillis=" + durationMillis +
-        ", responseBody=" + responseBody +
-        ", errorMessage=" + errorMessage +
-        ", startup=" + startup +
-        ", timestamp=" + timestamp +
-        "} " + super.toString();
+    return (
+      "SingularityTaskHealthcheckResult{" +
+      "statusCode=" +
+      statusCode +
+      ", durationMillis=" +
+      durationMillis +
+      ", responseBody=" +
+      responseBody +
+      ", errorMessage=" +
+      errorMessage +
+      ", startup=" +
+      startup +
+      ", timestamp=" +
+      timestamp +
+      "} " +
+      super.toString()
+    );
   }
 }

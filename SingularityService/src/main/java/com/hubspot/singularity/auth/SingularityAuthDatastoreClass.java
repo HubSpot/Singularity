@@ -12,7 +12,9 @@ public enum SingularityAuthDatastoreClass {
 
   private final Class<? extends SingularityAuthDatastore> authDatastoreClass;
 
-  SingularityAuthDatastoreClass(Class<? extends SingularityAuthDatastore> authDatastoreClass) {
+  SingularityAuthDatastoreClass(
+    Class<? extends SingularityAuthDatastore> authDatastoreClass
+  ) {
     this.authDatastoreClass = authDatastoreClass;
   }
 

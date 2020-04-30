@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.config;
 
 public class SingularityExecutorDockerAuthConfig {
-
   private boolean fromDockerConfig;
 
   private String username;
@@ -48,5 +47,4 @@ public class SingularityExecutorDockerAuthConfig {
   public void setServerAddress(String serverAddress) {
     this.serverAddress = serverAddress;
   }
-
 }

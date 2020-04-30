@@ -1,14 +1,12 @@
 package com.hubspot.singularity.data.zkmigrations;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 @Singleton
 public class ClearUsagesMigration extends ZkDataMigration {
-
   private final CuratorFramework curator;
 
   @Inject
@@ -29,6 +27,4 @@ public class ClearUsagesMigration extends ZkDataMigration {
       throw new RuntimeException(e);
     }
   }
-
-
 }

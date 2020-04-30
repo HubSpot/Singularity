@@ -1,34 +1,36 @@
 package com.hubspot.singularity.expiring;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(
-    title = "Represents a future update to the state of a rack or slave",
-    subTypes = {
-        SingularityExpiringSlaveState.class
-    }
+  title = "Represents a future update to the state of a rack or slave",
+  subTypes = { SingularityExpiringSlaveState.class }
 )
-public class SingularityExpiringMachineState extends SingularityExpiringParent<SingularityMachineChangeRequest> {
-
+public class SingularityExpiringMachineState
+  extends SingularityExpiringParent<SingularityMachineChangeRequest> {
   private final String machineId;
   private final MachineState revertToState;
   private final boolean killTasksOnDecommissionTimeout;
 
   @JsonCreator
-  public SingularityExpiringMachineState(@JsonProperty("user") Optional<String> user,
-                                         @JsonProperty("startMillis") long startMillis,
-                                         @JsonProperty("actionId") String actionId,
-                                         @JsonProperty("expiringAPIRequestObject") SingularityMachineChangeRequest machineChangeRequest,
-                                         @JsonProperty("machineId") String machineId,
-                                         @JsonProperty("revertToState") MachineState revertToState,
-                                         @JsonProperty("killTasksOnDecommissionTimeout") Optional<Boolean> killTasksOnDecommissionTimeout) {
+  public SingularityExpiringMachineState(
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("startMillis") long startMillis,
+    @JsonProperty("actionId") String actionId,
+    @JsonProperty(
+      "expiringAPIRequestObject"
+    ) SingularityMachineChangeRequest machineChangeRequest,
+    @JsonProperty("machineId") String machineId,
+    @JsonProperty("revertToState") MachineState revertToState,
+    @JsonProperty(
+      "killTasksOnDecommissionTimeout"
+    ) Optional<Boolean> killTasksOnDecommissionTimeout
+  ) {
     super(machineChangeRequest, user, startMillis, actionId);
     this.machineId = machineId;
     this.revertToState = revertToState;
@@ -46,8 +48,8 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
   }
 
   @Schema(
-      title = "if true, kill all remaining tasks on the slave if the decommission has timed out",
-      defaultValue = "false"
+    title = "if true, kill all remaining tasks on the slave if the decommission has timed out",
+    defaultValue = "false"
   )
   public boolean isKillTasksOnDecommissionTimeout() {
     return killTasksOnDecommissionTimeout;
@@ -55,10 +57,17 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
 
   @Override
   public String toString() {
-    return "SingularityExpiringMachineState{" +
-        "machineId='" + machineId + '\'' +
-        ", revertToState=" + revertToState +
-        ", killTasksOnDecommissionTimeout=" + killTasksOnDecommissionTimeout +
-        "} " + super.toString();
+    return (
+      "SingularityExpiringMachineState{" +
+      "machineId='" +
+      machineId +
+      '\'' +
+      ", revertToState=" +
+      revertToState +
+      ", killTasksOnDecommissionTimeout=" +
+      killTasksOnDecommissionTimeout +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -1,18 +1,15 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.mesos.v1.Protos.Offer;
-import org.apache.mesos.v1.Protos.OfferID;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
+import java.util.Collections;
+import java.util.List;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
 
 @Singleton
 public class SingularityNoOfferCache implements OfferCache {
-
   private final SingularityMesosSchedulerClient schedulerClient;
 
   @Inject
@@ -64,5 +61,4 @@ public class SingularityNoOfferCache implements OfferCache {
   public void enableOfferCache() {
     // no-op
   }
-
 }

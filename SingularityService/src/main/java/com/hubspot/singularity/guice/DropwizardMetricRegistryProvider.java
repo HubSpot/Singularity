@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-
 import io.dropwizard.setup.Environment;
 
 public class DropwizardMetricRegistryProvider implements Provider<MetricRegistry> {

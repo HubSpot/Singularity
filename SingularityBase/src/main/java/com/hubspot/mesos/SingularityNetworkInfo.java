@@ -1,14 +1,12 @@
 package com.hubspot.mesos;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Optional network settings for a container being launched in mesos")
@@ -18,9 +16,11 @@ public class SingularityNetworkInfo {
   private final Optional<List<SingularityPortMapping>> portMappings;
 
   @JsonCreator
-  public SingularityNetworkInfo(@JsonProperty("name") Optional<String> name,
-      @JsonProperty("groups") Optional<List<String>> groups,
-      @JsonProperty("portMappings") Optional<List<SingularityPortMapping>> portMappings) {
+  public SingularityNetworkInfo(
+    @JsonProperty("name") Optional<String> name,
+    @JsonProperty("groups") Optional<List<String>> groups,
+    @JsonProperty("portMappings") Optional<List<SingularityPortMapping>> portMappings
+  ) {
     this.name = name;
     this.groups = groups;
     this.portMappings = portMappings;
@@ -50,9 +50,11 @@ public class SingularityNetworkInfo {
       return false;
     }
     SingularityNetworkInfo that = (SingularityNetworkInfo) o;
-    return Objects.equals(name, that.name) &&
-        Objects.equals(groups, that.groups) &&
-        Objects.equals(portMappings, that.portMappings);
+    return (
+      Objects.equals(name, that.name) &&
+      Objects.equals(groups, that.groups) &&
+      Objects.equals(portMappings, that.portMappings)
+    );
   }
 
   @Override
@@ -62,10 +64,16 @@ public class SingularityNetworkInfo {
 
   @Override
   public String toString() {
-    return "SingularityNetworkInfo{" +
-        "name='" + name + '\'' +
-        ", groups=" + groups +
-        ", portMappings=" + portMappings +
-        '}';
+    return (
+      "SingularityNetworkInfo{" +
+      "name='" +
+      name +
+      '\'' +
+      ", groups=" +
+      groups +
+      ", portMappings=" +
+      portMappings +
+      '}'
+    );
   }
 }

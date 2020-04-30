@@ -1,12 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +11,11 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import java.util.List;
+import java.util.Optional;
+import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
@@ -28,15 +26,24 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   private final UsageManager usageManager;
 
   @Inject
-  public SlaveManager(CuratorFramework curator,
-                      SingularityConfiguration configuration,
-                      MetricRegistry metricRegistry,
-                      Transcoder<SingularitySlave> slaveTranscoder,
-                      Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
-                      Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
-                      SingularityLeaderCache leaderCache,
-                      UsageManager usageManager) {
-    super(curator, configuration, metricRegistry, slaveTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
+  public SlaveManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    Transcoder<SingularitySlave> slaveTranscoder,
+    Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
+    Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
+    SingularityLeaderCache leaderCache,
+    UsageManager usageManager
+  ) {
+    super(
+      curator,
+      configuration,
+      metricRegistry,
+      slaveTranscoder,
+      stateHistoryTranscoder,
+      expiringMachineStateTranscoder
+    );
     this.leaderCache = leaderCache;
     this.usageManager = usageManager;
   }
@@ -86,7 +93,12 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public StateChangeResult changeState(SingularitySlave singularitySlave, MachineState newState, Optional<String> message, Optional<String> user) {
+  public StateChangeResult changeState(
+    SingularitySlave singularitySlave,
+    MachineState newState,
+    Optional<String> message,
+    Optional<String> user
+  ) {
     if (newState == MachineState.DEAD) {
       usageManager.deleteSlaveUsage(singularitySlave.getId());
     }

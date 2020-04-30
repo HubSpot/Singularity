@@ -1,10 +1,5 @@
 package com.hubspot.singularity.client;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.curator.framework.CuratorFramework;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -19,11 +14,12 @@ import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.List;
+import java.util.Optional;
+import org.apache.curator.framework.CuratorFramework;
 
 public class SingularityClientModule extends AbstractModule {
-
   public static final String HTTP_CLIENT_NAME = "singularity.http.client";
 
   // bind this name to not use the curator discovery, eg: http://localhost:5060,http://localhost:7000
@@ -71,10 +67,16 @@ public class SingularityClientModule extends AbstractModule {
     objectMapper.registerModule(new GuavaModule());
     objectMapper.registerModule(new Jdk8Module());
 
-    HttpClient httpClient = new NingHttpClient(httpConfig.orElse(HttpConfig.newBuilder().setObjectMapper(objectMapper).build()));
-    bind(HttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(httpClient);
+    HttpClient httpClient = new NingHttpClient(
+      httpConfig.orElse(HttpConfig.newBuilder().setObjectMapper(objectMapper).build())
+    );
+    bind(HttpClient.class)
+      .annotatedWith(Names.named(HTTP_CLIENT_NAME))
+      .toInstance(httpClient);
 
-    bind(SingularityClient.class).toProvider(SingularityClientProvider.class).in(Scopes.SINGLETON);
+    bind(SingularityClient.class)
+      .toProvider(SingularityClientProvider.class)
+      .in(Scopes.SINGLETON);
 
     if (hosts != null) {
       bindHosts(binder()).toInstance(hosts);
@@ -82,7 +84,9 @@ public class SingularityClientModule extends AbstractModule {
   }
 
   public static LinkedBindingBuilder<List<String>> bindHosts(Binder binder) {
-    return binder.bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(HOSTS_PROPERTY_NAME));
+    return binder
+      .bind(new TypeLiteral<List<String>>() {})
+      .annotatedWith(Names.named(HOSTS_PROPERTY_NAME));
   }
 
   public static LinkedBindingBuilder<String> bindContextPath(Binder binder) {
@@ -93,7 +97,11 @@ public class SingularityClientModule extends AbstractModule {
     return binder.bind(CuratorFramework.class).annotatedWith(Names.named(CURATOR_NAME));
   }
 
-  public static LinkedBindingBuilder<SingularityClientCredentials> bindCredentials(Binder binder) {
-    return binder.bind(SingularityClientCredentials.class).annotatedWith(Names.named(CREDENTIALS_PROPERTY_NAME));
+  public static LinkedBindingBuilder<SingularityClientCredentials> bindCredentials(
+    Binder binder
+  ) {
+    return binder
+      .bind(SingularityClientCredentials.class)
+      .annotatedWith(Names.named(CREDENTIALS_PROPERTY_NAME));
   }
 }

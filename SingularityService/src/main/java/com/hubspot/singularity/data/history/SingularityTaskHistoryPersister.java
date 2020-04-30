@@ -1,20 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-
-import javax.inject.Singleton;
-
-import org.apache.mesos.v1.Protos.TaskStatus.Reason;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -27,11 +12,25 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import javax.inject.Singleton;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularityTaskHistoryPersister extends SingularityHistoryPersister<SingularityTaskId> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskHistoryPersister.class);
+public class SingularityTaskHistoryPersister
+  extends SingularityHistoryPersister<SingularityTaskId> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityTaskHistoryPersister.class
+  );
 
   private final TaskManager taskManager;
   private final DeployManager deployManager;
@@ -39,14 +38,19 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final int agentReregisterTimeoutSeconds;
 
   @Inject
-  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager,
-                                         DeployManager deployManager, HistoryManager historyManager, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+  public SingularityTaskHistoryPersister(
+    SingularityConfiguration configuration,
+    TaskManager taskManager,
+    DeployManager deployManager,
+    HistoryManager historyManager,
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+  ) {
     super(configuration, persisterLock);
-
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
-    this.agentReregisterTimeoutSeconds = configuration.getMesosConfiguration().getAgentReregisterTimeoutSeconds();
+    this.agentReregisterTimeoutSeconds =
+      configuration.getMesosConfiguration().getAgentReregisterTimeoutSeconds();
   }
 
   @Override
@@ -69,9 +73,13 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
           forRequest++;
         }
-        LOG.info("Transferred {} out of {} inactive task ids in {}", transferred, entry.getValue().size(), JavaUtils.duration(start));
+        LOG.info(
+          "Transferred {} out of {} inactive task ids in {}",
+          transferred,
+          entry.getValue().size(),
+          JavaUtils.duration(start)
+        );
       }
-
     } finally {
       persisterLock.unlock();
     }
@@ -82,15 +90,26 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     taskIds.removeAll(taskManager.getActiveTaskIds());
     taskIds.removeAll(taskManager.getLBCleanupTasks());
     List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
-    return taskIds.stream()
-        .filter((taskId) -> !isPartOfPendingDeploy(pendingDeploys, taskId) && !couldReturnWithRecoveredAgent(taskId))
-        .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
-        .collect(Collectors.groupingBy(SingularityTaskId::getRequestId));
+    return taskIds
+      .stream()
+      .filter(
+        taskId ->
+          !isPartOfPendingDeploy(pendingDeploys, taskId) &&
+          !couldReturnWithRecoveredAgent(taskId)
+      )
+      .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
+      .collect(Collectors.groupingBy(SingularityTaskId::getRequestId));
   }
 
-  private boolean isPartOfPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
+  private boolean isPartOfPendingDeploy(
+    List<SingularityPendingDeploy> pendingDeploys,
+    SingularityTaskId taskId
+  ) {
     for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
-      if (pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId()) && pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId())) {
+      if (
+        pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId()) &&
+        pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId())
+      ) {
         return true;
       }
     }
@@ -99,9 +118,13 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   }
 
   private boolean couldReturnWithRecoveredAgent(SingularityTaskId taskId) {
-    Optional<SingularityTaskHistoryUpdate> maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_LOST);
+    Optional<SingularityTaskHistoryUpdate> maybeUnreachable = taskManager.getTaskHistoryUpdate(
+      taskId,
+      ExtendedTaskState.TASK_LOST
+    );
     if (!maybeUnreachable.isPresent()) {
-      maybeUnreachable = taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_UNREACHABLE);
+      maybeUnreachable =
+        taskManager.getTaskHistoryUpdate(taskId, ExtendedTaskState.TASK_UNREACHABLE);
     }
     boolean couldReturn = false;
     long lastUpdateTime = 0;
@@ -110,16 +133,26 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
       if (maybeUnreachable.get().getTaskState() == ExtendedTaskState.TASK_UNREACHABLE) {
         couldReturn = true;
       }
-      if (maybeUnreachable.get().getTaskState() == ExtendedTaskState.TASK_LOST
-          && maybeUnreachable.get().getStatusReason().isPresent()
-          && maybeUnreachable.get().getStatusReason().get().equals(Reason.REASON_AGENT_REMOVED.name())) {
+      if (
+        maybeUnreachable.get().getTaskState() == ExtendedTaskState.TASK_LOST &&
+        maybeUnreachable.get().getStatusReason().isPresent() &&
+        maybeUnreachable
+          .get()
+          .getStatusReason()
+          .get()
+          .equals(Reason.REASON_AGENT_REMOVED.name())
+      ) {
         couldReturn = true;
       }
     }
 
     // Allow 1.5 times the reregistration timeout before persisting the task
     if (couldReturn) {
-      couldReturn = System.currentTimeMillis() - lastUpdateTime < TimeUnit.SECONDS.toMillis(agentReregisterTimeoutSeconds) * 1.5;
+      couldReturn =
+        System.currentTimeMillis() -
+        lastUpdateTime <
+        TimeUnit.SECONDS.toMillis(agentReregisterTimeoutSeconds) *
+        1.5;
     }
 
     return couldReturn;
@@ -127,7 +160,9 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   protected long getMaxAgeInMillisOfItem() {
-    return TimeUnit.HOURS.toMillis(configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours());
+    return TimeUnit.HOURS.toMillis(
+      configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours()
+    );
   }
 
   @Override
@@ -137,7 +172,9 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   protected boolean moveToHistory(SingularityTaskId object) {
-    final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
+    final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(
+      object
+    );
 
     if (taskHistory.isPresent()) {
       LOG.debug("Moving {} to history", object);
@@ -158,5 +195,4 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   protected SingularityDeleteResult purgeFromZk(SingularityTaskId object) {
     return taskManager.deleteTaskHistory(object);
   }
-
 }

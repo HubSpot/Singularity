@@ -2,13 +2,6 @@ package com.hubspot.singularity.s3uploader;
 
 import static com.hubspot.singularity.s3.base.SingularityS3BaseModule.METRICS_OBJECT_MAPPER;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
@@ -21,10 +14,17 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.s3.base.AbstractFileMetricsReporter;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderMetrics.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityS3UploaderMetrics.class
+  );
 
   private final MetricRegistry registry;
   private final Counter uploaderCounter;
@@ -41,11 +41,12 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
   private long startUploadsAt;
 
   @Inject
-  public SingularityS3UploaderMetrics(MetricRegistry registry,
-                                      @Named(METRICS_OBJECT_MAPPER) ObjectMapper mapper,
-                                      SingularityS3Configuration baseConfiguration) {
+  public SingularityS3UploaderMetrics(
+    MetricRegistry registry,
+    @Named(METRICS_OBJECT_MAPPER) ObjectMapper mapper,
+    SingularityS3Configuration baseConfiguration
+  ) {
     super(registry, baseConfiguration, mapper);
-
     this.registry = registry;
     this.uploaderCounter = registry.counter(name("uploaders", "total"));
     this.immediateUploaderCounter = registry.counter(name("uploaders", "immediate"));
@@ -56,40 +57,48 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
     this.expiring = Optional.empty();
     this.timeOfLastSuccessUpload = -1;
 
-    registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {
+    registry.register(
+      name("uploads", "millissincelast"),
+      new Gauge<Integer>() {
 
-      @Override
-      public Integer getValue() {
-        if (timeOfLastSuccessUpload == -1) {
-          return -1;
+        @Override
+        public Integer getValue() {
+          if (timeOfLastSuccessUpload == -1) {
+            return -1;
+          }
+
+          return Integer.valueOf(
+            (int) (System.currentTimeMillis() - timeOfLastSuccessUpload)
+          );
         }
-
-        return Integer.valueOf((int) (System.currentTimeMillis() - timeOfLastSuccessUpload));
       }
+    );
 
-    });
+    registry.register(
+      name("uploads", "lastdurationmillis"),
+      new Gauge<Integer>() {
 
-    registry.register(name("uploads", "lastdurationmillis"), new Gauge<Integer>() {
-
-      @Override
-      public Integer getValue() {
-        return lastUploadDuration;
-      }
-
-    });
-
-    registry.register(name("uploaders", "expiring"), new Gauge<Integer>() {
-
-      @Override
-      public Integer getValue() {
-        if (!expiring.isPresent()) {
-          return 0;
+        @Override
+        public Integer getValue() {
+          return lastUploadDuration;
         }
-
-        return expiring.get().size();
       }
+    );
 
-    });
+    registry.register(
+      name("uploaders", "expiring"),
+      new Gauge<Integer>() {
+
+        @Override
+        public Integer getValue() {
+          if (!expiring.isPresent()) {
+            return 0;
+          }
+
+          return expiring.get().size();
+        }
+      }
+    );
 
     this.filesystemEventsMeter = registry.meter(name("filesystem", "events"));
 
@@ -152,5 +161,4 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
   public Meter getFilesystemEventsMeter() {
     return filesystemEventsMeter;
   }
-
 }

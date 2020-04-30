@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.Module;
 
 public class ObfuscateModule extends Module {
+
   @Override
   public String getModuleName() {
     return "ObfuscateModule";

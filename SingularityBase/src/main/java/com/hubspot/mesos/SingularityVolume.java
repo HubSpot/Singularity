@@ -1,13 +1,11 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Represents a volume to be mounted into a docker container")
@@ -18,18 +16,20 @@ public class SingularityVolume {
   private final Optional<SingularityVolumeSource> source;
 
   public SingularityVolume(
-      String containerPath,
-      Optional<String> hostPath,
-      SingularityDockerVolumeMode mode) {
+    String containerPath,
+    Optional<String> hostPath,
+    SingularityDockerVolumeMode mode
+  ) {
     this(containerPath, hostPath, mode, Optional.empty());
   }
 
   @JsonCreator
   public SingularityVolume(
-      @JsonProperty("containerPath") String containerPath,
-      @JsonProperty("hostPath") Optional<String> hostPath,
-      @JsonProperty("mode") SingularityDockerVolumeMode mode,
-      @JsonProperty("source") Optional<SingularityVolumeSource> source) {
+    @JsonProperty("containerPath") String containerPath,
+    @JsonProperty("hostPath") Optional<String> hostPath,
+    @JsonProperty("mode") SingularityDockerVolumeMode mode,
+    @JsonProperty("source") Optional<SingularityVolumeSource> source
+  ) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = Optional.ofNullable(mode);
@@ -52,8 +52,7 @@ public class SingularityVolume {
   }
 
   @Schema(description = "Volume source")
-  public Optional<SingularityVolumeSource> getSource()
-  {
+  public Optional<SingularityVolumeSource> getSource() {
     return source;
   }
 
@@ -66,9 +65,11 @@ public class SingularityVolume {
       return false;
     }
     SingularityVolume that = (SingularityVolume) o;
-    return Objects.equals(containerPath, that.containerPath) &&
-        Objects.equals(hostPath, that.hostPath) &&
-        Objects.equals(mode, that.mode);
+    return (
+      Objects.equals(containerPath, that.containerPath) &&
+      Objects.equals(hostPath, that.hostPath) &&
+      Objects.equals(mode, that.mode)
+    );
   }
 
   @Override
@@ -78,10 +79,16 @@ public class SingularityVolume {
 
   @Override
   public String toString() {
-    return "SingularityVolume{" +
-        "containerPath='" + containerPath + '\'' +
-        ", hostPath=" + hostPath +
-        ", mode=" + mode +
-        '}';
+    return (
+      "SingularityVolume{" +
+      "containerPath='" +
+      containerPath +
+      '\'' +
+      ", hostPath=" +
+      hostPath +
+      ", mode=" +
+      mode +
+      '}'
+    );
   }
 }

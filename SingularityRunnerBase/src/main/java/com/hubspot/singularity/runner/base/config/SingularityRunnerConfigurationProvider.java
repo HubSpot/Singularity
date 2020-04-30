@@ -1,12 +1,5 @@
 package com.hubspot.singularity.runner.base.config;
 
-import java.io.File;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -14,10 +7,15 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
-
 import io.dropwizard.configuration.ConfigurationValidationException;
+import java.io.File;
+import java.util.Optional;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
-public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration> implements Provider<T> {
+public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration>
+  implements Provider<T> {
   private final Class<T> clazz;
   private final Optional<String> filename;
 
@@ -28,7 +26,10 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
   @Inject
   private Validator validator;
 
-  public SingularityRunnerConfigurationProvider(Class<T> clazz, Optional<String> filename) {
+  public SingularityRunnerConfigurationProvider(
+    Class<T> clazz,
+    Optional<String> filename
+  ) {
     this.clazz = clazz;
     this.filename = filename;
   }
@@ -43,7 +44,9 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
     try {
       final JsonNode baseTree = objectMapper.readTree(yamlFile);
 
-      return baseTree.hasNonNull(field) ? baseTree.get(field) : objectMapper.createObjectNode();
+      return baseTree.hasNonNull(field)
+        ? baseTree.get(field)
+        : objectMapper.createObjectNode();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -55,15 +58,22 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
 
     try {
       final File baseFile = new File(configuration.filename());
-      final T baseConfig = baseFile.exists() ? objectMapper.readValue(baseFile, clazz) : clazz.newInstance();
+      final T baseConfig = baseFile.exists()
+        ? objectMapper.readValue(baseFile, clazz)
+        : clazz.newInstance();
 
-      final JsonNode overrideNode = filename.isPresent() ? loadYamlField(filename.get(), configuration.consolidatedField()) : objectMapper.createObjectNode();
+      final JsonNode overrideNode = filename.isPresent()
+        ? loadYamlField(filename.get(), configuration.consolidatedField())
+        : objectMapper.createObjectNode();
 
       final T config = objectMapper.readerForUpdating(baseConfig).readValue(overrideNode);
 
       final Set<ConstraintViolation<T>> violations = validator.validate(config);
       if (!violations.isEmpty()) {
-        throw new ConfigurationValidationException(filename.orElse(configuration.filename()), violations);
+        throw new ConfigurationValidationException(
+          filename.orElse(configuration.filename()),
+          violations
+        );
       }
 
       return config;

@@ -1,14 +1,5 @@
 package com.hubspot.singularity.hooks;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -32,6 +23,13 @@ import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookQueueConfiguration;
 import com.hubspot.singularity.data.WebhookManager;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SnsWebhookManager {
@@ -46,19 +44,32 @@ public class SnsWebhookManager {
   private final Map<WebhookType, String> typeToArn;
 
   @Inject
-  public SnsWebhookManager(@Singularity ObjectMapper objectMapper,
-                           SingularityConfiguration configuration,
-                           SingularityManagedThreadPoolFactory threadPoolFactory,
-                           WebhookManager webhookManager) {
+  public SnsWebhookManager(
+    @Singularity ObjectMapper objectMapper,
+    SingularityConfiguration configuration,
+    SingularityManagedThreadPoolFactory threadPoolFactory,
+    WebhookManager webhookManager
+  ) {
     this.objectMapper = objectMapper;
     this.webhookConf = configuration.getWebhookQueueConfiguration();
-    if (webhookConf.getAwsAccessKey().isPresent() && webhookConf.getAwsSecretKey().isPresent()) {
-      this.snsClient = AmazonSNSClient.builder()
-          .withCredentials(new AWSStaticCredentialsProvider(
-              new BasicAWSCredentials(webhookConf.getAwsAccessKey().get(), webhookConf.getAwsSecretKey().get())
-          )).withClientConfiguration(
-              new ClientConfiguration()
-                  .withMaxConnections(configuration.getMaxConcurrentWebhooks())
+    if (
+      webhookConf.getAwsAccessKey().isPresent() &&
+      webhookConf.getAwsSecretKey().isPresent()
+    ) {
+      this.snsClient =
+        AmazonSNSClient
+          .builder()
+          .withCredentials(
+            new AWSStaticCredentialsProvider(
+              new BasicAWSCredentials(
+                webhookConf.getAwsAccessKey().get(),
+                webhookConf.getAwsSecretKey().get()
+              )
+            )
+          )
+          .withClientConfiguration(
+            new ClientConfiguration()
+              .withMaxConnections(configuration.getMaxConcurrentWebhooks())
               .withConnectionTimeout(webhookConf.getSnsConnectTimeout())
               .withRequestTimeout(webhookConf.getSnsRequestTimeout())
               .withSocketTimeout(webhookConf.getSnsSocketTimeout())
@@ -70,13 +81,15 @@ public class SnsWebhookManager {
       this.snsClient = AmazonSNSClientBuilder.defaultClient();
     }
     this.webhookManager = webhookManager;
-    this.publishExecutor = threadPoolFactory.get("webhook-publish", configuration.getMaxConcurrentWebhooks());
+    this.publishExecutor =
+      threadPoolFactory.get("webhook-publish", configuration.getMaxConcurrentWebhooks());
     this.typeToArn = new ConcurrentHashMap<>();
   }
 
   public void requestHistoryEvent(SingularityRequestHistory requestUpdate) {
     publish(WebhookType.REQUEST, requestUpdate)
-        .exceptionally((t) -> {
+      .exceptionally(
+        t -> {
           LOG.warn("Could not publish event, will retry ({})", t.getMessage());
           try {
             webhookManager.saveRequestUpdateForRetry(requestUpdate);
@@ -84,78 +97,99 @@ public class SnsWebhookManager {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }
           return null;
-        });
+        }
+      );
   }
 
   public void taskWebhook(SingularityTaskWebhook taskWebhook) {
     publish(WebhookType.TASK, taskWebhook)
-        .exceptionally((t) -> {
-          LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+      .exceptionally(
+        t -> {
+          LOG.warn(
+            "Could not publish event to sns, will retry later ({})",
+            t.getMessage()
+          );
           try {
             webhookManager.saveTaskUpdateForRetry(taskWebhook.getTaskUpdate());
           } catch (Throwable t2) {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }
           return null;
-        });
+        }
+      );
   }
 
   public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     publish(WebhookType.DEPLOY, deployUpdate)
-        .exceptionally((t) -> {
-          LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+      .exceptionally(
+        t -> {
+          LOG.warn(
+            "Could not publish event to sns, will retry later ({})",
+            t.getMessage()
+          );
           try {
             webhookManager.saveDeployUpdateForRetry(deployUpdate);
           } catch (Throwable t2) {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }
           return null;
-        });
+        }
+      );
   }
 
   public void crashLoopEvent(CrashLoopInfo crashLoopUpdate) {
     publish(WebhookType.CRASHLOOP, crashLoopUpdate)
-        .exceptionally((t) -> {
-          LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+      .exceptionally(
+        t -> {
+          LOG.warn(
+            "Could not publish event to sns, will retry later ({})",
+            t.getMessage()
+          );
           try {
             webhookManager.saveCrashLoopUpdateForRetry(crashLoopUpdate);
           } catch (Throwable t2) {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }
           return null;
-        });
+        }
+      );
   }
 
-
   private String getOrCreateSnsTopic(WebhookType type) {
-    return typeToArn.computeIfAbsent(type, (t) -> {
-      String topic = webhookConf.getSnsTopics().get(type);
-      try {
-        LOG.info("Attempting to create sns topic {}", topic);
-        CreateTopicRequest createTopicRequest = new CreateTopicRequest(topic);
-        CreateTopicResult createTopicResult = snsClient.createTopic(createTopicRequest);
-        return createTopicResult.getTopicArn();
-      } catch (Throwable th) {
-        LOG.error("Could not create sns topic {}", topic, th);
-        throw th;
+    return typeToArn.computeIfAbsent(
+      type,
+      t -> {
+        String topic = webhookConf.getSnsTopics().get(type);
+        try {
+          LOG.info("Attempting to create sns topic {}", topic);
+          CreateTopicRequest createTopicRequest = new CreateTopicRequest(topic);
+          CreateTopicResult createTopicResult = snsClient.createTopic(createTopicRequest);
+          return createTopicResult.getTopicArn();
+        } catch (Throwable th) {
+          LOG.error("Could not create sns topic {}", topic, th);
+          throw th;
+        }
       }
-    });
+    );
   }
 
   <T> CompletableFuture<Void> publish(WebhookType type, T content) {
     try {
-      return CompletableFuture.runAsync(() -> {
-        try {
-          PublishRequest publishRequest = new PublishRequest(
+      return CompletableFuture.runAsync(
+        () -> {
+          try {
+            PublishRequest publishRequest = new PublishRequest(
               getOrCreateSnsTopic(type),
               objectMapper.writeValueAsString(content)
-          );
-          PublishResult result = snsClient.publish(publishRequest);
-          LOG.trace("Sent update {} with messageId {}", content, result.getMessageId());
-        } catch (IOException ioe) {
-          throw new RuntimeException(ioe);
-        }
-      }, publishExecutor);
+            );
+            PublishResult result = snsClient.publish(publishRequest);
+            LOG.trace("Sent update {} with messageId {}", content, result.getMessageId());
+          } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+          }
+        },
+        publishExecutor
+      );
     } catch (Throwable t) {
       CompletableFuture<Void> f = new CompletableFuture<>();
       f.completeExceptionally(t);

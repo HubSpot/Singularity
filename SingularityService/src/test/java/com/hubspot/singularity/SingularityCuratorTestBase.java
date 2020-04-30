@@ -1,8 +1,23 @@
 package com.hubspot.singularity;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.ZkCache;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
+import com.hubspot.singularity.scheduler.SingularityTestModule;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import java.util.Set;
 import java.util.function.Function;
-
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.FileSystemResourceAccessor;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.ZKPaths;
@@ -17,47 +32,37 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.ZkCache;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
-import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
-import com.hubspot.singularity.scheduler.SingularityTestModule;
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
-
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.FileSystemResourceAccessor;
-
 @Timeout(value = 60)
 @TestInstance(Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 public class SingularityCuratorTestBase {
-
   @Inject
   protected Provider<Jdbi> dbiProvider;
+
   @Inject
   protected CuratorFramework cf;
+
   @Inject
   protected TestingServer ts;
+
   @Inject
   private SingularityLeaderCache cache;
+
   @Inject
   protected SingularityLeaderCacheCoordinator leaderCacheCoordinator;
+
   @Inject
   private ZkCache<SingularityDeploy> deployZkCache;
+
   @Inject
   private ZkCache<SingularityTask> taskZkCache;
+
   @Inject
   private OfferCache offerCache;
+
   @Inject
   protected MesosProtosUtils mesosProtosUtils;
+
   @Inject
   private SingularityConfiguration configuration;
 
@@ -66,7 +71,14 @@ public class SingularityCuratorTestBase {
   private final boolean useDBTests;
   private final Function<SingularityConfiguration, Void> customConfigSetup;
 
-  private static final Set<String> DELETE_NODES = ImmutableSet.of("requests", "deploys", "hosts", "metadata", "racks", "slaves");
+  private static final Set<String> DELETE_NODES = ImmutableSet.of(
+    "requests",
+    "deploys",
+    "hosts",
+    "metadata",
+    "racks",
+    "slaves"
+  );
 
   @AfterEach
   public void clearData() {
@@ -81,11 +93,19 @@ public class SingularityCuratorTestBase {
       // clean task data
       for (String child : cf.getChildren().forPath("/tasks")) {
         if (child.equals("statuses") || child.equals("history")) {
-          for (String node : cf.getChildren().forPath(ZKPaths.makePath("/tasks", child))) {
-            cf.delete().deletingChildrenIfNeeded().forPath(ZKPaths.makePath("/tasks", child, node));
+          for (String node : cf
+            .getChildren()
+            .forPath(ZKPaths.makePath("/tasks", child))) {
+            cf
+              .delete()
+              .deletingChildrenIfNeeded()
+              .forPath(ZKPaths.makePath("/tasks", child, node));
           }
         } else {
-          cf.delete().deletingChildrenIfNeeded().forPath(ZKPaths.makePath("/tasks", child));
+          cf
+            .delete()
+            .deletingChildrenIfNeeded()
+            .forPath(ZKPaths.makePath("/tasks", child));
         }
       }
 
@@ -93,12 +113,14 @@ public class SingularityCuratorTestBase {
       cache.clear();
       deployZkCache.invalidateAll();
       taskZkCache.invalidateAll();
-      offerCache.peekOffers().forEach((o) -> offerCache.rescindOffer(o.getId()));
+      offerCache.peekOffers().forEach(o -> offerCache.rescindOffer(o.getId()));
 
       // clear db
       if (useDBTests) {
         Handle handle = dbiProvider.get().open();
-        handle.execute("DELETE FROM taskHistory;DELETE FROM requestHistory;DELETE FROM deployHistory;");
+        handle.execute(
+          "DELETE FROM taskHistory;DELETE FROM requestHistory;DELETE FROM deployHistory;"
+        );
         handle.close();
       }
     } catch (Exception e) {
@@ -119,16 +141,21 @@ public class SingularityCuratorTestBase {
       Handle handle = dbiProvider.get().open();
       handle.getConnection().setAutoCommit(true);
 
-      Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
+      Database database = DatabaseFactory
+        .getInstance()
+        .findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
 
-      Liquibase liquibase = new Liquibase("singularity_test.sql", new FileSystemResourceAccessor(), database);
+      Liquibase liquibase = new Liquibase(
+        "singularity_test.sql",
+        new FileSystemResourceAccessor(),
+        database
+      );
       liquibase.update((String) null);
 
       try {
         database.close();
         handle.close();
-      } catch (Throwable t) {
-      }
+      } catch (Throwable t) {}
     }
   }
 
@@ -136,7 +163,10 @@ public class SingularityCuratorTestBase {
     this(useDBTests, null);
   }
 
-  public SingularityCuratorTestBase(boolean useDBTests, Function<SingularityConfiguration, Void> customConfigSetup) {
+  public SingularityCuratorTestBase(
+    boolean useDBTests,
+    Function<SingularityConfiguration, Void> customConfigSetup
+  ) {
     this.useDBTests = useDBTests;
     this.customConfigSetup = customConfigSetup;
   }
@@ -154,8 +184,5 @@ public class SingularityCuratorTestBase {
     if (ts != null) {
       ts.close();
     }
-
   }
-
-
 }

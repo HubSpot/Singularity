@@ -1,5 +1,6 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import com.google.common.collect.Sets;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,10 +14,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
-
-import com.google.common.collect.Sets;
 
 public class SimpleProcessManager extends SafeProcessManager {
 
@@ -24,23 +22,37 @@ public class SimpleProcessManager extends SafeProcessManager {
     super(log);
   }
 
-  public void runCommand(final List<String> command, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
+  public void runCommand(
+    final List<String> command,
+    final Set<Integer> acceptableExitCodes
+  )
+    throws InterruptedException, ProcessFailedException {
     runCommand(command, Redirect.INHERIT, acceptableExitCodes);
   }
 
-  public void runCommand(final List<String> command) throws InterruptedException, ProcessFailedException {
+  public void runCommand(final List<String> command)
+    throws InterruptedException, ProcessFailedException {
     runCommand(command, Redirect.INHERIT, Sets.newHashSet(0));
   }
 
-  public List<String> runCommandWithOutput(final List<String> command, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
+  public List<String> runCommandWithOutput(
+    final List<String> command,
+    final Set<Integer> acceptableExitCodes
+  )
+    throws InterruptedException, ProcessFailedException {
     return runCommand(command, Redirect.PIPE, acceptableExitCodes);
   }
 
-  public List<String> runCommandWithOutput(final List<String> command) throws InterruptedException, ProcessFailedException {
+  public List<String> runCommandWithOutput(final List<String> command)
+    throws InterruptedException, ProcessFailedException {
     return runCommand(command, Redirect.PIPE, Sets.newHashSet(0));
   }
 
-  public List<String> runCommand(final List<String> command, final Redirect redirectOutput) throws InterruptedException, ProcessFailedException {
+  public List<String> runCommand(
+    final List<String> command,
+    final Redirect redirectOutput
+  )
+    throws InterruptedException, ProcessFailedException {
     return runCommand(command, redirectOutput, Sets.newHashSet(0));
   }
 
@@ -55,9 +67,14 @@ public class SimpleProcessManager extends SafeProcessManager {
         exitCode = Optional.of(process.exitValue());
         return process.exitValue();
       } else {
-        throw new TimeoutException(String.format("Waited %d ms for an exit code from `%s`, but it didn't terminate in time.", timeoutMillis, command.stream().collect(Collectors.joining(" "))));
+        throw new TimeoutException(
+          String.format(
+            "Waited %d ms for an exit code from `%s`, but it didn't terminate in time.",
+            timeoutMillis,
+            command.stream().collect(Collectors.joining(" "))
+          )
+        );
       }
-
     } catch (Throwable t) {
       signalKillToProcessIfActive();
       throw new RuntimeException(t);
@@ -66,7 +83,12 @@ public class SimpleProcessManager extends SafeProcessManager {
     }
   }
 
-  public List<String> runCommand(final List<String> command, final Redirect redirectOutput, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
+  public List<String> runCommand(
+    final List<String> command,
+    final Redirect redirectOutput,
+    final Set<Integer> acceptableExitCodes
+  )
+    throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
     Optional<Integer> exitCode = Optional.empty();
@@ -97,7 +119,6 @@ public class SimpleProcessManager extends SafeProcessManager {
           throw reader.get().error.get();
         }
       }
-
     } catch (InterruptedException ie) {
       signalKillToProcessIfActive();
 
@@ -113,7 +134,13 @@ public class SimpleProcessManager extends SafeProcessManager {
     }
 
     if (exitCode.isPresent() && !acceptableExitCodes.contains(exitCode.get())) {
-      throw new ProcessFailedException(String.format("Got unacceptable exit code %s while running %s", exitCode, processToString));
+      throw new ProcessFailedException(
+        String.format(
+          "Got unacceptable exit code %s while running %s",
+          exitCode,
+          processToString
+        )
+      );
     }
 
     if (!reader.isPresent()) {
@@ -124,7 +151,6 @@ public class SimpleProcessManager extends SafeProcessManager {
   }
 
   private static class OutputReader extends Thread {
-
     private final List<String> output;
     private final InputStream inputStream;
     private Optional<Throwable> error;
@@ -137,7 +163,11 @@ public class SimpleProcessManager extends SafeProcessManager {
 
     @Override
     public void run() {
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      try (
+        BufferedReader br = new BufferedReader(
+          new InputStreamReader(inputStream, StandardCharsets.UTF_8)
+        )
+      ) {
         String line = br.readLine();
         while (line != null) {
           output.add(line);
@@ -147,8 +177,5 @@ public class SimpleProcessManager extends SafeProcessManager {
         this.error = Optional.of(t);
       }
     }
-
   }
-
-
 }

@@ -1,18 +1,15 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+import java.util.Optional;
 
 @Schema(description = "Describes the full history of a Singularity task")
 public class SingularityTaskHistory {
-
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
   private final Optional<String> directory;
   private final Optional<String> containerId;
@@ -23,14 +20,22 @@ public class SingularityTaskHistory {
   private final List<SingularityTaskMetadata> taskMetadata;
 
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates,
-                                @JsonProperty("directory") Optional<String> directory,
-                                @JsonProperty("containerId") Optional<String> containerId,
-                                @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults,
-                                @JsonProperty("task") SingularityTask task,
-                                @JsonProperty("loadBalancerUpdates") List<SingularityLoadBalancerUpdate> loadBalancerUpdates,
-                                @JsonProperty("shellCommandHistory") List<SingularityTaskShellCommandHistory> shellCommandHistory,
-                                @JsonProperty("taskMetadata") List<SingularityTaskMetadata> taskMetadata) {
+  public SingularityTaskHistory(
+    @JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates,
+    @JsonProperty("directory") Optional<String> directory,
+    @JsonProperty("containerId") Optional<String> containerId,
+    @JsonProperty(
+      "healthcheckResults"
+    ) List<SingularityTaskHealthcheckResult> healthcheckResults,
+    @JsonProperty("task") SingularityTask task,
+    @JsonProperty(
+      "loadBalancerUpdates"
+    ) List<SingularityLoadBalancerUpdate> loadBalancerUpdates,
+    @JsonProperty(
+      "shellCommandHistory"
+    ) List<SingularityTaskShellCommandHistory> shellCommandHistory,
+    @JsonProperty("taskMetadata") List<SingularityTaskMetadata> taskMetadata
+  ) {
     this.directory = directory;
     this.containerId = containerId;
     this.task = task;
@@ -46,7 +51,10 @@ public class SingularityTaskHistory {
     return taskUpdates;
   }
 
-  @Schema(description = "The directory of the task sandbox on teh mesos slave", nullable = true)
+  @Schema(
+    description = "The directory of the task sandbox on teh mesos slave",
+    nullable = true
+  )
   public Optional<String> getDirectory() {
     return directory;
   }
@@ -97,28 +105,50 @@ public class SingularityTaskHistory {
 
     SingularityTaskHistory that = (SingularityTaskHistory) o;
 
-    if (taskUpdates != null ? !taskUpdates.equals(that.taskUpdates) : that.taskUpdates != null) {
+    if (
+      taskUpdates != null
+        ? !taskUpdates.equals(that.taskUpdates)
+        : that.taskUpdates != null
+    ) {
       return false;
     }
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) {
       return false;
     }
-    if (containerId != null ? !containerId.equals(that.containerId) : that.containerId != null) {
+    if (
+      containerId != null
+        ? !containerId.equals(that.containerId)
+        : that.containerId != null
+    ) {
       return false;
     }
     if (task != null ? !task.equals(that.task) : that.task != null) {
       return false;
     }
-    if (healthcheckResults != null ? !healthcheckResults.equals(that.healthcheckResults) : that.healthcheckResults != null) {
+    if (
+      healthcheckResults != null
+        ? !healthcheckResults.equals(that.healthcheckResults)
+        : that.healthcheckResults != null
+    ) {
       return false;
     }
-    if (loadBalancerUpdates != null ? !loadBalancerUpdates.equals(that.loadBalancerUpdates) : that.loadBalancerUpdates != null) {
+    if (
+      loadBalancerUpdates != null
+        ? !loadBalancerUpdates.equals(that.loadBalancerUpdates)
+        : that.loadBalancerUpdates != null
+    ) {
       return false;
     }
-    if (shellCommandHistory != null ? !shellCommandHistory.equals(that.shellCommandHistory) : that.shellCommandHistory != null) {
+    if (
+      shellCommandHistory != null
+        ? !shellCommandHistory.equals(that.shellCommandHistory)
+        : that.shellCommandHistory != null
+    ) {
       return false;
     }
-    return taskMetadata != null ? taskMetadata.equals(that.taskMetadata) : that.taskMetadata == null;
+    return taskMetadata != null
+      ? taskMetadata.equals(that.taskMetadata)
+      : that.taskMetadata == null;
   }
 
   @Override
@@ -127,24 +157,37 @@ public class SingularityTaskHistory {
     result = 31 * result + (directory != null ? directory.hashCode() : 0);
     result = 31 * result + (containerId != null ? containerId.hashCode() : 0);
     result = 31 * result + (task != null ? task.hashCode() : 0);
-    result = 31 * result + (healthcheckResults != null ? healthcheckResults.hashCode() : 0);
-    result = 31 * result + (loadBalancerUpdates != null ? loadBalancerUpdates.hashCode() : 0);
-    result = 31 * result + (shellCommandHistory != null ? shellCommandHistory.hashCode() : 0);
+    result =
+      31 * result + (healthcheckResults != null ? healthcheckResults.hashCode() : 0);
+    result =
+      31 * result + (loadBalancerUpdates != null ? loadBalancerUpdates.hashCode() : 0);
+    result =
+      31 * result + (shellCommandHistory != null ? shellCommandHistory.hashCode() : 0);
     result = 31 * result + (taskMetadata != null ? taskMetadata.hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskHistory{" +
-        "taskUpdates=" + taskUpdates +
-        ", directory=" + directory +
-        ", containerId=" + containerId +
-        ", task=" + task +
-        ", healthcheckResults=" + healthcheckResults +
-        ", loadBalancerUpdates=" + loadBalancerUpdates +
-        ", shellCommandHistory=" + shellCommandHistory +
-        ", taskMetadata=" + taskMetadata +
-        '}';
+    return (
+      "SingularityTaskHistory{" +
+      "taskUpdates=" +
+      taskUpdates +
+      ", directory=" +
+      directory +
+      ", containerId=" +
+      containerId +
+      ", task=" +
+      task +
+      ", healthcheckResults=" +
+      healthcheckResults +
+      ", loadBalancerUpdates=" +
+      loadBalancerUpdates +
+      ", shellCommandHistory=" +
+      shellCommandHistory +
+      ", taskMetadata=" +
+      taskMetadata +
+      '}'
+    );
   }
 }

@@ -1,17 +1,15 @@
 package com.hubspot.singularity.data;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 
 public class NotificationsManager extends CuratorManager {
   private static final String NOTIFICATIONS_ROOT = "/notifications";
@@ -20,17 +18,24 @@ public class NotificationsManager extends CuratorManager {
   LoadingCache<String, List<String>> cache;
 
   @Inject
-  public NotificationsManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
+  public NotificationsManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry
+  ) {
     super(curator, configuration, metricRegistry);
-
-    cache = CacheBuilder.newBuilder()
+    cache =
+      CacheBuilder
+        .newBuilder()
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build(
-            new CacheLoader<String, List<String>>() {
-              @Override public List<String> load(String key) throws Exception {
-                return getChildren(key);
-              }
+          new CacheLoader<String, List<String>>() {
+
+            @Override
+            public List<String> load(String key) throws Exception {
+              return getChildren(key);
             }
+          }
         );
   }
 

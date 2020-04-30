@@ -1,12 +1,10 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 @Beta
 @Schema(description = "Describes a docker image")
@@ -18,11 +16,13 @@ public class SingularityDockerImage {
     this.name = name;
   }
 
-  @Schema(required = true, description = "Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@TYPE:DIGEST]")
+  @Schema(
+    required = true,
+    description = "Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@TYPE:DIGEST]"
+  )
   public String getName() {
     return name;
   }
-
 
   @Override
   public boolean equals(Object o) {
@@ -43,8 +43,6 @@ public class SingularityDockerImage {
 
   @Override
   public String toString() {
-    return "SingularityDockerImage{" +
-        "name='" + name + '\'' +
-        '}';
+    return "SingularityDockerImage{" + "name='" + name + '\'' + '}';
   }
 }

@@ -1,19 +1,15 @@
 package com.hubspot.singularity.config;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.validation.constraints.NotNull;
-
-import org.apache.mesos.v1.Protos.TaskStatus.Reason;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityAction;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 
 public class DisasterDetectionConfiguration {
-
   private boolean enabled = true;
 
   private int statsHistorySize = 10;
@@ -49,7 +45,12 @@ public class DisasterDetectionConfiguration {
   @JsonProperty("lostTaskReasons")
   @NotNull
   private List<Reason> lostTaskReasons = ImmutableList.of(
-    Reason.REASON_INVALID_OFFERS, Reason.REASON_AGENT_UNKNOWN, Reason.REASON_AGENT_REMOVED, Reason.REASON_AGENT_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
+    Reason.REASON_INVALID_OFFERS,
+    Reason.REASON_AGENT_UNKNOWN,
+    Reason.REASON_AGENT_REMOVED,
+    Reason.REASON_AGENT_RESTARTED,
+    Reason.REASON_MASTER_DISCONNECTED
+  );
 
   private double criticalLostTaskPortion = 0.2;
 
@@ -91,7 +92,9 @@ public class DisasterDetectionConfiguration {
     return disableActionsOnDisaster;
   }
 
-  public void setDisableActionsOnDisaster(List<SingularityAction> disableActionsOnDisaster) {
+  public void setDisableActionsOnDisaster(
+    List<SingularityAction> disableActionsOnDisaster
+  ) {
     this.disableActionsOnDisaster = disableActionsOnDisaster;
   }
 
@@ -139,7 +142,9 @@ public class DisasterDetectionConfiguration {
     return triggerAfterMillisOverTaskLagThreshold;
   }
 
-  public void setTriggerAfterMillisOverTaskLagThreshold(long triggerAfterMillisOverTaskLagThreshold) {
+  public void setTriggerAfterMillisOverTaskLagThreshold(
+    long triggerAfterMillisOverTaskLagThreshold
+  ) {
     this.triggerAfterMillisOverTaskLagThreshold = triggerAfterMillisOverTaskLagThreshold;
   }
 

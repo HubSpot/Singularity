@@ -1,6 +1,6 @@
 package com.hubspot.mesos.protos;
 
-public enum  MesosTaskStatusReason {
+public enum MesosTaskStatusReason {
   REASON_COMMAND_EXECUTOR_FAILED,
   REASON_CONTAINER_LAUNCH_FAILED,
   REASON_CONTAINER_LIMITATION,
@@ -39,5 +39,5 @@ public enum  MesosTaskStatusReason {
   REASON_TASK_GROUP_UNAUTHORIZED,
   REASON_TASK_INVALID,
   REASON_TASK_UNAUTHORIZED,
-  REASON_TASK_UNKNOWN,
+  REASON_TASK_UNKNOWN
 }

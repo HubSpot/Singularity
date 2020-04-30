@@ -1,9 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.deploy.EmbeddedArtifact;
@@ -13,6 +9,9 @@ import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class SingularityTaskExecutorData extends ExecutorData {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
@@ -27,76 +26,110 @@ public class SingularityTaskExecutorData extends ExecutorData {
   private final Optional<HealthcheckOptions> healthcheckOptions;
 
   public SingularityTaskExecutorData(
-      ExecutorData executorData,
-      List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-      String defaultS3Bucket,
-      String s3UploaderKeyPattern,
-      String serviceLog,
-      String serviceFinishedTailLog,
-      Optional<String> requestGroup,
-      Optional<String> s3StorageClass,
-      Optional<Long> applyS3StorageClassAfterBytes,
-      Optional<Integer> cpuHardLimit,
-      Optional<HealthcheckOptions> healthcheckOptions) {
-    this(executorData.getCmd(),
-        executorData.getEmbeddedArtifacts(),
-        executorData.getExternalArtifacts(),
-        executorData.getS3Artifacts(),
-        executorData.getSuccessfulExitCodes(),
-        executorData.getUser(),
-        executorData.getRunningSentinel(),
-        executorData.getExtraCmdLineArgs(),
-        executorData.getLoggingTag(),
-        executorData.getLoggingExtraFields(),
-        executorData.getSigKillProcessesAfterMillis(),
-        executorData.getMaxTaskThreads(),
-        executorData.getPreserveTaskSandboxAfterFinish(),
-        executorData.getMaxOpenFiles(),
-        executorData.getSkipLogrotateAndCompress(),
-        executorData.getS3ArtifactSignatures(),
-        executorData.getLogrotateFrequency(),
-        s3UploaderAdditionalFiles,
-        defaultS3Bucket,
-        s3UploaderKeyPattern,
-        serviceLog,
-        serviceFinishedTailLog,
-        requestGroup,
-        s3StorageClass,
-        applyS3StorageClassAfterBytes,
-        cpuHardLimit,
-        healthcheckOptions);
+    ExecutorData executorData,
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    String defaultS3Bucket,
+    String s3UploaderKeyPattern,
+    String serviceLog,
+    String serviceFinishedTailLog,
+    Optional<String> requestGroup,
+    Optional<String> s3StorageClass,
+    Optional<Long> applyS3StorageClassAfterBytes,
+    Optional<Integer> cpuHardLimit,
+    Optional<HealthcheckOptions> healthcheckOptions
+  ) {
+    this(
+      executorData.getCmd(),
+      executorData.getEmbeddedArtifacts(),
+      executorData.getExternalArtifacts(),
+      executorData.getS3Artifacts(),
+      executorData.getSuccessfulExitCodes(),
+      executorData.getUser(),
+      executorData.getRunningSentinel(),
+      executorData.getExtraCmdLineArgs(),
+      executorData.getLoggingTag(),
+      executorData.getLoggingExtraFields(),
+      executorData.getSigKillProcessesAfterMillis(),
+      executorData.getMaxTaskThreads(),
+      executorData.getPreserveTaskSandboxAfterFinish(),
+      executorData.getMaxOpenFiles(),
+      executorData.getSkipLogrotateAndCompress(),
+      executorData.getS3ArtifactSignatures(),
+      executorData.getLogrotateFrequency(),
+      s3UploaderAdditionalFiles,
+      defaultS3Bucket,
+      s3UploaderKeyPattern,
+      serviceLog,
+      serviceFinishedTailLog,
+      requestGroup,
+      s3StorageClass,
+      applyS3StorageClassAfterBytes,
+      cpuHardLimit,
+      healthcheckOptions
+    );
   }
 
   @JsonCreator
-  public SingularityTaskExecutorData(@JsonProperty("cmd") String cmd,
-                                     @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts,
-                                     @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
-                                     @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts,
-                                     @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes,
-                                     @JsonProperty("user") Optional<String> user,
-                                     @JsonProperty("runningSentinel") Optional<String> runningSentinel,
-                                     @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs,
-                                     @JsonProperty("loggingTag") Optional<String> loggingTag,
-                                     @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields,
-                                     @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-                                     @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
-                                     @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
-                                     @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
-                                     @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress,
-                                     @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
-                                     @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency,
-                                     @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-                                     @JsonProperty("defaultS3Bucket") String defaultS3Bucket,
-                                     @JsonProperty("s3UploaderKeyPattern") String s3UploaderKeyPattern,
-                                     @JsonProperty("serviceLog") String serviceLog,
-                                     @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog,
-                                     @JsonProperty("requestGroup")  Optional<String> requestGroup,
-                                     @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
-                                     @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
-                                     @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
-                                     @JsonProperty("healthcheckOptions") Optional<HealthcheckOptions> healthcheckOptions) {
-    super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
-        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+  public SingularityTaskExecutorData(
+    @JsonProperty("cmd") String cmd,
+    @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts,
+    @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
+    @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts,
+    @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("runningSentinel") Optional<String> runningSentinel,
+    @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs,
+    @JsonProperty("loggingTag") Optional<String> loggingTag,
+    @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields,
+    @JsonProperty(
+      "sigKillProcessesAfterMillis"
+    ) Optional<Long> sigKillProcessesAfterMillis,
+    @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
+    @JsonProperty(
+      "preserveTaskSandboxAfterFinish"
+    ) Optional<Boolean> preserveTaskSandboxAfterFinish,
+    @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
+    @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress,
+    @JsonProperty(
+      "s3ArtifactSignatures"
+    ) Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
+    @JsonProperty(
+      "logrotateFrequency"
+    ) Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency,
+    @JsonProperty(
+      "s3UploaderAdditionalFiles"
+    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    @JsonProperty("defaultS3Bucket") String defaultS3Bucket,
+    @JsonProperty("s3UploaderKeyPattern") String s3UploaderKeyPattern,
+    @JsonProperty("serviceLog") String serviceLog,
+    @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog,
+    @JsonProperty("requestGroup") Optional<String> requestGroup,
+    @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
+    @JsonProperty(
+      "applyS3StorageClassAfterBytes"
+    ) Optional<Long> applyS3StorageClassAfterBytes,
+    @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
+    @JsonProperty("healthcheckOptions") Optional<HealthcheckOptions> healthcheckOptions
+  ) {
+    super(
+      cmd,
+      embeddedArtifacts,
+      externalArtifacts,
+      s3Artifacts,
+      successfulExitCodes,
+      user,
+      runningSentinel,
+      extraCmdLineArgs,
+      loggingTag,
+      loggingExtraFields,
+      sigKillProcessesAfterMillis,
+      maxTaskThreads,
+      preserveTaskSandboxAfterFinish,
+      maxOpenFiles,
+      skipLogrotateAndCompress,
+      s3ArtifactSignatures,
+      logrotateFrequency
+    );
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     this.defaultS3Bucket = defaultS3Bucket;
     this.s3UploaderKeyPattern = s3UploaderKeyPattern;
@@ -151,17 +184,34 @@ public class SingularityTaskExecutorData extends ExecutorData {
 
   @Override
   public String toString() {
-    return "SingularityTaskExecutorData{" +
-        "s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", defaultS3Bucket='" + defaultS3Bucket + '\'' +
-        ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
-        ", serviceLog='" + serviceLog + '\'' +
-        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
-        ", requestGroup=" + requestGroup +
-        ", s3StorageClass=" + s3StorageClass +
-        ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
-        ", cpuHardLimit=" + cpuHardLimit +
-        ", healthcheckOptions=" + healthcheckOptions +
-        "} " + super.toString();
+    return (
+      "SingularityTaskExecutorData{" +
+      "s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", defaultS3Bucket='" +
+      defaultS3Bucket +
+      '\'' +
+      ", s3UploaderKeyPattern='" +
+      s3UploaderKeyPattern +
+      '\'' +
+      ", serviceLog='" +
+      serviceLog +
+      '\'' +
+      ", serviceFinishedTailLog='" +
+      serviceFinishedTailLog +
+      '\'' +
+      ", requestGroup=" +
+      requestGroup +
+      ", s3StorageClass=" +
+      s3StorageClass +
+      ", applyS3StorageClassAfterBytes=" +
+      applyS3StorageClassAfterBytes +
+      ", cpuHardLimit=" +
+      cpuHardLimit +
+      ", healthcheckOptions=" +
+      healthcheckOptions +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -1,15 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.util.Iterator;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-
-import org.apache.mesos.v1.Protos.TaskStatus;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +8,14 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.squareup.tape2.ObjectQueue;
 import com.squareup.tape2.ObjectQueue.Converter;
 import com.squareup.tape2.QueueFile;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import org.apache.mesos.v1.Protos.TaskStatus;
 
 @Singleton
 public class StatusUpdateQueue {
@@ -27,23 +25,34 @@ public class StatusUpdateQueue {
   private final ObjectQueue<TaskStatus> onDiskQueue;
 
   @Inject
-  public StatusUpdateQueue(SingularityConfiguration configuration,
-                           @Singularity ObjectMapper objectMapper) throws IOException {
+  public StatusUpdateQueue(
+    SingularityConfiguration configuration,
+    @Singularity ObjectMapper objectMapper
+  )
+    throws IOException {
     this.configuration = configuration;
-    this.inMemoryQueue = new ArrayBlockingQueue<>(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize());
+    this.inMemoryQueue =
+      new ArrayBlockingQueue<>(
+        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()
+      );
     File parent = Files.createTempDirectory("queues").toFile();
     this.queueFile = new File(parent, "queue-file");
-    this.onDiskQueue = ObjectQueue.create(new QueueFile.Builder(queueFile).build(), new Converter<TaskStatus>() {
-      @Override
-      public TaskStatus from(byte[] source) throws IOException {
-        return objectMapper.readValue(source, TaskStatus.class);
-      }
+    this.onDiskQueue =
+      ObjectQueue.create(
+        new QueueFile.Builder(queueFile).build(),
+        new Converter<TaskStatus>() {
 
-      @Override
-      public void toStream(TaskStatus value, OutputStream sink) throws IOException {
-        objectMapper.writeValue(sink, value);
-      }
-    });
+          @Override
+          public TaskStatus from(byte[] source) throws IOException {
+            return objectMapper.readValue(source, TaskStatus.class);
+          }
+
+          @Override
+          public void toStream(TaskStatus value, OutputStream sink) throws IOException {
+            objectMapper.writeValue(sink, value);
+          }
+        }
+      );
   }
 
   public int onDiskSize() {
@@ -59,7 +68,10 @@ public class StatusUpdateQueue {
   }
 
   public synchronized void add(TaskStatus update) throws IOException {
-    if (inMemoryQueue.size() < configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()) {
+    if (
+      inMemoryQueue.size() <
+      configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()
+    ) {
       inMemoryQueue.add(update);
     } else {
       onDiskQueue.add(update);

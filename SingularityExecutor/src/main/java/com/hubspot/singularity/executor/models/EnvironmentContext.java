@@ -1,17 +1,14 @@
 package com.hubspot.singularity.executor.models;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.Parameter;
 import org.apache.mesos.Protos.TaskInfo;
 
-import com.google.common.base.Strings;
-
 public class EnvironmentContext {
-
   protected final TaskInfo taskInfo;
 
   public EnvironmentContext(TaskInfo taskInfo) {
@@ -19,10 +16,7 @@ public class EnvironmentContext {
   }
 
   public List<Variable> getEnv() {
-    return taskInfo.getExecutor()
-        .getCommand()
-        .getEnvironment()
-        .getVariablesList();
+    return taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList();
   }
 
   public Protos.ContainerInfo.DockerInfo getDockerInfo() {
@@ -39,7 +33,10 @@ public class EnvironmentContext {
 
   public boolean isDockerWorkdirOverriden() {
     for (Parameter parameter : taskInfo.getContainer().getDocker().getParametersList()) {
-      if (parameter.hasKey() && (parameter.getKey().equals("w") || parameter.getKey().equals("workdir"))) {
+      if (
+        parameter.hasKey() &&
+        (parameter.getKey().equals("w") || parameter.getKey().equals("workdir"))
+      ) {
         return true;
       }
     }
@@ -68,8 +65,6 @@ public class EnvironmentContext {
 
   @Override
   public String toString() {
-    return "EnvironmentContext{" +
-        "taskInfo=" + taskInfo +
-        '}';
+    return "EnvironmentContext{" + "taskInfo=" + taskInfo + '}';
   }
 }

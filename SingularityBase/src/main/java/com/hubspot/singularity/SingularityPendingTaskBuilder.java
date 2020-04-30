@@ -1,15 +1,13 @@
 package com.hubspot.singularity;
 
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
-
 public class SingularityPendingTaskBuilder {
-
   private SingularityPendingTaskId pendingTaskId;
   private Optional<List<String>> cmdLineArgsList;
   private Optional<String> user;
@@ -40,18 +38,21 @@ public class SingularityPendingTaskBuilder {
     this.actionId = Optional.empty();
   }
 
-  public SingularityPendingTaskBuilder setPendingTaskId(SingularityPendingTaskId pendingTaskId) {
+  public SingularityPendingTaskBuilder setPendingTaskId(
+    SingularityPendingTaskId pendingTaskId
+  ) {
     this.pendingTaskId = pendingTaskId;
     return this;
   }
-
 
   public SingularityPendingTaskBuilder setCmdLineArgsList(List<String> cmdLineArgsList) {
     this.cmdLineArgsList = Optional.of(cmdLineArgsList);
     return this;
   }
 
-  public SingularityPendingTaskBuilder setCmdLineArgsList(Optional<List<String>> cmdLineArgsList) {
+  public SingularityPendingTaskBuilder setCmdLineArgsList(
+    Optional<List<String>> cmdLineArgsList
+  ) {
     this.cmdLineArgsList = cmdLineArgsList;
     return this;
   }
@@ -86,12 +87,16 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
-  public SingularityPendingTaskBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public SingularityPendingTaskBuilder setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     return this;
   }
 
-  public SingularityPendingTaskBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+  public SingularityPendingTaskBuilder setRunAsUserOverride(
+    Optional<String> runAsUserOverride
+  ) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
   }
@@ -101,17 +106,23 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
-  public SingularityPendingTaskBuilder setRequiredSlaveAttributeOverrides(Map<String, String> requiredSlaveAttributeOverrides) {
+  public SingularityPendingTaskBuilder setRequiredSlaveAttributeOverrides(
+    Map<String, String> requiredSlaveAttributeOverrides
+  ) {
     this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityPendingTaskBuilder setAllowedSlaveAttributeOverrides(Map<String, String> allowedSlaveAttributeOverrides) {
+  public SingularityPendingTaskBuilder setAllowedSlaveAttributeOverrides(
+    Map<String, String> allowedSlaveAttributeOverrides
+  ) {
     this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityPendingTaskBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+  public SingularityPendingTaskBuilder setExtraArtifacts(
+    List<SingularityMesosArtifact> extraArtifacts
+  ) {
     this.extraArtifacts = extraArtifacts;
     return this;
   }
@@ -123,28 +134,56 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
-        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, s3UploaderAdditionalFiles,
-        runAsUserOverride, envOverrides, requiredSlaveAttributeOverrides, allowedSlaveAttributeOverrides, extraArtifacts, actionId
+      pendingTaskId,
+      cmdLineArgsList,
+      user,
+      runId,
+      skipHealthchecks,
+      message,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      requiredSlaveAttributeOverrides,
+      allowedSlaveAttributeOverrides,
+      extraArtifacts,
+      actionId
     );
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingTask{" +
-        "pendingTaskId=" + pendingTaskId +
-        ", cmdLineArgsList=" + cmdLineArgsList +
-        ", user=" + user +
-        ", runId=" + runId +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", message=" + message +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts=" + extraArtifacts +
-        ", actionId=" + actionId +
-        '}';
+    return (
+      "SingularityPendingTask{" +
+      "pendingTaskId=" +
+      pendingTaskId +
+      ", cmdLineArgsList=" +
+      cmdLineArgsList +
+      ", user=" +
+      user +
+      ", runId=" +
+      runId +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", message=" +
+      message +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runAsUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts=" +
+      extraArtifacts +
+      ", actionId=" +
+      actionId +
+      '}'
+    );
   }
 }

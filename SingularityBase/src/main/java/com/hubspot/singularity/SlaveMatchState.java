@@ -23,5 +23,4 @@ public enum SlaveMatchState {
   public boolean isMatchAllowed() {
     return isMatchAllowed;
   }
-
 }

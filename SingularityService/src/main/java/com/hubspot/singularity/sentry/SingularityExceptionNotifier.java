@@ -1,19 +1,16 @@
 package com.hubspot.singularity.sentry;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SentryConfiguration;
-
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
 import net.kencochrane.raven.event.Event;
@@ -28,18 +25,27 @@ public class SingularityExceptionNotifier {
   private final Provider<Optional<HttpServletRequest>> requestProvider;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider) {
+  public SingularityExceptionNotifier(
+    Optional<SentryConfiguration> sentryConfiguration,
+    @Named(
+      SingularityMainModule.CURRENT_HTTP_REQUEST
+    ) Provider<Optional<HttpServletRequest>> requestProvider
+  ) {
     this.sentryConfiguration = sentryConfiguration;
     this.requestProvider = requestProvider;
     if (sentryConfiguration.isPresent()) {
-      this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
+      this.raven =
+        Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
     } else {
       this.raven = Optional.empty();
     }
   }
 
   private String getPrefix() {
-    if (!sentryConfiguration.isPresent() || Strings.isNullOrEmpty(sentryConfiguration.get().getPrefix())) {
+    if (
+      !sentryConfiguration.isPresent() ||
+      Strings.isNullOrEmpty(sentryConfiguration.get().getPrefix())
+    ) {
       return "";
     }
 
@@ -69,14 +75,16 @@ public class SingularityExceptionNotifier {
       return;
     }
 
-    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
+    final StackTraceElement[] currentThreadStackTrace = Thread
+      .currentThread()
+      .getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .withCulprit(getPrefix() + message)
-            .withMessage(message)
-            .withLevel(Event.Level.ERROR)
-            .withLogger(getCallingClassName(currentThreadStackTrace))
-            .withSentryInterface(new ExceptionInterface(t));
+      .withCulprit(getPrefix() + message)
+      .withMessage(message)
+      .withLevel(Event.Level.ERROR)
+      .withLogger(getCallingClassName(currentThreadStackTrace))
+      .withSentryInterface(new ExceptionInterface(t));
 
     final Optional<HttpServletRequest> maybeRequest = requestProvider.get();
 
@@ -102,12 +110,14 @@ public class SingularityExceptionNotifier {
       return;
     }
 
-    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
+    final StackTraceElement[] currentThreadStackTrace = Thread
+      .currentThread()
+      .getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .withMessage(getPrefix() + subject)
-            .withLevel(Event.Level.ERROR)
-            .withLogger(getCallingClassName(currentThreadStackTrace));
+      .withMessage(getPrefix() + subject)
+      .withLevel(Event.Level.ERROR)
+      .withLogger(getCallingClassName(currentThreadStackTrace));
 
     final Optional<HttpServletRequest> maybeRequest = requestProvider.get();
 

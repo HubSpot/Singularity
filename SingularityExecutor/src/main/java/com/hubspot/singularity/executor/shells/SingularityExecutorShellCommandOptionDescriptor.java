@@ -1,11 +1,9 @@
 package com.hubspot.singularity.executor.shells;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class SingularityExecutorShellCommandOptionDescriptor {
-
   @JsonProperty
   @NotNull
   private String name;
@@ -29,5 +27,4 @@ public class SingularityExecutorShellCommandOptionDescriptor {
   public void setFlag(String flag) {
     this.flag = flag;
   }
-
 }

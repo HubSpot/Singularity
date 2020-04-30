@@ -1,12 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import org.apache.mesos.Executor;
-import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
@@ -14,9 +7,14 @@ import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.executor.utils.MesosUtils;
+import org.apache.mesos.Executor;
+import org.apache.mesos.ExecutorDriver;
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingularityExecutor implements Executor {
-
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
   private final SingularityExecutorTaskBuilder taskBuilder;
@@ -25,8 +23,12 @@ public class SingularityExecutor implements Executor {
   private final ExecutorUtils executorUtils;
 
   @Inject
-  public SingularityExecutor(SingularityExecutorMonitor monitor, ExecutorUtils executorUtils, SingularityExecutorTaskBuilder taskBuilder,
-      SingularityExecutorMesosFrameworkMessageHandler messageHandler) {
+  public SingularityExecutor(
+    SingularityExecutorMonitor monitor,
+    ExecutorUtils executorUtils,
+    SingularityExecutorTaskBuilder taskBuilder,
+    SingularityExecutorMesosFrameworkMessageHandler messageHandler
+  ) {
     this.taskBuilder = taskBuilder;
     this.monitor = monitor;
     this.executorUtils = executorUtils;
@@ -40,9 +42,24 @@ public class SingularityExecutor implements Executor {
    * data field.
    */
   @Override
-  public void registered(ExecutorDriver executorDriver, Protos.ExecutorInfo executorInfo, Protos.FrameworkInfo frameworkInfo, Protos.SlaveInfo slaveInfo) {
-    LOG.debug("Registered {} with Mesos slave {} for framework {}", executorInfo.getExecutorId().getValue(), slaveInfo.getId().getValue(), frameworkInfo.getId().getValue());
-    LOG.trace("Registered {} with Mesos slave {} for framework {}", MesosUtils.formatForLogging(executorInfo), MesosUtils.formatForLogging(slaveInfo), MesosUtils.formatForLogging(frameworkInfo));
+  public void registered(
+    ExecutorDriver executorDriver,
+    Protos.ExecutorInfo executorInfo,
+    Protos.FrameworkInfo frameworkInfo,
+    Protos.SlaveInfo slaveInfo
+  ) {
+    LOG.debug(
+      "Registered {} with Mesos slave {} for framework {}",
+      executorInfo.getExecutorId().getValue(),
+      slaveInfo.getId().getValue(),
+      frameworkInfo.getId().getValue()
+    );
+    LOG.trace(
+      "Registered {} with Mesos slave {} for framework {}",
+      MesosUtils.formatForLogging(executorInfo),
+      MesosUtils.formatForLogging(slaveInfo),
+      MesosUtils.formatForLogging(frameworkInfo)
+    );
   }
 
   /**
@@ -71,33 +88,58 @@ public class SingularityExecutor implements Executor {
    * callback has returned.
    */
   @Override
-  public void launchTask(final ExecutorDriver executorDriver, final Protos.TaskInfo taskInfo) {
+  public void launchTask(
+    final ExecutorDriver executorDriver,
+    final Protos.TaskInfo taskInfo
+  ) {
     final String taskId = taskInfo.getTaskId().getValue();
 
     LOG.info("Asked to launch task {}", taskId);
 
     try {
-      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId, taskInfo.getExecutor().getExecutorId().getValue());
-      final SingularityExecutorTask task = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
+      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(
+        taskId,
+        taskInfo.getExecutor().getExecutorId().getValue()
+      );
+      final SingularityExecutorTask task = taskBuilder.buildTask(
+        taskId,
+        executorDriver,
+        taskInfo,
+        taskLog
+      );
 
       SubmitState submitState = monitor.submit(task);
 
       switch (submitState) {
         case REJECTED:
-          LOG.warn("Can't launch task {}, it was rejected (probably due to shutdown)", taskInfo);
+          LOG.warn(
+            "Can't launch task {}, it was rejected (probably due to shutdown)",
+            taskInfo
+          );
           break;
         case TASK_ALREADY_EXISTED:
           LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
           break;
         case SUBMITTED:
-          task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
+          task
+            .getLog()
+            .info("Launched task {} with data {}", taskId, task.getExecutorData());
           break;
       }
-
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
 
-      executorUtils.sendStatusUpdate(executorDriver, taskInfo.getTaskId(), TaskState.TASK_LOST, String.format("Unexpected exception while launching task %s - %s", taskId, t.getMessage()), LOG);
+      executorUtils.sendStatusUpdate(
+        executorDriver,
+        taskInfo.getTaskId(),
+        TaskState.TASK_LOST,
+        String.format(
+          "Unexpected exception while launching task %s - %s",
+          taskId,
+          t.getMessage()
+        ),
+        LOG
+      );
     }
   }
 

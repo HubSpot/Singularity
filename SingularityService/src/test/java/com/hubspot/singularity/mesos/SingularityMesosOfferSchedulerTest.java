@@ -1,15 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-
-import org.apache.mesos.v1.Protos.Offer;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -36,9 +26,16 @@ import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityUsagePoller;
 import com.hubspot.singularity.scheduler.TestingMesosClient;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import org.apache.mesos.v1.Protos.Offer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTestBase {
-
   @Inject
   protected SingularityMesosOfferScheduler scheduler;
 
@@ -74,14 +71,16 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
   private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
 
-
   public SingularityMesosOfferSchedulerTest() {
-    super(false, (configuration) -> {
-      configuration.getMesosConfiguration().setCpuWeight(0.30);
-      configuration.getMesosConfiguration().setMemWeight(0.50);
-      configuration.getMesosConfiguration().setDiskWeight(0.20);
-      return null;
-    });
+    super(
+      false,
+      configuration -> {
+        configuration.getMesosConfiguration().setCpuWeight(0.30);
+        configuration.getMesosConfiguration().setMemWeight(0.50);
+        configuration.getMesosConfiguration().setDiskWeight(0.20);
+        return null;
+      }
+    );
   }
 
   @BeforeEach
@@ -105,7 +104,14 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
     // NLR - no deployStatistics -> default weights
     setRequestType(RequestType.ON_DEMAND);
-    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5,  5, 10, 5, 5, 10, 5)), SlaveMatchState.OK));
+    assertValueIs(
+      0.5,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
   }
 
   @Test
@@ -113,44 +119,177 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // new slave (no resources used) -> perfect score
-    assertValueIs(1, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 0,10, 0, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(
+      1,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
 
     // cpu used, no mem used, no disk used
-    assertValueIs(0.85, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0)), SlaveMatchState.OK));
-    assertValueIs(0.76, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(
+      0.85,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.76,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
 
     // no cpu used, mem used, no disk used
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0)), SlaveMatchState.OK));
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(
+      0.75,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.60,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
 
     // no cpu used, no mem used, disk used
-    assertValueIs(0.90, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5)), SlaveMatchState.OK));
-    assertValueIs(0.84, scheduler.score(SLAVE_ID, Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(
+      0.90,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.84,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8)),
+        SlaveMatchState.OK
+      )
+    );
 
     // cpu used, mem used, no disk used
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0)), SlaveMatchState.OK));
-    assertValueIs(0.36, scheduler.score(SLAVE_ID, Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0)), SlaveMatchState.OK));
+    assertValueIs(
+      0.60,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.36,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0)),
+        SlaveMatchState.OK
+      )
+    );
 
     // no cpu used, mem used, disk used
-    assertValueIs(0.65, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 0, 10,0, 5, 10, 5)), SlaveMatchState.OK));
-    assertValueIs(0.44, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 0,10, 0, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(
+      0.65,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 0, 10, 0, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.44,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 0, 10, 0, 8, 10, 8)),
+        SlaveMatchState.OK
+      )
+    );
 
     // cpu used, no mem used, disk used
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, Optional.of(getUsage(0,10, 0, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(
+      0.75,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 5, 10, 5, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.60,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(0, 10, 0, 8, 10, 8, 8, 10, 8)),
+        SlaveMatchState.OK
+      )
+    );
 
     // cpu used, mem used, disk used
-    assertValueIs(0.5, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
-    assertValueIs(0.2, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
+    assertValueIs(
+      0.5,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.2,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
+        SlaveMatchState.OK
+      )
+    );
   }
 
   @Test
   public void itCorrectlyScalesScoresForPreferredHosts() {
-    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.OK));
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, Optional.of(getUsage(5,10, 5, 5,10, 5, 5, 10, 5)), SlaveMatchState.PREFERRED_SLAVE));
+    assertValueIs(
+      0.50,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.75,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
+        SlaveMatchState.PREFERRED_SLAVE
+      )
+    );
 
-    assertValueIs(0.20, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.OK));
-    assertValueIs(0.30, scheduler.score(SLAVE_ID, Optional.of(getUsage(8,10, 8, 8,10, 8, 8, 10, 8)), SlaveMatchState.PREFERRED_SLAVE));
+    assertValueIs(
+      0.20,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
+        SlaveMatchState.OK
+      )
+    );
+    assertValueIs(
+      0.30,
+      scheduler.score(
+        SLAVE_ID,
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
+        SlaveMatchState.PREFERRED_SLAVE
+      )
+    );
   }
 
   @Test
@@ -159,25 +298,80 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     double cpuReserved = 2;
     double memMbReserved = 1000;
     initFirstDeployWithResources(cpuReserved, memMbReserved);
-    saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(
+      requestManager
+        .getRequest(requestId)
+        .get()
+        .getRequest()
+        .toBuilder()
+        .setInstances(Optional.of(1))
+    );
     resourceOffers(3);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
     String t1 = taskId.getId();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10,(double) (taskId.getStartedAt() + 5000) / 1000, 1000);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(
+      t1,
+      10,
+      (double) (taskId.getStartedAt() + 5000) / 1000,
+      1000
+    );
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
-    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
+    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(
+      0.1,
+      0.1,
+      Optional.of(10.0),
+      1,
+      1,
+      Optional.of(30L),
+      1,
+      1,
+      Optional.of(1024L),
+      1,
+      System.currentTimeMillis(),
+      1,
+      30000,
+      10,
+      0,
+      0,
+      0,
+      0,
+      107374182
+    );
 
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host1"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host1")
+    );
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host2")
+    );
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host3")
+    );
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(
+      requestId,
+      new SingularityScaleRequest(
+        Optional.of(3),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      SingularityUser.DEFAULT_USER
+    );
 
-    Assertions.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+    Assertions.assertEquals(
+      2.0,
+      usageManager.getRequestUtilizations().get(requestId).getCpuUsed(),
+      0.001
+    );
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
     slaveAndRackManager.checkOffer(host2Offer);
@@ -185,7 +379,15 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     slaveAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer), System.currentTimeMillis());
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(
+      ImmutableMap.of(
+        host2Offer.getId().getValue(),
+        host2Offer,
+        host3Offer.getId().getValue(),
+        host3Offer
+      ),
+      System.currentTimeMillis()
+    );
     Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
@@ -200,31 +402,90 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     double cpuReserved = 2;
     double memMbReserved = 1000;
     initFirstDeployWithResources(cpuReserved, memMbReserved);
-    saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(
+      requestManager
+        .getRequest(requestId)
+        .get()
+        .getRequest()
+        .toBuilder()
+        .setInstances(Optional.of(1))
+    );
     resourceOffers(3);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
     String t1 = taskId.getId();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, getTimestampSeconds(taskId, 5    ), 1000);
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(
+      t1,
+      10,
+      getTimestampSeconds(taskId, 5),
+      1000
+    );
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 1 cpus used
-    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 11, getTimestampSeconds(taskId, 6), 1000);
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(
+      t1,
+      11,
+      getTimestampSeconds(taskId, 6),
+      1000
+    );
     mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
-    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
+    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(
+      0.1,
+      0.1,
+      Optional.of(10.0),
+      1,
+      1,
+      Optional.of(30L),
+      1,
+      1,
+      Optional.of(1024L),
+      1,
+      System.currentTimeMillis(),
+      1,
+      30000,
+      10,
+      0,
+      0,
+      0,
+      0,
+      107374182
+    );
 
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host1"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host2"));
-    usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(smallUsage, "host3"));
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host1")
+    );
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host2")
+    );
+    usageManager.saveCurrentSlaveUsage(
+      new SingularitySlaveUsageWithId(smallUsage, "host3")
+    );
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional
-        .empty()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(
+      requestId,
+      new SingularityScaleRequest(
+        Optional.of(3),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      SingularityUser.DEFAULT_USER
+    );
 
-    Assertions.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+    Assertions.assertEquals(
+      3.0,
+      usageManager.getRequestUtilizations().get(requestId).getCpuUsed(),
+      0.001
+    );
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
     slaveAndRackManager.checkOffer(host2Offer);
@@ -232,7 +493,15 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     slaveAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
-    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(ImmutableMap.of(host2Offer.getId().getValue(), host2Offer, host3Offer.getId().getValue(), host3Offer), System.currentTimeMillis());
+    Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(
+      ImmutableMap.of(
+        host2Offer.getId().getValue(),
+        host2Offer,
+        host3Offer.getId().getValue(),
+        host3Offer
+      ),
+      System.currentTimeMillis()
+    );
     Assertions.assertEquals(2, offerHolders.size());
 
     // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
@@ -243,38 +512,60 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
   private void assertValueIs(double expectedValue, double actualValue) {
     actualValue = Math.round(actualValue * 1000.0) / 1000.0;
-    Assertions.assertEquals(actualValue, expectedValue, String.format("Expected %f but found %f", expectedValue, actualValue));
+    Assertions.assertEquals(
+      actualValue,
+      expectedValue,
+      String.format("Expected %f but found %f", expectedValue, actualValue)
+    );
   }
 
-  private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved,
-                                                             long memMbTotal,
-                                                             long memMbInUse,
-                                                             double cpusReserved,
-                                                             double cpusTotal,
-                                                             double cpuInUse,
-                                                             long diskMbReserved,
-                                                             long diskMbTotal,
-                                                             long diskMbInUse) {
+  private SingularitySlaveUsageWithCalculatedScores getUsage(
+    long memMbReserved,
+    long memMbTotal,
+    long memMbInUse,
+    double cpusReserved,
+    double cpusTotal,
+    double cpuInUse,
+    long diskMbReserved,
+    long diskMbTotal,
+    long diskMbInUse
+  ) {
     long totalMemBytes = memMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
     long memBytesInUse = memMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
     return new SingularitySlaveUsageWithCalculatedScores(
-        new SingularitySlaveUsage(
-            cpuInUse, cpusReserved, Optional.of(cpusTotal),
-            memBytesInUse, memMbReserved, Optional.of(memMbTotal),
-            diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE, diskMbReserved, Optional.of(diskMbTotal),
-            1, 0L,
-            totalMemBytes, totalMemBytes - memBytesInUse,
-            cpusTotal, cpuInUse, cpuInUse, cpuInUse,
-            diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE, diskMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE),
-        MachineLoadMetric.LOAD_5, new MaxProbableUsage(0, 0, 0),
-        0, 0, System.currentTimeMillis()
+      new SingularitySlaveUsage(
+        cpuInUse,
+        cpusReserved,
+        Optional.of(cpusTotal),
+        memBytesInUse,
+        memMbReserved,
+        Optional.of(memMbTotal),
+        diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE,
+        diskMbReserved,
+        Optional.of(diskMbTotal),
+        1,
+        0L,
+        totalMemBytes,
+        totalMemBytes - memBytesInUse,
+        cpusTotal,
+        cpuInUse,
+        cpuInUse,
+        cpuInUse,
+        diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE,
+        diskMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE
+      ),
+      MachineLoadMetric.LOAD_5,
+      new MaxProbableUsage(0, 0, 0),
+      0,
+      0,
+      System.currentTimeMillis()
     );
   }
 
   private SingularityDeployStatistics getDeployStatistics(long avgRunTimeMillis) {
     return new SingularityDeployStatisticsBuilder("requestId", "deployId")
-        .setAverageRuntimeMillis(Optional.of(avgRunTimeMillis))
-        .build();
+      .setAverageRuntimeMillis(Optional.of(avgRunTimeMillis))
+      .build();
   }
 
   private void setRequestType(RequestType type) {

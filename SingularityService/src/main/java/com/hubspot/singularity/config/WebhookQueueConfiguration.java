@@ -1,12 +1,11 @@
 package com.hubspot.singularity.config;
 
-import java.util.Map;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.hooks.WebhookQueueType;
+import java.util.Map;
+import java.util.Optional;
 
 public class WebhookQueueConfiguration {
   @JsonProperty
@@ -14,9 +13,12 @@ public class WebhookQueueConfiguration {
 
   @JsonProperty
   private Map<WebhookType, String> snsTopics = ImmutableMap.of(
-      WebhookType.TASK, "singularity-task-updates",
-      WebhookType.DEPLOY, "singularity-deploy-updates",
-      WebhookType.REQUEST, "singularity-request-updates"
+    WebhookType.TASK,
+    "singularity-task-updates",
+    WebhookType.DEPLOY,
+    "singularity-deploy-updates",
+    WebhookType.REQUEST,
+    "singularity-request-updates"
   );
 
   @JsonProperty

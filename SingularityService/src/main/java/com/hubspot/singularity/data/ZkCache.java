@@ -1,24 +1,29 @@
 package com.hubspot.singularity.data;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class ZkCache<T> {
-
   private final Cache<String, T> cache;
   private final Meter hitMeter;
   private final Meter missMeter;
 
-  public ZkCache(int maxSize, int initialSize, long millisToExpireAfterAccess, MetricRegistry registry, String name) {
-    cache = CacheBuilder.newBuilder()
+  public ZkCache(
+    int maxSize,
+    int initialSize,
+    long millisToExpireAfterAccess,
+    MetricRegistry registry,
+    String name
+  ) {
+    cache =
+      CacheBuilder
+        .newBuilder()
         .maximumSize(maxSize)
         .concurrencyLevel(2)
         .initialCapacity(initialSize)
@@ -28,11 +33,16 @@ public class ZkCache<T> {
     this.hitMeter = registry.meter(String.format("zk.caches.%s.hits", name));
     this.missMeter = registry.meter(String.format("zk.caches.%s.miss", name));
 
-    registry.register(String.format("zk.caches.%s.size", name), new Gauge<Long>() {
-      @Override
-      public Long getValue() {
+    registry.register(
+      String.format("zk.caches.%s.size", name),
+      new Gauge<Long>() {
+
+        @Override
+        public Long getValue() {
           return cache.size();
-      }});
+        }
+      }
+    );
   }
 
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
@@ -60,5 +70,3 @@ public class ZkCache<T> {
     cache.invalidateAll();
   }
 }
-
-

@@ -1,11 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
@@ -19,10 +13,14 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Singleton
 public class SingularityWebCache {
-
   private volatile Map<SingularityPendingTaskId, SingularityPendingTask> cachedPendingTasks;
   private volatile long lastPendingTaskCache;
 
@@ -32,7 +30,7 @@ public class SingularityWebCache {
   private volatile Map<SingularityTaskId, SingularityTask> cachedActiveTasks;
   private volatile long lastActiveTaskCache;
 
-  private volatile  Map<String, SingularityRequestWithState> cachedRequests;
+  private volatile Map<String, SingularityRequestWithState> cachedRequests;
   private volatile long lastRequestsCache;
 
   private volatile List<SingularityRequestGroup> cachedRequestGroups;
@@ -62,7 +60,10 @@ public class SingularityWebCache {
   private final Meter requestUtilizationMissMeter;
 
   @Inject
-  public SingularityWebCache(SingularityConfiguration configuration, MetricRegistry metrics) {
+  public SingularityWebCache(
+    SingularityConfiguration configuration,
+    MetricRegistry metrics
+  ) {
     this.cacheForMillis = configuration.getCacheForWebForMillis();
 
     this.cleanupHitMeter = metrics.meter("zk.web.caches.cleanup.hits");
@@ -164,7 +165,9 @@ public class SingularityWebCache {
 
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     pendingMissMeter.mark();
-    Map<SingularityPendingTaskId, SingularityPendingTask> newPendingTasks = new HashMap<>(pendingTasks.size());
+    Map<SingularityPendingTaskId, SingularityPendingTask> newPendingTasks = new HashMap<>(
+      pendingTasks.size()
+    );
     for (SingularityPendingTask pendingTask : pendingTasks) {
       newPendingTasks.put(pendingTask.getPendingTaskId(), pendingTask);
     }
@@ -174,7 +177,9 @@ public class SingularityWebCache {
 
   public void cacheActiveTasks(List<SingularityTask> activeTasks) {
     activeMissMeter.mark();
-    Map<SingularityTaskId, SingularityTask> newActiveTasks = new HashMap<>(activeTasks.size());
+    Map<SingularityTaskId, SingularityTask> newActiveTasks = new HashMap<>(
+      activeTasks.size()
+    );
     for (SingularityTask activeTask : activeTasks) {
       newActiveTasks.put(activeTask.getTaskId(), activeTask);
     }
@@ -198,10 +203,11 @@ public class SingularityWebCache {
     lastRequestGroupsCache = System.currentTimeMillis();
   }
 
-  public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
+  public void cacheRequestUtilizations(
+    Map<String, RequestUtilization> requestUtilizations
+  ) {
     requestUtilizationMissMeter.mark();
     cachedRequestUtilizations = new HashMap<>(requestUtilizations);
     lastRequestUtilizationCache = System.currentTimeMillis();
   }
-
 }

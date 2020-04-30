@@ -2,17 +2,20 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Response containing the generated long lived auth token and associated user data")
+@Schema(
+  description = "Response containing the generated long lived auth token and associated user data"
+)
 public class SingularityTokenResponse {
   private final String token;
   private final SingularityUser user;
 
   @JsonCreator
-  public SingularityTokenResponse(@JsonProperty("token") String token,
-                                  @JsonProperty("user") SingularityUser user) {
+  public SingularityTokenResponse(
+    @JsonProperty("token") String token,
+    @JsonProperty("user") SingularityUser user
+  ) {
     this.token = token;
     this.user = user;
   }
@@ -53,9 +56,8 @@ public class SingularityTokenResponse {
 
   @Override
   public String toString() {
-    return "SingularityTokenResponse{" +
-        "token='" + token + '\'' +
-        ", user=" + user +
-        '}';
+    return (
+      "SingularityTokenResponse{" + "token='" + token + '\'' + ", user=" + user + '}'
+    );
   }
 }

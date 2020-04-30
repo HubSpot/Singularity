@@ -1,12 +1,10 @@
 package com.hubspot.mesos.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
 public class MesosExecutorObject {
-
   private final String directory;
   private final String id;
   private final String container;
@@ -16,7 +14,15 @@ public class MesosExecutorObject {
   private final List<MesosTaskObject> completedTasks;
 
   @JsonCreator
-  public MesosExecutorObject(@JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("container") String container, @JsonProperty("directory") String directory, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("tasks") List<MesosTaskObject> tasks,  @JsonProperty("completed_tasks") List<MesosTaskObject> completedTasks) {
+  public MesosExecutorObject(
+    @JsonProperty("id") String id,
+    @JsonProperty("name") String name,
+    @JsonProperty("container") String container,
+    @JsonProperty("directory") String directory,
+    @JsonProperty("resources") MesosResourcesObject resources,
+    @JsonProperty("tasks") List<MesosTaskObject> tasks,
+    @JsonProperty("completed_tasks") List<MesosTaskObject> completedTasks
+  ) {
     this.name = name;
     this.container = container;
     this.id = id;
@@ -56,14 +62,27 @@ public class MesosExecutorObject {
 
   @Override
   public String toString() {
-    return "MesosExecutorObject{" +
-        "directory='" + directory + '\'' +
-        ", id='" + id + '\'' +
-        ", container='" + container + '\'' +
-        ", name='" + name + '\'' +
-        ", resources=" + resources +
-        ", tasks=" + tasks +
-        ", completedTasks=" + completedTasks +
-        '}';
+    return (
+      "MesosExecutorObject{" +
+      "directory='" +
+      directory +
+      '\'' +
+      ", id='" +
+      id +
+      '\'' +
+      ", container='" +
+      container +
+      '\'' +
+      ", name='" +
+      name +
+      '\'' +
+      ", resources=" +
+      resources +
+      ", tasks=" +
+      tasks +
+      ", completedTasks=" +
+      completedTasks +
+      '}'
+    );
   }
 }

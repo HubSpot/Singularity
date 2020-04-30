@@ -1,10 +1,5 @@
 package com.hubspot.mesos.client;
 
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,20 +14,26 @@ import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosClient implements MesosClient {
-
   public static final String DEFAULT_HTTP_CLIENT_NAME = "mesos.http.client";
-  public static final String SHORT_TIMEOUT_HTTP_CLIENT_NAME = "mesos.http.client.short.timeout";
+  public static final String SHORT_TIMEOUT_HTTP_CLIENT_NAME =
+    "mesos.http.client.short.timeout";
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosClient.class);
 
   private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
   private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
-  private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics";
-  private static final String MESOS_MASTER_METRICS_SNAPSHOT_URL = "http://%s/metrics/snapshot";
-  private static final String MESOS_SLAVE_METRICS_SNAPSHOT_URL = "http://%s:5051/metrics/snapshot";
+  private static final String MESOS_SLAVE_STATISTICS_URL =
+    "http://%s:5051/monitor/statistics";
+  private static final String MESOS_MASTER_METRICS_SNAPSHOT_URL =
+    "http://%s/metrics/snapshot";
+  private static final String MESOS_SLAVE_METRICS_SNAPSHOT_URL =
+    "http://%s:5051/metrics/snapshot";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 
@@ -40,8 +41,10 @@ public class SingularityMesosClient implements MesosClient {
   private final HttpClient shortTimeoutHttpClient;
 
   @Inject
-  public SingularityMesosClient(@Named(DEFAULT_HTTP_CLIENT_NAME) HttpClient httpClient,
-                                @Named(SHORT_TIMEOUT_HTTP_CLIENT_NAME) HttpClient shortTimeoutHttpClient) {
+  public SingularityMesosClient(
+    @Named(DEFAULT_HTTP_CLIENT_NAME) HttpClient httpClient,
+    @Named(SHORT_TIMEOUT_HTTP_CLIENT_NAME) HttpClient shortTimeoutHttpClient
+  ) {
     this.httpClient = httpClient;
     this.shortTimeoutHttpClient = shortTimeoutHttpClient;
   }
@@ -65,15 +68,29 @@ public class SingularityMesosClient implements MesosClient {
     LOG.debug("Fetching {} from mesos", uri);
 
     try {
-      response = currentHttpClient.execute(HttpRequest.newBuilder().setUrl(uri).build(), new Options());
+      response =
+        currentHttpClient.execute(
+          HttpRequest.newBuilder().setUrl(uri).build(),
+          new Options()
+        );
 
-      LOG.debug("Response {} - {} after {}", response.getStatusCode(), uri, JavaUtils.duration(start));
+      LOG.debug(
+        "Response {} - {} after {}",
+        response.getStatusCode(),
+        uri,
+        JavaUtils.duration(start)
+      );
     } catch (Exception e) {
-      throw new MesosClientException(String.format("Exception fetching %s after %s", uri, JavaUtils.duration(start)), e);
+      throw new MesosClientException(
+        String.format("Exception fetching %s after %s", uri, JavaUtils.duration(start)),
+        e
+      );
     }
 
     if (!response.isSuccess()) {
-      throw new MesosClientException(String.format("Invalid response code from %s : %s", uri, response.getStatusCode()));
+      throw new MesosClientException(
+        String.format("Invalid response code from %s : %s", uri, response.getStatusCode())
+      );
     }
 
     return response;
@@ -89,7 +106,10 @@ public class SingularityMesosClient implements MesosClient {
     try {
       return response.getAs(clazz);
     } catch (Exception e) {
-      throw new MesosClientException(String.format("Couldn't deserialize %s from %s", clazz.getSimpleName(), uri), e);
+      throw new MesosClientException(
+        String.format("Couldn't deserialize %s from %s", clazz.getSimpleName(), uri),
+        e
+      );
     }
   }
 
@@ -104,8 +124,15 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname, boolean useShortTimeout) {
-    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class, useShortTimeout);
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(
+    String hostname,
+    boolean useShortTimeout
+  ) {
+    return getFromMesos(
+      String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname),
+      MesosSlaveMetricsSnapshotObject.class,
+      useShortTimeout
+    );
   }
 
   @Override
@@ -119,7 +146,10 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout) {
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(
+    String hostname,
+    boolean useShortTimeout
+  ) {
     final String uri = String.format(MESOS_SLAVE_STATISTICS_URL, hostname);
 
     HttpResponse response = getFromMesos(uri, useShortTimeout);
@@ -127,8 +157,10 @@ public class SingularityMesosClient implements MesosClient {
     try {
       return response.getAs(TASK_MONITOR_TYPE_REFERENCE);
     } catch (Exception e) {
-      throw new MesosClientException(String.format("Unable to deserialize task monitor object from %s", uri), e);
+      throw new MesosClientException(
+        String.format("Unable to deserialize task monitor object from %s", uri),
+        e
+      );
     }
   }
-
 }

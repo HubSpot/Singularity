@@ -1,12 +1,10 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "Describes an artifact to be downloaded")
 public class SingularityMesosArtifact {
@@ -18,15 +16,23 @@ public class SingularityMesosArtifact {
 
   @JsonCreator
   public static SingularityMesosArtifact fromString(String uri) {
-    return new SingularityMesosArtifact(uri, Optional.<Boolean>empty(), Optional.<Boolean>empty(), Optional.<Boolean>empty(), Optional.empty());
+    return new SingularityMesosArtifact(
+      uri,
+      Optional.<Boolean>empty(),
+      Optional.<Boolean>empty(),
+      Optional.<Boolean>empty(),
+      Optional.empty()
+    );
   }
 
   @JsonCreator
-  public SingularityMesosArtifact(@JsonProperty("uri") String uri,
-                                  @JsonProperty("cache") Optional<Boolean> cache,
-                                  @JsonProperty("executable") Optional<Boolean> executable,
-                                  @JsonProperty("extract") Optional<Boolean> extract,
-                                  @JsonProperty("outputFile") Optional<String> outputFile) {
+  public SingularityMesosArtifact(
+    @JsonProperty("uri") String uri,
+    @JsonProperty("cache") Optional<Boolean> cache,
+    @JsonProperty("executable") Optional<Boolean> executable,
+    @JsonProperty("extract") Optional<Boolean> extract,
+    @JsonProperty("outputFile") Optional<String> outputFile
+  ) {
     this.uri = uri;
     this.cache = cache.orElse(false);
     this.executable = executable.orElse(false);
@@ -40,34 +46,34 @@ public class SingularityMesosArtifact {
   }
 
   @Schema(
-      description = "Cache this artifact to avoid multiple downloads on the same host",
-      defaultValue = "false"
+    description = "Cache this artifact to avoid multiple downloads on the same host",
+    defaultValue = "false"
   )
   public boolean isCache() {
     return cache;
   }
 
   @Schema(
-      description = "If true, chmod the download file so it is executable",
-      defaultValue = "false"
+    description = "If true, chmod the download file so it is executable",
+    defaultValue = "false"
   )
   public boolean isExecutable() {
     return executable;
   }
 
   @Schema(
-      title = "If true, unpack the downloaded artifact in teh sandbox directory",
-      defaultValue = "true",
-      description = "Recognized file types: .tar, .tar.gz, .tar.bz2, .tar.xz, .gz, .tgz, .tbz2, .txz, .zip"
+    title = "If true, unpack the downloaded artifact in teh sandbox directory",
+    defaultValue = "true",
+    description = "Recognized file types: .tar, .tar.gz, .tar.bz2, .tar.xz, .gz, .tgz, .tbz2, .txz, .zip"
   )
   public boolean isExtract() {
     return extract;
   }
 
   @Schema(
-      title = "The destination filename for the download",
-      nullable = true,
-      defaultValue = "original name of the file"
+    title = "The destination filename for the download",
+    nullable = true,
+    defaultValue = "original name of the file"
   )
   public Optional<String> getOutputFile() {
     return outputFile;
@@ -82,10 +88,12 @@ public class SingularityMesosArtifact {
       return false;
     }
     SingularityMesosArtifact that = (SingularityMesosArtifact) o;
-    return cache == that.cache &&
-        executable == that.executable &&
-        extract == that.extract &&
-        Objects.equals(uri, that.uri);
+    return (
+      cache == that.cache &&
+      executable == that.executable &&
+      extract == that.extract &&
+      Objects.equals(uri, that.uri)
+    );
   }
 
   @Override
@@ -95,11 +103,18 @@ public class SingularityMesosArtifact {
 
   @Override
   public String toString() {
-    return "SingularityMesosArtifact{" +
-        "uri='" + uri + '\'' +
-        ", cache=" + cache +
-        ", executable=" + executable +
-        ", extract=" + extract +
-        '}';
+    return (
+      "SingularityMesosArtifact{" +
+      "uri='" +
+      uri +
+      '\'' +
+      ", cache=" +
+      cache +
+      ", executable=" +
+      executable +
+      ", extract=" +
+      extract +
+      '}'
+    );
   }
 }

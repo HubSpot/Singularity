@@ -1,18 +1,20 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.SingularityUser;
+import java.util.Objects;
+import java.util.Optional;
 
 public class SingularityUserPermissionsResponse {
   private final Optional<SingularityUser> user;
   private final Optional<String> error;
 
   @JsonCreator
-  public SingularityUserPermissionsResponse(@JsonProperty("user") Optional<SingularityUser> user, @JsonProperty("error") Optional<String> error) {
+  public SingularityUserPermissionsResponse(
+    @JsonProperty("user") Optional<SingularityUser> user,
+    @JsonProperty("error") Optional<String> error
+  ) {
     this.user = user;
     this.error = error;
   }
@@ -32,8 +34,9 @@ public class SingularityUserPermissionsResponse {
     }
     if (obj instanceof SingularityUserPermissionsResponse) {
       final SingularityUserPermissionsResponse that = (SingularityUserPermissionsResponse) obj;
-      return Objects.equals(this.user, that.user) &&
-          Objects.equals(this.error, that.error);
+      return (
+        Objects.equals(this.user, that.user) && Objects.equals(this.error, that.error)
+      );
     }
     return false;
   }
@@ -45,9 +48,8 @@ public class SingularityUserPermissionsResponse {
 
   @Override
   public String toString() {
-    return "SingularityUserPermissionsResponse{" +
-        "user=" + user +
-        ", error=" + error +
-        '}';
+    return (
+      "SingularityUserPermissionsResponse{" + "user=" + user + ", error=" + error + '}'
+    );
   }
 }

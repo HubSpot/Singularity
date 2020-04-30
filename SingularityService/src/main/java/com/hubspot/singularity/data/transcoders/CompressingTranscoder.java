@@ -2,15 +2,12 @@ package com.hubspot.singularity.data.transcoders;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hubspot.singularity.config.SingularityConfiguration;
 import javax.annotation.Nullable;
-
 import org.iq80.snappy.CorruptionException;
 import org.iq80.snappy.Snappy;
 
-import com.hubspot.singularity.config.SingularityConfiguration;
-
 public abstract class CompressingTranscoder<T> implements Transcoder<T> {
-
   private final boolean compressLargeDataObjects;
 
   protected CompressingTranscoder(SingularityConfiguration configuration) {
@@ -32,8 +29,8 @@ public abstract class CompressingTranscoder<T> implements Transcoder<T> {
     return getMaybeCompressedBytes(actualToBytes(object));
   }
 
-  private byte[] getMaybeCompressedBytes(@Nullable byte[] bytes) throws SingularityTranscoderException {
-
+  private byte[] getMaybeCompressedBytes(@Nullable byte[] bytes)
+    throws SingularityTranscoderException {
     if (bytes == null || bytes.length == 0) {
       return bytes;
     }
@@ -41,8 +38,8 @@ public abstract class CompressingTranscoder<T> implements Transcoder<T> {
     return compressLargeDataObjects ? Snappy.compress(bytes) : bytes;
   }
 
-  private byte[] getMaybeUncompressedBytes(@Nullable byte[] bytes) throws SingularityTranscoderException {
-
+  private byte[] getMaybeUncompressedBytes(@Nullable byte[] bytes)
+    throws SingularityTranscoderException {
     if (bytes == null || bytes.length == 0) {
       return bytes;
     }

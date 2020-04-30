@@ -1,12 +1,10 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+import java.util.Set;
 
 @Schema(description = "Batch response for multiple requests")
 public class SingularityRequestBatch {
@@ -14,8 +12,10 @@ public class SingularityRequestBatch {
   private final Set<String> notFound;
 
   @JsonCreator
-  public SingularityRequestBatch(@JsonProperty("requests") List<SingularityRequestParent> requests,
-                                 @JsonProperty("notFound") Set<String> notFound) {
+  public SingularityRequestBatch(
+    @JsonProperty("requests") List<SingularityRequestParent> requests,
+    @JsonProperty("notFound") Set<String> notFound
+  ) {
     this.requests = requests;
     this.notFound = notFound;
   }
@@ -25,7 +25,10 @@ public class SingularityRequestBatch {
     return requests;
   }
 
-  @Schema(nullable = false, description = "List of request ids from the requested batch that were not found")
+  @Schema(
+    nullable = false,
+    description = "List of request ids from the requested batch that were not found"
+  )
   public Set<String> getNotFound() {
     return notFound;
   }
@@ -56,9 +59,8 @@ public class SingularityRequestBatch {
 
   @Override
   public String toString() {
-    return "SingularityRequestBatch{" +
-        "requests=" + requests +
-        ", notFound=" + notFound +
-        '}';
+    return (
+      "SingularityRequestBatch{" + "requests=" + requests + ", notFound=" + notFound + '}'
+    );
   }
 }

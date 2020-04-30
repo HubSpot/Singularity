@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
-public enum  HealthcheckMethod {
-
-  GET("GET"), POST("POST");
+public enum HealthcheckMethod {
+  GET("GET"),
+  POST("POST");
 
   private String method;
 

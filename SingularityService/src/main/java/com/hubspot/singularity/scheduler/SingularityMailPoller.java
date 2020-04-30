@@ -1,13 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -22,10 +14,14 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
-
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMailPoller.class);
 
   private final SingularityConfiguration configuration;
@@ -36,10 +32,15 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
 
   @Inject
-  SingularityMailPoller(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager, RequestManager requestManager,
-      HistoryManager historyManager, SingularityMailer mailer) {
+  SingularityMailPoller(
+    SingularityConfiguration configuration,
+    SingularityTaskMetadataConfiguration taskMetadataConfiguration,
+    TaskManager taskManager,
+    RequestManager requestManager,
+    HistoryManager historyManager,
+    SingularityMailer mailer
+  ) {
     super(configuration.getCheckQueuedMailsEveryMillis(), TimeUnit.MILLISECONDS);
-
     this.configuration = configuration;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
     this.taskManager = taskManager;
@@ -54,33 +55,53 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   }
 
   private enum ShouldSendMailState {
-    SEND, WAIT, ERROR;
+    SEND,
+    WAIT,
+    ERROR
   }
 
   private void checkToSendTaskFinishedMail(SingularityTaskId taskId) {
-    Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskId.getRequestId());
+    Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(
+      taskId.getRequestId()
+    );
     Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(taskId);
     if (!taskHistory.isPresent()) {
       taskHistory = historyManager.getTaskHistory(taskId.getId());
     }
 
-    ShouldSendMailState shouldSendState = shouldSendTaskFinishedMail(taskId, requestWithState, taskHistory);
+    ShouldSendMailState shouldSendState = shouldSendTaskFinishedMail(
+      taskId,
+      requestWithState,
+      taskHistory
+    );
 
     if (shouldSendState == ShouldSendMailState.WAIT) {
       return;
     }
 
     try {
-      mailer.sendTaskCompletedMail(taskHistory.get(), requestWithState.get().getRequest());
+      mailer.sendTaskCompletedMail(
+        taskHistory.get(),
+        requestWithState.get().getRequest()
+      );
     } catch (Throwable t) {
       LOG.error("While trying to send task completed mail for {}", taskId, t);
     } finally {
       SingularityDeleteResult result = taskManager.deleteFinishedTaskMailQueue(taskId);
-      LOG.debug("Task {} mail sent with status {} (delete result {})", taskId, shouldSendState, result);
+      LOG.debug(
+        "Task {} mail sent with status {} (delete result {})",
+        taskId,
+        shouldSendState,
+        result
+      );
     }
   }
 
-  private ShouldSendMailState shouldSendTaskFinishedMail(SingularityTaskId taskId, Optional<SingularityRequestWithState> requestWithState, Optional<SingularityTaskHistory> taskHistory) {
+  private ShouldSendMailState shouldSendTaskFinishedMail(
+    SingularityTaskId taskId,
+    Optional<SingularityRequestWithState> requestWithState,
+    Optional<SingularityTaskHistory> taskHistory
+  ) {
     if (!requestWithState.isPresent()) {
       LOG.warn("No request found for {}, can't send task finished email", taskId);
       return ShouldSendMailState.ERROR;
@@ -95,11 +116,28 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
       return ShouldSendMailState.ERROR;
     }
 
-    if (taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().isPresent()) {
+    if (
+      taskMetadataConfiguration
+        .getSendTaskCompletedMailOnceMetadataTypeIsAvailable()
+        .isPresent()
+    ) {
       for (SingularityTaskMetadata taskMetadata : taskHistory.get().getTaskMetadata()) {
-        if (taskMetadata.getType().equals(taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().get())) {
-          LOG.debug("Sending task finished email for {} because metadata type {} is present", taskId,
-              taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().get());
+        if (
+          taskMetadata
+            .getType()
+            .equals(
+              taskMetadataConfiguration
+                .getSendTaskCompletedMailOnceMetadataTypeIsAvailable()
+                .get()
+            )
+        ) {
+          LOG.debug(
+            "Sending task finished email for {} because metadata type {} is present",
+            taskId,
+            taskMetadataConfiguration
+              .getSendTaskCompletedMailOnceMetadataTypeIsAvailable()
+              .get()
+          );
           return ShouldSendMailState.SEND;
         }
       }
@@ -107,18 +145,30 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
 
     // check to see if it's too soon.
     if (taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis() > 0) {
-      Optional<SingularityTaskHistoryUpdate> lastUpdate = taskHistory.get().getLastTaskUpdate();
+      Optional<SingularityTaskHistoryUpdate> lastUpdate = taskHistory
+        .get()
+        .getLastTaskUpdate();
 
       if (!lastUpdate.isPresent()) {
         LOG.warn("Missing last update for {}, can't send task finished email", taskId);
         return ShouldSendMailState.ERROR;
       }
 
-      final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
+      final long timeSinceLastUpdate =
+        System.currentTimeMillis() - lastUpdate.get().getTimestamp();
 
-      if (timeSinceLastUpdate < taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()) {
-        LOG.debug("Not sending task finished email for {} because last update was {} ago, buffer is {}", taskId, JavaUtils.durationFromMillis(timeSinceLastUpdate),
-            JavaUtils.durationFromMillis(taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()));
+      if (
+        timeSinceLastUpdate <
+        taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()
+      ) {
+        LOG.debug(
+          "Not sending task finished email for {} because last update was {} ago, buffer is {}",
+          taskId,
+          JavaUtils.durationFromMillis(timeSinceLastUpdate),
+          JavaUtils.durationFromMillis(
+            taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()
+          )
+        );
         return ShouldSendMailState.WAIT;
       }
     }
@@ -137,5 +187,4 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   protected boolean abortsOnError() {
     return false;
   }
-
 }

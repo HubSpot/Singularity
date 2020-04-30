@@ -2,6 +2,10 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -9,22 +13,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.hubspot.singularity.config.SingularityConfiguration;
-
 @Singleton
 public class SingularityManagedScheduledExecutorServiceFactory {
-
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ScheduledExecutorService> executorPools = new ArrayList<>();
 
   private final long timeoutInMillis;
 
   @Inject
-  public SingularityManagedScheduledExecutorServiceFactory(final SingularityConfiguration configuration) {
-    this.timeoutInMillis = TimeUnit.SECONDS.toMillis(configuration.getThreadpoolShutdownDelayInSeconds());
+  public SingularityManagedScheduledExecutorServiceFactory(
+    final SingularityConfiguration configuration
+  ) {
+    this.timeoutInMillis =
+      TimeUnit.SECONDS.toMillis(configuration.getThreadpoolShutdownDelayInSeconds());
   }
 
   public ScheduledExecutorService get(String name) {
@@ -39,9 +40,16 @@ public class SingularityManagedScheduledExecutorServiceFactory {
     return get(name, poolSize, false);
   }
 
-  public synchronized ScheduledExecutorService get(String name, int poolSize, boolean isLeaderOnlyPoller) {
+  public synchronized ScheduledExecutorService get(
+    String name,
+    int poolSize,
+    boolean isLeaderOnlyPoller
+  ) {
     checkState(!stopped.get(), "already stopped");
-    ScheduledExecutorService service = Executors.newScheduledThreadPool(poolSize, new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build());
+    ScheduledExecutorService service = Executors.newScheduledThreadPool(
+      poolSize,
+      new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build()
+    );
     if (isLeaderOnlyPoller) {
       executorPools.add(0, service);
     } else {

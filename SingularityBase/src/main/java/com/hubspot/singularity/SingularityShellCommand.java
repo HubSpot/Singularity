@@ -1,21 +1,23 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Describes a command to run against an active task")
 public class SingularityShellCommand {
-
   private final String name;
   private final Optional<List<String>> options;
   private final Optional<String> user;
   private final Optional<String> logfileName;
 
-  public SingularityShellCommand(@JsonProperty("name") String name, @JsonProperty("options") Optional<List<String>> options, @JsonProperty("user") Optional<String> user, @JsonProperty("logfileName") Optional<String> logfileName) {
+  public SingularityShellCommand(
+    @JsonProperty("name") String name,
+    @JsonProperty("options") Optional<List<String>> options,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("logfileName") Optional<String> logfileName
+  ) {
     this.name = name;
     this.options = options;
     this.user = user;
@@ -27,7 +29,7 @@ public class SingularityShellCommand {
     return user;
   }
 
-  @Schema(required=true, title = "Name of the shell command to run")
+  @Schema(required = true, title = "Name of the shell command to run")
   public String getName() {
     return name;
   }
@@ -42,12 +44,20 @@ public class SingularityShellCommand {
     return logfileName;
   }
 
-  @Override public String toString() {
-    return "SingularityShellCommand[" +
-        "name='" + name + '\'' +
-        ", options=" + options +
-        ", user=" + user +
-        ", logfileName=" + logfileName +
-        ']';
+  @Override
+  public String toString() {
+    return (
+      "SingularityShellCommand[" +
+      "name='" +
+      name +
+      '\'' +
+      ", options=" +
+      options +
+      ", user=" +
+      user +
+      ", logfileName=" +
+      logfileName +
+      ']'
+    );
   }
 }

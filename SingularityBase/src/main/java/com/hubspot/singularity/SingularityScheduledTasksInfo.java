@@ -3,14 +3,19 @@ package com.hubspot.singularity;
 import java.util.List;
 
 public class SingularityScheduledTasksInfo {
-
   private final int numFutureTasks;
   private final long maxTaskLag;
   private final long timestamp;
   private final List<SingularityPendingTaskId> lateTasks;
   private final List<SingularityPendingTaskId> onDemandLateTasks;
 
-  public SingularityScheduledTasksInfo(List<SingularityPendingTaskId> lateTasks, List<SingularityPendingTaskId> onDemandLateTasks, int numFutureTasks, long maxTaskLag, long timestamp) {
+  public SingularityScheduledTasksInfo(
+    List<SingularityPendingTaskId> lateTasks,
+    List<SingularityPendingTaskId> onDemandLateTasks,
+    int numFutureTasks,
+    long maxTaskLag,
+    long timestamp
+  ) {
     this.lateTasks = lateTasks;
     this.onDemandLateTasks = onDemandLateTasks;
     this.numFutureTasks = numFutureTasks;

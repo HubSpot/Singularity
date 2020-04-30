@@ -20,20 +20,23 @@ public class SingularityServiceUIModule extends AbstractModule {
   @Override
   public void configure() {
     switch (uiConfiguration.getRootUrlMode()) {
-      case UI_REDIRECT: {
-        bind(UiResource.class);
-        bind(IndexResource.class);
-        break;
-      }
-      case INDEX_CATCHALL: {
-        bind(StaticCatchallResource.class);
-        break;
-      }
+      case UI_REDIRECT:
+        {
+          bind(UiResource.class);
+          bind(IndexResource.class);
+          break;
+        }
+      case INDEX_CATCHALL:
+        {
+          bind(StaticCatchallResource.class);
+          break;
+        }
       case DISABLED:
-      default: {
-        bind(UiResource.class);
-        break;
-      }
+      default:
+        {
+          bind(UiResource.class);
+          break;
+        }
     }
   }
 }

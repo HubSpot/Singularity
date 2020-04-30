@@ -1,16 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -22,9 +11,18 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>> extends CuratorAsyncManager {
-
+public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>>
+  extends CuratorAsyncManager {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
 
   private static final String HISTORY_PATH = "history";
@@ -35,10 +33,15 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder;
   private final int maxHistoryEntries;
 
-  public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
-      Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder, Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder) {
+  public AbstractMachineManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    Transcoder<T> transcoder,
+    Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder,
+    Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder
+  ) {
     super(curator, configuration, metricRegistry);
-
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
     this.expiringMachineStateTranscoder = expiringMachineStateTranscoder;
@@ -81,7 +84,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   public Map<String, T> getObjectsByIdForState(MachineState state) {
     List<T> filteredObjects = getObjectsFiltered(state);
 
-    Map<String, T> filteredObjectIds = Maps.newHashMapWithExpectedSize(filteredObjects.size());
+    Map<String, T> filteredObjectIds = Maps.newHashMapWithExpectedSize(
+      filteredObjects.size()
+    );
 
     for (T filteredObject : filteredObjects) {
       filteredObjectIds.put(filteredObject.getId(), filteredObject);
@@ -93,7 +98,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   public List<T> getObjectsFiltered(MachineState state) {
     List<T> fromCache = getObjectsFromLeaderCache();
     if (fromCache != null) {
-      return fromCache.stream().filter((o) -> o.getCurrentState().getState() == state).collect(Collectors.toList());
+      return fromCache
+        .stream()
+        .filter(o -> o.getCurrentState().getState() == state)
+        .collect(Collectors.toList());
     } else {
       return getObjectsFiltered(Optional.of(state));
     }
@@ -127,7 +135,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
   public Optional<T> getObject(String objectId) {
     Optional<T> maybeCached = getObjectFromLeaderCache(objectId);
-    if(!maybeCached.isPresent()) {
+    if (!maybeCached.isPresent()) {
       return getObjectNoCache(objectId);
     } else {
       return maybeCached;
@@ -147,10 +155,18 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   protected abstract void deleteFromLeaderCache(String objectId);
 
   public enum StateChangeResult {
-    FAILURE_NOT_FOUND, FAILURE_ALREADY_AT_STATE, FAILURE_ILLEGAL_TRANSITION, SUCCESS;
+    FAILURE_NOT_FOUND,
+    FAILURE_ALREADY_AT_STATE,
+    FAILURE_ILLEGAL_TRANSITION,
+    SUCCESS
   }
 
-  public StateChangeResult changeState(String objectId, MachineState newState, Optional<String> message, Optional<String> user) {
+  public StateChangeResult changeState(
+    String objectId,
+    MachineState newState,
+    Optional<String> message,
+    Optional<String> user
+  ) {
     Optional<T> maybeObject = getObject(objectId);
 
     if (!maybeObject.isPresent()) {
@@ -162,8 +178,17 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return changeState(object, newState, message, user);
   }
 
-  public StateChangeResult changeState(T object, MachineState newState, Optional<String> message, Optional<String> user) {
-    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(object.getCurrentState().getState(), newState, false);
+  public StateChangeResult changeState(
+    T object,
+    MachineState newState,
+    Optional<String> message,
+    Optional<String> user
+  ) {
+    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(
+      object.getCurrentState().getState(),
+      newState,
+      false
+    );
 
     if (maybeInvalidStateChange.isPresent()) {
       return maybeInvalidStateChange.get();
@@ -171,9 +196,21 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     clearExpiringStateChangeIfInvalid(object, newState);
 
-    SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(object.getId(), newState, System.currentTimeMillis(), user, message);
+    SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(
+      object.getId(),
+      newState,
+      System.currentTimeMillis(),
+      user,
+      message
+    );
 
-    LOG.debug("{} changing state from {} to {} by {}", object.getId(), object.getCurrentState().getState(), newState, user);
+    LOG.debug(
+      "{} changing state from {} to {} by {}",
+      object.getId(),
+      object.getCurrentState().getState(),
+      newState,
+      user
+    );
 
     saveObject(object.changeState(newStateUpdate));
 
@@ -181,31 +218,54 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   private void clearExpiringStateChangeIfInvalid(T object, MachineState newState) {
-    Optional<SingularityExpiringMachineState> maybeExpiring = getExpiringObject(object.getId());
+    Optional<SingularityExpiringMachineState> maybeExpiring = getExpiringObject(
+      object.getId()
+    );
     if (!maybeExpiring.isPresent()) {
       return;
     }
     MachineState targetExpiringState = maybeExpiring.get().getRevertToState();
 
-    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(newState, targetExpiringState, true);
+    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(
+      newState,
+      targetExpiringState,
+      true
+    );
 
     if (maybeInvalidStateChange.isPresent()) {
-      LOG.info("Cannot complete expiring state transition from {} to {}, removing expiring action for {}", newState, targetExpiringState, object.getId());
+      LOG.info(
+        "Cannot complete expiring state transition from {} to {}, removing expiring action for {}",
+        newState,
+        targetExpiringState,
+        object.getId()
+      );
       deleteExpiringObject(object.getId());
     }
   }
 
-  private Optional<StateChangeResult> getInvalidStateChangeResult(MachineState currentState, MachineState newState, boolean expiringAction) {
+  private Optional<StateChangeResult> getInvalidStateChangeResult(
+    MachineState currentState,
+    MachineState newState,
+    boolean expiringAction
+  ) {
     if (currentState == newState) {
       return Optional.of(StateChangeResult.FAILURE_ALREADY_AT_STATE);
     }
 
-    if (newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()) {
+    if (
+      newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()
+    ) {
       return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
     }
 
     // can't jump from FROZEN or ACTIVE to DECOMMISSIONING or DECOMMISSIONED
-    if (((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN || currentState == MachineState.ACTIVE)) {
+    if (
+      (
+        (newState == MachineState.DECOMMISSIONING) ||
+        (newState == MachineState.DECOMMISSIONED)
+      ) &&
+      (currentState == MachineState.FROZEN || currentState == MachineState.ACTIVE)
+    ) {
       return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
     }
 
@@ -222,23 +282,41 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return Optional.empty();
   }
 
-  private String getHistoryUpdatePath(SingularityMachineStateHistoryUpdate historyUpdate) {
-    final String historyChildPath = String.format("%s-%s", historyUpdate.getState().name(), historyUpdate.getTimestamp());
+  private String getHistoryUpdatePath(
+    SingularityMachineStateHistoryUpdate historyUpdate
+  ) {
+    final String historyChildPath = String.format(
+      "%s-%s",
+      historyUpdate.getState().name(),
+      historyUpdate.getTimestamp()
+    );
 
-    return ZKPaths.makePath(getHistoryPath(historyUpdate.getObjectId()), historyChildPath);
+    return ZKPaths.makePath(
+      getHistoryPath(historyUpdate.getObjectId()),
+      historyChildPath
+    );
   }
 
   public void clearOldHistory(String machineId) {
     List<SingularityMachineStateHistoryUpdate> histories = getHistory(machineId);
-    histories.sort(Comparator.comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp).reversed());
-    histories.stream()
-        .skip(maxHistoryEntries)
-        .forEach((history) -> {
+    histories.sort(
+      Comparator
+        .comparingLong(SingularityMachineStateHistoryUpdate::getTimestamp)
+        .reversed()
+    );
+    histories
+      .stream()
+      .skip(maxHistoryEntries)
+      .forEach(
+        history -> {
           delete(getHistoryUpdatePath(history));
-        });
+        }
+      );
   }
 
-  private SingularityCreateResult saveHistoryUpdate(SingularityMachineStateHistoryUpdate historyUpdate) {
+  private SingularityCreateResult saveHistoryUpdate(
+    SingularityMachineStateHistoryUpdate historyUpdate
+  ) {
     return create(getHistoryUpdatePath(historyUpdate), historyUpdate, historyTranscoder);
   }
 
@@ -260,20 +338,28 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public List<SingularityExpiringMachineState> getExpiringObjects() {
-    return getAsyncChildren(ZKPaths.makePath(getRoot(), EXPIRING_PATH), expiringMachineStateTranscoder);
+    return getAsyncChildren(
+      ZKPaths.makePath(getRoot(), EXPIRING_PATH),
+      expiringMachineStateTranscoder
+    );
   }
 
   public Optional<SingularityExpiringMachineState> getExpiringObject(String machineId) {
     return getData(getExpiringPath(machineId), expiringMachineStateTranscoder);
   }
 
-  public SingularityCreateResult saveExpiringObject(SingularityExpiringMachineState expiringMachineState, String machineId) {
-    return save(getExpiringPath(machineId), expiringMachineState, expiringMachineStateTranscoder);
+  public SingularityCreateResult saveExpiringObject(
+    SingularityExpiringMachineState expiringMachineState,
+    String machineId
+  ) {
+    return save(
+      getExpiringPath(machineId),
+      expiringMachineState,
+      expiringMachineStateTranscoder
+    );
   }
 
   public SingularityDeleteResult deleteExpiringObject(String machineId) {
     return delete(getExpiringPath(machineId));
   }
-
-
 }

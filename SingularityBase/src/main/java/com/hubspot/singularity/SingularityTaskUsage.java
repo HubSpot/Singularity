@@ -2,12 +2,10 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Current usage for a task")
 public class SingularityTaskUsage {
-
   private final long memoryTotalBytes;
   private final long timestamp; // epoch millis
   private final double cpuSeconds;
@@ -17,13 +15,15 @@ public class SingularityTaskUsage {
   private final double cpusThrottledTimeSecs;
 
   @JsonCreator
-  public SingularityTaskUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
-                              @JsonProperty("timestamp") long timestamp,
-                              @JsonProperty("cpuSeconds") double cpuSeconds,
-                              @JsonProperty("diskTotalBytes") long diskTotalBytes,
-                              @JsonProperty("cpusNrPeriods") long cpusNrPeriods,
-                              @JsonProperty("cpusNrThrottled") long cpusNrThrottled,
-                              @JsonProperty("cpusThrottledTimeSecs") double cpusThrottledTimeSecs) {
+  public SingularityTaskUsage(
+    @JsonProperty("memoryTotalBytes") long memoryTotalBytes,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("cpuSeconds") double cpuSeconds,
+    @JsonProperty("diskTotalBytes") long diskTotalBytes,
+    @JsonProperty("cpusNrPeriods") long cpusNrPeriods,
+    @JsonProperty("cpusNrThrottled") long cpusNrThrottled,
+    @JsonProperty("cpusThrottledTimeSecs") double cpusThrottledTimeSecs
+  ) {
     this.memoryTotalBytes = memoryTotalBytes;
     this.timestamp = timestamp;
     this.cpuSeconds = cpuSeconds;
@@ -70,14 +70,23 @@ public class SingularityTaskUsage {
 
   @Override
   public String toString() {
-    return "SingularityTaskUsage{" +
-        "memoryTotalBytes=" + memoryTotalBytes +
-        ", timestamp=" + timestamp +
-        ", cpuSeconds=" + cpuSeconds +
-        ", diskTotalBytes=" + diskTotalBytes +
-        ", cpusNrPeriods=" + cpusNrPeriods +
-        ", cpusNrThrottled=" + cpusNrThrottled +
-        ", cpusThrottledTimeSecs=" + cpusThrottledTimeSecs +
-        '}';
+    return (
+      "SingularityTaskUsage{" +
+      "memoryTotalBytes=" +
+      memoryTotalBytes +
+      ", timestamp=" +
+      timestamp +
+      ", cpuSeconds=" +
+      cpuSeconds +
+      ", diskTotalBytes=" +
+      diskTotalBytes +
+      ", cpusNrPeriods=" +
+      cpusNrPeriods +
+      ", cpusNrThrottled=" +
+      cpusNrThrottled +
+      ", cpusThrottledTimeSecs=" +
+      cpusThrottledTimeSecs +
+      '}'
+    );
   }
 }

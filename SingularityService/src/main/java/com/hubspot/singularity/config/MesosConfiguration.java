@@ -1,19 +1,18 @@
 package com.hubspot.singularity.config;
 
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hubspot.singularity.MachineLoadMetric;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
-@JsonIgnoreProperties( ignoreUnknown = true )
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MesosConfiguration {
-
   @NotNull
   private String master;
+
   @NotNull
   private String frameworkName;
+
   @NotNull
   private String frameworkId;
 

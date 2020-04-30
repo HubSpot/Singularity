@@ -13,9 +13,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.usage.UsageManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
-
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUsagePoller.class);
 
   private final SingularityConfiguration configuration;
@@ -39,15 +37,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private final SingularityTaskShuffler taskShuffler;
 
   @Inject
-  SingularityUsagePoller(SingularityConfiguration configuration,
-                         SingularityUsageHelper usageHelper,
-                         UsageManager usageManager,
-                         DeployManager deployManager,
-                         DisasterManager disasterManager,
-                         SingularityManagedThreadPoolFactory threadPoolFactory,
-                         SingularityTaskShuffler taskShuffler) {
+  SingularityUsagePoller(
+    SingularityConfiguration configuration,
+    SingularityUsageHelper usageHelper,
+    UsageManager usageManager,
+    DeployManager deployManager,
+    DisasterManager disasterManager,
+    SingularityManagedThreadPoolFactory threadPoolFactory,
+    SingularityTaskShuffler taskShuffler
+  ) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
-
     this.configuration = configuration;
     this.usageHelper = usageHelper;
     this.usageManager = usageManager;
@@ -55,13 +54,19 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.disasterManager = disasterManager;
     this.taskShuffler = taskShuffler;
 
-    this.usageExecutor = threadPoolFactory.get("usage-collection", configuration.getMaxConcurrentUsageCollections());
+    this.usageExecutor =
+      threadPoolFactory.get(
+        "usage-collection",
+        configuration.getMaxConcurrentUsageCollections()
+      );
   }
 
   @Override
   public void runActionOnPoll() {
     Map<String, RequestUtilization> utilizationPerRequestId = new ConcurrentHashMap<>();
-    Map<String, RequestUtilization> previousUtilizations = usageManager.getRequestUtilizations(false);
+    Map<String, RequestUtilization> previousUtilizations = usageManager.getRequestUtilizations(
+      false
+    );
     final long now = System.currentTimeMillis();
 
     AtomicLong totalMemBytesUsed = new AtomicLong(0);
@@ -75,36 +80,68 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     List<CompletableFuture<Void>> usageFutures = new ArrayList<>();
 
-    usageHelper.getSlavesToTrackUsageFor().forEach((slave) -> {
-      usageFutures.add(CompletableFuture.runAsync(() -> {
-            usageHelper.collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
-                totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, false);
-          }, usageExecutor)
+    usageHelper
+      .getSlavesToTrackUsageFor()
+      .forEach(
+        slave -> {
+          usageFutures.add(
+            CompletableFuture.runAsync(
+              () -> {
+                usageHelper.collectSlaveUsage(
+                  slave,
+                  now,
+                  utilizationPerRequestId,
+                  previousUtilizations,
+                  overLoadedHosts,
+                  totalMemBytesUsed,
+                  totalMemBytesAvailable,
+                  totalCpuUsed,
+                  totalCpuAvailable,
+                  totalDiskBytesUsed,
+                  totalDiskBytesAvailable,
+                  false
+                );
+              },
+              usageExecutor
+            )
+          );
+        }
       );
-    });
 
     CompletableFutures.allOf(usageFutures).join();
 
     usageManager.saveClusterUtilization(
-        getClusterUtilization(
-            utilizationPerRequestId, totalMemBytesUsed.get(), totalMemBytesAvailable.get(),
-            totalCpuUsed.get(), totalCpuAvailable.get(), totalDiskBytesUsed.get(), totalDiskBytesAvailable.get(), now));
+      getClusterUtilization(
+        utilizationPerRequestId,
+        totalMemBytesUsed.get(),
+        totalMemBytesAvailable.get(),
+        totalCpuUsed.get(),
+        totalCpuAvailable.get(),
+        totalDiskBytesUsed.get(),
+        totalDiskBytesAvailable.get(),
+        now
+      )
+    );
     utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
-    if (configuration.isShuffleTasksForOverloadedSlaves() && !disasterManager.isDisabled(SingularityAction.TASK_SHUFFLE)) {
+    if (
+      configuration.isShuffleTasksForOverloadedSlaves() &&
+      !disasterManager.isDisabled(SingularityAction.TASK_SHUFFLE)
+    ) {
       taskShuffler.shuffle(overLoadedHosts);
     }
   }
 
-
-  private SingularityClusterUtilization getClusterUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
-                                                              long totalMemBytesUsed,
-                                                              long totalMemBytesAvailable,
-                                                              double totalCpuUsed,
-                                                              double totalCpuAvailable,
-                                                              long totalDiskBytesUsed,
-                                                              long totalDiskBytesAvailable,
-                                                              long now) {
+  private SingularityClusterUtilization getClusterUtilization(
+    Map<String, RequestUtilization> utilizationPerRequestId,
+    long totalMemBytesUsed,
+    long totalMemBytesAvailable,
+    double totalCpuUsed,
+    double totalCpuAvailable,
+    long totalDiskBytesUsed,
+    long totalDiskBytesAvailable,
+    long now
+  ) {
     int numRequestsWithUnderUtilizedCpu = 0;
     int numRequestsWithOverUtilizedCpu = 0;
     int numRequestsWithUnderUtilizedMemBytes = 0;
@@ -130,19 +167,33 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long minUnderUtilizedMemBytes = Long.MAX_VALUE;
     long minUnderUtilizedDiskBytes = Long.MAX_VALUE;
 
-
     for (RequestUtilization utilization : utilizationPerRequestId.values()) {
-      Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(utilization.getRequestId(), utilization.getDeployId());
+      Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(
+        utilization.getRequestId(),
+        utilization.getDeployId()
+      );
 
       if (maybeDeploy.isPresent() && maybeDeploy.get().getResources().isPresent()) {
         String requestId = utilization.getRequestId();
-        long memoryBytesReserved = (long) (maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
+        long memoryBytesReserved = (long) (
+          maybeDeploy.get().getResources().get().getMemoryMb() *
+          SingularitySlaveUsage.BYTES_PER_MEGABYTE
+        );
         double cpuReserved = maybeDeploy.get().getResources().get().getCpus();
-        long diskBytesReserved = (long) maybeDeploy.get().getResources().get().getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+        long diskBytesReserved = (long) maybeDeploy
+          .get()
+          .getResources()
+          .get()
+          .getDiskMb() *
+        SingularitySlaveUsage.BYTES_PER_MEGABYTE;
 
         double unusedCpu = cpuReserved - utilization.getAvgCpuUsed();
-        long unusedMemBytes = (long) (memoryBytesReserved - utilization.getAvgMemBytesUsed());
-        long unusedDiskBytes = (long) (diskBytesReserved - utilization.getAvgDiskBytesUsed());
+        long unusedMemBytes = (long) (
+          memoryBytesReserved - utilization.getAvgMemBytesUsed()
+        );
+        long unusedDiskBytes = (long) (
+          diskBytesReserved - utilization.getAvgDiskBytesUsed()
+        );
 
         if (unusedCpu > 0) {
           numRequestsWithUnderUtilizedCpu++;
@@ -186,16 +237,52 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
 
-    double avgUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu != 0 ? totalUnderUtilizedCpu / numRequestsWithUnderUtilizedCpu : 0;
-    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0 ? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu : 0;
-    long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0 ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes : 0;
-    long avgUnderUtilizedDiskBytes = numRequestsWithUnderUtilizedDiskBytes != 0 ? totalUnderUtilizedDiskBytes / numRequestsWithUnderUtilizedDiskBytes : 0;
+    double avgUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu != 0
+      ? totalUnderUtilizedCpu / numRequestsWithUnderUtilizedCpu
+      : 0;
+    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0
+      ? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu
+      : 0;
+    long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0
+      ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes
+      : 0;
+    long avgUnderUtilizedDiskBytes = numRequestsWithUnderUtilizedDiskBytes != 0
+      ? totalUnderUtilizedDiskBytes / numRequestsWithUnderUtilizedDiskBytes
+      : 0;
 
-    return new SingularityClusterUtilization(numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
-        numRequestsWithUnderUtilizedMemBytes, numRequestsWithUnderUtilizedDiskBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, totalUnderUtilizedDiskBytes, avgUnderUtilizedCpu, avgOverUtilizedCpu,
-        avgUnderUtilizedMemBytes, avgUnderUtilizedDiskBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, maxUnderUtilizedDiskBytes, maxUnderUtilizedCpuRequestId, maxOverUtilizedCpuRequestId,
-        maxUnderUtilizedMemBytesRequestId, maxUnderUtilizedDiskBytesRequestId, getMin(minUnderUtilizedCpu), getMin(minOverUtilizedCpu), getMin(minUnderUtilizedMemBytes), getMin(minUnderUtilizedDiskBytes), totalMemBytesUsed,
-        totalMemBytesAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
+    return new SingularityClusterUtilization(
+      numRequestsWithUnderUtilizedCpu,
+      numRequestsWithOverUtilizedCpu,
+      numRequestsWithUnderUtilizedMemBytes,
+      numRequestsWithUnderUtilizedDiskBytes,
+      totalUnderUtilizedCpu,
+      totalOverUtilizedCpu,
+      totalUnderUtilizedMemBytes,
+      totalUnderUtilizedDiskBytes,
+      avgUnderUtilizedCpu,
+      avgOverUtilizedCpu,
+      avgUnderUtilizedMemBytes,
+      avgUnderUtilizedDiskBytes,
+      maxUnderUtilizedCpu,
+      maxOverUtilizedCpu,
+      maxUnderUtilizedMemBytes,
+      maxUnderUtilizedDiskBytes,
+      maxUnderUtilizedCpuRequestId,
+      maxOverUtilizedCpuRequestId,
+      maxUnderUtilizedMemBytesRequestId,
+      maxUnderUtilizedDiskBytesRequestId,
+      getMin(minUnderUtilizedCpu),
+      getMin(minOverUtilizedCpu),
+      getMin(minUnderUtilizedMemBytes),
+      getMin(minUnderUtilizedDiskBytes),
+      totalMemBytesUsed,
+      totalMemBytesAvailable,
+      totalDiskBytesUsed,
+      totalDiskBytesAvailable,
+      totalCpuUsed,
+      totalCpuAvailable,
+      now
+    );
   }
 
   private double getMin(double value) {
@@ -205,5 +292,4 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private long getMin(long value) {
     return value == Long.MAX_VALUE ? 0 : value;
   }
-
 }

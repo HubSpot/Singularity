@@ -1,8 +1,5 @@
 package com.hubspot.singularity.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -11,6 +8,8 @@ import com.hubspot.singularity.config.WebhookQueueConfiguration;
 import com.hubspot.singularity.data.ZkWebhookQueue;
 import com.hubspot.singularity.hooks.SnsWebhookQueue;
 import com.hubspot.singularity.hooks.WebhookQueueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingularityEventModule implements Module {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityEventModule.class);
@@ -23,7 +22,10 @@ public class SingularityEventModule implements Module {
 
   @Override
   public void configure(final Binder binder) {
-    Multibinder<SingularityEventSender> eventListeners = Multibinder.newSetBinder(binder, SingularityEventSender.class);
+    Multibinder<SingularityEventSender> eventListeners = Multibinder.newSetBinder(
+      binder,
+      SingularityEventSender.class
+    );
     if (webhookQueueConfiguration.getQueueType() == WebhookQueueType.SNS) {
       LOG.info("Binding sns webhook managed");
       eventListeners.addBinding().to(SnsWebhookQueue.class).in(Scopes.SINGLETON);
@@ -31,6 +33,9 @@ public class SingularityEventModule implements Module {
       LOG.info("Binding zookeeper webhook manager");
       eventListeners.addBinding().to(ZkWebhookQueue.class).in(Scopes.SINGLETON);
     }
-    binder.bind(SingularityEventListener.class).to(SingularityEventController.class).in(Scopes.SINGLETON);
+    binder
+      .bind(SingularityEventListener.class)
+      .to(SingularityEventController.class)
+      .in(Scopes.SINGLETON);
   }
 }

@@ -1,16 +1,20 @@
 package com.hubspot.singularity.helpers;
 
-import java.util.Objects;
-
 import com.google.common.primitives.Longs;
 import com.hubspot.singularity.SingularityRequestWithState;
+import java.util.Objects;
 
-public class RequestParentWithLastActionTime implements Comparable<RequestParentWithLastActionTime> {
+public class RequestParentWithLastActionTime
+  implements Comparable<RequestParentWithLastActionTime> {
   private final SingularityRequestWithState requestWithState;
   private final long lastActionTime;
   private final boolean starred;
 
-  public RequestParentWithLastActionTime(SingularityRequestWithState requestWithState, long lastActionTime, boolean starred) {
+  public RequestParentWithLastActionTime(
+    SingularityRequestWithState requestWithState,
+    long lastActionTime,
+    boolean starred
+  ) {
     this.requestWithState = requestWithState;
     this.lastActionTime = lastActionTime;
     this.starred = starred;
@@ -44,8 +48,10 @@ public class RequestParentWithLastActionTime implements Comparable<RequestParent
     }
     if (obj instanceof RequestParentWithLastActionTime) {
       final RequestParentWithLastActionTime that = (RequestParentWithLastActionTime) obj;
-      return Objects.equals(this.lastActionTime, that.lastActionTime) &&
-          Objects.equals(this.requestWithState, that.requestWithState);
+      return (
+        Objects.equals(this.lastActionTime, that.lastActionTime) &&
+        Objects.equals(this.requestWithState, that.requestWithState)
+      );
     }
     return false;
   }

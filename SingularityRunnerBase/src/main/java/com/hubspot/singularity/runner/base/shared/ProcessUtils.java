@@ -1,25 +1,20 @@
 package com.hubspot.singularity.runner.base.shared;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProcessUtils {
-
   private static final Logger LOG = LoggerFactory.getLogger(ProcessUtils.class);
 
   private final Optional<Logger> log;
@@ -34,7 +29,6 @@ public class ProcessUtils {
   }
 
   public static class ProcessResult {
-
     private final int exitCode;
     private final String output;
 
@@ -55,14 +49,18 @@ public class ProcessUtils {
     public String toString() {
       return "ProcessResult [exitCode=" + exitCode + ", output=" + output + "]";
     }
-
   }
 
   public ProcessResult sendSignal(Signal signal, int pid) {
     final long start = System.currentTimeMillis();
 
     if (log.isPresent()) {
-      final String logLine = String.format("Signaling %s (%s) to process %s", signal, signal.getCode(), pid);
+      final String logLine = String.format(
+        "Signaling %s (%s) to process %s",
+        signal,
+        signal.getCode(),
+        pid
+      );
       if (signal == Signal.CHECK) {
         log.get().trace(logLine);
       } else {
@@ -75,19 +73,32 @@ public class ProcessUtils {
     }
 
     try {
-      final ProcessBuilder pb = new ProcessBuilder("kill", String.format("-%s", signal.getCode()), Integer.toString(pid));
+      final ProcessBuilder pb = new ProcessBuilder(
+        "kill",
+        String.format("-%s", signal.getCode()),
+        Integer.toString(pid)
+      );
       pb.redirectErrorStream(true);
 
       final Process p = pb.start();
 
       final int exitCode = p.waitFor();
 
-      final String output = CharStreams.toString(new InputStreamReader(p.getInputStream(), Charsets.UTF_8));
+      final String output = CharStreams.toString(
+        new InputStreamReader(p.getInputStream(), Charsets.UTF_8)
+      );
 
       Closeables.closeQuietly(p.getInputStream());
 
       if (log.isPresent()) {
-        log.get().trace("Kill signal process for {} got exit code {} after {}", pid, exitCode, JavaUtils.duration(start));
+        log
+          .get()
+          .trace(
+            "Kill signal process for {} got exit code {} after {}",
+            pid,
+            exitCode,
+            JavaUtils.duration(start)
+          );
       }
 
       return new ProcessResult(exitCode, output.trim());
@@ -98,7 +109,10 @@ public class ProcessUtils {
 
   public int getUnixPID(Process process) {
     // older java versions have UNIXProcess, newer have ProcessImpl. Both have a pid field we can access
-    Preconditions.checkArgument(process.getClass().getName().equals("java.lang.UNIXProcess") || process.getClass().getName().equals("java.lang.ProcessImpl"));
+    Preconditions.checkArgument(
+      process.getClass().getName().equals("java.lang.UNIXProcess") ||
+      process.getClass().getName().equals("java.lang.ProcessImpl")
+    );
 
     Class<?> clazz = process.getClass();
 
@@ -107,18 +121,23 @@ public class ProcessUtils {
       field.setAccessible(true);
       Object pidObject = field.get(process);
       return (Integer) pidObject;
-    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+    } catch (
+      NoSuchFieldException
+      | SecurityException
+      | IllegalArgumentException
+      | IllegalAccessException e
+    ) {
       throw new RuntimeException(e);
     }
   }
 
   public boolean doesProcessExist(int pid) {
     ProcessResult processResult = sendSignal(Signal.CHECK, pid);
-    if (processResult.getExitCode() != 0 && processResult.output.contains("No such process")) {
+    if (
+      processResult.getExitCode() != 0 && processResult.output.contains("No such process")
+    ) {
       return false;
     }
     return true;
   }
-
-
 }

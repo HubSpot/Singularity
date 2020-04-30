@@ -3,19 +3,22 @@ package com.hubspot.singularity.data.transcoders;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Function;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-
 public final class Transcoders {
+
   private Transcoders() {
     throw new AssertionError("do not instantiate");
   }
 
-  public static <T> Function<T, byte[]> getToBytesFunction(final Transcoder<T> transcoder) {
+  public static <T> Function<T, byte[]> getToBytesFunction(
+    final Transcoder<T> transcoder
+  ) {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<T, byte[]>() {
+
       @Override
       public byte[] apply(@Nullable T value) {
         try {
@@ -27,10 +30,13 @@ public final class Transcoders {
     };
   }
 
-  public static <T> Function<byte[], T> getFromBytesFunction(final Transcoder<T> transcoder) {
+  public static <T> Function<byte[], T> getFromBytesFunction(
+    final Transcoder<T> transcoder
+  ) {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<byte[], T>() {
+
       @Override
       public T apply(@Nullable byte[] value) {
         try {
@@ -42,10 +48,13 @@ public final class Transcoders {
     };
   }
 
-  public static <T> Function<String, T> getFromStringFunction(final Transcoder<T> transcoder) {
+  public static <T> Function<String, T> getFromStringFunction(
+    final Transcoder<T> transcoder
+  ) {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<String, T>() {
+
       @Override
       public T apply(@Nullable String value) {
         if (value == null) {

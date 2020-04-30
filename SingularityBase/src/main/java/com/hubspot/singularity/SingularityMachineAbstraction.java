@@ -1,30 +1,38 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(
-    title = "Describes a slave or rack",
-    subTypes = {
-        SingularitySlave.class,
-        SingularityRack.class
-    }
+  title = "Describes a slave or rack",
+  subTypes = { SingularitySlave.class, SingularityRack.class }
 )
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
-
   private final String id;
   private final long firstSeenAt;
   private final SingularityMachineStateHistoryUpdate currentState;
 
   public SingularityMachineAbstraction(String id) {
-    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.<String>empty(), Optional.<String>empty()));
+    this(
+      id,
+      System.currentTimeMillis(),
+      new SingularityMachineStateHistoryUpdate(
+        id,
+        MachineState.ACTIVE,
+        System.currentTimeMillis(),
+        Optional.<String>empty(),
+        Optional.<String>empty()
+      )
+    );
   }
 
-  public SingularityMachineAbstraction(String id, long firstSeenAt, SingularityMachineStateHistoryUpdate currentState) {
+  public SingularityMachineAbstraction(
+    String id,
+    long firstSeenAt,
+    SingularityMachineStateHistoryUpdate currentState
+  ) {
     this.id = id;
     this.currentState = currentState;
     this.firstSeenAt = firstSeenAt;
@@ -80,5 +88,4 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
   }
 
   public abstract T changeState(SingularityMachineStateHistoryUpdate newState);
-
 }

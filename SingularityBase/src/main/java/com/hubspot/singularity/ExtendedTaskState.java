@@ -1,10 +1,8 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.hubspot.mesos.protos.MesosTaskState;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema
 public enum ExtendedTaskState {
@@ -23,14 +21,22 @@ public enum ExtendedTaskState {
   TASK_DROPPED("dropped", true, Optional.of(MesosTaskState.TASK_DROPPED)),
   TASK_GONE("gone", true, Optional.of(MesosTaskState.TASK_GONE)),
   TASK_UNREACHABLE("unreachable", true, Optional.of(MesosTaskState.TASK_UNREACHABLE)),
-  TASK_GONE_BY_OPERATOR("goneByOperator", true, Optional.of(MesosTaskState.TASK_GONE_BY_OPERATOR)),
+  TASK_GONE_BY_OPERATOR(
+    "goneByOperator",
+    true,
+    Optional.of(MesosTaskState.TASK_GONE_BY_OPERATOR)
+  ),
   TASK_UNKNOWN("dropped", true, Optional.of(MesosTaskState.TASK_UNKNOWN));
 
   private final String displayName;
   private final boolean isDone;
   private final Optional<MesosTaskState> taskState;
 
-  ExtendedTaskState(String displayName, boolean isDone, Optional<MesosTaskState> taskState) {
+  ExtendedTaskState(
+    String displayName,
+    boolean isDone,
+    Optional<MesosTaskState> taskState
+  ) {
     this.displayName = displayName;
     this.isDone = isDone;
     this.taskState = taskState;

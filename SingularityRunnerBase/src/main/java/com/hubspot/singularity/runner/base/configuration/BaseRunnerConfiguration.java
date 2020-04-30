@@ -1,10 +1,9 @@
 package com.hubspot.singularity.runner.base.configuration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class BaseRunnerConfiguration {
   public static final String DEFAULT_ROOT_LOG_LEVEL = "INFO";
@@ -21,7 +20,9 @@ public abstract class BaseRunnerConfiguration {
   private Map<String, String> loggingLevel = new HashMap<>();
 
   @JsonProperty
-  private Optional<String> loggingPattern = Optional.of("%-5level [%d] [%.15thread] %logger{50} %contextName - %msg%n");
+  private Optional<String> loggingPattern = Optional.of(
+    "%-5level [%d] [%.15thread] %logger{50} %contextName - %msg%n"
+  );
 
   @JsonProperty
   private Optional<String> hostname = Optional.empty();

@@ -1,24 +1,28 @@
 package com.hubspot.deploy;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Raw content used to create an artifact in the task sandbox")
 public class EmbeddedArtifact extends Artifact {
-
   private final byte[] content;
 
   @JsonCreator
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public EmbeddedArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum,
-                          @JsonProperty("content") byte[] content, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
+  public EmbeddedArtifact(
+    @JsonProperty("name") String name,
+    @JsonProperty("filename") String filename,
+    @JsonProperty("md5sum") Optional<String> md5sum,
+    @JsonProperty("content") byte[] content,
+    @JsonProperty(
+      "targetFolderRelativeToTask"
+    ) Optional<String> targetFolderRelativeToTask
+  ) {
     super(name, filename, md5sum, targetFolderRelativeToTask);
     this.content = content;
   }
@@ -51,8 +55,12 @@ public class EmbeddedArtifact extends Artifact {
 
   @Override
   public String toString() {
-    return "EmbeddedArtifact{" +
-        "content=" + Arrays.toString(content) +
-        "} " + super.toString();
+    return (
+      "EmbeddedArtifact{" +
+      "content=" +
+      Arrays.toString(content) +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -1,10 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -19,17 +14,26 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Singleton
-public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory, SingularityTaskHistoryQuery> {
-
+public class TaskHistoryHelper
+  extends BlendedHistoryHelper<SingularityTaskIdHistory, SingularityTaskHistoryQuery> {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public TaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, RequestManager requestManager, SingularityConfiguration configuration) {
+  public TaskHistoryHelper(
+    TaskManager taskManager,
+    HistoryManager historyManager,
+    RequestManager requestManager,
+    SingularityConfiguration configuration
+  ) {
     super(configuration.getDatabaseConfiguration().isPresent());
     this.taskManager = taskManager;
     this.historyManager = historyManager;
@@ -38,7 +42,9 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   private List<SingularityTaskIdHistory> getFromZk(List<String> requestIds) {
-    final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInactiveTaskIds(requestIds);
+    final List<SingularityTaskId> inactiveTasksInZk = taskManager.getInactiveTaskIds(
+      requestIds
+    );
 
     return getTaskHistoriesFor(taskManager, inactiveTasksInZk);
   }
@@ -52,15 +58,27 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getBlendedHistory(SingularityTaskHistoryQuery query, Integer limitStart, Integer limitCount, boolean canSkipZk) {
-    List<SingularityTaskIdHistory> results = super.getBlendedHistory(query, limitStart, limitCount, canSkipZk);
+  public List<SingularityTaskIdHistory> getBlendedHistory(
+    SingularityTaskHistoryQuery query,
+    Integer limitStart,
+    Integer limitCount,
+    boolean canSkipZk
+  ) {
+    List<SingularityTaskIdHistory> results = super.getBlendedHistory(
+      query,
+      limitStart,
+      limitCount,
+      canSkipZk
+    );
     Collections.sort(results, query.getComparator());
     return results;
   }
 
   @Override
   protected List<SingularityTaskIdHistory> getFromZk(SingularityTaskHistoryQuery query) {
-    final List<SingularityTaskIdHistory> filteredHistory = Lists.newArrayList(Iterables.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()));
+    final List<SingularityTaskIdHistory> filteredHistory = Lists.newArrayList(
+      Iterables.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter())
+    );
 
     Collections.sort(filteredHistory, query.getComparator());
 
@@ -68,9 +86,25 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   @Override
-  protected List<SingularityTaskIdHistory> getFromHistory(SingularityTaskHistoryQuery query, int historyStart, int numFromHistory) {
-    return historyManager.getTaskIdHistory(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
-        query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter(), query.getOrderDirection(), Optional.of(historyStart), numFromHistory);
+  protected List<SingularityTaskIdHistory> getFromHistory(
+    SingularityTaskHistoryQuery query,
+    int historyStart,
+    int numFromHistory
+  ) {
+    return historyManager.getTaskIdHistory(
+      query.getRequestId(),
+      query.getDeployId(),
+      query.getRunId(),
+      query.getHost(),
+      query.getLastTaskStatus(),
+      query.getStartedBefore(),
+      query.getStartedAfter(),
+      query.getUpdatedBefore(),
+      query.getUpdatedAfter(),
+      query.getOrderDirection(),
+      Optional.of(historyStart),
+      numFromHistory
+    );
   }
 
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
@@ -80,7 +114,9 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
       return maybeTask;
     }
 
-    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(taskId.getId());
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(
+      taskId.getId()
+    );
 
     if (history.isPresent()) {
       return Optional.of(history.get().getTask());
@@ -90,16 +126,27 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   public Optional<SingularityTaskIdHistory> getByRunId(String requestId, String runId) {
-    for (SingularityTaskIdHistory history : getFromZk(Collections.singletonList(requestId))) {
+    for (SingularityTaskIdHistory history : getFromZk(
+      Collections.singletonList(requestId)
+    )) {
       if (history.getRunId().isPresent() && history.getRunId().get().equals(runId)) {
         return Optional.of(history);
       }
     }
 
-    Optional<SingularityTaskHistory> history = historyManager.getTaskHistoryByRunId(requestId, runId);
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistoryByRunId(
+      requestId,
+      runId
+    );
 
     if (history.isPresent()) {
-      return Optional.of(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(history.get().getTask().getTaskId(), history.get().getTask(), history.get().getTaskUpdates()));
+      return Optional.of(
+        SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(
+          history.get().getTask().getTaskId(),
+          history.get().getTask(),
+          history.get().getTaskUpdates()
+        )
+      );
     }
 
     return Optional.empty();
@@ -125,29 +172,48 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
     if (query.getStartedBefore().isPresent()) {
       return false;
     }
-    if (query.getOrderDirection().isPresent() && query.getOrderDirection().get() == OrderDirection.ASC) {
+    if (
+      query.getOrderDirection().isPresent() &&
+      query.getOrderDirection().get() == OrderDirection.ASC
+    ) {
       return false;
     }
     return true;
   }
 
   @Override
-  protected Comparator<SingularityTaskIdHistory> getComparator(SingularityTaskHistoryQuery query) {
+  protected Comparator<SingularityTaskIdHistory> getComparator(
+    SingularityTaskHistoryQuery query
+  ) {
     return query.getComparator();
   }
 
   @Override
-  protected Optional<Integer> getTotalCount(SingularityTaskHistoryQuery query, boolean canSkipZk) {
+  protected Optional<Integer> getTotalCount(
+    SingularityTaskHistoryQuery query,
+    boolean canSkipZk
+  ) {
     final int numFromZk;
     if (sqlEnabled && canSkipZk) {
       numFromZk = 0;
     } else {
-      numFromZk = Collections2.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()).size();
+      numFromZk =
+        Collections2
+          .filter(getFromZk(getRequestIds(query)), query.getHistoryFilter())
+          .size();
     }
-    final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
-        query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter());
+    final int numFromHistory = historyManager.getTaskIdHistoryCount(
+      query.getRequestId(),
+      query.getDeployId(),
+      query.getRunId(),
+      query.getHost(),
+      query.getLastTaskStatus(),
+      query.getStartedBefore(),
+      query.getStartedAfter(),
+      query.getUpdatedBefore(),
+      query.getUpdatedAfter()
+    );
 
     return Optional.ofNullable(numFromZk + numFromHistory);
   }
-
 }

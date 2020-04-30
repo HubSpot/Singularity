@@ -16,7 +16,9 @@ public enum SingularityAuthenticatorClass {
 
   private final Class<? extends SingularityAuthenticator> authenticatorClass;
 
-  SingularityAuthenticatorClass(Class<? extends SingularityAuthenticator> authenticatorClass) {
+  SingularityAuthenticatorClass(
+    Class<? extends SingularityAuthenticator> authenticatorClass
+  ) {
     this.authenticatorClass = authenticatorClass;
   }
 

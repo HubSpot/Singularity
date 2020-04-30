@@ -1,9 +1,8 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Optional;
 
 public class CrashLoopInfo {
   private final String requestId;
@@ -13,11 +12,13 @@ public class CrashLoopInfo {
   private final CrashLoopType type;
 
   @JsonCreator
-  public CrashLoopInfo(@JsonProperty("requestId") String requestId,
-                       @JsonProperty("deployId") String deployId,
-                       @JsonProperty("start") long start,
-                       @JsonProperty("end") Optional<Long> end,
-                       @JsonProperty("type") CrashLoopType type) {
+  public CrashLoopInfo(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") String deployId,
+    @JsonProperty("start") long start,
+    @JsonProperty("end") Optional<Long> end,
+    @JsonProperty("type") CrashLoopType type
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.start = start;
@@ -75,12 +76,21 @@ public class CrashLoopInfo {
 
   @Override
   public String toString() {
-    return "CrashLoopInfo{" +
-        "requestId='" + requestId + '\'' +
-        ", deployId='" + deployId + '\'' +
-        ", start=" + start +
-        ", end=" + end +
-        ", type=" + type +
-        '}';
+    return (
+      "CrashLoopInfo{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", deployId='" +
+      deployId +
+      '\'' +
+      ", start=" +
+      start +
+      ", end=" +
+      end +
+      ", type=" +
+      type +
+      '}'
+    );
   }
 }

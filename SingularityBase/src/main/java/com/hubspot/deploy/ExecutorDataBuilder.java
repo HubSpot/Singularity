@@ -1,13 +1,11 @@
 package com.hubspot.deploy;
 
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
-
 public class ExecutorDataBuilder {
-
   private String cmd;
   private List<EmbeddedArtifact> embeddedArtifacts;
   private List<ExternalArtifact> externalArtifacts;
@@ -26,11 +24,25 @@ public class ExecutorDataBuilder {
   private Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
   private Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency;
 
-  public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
-      Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
-      Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish,
-      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
-      Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+  public ExecutorDataBuilder(
+    String cmd,
+    List<EmbeddedArtifact> embeddedArtifacts,
+    List<ExternalArtifact> externalArtifacts,
+    List<S3Artifact> s3Artifacts,
+    List<Integer> successfulExitCodes,
+    Optional<String> runningSentinel,
+    Optional<String> user,
+    List<String> extraCmdLineArgs,
+    Optional<String> loggingTag,
+    Map<String, String> loggingExtraFields,
+    Optional<Long> sigKillProcessesAfterMillis,
+    Optional<Integer> maxTaskThreads,
+    Optional<Boolean> preserveTaskSandboxAfterFinish,
+    Optional<Integer> maxOpenFiles,
+    Optional<Boolean> skipLogrotateAndCompress,
+    Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
+    Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency
+  ) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -50,13 +62,28 @@ public class ExecutorDataBuilder {
     this.logrotateFrequency = logrotateFrequency;
   }
 
-  public ExecutorDataBuilder() {
-
-  }
+  public ExecutorDataBuilder() {}
 
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
-        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+    return new ExecutorData(
+      cmd,
+      embeddedArtifacts,
+      externalArtifacts,
+      s3Artifacts,
+      successfulExitCodes,
+      user,
+      runningSentinel,
+      extraCmdLineArgs,
+      loggingTag,
+      loggingExtraFields,
+      sigKillProcessesAfterMillis,
+      maxTaskThreads,
+      preserveTaskSandboxAfterFinish,
+      maxOpenFiles,
+      skipLogrotateAndCompress,
+      s3ArtifactSignatures,
+      logrotateFrequency
+    );
   }
 
   public Optional<String> getLoggingTag() {
@@ -72,7 +99,9 @@ public class ExecutorDataBuilder {
     return loggingExtraFields;
   }
 
-  public ExecutorDataBuilder setLoggingExtraFields(Map<String, String> loggingExtraFields) {
+  public ExecutorDataBuilder setLoggingExtraFields(
+    Map<String, String> loggingExtraFields
+  ) {
     this.loggingExtraFields = loggingExtraFields;
     return this;
   }
@@ -114,17 +143,23 @@ public class ExecutorDataBuilder {
     return sigKillProcessesAfterMillis;
   }
 
-  public ExecutorDataBuilder setSigKillProcessesAfterMillis(Optional<Long> sigKillProcessesAfterMillis) {
+  public ExecutorDataBuilder setSigKillProcessesAfterMillis(
+    Optional<Long> sigKillProcessesAfterMillis
+  ) {
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     return this;
   }
 
-  public ExecutorDataBuilder setEmbeddedArtifacts(List<EmbeddedArtifact> embeddedArtifacts) {
+  public ExecutorDataBuilder setEmbeddedArtifacts(
+    List<EmbeddedArtifact> embeddedArtifacts
+  ) {
     this.embeddedArtifacts = embeddedArtifacts;
     return this;
   }
 
-  public ExecutorDataBuilder setExternalArtifacts(List<ExternalArtifact> externalArtifacts) {
+  public ExecutorDataBuilder setExternalArtifacts(
+    List<ExternalArtifact> externalArtifacts
+  ) {
     this.externalArtifacts = externalArtifacts;
     return this;
   }
@@ -171,7 +206,9 @@ public class ExecutorDataBuilder {
     return preserveTaskSandboxAfterFinish;
   }
 
-  public ExecutorDataBuilder setPreserveTaskSandboxAfterFinish(Optional<Boolean> preserveTaskSandboxAfterFinish) {
+  public ExecutorDataBuilder setPreserveTaskSandboxAfterFinish(
+    Optional<Boolean> preserveTaskSandboxAfterFinish
+  ) {
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     return this;
   }
@@ -189,7 +226,9 @@ public class ExecutorDataBuilder {
     return skipLogrotateAndCompress;
   }
 
-  public ExecutorDataBuilder setSkipLogrotateAndCompress(Optional<Boolean> skipLogrotateAndCompress) {
+  public ExecutorDataBuilder setSkipLogrotateAndCompress(
+    Optional<Boolean> skipLogrotateAndCompress
+  ) {
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
     return this;
   }
@@ -198,7 +237,9 @@ public class ExecutorDataBuilder {
     return s3ArtifactSignatures;
   }
 
-  public ExecutorDataBuilder setS3ArtifactSignatures(Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
+  public ExecutorDataBuilder setS3ArtifactSignatures(
+    Optional<List<S3ArtifactSignature>> s3ArtifactSignatures
+  ) {
     this.s3ArtifactSignatures = s3ArtifactSignatures;
     return this;
   }
@@ -207,31 +248,53 @@ public class ExecutorDataBuilder {
     return logrotateFrequency;
   }
 
-  public ExecutorDataBuilder setLogrotateFrequency(Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+  public ExecutorDataBuilder setLogrotateFrequency(
+    Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency
+  ) {
     this.logrotateFrequency = logrotateFrequency;
     return this;
   }
 
   @Override
   public String toString() {
-    return "ExecutorDataBuilder{" +
-        "cmd='" + cmd + '\'' +
-        ", embeddedArtifacts=" + embeddedArtifacts +
-        ", externalArtifacts=" + externalArtifacts +
-        ", s3Artifacts=" + s3Artifacts +
-        ", successfulExitCodes=" + successfulExitCodes +
-        ", runningSentinel=" + runningSentinel +
-        ", user=" + user +
-        ", extraCmdLineArgs=" + extraCmdLineArgs +
-        ", loggingTag=" + loggingTag +
-        ", loggingExtraFields=" + loggingExtraFields +
-        ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
-        ", maxTaskThreads=" + maxTaskThreads +
-        ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
-        ", maxOpenFiles=" + maxOpenFiles +
-        ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
-        ", s3ArtifactSignatures=" + s3ArtifactSignatures +
-        ", logrotateFrequency=" + logrotateFrequency +
-        '}';
+    return (
+      "ExecutorDataBuilder{" +
+      "cmd='" +
+      cmd +
+      '\'' +
+      ", embeddedArtifacts=" +
+      embeddedArtifacts +
+      ", externalArtifacts=" +
+      externalArtifacts +
+      ", s3Artifacts=" +
+      s3Artifacts +
+      ", successfulExitCodes=" +
+      successfulExitCodes +
+      ", runningSentinel=" +
+      runningSentinel +
+      ", user=" +
+      user +
+      ", extraCmdLineArgs=" +
+      extraCmdLineArgs +
+      ", loggingTag=" +
+      loggingTag +
+      ", loggingExtraFields=" +
+      loggingExtraFields +
+      ", sigKillProcessesAfterMillis=" +
+      sigKillProcessesAfterMillis +
+      ", maxTaskThreads=" +
+      maxTaskThreads +
+      ", preserveTaskSandboxAfterFinish=" +
+      preserveTaskSandboxAfterFinish +
+      ", maxOpenFiles=" +
+      maxOpenFiles +
+      ", skipLogrotateAndCompress=" +
+      skipLogrotateAndCompress +
+      ", s3ArtifactSignatures=" +
+      s3ArtifactSignatures +
+      ", logrotateFrequency=" +
+      logrotateFrequency +
+      '}'
+    );
   }
 }

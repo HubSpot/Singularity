@@ -1,13 +1,12 @@
 package com.hubspot.singularity;
 
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityRunNowRequestBuilder {
   private Optional<String> message;
@@ -23,8 +22,7 @@ public class SingularityRunNowRequestBuilder {
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
-  public SingularityRunNowRequestBuilder()
-  {
+  public SingularityRunNowRequestBuilder() {
     this.message = Optional.empty();
     this.runId = Optional.empty();
     this.commandLineArgs = Optional.empty();
@@ -48,7 +46,9 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setCommandLineArgs(List<String> commandLineArgs) {
+  public SingularityRunNowRequestBuilder setCommandLineArgs(
+    List<String> commandLineArgs
+  ) {
     this.commandLineArgs = Optional.of(commandLineArgs);
     return this;
   }
@@ -63,32 +63,44 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public SingularityRunNowRequestBuilder setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+  public SingularityRunNowRequestBuilder setRunAsUserOverride(
+    Optional<String> runAsUserOverride
+  ) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
+  public SingularityRunNowRequestBuilder setEnvOverrides(
+    Map<String, String> environmentVariables
+  ) {
     this.envOverrides = environmentVariables;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setRequiredSlaveAttributeOverrides(Map<String, String> requiredSlaveAttributeOverrides) {
+  public SingularityRunNowRequestBuilder setRequiredSlaveAttributeOverrides(
+    Map<String, String> requiredSlaveAttributeOverrides
+  ) {
     this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setAllowedSlaveAttributeOverrides(Map<String, String> allowedSlaveAttributeOverrides) {
+  public SingularityRunNowRequestBuilder setAllowedSlaveAttributeOverrides(
+    Map<String, String> allowedSlaveAttributeOverrides
+  ) {
     this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+  public SingularityRunNowRequestBuilder setExtraArtifacts(
+    List<SingularityMesosArtifact> extraArtifacts
+  ) {
     this.extraArtifacts = extraArtifacts;
     return this;
   }
@@ -100,24 +112,50 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, s3UploaderAdditionalFiles, runAsUserOverride, envOverrides, requiredSlaveAttributeOverrides, allowedSlaveAttributeOverrides, extraArtifacts, runAt);
+      message,
+      skipHealthchecks,
+      runId,
+      commandLineArgs,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      requiredSlaveAttributeOverrides,
+      allowedSlaveAttributeOverrides,
+      extraArtifacts,
+      runAt
+    );
   }
 
   @Override
   public String toString() {
-    return "SingularityRunNowRequestBuilder{" +
-        "message=" + message +
-        ", runId=" + runId +
-        ", commandLineArgs=" + commandLineArgs +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runNowUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts=" + extraArtifacts +
-        ", runAt=" + runAt +
-        "}";
+    return (
+      "SingularityRunNowRequestBuilder{" +
+      "message=" +
+      message +
+      ", runId=" +
+      runId +
+      ", commandLineArgs=" +
+      commandLineArgs +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runNowUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts=" +
+      extraArtifacts +
+      ", runAt=" +
+      runAt +
+      "}"
+    );
   }
 }

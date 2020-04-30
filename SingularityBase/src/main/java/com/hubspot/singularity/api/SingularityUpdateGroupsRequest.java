@@ -1,14 +1,12 @@
 package com.hubspot.singularity.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Represents updates to the groups for a request")
 public class SingularityUpdateGroupsRequest {
@@ -18,13 +16,17 @@ public class SingularityUpdateGroupsRequest {
   private final Optional<String> message;
 
   @JsonCreator
-  public SingularityUpdateGroupsRequest(@JsonProperty("group") Optional<String> group,
-                                        @JsonProperty("readWriteGroups") Set<String> readWriteGroups,
-                                        @JsonProperty("readOnlyGroups") Set<String> readOnlyGroups,
-                                        @JsonProperty("message") Optional<String> message) {
+  public SingularityUpdateGroupsRequest(
+    @JsonProperty("group") Optional<String> group,
+    @JsonProperty("readWriteGroups") Set<String> readWriteGroups,
+    @JsonProperty("readOnlyGroups") Set<String> readOnlyGroups,
+    @JsonProperty("message") Optional<String> message
+  ) {
     this.group = group;
-    this.readWriteGroups = readWriteGroups != null ? readWriteGroups : Collections.emptySet();
-    this.readOnlyGroups = readOnlyGroups != null ? readOnlyGroups : Collections.emptySet();
+    this.readWriteGroups =
+      readWriteGroups != null ? readWriteGroups : Collections.emptySet();
+    this.readOnlyGroups =
+      readOnlyGroups != null ? readOnlyGroups : Collections.emptySet();
     this.message = message;
   }
 
@@ -43,7 +45,10 @@ public class SingularityUpdateGroupsRequest {
     return readOnlyGroups;
   }
 
-  @Schema(description = "An option message detailing the reason for the group updates", nullable = true)
+  @Schema(
+    description = "An option message detailing the reason for the group updates",
+    nullable = true
+  )
   public Optional<String> getMessage() {
     return message;
   }
@@ -55,10 +60,12 @@ public class SingularityUpdateGroupsRequest {
     }
     if (obj instanceof SingularityUpdateGroupsRequest) {
       final SingularityUpdateGroupsRequest that = (SingularityUpdateGroupsRequest) obj;
-      return Objects.equals(this.group, that.group) &&
-          Objects.equals(this.readWriteGroups, that.readWriteGroups) &&
-          Objects.equals(this.readOnlyGroups, that.readOnlyGroups) &&
-          Objects.equals(this.message, that.message);
+      return (
+        Objects.equals(this.group, that.group) &&
+        Objects.equals(this.readWriteGroups, that.readWriteGroups) &&
+        Objects.equals(this.readOnlyGroups, that.readOnlyGroups) &&
+        Objects.equals(this.message, that.message)
+      );
     }
     return false;
   }
@@ -70,11 +77,17 @@ public class SingularityUpdateGroupsRequest {
 
   @Override
   public String toString() {
-    return "SingularityUpdateGroupsRequest{" +
-        "group=" + group +
-        ", readWriteGroups=" + readWriteGroups +
-        ", readOnlyGroups=" + readOnlyGroups +
-        ", message=" + message +
-        '}';
+    return (
+      "SingularityUpdateGroupsRequest{" +
+      "group=" +
+      group +
+      ", readWriteGroups=" +
+      readWriteGroups +
+      ", readOnlyGroups=" +
+      readOnlyGroups +
+      ", message=" +
+      message +
+      '}'
+    );
   }
 }

@@ -1,9 +1,8 @@
 package com.hubspot.singularity.executor.config;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Optional;
 
 public class LogrotateCompressionSettings {
   private Optional<String> compressCmd = Optional.empty();
@@ -12,10 +11,12 @@ public class LogrotateCompressionSettings {
   private Optional<String> compressExt = Optional.empty();
 
   @JsonCreator
-  public LogrotateCompressionSettings(@JsonProperty("compressCmd") Optional<String> compressCmd,
-                                      @JsonProperty("uncompressCmd") Optional<String> uncompressCmd,
-                                      @JsonProperty("compressOptions") Optional<String> compressOptions,
-                                      @JsonProperty("compressExt") Optional<String> compressExt) {
+  public LogrotateCompressionSettings(
+    @JsonProperty("compressCmd") Optional<String> compressCmd,
+    @JsonProperty("uncompressCmd") Optional<String> uncompressCmd,
+    @JsonProperty("compressOptions") Optional<String> compressOptions,
+    @JsonProperty("compressExt") Optional<String> compressExt
+  ) {
     this.compressCmd = compressCmd;
     this.uncompressCmd = uncompressCmd;
     this.compressOptions = compressOptions;
@@ -23,7 +24,12 @@ public class LogrotateCompressionSettings {
   }
 
   public static LogrotateCompressionSettings empty() {
-    return new LogrotateCompressionSettings(Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty(), Optional.<String>empty());
+    return new LogrotateCompressionSettings(
+      Optional.<String>empty(),
+      Optional.<String>empty(),
+      Optional.<String>empty(),
+      Optional.<String>empty()
+    );
   }
 
   public Optional<String> getCompressCmd() {
@@ -60,11 +66,17 @@ public class LogrotateCompressionSettings {
 
   @Override
   public String toString() {
-    return "LogrotateCompressionSettings{" +
-        "compressCmd=" + compressCmd +
-        ", uncompressCmd=" + uncompressCmd +
-        ", compressOptions=" + compressOptions +
-        ", compressExt=" + compressExt +
-        '}';
+    return (
+      "LogrotateCompressionSettings{" +
+      "compressCmd=" +
+      compressCmd +
+      ", uncompressCmd=" +
+      uncompressCmd +
+      ", compressOptions=" +
+      compressOptions +
+      ", compressExt=" +
+      compressExt +
+      '}'
+    );
   }
 }

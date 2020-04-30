@@ -1,16 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.mesos.v1.Protos.Offer;
-import org.apache.mesos.v1.Protos.OfferID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -22,10 +11,19 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularityOfferCache implements OfferCache, RemovalListener<String, CachedOffer> {
-
+public class SingularityOfferCache
+  implements OfferCache, RemovalListener<String, CachedOffer> {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
 
   private final Cache<String, CachedOffer> offerCache;
@@ -34,12 +32,20 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
-  public SingularityOfferCache(SingularityConfiguration configuration, SingularityMesosSchedulerClient schedulerClient) {
+  public SingularityOfferCache(
+    SingularityConfiguration configuration,
+    SingularityMesosSchedulerClient schedulerClient
+  ) {
     this.configuration = configuration;
     this.schedulerClient = schedulerClient;
 
-    offerCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(configuration.getMesosConfiguration().getOfferTimeout(), TimeUnit.MILLISECONDS)
+    offerCache =
+      CacheBuilder
+        .newBuilder()
+        .expireAfterWrite(
+          configuration.getMesosConfiguration().getOfferTimeout(),
+          TimeUnit.MILLISECONDS
+        )
         .maximumSize(configuration.getOfferCacheSize())
         .removalListener(this)
         .build();
@@ -51,7 +57,11 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
       schedulerClient.decline(Collections.singletonList(offer.getId()));
       return;
     }
-    LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
+    LOG.debug(
+      "Caching offer {} for {}",
+      offer.getId().getValue(),
+      JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis())
+    );
 
     offerCache.put(offer.getId().getValue(), new CachedOffer(offer));
   }
@@ -62,7 +72,11 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
       return;
     }
 
-    LOG.debug("Cache removal for {} due to {}", notification.getKey(), notification.getCause());
+    LOG.debug(
+      "Cache removal for {} due to {}",
+      notification.getKey(),
+      notification.getCause()
+    );
 
     synchronized (offerCache) {
       if (notification.getValue().offerState == OfferState.AVAILABLE) {
@@ -77,7 +91,11 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   public void rescindOffer(OfferID offerId) {
     CachedOffer maybeCached = offerCache.getIfPresent(offerId.getValue());
     if (maybeCached != null) {
-      LOG.info("Offer {} on {} rescinded", offerId.getValue(), maybeCached.getOffer().getHostname());
+      LOG.info(
+        "Offer {} on {} rescinded",
+        offerId.getValue(),
+        maybeCached.getOffer().getHostname()
+      );
     } else {
       LOG.info("Offer {} rescinded (not in cache)", offerId.getValue());
     }
@@ -146,7 +164,10 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
   private void declineOffer(CachedOffer offer) {
     if (!schedulerClient.isRunning()) {
-      LOG.error("No active scheduler driver present to handle expired offer {} - this should never happen", offer.offerId);
+      LOG.error(
+        "No active scheduler driver present to handle expired offer {} - this should never happen",
+        offer.offerId
+      );
       return;
     }
 
@@ -156,11 +177,12 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   private enum OfferState {
-    AVAILABLE, CHECKED_OUT, EXPIRED;
+    AVAILABLE,
+    CHECKED_OUT,
+    EXPIRED
   }
 
   public static class CachedOffer {
-
     private final String offerId;
     private final Offer offer;
     private OfferState offerState;
@@ -180,19 +202,33 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     }
 
     private void checkOut() {
-      Preconditions.checkState(offerState == OfferState.AVAILABLE, "Offer %s was in state %s", offerId, offerState);
+      Preconditions.checkState(
+        offerState == OfferState.AVAILABLE,
+        "Offer %s was in state %s",
+        offerId,
+        offerState
+      );
       this.offerState = OfferState.CHECKED_OUT;
     }
 
     private void checkIn() {
-      Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
+      Preconditions.checkState(
+        offerState == OfferState.CHECKED_OUT,
+        "Offer %s was in state %s",
+        offerId,
+        offerState
+      );
       this.offerState = OfferState.AVAILABLE;
     }
 
     private void expire() {
-      Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
+      Preconditions.checkState(
+        offerState == OfferState.CHECKED_OUT,
+        "Offer %s was in state %s",
+        offerId,
+        offerState
+      );
       this.offerState = OfferState.EXPIRED;
     }
-
   }
 }

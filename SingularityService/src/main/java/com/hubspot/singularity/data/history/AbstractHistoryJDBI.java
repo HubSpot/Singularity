@@ -1,24 +1,23 @@
 package com.hubspot.singularity.data.history;
 
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.jdbi.v3.core.statement.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityTaskIdHistory;
 
 // Common code for DB queries
 public interface AbstractHistoryJDBI extends HistoryJDBI {
   Logger LOG = LoggerFactory.getLogger(HistoryJDBI.class);
 
-  String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
+  String GET_TASK_ID_HISTORY_QUERY =
+    "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
   String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT COUNT(*) FROM taskHistory";
 
   default void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
@@ -29,17 +28,19 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     }
   }
 
-  default void applyTaskIdHistoryBaseQuery(StringBuilder sqlBuilder,
-                                             Map<String, Object> binds,
-                                             Optional<String> requestId,
-                                             Optional<String> deployId,
-                                             Optional<String> runId,
-                                             Optional<String> host,
-                                             Optional<ExtendedTaskState> lastTaskStatus,
-                                             Optional<Long> startedBefore,
-                                             Optional<Long> startedAfter,
-                                             Optional<Long> updatedBefore,
-                                             Optional<Long> updatedAfter) {
+  default void applyTaskIdHistoryBaseQuery(
+    StringBuilder sqlBuilder,
+    Map<String, Object> binds,
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  ) {
     if (requestId.isPresent()) {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("requestId = :requestId");
@@ -95,14 +96,36 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     }
   }
 
-  default List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
-                                                         Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
-                                                         Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
-
+  default List<SingularityTaskIdHistory> getTaskIdHistory(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter,
+    Optional<OrderDirection> orderDirection,
+    Optional<Integer> limitStart,
+    Integer limitCount
+  ) {
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
 
-    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
+    applyTaskIdHistoryBaseQuery(
+      sqlBuilder,
+      binds,
+      requestId,
+      deployId,
+      runId,
+      host,
+      lastTaskStatus,
+      startedBefore,
+      startedAfter,
+      updatedBefore,
+      updatedAfter
+    );
 
     sqlBuilder.append(" ORDER BY updatedAt ");
     sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
@@ -133,14 +156,33 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     return query.mapTo(SingularityTaskIdHistory.class).list();
   }
 
-  default int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
-                                   Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
-                                   Optional<Long> updatedAfter) {
-
+  default int getTaskIdHistoryCount(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  ) {
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_COUNT_QUERY);
 
-    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
+    applyTaskIdHistoryBaseQuery(
+      sqlBuilder,
+      binds,
+      requestId,
+      deployId,
+      runId,
+      host,
+      lastTaskStatus,
+      startedBefore,
+      startedAfter,
+      updatedBefore,
+      updatedAfter
+    );
 
     final String sql = sqlBuilder.toString();
 
@@ -150,5 +192,4 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     binds.forEach(query::bind);
     return query.mapTo(Integer.class).first();
   }
-
 }

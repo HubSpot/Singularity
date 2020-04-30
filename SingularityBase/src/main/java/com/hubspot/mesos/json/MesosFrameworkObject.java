@@ -1,13 +1,11 @@
 package com.hubspot.mesos.json;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class MesosFrameworkObject {
-
   private final String name;
   private final String id;
   private final String pid;
@@ -26,10 +24,24 @@ public class MesosFrameworkObject {
   private final List<MesosTaskObject> tasks;
 
   @JsonCreator
-  public MesosFrameworkObject(@JsonProperty("name") String name, @JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("webui_url") String webuiUrl,
-      @JsonProperty("user") String user, @JsonProperty("role") String role, @JsonProperty("registered_time") long registeredTime, @JsonProperty("unregistered_time") long unregisteredTime, @JsonProperty("reregistered_time") long reregisteredTime,
-      @JsonProperty("active") boolean active, @JsonProperty("checkpoint") boolean checkpoint, @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("used_resources") MesosResourcesObject usedResources,
-      @JsonProperty("offered_resources") MesosResourcesObject offeredResources, @JsonProperty("tasks") List<MesosTaskObject> tasks) {
+  public MesosFrameworkObject(
+    @JsonProperty("name") String name,
+    @JsonProperty("id") String id,
+    @JsonProperty("pid") String pid,
+    @JsonProperty("hostname") String hostname,
+    @JsonProperty("webui_url") String webuiUrl,
+    @JsonProperty("user") String user,
+    @JsonProperty("role") String role,
+    @JsonProperty("registered_time") long registeredTime,
+    @JsonProperty("unregistered_time") long unregisteredTime,
+    @JsonProperty("reregistered_time") long reregisteredTime,
+    @JsonProperty("active") boolean active,
+    @JsonProperty("checkpoint") boolean checkpoint,
+    @JsonProperty("resources") MesosResourcesObject resources,
+    @JsonProperty("used_resources") MesosResourcesObject usedResources,
+    @JsonProperty("offered_resources") MesosResourcesObject offeredResources,
+    @JsonProperty("tasks") List<MesosTaskObject> tasks
+  ) {
     this.name = name;
     this.id = id;
     this.pid = pid;
@@ -121,48 +133,92 @@ public class MesosFrameworkObject {
       return false;
     }
     MesosFrameworkObject that = (MesosFrameworkObject) o;
-    return registeredTime == that.registeredTime &&
-        unregisteredTime == that.unregisteredTime &&
-        reregisteredTime == that.reregisteredTime &&
-        active == that.active &&
-        checkpoint == that.checkpoint &&
-        Objects.equals(name, that.name) &&
-        Objects.equals(id, that.id) &&
-        Objects.equals(pid, that.pid) &&
-        Objects.equals(hostname, that.hostname) &&
-        Objects.equals(webuiUrl, that.webuiUrl) &&
-        Objects.equals(user, that.user) &&
-        Objects.equals(role, that.role) &&
-        Objects.equals(resources, that.resources) &&
-        Objects.equals(usedResources, that.usedResources) &&
-        Objects.equals(offeredResources, that.offeredResources) &&
-        Objects.equals(tasks, that.tasks);
+    return (
+      registeredTime == that.registeredTime &&
+      unregisteredTime == that.unregisteredTime &&
+      reregisteredTime == that.reregisteredTime &&
+      active == that.active &&
+      checkpoint == that.checkpoint &&
+      Objects.equals(name, that.name) &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(pid, that.pid) &&
+      Objects.equals(hostname, that.hostname) &&
+      Objects.equals(webuiUrl, that.webuiUrl) &&
+      Objects.equals(user, that.user) &&
+      Objects.equals(role, that.role) &&
+      Objects.equals(resources, that.resources) &&
+      Objects.equals(usedResources, that.usedResources) &&
+      Objects.equals(offeredResources, that.offeredResources) &&
+      Objects.equals(tasks, that.tasks)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, id, pid, hostname, webuiUrl, user, role, registeredTime, unregisteredTime, reregisteredTime, active, checkpoint, resources, usedResources, offeredResources, tasks);
+    return Objects.hash(
+      name,
+      id,
+      pid,
+      hostname,
+      webuiUrl,
+      user,
+      role,
+      registeredTime,
+      unregisteredTime,
+      reregisteredTime,
+      active,
+      checkpoint,
+      resources,
+      usedResources,
+      offeredResources,
+      tasks
+    );
   }
 
   @Override
   public String toString() {
-    return "MesosFrameworkObject{" +
-        "name='" + name + '\'' +
-        ", id='" + id + '\'' +
-        ", pid='" + pid + '\'' +
-        ", hostname='" + hostname + '\'' +
-        ", webuiUrl='" + webuiUrl + '\'' +
-        ", user='" + user + '\'' +
-        ", role='" + role + '\'' +
-        ", registeredTime=" + registeredTime +
-        ", unregisteredTime=" + unregisteredTime +
-        ", reregisteredTime=" + reregisteredTime +
-        ", active=" + active +
-        ", checkpoint=" + checkpoint +
-        ", resources=" + resources +
-        ", usedResources=" + usedResources +
-        ", offeredResources=" + offeredResources +
-        ", tasks=" + tasks +
-        '}';
+    return (
+      "MesosFrameworkObject{" +
+      "name='" +
+      name +
+      '\'' +
+      ", id='" +
+      id +
+      '\'' +
+      ", pid='" +
+      pid +
+      '\'' +
+      ", hostname='" +
+      hostname +
+      '\'' +
+      ", webuiUrl='" +
+      webuiUrl +
+      '\'' +
+      ", user='" +
+      user +
+      '\'' +
+      ", role='" +
+      role +
+      '\'' +
+      ", registeredTime=" +
+      registeredTime +
+      ", unregisteredTime=" +
+      unregisteredTime +
+      ", reregisteredTime=" +
+      reregisteredTime +
+      ", active=" +
+      active +
+      ", checkpoint=" +
+      checkpoint +
+      ", resources=" +
+      resources +
+      ", usedResources=" +
+      usedResources +
+      ", offeredResources=" +
+      offeredResources +
+      ", tasks=" +
+      tasks +
+      '}'
+    );
   }
 }

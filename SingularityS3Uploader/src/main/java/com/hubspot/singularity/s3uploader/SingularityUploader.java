@@ -1,5 +1,18 @@
 package com.hubspot.singularity.s3uploader;
 
+import com.codahale.metrics.Timer.Context;
+import com.github.rholder.retry.RetryException;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
+import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -20,24 +33,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Stream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.Timer.Context;
-import com.github.rholder.retry.RetryException;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
-import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
-import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public abstract class SingularityUploader {
   static final Logger LOG = LoggerFactory.getLogger(SingularityUploader.class);
@@ -58,21 +55,26 @@ public abstract class SingularityUploader {
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
   private final Lock checkFileOpenLock;
 
-  SingularityUploader(S3UploadMetadata uploadMetadata,
-                      FileSystem fileSystem,
-                      SingularityS3UploaderMetrics metrics,
-                      Path metadataPath,
-                      SingularityS3UploaderConfiguration configuration,
-                      String hostname,
-                      SingularityRunnerExceptionNotifier exceptionNotifier,
-                      Lock checkFileOpenLock) {
+  SingularityUploader(
+    S3UploadMetadata uploadMetadata,
+    FileSystem fileSystem,
+    SingularityS3UploaderMetrics metrics,
+    Path metadataPath,
+    SingularityS3UploaderConfiguration configuration,
+    String hostname,
+    SingularityRunnerExceptionNotifier exceptionNotifier,
+    Lock checkFileOpenLock
+  ) {
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
     this.pathMatcher = fileSystem.getPathMatcher("glob:" + uploadMetadata.getFileGlob());
 
     if (uploadMetadata.getOnFinishGlob().isPresent()) {
-      finishedPathMatcher = Optional.of(fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get()));
+      finishedPathMatcher =
+        Optional.of(
+          fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get())
+        );
     } else {
       finishedPathMatcher = Optional.<PathMatcher>empty();
     }
@@ -98,7 +100,11 @@ public abstract class SingularityUploader {
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
-      if (!configuration.isCheckForOpenFiles() || uploadMetadata.isImmediate() || !isFileOpen(file, configuration.isCheckOpenFilesViaFuser())) {
+      if (
+        !configuration.isCheckForOpenFiles() ||
+        uploadMetadata.isImmediate() ||
+        !isFileOpen(file, configuration.isCheckOpenFilesViaFuser())
+      ) {
         try {
           uploadSingle(i, file);
           metrics.upload();
@@ -107,11 +113,26 @@ public abstract class SingularityUploader {
         } catch (RetryException re) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, re);
-          exceptionNotifier.notify(String.format("%s exception during upload", re.getCause().getClass()), re.getCause(), ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "failedAttempts", Integer.toString(re.getNumberOfFailedAttempts())));
+          exceptionNotifier.notify(
+            String.format("%s exception during upload", re.getCause().getClass()),
+            re.getCause(),
+            ImmutableMap.of(
+              "logIdentifier",
+              logIdentifier,
+              "file",
+              file.toString(),
+              "failedAttempts",
+              Integer.toString(re.getNumberOfFailedAttempts())
+            )
+          );
         } catch (Exception e) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
-          exceptionNotifier.notify(String.format("Error during upload (%s)", e.getMessage()), e, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString()));
+          exceptionNotifier.notify(
+            String.format("Error during upload (%s)", e.getMessage()),
+            e,
+            ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString())
+          );
         } finally {
           context.stop();
         }
@@ -120,7 +141,13 @@ public abstract class SingularityUploader {
       }
     }
 
-    LOG.info("{} Uploaded {} out of {} item(s) in {}", logIdentifier, success, toUpload.size(), JavaUtils.duration(start));
+    LOG.info(
+      "{} Uploaded {} out of {} item(s) in {}",
+      logIdentifier,
+      success,
+      toUpload.size(),
+      JavaUtils.duration(start)
+    );
     return toUpload.size();
   }
 
@@ -136,7 +163,10 @@ public abstract class SingularityUploader {
     return uploadBatch(filesToUpload(isFinished));
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "https://github.com/spotbugs/spotbugs/issues/259"
+  )
   List<Path> filesToUpload(boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
 
@@ -148,41 +178,48 @@ public abstract class SingularityUploader {
     }
 
     try (Stream<Path> paths = Files.walk(directory, 1)) {
-      paths.forEach((file) -> {
-        if (file.equals(directory)) {
-          return;
+      paths.forEach(
+        file -> {
+          if (file.equals(directory)) {
+            return;
+          }
+          try {
+            handleFile(file, isFinished, toUpload);
+          } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+          }
         }
-        try {
-          handleFile(file, isFinished, toUpload);
-        } catch (IOException ioe) {
-          throw new RuntimeException(ioe);
-        }
-      });
-    } catch (UncheckedIOException|NoSuchFileException nsfe) {
+      );
+    } catch (UncheckedIOException | NoSuchFileException nsfe) {
       LOG.debug("Parent file {} did not exist, skipping", directory);
     }
     return toUpload;
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
-  private AtomicInteger handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "https://github.com/spotbugs/spotbugs/issues/259"
+  )
+  private AtomicInteger handleFile(Path path, boolean isFinished, List<Path> toUpload)
+    throws IOException {
     AtomicInteger found = new AtomicInteger();
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.trace("{} was a directory, checking files in directory", path);
         try (Stream<Path> paths = Files.walk(path, 1)) {
-          paths.forEach((file) -> {
-            if (file.equals(path)) {
-              return; // Files.walk includes an element that is the starting path itself, skip this
+          paths.forEach(
+            file -> {
+              if (file.equals(path)) {
+                return; // Files.walk includes an element that is the starting path itself, skip this
+              }
+              try {
+                found.getAndAdd(handleFile(file, isFinished, toUpload).get());
+              } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+              }
             }
-            try {
-              found.getAndAdd(handleFile(file, isFinished, toUpload).get());
-            } catch (IOException ioe) {
-              throw new RuntimeException(ioe);
-            }
-          });
+          );
         }
-
       } else {
         LOG.trace("{} was a directory, skipping", path);
       }
@@ -190,11 +227,24 @@ public abstract class SingularityUploader {
     }
 
     if (!pathMatcher.matches(path.getFileName())) {
-      if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(path.getFileName())) {
-        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, path, uploadMetadata.getFileGlob());
+      if (
+        !isFinished ||
+        !finishedPathMatcher.isPresent() ||
+        !finishedPathMatcher.get().matches(path.getFileName())
+      ) {
+        LOG.trace(
+          "{} Skipping {} because it doesn't match {}",
+          logIdentifier,
+          path,
+          uploadMetadata.getFileGlob()
+        );
         return found;
       } else {
-        LOG.trace("Not skipping file {} because it matched finish glob {}", path, uploadMetadata.getOnFinishGlob().get());
+        LOG.trace(
+          "Not skipping file {} because it matched finish glob {}",
+          path,
+          uploadMetadata.getOnFinishGlob().get()
+        );
       }
     }
 
@@ -237,7 +287,12 @@ public abstract class SingularityUploader {
     return false;
   }
 
-  Optional<Long> readFileAttributeAsLong(Path file, String attribute, UserDefinedFileAttributeView view, List<String> knownAttributes) {
+  Optional<Long> readFileAttributeAsLong(
+    Path file,
+    String attribute,
+    UserDefinedFileAttributeView view,
+    List<String> knownAttributes
+  ) {
     if (knownAttributes.contains(attribute)) {
       try {
         LOG.trace("Attempting to read attribute {}, from file {}", attribute, file);
@@ -259,7 +314,10 @@ public abstract class SingularityUploader {
     }
   }
 
-  boolean shouldApplyStorageClass(long fileSizeBytes, Optional<String> maybeStorageClass) {
+  boolean shouldApplyStorageClass(
+    long fileSizeBytes,
+    Optional<String> maybeStorageClass
+  ) {
     if (!maybeStorageClass.isPresent()) {
       return false;
     }
@@ -276,11 +334,24 @@ public abstract class SingularityUploader {
     LOG.trace("Supported attribute views are {}", supportedViews);
     if (supportedViews.contains("user")) {
       try {
-        UserDefinedFileAttributeView view = Files.getFileAttributeView(file, UserDefinedFileAttributeView.class);
+        UserDefinedFileAttributeView view = Files.getFileAttributeView(
+          file,
+          UserDefinedFileAttributeView.class
+        );
         List<String> attributes = view.list();
         LOG.debug("Found file attributes {} for file {}", attributes, file);
-        Optional<Long> maybeStartTime = readFileAttributeAsLong(file, LOG_START_TIME_ATTR, view, attributes);
-        Optional<Long> maybeEndTime = readFileAttributeAsLong(file, LOG_END_TIME_ATTR, view, attributes);
+        Optional<Long> maybeStartTime = readFileAttributeAsLong(
+          file,
+          LOG_START_TIME_ATTR,
+          view,
+          attributes
+        );
+        Optional<Long> maybeEndTime = readFileAttributeAsLong(
+          file,
+          LOG_END_TIME_ATTR,
+          view,
+          attributes
+        );
         return new UploaderFileAttributes(maybeStartTime, maybeEndTime);
       } catch (Exception e) {
         LOG.error("Could not get extra file metadata for {}", file, e);
@@ -300,19 +371,37 @@ public abstract class SingularityUploader {
 
     SingularityS3Uploader that = (SingularityS3Uploader) o;
 
-    if (uploadMetadata != null ? !uploadMetadata.equals(that.uploadMetadata) : that.uploadMetadata != null) {
+    if (
+      uploadMetadata != null
+        ? !uploadMetadata.equals(that.uploadMetadata)
+        : that.uploadMetadata != null
+    ) {
       return false;
     }
-    if (fileDirectory != null ? !fileDirectory.equals(that.fileDirectory) : that.fileDirectory != null) {
+    if (
+      fileDirectory != null
+        ? !fileDirectory.equals(that.fileDirectory)
+        : that.fileDirectory != null
+    ) {
       return false;
     }
-    if (bucketName != null ? !bucketName.equals(that.bucketName) : that.bucketName != null) {
+    if (
+      bucketName != null ? !bucketName.equals(that.bucketName) : that.bucketName != null
+    ) {
       return false;
     }
-    if (metadataPath != null ? !metadataPath.equals(that.metadataPath) : that.metadataPath != null) {
+    if (
+      metadataPath != null
+        ? !metadataPath.equals(that.metadataPath)
+        : that.metadataPath != null
+    ) {
       return false;
     }
-    if (logIdentifier != null ? !logIdentifier.equals(that.logIdentifier) : that.logIdentifier != null) {
+    if (
+      logIdentifier != null
+        ? !logIdentifier.equals(that.logIdentifier)
+        : that.logIdentifier != null
+    ) {
       return false;
     }
     return hostname != null ? hostname.equals(that.hostname) : that.hostname == null;

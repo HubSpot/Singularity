@@ -1,5 +1,8 @@
 package com.hubspot.singularity;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,25 +11,40 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-
 public class SingularityS3FormatHelper {
   public static final String DEFAULT_GROUP_NAME = "default";
 
-  private static final List<String> DISALLOWED_FOR_TASK = ImmutableList.of("%index", "%s", "%filename", "%fileext");
-  private static final List<String> DISALLOWED_FOR_DEPLOY = ImmutableList.copyOf(Iterables.concat(DISALLOWED_FOR_TASK, ImmutableList.of("%host")));
-  private static final List<String> DISALLOWED_FOR_REQUEST = ImmutableList.copyOf(Iterables.concat(DISALLOWED_FOR_DEPLOY, ImmutableList.of("%tag", "%deployId")));
+  private static final List<String> DISALLOWED_FOR_TASK = ImmutableList.of(
+    "%index",
+    "%s",
+    "%filename",
+    "%fileext"
+  );
+  private static final List<String> DISALLOWED_FOR_DEPLOY = ImmutableList.copyOf(
+    Iterables.concat(DISALLOWED_FOR_TASK, ImmutableList.of("%host"))
+  );
+  private static final List<String> DISALLOWED_FOR_REQUEST = ImmutableList.copyOf(
+    Iterables.concat(DISALLOWED_FOR_DEPLOY, ImmutableList.of("%tag", "%deployId"))
+  );
 
-  public static String getS3KeyFormat(String s3KeyFormat, String requestId, String group) {
+  public static String getS3KeyFormat(
+    String s3KeyFormat,
+    String requestId,
+    String group
+  ) {
     s3KeyFormat = s3KeyFormat.replace("%requestId", requestId);
     s3KeyFormat = s3KeyFormat.replace("%group", group);
 
     return s3KeyFormat;
   }
 
-  public static String getS3KeyFormat(String s3KeyFormat, String requestId, String deployId, Optional<String> loggingTag, String group) {
+  public static String getS3KeyFormat(
+    String s3KeyFormat,
+    String requestId,
+    String deployId,
+    Optional<String> loggingTag,
+    String group
+  ) {
     s3KeyFormat = getS3KeyFormat(s3KeyFormat, requestId, group);
 
     s3KeyFormat = s3KeyFormat.replace("%tag", loggingTag.orElse(""));
@@ -35,8 +53,20 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
 
-  public static String getS3KeyFormat(String s3KeyFormat, SingularityTaskId taskId, Optional<String> loggingTag, String group) {
-    s3KeyFormat = getS3KeyFormat(s3KeyFormat, taskId.getRequestId(), taskId.getDeployId(), loggingTag, group);
+  public static String getS3KeyFormat(
+    String s3KeyFormat,
+    SingularityTaskId taskId,
+    Optional<String> loggingTag,
+    String group
+  ) {
+    s3KeyFormat =
+      getS3KeyFormat(
+        s3KeyFormat,
+        taskId.getRequestId(),
+        taskId.getDeployId(),
+        loggingTag,
+        group
+      );
 
     s3KeyFormat = s3KeyFormat.replace("%host", taskId.getSanitizedHost());
     s3KeyFormat = s3KeyFormat.replace("%taskId", taskId.toString());
@@ -44,7 +74,13 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
 
-  public static String getKey(String s3KeyFormat, int sequence, long timestamp, String filename, String hostname) {
+  public static String getKey(
+    String s3KeyFormat,
+    int sequence,
+    long timestamp,
+    String filename,
+    String hostname
+  ) {
     final Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(timestamp);
 
@@ -77,11 +113,13 @@ public class SingularityS3FormatHelper {
     }
 
     if (s3KeyFormat.contains("%d")) {
-      s3KeyFormat = s3KeyFormat.replace("%d", padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
+      s3KeyFormat =
+        s3KeyFormat.replace("%d", padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
     }
 
     if (s3KeyFormat.contains("%H")) {
-      s3KeyFormat = s3KeyFormat.replace("%H", padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY)));
+      s3KeyFormat =
+        s3KeyFormat.replace("%H", padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY)));
     }
 
     if (s3KeyFormat.contains("%s")) {
@@ -124,12 +162,27 @@ public class SingularityS3FormatHelper {
     return String.format("%02d", value);
   }
 
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, String deployId, Optional<String> tag, long start, long end, String group, List<String> prefixWhitelist) {
+  public static Collection<String> getS3KeyPrefixes(
+    String s3KeyFormat,
+    String requestId,
+    String deployId,
+    Optional<String> tag,
+    long start,
+    long end,
+    String group,
+    List<String> prefixWhitelist
+  ) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, requestId, deployId, tag, group);
 
     keyFormat = trimTaskId(keyFormat, requestId + "-" + deployId);
 
-    return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_DEPLOY, start, end, prefixWhitelist);
+    return getS3KeyPrefixes(
+      keyFormat,
+      DISALLOWED_FOR_DEPLOY,
+      start,
+      end,
+      prefixWhitelist
+    );
   }
 
   private static String trimTaskId(String s3KeyFormat, String replaceWith) {
@@ -142,15 +195,33 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
 
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, String requestId, long start, long end, String group) {
+  public static Collection<String> getS3KeyPrefixes(
+    String s3KeyFormat,
+    String requestId,
+    long start,
+    long end,
+    String group
+  ) {
     s3KeyFormat = getS3KeyFormat(s3KeyFormat, requestId, group);
 
     s3KeyFormat = trimTaskId(s3KeyFormat, requestId);
 
-    return getS3KeyPrefixes(s3KeyFormat, DISALLOWED_FOR_REQUEST, start, end, Collections.emptyList());
+    return getS3KeyPrefixes(
+      s3KeyFormat,
+      DISALLOWED_FOR_REQUEST,
+      start,
+      end,
+      Collections.emptyList()
+    );
   }
 
-  private static Collection<String> getS3KeyPrefixes(String s3KeyFormat, List<String> disallowedKeys, long start, long end, List<String> prefixWhitelist) {
+  private static Collection<String> getS3KeyPrefixes(
+    String s3KeyFormat,
+    List<String> disallowedKeys,
+    long start,
+    long end,
+    List<String> prefixWhitelist
+  ) {
     String trimKeyFormat = trimKeyFormat(s3KeyFormat, disallowedKeys);
 
     int indexOfY = trimKeyFormat.indexOf("%Y");
@@ -197,14 +268,27 @@ public class SingularityS3FormatHelper {
       }
 
       if (indexOfD > -1) {
-        keyBuilder.replace(indexOfD, indexOfD + 2, padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH)));
+        keyBuilder.replace(
+          indexOfD,
+          indexOfD + 2,
+          padTwoDigitNumber(calendar.get(Calendar.DAY_OF_MONTH))
+        );
       }
 
       if (indexOfH > -1) {
-        keyBuilder.replace(indexOfH, indexOfH + 2, padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY)));
+        keyBuilder.replace(
+          indexOfH,
+          indexOfH + 2,
+          padTwoDigitNumber(calendar.get(Calendar.HOUR_OF_DAY))
+        );
       }
 
-      if (prefixWhitelist.isEmpty() || prefixWhitelist.stream().anyMatch(allowedPrefix -> keyBuilder.toString().startsWith(allowedPrefix))) {
+      if (
+        prefixWhitelist.isEmpty() ||
+        prefixWhitelist
+          .stream()
+          .anyMatch(allowedPrefix -> keyBuilder.toString().startsWith(allowedPrefix))
+      ) {
         keyPrefixes.add(keyBuilder.toString());
       }
 
@@ -224,10 +308,17 @@ public class SingularityS3FormatHelper {
     return keyPrefixes;
   }
 
-  public static Collection<String> getS3KeyPrefixes(String s3KeyFormat, SingularityTaskId taskId, Optional<String> tag, long start, long end, String group, List<String> prefixWhitelist) {
+  public static Collection<String> getS3KeyPrefixes(
+    String s3KeyFormat,
+    SingularityTaskId taskId,
+    Optional<String> tag,
+    long start,
+    long end,
+    String group,
+    List<String> prefixWhitelist
+  ) {
     String keyFormat = getS3KeyFormat(s3KeyFormat, taskId, tag, group);
 
     return getS3KeyPrefixes(keyFormat, DISALLOWED_FOR_TASK, start, end, prefixWhitelist);
   }
-
 }
