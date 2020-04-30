@@ -1,13 +1,11 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
+import java.util.Optional;
 
 public class SingularityTaskStatusHolder {
-
   private final Optional<MesosTaskStatusObject> taskStatus;
   private final SingularityTaskId taskId;
   private final long serverTimestamp;
@@ -15,7 +13,13 @@ public class SingularityTaskStatusHolder {
   private final Optional<String> slaveId;
 
   @JsonCreator
-  public SingularityTaskStatusHolder(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("taskStatus") Optional<MesosTaskStatusObject> taskStatus, @JsonProperty("serverTimestamp") long serverTimestamp, @JsonProperty("serverId") String serverId, @JsonProperty("slaveId") Optional<String> slaveId) {
+  public SingularityTaskStatusHolder(
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("taskStatus") Optional<MesosTaskStatusObject> taskStatus,
+    @JsonProperty("serverTimestamp") long serverTimestamp,
+    @JsonProperty("serverId") String serverId,
+    @JsonProperty("slaveId") Optional<String> slaveId
+  ) {
     this.taskId = taskId;
     this.taskStatus = taskStatus;
     this.serverTimestamp = serverTimestamp;
@@ -45,12 +49,20 @@ public class SingularityTaskStatusHolder {
 
   @Override
   public String toString() {
-    return "SingularityTaskStatusHolder{" +
-        "taskStatus=" + taskStatus +
-        ", taskId=" + taskId +
-        ", serverTimestamp=" + serverTimestamp +
-        ", serverId='" + serverId + '\'' +
-        ", slaveId=" + slaveId +
-        '}';
+    return (
+      "SingularityTaskStatusHolder{" +
+      "taskStatus=" +
+      taskStatus +
+      ", taskId=" +
+      taskId +
+      ", serverTimestamp=" +
+      serverTimestamp +
+      ", serverId='" +
+      serverId +
+      '\'' +
+      ", slaveId=" +
+      slaveId +
+      '}'
+    );
   }
 }

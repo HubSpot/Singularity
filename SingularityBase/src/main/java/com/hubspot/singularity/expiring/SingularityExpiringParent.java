@@ -1,26 +1,27 @@
 package com.hubspot.singularity.expiring;
 
+import com.hubspot.singularity.api.SingularityExpiringRequestParent;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
-import com.hubspot.singularity.api.SingularityExpiringRequestParent;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(
-    title = "Represents a future action on an object",
-    subTypes = {
-        SingularityExpiringMachineState.class,
-        SingularityExpiringRequestActionParent.class
-    }
+  title = "Represents a future action on an object",
+  subTypes = {
+    SingularityExpiringMachineState.class, SingularityExpiringRequestActionParent.class
+  }
 )
 public abstract class SingularityExpiringParent<T extends SingularityExpiringRequestParent> {
-
   private final Optional<String> user;
   private final long startMillis;
   private final String actionId;
   private final T expiringAPIRequestObject;
 
-  public SingularityExpiringParent(T expiringAPIRequestObject, Optional<String> user, long startMillis, String actionId) {
+  public SingularityExpiringParent(
+    T expiringAPIRequestObject,
+    Optional<String> user,
+    long startMillis,
+    String actionId
+  ) {
     this.expiringAPIRequestObject = expiringAPIRequestObject;
     this.user = user;
     this.startMillis = startMillis;
@@ -49,11 +50,18 @@ public abstract class SingularityExpiringParent<T extends SingularityExpiringReq
 
   @Override
   public String toString() {
-    return "SingularityExpiringParent{" +
-        "user=" + user +
-        ", startMillis=" + startMillis +
-        ", actionId='" + actionId + '\'' +
-        ", expiringAPIRequestObject=" + expiringAPIRequestObject +
-        '}';
+    return (
+      "SingularityExpiringParent{" +
+      "user=" +
+      user +
+      ", startMillis=" +
+      startMillis +
+      ", actionId='" +
+      actionId +
+      '\'' +
+      ", expiringAPIRequestObject=" +
+      expiringAPIRequestObject +
+      '}'
+    );
   }
 }

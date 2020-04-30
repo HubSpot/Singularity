@@ -1,15 +1,13 @@
 package com.hubspot.singularity.config;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.auth.SingularityAuthDatastoreClass;
 import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 public class AuthConfiguration {
   @JsonProperty
@@ -18,11 +16,14 @@ public class AuthConfiguration {
   @JsonProperty
   @NotNull
   @Deprecated
-  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
+  private SingularityAuthenticatorClass authenticator =
+    SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
 
   @JsonProperty
   @NotNull
-  private List<SingularityAuthenticatorClass> authenticators = Lists.newArrayList(SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH);
+  private List<SingularityAuthenticatorClass> authenticators = Lists.newArrayList(
+    SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH
+  );
 
   @JsonProperty
   @NotNull
@@ -50,7 +51,7 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
+  private String requestUserHeaderName = "X-Username"; // used by SingularityHeaderPassthroughAuthenticator
 
   @JsonProperty
   private int webhookAuthRequestTimeoutMs = 2000;
@@ -147,7 +148,9 @@ public class AuthConfiguration {
     return webhookAuthRequestTimeoutMs;
   }
 
-  public AuthConfiguration setWebhookAuthRequestTimeoutMs(int webhookAuthRequestTimeoutMs) {
+  public AuthConfiguration setWebhookAuthRequestTimeoutMs(
+    int webhookAuthRequestTimeoutMs
+  ) {
     this.webhookAuthRequestTimeoutMs = webhookAuthRequestTimeoutMs;
     return this;
   }
@@ -165,7 +168,9 @@ public class AuthConfiguration {
     return webhookAuthConnectTimeoutMs;
   }
 
-  public AuthConfiguration setWebhookAuthConnectTimeoutMs(int webhookAuthConnectTimeoutMs) {
+  public AuthConfiguration setWebhookAuthConnectTimeoutMs(
+    int webhookAuthConnectTimeoutMs
+  ) {
     this.webhookAuthConnectTimeoutMs = webhookAuthConnectTimeoutMs;
     return this;
   }

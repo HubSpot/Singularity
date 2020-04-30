@@ -1,16 +1,14 @@
 package com.hubspot.singularity;
 
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-
 public class SingularityPendingRequestBuilder {
-
   private String requestId;
   private String deployId;
   private long timestamp;
@@ -76,12 +74,16 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
-  public SingularityPendingRequestBuilder setCmdLineArgsList(List<String> cmdLineArgsList) {
+  public SingularityPendingRequestBuilder setCmdLineArgsList(
+    List<String> cmdLineArgsList
+  ) {
     this.cmdLineArgsList = Optional.of(cmdLineArgsList);
     return this;
   }
 
-  public SingularityPendingRequestBuilder setCmdLineArgsList(Optional<List<String>> cmdLineArgsList) {
+  public SingularityPendingRequestBuilder setCmdLineArgsList(
+    Optional<List<String>> cmdLineArgsList
+  ) {
     this.cmdLineArgsList = cmdLineArgsList;
     return this;
   }
@@ -101,7 +103,9 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
-  public SingularityPendingRequestBuilder setSkipHealthchecks(Optional<Boolean> skipHealthchecks) {
+  public SingularityPendingRequestBuilder setSkipHealthchecks(
+    Optional<Boolean> skipHealthchecks
+  ) {
     this.skipHealthchecks = skipHealthchecks;
     return this;
   }
@@ -136,32 +140,44 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
-  public SingularityPendingRequestBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public SingularityPendingRequestBuilder setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     return this;
   }
 
-  public SingularityPendingRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+  public SingularityPendingRequestBuilder setRunAsUserOverride(
+    Optional<String> runAsUserOverride
+  ) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
   }
 
-  public SingularityPendingRequestBuilder setEnvOverrides(Map<String, String> envOverrides) {
+  public SingularityPendingRequestBuilder setEnvOverrides(
+    Map<String, String> envOverrides
+  ) {
     this.envOverrides = envOverrides;
     return this;
   }
 
-  public SingularityPendingRequestBuilder setRequiredSlaveAttributeOverrides(Map<String, String> requiredSlaveAttributeOverrides) {
+  public SingularityPendingRequestBuilder setRequiredSlaveAttributeOverrides(
+    Map<String, String> requiredSlaveAttributeOverrides
+  ) {
     this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityPendingRequestBuilder setAllowedSlaveAttributeOverrides(Map<String, String> allowedSlaveAttributeOverrides) {
+  public SingularityPendingRequestBuilder setAllowedSlaveAttributeOverrides(
+    Map<String, String> allowedSlaveAttributeOverrides
+  ) {
     this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
     return this;
   }
 
-  public SingularityPendingRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+  public SingularityPendingRequestBuilder setExtraArtifacts(
+    List<SingularityMesosArtifact> extraArtifacts
+  ) {
     this.extraArtifacts = extraArtifacts;
     return this;
   }
@@ -178,48 +194,68 @@ public class SingularityPendingRequestBuilder {
 
   public SingularityPendingRequest build() {
     return new SingularityPendingRequest(
-        requestId,
-        deployId,
-        timestamp,
-        user,
-        pendingType,
-        cmdLineArgsList,
-        runId,
-        skipHealthchecks,
-        message,
-        actionId,
-        resources,
-        s3UploaderAdditionalFiles,
-        runAsUserOverride,
-        envOverrides,
-        requiredSlaveAttributeOverrides,
-        allowedSlaveAttributeOverrides,
-        extraArtifacts,
-        runAt
+      requestId,
+      deployId,
+      timestamp,
+      user,
+      pendingType,
+      cmdLineArgsList,
+      runId,
+      skipHealthchecks,
+      message,
+      actionId,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      requiredSlaveAttributeOverrides,
+      allowedSlaveAttributeOverrides,
+      extraArtifacts,
+      runAt
     );
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingRequestBuilder{" +
-        "requestId=" + requestId +
-        ", deployId=" + deployId +
-        ", timestamp=" + timestamp +
-        ", pendingType=" + pendingType +
-        ", user=" + user +
-        ", cmdLineArgsList=" + cmdLineArgsList +
-        ", runId=" + runId +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", message=" + message +
-        ", actionId=" + actionId +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts=" + extraArtifacts +
-        ", runAt=" + runAt +
-        "}";
+    return (
+      "SingularityPendingRequestBuilder{" +
+      "requestId=" +
+      requestId +
+      ", deployId=" +
+      deployId +
+      ", timestamp=" +
+      timestamp +
+      ", pendingType=" +
+      pendingType +
+      ", user=" +
+      user +
+      ", cmdLineArgsList=" +
+      cmdLineArgsList +
+      ", runId=" +
+      runId +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", message=" +
+      message +
+      ", actionId=" +
+      actionId +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runAsUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts=" +
+      extraArtifacts +
+      ", runAt=" +
+      runAt +
+      "}"
+    );
   }
 }

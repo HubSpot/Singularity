@@ -1,9 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,15 +8,22 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Singleton
-public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployHistory, String> {
-
+public class DeployHistoryHelper
+  extends BlendedHistoryHelper<SingularityDeployHistory, String> {
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
 
   @Inject
-  public DeployHistoryHelper(DeployManager deployManager, HistoryManager historyManager, SingularityConfiguration configuration) {
+  public DeployHistoryHelper(
+    DeployManager deployManager,
+    HistoryManager historyManager,
+    SingularityConfiguration configuration
+  ) {
     super(configuration.getDatabaseConfiguration().isPresent());
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -28,11 +31,19 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
 
   @Override
   protected List<SingularityDeployHistory> getFromZk(String requestId) {
-    final List<SingularityDeployKey> deployKeys = deployManager.getDeployIdsFor(requestId);
-    final List<SingularityDeployHistory> histories = Lists.newArrayListWithCapacity(deployKeys.size());
+    final List<SingularityDeployKey> deployKeys = deployManager.getDeployIdsFor(
+      requestId
+    );
+    final List<SingularityDeployHistory> histories = Lists.newArrayListWithCapacity(
+      deployKeys.size()
+    );
 
     for (SingularityDeployKey key : deployKeys) {
-      Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(key.getRequestId(), key.getDeployId(), false);
+      Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(
+        key.getRequestId(),
+        key.getDeployId(),
+        false
+      );
       if (deployHistory.isPresent()) {
         histories.add(deployHistory.get());
       }
@@ -44,8 +55,16 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
   }
 
   @Override
-  protected List<SingularityDeployHistory> getFromHistory(String requestId, int historyStart, int numFromHistory) {
-    return historyManager.getDeployHistoryForRequest(requestId, historyStart, numFromHistory);
+  protected List<SingularityDeployHistory> getFromHistory(
+    String requestId,
+    int historyStart,
+    int numFromHistory
+  ) {
+    return historyManager.getDeployHistoryForRequest(
+      requestId,
+      historyStart,
+      numFromHistory
+    );
   }
 
   public boolean isDeployIdAvailable(String requestId, String deployId) {

@@ -2,21 +2,22 @@ package com.hubspot.singularity.s3.base.config;
 
 import static com.hubspot.mesos.JavaUtils.obfuscateValue;
 
-import java.util.Objects;
-
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
+import java.util.Objects;
 
 public class SingularityS3Credentials {
   private final String accessKey;
   private final String secretKey;
 
   @JsonCreator
-  public SingularityS3Credentials(@JsonProperty("accessKey") String accessKey,
-                                  @JsonProperty("secretKey") String secretKey) {
+  public SingularityS3Credentials(
+    @JsonProperty("accessKey") String accessKey,
+    @JsonProperty("secretKey") String secretKey
+  ) {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
   }
@@ -40,8 +41,10 @@ public class SingularityS3Credentials {
       return false;
     }
     SingularityS3Credentials that = (SingularityS3Credentials) o;
-    return Objects.equals(accessKey, that.accessKey) &&
-            Objects.equals(secretKey, that.secretKey);
+    return (
+      Objects.equals(accessKey, that.accessKey) &&
+      Objects.equals(secretKey, that.secretKey)
+    );
   }
 
   @Override
@@ -51,10 +54,16 @@ public class SingularityS3Credentials {
 
   @Override
   public String toString() {
-    return "SingularityS3Credentials[" +
-            "accessKey='" + obfuscateValue(accessKey) + '\'' +
-            ", secretKey='" + obfuscateValue(secretKey) + '\'' +
-            ']';
+    return (
+      "SingularityS3Credentials[" +
+      "accessKey='" +
+      obfuscateValue(accessKey) +
+      '\'' +
+      ", secretKey='" +
+      obfuscateValue(secretKey) +
+      '\'' +
+      ']'
+    );
   }
 
   @JsonIgnore

@@ -1,10 +1,8 @@
 package com.hubspot.singularity.sentry;
 
-import javax.ws.rs.core.Response;
-
 import com.google.inject.Inject;
-
 import io.dropwizard.jersey.errors.LoggingExceptionMapper;
+import javax.ws.rs.core.Response;
 
 @javax.ws.rs.ext.Provider
 public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> {
@@ -26,4 +24,3 @@ public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> 
     return response;
   }
 }
-

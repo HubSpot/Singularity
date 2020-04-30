@@ -1,15 +1,12 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Describes a task that has been sent a kill signal")
 public class SingularityKilledTaskIdRecord {
-
   private final SingularityTaskId taskId;
   private final long originalTimestamp;
   private final long timestamp;
@@ -18,9 +15,14 @@ public class SingularityKilledTaskIdRecord {
   private final int retries;
 
   @JsonCreator
-  public SingularityKilledTaskIdRecord(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("originalTimestamp") long originalTimestamp,
-      @JsonProperty("requestCleanupType") Optional<RequestCleanupType> requestCleanupType, @JsonProperty("taskCleanupType") Optional<TaskCleanupType> taskCleanupType,
-      @JsonProperty("retries") int retries) {
+  public SingularityKilledTaskIdRecord(
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("originalTimestamp") long originalTimestamp,
+    @JsonProperty("requestCleanupType") Optional<RequestCleanupType> requestCleanupType,
+    @JsonProperty("taskCleanupType") Optional<TaskCleanupType> taskCleanupType,
+    @JsonProperty("retries") int retries
+  ) {
     this.taskId = taskId;
     this.timestamp = timestamp;
     this.requestCleanupType = requestCleanupType;
@@ -39,17 +41,25 @@ public class SingularityKilledTaskIdRecord {
     return timestamp;
   }
 
-  @Schema(description = "An optional enum cleanup type associated with this task kill", nullable = true)
+  @Schema(
+    description = "An optional enum cleanup type associated with this task kill",
+    nullable = true
+  )
   public Optional<RequestCleanupType> getRequestCleanupType() {
     return requestCleanupType;
   }
 
-  @Schema(description = "An optional enum cleanup type associated with this task kill", nullable = true)
+  @Schema(
+    description = "An optional enum cleanup type associated with this task kill",
+    nullable = true
+  )
   public Optional<TaskCleanupType> getTaskCleanupType() {
     return taskCleanupType;
   }
 
-  @Schema(description = "The original time when the task kill was triggered (in case multiple kills have been issued)")
+  @Schema(
+    description = "The original time when the task kill was triggered (in case multiple kills have been issued)"
+  )
   public long getOriginalTimestamp() {
     return originalTimestamp;
   }
@@ -61,13 +71,21 @@ public class SingularityKilledTaskIdRecord {
 
   @Override
   public String toString() {
-    return "SingularityKilledTaskIdRecord{" +
-        "taskId=" + taskId +
-        ", originalTimestamp=" + originalTimestamp +
-        ", timestamp=" + timestamp +
-        ", requestCleanupType=" + requestCleanupType +
-        ", taskCleanupType=" + taskCleanupType +
-        ", retries=" + retries +
-        '}';
+    return (
+      "SingularityKilledTaskIdRecord{" +
+      "taskId=" +
+      taskId +
+      ", originalTimestamp=" +
+      originalTimestamp +
+      ", timestamp=" +
+      timestamp +
+      ", requestCleanupType=" +
+      requestCleanupType +
+      ", taskCleanupType=" +
+      taskCleanupType +
+      ", retries=" +
+      retries +
+      '}'
+    );
   }
 }

@@ -1,18 +1,17 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.primitives.Longs;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "A request to run a shell command against a task")
-public class SingularityTaskShellCommandRequest extends SingularityFrameworkMessage implements Comparable<SingularityTaskShellCommandRequest> {
-
+public class SingularityTaskShellCommandRequest
+  extends SingularityFrameworkMessage
+  implements Comparable<SingularityTaskShellCommandRequest> {
   private final SingularityTaskId taskId;
   private final Optional<String> user;
   private final SingularityShellCommand shellCommand;
@@ -20,13 +19,18 @@ public class SingularityTaskShellCommandRequest extends SingularityFrameworkMess
   private final SingularityTaskShellCommandRequestId id;
 
   @JsonCreator
-  public SingularityTaskShellCommandRequest(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("user") Optional<String> user, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("shellCommand") SingularityShellCommand shellCommand) {
+  public SingularityTaskShellCommandRequest(
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("shellCommand") SingularityShellCommand shellCommand
+  ) {
     this.taskId = taskId;
     this.user = user;
     this.timestamp = timestamp;
     this.shellCommand = shellCommand;
-    this.id = new SingularityTaskShellCommandRequestId(taskId, shellCommand.getName(), timestamp);
+    this.id =
+      new SingularityTaskShellCommandRequestId(taskId, shellCommand.getName(), timestamp);
   }
 
   @JsonIgnore
@@ -78,12 +82,20 @@ public class SingularityTaskShellCommandRequest extends SingularityFrameworkMess
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandRequest{" +
-        "taskId=" + taskId +
-        ", user=" + user +
-        ", shellCommand=" + shellCommand +
-        ", timestamp=" + timestamp +
-        ", id=" + id +
-        "} " + super.toString();
+    return (
+      "SingularityTaskShellCommandRequest{" +
+      "taskId=" +
+      taskId +
+      ", user=" +
+      user +
+      ", shellCommand=" +
+      shellCommand +
+      ", timestamp=" +
+      timestamp +
+      ", id=" +
+      id +
+      "} " +
+      super.toString()
+    );
   }
 }

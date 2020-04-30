@@ -1,11 +1,9 @@
 package com.hubspot.singularity.api;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 @Schema(description = "Describes parameters to fetch the next page of results from s3")
 public class ContinuationToken {
@@ -13,17 +11,26 @@ public class ContinuationToken {
   private final boolean lastPage;
 
   @JsonCreator
-  public ContinuationToken(@JsonProperty("value") String value, @JsonProperty("lastPage") boolean lastPage) {
+  public ContinuationToken(
+    @JsonProperty("value") String value,
+    @JsonProperty("lastPage") boolean lastPage
+  ) {
     this.value = value;
     this.lastPage = lastPage;
   }
 
-  @Schema(required = true, description = "S3 continuation token specific to a bucket + prefix being searched")
+  @Schema(
+    required = true,
+    description = "S3 continuation token specific to a bucket + prefix being searched"
+  )
   public String getValue() {
     return value;
   }
 
-  @Schema(required = true, description = "If true, there are no further results for this bucket + prefix")
+  @Schema(
+    required = true,
+    description = "If true, there are no further results for this bucket + prefix"
+  )
   public boolean isLastPage() {
     return lastPage;
   }
@@ -37,8 +44,7 @@ public class ContinuationToken {
       return false;
     }
     ContinuationToken that = (ContinuationToken) o;
-    return lastPage == that.lastPage &&
-        Objects.equals(value, that.value);
+    return lastPage == that.lastPage && Objects.equals(value, that.value);
   }
 
   @Override
@@ -48,9 +54,8 @@ public class ContinuationToken {
 
   @Override
   public String toString() {
-    return "ContinuationToken{" +
-        "value='" + value + '\'' +
-        ", lastPage=" + lastPage +
-        '}';
+    return (
+      "ContinuationToken{" + "value='" + value + '\'' + ", lastPage=" + lastPage + '}'
+    );
   }
 }

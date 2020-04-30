@@ -23,15 +23,17 @@ import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
 
-public class SingularityServiceModule extends DropwizardAwareModule<SingularityConfiguration> {
-
+public class SingularityServiceModule
+  extends DropwizardAwareModule<SingularityConfiguration> {
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
 
   public SingularityServiceModule() {
     this.dbModuleProvider = SingularityDbModule::new;
   }
 
-  public SingularityServiceModule(Function<SingularityConfiguration, Module> dbModuleProvider) {
+  public SingularityServiceModule(
+    Function<SingularityConfiguration, Module> dbModuleProvider
+  ) {
     this.dbModuleProvider = dbModuleProvider;
   }
 
@@ -40,7 +42,9 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularityMainModule(getConfiguration()));
     binder.install(new SingularityDataModule(getConfiguration()));
     binder.install(new SingularitySchedulerModule());
-    binder.install(new SingularityResourceModule(getConfiguration().getUiConfiguration()));
+    binder.install(
+      new SingularityResourceModule(getConfiguration().getUiConfiguration())
+    );
     binder.install(new SingularityTranscoderModule());
     binder.install(new SingularityHistoryModule());
     binder.install(dbModuleProvider.apply(getConfiguration()));
@@ -52,7 +56,9 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     // API Docs
     getEnvironment().jersey().register(SingularityOpenApiResource.class);
 
-    binder.install(new SingularityEventModule(getConfiguration().getWebhookQueueConfiguration()));
+    binder.install(
+      new SingularityEventModule(getConfiguration().getWebhookQueueConfiguration())
+    );
   }
 
   @Provides
@@ -60,21 +66,25 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
   public IndexViewConfiguration provideIndexViewConfiguration() {
     SingularityConfiguration configuration = getConfiguration();
     return new IndexViewConfiguration(
-        configuration.getUiConfiguration(),
-        configuration.getMesosConfiguration().getDefaultMemory(),
-        configuration.getMesosConfiguration().getDefaultCpus(),
-        configuration.getMesosConfiguration().getDefaultDisk(),
-        configuration.getMesosConfiguration().getSlaveHttpPort(),
-        configuration.getMesosConfiguration().getSlaveHttpsPort(),
-        configuration.getDefaultBounceExpirationMinutes(),
-        configuration.getHealthcheckIntervalSeconds(),
-        configuration.getHealthcheckTimeoutSeconds(),
-        configuration.getHealthcheckMaxRetries(),
-        configuration.getStartupTimeoutSeconds(),
-        !Strings.isNullOrEmpty(configuration.getLoadBalancerUri()),
-        configuration.getCommonHostnameSuffixToOmit(),
-        configuration.getWarnIfScheduledJobIsRunningPastNextRunPct(),
-        configuration.getAuthConfiguration().isEnabled() && configuration.getAuthConfiguration().getAuthenticators().contains(SingularityAuthenticatorClass.WEBHOOK)
+      configuration.getUiConfiguration(),
+      configuration.getMesosConfiguration().getDefaultMemory(),
+      configuration.getMesosConfiguration().getDefaultCpus(),
+      configuration.getMesosConfiguration().getDefaultDisk(),
+      configuration.getMesosConfiguration().getSlaveHttpPort(),
+      configuration.getMesosConfiguration().getSlaveHttpsPort(),
+      configuration.getDefaultBounceExpirationMinutes(),
+      configuration.getHealthcheckIntervalSeconds(),
+      configuration.getHealthcheckTimeoutSeconds(),
+      configuration.getHealthcheckMaxRetries(),
+      configuration.getStartupTimeoutSeconds(),
+      !Strings.isNullOrEmpty(configuration.getLoadBalancerUri()),
+      configuration.getCommonHostnameSuffixToOmit(),
+      configuration.getWarnIfScheduledJobIsRunningPastNextRunPct(),
+      configuration.getAuthConfiguration().isEnabled() &&
+      configuration
+        .getAuthConfiguration()
+        .getAuthenticators()
+        .contains(SingularityAuthenticatorClass.WEBHOOK)
     );
   }
 }

@@ -4,13 +4,17 @@ import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.data.WebhookManager;
 
-public class SingularityDeployWebhookAsyncHandler extends AbstractSingularityWebhookAsyncHandler<SingularityDeployUpdate>  {
-
+public class SingularityDeployWebhookAsyncHandler
+  extends AbstractSingularityWebhookAsyncHandler<SingularityDeployUpdate> {
   private final WebhookManager webhookManager;
 
-  public SingularityDeployWebhookAsyncHandler(WebhookManager webhookManager, SingularityWebhook webhook, SingularityDeployUpdate deployUpdate, boolean shouldDeleteUpdateDueToQueueAboveCapacity) {
+  public SingularityDeployWebhookAsyncHandler(
+    WebhookManager webhookManager,
+    SingularityWebhook webhook,
+    SingularityDeployUpdate deployUpdate,
+    boolean shouldDeleteUpdateDueToQueueAboveCapacity
+  ) {
     super(webhook, deployUpdate, shouldDeleteUpdateDueToQueueAboveCapacity);
-
     this.webhookManager = webhookManager;
   }
 
@@ -18,5 +22,4 @@ public class SingularityDeployWebhookAsyncHandler extends AbstractSingularityWeb
   public void deleteWebhookUpdate() {
     webhookManager.deleteDeployUpdate(webhook, update);
   }
-
 }

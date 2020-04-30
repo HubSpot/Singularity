@@ -4,17 +4,9 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.curator.test.TestingServer;
-import org.eclipse.jetty.util.component.LifeCycle;
-import org.jdbi.v3.core.Jdbi;
-import org.slf4j.LoggerFactory;
-
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
@@ -70,24 +62,38 @@ import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.setup.Environment;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import javax.servlet.http.HttpServletRequest;
 import net.kencochrane.raven.Raven;
+import org.apache.curator.test.TestingServer;
+import org.eclipse.jetty.util.component.LifeCycle;
+import org.jdbi.v3.core.Jdbi;
+import org.slf4j.LoggerFactory;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
   private final ObjectMapper om = JavaUtils.newObjectMapper();
-  private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
+  private final Environment environment = new Environment(
+    "test-env",
+    om,
+    null,
+    new MetricRegistry(),
+    null
+  );
 
   private final boolean useDBTests;
   private final Function<SingularityConfiguration, Void> customConfigSetup;
 
-  public SingularityTestModule(boolean useDbTests,Function<SingularityConfiguration, Void> customConfigSetup) throws Exception {
+  public SingularityTestModule(
+    boolean useDbTests,
+    Function<SingularityConfiguration, Void> customConfigSetup
+  )
+    throws Exception {
     this.useDBTests = useDbTests;
     this.customConfigSetup = customConfigSetup;
 
@@ -95,10 +101,16 @@ public class SingularityTestModule implements Module {
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level", "WARN")));
+    rootLogger.setLevel(
+      Level.toLevel(System.getProperty("singularity.test.log.level", "WARN"))
+    );
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")));
+    hsLogger.setLevel(
+      Level.toLevel(
+        System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")
+      )
+    );
 
     this.ts = new TestingServer();
   }
@@ -109,14 +121,18 @@ public class SingularityTestModule implements Module {
 
   public void start() throws Exception {
     // Start all the managed instances in dropwizard.
-    Set<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
+    Set<LifeCycle> managedObjects = ImmutableSet.copyOf(
+      environment.lifecycle().getManagedObjects()
+    );
     for (LifeCycle managed : managedObjects) {
       managed.start();
     }
   }
 
   public void stop() throws Exception {
-    ImmutableSet<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
+    ImmutableSet<LifeCycle> managedObjects = ImmutableSet.copyOf(
+      environment.lifecycle().getManagedObjects()
+    );
     for (LifeCycle managed : Lists.reverse(managedObjects.asList())) {
       managed.stop();
     }
@@ -124,7 +140,6 @@ public class SingularityTestModule implements Module {
 
   @Override
   public void configure(Binder mainBinder) {
-
     mainBinder.install(new GuiceBundle.GuiceEnforcerModule());
 
     TestingMesosClient tmc = new TestingMesosClient();
@@ -132,7 +147,9 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(TestingMesosClient.class).toInstance(tmc);
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
-    final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+    final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(
+      ts
+    );
     configuration.getMesosConfiguration().setMaster("");
 
     if (useDBTests) {
@@ -147,61 +164,97 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
 
-    mainBinder.install(Modules.override(new SingularityMainModule(configuration))
-        .with(new Module() {
+    mainBinder.install(
+      Modules
+        .override(new SingularityMainModule(configuration))
+        .with(
+          new Module() {
 
-          @Override
-          public void configure(Binder binder) {
-            binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
+            @Override
+            public void configure(Binder binder) {
+              binder
+                .bind(SingularityExceptionNotifier.class)
+                .toInstance(mock(SingularityExceptionNotifier.class));
 
-            SingularityAbort abort = mock(SingularityAbort.class);
-            SingularityMailer mailer = mock(SingularityMailer.class);
+              SingularityAbort abort = mock(SingularityAbort.class);
+              SingularityMailer mailer = mock(SingularityMailer.class);
 
-            binder.bind(SingularityMailer.class).toInstance(mailer);
-            binder.bind(SingularityAbort.class).toInstance(abort);
+              binder.bind(SingularityMailer.class).toInstance(mailer);
+              binder.bind(SingularityAbort.class).toInstance(abort);
 
-            TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-            binder.bind(LoadBalancerClient.class).toInstance(tlbc);
-            binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-            if (configuration.isCacheOffers()) {
-              binder.bind(OfferCache.class).to(SingularityOfferCache.class);
-            } else {
-              binder.bind(OfferCache.class).to(SingularityNoOfferCache.class);
-            }
-
-            binder.bind(ObjectMapper.class).toInstance(om);
-            binder.bind(Environment.class).toInstance(environment);
-
-            binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
-            binder.bind(SingularityLifecycleManaged.class).to(SingularityLifecycleManagedTest.class).asEagerSingleton();
-
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>empty());
-            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>empty());
-
-            binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
-              @Override
-              public HttpServletRequest get() {
-                throw new OutOfScopeException("testing");
+              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+              binder.bind(LoadBalancerClient.class).toInstance(tlbc);
+              binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
+              if (configuration.isCacheOffers()) {
+                binder.bind(OfferCache.class).to(SingularityOfferCache.class);
+              } else {
+                binder.bind(OfferCache.class).to(SingularityNoOfferCache.class);
               }
-            });
 
-            binder.bind(SingularityLeaderController.class).to(SingularityTestLeaderController.class).in(Scopes.SINGLETON);
+              binder.bind(ObjectMapper.class).toInstance(om);
+              binder.bind(Environment.class).toInstance(environment);
+
+              binder
+                .bind(HostAndPort.class)
+                .annotatedWith(named(HTTP_HOST_AND_PORT))
+                .toInstance(HostAndPort.fromString("localhost:8080"));
+              binder
+                .bind(SingularityLifecycleManaged.class)
+                .to(SingularityLifecycleManagedTest.class)
+                .asEagerSingleton();
+
+              binder
+                .bind(new TypeLiteral<Optional<Raven>>() {})
+                .toInstance(Optional.<Raven>empty());
+              binder
+                .bind(new TypeLiteral<Optional<SentryConfiguration>>() {})
+                .toInstance(Optional.<SentryConfiguration>empty());
+
+              binder
+                .bind(HttpServletRequest.class)
+                .toProvider(
+                  new Provider<HttpServletRequest>() {
+
+                    @Override
+                    public HttpServletRequest get() {
+                      throw new OutOfScopeException("testing");
+                    }
+                  }
+                );
+
+              binder
+                .bind(SingularityLeaderController.class)
+                .to(SingularityTestLeaderController.class)
+                .in(Scopes.SINGLETON);
+            }
           }
-        }));
+        )
+    );
 
-    mainBinder.install(Modules.override(new SingularityMesosModule())
-        .with(new Module() {
+    mainBinder.install(
+      Modules
+        .override(new SingularityMesosModule())
+        .with(
+          new Module() {
 
-          @Override
-          public void configure(Binder binder) {
-            SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
-            binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
+            @Override
+            public void configure(Binder binder) {
+              SingularityMesosExecutorInfoSupport logSupport = mock(
+                SingularityMesosExecutorInfoSupport.class
+              );
+              binder
+                .bind(SingularityMesosExecutorInfoSupport.class)
+                .toInstance(logSupport);
 
-            SingularityMesosSchedulerClient mockClient = mock(SingularityMesosSchedulerClient.class);
-            when(mockClient.isRunning()).thenReturn(true);
-            binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
+              SingularityMesosSchedulerClient mockClient = mock(
+                SingularityMesosSchedulerClient.class
+              );
+              when(mockClient.isRunning()).thenReturn(true);
+              binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
+            }
           }
-        }));
+        )
+    );
 
     mainBinder.install(new SingularityDataModule(configuration));
     mainBinder.install(new SingularitySchedulerModule());
@@ -210,11 +263,17 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityDbModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
 
-    mainBinder.install(new SingularityEventModule(configuration.getWebhookQueueConfiguration()));
+    mainBinder.install(
+      new SingularityEventModule(configuration.getWebhookQueueConfiguration())
+    );
 
     // Auth module bits
-    mainBinder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
-    mainBinder.bind(SingularityAuthDatastore.class).to(SingularityDisabledAuthDatastore.class);
+    mainBinder
+      .bind(SingularityAuthenticator.class)
+      .to(SingularityTestAuthenticator.class);
+    mainBinder
+      .bind(SingularityAuthDatastore.class)
+      .to(SingularityDisabledAuthDatastore.class);
     mainBinder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
     mainBinder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
 
@@ -236,7 +295,9 @@ public class SingularityTestModule implements Module {
     return dataSourceFactory;
   }
 
-  private static SingularityConfiguration getSingularityConfigurationForTestingServer(final TestingServer ts) {
+  private static SingularityConfiguration getSingularityConfigurationForTestingServer(
+    final TestingServer ts
+  ) {
     SingularityConfiguration config = new SingularityConfiguration();
     config.setLoadBalancerUri("test");
 
@@ -256,5 +317,4 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
-
 }

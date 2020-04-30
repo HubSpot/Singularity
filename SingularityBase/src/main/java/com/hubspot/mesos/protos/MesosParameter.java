@@ -1,19 +1,20 @@
 package com.hubspot.mesos.protos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MesosParameter {
   private final Optional<String> key;
   private final Optional<String> value;
 
   @JsonCreator
-  public MesosParameter(@JsonProperty("key") Optional<String> key,
-                        @JsonProperty("value") Optional<String> value) {
+  public MesosParameter(
+    @JsonProperty("key") Optional<String> key,
+    @JsonProperty("value") Optional<String> value
+  ) {
     this.key = key;
     this.value = value;
   }
@@ -43,8 +44,7 @@ public class MesosParameter {
     }
     if (obj instanceof MesosParameter) {
       final MesosParameter that = (MesosParameter) obj;
-      return Objects.equals(this.key, that.key) &&
-          Objects.equals(this.value, that.value);
+      return Objects.equals(this.key, that.key) && Objects.equals(this.value, that.value);
     }
     return false;
   }
@@ -56,9 +56,6 @@ public class MesosParameter {
 
   @Override
   public String toString() {
-    return "MesosKeyValueObject{" +
-        "key=" + key +
-        ", value=" + value +
-        '}';
+    return "MesosKeyValueObject{" + "key=" + key + ", value=" + value + '}';
   }
 }

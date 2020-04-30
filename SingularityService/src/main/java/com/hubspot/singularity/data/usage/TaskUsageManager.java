@@ -1,13 +1,14 @@
 package com.hubspot.singularity.data.usage;
 
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskUsage;
 import java.util.Comparator;
 import java.util.List;
 
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskUsage;
-
 public interface TaskUsageManager {
-  Comparator<SingularityTaskUsage> TASK_USAGE_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(SingularityTaskUsage::getTimestamp);
+  Comparator<SingularityTaskUsage> TASK_USAGE_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(
+    SingularityTaskUsage::getTimestamp
+  );
 
   void deleteTaskUsage(SingularityTaskId taskId);
 

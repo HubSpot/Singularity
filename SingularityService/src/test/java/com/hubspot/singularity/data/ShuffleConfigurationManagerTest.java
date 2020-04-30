@@ -4,15 +4,14 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Ignore;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBase {
   protected String r1 = "1";
@@ -26,10 +25,13 @@ public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBas
 
   @Inject
   public ShuffleConfigurationManagerTest() {
-    super(false, (cfg) -> {
-      cfg.setDoNotShuffleRequests(Arrays.asList("no-shuffle"));
-      return null;
-    });
+    super(
+      false,
+      cfg -> {
+        cfg.setDoNotShuffleRequests(Arrays.asList("no-shuffle"));
+        return null;
+      }
+    );
   }
 
   @Test

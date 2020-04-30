@@ -1,10 +1,5 @@
 package com.hubspot.singularity.smtp;
 
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityRequest;
@@ -13,6 +8,9 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NoopMailer implements SingularityMailer {
   private static final Logger LOG = LoggerFactory.getLogger(NoopMailer.class);
@@ -26,37 +24,68 @@ public class NoopMailer implements SingularityMailer {
   }
 
   @Override
-  public void sendTaskOverdueMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, long runTime, long expectedRuntime) {
+  public void sendTaskOverdueMail(
+    Optional<SingularityTask> task,
+    SingularityTaskId taskId,
+    SingularityRequest request,
+    long runTime,
+    long expectedRuntime
+  ) {
     logNotSendingEmail("task overdue");
   }
 
   @Override
-  public void queueTaskCompletedMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
+  public void queueTaskCompletedMail(
+    Optional<SingularityTask> task,
+    SingularityTaskId taskId,
+    SingularityRequest request,
+    ExtendedTaskState taskState
+  ) {
     logNotSendingEmail("task completed");
   }
 
   @Override
-  public void sendTaskCompletedMail(SingularityTaskHistory taskHistory, SingularityRequest request) {
+  public void sendTaskCompletedMail(
+    SingularityTaskHistory taskHistory,
+    SingularityRequest request
+  ) {
     logNotSendingEmail("task completed");
   }
 
   @Override
-  public void sendRequestPausedMail(SingularityRequest request, Optional<SingularityPauseRequest> pauseRequest, Optional<String> user) {
+  public void sendRequestPausedMail(
+    SingularityRequest request,
+    Optional<SingularityPauseRequest> pauseRequest,
+    Optional<String> user
+  ) {
     logNotSendingEmail("request paused");
   }
 
   @Override
-  public void sendRequestUnpausedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
+  public void sendRequestUnpausedMail(
+    SingularityRequest request,
+    Optional<String> user,
+    Optional<String> message
+  ) {
     logNotSendingEmail("request unpaused");
   }
 
   @Override
-  public void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user) {
+  public void sendRequestScaledMail(
+    SingularityRequest request,
+    Optional<SingularityScaleRequest> newScaleRequest,
+    Optional<Integer> formerInstances,
+    Optional<String> user
+  ) {
     logNotSendingEmail("request scaled");
   }
 
   @Override
-  public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
+  public void sendRequestRemovedMail(
+    SingularityRequest request,
+    Optional<String> user,
+    Optional<String> message
+  ) {
     logNotSendingEmail("request removed");
   }
 

@@ -1,17 +1,15 @@
 package com.hubspot.singularity.runner.base.validators;
 
+import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import java.io.File;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
+public class DirectoryExistsValidator
+  implements ConstraintValidator<DirectoryExists, String> {
 
-public class DirectoryExistsValidator implements ConstraintValidator<DirectoryExists, String> {
   @Override
-  public void initialize(DirectoryExists constraintAnnotation) {
-
-  }
+  public void initialize(DirectoryExists constraintAnnotation) {}
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

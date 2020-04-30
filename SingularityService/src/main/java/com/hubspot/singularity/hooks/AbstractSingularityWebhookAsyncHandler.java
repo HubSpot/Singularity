@@ -1,18 +1,18 @@
 package com.hubspot.singularity.hooks;
 
-import java.util.concurrent.CompletableFuture;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityWebhook;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.Response;
+import java.util.concurrent.CompletableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCompletionHandler<Response>  {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractSingularityWebhookAsyncHandler.class);
+public abstract class AbstractSingularityWebhookAsyncHandler<T>
+  extends AsyncCompletionHandler<Response> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    AbstractSingularityWebhookAsyncHandler.class
+  );
 
   protected final SingularityWebhook webhook;
   protected final T update;
@@ -21,7 +21,11 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
 
   private CompletableFuture<Response> completableFuture;
 
-  public AbstractSingularityWebhookAsyncHandler(SingularityWebhook webhook, T update, boolean shouldDeleteUpdateOnFailure) {
+  public AbstractSingularityWebhookAsyncHandler(
+    SingularityWebhook webhook,
+    T update,
+    boolean shouldDeleteUpdateOnFailure
+  ) {
     this.webhook = webhook;
     this.update = update;
     this.shouldDeleteUpdateOnFailure = shouldDeleteUpdateOnFailure;
@@ -31,7 +35,13 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
 
   @Override
   public void onThrowable(Throwable t) {
-    LOG.trace("Webhook {} for {} failed after {}", webhook.getUri(), update, JavaUtils.duration(start), t);
+    LOG.trace(
+      "Webhook {} for {} failed after {}",
+      webhook.getUri(),
+      update,
+      JavaUtils.duration(start),
+      t
+    );
 
     if (shouldDeleteUpdateOnFailure) {
       deleteWebhookUpdate();
@@ -48,13 +58,21 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
 
   @Override
   public Response onCompleted(Response response) throws Exception {
-    LOG.trace("Webhook {} for {} completed with {} after {}", webhook.getUri(), update, response.getStatusCode(), JavaUtils.duration(start));
+    LOG.trace(
+      "Webhook {} for {} completed with {} after {}",
+      webhook.getUri(),
+      update,
+      response.getStatusCode(),
+      JavaUtils.duration(start)
+    );
 
     if (response.hasResponseBody()) {
       LOG.trace("Webhook response message is: '{}'", response.getResponseBody());
     }
 
-    if (JavaUtils.isHttpSuccess(response.getStatusCode()) || shouldDeleteUpdateOnFailure) {
+    if (
+      JavaUtils.isHttpSuccess(response.getStatusCode()) || shouldDeleteUpdateOnFailure
+    ) {
       deleteWebhookUpdate();
     }
 

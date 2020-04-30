@@ -1,39 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Singleton;
-
-import org.apache.mesos.v1.Protos.CommandInfo;
-import org.apache.mesos.v1.Protos.CommandInfo.URI;
-import org.apache.mesos.v1.Protos.ContainerInfo;
-import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo;
-import org.apache.mesos.v1.Protos.ContainerInfo.MesosInfo;
-import org.apache.mesos.v1.Protos.Environment;
-import org.apache.mesos.v1.Protos.Environment.Variable;
-import org.apache.mesos.v1.Protos.ExecutorID;
-import org.apache.mesos.v1.Protos.ExecutorInfo;
-import org.apache.mesos.v1.Protos.Image;
-import org.apache.mesos.v1.Protos.Label;
-import org.apache.mesos.v1.Protos.Labels;
-import org.apache.mesos.v1.Protos.Labels.Builder;
-import org.apache.mesos.v1.Protos.NetworkInfo;
-import org.apache.mesos.v1.Protos.Parameter;
-import org.apache.mesos.v1.Protos.Parameters;
-import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.TaskID;
-import org.apache.mesos.v1.Protos.TaskInfo;
-import org.apache.mesos.v1.Protos.Volume;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
@@ -72,11 +38,43 @@ import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.inject.Singleton;
+import org.apache.mesos.v1.Protos.CommandInfo;
+import org.apache.mesos.v1.Protos.CommandInfo.URI;
+import org.apache.mesos.v1.Protos.ContainerInfo;
+import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo;
+import org.apache.mesos.v1.Protos.ContainerInfo.MesosInfo;
+import org.apache.mesos.v1.Protos.Environment;
+import org.apache.mesos.v1.Protos.Environment.Variable;
+import org.apache.mesos.v1.Protos.ExecutorID;
+import org.apache.mesos.v1.Protos.ExecutorInfo;
+import org.apache.mesos.v1.Protos.Image;
+import org.apache.mesos.v1.Protos.Label;
+import org.apache.mesos.v1.Protos.Labels;
+import org.apache.mesos.v1.Protos.Labels.Builder;
+import org.apache.mesos.v1.Protos.NetworkInfo;
+import org.apache.mesos.v1.Protos.Parameter;
+import org.apache.mesos.v1.Protos.Parameters;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.Volume;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 class SingularityMesosTaskBuilder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityMesosTaskBuilder.class
+  );
 
   private final ObjectMapper objectMapper;
   private final ExecutorIdGenerator idGenerator;
@@ -84,34 +82,66 @@ class SingularityMesosTaskBuilder {
   private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  SingularityMesosTaskBuilder(@Singularity ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
+  SingularityMesosTaskBuilder(
+    @Singularity ObjectMapper objectMapper,
+    ExecutorIdGenerator idGenerator,
+    SingularityConfiguration configuration,
+    MesosProtosUtils mesosProtosUtils
+  ) {
     this.objectMapper = objectMapper;
     this.idGenerator = idGenerator;
     this.configuration = configuration;
     this.mesosProtosUtils = mesosProtosUtils;
   }
 
-  public SingularityMesosTaskHolder buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
+  public SingularityMesosTaskHolder buildTask(
+    SingularityOfferHolder offerHolder,
+    List<Resource> availableResources,
+    SingularityTaskRequest taskRequest,
+    Resources desiredTaskResources,
+    Resources desiredExecutorResources
+  ) {
     final String sanitizedRackId = offerHolder.getSanitizedRackId();
     final String sanitizedHost = offerHolder.getSanitizedHost();
 
-    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(),
-        taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), sanitizedHost, sanitizedRackId);
+    final SingularityTaskId taskId = new SingularityTaskId(
+      taskRequest.getPendingTask().getPendingTaskId().getRequestId(),
+      taskRequest.getDeploy().getId(),
+      System.currentTimeMillis(),
+      taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(),
+      sanitizedHost,
+      sanitizedRackId
+    );
 
-    final TaskInfo.Builder bldr = TaskInfo.newBuilder()
-        .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
+    final TaskInfo.Builder bldr = TaskInfo
+      .newBuilder()
+      .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
 
     Optional<long[]> ports = Optional.empty();
     Optional<Resource> portsResource = Optional.empty();
 
-    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
+    final Optional<SingularityContainerInfo> containerInfo = taskRequest
+      .getDeploy()
+      .getContainerInfo();
     if (desiredTaskResources.getNumPorts() > 0 || hasLiteralPortMapping(containerInfo)) {
       List<Long> requestedPorts = new ArrayList<>();
       if (hasLiteralPortMapping(containerInfo)) {
-        requestedPorts.addAll(containerInfo.get().getDocker().get().getLiteralHostPorts());
+        requestedPorts.addAll(
+          containerInfo.get().getDocker().get().getLiteralHostPorts()
+        );
       }
-      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources, requestedPorts));
-      ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
+      portsResource =
+        Optional.of(
+          MesosUtils.getPortsResource(
+            desiredTaskResources.getNumPorts(),
+            availableResources,
+            requestedPorts
+          )
+        );
+      ports =
+        Optional.of(
+          MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts())
+        );
     }
 
     if (containerInfo.isPresent()) {
@@ -119,7 +149,14 @@ class SingularityMesosTaskBuilder {
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
-      prepareCustomExecutor(bldr, taskId, taskRequest, offerHolder, ports, desiredExecutorResources);
+      prepareCustomExecutor(
+        bldr,
+        taskId,
+        taskRequest,
+        offerHolder,
+        ports,
+        desiredExecutorResources
+      );
     } else {
       prepareCommand(bldr, taskId, taskRequest, offerHolder, ports);
     }
@@ -128,11 +165,16 @@ class SingularityMesosTaskBuilder {
       bldr.addResources(portsResource.get());
     }
 
-
     Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
-    bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
-    bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
-    bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
+    bldr.addResources(
+      MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole)
+    );
+    bldr.addResources(
+      MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole)
+    );
+    bldr.addResources(
+      MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole)
+    );
 
     bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
 
@@ -140,8 +182,14 @@ class SingularityMesosTaskBuilder {
 
     final Builder labelsBuilder = Labels.newBuilder();
     // apply request-specific labels, if any
-    if (taskRequest.getDeploy().getMesosLabels().isPresent() && !taskRequest.getDeploy().getMesosLabels().get().isEmpty()) {
-      for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosLabels().get()) {
+    if (
+      taskRequest.getDeploy().getMesosLabels().isPresent() &&
+      !taskRequest.getDeploy().getMesosLabels().get().isEmpty()
+    ) {
+      for (SingularityMesosTaskLabel label : taskRequest
+        .getDeploy()
+        .getMesosLabels()
+        .get()) {
         org.apache.mesos.v1.Protos.Label.Builder labelBuilder = Label.newBuilder();
         labelBuilder.setKey(label.getKey());
         if ((label.getValue().isPresent())) {
@@ -152,9 +200,20 @@ class SingularityMesosTaskBuilder {
     }
 
     // apply task-specific labels, if any
-    final int taskInstanceNo = taskRequest.getPendingTask().getPendingTaskId().getInstanceNo();
-    if (taskRequest.getDeploy().getMesosTaskLabels().isPresent() && taskRequest.getDeploy().getMesosTaskLabels().get().containsKey(taskInstanceNo) && !taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo).isEmpty()) {
-      for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo)) {
+    final int taskInstanceNo = taskRequest
+      .getPendingTask()
+      .getPendingTaskId()
+      .getInstanceNo();
+    if (
+      taskRequest.getDeploy().getMesosTaskLabels().isPresent() &&
+      taskRequest.getDeploy().getMesosTaskLabels().get().containsKey(taskInstanceNo) &&
+      !taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo).isEmpty()
+    ) {
+      for (SingularityMesosTaskLabel label : taskRequest
+        .getDeploy()
+        .getMesosTaskLabels()
+        .get()
+        .get(taskInstanceNo)) {
         org.apache.mesos.v1.Protos.Label.Builder labelBuilder = Label.newBuilder();
         labelBuilder.setKey(label.getKey());
         if ((label.getValue().isPresent())) {
@@ -168,16 +227,29 @@ class SingularityMesosTaskBuilder {
     TaskInfo task = bldr.build();
 
     return new SingularityMesosTaskHolder(
-        new SingularityTask(taskRequest,
-            taskId,
-            offerHolder.getOffers().stream().map((o) -> mesosProtosUtils.offerFromProtos(o)).collect(Collectors.toList()),
-            mesosProtosUtils.taskFromProtos(task),
-            Optional.of(offerHolder.getRackId())),
-        task);
+      new SingularityTask(
+        taskRequest,
+        taskId,
+        offerHolder
+          .getOffers()
+          .stream()
+          .map(o -> mesosProtosUtils.offerFromProtos(o))
+          .collect(Collectors.toList()),
+        mesosProtosUtils.taskFromProtos(task),
+        Optional.of(offerHolder.getRackId())
+      ),
+      task
+    );
   }
 
-  private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {
-    return maybeContainerInfo.isPresent() && maybeContainerInfo.get().getDocker().isPresent() && !maybeContainerInfo.get().getDocker().get().getLiteralHostPorts().isEmpty();
+  private boolean hasLiteralPortMapping(
+    Optional<SingularityContainerInfo> maybeContainerInfo
+  ) {
+    return (
+      maybeContainerInfo.isPresent() &&
+      maybeContainerInfo.get().getDocker().isPresent() &&
+      !maybeContainerInfo.get().getDocker().get().getLiteralHostPorts().isEmpty()
+    );
   }
 
   private void setEnv(Environment.Builder envBldr, String key, Object value) {
@@ -187,7 +259,13 @@ class SingularityMesosTaskBuilder {
     envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
   }
 
-  private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
+  private void prepareEnvironment(
+    final SingularityTaskRequest task,
+    SingularityTaskId taskId,
+    CommandInfo.Builder commandBuilder,
+    final SingularityOfferHolder offerHolder,
+    final Optional<long[]> ports
+  ) {
     Map<String, Object> envVars = new HashMap<>();
 
     envVars.put("INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
@@ -196,18 +274,40 @@ class SingularityMesosTaskBuilder {
     envVars.put("TASK_RACK_ID", offerHolder.getRackId());
     envVars.put("AVAILABILITY_ZONE", offerHolder.getRackId());
 
-    envVars.put("TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    envVars.put(
+      "TASK_REQUEST_ID",
+      task.getPendingTask().getPendingTaskId().getRequestId()
+    );
     envVars.put("TASK_DEPLOY_ID", taskId.getDeployId());
     envVars.put("TASK_ID", taskId.getId());
     envVars.put("ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
-    for (Entry<String, String> envEntry : task.getDeploy().getEnv().orElse(Collections.<String, String>emptyMap()).entrySet()) {
-      envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+    for (Entry<String, String> envEntry : task
+      .getDeploy()
+      .getEnv()
+      .orElse(Collections.<String, String>emptyMap())
+      .entrySet()) {
+      envVars.put(
+        envEntry.getKey(),
+        fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId)
+      );
     }
 
-    if (task.getDeploy().getTaskEnv().isPresent() && task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) && !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()) {
-      for (Entry<String, String> envEntry : task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).entrySet()) {
-        envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+    if (
+      task.getDeploy().getTaskEnv().isPresent() &&
+      task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) &&
+      !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()
+    ) {
+      for (Entry<String, String> envEntry : task
+        .getDeploy()
+        .getTaskEnv()
+        .get()
+        .get(taskId.getInstanceNo())
+        .entrySet()) {
+        envVars.put(
+          envEntry.getKey(),
+          fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId)
+        );
       }
     }
 
@@ -249,14 +349,18 @@ class SingularityMesosTaskBuilder {
     commandBuilder.setEnvironment(envBldr.build());
   }
 
-  private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, final Optional<long[]> ports) {
+  private Optional<DockerInfo.PortMapping> buildPortMapping(
+    final SingularityDockerPortMapping singularityDockerPortMapping,
+    final Optional<long[]> ports
+  ) {
     final int containerPort;
     switch (singularityDockerPortMapping.getContainerPortType()) {
       case LITERAL:
         containerPort = singularityDockerPortMapping.getContainerPort();
         break;
       case FROM_OFFER:
-        containerPort = Ints.checkedCast(ports.get()[singularityDockerPortMapping.getContainerPort()]);
+        containerPort =
+          Ints.checkedCast(ports.get()[singularityDockerPortMapping.getContainerPort()]);
         break;
       default:
         return Optional.empty();
@@ -268,22 +372,32 @@ class SingularityMesosTaskBuilder {
         hostPort = singularityDockerPortMapping.getHostPort();
         break;
       case FROM_OFFER:
-        hostPort = Ints.checkedCast(ports.get()[singularityDockerPortMapping.getHostPort()]);
+        hostPort =
+          Ints.checkedCast(ports.get()[singularityDockerPortMapping.getHostPort()]);
         break;
       default:
         return Optional.empty();
     }
 
-    return Optional.of(DockerInfo.PortMapping.newBuilder()
+    return Optional.of(
+      DockerInfo
+        .PortMapping.newBuilder()
         .setContainerPort(containerPort)
         .setHostPort(hostPort)
         .setProtocol(singularityDockerPortMapping.getProtocol())
-        .build());
+        .build()
+    );
   }
 
-  private String fillInTaskIdValues(String string, SingularityOfferHolder offerHolder, SingularityTaskId taskId) {
+  private String fillInTaskIdValues(
+    String string,
+    SingularityOfferHolder offerHolder,
+    SingularityTaskId taskId
+  ) {
     if (!Strings.isNullOrEmpty(string)) {
-      string = string.replace("${TASK_REQUEST_ID}", taskId.getRequestId())
+      string =
+        string
+          .replace("${TASK_REQUEST_ID}", taskId.getRequestId())
           .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
           .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
           .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
@@ -295,9 +409,17 @@ class SingularityMesosTaskBuilder {
     return string;
   }
 
-  private void prepareContainerInfo(final SingularityOfferHolder offerHolder, final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
+  private void prepareContainerInfo(
+    final SingularityOfferHolder offerHolder,
+    final SingularityTaskId taskId,
+    final TaskInfo.Builder bldr,
+    final SingularityContainerInfo containerInfo,
+    final Optional<long[]> ports
+  ) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
-    containerBuilder.setType(ContainerInfo.Type.valueOf(containerInfo.getType().toString()));
+    containerBuilder.setType(
+      ContainerInfo.Type.valueOf(containerInfo.getType().toString())
+    );
 
     final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
 
@@ -306,34 +428,62 @@ class SingularityMesosTaskBuilder {
       dockerInfoBuilder.setImage(dockerInfo.get().getImage());
 
       if (dockerInfo.get().getNetwork().isPresent()) {
-        dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
+        dockerInfoBuilder.setNetwork(
+          DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString())
+        );
       }
 
-      final List<SingularityDockerPortMapping> portMappings = dockerInfo.get().getPortMappings();
-      final boolean isBridged = SingularityDockerNetworkType.BRIDGE.equals(dockerInfo.get().getNetwork().orElse(null));
+      final List<SingularityDockerPortMapping> portMappings = dockerInfo
+        .get()
+        .getPortMappings();
+      final boolean isBridged = SingularityDockerNetworkType.BRIDGE.equals(
+        dockerInfo.get().getNetwork().orElse(null)
+      );
 
-      if ((dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) && !portMappings.isEmpty()) {
+      if (
+        (dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) &&
+        !portMappings.isEmpty()
+      ) {
         for (SingularityDockerPortMapping singularityDockerPortMapping : portMappings) {
-          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports);
+          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(
+            singularityDockerPortMapping,
+            ports
+          );
 
           if (maybePortMapping.isPresent()) {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
         }
-      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && isBridged && portMappings.isEmpty() && ports.isPresent()) {
+      } else if (
+        configuration.getNetworkConfiguration().isDefaultPortMapping() &&
+        isBridged &&
+        portMappings.isEmpty() &&
+        ports.isPresent()
+      ) {
         for (long longPort : ports.get()) {
           int port = Ints.checkedCast(longPort);
-          dockerInfoBuilder.addPortMappings(DockerInfo.PortMapping.newBuilder()
+          dockerInfoBuilder.addPortMappings(
+            DockerInfo
+              .PortMapping.newBuilder()
               .setHostPort(port)
               .setContainerPort(port)
-              .build());
+              .build()
+          );
         }
       }
 
       if (!dockerInfo.get().getDockerParameters().isEmpty()) {
         List<Parameter> parameters = new ArrayList<>();
-        for (SingularityDockerParameter parameter : dockerInfo.get().getDockerParameters()) {
-          parameters.add(Parameter.newBuilder().setKey(parameter.getKey()).setValue(parameter.getValue()).build());
+        for (SingularityDockerParameter parameter : dockerInfo
+          .get()
+          .getDockerParameters()) {
+          parameters.add(
+            Parameter
+              .newBuilder()
+              .setKey(parameter.getKey())
+              .setValue(parameter.getValue())
+              .build()
+          );
         }
         dockerInfoBuilder.addAllParameters(parameters);
       }
@@ -345,11 +495,17 @@ class SingularityMesosTaskBuilder {
       containerBuilder.setDocker(dockerInfoBuilder);
     }
 
-    for (SingularityVolume volumeInfo : containerInfo.getVolumes().orElse(Collections.<SingularityVolume>emptyList())) {
+    for (SingularityVolume volumeInfo : containerInfo
+      .getVolumes()
+      .orElse(Collections.<SingularityVolume>emptyList())) {
       final Volume.Builder volumeBuilder = Volume.newBuilder();
-      volumeBuilder.setContainerPath(fillInTaskIdValues(volumeInfo.getContainerPath(), offerHolder, taskId));
+      volumeBuilder.setContainerPath(
+        fillInTaskIdValues(volumeInfo.getContainerPath(), offerHolder, taskId)
+      );
       if (volumeInfo.getHostPath().isPresent()) {
-        volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), offerHolder, taskId));
+        volumeBuilder.setHostPath(
+          fillInTaskIdValues(volumeInfo.getHostPath().get(), offerHolder, taskId)
+        );
       }
       if (volumeInfo.getMode().isPresent()) {
         volumeBuilder.setMode(Volume.Mode.valueOf(volumeInfo.getMode().get().toString()));
@@ -367,12 +523,25 @@ class SingularityMesosTaskBuilder {
             dockerVolumeBuilder.setDriver(dockerVolume.getDriver().get());
           }
           if (dockerVolume.getName().isPresent()) {
-            dockerVolumeBuilder.setName(dockerVolume.getName().get().replace("%i", Integer.toString(taskId.getInstanceNo())));
+            dockerVolumeBuilder.setName(
+              dockerVolume
+                .getName()
+                .get()
+                .replace("%i", Integer.toString(taskId.getInstanceNo()))
+            );
           }
           if (!dockerVolume.getDriverOptions().isEmpty()) {
             final Parameters.Builder parameters = Parameters.newBuilder();
-            for (Entry<String, String> option : dockerVolume.getDriverOptions().entrySet()) {
-              parameters.addParameter(Parameter.newBuilder().setKey(option.getKey()).setValue(option.getValue()).build());
+            for (Entry<String, String> option : dockerVolume
+              .getDriverOptions()
+              .entrySet()) {
+              parameters.addParameter(
+                Parameter
+                  .newBuilder()
+                  .setKey(option.getKey())
+                  .setValue(option.getValue())
+                  .build()
+              );
             }
             dockerVolumeBuilder.setDriverOptions(parameters.build());
           }
@@ -390,9 +559,12 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
-  private void prepareMesosInfo(ContainerInfo.Builder containerBuilder, final SingularityContainerInfo containerInfo) {
+  private void prepareMesosInfo(
+    ContainerInfo.Builder containerBuilder,
+    final SingularityContainerInfo containerInfo
+  ) {
     if (!containerInfo.getMesos().isPresent()) {
-        return;
+      return;
     }
     final MesosInfo.Builder builder = MesosInfo.newBuilder();
     final SingularityMesosInfo mesos = containerInfo.getMesos().get();
@@ -423,8 +595,14 @@ class SingularityMesosTaskBuilder {
     containerBuilder.setMesos(builder.build());
   }
 
-  private void prepareNetworkInfos(ContainerInfo.Builder containerBuilder, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
-    for (SingularityNetworkInfo netInfo : containerInfo.getNetworkInfos().orElse(Collections.emptyList())) {
+  private void prepareNetworkInfos(
+    ContainerInfo.Builder containerBuilder,
+    final SingularityContainerInfo containerInfo,
+    final Optional<long[]> ports
+  ) {
+    for (SingularityNetworkInfo netInfo : containerInfo
+      .getNetworkInfos()
+      .orElse(Collections.emptyList())) {
       final NetworkInfo.Builder netBuilder = NetworkInfo.newBuilder();
       if (netInfo.getName().isPresent()) {
         netBuilder.setName(netInfo.getName().get());
@@ -432,13 +610,21 @@ class SingularityMesosTaskBuilder {
       for (String group : netInfo.getGroups().orElse(Collections.emptyList())) {
         netBuilder.addGroups(group);
       }
-      for (SingularityPortMapping mapping : netInfo.getPortMappings().orElseGet(defaultPortMappingFor(ports))) {
+      for (SingularityPortMapping mapping : netInfo
+        .getPortMappings()
+        .orElseGet(defaultPortMappingFor(ports))) {
         final NetworkInfo.PortMapping.Builder portBuilder = NetworkInfo.PortMapping.newBuilder();
         final int hostPort = mapping.getHostPort();
         final int containerPort = mapping.getContainerPort();
         final long[] offerPorts = ports.orElse(new long[0]);
-        portBuilder.setHostPort(hostPort < offerPorts.length ? (int) offerPorts[hostPort] : hostPort);
-        portBuilder.setContainerPort(containerPort < offerPorts.length ? (int) offerPorts[containerPort] : containerPort);
+        portBuilder.setHostPort(
+          hostPort < offerPorts.length ? (int) offerPorts[hostPort] : hostPort
+        );
+        portBuilder.setContainerPort(
+          containerPort < offerPorts.length
+            ? (int) offerPorts[containerPort]
+            : containerPort
+        );
         if (mapping.getProtocol().isPresent()) {
           portBuilder.setProtocol(mapping.getProtocol().get());
         }
@@ -448,8 +634,11 @@ class SingularityMesosTaskBuilder {
     }
   }
 
-  private Supplier<List<SingularityPortMapping>> defaultPortMappingFor(Optional<long[]> ports) {
+  private Supplier<List<SingularityPortMapping>> defaultPortMappingFor(
+    Optional<long[]> ports
+  ) {
     return new Supplier<List<SingularityPortMapping>>() {
+
       @Override
       public List<SingularityPortMapping> get() {
         final long[] portArray = ports.orElse(new long[0]);
@@ -464,7 +653,10 @@ class SingularityMesosTaskBuilder {
     };
   }
 
-  private List<Resource> buildMesosResources(final Resources resources, Optional<String> role) {
+  private List<Resource> buildMesosResources(
+    final Resources resources,
+    Optional<String> role
+  ) {
     ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
     if (resources.getCpus() > 0) {
@@ -485,9 +677,17 @@ class SingularityMesosTaskBuilder {
   /**
    * Prepares the Mesos TaskInfo object when using our custom SingularityExecutor.
    */
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder,
-      final Optional<long[]> ports, final Resources desiredExecutorResources) {
-    CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
+  private void prepareCustomExecutor(
+    final TaskInfo.Builder bldr,
+    final SingularityTaskId taskId,
+    final SingularityTaskRequest task,
+    final SingularityOfferHolder offerHolder,
+    final Optional<long[]> ports,
+    final Resources desiredExecutorResources
+  ) {
+    CommandInfo.Builder commandBuilder = CommandInfo
+      .newBuilder()
+      .setValue(task.getDeploy().getCustomExecutorCmd().get());
 
     prepareEnvironment(task, taskId, commandBuilder, offerHolder, ports);
 
@@ -497,36 +697,89 @@ class SingularityMesosTaskBuilder {
 
     prepareMesosUriDownloads(task.getPendingTask().getExtraArtifacts(), commandBuilder);
 
-    bldr.setExecutor(ExecutorInfo.newBuilder()
+    bldr.setExecutor(
+      ExecutorInfo
+        .newBuilder()
         .setCommand(commandBuilder.build())
-        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().orElse(idGenerator.getNextExecutorId())))
+        .setExecutorId(
+          ExecutorID
+            .newBuilder()
+            .setValue(
+              task
+                .getDeploy()
+                .getCustomExecutorId()
+                .orElse(idGenerator.getNextExecutorId())
+            )
+        )
         .setSource(task.getDeploy().getCustomExecutorSource().orElse(taskId.getId())) // set source to taskId for use in statistics endpoint, TODO: remove
-        .setLabels(Labels.newBuilder().addLabels(Label.newBuilder().setKey("taskId").setValue(taskId.getId())))
-        .addAllResources(buildMesosResources(desiredExecutorResources, task.getRequest().getRequiredRole()))
+        .setLabels(
+          Labels
+            .newBuilder()
+            .addLabels(Label.newBuilder().setKey("taskId").setValue(taskId.getId()))
+        )
+        .addAllResources(
+          buildMesosResources(
+            desiredExecutorResources,
+            task.getRequest().getRequiredRole()
+          )
+        )
         .build()
-        );
+    );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
-      final ExecutorDataBuilder executorDataBldr = task.getDeploy().getExecutorData().get().toBuilder();
+      final ExecutorDataBuilder executorDataBldr = task
+        .getDeploy()
+        .getExecutorData()
+        .get()
+        .toBuilder();
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
 
       if (configuration.getS3ConfigurationOptional().isPresent()) {
-        if (task.getRequest().getGroup().isPresent() && configuration.getS3ConfigurationOptional().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
-          defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
-          LOG.trace("Setting defaultS3Bucket to {} for task {} executorData", defaultS3Bucket, taskId.getId());
+        if (
+          task.getRequest().getGroup().isPresent() &&
+          configuration
+            .getS3ConfigurationOptional()
+            .get()
+            .getGroupOverrides()
+            .containsKey(task.getRequest().getGroup().get())
+        ) {
+          defaultS3Bucket =
+            configuration
+              .getS3ConfigurationOptional()
+              .get()
+              .getGroupOverrides()
+              .get(task.getRequest().getGroup().get())
+              .getS3Bucket();
+          LOG.trace(
+            "Setting defaultS3Bucket to {} for task {} executorData",
+            defaultS3Bucket,
+            taskId.getId()
+          );
         } else {
-          defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getS3Bucket();
+          defaultS3Bucket =
+            configuration.getS3ConfigurationOptional().get().getS3Bucket();
         }
-        s3UploaderKeyPattern = configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
+        s3UploaderKeyPattern =
+          configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
       }
 
-      if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
-        LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
+      if (
+        task.getPendingTask().getCmdLineArgsList().isPresent() &&
+        !task.getPendingTask().getCmdLineArgsList().get().isEmpty()
+      ) {
+        LOG.trace(
+          "Adding cmd line args {} to task {} executorData",
+          task.getPendingTask().getCmdLineArgsList(),
+          taskId.getId()
+        );
 
         final ImmutableList.Builder<String> extraCmdLineArgsBuilder = ImmutableList.builder();
-        if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
+        if (
+          executorDataBldr.getExtraCmdLineArgs() != null &&
+          !executorDataBldr.getExtraCmdLineArgs().isEmpty()
+        ) {
           extraCmdLineArgsBuilder.addAll(executorDataBldr.getExtraCmdLineArgs());
         }
         extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList().get());
@@ -535,27 +788,64 @@ class SingularityMesosTaskBuilder {
 
       List<SingularityS3UploaderFile> uploaderAdditionalFiles = new ArrayList<>();
       if (configuration.getS3ConfigurationOptional().isPresent()) {
-        uploaderAdditionalFiles.addAll(configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles());
+        uploaderAdditionalFiles.addAll(
+          configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles()
+        );
       }
-      uploaderAdditionalFiles.addAll(task.getPendingTask().getS3UploaderAdditionalFiles());
+      uploaderAdditionalFiles.addAll(
+        task.getPendingTask().getS3UploaderAdditionalFiles()
+      );
       uploaderAdditionalFiles.addAll(task.getDeploy().getS3UploaderAdditionalFiles());
 
-      Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>empty();
-      Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>empty();
+      Optional<String> maybeS3StorageClass = configuration
+          .getS3ConfigurationOptional()
+          .isPresent()
+        ? configuration.getS3ConfigurationOptional().get().getS3StorageClass()
+        : Optional.<String>empty();
+      Optional<Long> maybeApplyAfterBytes = configuration
+          .getS3ConfigurationOptional()
+          .isPresent()
+        ? configuration
+          .getS3ConfigurationOptional()
+          .get()
+          .getApplyS3StorageClassAfterBytes()
+        : Optional.<Long>empty();
 
       if (task.getPendingTask().getRunAsUserOverride().isPresent()) {
         executorDataBldr.setUser(task.getPendingTask().getRunAsUserOverride());
       }
 
-      Optional<HealthcheckOptions> healthcheckOptions = task.getRequest().getSkipHealthchecks().orElse(false) ? Optional.empty() : task.getDeploy().getHealthcheck();
-      final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
-          configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task), healthcheckOptions);
+      Optional<HealthcheckOptions> healthcheckOptions = task
+          .getRequest()
+          .getSkipHealthchecks()
+          .orElse(false)
+        ? Optional.empty()
+        : task.getDeploy().getHealthcheck();
+      final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(
+        executorDataBldr.build(),
+        uploaderAdditionalFiles,
+        defaultS3Bucket,
+        s3UploaderKeyPattern,
+        configuration.getCustomExecutorConfiguration().getServiceLog(),
+        configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(),
+        task.getRequest().getGroup(),
+        maybeS3StorageClass,
+        maybeApplyAfterBytes,
+        getCpuHardLimit(task),
+        healthcheckOptions
+      );
 
       try {
-        bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
+        bldr.setData(
+          ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData))
+        );
       } catch (JsonProcessingException e) {
-        LOG.warn("Unable to process executor data {} for task {} as json (trying as string)", executorData, taskId.getId(), e);
+        LOG.warn(
+          "Unable to process executor data {} for task {} as json (trying as string)",
+          executorData,
+          taskId.getId(),
+          e
+        );
 
         bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
       }
@@ -566,10 +856,17 @@ class SingularityMesosTaskBuilder {
 
   private Optional<Integer> getCpuHardLimit(SingularityTaskRequest task) {
     if (configuration.getCpuHardLimit().isPresent()) {
-      Optional<Resources> maybeResources = task.getPendingTask().getResources().isPresent() ? task.getPendingTask().getResources() : task.getDeploy().getResources();
+      Optional<Resources> maybeResources = task
+          .getPendingTask()
+          .getResources()
+          .isPresent()
+        ? task.getPendingTask().getResources()
+        : task.getDeploy().getResources();
       if (maybeResources.isPresent()) {
         double requestedCpus = maybeResources.get().getCpus();
-        int scaledLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
+        int scaledLimit = (int) Math.ceil(
+          requestedCpus * configuration.getCpuHardLimitScaleFactor()
+        );
         return Optional.of(Math.max(scaledLimit, configuration.getCpuHardLimit().get()));
       }
     }
@@ -579,10 +876,21 @@ class SingularityMesosTaskBuilder {
   /**
    * Prepares the Mesos TaskInfo object when using the Mesos Default Executor.
    */
-  private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
+  private void prepareCommand(
+    final TaskInfo.Builder bldr,
+    final SingularityTaskId taskId,
+    final SingularityTaskRequest task,
+    final SingularityOfferHolder offerHolder,
+    final Optional<long[]> ports
+  ) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
-    Optional<String> specifiedUser = task.getPendingTask().getRunAsUserOverride().isPresent() ? task.getPendingTask().getRunAsUserOverride() : task.getDeploy().getUser();
+    Optional<String> specifiedUser = task
+        .getPendingTask()
+        .getRunAsUserOverride()
+        .isPresent()
+      ? task.getPendingTask().getRunAsUserOverride()
+      : task.getDeploy().getUser();
     if (specifiedUser.isPresent()) {
       commandBldr.setUser(specifiedUser.get());
     }
@@ -599,13 +907,21 @@ class SingularityMesosTaskBuilder {
       commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList().get());
     }
 
-    if (task.getDeploy().getShell().isPresent()){
+    if (task.getDeploy().getShell().isPresent()) {
       commandBldr.setShell(task.getDeploy().getShell().get());
-    } else if ((task.getDeploy().getArguments().isPresent() && !task.getDeploy().getArguments().get().isEmpty()) ||
-        // Hopefully temporary workaround for
-        // http://www.mail-archive.com/user@mesos.apache.org/msg01449.html
-        task.getDeploy().getContainerInfo().isPresent() ||
-        (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty())) {
+    } else if (
+      (
+        task.getDeploy().getArguments().isPresent() &&
+        !task.getDeploy().getArguments().get().isEmpty()
+      ) ||
+      // Hopefully temporary workaround for
+      // http://www.mail-archive.com/user@mesos.apache.org/msg01449.html
+      task.getDeploy().getContainerInfo().isPresent() ||
+      (
+        task.getPendingTask().getCmdLineArgsList().isPresent() &&
+        !task.getPendingTask().getCmdLineArgsList().get().isEmpty()
+      )
+    ) {
       commandBldr.setShell(false);
     }
 
@@ -620,13 +936,17 @@ class SingularityMesosTaskBuilder {
     bldr.setCommand(commandBldr);
   }
 
-  private void prepareMesosUriDownloads(List<SingularityMesosArtifact> extraArtifacts, CommandInfo.Builder commandBldr) {
+  private void prepareMesosUriDownloads(
+    List<SingularityMesosArtifact> extraArtifacts,
+    CommandInfo.Builder commandBldr
+  ) {
     for (SingularityMesosArtifact artifact : extraArtifacts) {
-      CommandInfo.URI.Builder uriBldr = URI.newBuilder()
-          .setValue(artifact.getUri())
-          .setCache(artifact.isCache())
-          .setExecutable(artifact.isExecutable())
-          .setExtract(artifact.isExtract());
+      CommandInfo.URI.Builder uriBldr = URI
+        .newBuilder()
+        .setValue(artifact.getUri())
+        .setCache(artifact.isCache())
+        .setExecutable(artifact.isExecutable())
+        .setExtract(artifact.isExtract());
 
       if (artifact.getOutputFile().isPresent()) {
         uriBldr.setOutputFile(artifact.getOutputFile().get());
@@ -635,5 +955,4 @@ class SingularityMesosTaskBuilder {
       commandBldr.addUris(uriBldr.build());
     }
   }
-
 }

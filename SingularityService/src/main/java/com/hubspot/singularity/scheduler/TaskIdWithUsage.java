@@ -9,7 +9,11 @@ class TaskIdWithUsage {
   private final Resources requestedResources;
   private final SingularityTaskCurrentUsage usage;
 
-  TaskIdWithUsage(SingularityTaskId taskId, Resources requestedResources, SingularityTaskCurrentUsage usage) {
+  TaskIdWithUsage(
+    SingularityTaskId taskId,
+    Resources requestedResources,
+    SingularityTaskCurrentUsage usage
+  ) {
     this.taskId = taskId;
     this.requestedResources = requestedResources;
     this.usage = usage;

@@ -1,15 +1,13 @@
 package com.hubspot.mesos.client;
 
-import java.util.List;
-
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import java.util.List;
 
 public interface MesosClient {
-
   public String getMasterUri(String hostnameAndPort);
 
   default String getMetricsSnapshotUri(String hostnameAndPort) {
@@ -28,7 +26,6 @@ public interface MesosClient {
     public MesosClientException(String message, Throwable cause) {
       super(message, cause);
     }
-
   }
 
   public MesosMasterStateObject getMasterState(String uri);
@@ -39,7 +36,10 @@ public interface MesosClient {
     return getSlaveMetricsSnapshot(uri, false);
   }
 
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String uri, boolean useShortTimeout);
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(
+    String uri,
+    boolean useShortTimeout
+  );
 
   public String getSlaveUri(String hostname);
 
@@ -49,6 +49,8 @@ public interface MesosClient {
     return getSlaveResourceUsage(hostname, false);
   }
 
-  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout);
-
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(
+    String hostname,
+    boolean useShortTimeout
+  );
 }

@@ -6,9 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
+import com.google.common.collect.ImmutableList;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.HttpRequest;
+import com.hubspot.horizon.HttpResponse;
 import java.net.URI;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -16,18 +19,16 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.common.collect.ImmutableList;
-import com.hubspot.horizon.HttpClient;
-import com.hubspot.horizon.HttpRequest;
-import com.hubspot.horizon.HttpResponse;
-
 public class SingularityClientTest {
   @Mock
   private HttpClient httpClient;
+
   @Mock
   private HttpResponse response;
+
   @Mock
   private HttpRequest request;
+
   @Captor
   private ArgumentCaptor<HttpRequest> requestCaptor;
 
@@ -38,46 +39,42 @@ public class SingularityClientTest {
     MockitoAnnotations.initMocks(this);
     singularityClient = buildClient();
 
-    when(response.getRequest())
-        .thenReturn(request);
-    when(request.getUrl())
-        .thenReturn(new URI("test-url"));
+    when(response.getRequest()).thenReturn(request);
+    when(request.getUrl()).thenReturn(new URI("test-url"));
   }
 
   @Test
   public void itRetriesRequestsThatErrorDueToDeadHost() {
-    when(httpClient.execute(any()))
-        .thenReturn(response);
-    when(response.getStatusCode())
-        .thenReturn(503)
-        .thenReturn(200);
-    when(response.isServerError())
-        .thenReturn(true)
-        .thenReturn(false);
+    when(httpClient.execute(any())).thenReturn(response);
+    when(response.getStatusCode()).thenReturn(503).thenReturn(200);
+    when(response.isServerError()).thenReturn(true).thenReturn(false);
 
     singularityClient.pauseSingularityRequest("requestId", Optional.empty());
 
-    verify(httpClient, times(2))
-        .execute(requestCaptor.capture());
+    verify(httpClient, times(2)).execute(requestCaptor.capture());
     HttpRequest sentRequest = requestCaptor.getValue();
     assertThat(sentRequest.getUrl().toString())
-        .matches("http://host(1|2)/singularity/v2/api/requests/request/requestId/pause");
+      .matches("http://host(1|2)/singularity/v2/api/requests/request/requestId/pause");
   }
 
   @Test
   public void itThrowsAnExceptionOnServerErrors() {
-    when(httpClient.execute(any()))
-        .thenReturn(response);
-    when(response.getStatusCode())
-        .thenReturn(500);
-    when(response.isError())
-        .thenReturn(true);
+    when(httpClient.execute(any())).thenReturn(response);
+    when(response.getStatusCode()).thenReturn(500);
+    when(response.isError()).thenReturn(true);
 
     assertThatExceptionOfType(SingularityClientException.class)
-        .isThrownBy(() -> singularityClient.pauseSingularityRequest("requestId", Optional.empty()));
+      .isThrownBy(
+        () -> singularityClient.pauseSingularityRequest("requestId", Optional.empty())
+      );
   }
 
   private SingularityClient buildClient() {
-    return new SingularityClient("singularity/v2/api", httpClient, ImmutableList.of("host1", "host2"), Optional.empty());
+    return new SingularityClient(
+      "singularity/v2/api",
+      httpClient,
+      ImmutableList.of("host1", "host2"),
+      Optional.empty()
+    );
   }
 }

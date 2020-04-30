@@ -1,12 +1,10 @@
 package com.hubspot.singularity.executor.handlebars;
 
-import java.io.IOException;
-
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
+import java.io.IOException;
 
 public class BashEscapedHelper implements Helper<Object> {
-
   public static final String NAME = "bashEscaped";
 
   @Override

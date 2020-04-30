@@ -1,24 +1,20 @@
 package com.hubspot.singularity;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import javax.annotation.Nonnull;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import javax.annotation.Nonnull;
 
 @Schema(description = "Overrides and settings for a particular task being launched")
 public class SingularityPendingTask {
-
   private final SingularityPendingTaskId pendingTaskId;
   private final Optional<List<String>> cmdLineArgsList;
   private final Optional<String> user;
@@ -34,14 +30,15 @@ public class SingularityPendingTask {
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
-  public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
+  public static Predicate<SingularityPendingTask> matchingRequest(
+    final String requestId
+  ) {
     return new Predicate<SingularityPendingTask>() {
 
       @Override
       public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getRequestId().equals(requestId);
       }
-
     };
   }
 
@@ -52,25 +49,32 @@ public class SingularityPendingTask {
       public boolean apply(@Nonnull SingularityPendingTask input) {
         return input.getPendingTaskId().getDeployId().equals(deployId);
       }
-
     };
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
-                                @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-                                @JsonProperty("user") Optional<String> user,
-                                @JsonProperty("runId") Optional<String> runId,
-                                @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                @JsonProperty("message") Optional<String> message,
-                                @JsonProperty("resources") Optional<Resources> resources,
-                                @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-                                @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
-                                @JsonProperty("envOverrides") Map<String, String> envOverrides,
-                                @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
-                                @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
-                                @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-                                @JsonProperty("actionId") Optional<String> actionId) {
+  public SingularityPendingTask(
+    @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
+    @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("runId") Optional<String> runId,
+    @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("resources") Optional<Resources> resources,
+    @JsonProperty(
+      "s3UploaderAdditionalFiles"
+    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
+    @JsonProperty("envOverrides") Map<String, String> envOverrides,
+    @JsonProperty(
+      "requiredSlaveAttributeOverrides"
+    ) Map<String, String> requiredSlaveAttributeOverrides,
+    @JsonProperty(
+      "allowedSlaveAttributeOverrides"
+    ) Map<String, String> allowedSlaveAttributeOverrides,
+    @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+    @JsonProperty("actionId") Optional<String> actionId
+  ) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.message = message;
@@ -146,15 +150,18 @@ public class SingularityPendingTask {
     return cmdLineArgsList;
   }
 
-  @Schema(nullable = true, description = "An optional unique run id associated with this task")
+  @Schema(
+    nullable = true,
+    description = "An optional unique run id associated with this task"
+  )
   public Optional<String> getRunId() {
     return runId;
   }
 
   @Schema(
-      nullable = true,
-      title = "If `true`, do not run healthchecks for this task and immediately consider it healthy",
-      defaultValue = "false"
+    nullable = true,
+    title = "If `true`, do not run healthchecks for this task and immediately consider it healthy",
+    defaultValue = "false"
   )
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
@@ -166,63 +173,95 @@ public class SingularityPendingTask {
   }
 
   @Schema(
-      title = "Optional overrides to the resources requested for this task",
-      defaultValue = "resources sepcified in the deploy associated with this task"
+    title = "Optional overrides to the resources requested for this task",
+    defaultValue = "resources sepcified in the deploy associated with this task"
   )
   public Optional<Resources> getResources() {
     return resources;
   }
 
-  @Schema(description = "A list of additional files for the SingularityS3Uploader to upload")
+  @Schema(
+    description = "A list of additional files for the SingularityS3Uploader to upload"
+  )
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
     return s3UploaderAdditionalFiles;
   }
 
-  @Schema(description = "Override the system user this task will be run as", nullable = true)
+  @Schema(
+    description = "Override the system user this task will be run as",
+    nullable = true
+  )
   public Optional<String> getRunAsUserOverride() {
     return runAsUserOverride;
   }
 
   @Schema(description = "Environment variable overrides for this particular task")
-  public Map<String, String> getEnvOverrides() { return envOverrides; }
+  public Map<String, String> getEnvOverrides() {
+    return envOverrides;
+  }
 
-  @Schema(description = "Required slave attribute overrides for this particular task. These will be applied on top of any requiredSlaveAttributes that are defined at the SingularityRequest level.")
+  @Schema(
+    description = "Required slave attribute overrides for this particular task. These will be applied on top of any requiredSlaveAttributes that are defined at the SingularityRequest level."
+  )
   public Map<String, String> getRequiredSlaveAttributeOverrides() {
     return requiredSlaveAttributeOverrides;
   }
 
-  @Schema(description = "Allowed slave attribute overrides for this particular task. These will be applied on top of any allowedSlaveAttributes that are defined at the SingularityRequest level.")
+  @Schema(
+    description = "Allowed slave attribute overrides for this particular task. These will be applied on top of any allowedSlaveAttributes that are defined at the SingularityRequest level."
+  )
   public Map<String, String> getAllowedSlaveAttributeOverrides() {
     return allowedSlaveAttributeOverrides;
   }
 
-  @Schema(description = "A list of additional artifacts to download for this particular task")
+  @Schema(
+    description = "A list of additional artifacts to download for this particular task"
+  )
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
   }
 
-  @Schema(description = "An optional unique id associated with the launch of this task", nullable = true)
+  @Schema(
+    description = "An optional unique id associated with the launch of this task",
+    nullable = true
+  )
   public Optional<String> getActionId() {
     return actionId;
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingTask{" +
-        "pendingTaskId=" + pendingTaskId +
-        ", cmdLineArgsList=" + cmdLineArgsList +
-        ", user=" + user +
-        ", runId=" + runId +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", message=" + message +
-        ", resources=" + resources +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride=" + runAsUserOverride +
-        ", envOverrides=" + envOverrides +
-        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
-        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts" + extraArtifacts +
-        ", actionId=" + actionId +
-        '}';
+    return (
+      "SingularityPendingTask{" +
+      "pendingTaskId=" +
+      pendingTaskId +
+      ", cmdLineArgsList=" +
+      cmdLineArgsList +
+      ", user=" +
+      user +
+      ", runId=" +
+      runId +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", message=" +
+      message +
+      ", resources=" +
+      resources +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", runAsUserOverride=" +
+      runAsUserOverride +
+      ", envOverrides=" +
+      envOverrides +
+      ", requiredSlaveAttributeOverrides=" +
+      requiredSlaveAttributeOverrides +
+      ", allowedSlaveAttributeOverrides=" +
+      allowedSlaveAttributeOverrides +
+      ", extraArtifacts" +
+      extraArtifacts +
+      ", actionId=" +
+      actionId +
+      '}'
+    );
   }
 }

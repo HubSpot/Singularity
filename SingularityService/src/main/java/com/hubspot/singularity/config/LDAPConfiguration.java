@@ -1,14 +1,11 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-
 import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 
 public class LDAPConfiguration {
   //
@@ -35,7 +32,7 @@ public class LDAPConfiguration {
   //
   @JsonProperty
   @NotEmpty
-  private String userBaseDN = "";  // ex. ou=users,ou=people,dc=example,dc=com
+  private String userBaseDN = ""; // ex. ou=users,ou=people,dc=example,dc=com
 
   @JsonProperty
   @NotEmpty
@@ -54,7 +51,7 @@ public class LDAPConfiguration {
   //
   @JsonProperty
   @NotEmpty
-  private String groupBaseDN = "";  // ex. ou=groups,ou=people,dc=example,dc=com
+  private String groupBaseDN = ""; // ex. ou=groups,ou=people,dc=example,dc=com
 
   @JsonProperty
   @NotEmpty
@@ -94,13 +91,14 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotNull
-  private LdapPoolWhenExhaustedAction poolWhenExhaustedAction = LdapPoolWhenExhaustedAction.BLOCK;
+  private LdapPoolWhenExhaustedAction poolWhenExhaustedAction =
+    LdapPoolWhenExhaustedAction.BLOCK;
 
   //
   // MISC.
   //
   @JsonProperty
-  private boolean stripUserEmailDomain = true;  // if true, tpetr@hubspot.com --> tpetr
+  private boolean stripUserEmailDomain = true; // if true, tpetr@hubspot.com --> tpetr
 
   public String getHostname() {
     return hostname;
@@ -250,7 +248,9 @@ public class LDAPConfiguration {
     return poolWhenExhaustedAction;
   }
 
-  public void setPoolWhenExhaustedAction(LdapPoolWhenExhaustedAction poolWhenExhaustedAction) {
+  public void setPoolWhenExhaustedAction(
+    LdapPoolWhenExhaustedAction poolWhenExhaustedAction
+  ) {
     this.poolWhenExhaustedAction = poolWhenExhaustedAction;
   }
 

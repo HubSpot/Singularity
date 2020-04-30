@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema
 public enum TaskCleanupType {
-
   BOUNCING(false, false),
   DECOMMISSION_TIMEOUT(true, true),
   DECOMISSIONING(false, false),
@@ -29,13 +28,15 @@ public enum TaskCleanupType {
   UNHEALTHY_NEW_TASK(true, true),
   USER_REQUESTED(true, true),
   USER_REQUESTED_DESTROY(true, true),
-  USER_REQUESTED_TASK_BOUNCE(false, false),
-  ;
+  USER_REQUESTED_TASK_BOUNCE(false, false);
 
   private final boolean killLongRunningTaskInstantly;
   private final boolean killNonLongRunningTaskInstantly;
 
-  private TaskCleanupType(boolean killLongRunningTaskInstantly, boolean killNonLongRunningTaskInstantly) {
+  private TaskCleanupType(
+    boolean killLongRunningTaskInstantly,
+    boolean killNonLongRunningTaskInstantly
+  ) {
     this.killLongRunningTaskInstantly = killLongRunningTaskInstantly;
     this.killNonLongRunningTaskInstantly = killNonLongRunningTaskInstantly;
   }

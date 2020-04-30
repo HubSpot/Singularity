@@ -1,16 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
-import org.apache.mesos.v1.Protos;
-import org.apache.mesos.v1.Protos.TaskState;
-import org.apache.mesos.v1.Protos.TaskStatus;
-import org.apache.mesos.v1.Protos.TaskStatus.Reason;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.google.common.base.Strings;
@@ -53,13 +42,26 @@ import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosStatusUpdateHandler {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosStatusUpdateHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityMesosStatusUpdateHandler.class
+  );
 
   private static final Set<MesosTaskState> ACTIVE_STATES = ImmutableSet.of(
-      MesosTaskState.TASK_STAGING, MesosTaskState.TASK_STARTING, MesosTaskState.TASK_RUNNING
+    MesosTaskState.TASK_STAGING,
+    MesosTaskState.TASK_STARTING,
+    MesosTaskState.TASK_RUNNING
   );
 
   private final TaskManager taskManager;
@@ -84,25 +86,29 @@ public class SingularityMesosStatusUpdateHandler {
   private final ExecutorAndQueue statusUpdatesExecutor;
 
   @Inject
-  public SingularityMesosStatusUpdateHandler(TaskManager taskManager,
-                                             DeployManager deployManager,
-                                             RequestManager requestManager,
-                                             IdTranscoder<SingularityTaskId> taskIdTranscoder,
-                                             SingularityExceptionNotifier exceptionNotifier,
-                                             SingularityHealthchecker healthchecker,
-                                             SingularityNewTaskChecker newTaskChecker,
-                                             SingularitySlaveAndRackManager slaveAndRackManager,
-                                             SingularityMesosExecutorInfoSupport logSupport,
-                                             SingularityScheduler scheduler,
-                                             @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
-                                             SingularitySchedulerLock schedulerLock,
-                                             SingularityConfiguration configuration,
-                                             SingularityLeaderCache leaderCache,
-                                             MesosProtosUtils mesosProtosUtils,
-                                             SingularityManagedThreadPoolFactory threadPoolFactory,
-                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
-                                             @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas) {
+  public SingularityMesosStatusUpdateHandler(
+    TaskManager taskManager,
+    DeployManager deployManager,
+    RequestManager requestManager,
+    IdTranscoder<SingularityTaskId> taskIdTranscoder,
+    SingularityExceptionNotifier exceptionNotifier,
+    SingularityHealthchecker healthchecker,
+    SingularityNewTaskChecker newTaskChecker,
+    SingularitySlaveAndRackManager slaveAndRackManager,
+    SingularityMesosExecutorInfoSupport logSupport,
+    SingularityScheduler scheduler,
+    @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
+    SingularitySchedulerLock schedulerLock,
+    SingularityConfiguration configuration,
+    SingularityLeaderCache leaderCache,
+    MesosProtosUtils mesosProtosUtils,
+    SingularityManagedThreadPoolFactory threadPoolFactory,
+    @Named(
+      SingularityMesosModule.TASK_LOST_REASONS_COUNTER
+    ) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
+    @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
+    @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas
+  ) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -121,15 +127,30 @@ public class SingularityMesosStatusUpdateHandler {
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
-    this.statusUpdatesExecutor = threadPoolFactory.get("status-updates", configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(), configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize());
+    this.statusUpdatesExecutor =
+      threadPoolFactory.get(
+        "status-updates",
+        configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(),
+        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()
+      );
   }
 
-  private boolean isRecoveryStatusUpdate(Optional<SingularityTaskStatusHolder> previousTaskStatusHolder, Reason reason, ExtendedTaskState taskState, final SingularityTaskStatusHolder newTaskStatusHolder) {
-    if (!previousTaskStatusHolder.isPresent() // Task was already removed from the active list
-        && !taskState.isDone()
-        && newTaskStatusHolder.getTaskStatus().isPresent()
-        && ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())) {
-      LOG.warn("Task {} recovered but may have already been replaced", newTaskStatusHolder.getTaskId());
+  private boolean isRecoveryStatusUpdate(
+    Optional<SingularityTaskStatusHolder> previousTaskStatusHolder,
+    Reason reason,
+    ExtendedTaskState taskState,
+    final SingularityTaskStatusHolder newTaskStatusHolder
+  ) {
+    if (
+      !previousTaskStatusHolder.isPresent() && // Task was already removed from the active list
+      !taskState.isDone() &&
+      newTaskStatusHolder.getTaskStatus().isPresent() &&
+      ACTIVE_STATES.contains(newTaskStatusHolder.getTaskStatus().get().getState())
+    ) {
+      LOG.warn(
+        "Task {} recovered but may have already been replaced",
+        newTaskStatusHolder.getTaskId()
+      );
       return true;
     }
     return false;
@@ -141,7 +162,10 @@ public class SingularityMesosStatusUpdateHandler {
    * we've never heard of this task (very unlikely since we first write a status into zk before we
    * launch a task)
    */
-  private boolean isDuplicateOrIgnorableStatusUpdate(Optional<SingularityTaskStatusHolder> previousTaskStatusHolder, final SingularityTaskStatusHolder newTaskStatusHolder) {
+  private boolean isDuplicateOrIgnorableStatusUpdate(
+    Optional<SingularityTaskStatusHolder> previousTaskStatusHolder,
+    final SingularityTaskStatusHolder newTaskStatusHolder
+  ) {
     if (!previousTaskStatusHolder.isPresent()) {
       return true;
     }
@@ -150,10 +174,17 @@ public class SingularityMesosStatusUpdateHandler {
       return false;
     }
 
-    return previousTaskStatusHolder.get().getTaskStatus().get().getState() == newTaskStatusHolder.getTaskStatus().get().getState();
+    return (
+      previousTaskStatusHolder.get().getTaskStatus().get().getState() ==
+      newTaskStatusHolder.getTaskStatus().get().getState()
+    );
   }
 
-  private void saveNewTaskStatusHolder(SingularityTaskId taskIdObj, SingularityTaskStatusHolder newTaskStatusHolder, ExtendedTaskState taskState) {
+  private void saveNewTaskStatusHolder(
+    SingularityTaskId taskIdObj,
+    SingularityTaskStatusHolder newTaskStatusHolder,
+    ExtendedTaskState taskState
+  ) {
     if (taskState.isDone()) {
       taskManager.deleteLastActiveTaskStatus(taskIdObj);
     } else {
@@ -171,23 +202,53 @@ public class SingularityMesosStatusUpdateHandler {
     }
   }
 
-  private Optional<String> getStatusMessage(Protos.TaskStatus status, Optional<SingularityTask> task) {
+  private Optional<String> getStatusMessage(
+    Protos.TaskStatus status,
+    Optional<SingularityTask> task
+  ) {
     if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
       return Optional.of(status.getMessage());
-    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
-      if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-        if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
-          return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(),
-              task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+    } else if (
+      status.hasReason() &&
+      status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY
+    ) {
+      if (
+        task.isPresent() &&
+        task.get().getTaskRequest().getDeploy().getResources().isPresent()
+      ) {
+        if (
+          task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0
+        ) {
+          return Optional.of(
+            String.format(
+              "Task exceeded one or more memory limits (%s MB mem, %s MB disk).",
+              task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(),
+              task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()
+            )
+          );
         } else {
-          return Optional.of(String.format("Task exceeded memory limit (%s MB mem).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+          return Optional.of(
+            String.format(
+              "Task exceeded memory limit (%s MB mem).",
+              task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()
+            )
+          );
         }
-
       }
       return Optional.of("Task exceeded memory limit.");
-    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_DISK) {
-      if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-        return Optional.of(String.format("Task exceeded disk limit (%s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+    } else if (
+      status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_DISK
+    ) {
+      if (
+        task.isPresent() &&
+        task.get().getTaskRequest().getDeploy().getResources().isPresent()
+      ) {
+        return Optional.of(
+          String.format(
+            "Task exceeded disk limit (%s MB disk).",
+            task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()
+          )
+        );
       } else {
         return Optional.of("Task exceeded disk limit.");
       }
@@ -200,28 +261,31 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityPendingTask pendingTask = task.getTaskRequest().getPendingTask();
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequestBuilder()
-        .setRequestId(task.getTaskRequest().getRequest().getId())
-        .setDeployId(task.getTaskRequest().getDeploy().getId())
-        .setPendingType(PendingType.RETRY)
-        .setUser(pendingTask.getUser())
-        .setRunId(pendingTask.getRunId())
-        .setCmdLineArgsList(pendingTask.getCmdLineArgsList())
-        .setSkipHealthchecks(pendingTask.getSkipHealthchecks())
-        .setMessage(pendingTask.getMessage())
-        .setResources(pendingTask.getResources())
-        .setS3UploaderAdditionalFiles(pendingTask.getS3UploaderAdditionalFiles())
-        .setRunAsUserOverride(pendingTask.getRunAsUserOverride())
-        .setEnvOverrides(pendingTask.getEnvOverrides())
-        .setExtraArtifacts(pendingTask.getExtraArtifacts())
-        .setActionId(pendingTask.getActionId())
-        .setRunAt(pendingTask.getPendingTaskId().getNextRunAt())
-        .setTimestamp(System.currentTimeMillis())
-        .build();
+      .setRequestId(task.getTaskRequest().getRequest().getId())
+      .setDeployId(task.getTaskRequest().getDeploy().getId())
+      .setPendingType(PendingType.RETRY)
+      .setUser(pendingTask.getUser())
+      .setRunId(pendingTask.getRunId())
+      .setCmdLineArgsList(pendingTask.getCmdLineArgsList())
+      .setSkipHealthchecks(pendingTask.getSkipHealthchecks())
+      .setMessage(pendingTask.getMessage())
+      .setResources(pendingTask.getResources())
+      .setS3UploaderAdditionalFiles(pendingTask.getS3UploaderAdditionalFiles())
+      .setRunAsUserOverride(pendingTask.getRunAsUserOverride())
+      .setEnvOverrides(pendingTask.getEnvOverrides())
+      .setExtraArtifacts(pendingTask.getExtraArtifacts())
+      .setActionId(pendingTask.getActionId())
+      .setRunAt(pendingTask.getPendingTaskId().getNextRunAt())
+      .setTimestamp(System.currentTimeMillis())
+      .build();
 
     requestManager.addToPendingQueue(pendingRequest);
   }
 
-  private StatusUpdateResult unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
+  private StatusUpdateResult unsafeProcessStatusUpdate(
+    Protos.TaskStatus status,
+    SingularityTaskId taskIdObj
+  ) {
     final String taskId = status.getTaskId().getValue();
 
     long timestamp = System.currentTimeMillis();
@@ -233,37 +297,84 @@ public class SingularityMesosStatusUpdateHandler {
     long now = System.currentTimeMillis();
     long delta = now - timestamp;
 
-    LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
+    LOG.debug(
+      "Update: task {} is now {} ({}) at {} (delta: {})",
+      taskId,
+      status.getState(),
+      status.getMessage(),
+      timestamp,
+      JavaUtils.durationFromMillis(delta)
+    );
     statusUpdateDeltas.update(delta);
 
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>empty());
-    final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(
+      taskIdObj,
+      Optional.of(mesosProtosUtils.taskStatusFromProtos(status)),
+      System.currentTimeMillis(),
+      serverId,
+      Optional.<String>empty()
+    );
+    final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(
+      taskIdObj
+    );
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
-    if (isRecoveryStatusUpdate(previousTaskStatusHolder, status.getReason(), taskState, newTaskStatusHolder)) {
-      LOG.info("Found recovery status update with reason {} for task {}", status.getReason(), taskId);
-      final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(taskIdObj);
-      if (!maybeTaskHistory.isPresent() || !maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {
-        LOG.warn("Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos", taskIdObj);
+    if (
+      isRecoveryStatusUpdate(
+        previousTaskStatusHolder,
+        status.getReason(),
+        taskState,
+        newTaskStatusHolder
+      )
+    ) {
+      LOG.info(
+        "Found recovery status update with reason {} for task {}",
+        status.getReason(),
+        taskId
+      );
+      final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(
+        taskIdObj
+      );
+      if (
+        !maybeTaskHistory.isPresent() ||
+        !maybeTaskHistory.get().getLastTaskUpdate().isPresent()
+      ) {
+        LOG.warn(
+          "Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos",
+          taskIdObj
+        );
         return StatusUpdateResult.KILL_TASK;
       }
-      boolean reactivated = taskManager.reactivateTask(taskIdObj, taskState, newTaskStatusHolder, Optional.ofNullable(status.getMessage()), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>empty());
+      boolean reactivated = taskManager.reactivateTask(
+        taskIdObj,
+        taskState,
+        newTaskStatusHolder,
+        Optional.ofNullable(status.getMessage()),
+        status.hasReason()
+          ? Optional.of(status.getReason().name())
+          : Optional.<String>empty()
+      );
       if (reactivated) {
         requestManager.addToPendingQueue(
-            new SingularityPendingRequest(
-                taskIdObj.getRequestId(),
-                taskIdObj.getDeployId(),
-                now,
-                Optional.empty(),
-                PendingType.TASK_RECOVERED,
-                Optional.empty(),
-                Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue())))
+          new SingularityPendingRequest(
+            taskIdObj.getRequestId(),
+            taskIdObj.getDeployId(),
+            now,
+            Optional.empty(),
+            PendingType.TASK_RECOVERED,
+            Optional.empty(),
+            Optional.of(
+              String.format("Agent %s recovered", status.getAgentId().getValue())
+            )
+          )
         );
         return StatusUpdateResult.DONE;
       } else {
         return StatusUpdateResult.KILL_TASK;
       }
-    } else if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
+    } else if (
+      isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)
+    ) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
       return StatusUpdateResult.IGNORED;
@@ -273,14 +384,16 @@ public class SingularityMesosStatusUpdateHandler {
 
     if (status.getState() == TaskState.TASK_LOST) {
       boolean isMesosFailure =
-          status.getReason() == Reason.REASON_INVALID_OFFERS
-          || status.getReason() == Reason.REASON_AGENT_REMOVED
-          || status.getReason() == Reason.REASON_AGENT_RESTARTED
-          || status.getReason() == Reason.REASON_AGENT_UNKNOWN
-          || status.getReason() == Reason.REASON_MASTER_DISCONNECTED
-          || status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
+        status.getReason() == Reason.REASON_INVALID_OFFERS ||
+        status.getReason() == Reason.REASON_AGENT_REMOVED ||
+        status.getReason() == Reason.REASON_AGENT_RESTARTED ||
+        status.getReason() == Reason.REASON_AGENT_UNKNOWN ||
+        status.getReason() == Reason.REASON_MASTER_DISCONNECTED ||
+        status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
 
-      RequestType requestType = task.isPresent() ? task.get().getTaskRequest().getRequest().getRequestType() : null;
+      RequestType requestType = task.isPresent()
+        ? task.get().getTaskRequest().getRequest().getRequestType()
+        : null;
       boolean isRelaunchable = requestType != null && !requestType.isLongRunning();
 
       if (isMesosFailure && isRelaunchable) {
@@ -295,7 +408,9 @@ public class SingularityMesosStatusUpdateHandler {
 
     if (!taskState.isDone()) {
       if (task.isPresent()) {
-        final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+        final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(
+          taskIdObj.getRequestId()
+        );
 
         Optional<SingularityRequestWithState> requestWithState = Optional.empty();
 
@@ -304,14 +419,24 @@ public class SingularityMesosStatusUpdateHandler {
           healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestWithState);
         }
 
-        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+        if (
+          !pendingDeploy.isPresent() ||
+          !pendingDeploy
+            .get()
+            .getDeployMarker()
+            .getDeployId()
+            .equals(taskIdObj.getDeployId())
+        ) {
           if (!requestWithState.isPresent()) {
             requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
           }
           newTaskChecker.enqueueNewTaskCheck(task.get(), requestWithState, healthchecker);
         }
       } else {
-        final String message = String.format("Task %s is active but is missing task data", taskId);
+        final String message = String.format(
+          "Task %s is active but is missing task data",
+          taskId
+        );
         exceptionNotifier.notify(message);
         LOG.error(message);
       }
@@ -319,9 +444,18 @@ public class SingularityMesosStatusUpdateHandler {
 
     final Optional<String> statusMessage = getStatusMessage(status, task);
 
-    final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>empty());
-    final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
+    final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(
+      taskIdObj,
+      timestamp,
+      taskState,
+      statusMessage,
+      status.hasReason()
+        ? Optional.of(status.getReason().name())
+        : Optional.<String>empty()
+    );
+    final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(
+      taskUpdate
+    );
 
     logSupport.checkDirectoryAndContainerId(taskIdObj);
 
@@ -331,40 +465,71 @@ public class SingularityMesosStatusUpdateHandler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      handleCompletedTaskState(status, taskIdObj, taskState, taskHistoryUpdateCreateResult, task, timestamp);
+      handleCompletedTaskState(
+        status,
+        taskIdObj,
+        taskState,
+        taskHistoryUpdateCreateResult,
+        task,
+        timestamp
+      );
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
     return StatusUpdateResult.DONE;
   }
 
-  private synchronized void handleCompletedTaskState(TaskStatus status, SingularityTaskId taskIdObj, ExtendedTaskState taskState,
-      SingularityCreateResult taskHistoryUpdateCreateResult, Optional<SingularityTask> task, long timestamp) {
+  private synchronized void handleCompletedTaskState(
+    TaskStatus status,
+    SingularityTaskId taskIdObj,
+    ExtendedTaskState taskState,
+    SingularityCreateResult taskHistoryUpdateCreateResult,
+    Optional<SingularityTask> task,
+    long timestamp
+  ) {
     // Method synchronized to prevent race condition where two tasks complete at the same time but the leader cache holding the state
     // doesn't get updated between each task completion. If this were to happen, then slaves would never transition from DECOMMISSIONING to
     // DECOMMISSIONED because each task state check thinks the other task is still running.
-    slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
-    scheduler.handleCompletedTask(task, taskIdObj, timestamp, taskState, taskHistoryUpdateCreateResult, status);
+    slaveAndRackManager.checkStateAfterFinishedTask(
+      taskIdObj,
+      status.getAgentId().getValue(),
+      leaderCache
+    );
+    scheduler.handleCompletedTask(
+      task,
+      taskIdObj,
+      timestamp,
+      taskState,
+      taskHistoryUpdateCreateResult,
+      status
+    );
   }
 
   public boolean hasRoomForMoreUpdates() {
-    return statusUpdatesExecutor.getQueue().size() < statusUpdatesExecutor.getQueueLimit();
+    return (
+      statusUpdatesExecutor.getQueue().size() < statusUpdatesExecutor.getQueueLimit()
+    );
   }
 
-  public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(Protos.TaskStatus status) {
-    return CompletableFuture.supplyAsync(() -> {
-      final String taskId = status.getTaskId().getValue();
-      final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
+  public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(
+    Protos.TaskStatus status
+  ) {
+    return CompletableFuture.supplyAsync(
+      () -> {
+        final String taskId = status.getTaskId().getValue();
+        final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
-      if (!maybeTaskId.isPresent()) {
-        return StatusUpdateResult.INVALID_TASK_ID;
-      }
+        if (!maybeTaskId.isPresent()) {
+          return StatusUpdateResult.INVALID_TASK_ID;
+        }
 
-      return schedulerLock.runWithRequestLockAndReturn(
+        return schedulerLock.runWithRequestLockAndReturn(
           () -> unsafeProcessStatusUpdate(status, maybeTaskId.get()),
           maybeTaskId.get().getRequestId(),
           getClass().getSimpleName()
-      );
-    }, statusUpdatesExecutor.getExecutorService());
+        );
+      },
+      statusUpdatesExecutor.getExecutorService()
+    );
   }
 }

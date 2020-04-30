@@ -1,19 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.hubspot.singularity.data.ShuffleConfigurationManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -37,10 +23,22 @@ import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.ShuffleConfigurationManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityUsageHelper {
@@ -58,14 +56,15 @@ public class SingularityUsageHelper {
 
   @Inject
   public SingularityUsageHelper(
-      MesosClient mesosClient,
-      SingularityConfiguration configuration,
-      SingularityExceptionNotifier exceptionNotifier,
-      RequestManager requestManager,
-      SlaveManager slaveManager,
-      TaskManager taskManager,
-      UsageManager usageManager,
-      ShuffleConfigurationManager shuffleConfigurationManager) {
+    MesosClient mesosClient,
+    SingularityConfiguration configuration,
+    SingularityExceptionNotifier exceptionNotifier,
+    RequestManager requestManager,
+    SlaveManager slaveManager,
+    TaskManager taskManager,
+    UsageManager usageManager,
+    ShuffleConfigurationManager shuffleConfigurationManager
+  ) {
     this.mesosClient = mesosClient;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
@@ -81,7 +80,10 @@ public class SingularityUsageHelper {
     List<SingularitySlave> slavesToTrack = new ArrayList<>(slaves.size());
 
     for (SingularitySlave slave : slaves) {
-      if (slave.getCurrentState().getState().isInactive() || slave.getCurrentState().getState() == MachineState.DECOMMISSIONED) {
+      if (
+        slave.getCurrentState().getState().isInactive() ||
+        slave.getCurrentState().getState() == MachineState.DECOMMISSIONED
+      ) {
         continue;
       }
 
@@ -96,18 +98,19 @@ public class SingularityUsageHelper {
   }
 
   public void collectSlaveUsage(
-      SingularitySlave slave,
-      long now,
-      Map<String, RequestUtilization> utilizationPerRequestId,
-      Map<String, RequestUtilization> previousUtilizations,
-      Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-      AtomicLong totalMemBytesUsed,
-      AtomicLong totalMemBytesAvailable,
-      AtomicDouble totalCpuUsed,
-      AtomicDouble totalCpuAvailable,
-      AtomicLong totalDiskBytesUsed,
-      AtomicLong totalDiskBytesAvailable,
-      boolean useShortTimeout) {
+    SingularitySlave slave,
+    long now,
+    Map<String, RequestUtilization> utilizationPerRequestId,
+    Map<String, RequestUtilization> previousUtilizations,
+    Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+    AtomicLong totalMemBytesUsed,
+    AtomicLong totalMemBytesAvailable,
+    AtomicDouble totalCpuUsed,
+    AtomicDouble totalCpuAvailable,
+    AtomicLong totalDiskBytesUsed,
+    AtomicLong totalDiskBytesAvailable,
+    boolean useShortTimeout
+  ) {
     Optional<Long> memoryMbTotal = Optional.empty();
     Optional<Double> cpusTotal = Optional.empty();
     Optional<Long> diskMbTotal = Optional.empty();
@@ -121,8 +124,13 @@ public class SingularityUsageHelper {
     long diskMbUsedOnSlave = 0;
 
     try {
-      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost(), useShortTimeout);
-      MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
+      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(
+        slave.getHost(),
+        useShortTimeout
+      );
+      MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(
+        slave.getHost()
+      );
       double systemMemTotalBytes = 0;
       double systemMemFreeBytes = 0;
       double systemLoad1Min = 0;
@@ -156,14 +164,27 @@ public class SingularityUsageHelper {
           break;
       }
 
-      boolean slaveOverloadedForCpu = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
-      boolean slaveExperiencingHighMemUsage = ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) > configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
+      boolean slaveOverloadedForCpu =
+        systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+      boolean slaveExperiencingHighMemUsage =
+        ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) >
+        configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
-      Set<String> shuffleBlacklist = new HashSet<>(shuffleConfigurationManager.getShuffleBlacklist());
+      Set<String> shuffleBlacklist = new HashSet<>(
+        shuffleConfigurationManager.getShuffleBlacklist()
+      );
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
-        if (!taskUsage.getFrameworkId().equals(configuration.getMesosConfiguration().getFrameworkId())) {
-          LOG.info("Skipping task {} from other framework {}", taskUsage.getSource(), taskUsage.getFrameworkId());
+        if (
+          !taskUsage
+            .getFrameworkId()
+            .equals(configuration.getMesosConfiguration().getFrameworkId())
+        ) {
+          LOG.info(
+            "Skipping task {} from other framework {}",
+            taskUsage.getSource(),
+            taskUsage.getFrameworkId()
+          );
           continue;
         }
         String taskId = taskUsage.getSource();
@@ -182,9 +203,10 @@ public class SingularityUsageHelper {
         Optional<SingularityTask> maybeTask = taskManager.getTask(task);
         Optional<Resources> maybeResources = Optional.empty();
         if (maybeTask.isPresent()) {
-          maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().isPresent() ?
-              maybeTask.get().getTaskRequest().getPendingTask().getResources() :
-              maybeTask.get().getTaskRequest().getDeploy().getResources();
+          maybeResources =
+            maybeTask.get().getTaskRequest().getPendingTask().getResources().isPresent()
+              ? maybeTask.get().getTaskRequest().getPendingTask().getResources()
+              : maybeTask.get().getTaskRequest().getDeploy().getResources();
           if (maybeResources.isPresent()) {
             Resources taskResources = maybeResources.get();
             double memoryMbReservedForTask = taskResources.getMemoryMb();
@@ -195,7 +217,18 @@ public class SingularityUsageHelper {
             cpuReservedOnSlave += cpuReservedForTask;
             diskMbReservedOnSlave += diskMbReservedForTask;
 
-            updateRequestUtilization(utilizationPerRequestId, previousUtilizations.get(maybeTask.get().getTaskRequest().getRequest().getId()), pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask);
+            updateRequestUtilization(
+              utilizationPerRequestId,
+              previousUtilizations.get(
+                maybeTask.get().getTaskRequest().getRequest().getId()
+              ),
+              pastTaskUsages,
+              latestUsage,
+              task,
+              memoryMbReservedForTask,
+              cpuReservedForTask,
+              diskMbReservedForTask
+            );
           }
         }
         memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
@@ -203,56 +236,117 @@ public class SingularityUsageHelper {
 
         SingularityTaskCurrentUsage currentUsage = null;
         if (pastTaskUsages.isEmpty()) {
-          Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
+          Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(
+            task,
+            ExtendedTaskState.TASK_STARTING
+          );
           if (maybeStartingUpdate.isPresent()) {
             long startTimestamp = maybeStartingUpdate.get().getTimestamp();
-            double usedCpusSinceStart = latestUsage.getCpuSeconds() / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - startTimestamp);
-            currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), (long) taskUsage.getStatistics().getTimestamp() * 1000, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
+            double usedCpusSinceStart =
+              latestUsage.getCpuSeconds() /
+              TimeUnit.MILLISECONDS.toSeconds(
+                latestUsage.getTimestamp() - startTimestamp
+              );
+            currentUsage =
+              new SingularityTaskCurrentUsage(
+                latestUsage.getMemoryTotalBytes(),
+                (long) taskUsage.getStatistics().getTimestamp() * 1000,
+                usedCpusSinceStart,
+                latestUsage.getDiskTotalBytes()
+              );
 
             cpusUsedOnSlave += usedCpusSinceStart;
           }
         } else {
           SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
-          double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / TimeUnit.MILLISECONDS.toSeconds(latestUsage.getTimestamp() - lastUsage.getTimestamp()));
+          double taskCpusUsed =
+            (
+              (latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) /
+              TimeUnit.MILLISECONDS.toSeconds(
+                latestUsage.getTimestamp() - lastUsage.getTimestamp()
+              )
+            );
 
-          currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), (long) taskUsage.getStatistics().getTimestamp() * 1000, taskCpusUsed, latestUsage.getDiskTotalBytes());
+          currentUsage =
+            new SingularityTaskCurrentUsage(
+              latestUsage.getMemoryTotalBytes(),
+              (long) taskUsage.getStatistics().getTimestamp() * 1000,
+              taskCpusUsed,
+              latestUsage.getDiskTotalBytes()
+            );
           cpusUsedOnSlave += taskCpusUsed;
         }
 
         if (currentUsage != null && currentUsage.getCpusUsed() > 0) {
           if (isEligibleForShuffle(task, shuffleBlacklist)) {
-            Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
-            if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
-              LOG.trace("Task {} already being cleaned up to spread cpu or mem usage, skipping", taskId);
+            Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(
+              task,
+              ExtendedTaskState.TASK_CLEANING
+            );
+            if (
+              maybeCleanupUpdate.isPresent() &&
+              isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())
+            ) {
+              LOG.trace(
+                "Task {} already being cleaned up to spread cpu or mem usage, skipping",
+                taskId
+              );
             } else {
               if (maybeResources.isPresent()) {
-                possibleTasksToShuffle.add(new TaskIdWithUsage(task, maybeResources.get(), currentUsage));
+                possibleTasksToShuffle.add(
+                  new TaskIdWithUsage(task, maybeResources.get(), currentUsage)
+                );
               }
             }
           }
         }
       }
 
-      if (!slave.getResources().isPresent() ||
-          !slave.getResources().get().getMemoryMegaBytes().isPresent() ||
-          !slave.getResources().get().getNumCpus().isPresent()) {
+      if (
+        !slave.getResources().isPresent() ||
+        !slave.getResources().get().getMemoryMegaBytes().isPresent() ||
+        !slave.getResources().get().getNumCpus().isPresent()
+      ) {
         LOG.debug("Could not find slave or resources for slave {}", slave.getId());
       } else {
-        memoryMbTotal = Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
-        cpusTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
+        memoryMbTotal =
+          Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
+        cpusTotal =
+          Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
         diskMbTotal = Optional.of(slave.getResources().get().getDiskSpace().get());
       }
 
-      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
-          memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
-          systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
+      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(
+        cpusUsedOnSlave,
+        cpuReservedOnSlave,
+        cpusTotal,
+        memoryBytesUsedOnSlave,
+        memoryMbReservedOnSlave,
+        memoryMbTotal,
+        diskMbUsedOnSlave,
+        diskMbReservedOnSlave,
+        diskMbTotal,
+        allTaskUsage.size(),
+        now,
+        systemMemTotalBytes,
+        systemMemFreeBytes,
+        systemCpusTotal,
+        systemLoad1Min,
+        systemLoad5Min,
+        systemLoad15Min,
+        slaveDiskUsed,
+        slaveDiskTotal
+      );
 
       if (slaveOverloadedForCpu || slaveExperiencingHighMemUsage) {
         overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
       }
 
-      if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
+      if (
+        slaveUsage.getMemoryBytesTotal().isPresent() &&
+        slaveUsage.getCpusTotal().isPresent()
+      ) {
         totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
         totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
         totalDiskBytesUsed.getAndAdd((long) slaveUsage.getDiskBytesUsed());
@@ -263,9 +357,14 @@ public class SingularityUsageHelper {
       }
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
-      usageManager.saveCurrentSlaveUsage(new SingularitySlaveUsageWithId(slaveUsage, slave.getId()));
+      usageManager.saveCurrentSlaveUsage(
+        new SingularitySlaveUsageWithId(slaveUsage, slave.getId())
+      );
     } catch (Throwable t) {
-      String message = String.format("Could not get slave usage for host %s", slave.getHost());
+      String message = String.format(
+        "Could not get slave usage for host %s",
+        slave.getHost()
+      );
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
     }
@@ -274,73 +373,113 @@ public class SingularityUsageHelper {
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
     double timestampMillis = taskUsage.getStatistics().getTimestamp() * 1000;
     return new SingularityTaskUsage(
-        taskUsage.getStatistics().getMemTotalBytes(),
-        (long) timestampMillis,
-        taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs(),
-        taskUsage.getStatistics().getDiskUsedBytes(),
-        taskUsage.getStatistics().getCpusNrPeriods(),
-        taskUsage.getStatistics().getCpusNrThrottled(),
-        taskUsage.getStatistics().getCpusThrottledTimeSecs());
+      taskUsage.getStatistics().getMemTotalBytes(),
+      (long) timestampMillis,
+      taskUsage.getStatistics().getCpusSystemTimeSecs() +
+      taskUsage.getStatistics().getCpusUserTimeSecs(),
+      taskUsage.getStatistics().getDiskUsedBytes(),
+      taskUsage.getStatistics().getCpusNrPeriods(),
+      taskUsage.getStatistics().getCpusNrThrottled(),
+      taskUsage.getStatistics().getCpusThrottledTimeSecs()
+    );
   }
 
-  private List<SingularityTaskUsage> getFullListOfTaskUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
+  private List<SingularityTaskUsage> getFullListOfTaskUsages(
+    List<SingularityTaskUsage> pastTaskUsages,
+    SingularityTaskUsage latestUsage,
+    SingularityTaskId task
+  ) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0, 0, 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(
+      new SingularityTaskUsage(0, task.getStartedAt(), 0, 0, 0, 0, 0)
+    ); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
     return pastTaskUsagesCopy;
   }
 
-
-  private boolean isEligibleForShuffle(SingularityTaskId task, Set<String> requestBlacklist) {
-    Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
+  private boolean isEligibleForShuffle(
+    SingularityTaskId task,
+    Set<String> requestBlacklist
+  ) {
+    Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(
+      task,
+      ExtendedTaskState.TASK_RUNNING
+    );
 
     return (
-        (!requestBlacklist.contains(task.getRequestId()) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId()))
-            && isLongRunning(task)
-            && (
-            configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
-                || (taskRunning.isPresent() && TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - taskRunning.get()
-                .getTimestamp()) >= configuration.getMinutesBeforeNewTaskEligibleForShuffle())
+      (
+        !requestBlacklist.contains(task.getRequestId()) &&
+        !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
+      ) &&
+      isLongRunning(task) &&
+      (
+        configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 || // Shuffle delay is disabled entirely
+        (
+          taskRunning.isPresent() &&
+          TimeUnit.MILLISECONDS.toMinutes(
+            System.currentTimeMillis() - taskRunning.get().getTimestamp()
+          ) >=
+          configuration.getMinutesBeforeNewTaskEligibleForShuffle()
         )
+      )
     );
   }
 
   private boolean isLongRunning(SingularityTaskId task) {
-    Optional<SingularityRequestWithState> request = requestManager.getRequest(task.getRequestId());
+    Optional<SingularityRequestWithState> request = requestManager.getRequest(
+      task.getRequestId()
+    );
     if (request.isPresent()) {
       return request.get().getRequest().getRequestType().isLongRunning();
     }
 
-    LOG.warn("Couldn't find request id {} for task {}", task.getRequestId(), task.getId());
+    LOG.warn(
+      "Couldn't find request id {} for task {}",
+      task.getRequestId(),
+      task.getId()
+    );
     return false;
   }
 
-  private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+  private boolean isTaskAlreadyCleanedUpForShuffle(
+    SingularityTaskHistoryUpdate taskHistoryUpdate
+  ) {
     String statusMessage = taskHistoryUpdate.getStatusMessage().orElse("");
-    if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
+    if (
+      statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) ||
+      statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())
+    ) {
       return true;
     }
     for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
       statusMessage = previous.getStatusMessage().orElse("");
-      if (statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) || statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())) {
+      if (
+        statusMessage.contains(TaskCleanupType.REBALANCE_CPU_USAGE.name()) ||
+        statusMessage.contains(TaskCleanupType.REBALANCE_MEMORY_USAGE.name())
+      ) {
         return true;
       }
     }
     return false;
   }
 
-  private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
-                                        RequestUtilization previous,
-                                        List<SingularityTaskUsage> pastTaskUsages,
-                                        SingularityTaskUsage latestUsage,
-                                        SingularityTaskId task,
-                                        double memoryMbReservedForTask,
-                                        double cpuReservedForTask,
-                                        double diskMbReservedForTask) {
+  private void updateRequestUtilization(
+    Map<String, RequestUtilization> utilizationPerRequestId,
+    RequestUtilization previous,
+    List<SingularityTaskUsage> pastTaskUsages,
+    SingularityTaskUsage latestUsage,
+    SingularityTaskId task,
+    double memoryMbReservedForTask,
+    double cpuReservedForTask,
+    double diskMbReservedForTask
+  ) {
     String requestId = task.getRequestId();
-    RequestUtilization newRequestUtilization = utilizationPerRequestId.getOrDefault(requestId, new RequestUtilization(requestId, task.getDeployId()));
+    RequestUtilization newRequestUtilization = utilizationPerRequestId.getOrDefault(
+      requestId,
+      new RequestUtilization(requestId, task.getDeployId())
+    );
     // Take the previous request utilization into account to better measure 24 hour max/min values
     if (previous != null) {
       if (previous.getMaxMemTimestamp() < DAY_IN_SECONDS) {
@@ -368,17 +507,31 @@ public class SingularityUsageHelper {
         newRequestUtilization.setMinDiskTimestamp(previous.getMinDiskTimestamp());
       }
       if (previous.getMaxCpuThrottledTimestamp() < DAY_IN_SECONDS) {
-        newRequestUtilization.setMaxPercentCpuTimeThrottled(previous.getMaxPercentCpuTimeThrottled());
-        newRequestUtilization.setMaxCpuThrottledTimestamp(previous.getMaxCpuThrottledTimestamp());
+        newRequestUtilization.setMaxPercentCpuTimeThrottled(
+          previous.getMaxPercentCpuTimeThrottled()
+        );
+        newRequestUtilization.setMaxCpuThrottledTimestamp(
+          previous.getMaxCpuThrottledTimestamp()
+        );
       }
       if (previous.getMinCpuThrottledTimestamp() < DAY_IN_SECONDS) {
-        newRequestUtilization.setMinPercentCpuTimeThrottled(previous.getMinPercentCpuTimeThrottled());
-        newRequestUtilization.setMinCpuThrottledTimestamp(previous.getMinCpuThrottledTimestamp());
+        newRequestUtilization.setMinPercentCpuTimeThrottled(
+          previous.getMinPercentCpuTimeThrottled()
+        );
+        newRequestUtilization.setMinCpuThrottledTimestamp(
+          previous.getMinCpuThrottledTimestamp()
+        );
       }
     }
 
-    List<SingularityTaskUsage> pastTaskUsagesCopy = getFullListOfTaskUsages(pastTaskUsages, latestUsage, task);
-    pastTaskUsagesCopy.sort(Comparator.comparingDouble(SingularityTaskUsage::getTimestamp));
+    List<SingularityTaskUsage> pastTaskUsagesCopy = getFullListOfTaskUsages(
+      pastTaskUsages,
+      latestUsage,
+      task
+    );
+    pastTaskUsagesCopy.sort(
+      Comparator.comparingDouble(SingularityTaskUsage::getTimestamp)
+    );
     int numTasks = pastTaskUsagesCopy.size() - 1; // One usage is a fake 0 usage to calculate first cpu times
 
     int numCpuOverages = 0;
@@ -386,9 +539,15 @@ public class SingularityUsageHelper {
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
-      double timeElapsed = (double) (newerUsage.getTimestamp() - olderUsage.getTimestamp()) / 1000;
-      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / timeElapsed;
-      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / timeElapsed;
+      double timeElapsed = (double) (
+        newerUsage.getTimestamp() - olderUsage.getTimestamp()
+      ) /
+      1000;
+      double cpusUsed =
+        (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / timeElapsed;
+      double percentCpuTimeThrottled =
+        (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) /
+        timeElapsed;
 
       if (cpusUsed > newRequestUtilization.getMaxCpuUsed()) {
         newRequestUtilization.setMaxCpuUsed(cpusUsed);
@@ -414,11 +573,15 @@ public class SingularityUsageHelper {
         newRequestUtilization.setMinDiskBytesUsed(newerUsage.getDiskTotalBytes());
         newRequestUtilization.setMaxDiskTimestamp(newerUsage.getTimestamp());
       }
-      if (percentCpuTimeThrottled > newRequestUtilization.getMaxPercentCpuTimeThrottled()) {
+      if (
+        percentCpuTimeThrottled > newRequestUtilization.getMaxPercentCpuTimeThrottled()
+      ) {
         newRequestUtilization.setMaxPercentCpuTimeThrottled(percentCpuTimeThrottled);
         newRequestUtilization.setMaxCpuThrottledTimestamp(newerUsage.getTimestamp());
       }
-      if (percentCpuTimeThrottled < newRequestUtilization.getMinPercentCpuTimeThrottled()) {
+      if (
+        percentCpuTimeThrottled < newRequestUtilization.getMinPercentCpuTimeThrottled()
+      ) {
         newRequestUtilization.setMinPercentCpuTimeThrottled(percentCpuTimeThrottled);
         newRequestUtilization.setMinCpuThrottledTimestamp(newerUsage.getTimestamp());
       }
@@ -428,20 +591,28 @@ public class SingularityUsageHelper {
       }
 
       newRequestUtilization
-          .addCpuUsed(cpusUsed)
-          .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
-          .addPercentCpuTimeThrottled(percentCpuTimeThrottled)
-          .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
-          .incrementTaskCount();
+        .addCpuUsed(cpusUsed)
+        .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
+        .addPercentCpuTimeThrottled(percentCpuTimeThrottled)
+        .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
+        .incrementTaskCount();
     }
 
-    double cpuBurstRating = pastTaskUsagesCopy.size() > 0 ? numCpuOverages / (double) pastTaskUsagesCopy.size() : 1;
+    double cpuBurstRating = pastTaskUsagesCopy.size() > 0
+      ? numCpuOverages / (double) pastTaskUsagesCopy.size()
+      : 1;
 
     newRequestUtilization
-        .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
-        .addCpuReserved(cpuReservedForTask * numTasks)
-        .addDiskBytesReserved((long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks)
-        .setCpuBurstRating(cpuBurstRating);
+      .addMemBytesReserved(
+        (long) (
+          memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks
+        )
+      )
+      .addCpuReserved(cpuReservedForTask * numTasks)
+      .addDiskBytesReserved(
+        (long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks
+      )
+      .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, newRequestUtilization);
   }

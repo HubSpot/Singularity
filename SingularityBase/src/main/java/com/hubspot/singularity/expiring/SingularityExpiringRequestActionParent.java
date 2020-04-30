@@ -1,25 +1,29 @@
 package com.hubspot.singularity.expiring;
 
+import com.hubspot.singularity.api.SingularityExpiringRequestParent;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
-import com.hubspot.singularity.api.SingularityExpiringRequestParent;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(
-    description = "Details about a future action",
-    subTypes = {
-        SingularityExpiringBounce.class,
-        SingularityExpiringPause.class,
-        SingularityExpiringScale.class,
-        SingularityExpiringSkipHealthchecks.class
-    }
+  description = "Details about a future action",
+  subTypes = {
+    SingularityExpiringBounce.class,
+    SingularityExpiringPause.class,
+    SingularityExpiringScale.class,
+    SingularityExpiringSkipHealthchecks.class
+  }
 )
-public abstract class SingularityExpiringRequestActionParent<T extends SingularityExpiringRequestParent> extends SingularityExpiringParent<T> {
-
+public abstract class SingularityExpiringRequestActionParent<T extends SingularityExpiringRequestParent>
+  extends SingularityExpiringParent<T> {
   private final String requestId;
 
-  public SingularityExpiringRequestActionParent(T expiringAPIRequestObject, Optional<String> user, long startMillis, String actionId, String requestId) {
+  public SingularityExpiringRequestActionParent(
+    T expiringAPIRequestObject,
+    Optional<String> user,
+    long startMillis,
+    String actionId,
+    String requestId
+  ) {
     super(expiringAPIRequestObject, user, startMillis, actionId);
     this.requestId = requestId;
   }
@@ -31,8 +35,13 @@ public abstract class SingularityExpiringRequestActionParent<T extends Singulari
 
   @Override
   public String toString() {
-    return "SingularityExpiringRequestActionParent{" +
-        "requestId='" + requestId + '\'' +
-        "} " + super.toString();
+    return (
+      "SingularityExpiringRequestActionParent{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      "} " +
+      super.toString()
+    );
   }
 }

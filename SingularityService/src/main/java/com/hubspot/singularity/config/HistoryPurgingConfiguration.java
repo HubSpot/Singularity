@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public class HistoryPurgingConfiguration {
-
   private int deleteTaskHistoryAfterDays = 0;
 
   private int deleteTaskHistoryAfterTasksPerRequest = 0;
@@ -47,7 +46,9 @@ public class HistoryPurgingConfiguration {
     return absentIfNotOverOne(deleteTaskHistoryAfterTasksPerRequest);
   }
 
-  public void setDeleteTaskHistoryAfterTasksPerRequest(int deleteTaskHistoryAfterTasksPerRequest) {
+  public void setDeleteTaskHistoryAfterTasksPerRequest(
+    int deleteTaskHistoryAfterTasksPerRequest
+  ) {
     this.deleteTaskHistoryAfterTasksPerRequest = deleteTaskHistoryAfterTasksPerRequest;
   }
 
@@ -63,8 +64,11 @@ public class HistoryPurgingConfiguration {
     return absentIfNotOverOne(deleteTaskHistoryBytesAfterTasksPerRequest);
   }
 
-  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(int deleteTaskHistoryBytesAfterTasksPerRequest) {
-    this.deleteTaskHistoryBytesAfterTasksPerRequest = deleteTaskHistoryBytesAfterTasksPerRequest;
+  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(
+    int deleteTaskHistoryBytesAfterTasksPerRequest
+  ) {
+    this.deleteTaskHistoryBytesAfterTasksPerRequest =
+      deleteTaskHistoryBytesAfterTasksPerRequest;
   }
 
   public int getCheckTaskHistoryEveryHours() {
@@ -76,7 +80,14 @@ public class HistoryPurgingConfiguration {
   }
 
   public boolean isEnabledAndValid() {
-    return enabled && checkTaskHistoryEveryHours > 0 && (getDeleteTaskHistoryAfterDays().isPresent() || getDeleteTaskHistoryAfterTasksPerRequest().isPresent());
+    return (
+      enabled &&
+      checkTaskHistoryEveryHours > 0 &&
+      (
+        getDeleteTaskHistoryAfterDays().isPresent() ||
+        getDeleteTaskHistoryAfterTasksPerRequest().isPresent()
+      )
+    );
   }
 
   public void setEnabled(boolean enabled) {
@@ -87,7 +98,9 @@ public class HistoryPurgingConfiguration {
     return requestOverrides;
   }
 
-  public void setRequestOverrides(Map<String, HistoryPurgeRequestSettings> requestOverrides) {
+  public void setRequestOverrides(
+    Map<String, HistoryPurgeRequestSettings> requestOverrides
+  ) {
     this.requestOverrides = requestOverrides;
   }
 

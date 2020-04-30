@@ -1,31 +1,33 @@
 package com.hubspot.singularity.auth.authenticator;
 
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import io.dropwizard.auth.Authenticator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.config.SingularityConfiguration;
-
-import io.dropwizard.auth.Authenticator;
-
-public class SingularityMultiMethodAuthenticator implements Authenticator<ContainerRequestContext, SingularityUser> {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMultiMethodAuthenticator.class);
+public class SingularityMultiMethodAuthenticator
+  implements Authenticator<ContainerRequestContext, SingularityUser> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityMultiMethodAuthenticator.class
+  );
 
   private final Set<SingularityAuthenticator> authenticators;
   private final SingularityConfiguration configuration;
 
   @javax.inject.Inject
-  public SingularityMultiMethodAuthenticator(Set<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
+  public SingularityMultiMethodAuthenticator(
+    Set<SingularityAuthenticator> authenticators,
+    SingularityConfiguration configuration
+  ) {
     this.authenticators = authenticators;
     this.configuration = configuration;
   }
@@ -42,9 +44,21 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
         LOG.trace("Unauthenticated: {}", t.getMessage());
         if (t instanceof WebApplicationException) {
           WebApplicationException wae = (WebApplicationException) t;
-          unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), wae.getResponse().getEntity().toString()));
+          unauthorizedExceptionMessages.add(
+            String.format(
+              "%s (%s)",
+              authenticator.getClass().getSimpleName(),
+              wae.getResponse().getEntity().toString()
+            )
+          );
         } else {
-          unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), t.getMessage()));
+          unauthorizedExceptionMessages.add(
+            String.format(
+              "%s (%s)",
+              authenticator.getClass().getSimpleName(),
+              t.getMessage()
+            )
+          );
         }
       }
     }
@@ -52,9 +66,22 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
     // No user found if we got here
     if (configuration.getAuthConfiguration().isEnabled()) {
       if (!unauthorizedExceptionMessages.isEmpty()) {
-        throw WebExceptions.unauthorized(String.format("Unable to authenticate using methods: %s", unauthorizedExceptionMessages));
+        throw WebExceptions.unauthorized(
+          String.format(
+            "Unable to authenticate using methods: %s",
+            unauthorizedExceptionMessages
+          )
+        );
       } else {
-        throw WebExceptions.unauthorized(String.format("Unable to authenticate user using methods: %s", authenticators.stream().map(SingularityAuthenticator::getClass).collect(Collectors.toList())));
+        throw WebExceptions.unauthorized(
+          String.format(
+            "Unable to authenticate user using methods: %s",
+            authenticators
+              .stream()
+              .map(SingularityAuthenticator::getClass)
+              .collect(Collectors.toList())
+          )
+        );
       }
     }
 

@@ -4,8 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema
 public enum RequestState {
-
-  ACTIVE(true), DELETING(false), DELETED(false), PAUSED(false), SYSTEM_COOLDOWN(true), FINISHED(false), DEPLOYING_TO_UNPAUSE(true);
+  ACTIVE(true),
+  DELETING(false),
+  DELETED(false),
+  PAUSED(false),
+  SYSTEM_COOLDOWN(true),
+  FINISHED(false),
+  DEPLOYING_TO_UNPAUSE(true);
 
   private final boolean isRunnable;
 
@@ -16,5 +21,4 @@ public enum RequestState {
   public boolean isRunnable() {
     return isRunnable;
   }
-
 }

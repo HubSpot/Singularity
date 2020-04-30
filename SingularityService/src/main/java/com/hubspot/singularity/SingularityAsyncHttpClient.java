@@ -1,9 +1,8 @@
 package com.hubspot.singularity;
 
-import javax.inject.Inject;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import javax.inject.Inject;
 
 public class SingularityAsyncHttpClient extends AsyncHttpClient {
 

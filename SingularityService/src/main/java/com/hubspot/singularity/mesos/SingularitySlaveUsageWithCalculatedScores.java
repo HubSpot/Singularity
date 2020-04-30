@@ -28,12 +28,14 @@ class SingularitySlaveUsageWithCalculatedScores {
 
   private final long timestamp;
 
-  SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage,
-                                            MachineLoadMetric systemLoadMetric,
-                                            MaxProbableUsage maxProbableTaskUsage,
-                                            double load5Threshold,
-                                            double load1Threshold,
-                                            long timestamp) {
+  SingularitySlaveUsageWithCalculatedScores(
+    SingularitySlaveUsage slaveUsage,
+    MachineLoadMetric systemLoadMetric,
+    MaxProbableUsage maxProbableTaskUsage,
+    double load5Threshold,
+    double load1Threshold,
+    long timestamp
+  ) {
     this.slaveUsage = slaveUsage;
     this.systemLoadMetric = systemLoadMetric;
     this.maxProbableTaskUsage = maxProbableTaskUsage;
@@ -50,16 +52,32 @@ class SingularitySlaveUsageWithCalculatedScores {
   }
 
   boolean isCpuOverloaded(double estimatedNumCpusToAdd) {
-    return  ((slaveUsage.getSystemLoad5Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load5Threshold
-        || ((slaveUsage.getSystemLoad1Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load1Threshold;
+    return (
+      (
+        (
+          slaveUsage.getSystemLoad5Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
+        ) /
+        slaveUsage.getSystemCpusTotal()
+      ) >
+      load5Threshold ||
+      (
+        (
+          slaveUsage.getSystemLoad1Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
+        ) /
+        slaveUsage.getSystemCpusTotal()
+      ) >
+      load1Threshold
+    );
   }
 
-  private void setScores(double cpusAllocatedScore,
-                 double memAllocatedScore,
-                 double diskAllocatedScore,
-                 double cpusInUseScore,
-                 double memInUseScore,
-                 double diskInUseScore) {
+  private void setScores(
+    double cpusAllocatedScore,
+    double memAllocatedScore,
+    double diskAllocatedScore,
+    double cpusInUseScore,
+    double memInUseScore,
+    double diskInUseScore
+  ) {
     this.cpusAllocatedScore = cpusAllocatedScore;
     this.memAllocatedScore = memAllocatedScore;
     this.diskAllocatedScore = diskAllocatedScore;
@@ -69,32 +87,59 @@ class SingularitySlaveUsageWithCalculatedScores {
   }
 
   private boolean missingUsageData(SingularitySlaveUsage slaveUsage) {
-    return !slaveUsage.getCpusTotal().isPresent() ||
-        !slaveUsage.getMemoryMbTotal().isPresent() ||
-        !slaveUsage.getDiskMbTotal().isPresent();
+    return (
+      !slaveUsage.getCpusTotal().isPresent() ||
+      !slaveUsage.getMemoryMbTotal().isPresent() ||
+      !slaveUsage.getDiskMbTotal().isPresent()
+    );
   }
 
   void recalculateScores() {
     setScores(
-        (slaveUsage.getCpusReserved() + estimatedAddedCpusUsage) / slaveUsage.getCpusTotal().get(),
-        ((slaveUsage.getMemoryMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) + estimatedAddedMemoryBytesUsage) / slaveUsage.getMemoryBytesTotal().get(),
-        ((slaveUsage.getDiskMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) + estimatedAddedDiskBytesUsage) / slaveUsage.getDiskBytesTotal().get(),
-        Math.max(0, 1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())),
-        1 - (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes()),
-        1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getSlaveDiskTotal())
+      (slaveUsage.getCpusReserved() + estimatedAddedCpusUsage) /
+      slaveUsage.getCpusTotal().get(),
+      (
+        (slaveUsage.getMemoryMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) +
+        estimatedAddedMemoryBytesUsage
+      ) /
+      slaveUsage.getMemoryBytesTotal().get(),
+      (
+        (slaveUsage.getDiskMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) +
+        estimatedAddedDiskBytesUsage
+      ) /
+      slaveUsage.getDiskBytesTotal().get(),
+      Math.max(
+        0,
+        1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())
+      ),
+      1 -
+      (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes()),
+      1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getSlaveDiskTotal())
     );
   }
 
   private double getMaxProbableCpuWithEstimatedUsage() {
-    return Math.max(getSystemLoadMetric(), maxProbableTaskUsage.getCpu()) + estimatedAddedCpusUsage;
+    return (
+      Math.max(getSystemLoadMetric(), maxProbableTaskUsage.getCpu()) +
+      estimatedAddedCpusUsage
+    );
   }
 
   private double getMaxProbableMemBytesWithEstimatedUsage() {
-    return Math.max(slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes(), maxProbableTaskUsage.getMemBytes()) + estimatedAddedMemoryBytesUsage;
+    return (
+      Math.max(
+        slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes(),
+        maxProbableTaskUsage.getMemBytes()
+      ) +
+      estimatedAddedMemoryBytesUsage
+    );
   }
 
   private double getMaxProbableDiskBytesWithEstimatedUsage() {
-    return Math.max(slaveUsage.getSlaveDiskUsed(), maxProbableTaskUsage.getDiskBytes()) + estimatedAddedDiskBytesUsage;
+    return (
+      Math.max(slaveUsage.getSlaveDiskUsed(), maxProbableTaskUsage.getDiskBytes()) +
+      estimatedAddedDiskBytesUsage
+    );
   }
 
   boolean isMissingUsageData() {
@@ -195,21 +240,37 @@ class SingularitySlaveUsageWithCalculatedScores {
 
   @Override
   public String toString() {
-    return "SingularitySlaveUsageWithCalculatedScores{" +
-        "slaveUsage=" + slaveUsage +
-        ", missingUsageData=" + missingUsageData +
-        ", cpusAllocatedScore=" + cpusAllocatedScore +
-        ", memAllocatedScore=" + memAllocatedScore +
-        ", diskAllocatedScore=" + diskAllocatedScore +
-        ", cpusInUseScore=" + cpusInUseScore +
-        ", memInUseScore=" + memInUseScore +
-        ", diskInUseScore=" + diskInUseScore +
-        ", estimatedAddedCpusUsage=" + estimatedAddedCpusUsage +
-        ", estimatedAddedMemoryBytesUsage=" + estimatedAddedMemoryBytesUsage +
-        ", estimatedAddedDiskBytesUsage=" + estimatedAddedDiskBytesUsage +
-        ", estimatedAddedCpusReserved=" + estimatedAddedCpusReserved +
-        ", estimatedAddedMemoryBytesReserved=" + estimatedAddedMemoryBytesReserved +
-        ", estimatedAddedDiskBytesReserved=" + estimatedAddedDiskBytesReserved +
-        '}';
+    return (
+      "SingularitySlaveUsageWithCalculatedScores{" +
+      "slaveUsage=" +
+      slaveUsage +
+      ", missingUsageData=" +
+      missingUsageData +
+      ", cpusAllocatedScore=" +
+      cpusAllocatedScore +
+      ", memAllocatedScore=" +
+      memAllocatedScore +
+      ", diskAllocatedScore=" +
+      diskAllocatedScore +
+      ", cpusInUseScore=" +
+      cpusInUseScore +
+      ", memInUseScore=" +
+      memInUseScore +
+      ", diskInUseScore=" +
+      diskInUseScore +
+      ", estimatedAddedCpusUsage=" +
+      estimatedAddedCpusUsage +
+      ", estimatedAddedMemoryBytesUsage=" +
+      estimatedAddedMemoryBytesUsage +
+      ", estimatedAddedDiskBytesUsage=" +
+      estimatedAddedDiskBytesUsage +
+      ", estimatedAddedCpusReserved=" +
+      estimatedAddedCpusReserved +
+      ", estimatedAddedMemoryBytesReserved=" +
+      estimatedAddedMemoryBytesReserved +
+      ", estimatedAddedDiskBytesReserved=" +
+      estimatedAddedDiskBytesReserved +
+      '}'
+    );
   }
 }

@@ -1,27 +1,26 @@
 package com.hubspot.singularity.data.zkmigrations;
 
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.data.MetadataManager;
+import java.util.List;
+import java.util.Optional;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ZkDataMigrationRunner {
-
   private static final Logger LOG = LoggerFactory.getLogger(ZkDataMigrationRunner.class);
 
   private final MetadataManager metadataManager;
   private final List<ZkDataMigration> migrations;
 
   @Inject
-  public ZkDataMigrationRunner(MetadataManager metadataManager, List<ZkDataMigration> migrations) {
+  public ZkDataMigrationRunner(
+    MetadataManager metadataManager,
+    List<ZkDataMigration> migrations
+  ) {
     this.metadataManager = metadataManager;
     this.migrations = migrations;
   }
@@ -31,7 +30,11 @@ public class ZkDataMigrationRunner {
     final Optional<String> currentVersion = metadataManager.getZkDataVersion();
     final int intVersionNumber = Integer.parseInt(currentVersion.orElse("0"));
 
-    LOG.info("Current ZK data version is {}, known migrations: {}", intVersionNumber, migrations);
+    LOG.info(
+      "Current ZK data version is {}, known migrations: {}",
+      intVersionNumber,
+      migrations
+    );
 
     int numMigrationsApplied = 0;
     int lastAppliedMigration = intVersionNumber;
@@ -57,9 +60,12 @@ public class ZkDataMigrationRunner {
       metadataManager.setZkDataVersion(Integer.toString(lastAppliedMigration));
     }
 
-    LOG.info("Applied {} migrations in {}", numMigrationsApplied, JavaUtils.duration(start));
+    LOG.info(
+      "Applied {} migrations in {}",
+      numMigrationsApplied,
+      JavaUtils.duration(start)
+    );
 
     return numMigrationsApplied;
   }
-
 }

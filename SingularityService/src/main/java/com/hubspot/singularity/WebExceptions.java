@@ -8,8 +8,7 @@ import javax.ws.rs.core.Response.Status;
 
 public final class WebExceptions {
 
-  private WebExceptions() {
-  }
+  private WebExceptions() {}
 
   public static void checkBadRequest(boolean condition, String message, Object... args) {
     if (!condition) {
@@ -35,7 +34,11 @@ public final class WebExceptions {
     }
   }
 
-  public static void checkUnauthorized(boolean condition, String message, Object... args) {
+  public static void checkUnauthorized(
+    boolean condition,
+    String message,
+    Object... args
+  ) {
     if (!condition) {
       unauthorized(message, args);
     }
@@ -88,12 +91,17 @@ public final class WebExceptions {
     return webException(429, message, args);
   }
 
-  private static WebApplicationException webException(int statusCode, String message, Object... formatArgs) {
+  private static WebApplicationException webException(
+    int statusCode,
+    String message,
+    Object... formatArgs
+  ) {
     if (formatArgs.length > 0) {
       message = format(message, formatArgs);
     }
 
-    throw new WebApplicationException(Response.status(statusCode).entity(message).type("text/plain").build());
+    throw new WebApplicationException(
+      Response.status(statusCode).entity(message).type("text/plain").build()
+    );
   }
-
 }

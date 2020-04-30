@@ -1,12 +1,10 @@
 package com.hubspot.mesos.json;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
 
 public class MesosTaskObject {
-
   private final MesosResourcesObject resources;
   private final String state;
   private final String id;
@@ -16,8 +14,15 @@ public class MesosTaskObject {
   private final String executorId;
 
   @JsonCreator
-  public MesosTaskObject(@JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("state") String state, @JsonProperty("id") String id, @JsonProperty("name") String name, @JsonProperty("slave_id") String slaveId,
-    @JsonProperty("framework_id") String frameworkId, @JsonProperty("executor_id") String executorId) {
+  public MesosTaskObject(
+    @JsonProperty("resources") MesosResourcesObject resources,
+    @JsonProperty("state") String state,
+    @JsonProperty("id") String id,
+    @JsonProperty("name") String name,
+    @JsonProperty("slave_id") String slaveId,
+    @JsonProperty("framework_id") String frameworkId,
+    @JsonProperty("executor_id") String executorId
+  ) {
     this.resources = resources;
     this.state = state;
     this.id = id;
@@ -64,13 +69,15 @@ public class MesosTaskObject {
       return false;
     }
     MesosTaskObject that = (MesosTaskObject) o;
-    return Objects.equals(resources, that.resources) &&
-        Objects.equals(state, that.state) &&
-        Objects.equals(id, that.id) &&
-        Objects.equals(name, that.name) &&
-        Objects.equals(slaveId, that.slaveId) &&
-        Objects.equals(frameworkId, that.frameworkId) &&
-        Objects.equals(executorId, that.executorId);
+    return (
+      Objects.equals(resources, that.resources) &&
+      Objects.equals(state, that.state) &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(name, that.name) &&
+      Objects.equals(slaveId, that.slaveId) &&
+      Objects.equals(frameworkId, that.frameworkId) &&
+      Objects.equals(executorId, that.executorId)
+    );
   }
 
   @Override
@@ -80,14 +87,29 @@ public class MesosTaskObject {
 
   @Override
   public String toString() {
-    return "MesosTaskObject{" +
-        "resources=" + resources +
-        ", state='" + state + '\'' +
-        ", id='" + id + '\'' +
-        ", name='" + name + '\'' +
-        ", slaveId='" + slaveId + '\'' +
-        ", frameworkId='" + frameworkId + '\'' +
-        ", executorId='" + executorId + '\'' +
-        '}';
+    return (
+      "MesosTaskObject{" +
+      "resources=" +
+      resources +
+      ", state='" +
+      state +
+      '\'' +
+      ", id='" +
+      id +
+      '\'' +
+      ", name='" +
+      name +
+      '\'' +
+      ", slaveId='" +
+      slaveId +
+      '\'' +
+      ", frameworkId='" +
+      frameworkId +
+      '\'' +
+      ", executorId='" +
+      executorId +
+      '\'' +
+      '}'
+    );
   }
 }

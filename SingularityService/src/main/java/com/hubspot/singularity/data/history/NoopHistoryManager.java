@@ -1,27 +1,23 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import javax.inject.Inject;
-
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import javax.inject.Inject;
 
 public class NoopHistoryManager implements HistoryManager {
 
   @Inject
-  public NoopHistoryManager() {
-  }
+  public NoopHistoryManager() {}
 
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
@@ -39,12 +35,19 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public Optional<SingularityDeployHistory> getDeployHistory(String requestId, String deployId) {
+  public Optional<SingularityDeployHistory> getDeployHistory(
+    String requestId,
+    String deployId
+  ) {
     return Optional.empty();
   }
 
   @Override
-  public List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
+  public List<SingularityDeployHistory> getDeployHistoryForRequest(
+    String requestId,
+    Integer limitStart,
+    Integer limitCount
+  ) {
     return Collections.emptyList();
   }
 
@@ -54,14 +57,35 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
-      Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
+  public List<SingularityTaskIdHistory> getTaskIdHistory(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter,
+    Optional<OrderDirection> orderDirection,
+    Optional<Integer> limitStart,
+    Integer limitCount
+  ) {
     return Collections.emptyList();
   }
 
   @Override
-  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
-        Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter) {
+  public int getTaskIdHistoryCount(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> startedBefore,
+    Optional<Long> startedAfter,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  ) {
     return 0;
   }
 
@@ -71,12 +95,20 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
+  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(
+    String requestId,
+    String runId
+  ) {
     return Optional.empty();
   }
 
   @Override
-  public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
+  public List<SingularityRequestHistory> getRequestHistory(
+    String requestId,
+    Optional<OrderDirection> orderDirection,
+    Integer limitStart,
+    Integer limitCount
+  ) {
     return Collections.emptyList();
   }
 
@@ -86,7 +118,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
+  public List<String> getRequestHistoryLike(
+    String requestIdLike,
+    Integer limitStart,
+    Integer limitCount
+  ) {
     return Collections.emptyList();
   }
 
@@ -101,7 +137,14 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount) {
+  public void purgeTaskHistory(
+    String requestId,
+    int count,
+    Optional<Integer> limit,
+    Optional<Date> purgeBefore,
+    boolean deleteRowInsteadOfUpdate,
+    Integer maxPurgeCount
+  ) {
     throw new UnsupportedOperationException("NoopHistoryManager can not update/delete");
   }
 

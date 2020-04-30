@@ -2,9 +2,6 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,11 +10,11 @@ import com.google.common.io.Resources;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-
 import io.dropwizard.views.View;
+import java.io.IOException;
+import java.util.Map;
 
 public class IndexView extends View {
-
   private final String appRoot;
   private final String apiDocs;
   private final String staticRoot;
@@ -77,19 +74,36 @@ public class IndexView extends View {
   private final String appCssPath;
   private final String vendorJsPath;
 
-  public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
+  public IndexView(
+    String singularityUriBase,
+    String appRoot,
+    IndexViewConfiguration configuration,
+    ObjectMapper mapper
+  ) {
     super("index.mustache");
-
     checkNotNull(singularityUriBase, "singularityUriBase is null");
 
     UIConfiguration uiConfiguration = configuration.getUiConfiguration();
 
     String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
 
-    this.appRoot = uiConfiguration.getAppRootOverride().orElse((rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot);
-    this.staticRoot = uiConfiguration.getStaticRootOverride().orElse(String.format("%s/static", singularityUriBase));
+    this.appRoot =
+      uiConfiguration
+        .getAppRootOverride()
+        .orElse(
+          (rawAppRoot.endsWith("/"))
+            ? rawAppRoot.substring(0, rawAppRoot.length() - 1)
+            : rawAppRoot
+        );
+    this.staticRoot =
+      uiConfiguration
+        .getStaticRootOverride()
+        .orElse(String.format("%s/static", singularityUriBase));
     this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
-    this.apiRoot = uiConfiguration.getApiRootOverride().orElse(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
+    this.apiRoot =
+      uiConfiguration
+        .getApiRootOverride()
+        .orElse(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
 
     this.title = uiConfiguration.getTitle();
 
@@ -107,9 +121,11 @@ public class IndexView extends View {
     this.navColor = uiConfiguration.getNavColor().orElse("");
 
     this.defaultBounceExpirationMinutes = configuration.getBounceExpirationMinutes();
-    this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
+    this.defaultHealthcheckIntervalSeconds =
+      configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
-    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().orElse(0);
+    this.defaultHealthcheckMaxRetries =
+      configuration.getHealthcheckMaxRetries().orElse(0);
     this.defaultStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
 
     this.runningTaskLogPath = uiConfiguration.getRunningTaskLogPath();
@@ -117,13 +133,16 @@ public class IndexView extends View {
 
     this.showTaskDiskResource = uiConfiguration.isShowTaskDiskResource();
 
-    this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().orElse("");
+    this.commonHostnameSuffixToOmit =
+      configuration.getCommonHostnameSuffixToOmit().orElse("");
 
     this.taskS3LogOmitPrefix = uiConfiguration.getTaskS3LogOmitPrefix().orElse("");
 
-    this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+    this.warnIfScheduledJobIsRunningPastNextRunPct =
+      configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
 
-    this.redirectOnUnauthorizedUrl = uiConfiguration.getRedirectOnUnauthorizedUrl().orElse("");
+    this.redirectOnUnauthorizedUrl =
+      uiConfiguration.getRedirectOnUnauthorizedUrl().orElse("");
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
@@ -160,8 +179,8 @@ public class IndexView extends View {
 
     try {
       Map<String, String> revManifest = mapper.readValue(
-          Resources.getResource("assets/static/rev-manifest.json"),
-          new TypeReference<Map<String, String>>(){}
+        Resources.getResource("assets/static/rev-manifest.json"),
+        new TypeReference<Map<String, String>>() {}
       );
       this.appCssPath = revManifest.get("css/app.css");
       this.appJsPath = revManifest.get("js/app.bundle.js");
@@ -333,47 +352,113 @@ public class IndexView extends View {
 
   @Override
   public String toString() {
-    return "IndexView{" +
-        "appRoot='" + appRoot + '\'' +
-        ", apiDocs='" + apiDocs + '\'' +
-        ", staticRoot='" + staticRoot + '\'' +
-        ", apiRoot='" + apiRoot + '\'' +
-        ", navColor='" + navColor + '\'' +
-        ", defaultMemory=" + defaultMemory +
-        ", defaultCpus=" + defaultCpus +
-        ", defaultDisk=" + defaultDisk +
-        ", hideNewDeployButton=" + hideNewDeployButton +
-        ", hideNewRequestButton=" + hideNewRequestButton +
-        ", loadBalancingEnabled=" + loadBalancingEnabled +
-        ", title='" + title + '\'' +
-        ", slaveHttpPort=" + slaveHttpPort +
-        ", slaveHttpsPort=" + slaveHttpsPort +
-        ", defaultBounceExpirationMinutes=" + defaultBounceExpirationMinutes +
-        ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
-        ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
-        ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
-        ", defaultStartupTimeoutSeconds=" + defaultStartupTimeoutSeconds +
-        ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
-        ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
-        ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
-        ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
-        ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
-        ", shellCommands='" + shellCommands + '\'' +
-        ", shortenSlaveUsageHostname=" + shortenSlaveUsageHostname +
-        ", timestampFormat='" + timestampFormat + '\'' +
-        ", showTaskDiskResource=" + showTaskDiskResource +
-        ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
-        ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
-        ", extraScript='" + extraScript + '\'' +
-        ", generateAuthHeader=" + generateAuthHeader +
-        ", authCookieName='" + authCookieName + '\'' +
-        ", authTokenKey='" + authTokenKey + '\'' +
-        ", quickLinks='" + quickLinks + '\'' +
-        ", navTitleLinks='" + navTitleLinks + '\'' +
-        ", lessTerminalPath='" + lessTerminalPath + '\'' +
-        ", appJsPath='" + appJsPath + '\'' +
-        ", appCssPath='" + appCssPath + '\'' +
-        ", vendorJsPath='" + vendorJsPath + '\'' +
-        "} " + super.toString();
+    return (
+      "IndexView{" +
+      "appRoot='" +
+      appRoot +
+      '\'' +
+      ", apiDocs='" +
+      apiDocs +
+      '\'' +
+      ", staticRoot='" +
+      staticRoot +
+      '\'' +
+      ", apiRoot='" +
+      apiRoot +
+      '\'' +
+      ", navColor='" +
+      navColor +
+      '\'' +
+      ", defaultMemory=" +
+      defaultMemory +
+      ", defaultCpus=" +
+      defaultCpus +
+      ", defaultDisk=" +
+      defaultDisk +
+      ", hideNewDeployButton=" +
+      hideNewDeployButton +
+      ", hideNewRequestButton=" +
+      hideNewRequestButton +
+      ", loadBalancingEnabled=" +
+      loadBalancingEnabled +
+      ", title='" +
+      title +
+      '\'' +
+      ", slaveHttpPort=" +
+      slaveHttpPort +
+      ", slaveHttpsPort=" +
+      slaveHttpsPort +
+      ", defaultBounceExpirationMinutes=" +
+      defaultBounceExpirationMinutes +
+      ", defaultHealthcheckIntervalSeconds=" +
+      defaultHealthcheckIntervalSeconds +
+      ", defaultHealthcheckTimeoutSeconds=" +
+      defaultHealthcheckTimeoutSeconds +
+      ", defaultHealthcheckMaxRetries=" +
+      defaultHealthcheckMaxRetries +
+      ", defaultStartupTimeoutSeconds=" +
+      defaultStartupTimeoutSeconds +
+      ", runningTaskLogPath='" +
+      runningTaskLogPath +
+      '\'' +
+      ", finishedTaskLogPath='" +
+      finishedTaskLogPath +
+      '\'' +
+      ", commonHostnameSuffixToOmit='" +
+      commonHostnameSuffixToOmit +
+      '\'' +
+      ", taskS3LogOmitPrefix='" +
+      taskS3LogOmitPrefix +
+      '\'' +
+      ", warnIfScheduledJobIsRunningPastNextRunPct=" +
+      warnIfScheduledJobIsRunningPastNextRunPct +
+      ", shellCommands='" +
+      shellCommands +
+      '\'' +
+      ", shortenSlaveUsageHostname=" +
+      shortenSlaveUsageHostname +
+      ", timestampFormat='" +
+      timestampFormat +
+      '\'' +
+      ", showTaskDiskResource=" +
+      showTaskDiskResource +
+      ", timestampWithSecondsFormat='" +
+      timestampWithSecondsFormat +
+      '\'' +
+      ", redirectOnUnauthorizedUrl='" +
+      redirectOnUnauthorizedUrl +
+      '\'' +
+      ", extraScript='" +
+      extraScript +
+      '\'' +
+      ", generateAuthHeader=" +
+      generateAuthHeader +
+      ", authCookieName='" +
+      authCookieName +
+      '\'' +
+      ", authTokenKey='" +
+      authTokenKey +
+      '\'' +
+      ", quickLinks='" +
+      quickLinks +
+      '\'' +
+      ", navTitleLinks='" +
+      navTitleLinks +
+      '\'' +
+      ", lessTerminalPath='" +
+      lessTerminalPath +
+      '\'' +
+      ", appJsPath='" +
+      appJsPath +
+      '\'' +
+      ", appCssPath='" +
+      appCssPath +
+      '\'' +
+      ", vendorJsPath='" +
+      vendorJsPath +
+      '\'' +
+      "} " +
+      super.toString()
+    );
   }
 }

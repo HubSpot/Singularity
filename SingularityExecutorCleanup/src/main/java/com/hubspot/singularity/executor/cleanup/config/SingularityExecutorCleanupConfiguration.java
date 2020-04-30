@@ -1,15 +1,5 @@
 package com.hubspot.singularity.executor.cleanup.config;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityS3UploaderFile;
@@ -17,8 +7,18 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.shared.CompressionType;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
-@Configuration(filename = "/etc/singularity.executor.cleanup.yaml", consolidatedField = "executorCleanup")
+@Configuration(
+  filename = "/etc/singularity.executor.cleanup.yaml",
+  consolidatedField = "executorCleanup"
+)
 public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean safeModeWontRunWithNoTasks = true;
@@ -69,7 +69,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   private String defaultServiceFinishedTailLog = "tail_of_finished_service.log";
 
   @NotNull
-  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(
+    SingularityS3UploaderFile.fromString("service.log")
+  );
 
   @NotNull
   private String defaultS3Bucket = "";
@@ -113,8 +115,11 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return cleanupAppDirectoryOfFailedTasksAfterMillis;
   }
 
-  public void setCleanupAppDirectoryOfFailedTasksAfterMillis(long cleanupAppDirectoryOfFailedTasksAfterMillis) {
-    this.cleanupAppDirectoryOfFailedTasksAfterMillis = cleanupAppDirectoryOfFailedTasksAfterMillis;
+  public void setCleanupAppDirectoryOfFailedTasksAfterMillis(
+    long cleanupAppDirectoryOfFailedTasksAfterMillis
+  ) {
+    this.cleanupAppDirectoryOfFailedTasksAfterMillis =
+      cleanupAppDirectoryOfFailedTasksAfterMillis;
   }
 
   public List<String> getSingularityHosts() {
@@ -153,7 +158,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return singularityClientCredentials;
   }
 
-  public void setSingularityClientCredentials(Optional<SingularityClientCredentials> singularityClientCredentials) {
+  public void setSingularityClientCredentials(
+    Optional<SingularityClientCredentials> singularityClientCredentials
+  ) {
     this.singularityClientCredentials = singularityClientCredentials;
   }
 
@@ -161,7 +168,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return singularityClientCredentialsPath;
   }
 
-  public void setSingularityClientCredentialsPath(Optional<String> singularityClientCredentialsPath) {
+  public void setSingularityClientCredentialsPath(
+    Optional<String> singularityClientCredentialsPath
+  ) {
     this.singularityClientCredentialsPath = singularityClientCredentialsPath;
   }
 
@@ -185,7 +194,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return defaultServiceLog;
   }
 
-  public SingularityExecutorCleanupConfiguration setDefaultServiceLog(String defaultServiceLog) {
+  public SingularityExecutorCleanupConfiguration setDefaultServiceLog(
+    String defaultServiceLog
+  ) {
     this.defaultServiceLog = defaultServiceLog;
     return this;
   }
@@ -194,7 +205,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return defaultServiceFinishedTailLog;
   }
 
-  public SingularityExecutorCleanupConfiguration setDefaultServiceFinishedTailLog(String defaultServiceFinishedTailLog) {
+  public SingularityExecutorCleanupConfiguration setDefaultServiceFinishedTailLog(
+    String defaultServiceFinishedTailLog
+  ) {
     this.defaultServiceFinishedTailLog = defaultServiceFinishedTailLog;
     return this;
   }
@@ -203,7 +216,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return s3UploaderAdditionalFiles;
   }
 
-  public SingularityExecutorCleanupConfiguration setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public SingularityExecutorCleanupConfiguration setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     return this;
   }
@@ -212,7 +227,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return defaultS3Bucket;
   }
 
-  public SingularityExecutorCleanupConfiguration setDefaultS3Bucket(String defaultS3Bucket) {
+  public SingularityExecutorCleanupConfiguration setDefaultS3Bucket(
+    String defaultS3Bucket
+  ) {
     this.defaultS3Bucket = defaultS3Bucket;
     return this;
   }
@@ -228,24 +245,51 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @Override
   public String toString() {
-    return "SingularityExecutorCleanupConfiguration{" +
-        "safeModeWontRunWithNoTasks=" + safeModeWontRunWithNoTasks +
-        ", executorCleanupResultsDirectory='" + executorCleanupResultsDirectory + '\'' +
-        ", executorCleanupResultsSuffix='" + executorCleanupResultsSuffix + '\'' +
-        ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
-        ", singularityHosts=" + singularityHosts +
-        ", singularityUseSsl=" + singularityUseSsl +
-        ", singularityContextPath='" + singularityContextPath + '\'' +
-        ", runDockerCleanup=" + runDockerCleanup +
-        ", singularityClientCredentials=" + singularityClientCredentials +
-        ", singularityClientCredentialsPath=" + singularityClientCredentialsPath +
-        ", cleanTasksWhenDecommissioned=" + cleanTasksWhenDecommissioned +
-        ", compressionType=" + compressionType +
-        ", defaultServiceLog='" + defaultServiceLog + '\'' +
-        ", defaultServiceFinishedTailLog='" + defaultServiceFinishedTailLog + '\'' +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", defaultS3Bucket='" + defaultS3Bucket + '\'' +
-        ", s3KeyFormat='" + s3KeyFormat + '\'' +
-        "} " + super.toString();
+    return (
+      "SingularityExecutorCleanupConfiguration{" +
+      "safeModeWontRunWithNoTasks=" +
+      safeModeWontRunWithNoTasks +
+      ", executorCleanupResultsDirectory='" +
+      executorCleanupResultsDirectory +
+      '\'' +
+      ", executorCleanupResultsSuffix='" +
+      executorCleanupResultsSuffix +
+      '\'' +
+      ", cleanupAppDirectoryOfFailedTasksAfterMillis=" +
+      cleanupAppDirectoryOfFailedTasksAfterMillis +
+      ", singularityHosts=" +
+      singularityHosts +
+      ", singularityUseSsl=" +
+      singularityUseSsl +
+      ", singularityContextPath='" +
+      singularityContextPath +
+      '\'' +
+      ", runDockerCleanup=" +
+      runDockerCleanup +
+      ", singularityClientCredentials=" +
+      singularityClientCredentials +
+      ", singularityClientCredentialsPath=" +
+      singularityClientCredentialsPath +
+      ", cleanTasksWhenDecommissioned=" +
+      cleanTasksWhenDecommissioned +
+      ", compressionType=" +
+      compressionType +
+      ", defaultServiceLog='" +
+      defaultServiceLog +
+      '\'' +
+      ", defaultServiceFinishedTailLog='" +
+      defaultServiceFinishedTailLog +
+      '\'' +
+      ", s3UploaderAdditionalFiles=" +
+      s3UploaderAdditionalFiles +
+      ", defaultS3Bucket='" +
+      defaultS3Bucket +
+      '\'' +
+      ", s3KeyFormat='" +
+      s3KeyFormat +
+      '\'' +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -7,7 +7,13 @@ public class DockerContext {
   private final int stopTimeout;
   private final boolean privileged;
 
-  public DockerContext(EnvironmentContext envContext, RunnerContext runContext, String prefix, int stopTimeout, boolean privileged) {
+  public DockerContext(
+    EnvironmentContext envContext,
+    RunnerContext runContext,
+    String prefix,
+    int stopTimeout,
+    boolean privileged
+  ) {
     this.envContext = envContext;
     this.runContext = runContext;
     this.prefix = prefix;
@@ -37,12 +43,20 @@ public class DockerContext {
 
   @Override
   public String toString() {
-    return "DockerContext{" +
-        "envContext=" + envContext +
-        ", runContext=" + runContext +
-        ", prefix='" + prefix + '\'' +
-        ", stopTimeout=" + stopTimeout +
-        ", privileged=" + privileged +
-        '}';
+    return (
+      "DockerContext{" +
+      "envContext=" +
+      envContext +
+      ", runContext=" +
+      runContext +
+      ", prefix='" +
+      prefix +
+      '\'' +
+      ", stopTimeout=" +
+      stopTimeout +
+      ", privileged=" +
+      privileged +
+      '}'
+    );
   }
 }

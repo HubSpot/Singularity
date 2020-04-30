@@ -1,14 +1,16 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.hubspot.baragon.models.BaragonServiceState;
+import java.util.Optional;
 
 public class SingularityCheckingUpstreamsUpdate {
   private final Optional<BaragonServiceState> baragonServiceState;
   private final String singularityRequestId;
 
-  public SingularityCheckingUpstreamsUpdate (Optional<BaragonServiceState> baragonServiceState, String singularityRequest) {
+  public SingularityCheckingUpstreamsUpdate(
+    Optional<BaragonServiceState> baragonServiceState,
+    String singularityRequest
+  ) {
     this.baragonServiceState = baragonServiceState;
     this.singularityRequestId = singularityRequest;
   }
@@ -23,9 +25,13 @@ public class SingularityCheckingUpstreamsUpdate {
 
   @Override
   public String toString() {
-    return "SingularityCheckingUpstreamsUpdate{" +
-        " baragonServiceState=" + baragonServiceState +
-        ", singularityRequestId=" + singularityRequestId +
-        '}';
+    return (
+      "SingularityCheckingUpstreamsUpdate{" +
+      " baragonServiceState=" +
+      baragonServiceState +
+      ", singularityRequestId=" +
+      singularityRequestId +
+      '}'
+    );
   }
 }

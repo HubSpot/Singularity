@@ -1,9 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,30 +10,42 @@ import com.hubspot.mesos.protos.MesosRangeObject;
 import com.hubspot.mesos.protos.MesosResourceObject;
 import com.hubspot.mesos.protos.MesosStringValue;
 import com.hubspot.mesos.protos.MesosTaskObject;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Schema(description = "Describes a singularity task")
 public class SingularityTask extends SingularityTaskIdHolder {
-
   private final SingularityTaskRequest taskRequest;
   private final List<MesosOfferObject> offers;
   private final MesosTaskObject mesosTask;
   private final Optional<String> rackId;
 
-  public SingularityTask(SingularityTaskRequest taskRequest, SingularityTaskId taskId, List<MesosOfferObject> offers, MesosTaskObject task, Optional<String> rackId) {
+  public SingularityTask(
+    SingularityTaskRequest taskRequest,
+    SingularityTaskId taskId,
+    List<MesosOfferObject> offers,
+    MesosTaskObject task,
+    Optional<String> rackId
+  ) {
     this(taskRequest, taskId, null, offers, task, rackId);
   }
 
   @JsonCreator
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest,
-                         @JsonProperty("taskId") SingularityTaskId taskId,
-                         @JsonProperty("offer") MesosOfferObject offer,
-                         @JsonProperty("offers") List<MesosOfferObject> offers,
-                         @JsonProperty("mesosTask") MesosTaskObject task,
-                         @JsonProperty("rackId") Optional<String> rackId) {
+  public SingularityTask(
+    @JsonProperty("taskRequest") SingularityTaskRequest taskRequest,
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("offer") MesosOfferObject offer,
+    @JsonProperty("offers") List<MesosOfferObject> offers,
+    @JsonProperty("mesosTask") MesosTaskObject task,
+    @JsonProperty("rackId") Optional<String> rackId
+  ) {
     super(taskId);
-    Preconditions.checkArgument(offer != null || offers != null, "Must specify at least one of offer / offers");
+    Preconditions.checkArgument(
+      offer != null || offers != null,
+      "Must specify at least one of offer / offers"
+    );
     this.taskRequest = taskRequest;
     this.mesosTask = task;
     this.rackId = rackId;
@@ -48,7 +56,9 @@ public class SingularityTask extends SingularityTaskIdHolder {
     }
   }
 
-  @Schema(description = "The full request, deploy, and pending task data used to launch this tasl")
+  @Schema(
+    description = "The full request, deploy, and pending task data used to launch this tasl"
+  )
   public SingularityTaskRequest getTaskRequest() {
     return taskRequest;
   }
@@ -57,17 +67,17 @@ public class SingularityTask extends SingularityTaskIdHolder {
    * Use getOffers instead. getOffer will currently return the first offer in getOffers
    */
   @Deprecated
-  @Schema(hidden=true, title = "The offer used to launch this task")
+  @Schema(hidden = true, title = "The offer used to launch this task")
   public MesosOfferObject getOffer() {
     return offers.get(0);
   }
 
-  @Schema(hidden=true, title = "The list of offers used to launch this task")
+  @Schema(hidden = true, title = "The list of offers used to launch this task")
   public List<MesosOfferObject> getOffers() {
     return offers;
   }
 
-  @Schema(hidden=true, title = "The full mesos task definition (from the mesos protos)")
+  @Schema(hidden = true, title = "The full mesos task definition (from the mesos protos)")
   public MesosTaskObject getMesosTask() {
     return mesosTask;
   }
@@ -92,7 +102,10 @@ public class SingularityTask extends SingularityTaskIdHolder {
     Optional<MesosResourceObject> maybePortResource = getPortsResource();
     final List<Long> ports = Lists.newArrayList();
     if (maybePortResource.isPresent() && maybePortResource.get().hasRanges()) {
-      List<MesosRangeObject> portRanges = maybePortResource.get().getRanges().getRangesList();
+      List<MesosRangeObject> portRanges = maybePortResource
+        .get()
+        .getRanges()
+        .getRangesList();
       for (MesosRangeObject range : portRanges) {
         for (long port = range.getBegin(); port <= range.getEnd(); port++) {
           ports.add(port);
@@ -127,7 +140,11 @@ public class SingularityTask extends SingularityTaskIdHolder {
 
     SingularityTask task = (SingularityTask) o;
 
-    if (taskRequest != null ? !taskRequest.equals(task.taskRequest) : task.taskRequest != null) {
+    if (
+      taskRequest != null
+        ? !taskRequest.equals(task.taskRequest)
+        : task.taskRequest != null
+    ) {
       return false;
     }
     if (offers != null ? !offers.equals(task.offers) : task.offers != null) {
@@ -150,11 +167,17 @@ public class SingularityTask extends SingularityTaskIdHolder {
 
   @Override
   public String toString() {
-    return "SingularityTask{" +
-        "taskRequest=" + taskRequest +
-        ", offer=" + offers +
-        ", mesosTask=" + mesosTask +
-        ", rackId=" + rackId +
-        '}';
+    return (
+      "SingularityTask{" +
+      "taskRequest=" +
+      taskRequest +
+      ", offer=" +
+      offers +
+      ", mesosTask=" +
+      mesosTask +
+      ", rackId=" +
+      rackId +
+      '}'
+    );
   }
 }

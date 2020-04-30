@@ -38,8 +38,10 @@ public class RequestUtilization {
   private long minCpuThrottledTimestamp = 0;
 
   @JsonCreator
-  public RequestUtilization(@JsonProperty("requestId") String requestId,
-                            @JsonProperty("deployId") String deployId) {
+  public RequestUtilization(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") String deployId
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
   }
@@ -213,7 +215,9 @@ public class RequestUtilization {
     return maxPercentCpuTimeThrottled;
   }
 
-  public RequestUtilization setMaxPercentCpuTimeThrottled(double maxPercentCpuTimeThrottled) {
+  public RequestUtilization setMaxPercentCpuTimeThrottled(
+    double maxPercentCpuTimeThrottled
+  ) {
     this.maxPercentCpuTimeThrottled = maxPercentCpuTimeThrottled;
     return this;
   }
@@ -222,7 +226,9 @@ public class RequestUtilization {
     return minPercentCpuTimeThrottled;
   }
 
-  public RequestUtilization setMinPercentCpuTimeThrottled(double minPercentCpuTimeThrottled) {
+  public RequestUtilization setMinPercentCpuTimeThrottled(
+    double minPercentCpuTimeThrottled
+  ) {
     this.minPercentCpuTimeThrottled = minPercentCpuTimeThrottled;
     return this;
   }
@@ -301,26 +307,49 @@ public class RequestUtilization {
 
   @Override
   public String toString() {
-    return "RequestUtilization{" +
-        "requestId='" + requestId + '\'' +
-        ", deployId='" + deployId + '\'' +
-        ", memBytesUsed=" + memBytesUsed +
-        ", memBytesReserved=" + memBytesReserved +
-        ", cpuUsed=" + cpuUsed +
-        ", cpuReserved=" + cpuReserved +
-        ", diskBytesUsed=" + diskBytesUsed +
-        ", diskBytesReserved=" + diskBytesReserved +
-        ", numTasks=" + numTasks +
-        ", maxMemBytesUsed=" + maxMemBytesUsed +
-        ", minMemBytesUsed=" + minMemBytesUsed +
-        ", maxCpuUsed=" + maxCpuUsed +
-        ", minCpuUsed=" + minCpuUsed +
-        ", maxDiskBytesUsed=" + maxDiskBytesUsed +
-        ", minDiskBytesUsed=" + minDiskBytesUsed +
-        ", cpuBurstRating=" + cpuBurstRating +
-        ", percentCpuTimeThrottled=" + percentCpuTimeThrottled +
-        ", maxPercentCpuTimeThrottled=" + maxPercentCpuTimeThrottled +
-        ", minPercentCpuTimeThrottled=" + minPercentCpuTimeThrottled +
-        '}';
+    return (
+      "RequestUtilization{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", deployId='" +
+      deployId +
+      '\'' +
+      ", memBytesUsed=" +
+      memBytesUsed +
+      ", memBytesReserved=" +
+      memBytesReserved +
+      ", cpuUsed=" +
+      cpuUsed +
+      ", cpuReserved=" +
+      cpuReserved +
+      ", diskBytesUsed=" +
+      diskBytesUsed +
+      ", diskBytesReserved=" +
+      diskBytesReserved +
+      ", numTasks=" +
+      numTasks +
+      ", maxMemBytesUsed=" +
+      maxMemBytesUsed +
+      ", minMemBytesUsed=" +
+      minMemBytesUsed +
+      ", maxCpuUsed=" +
+      maxCpuUsed +
+      ", minCpuUsed=" +
+      minCpuUsed +
+      ", maxDiskBytesUsed=" +
+      maxDiskBytesUsed +
+      ", minDiskBytesUsed=" +
+      minDiskBytesUsed +
+      ", cpuBurstRating=" +
+      cpuBurstRating +
+      ", percentCpuTimeThrottled=" +
+      percentCpuTimeThrottled +
+      ", maxPercentCpuTimeThrottled=" +
+      maxPercentCpuTimeThrottled +
+      ", minPercentCpuTimeThrottled=" +
+      minPercentCpuTimeThrottled +
+      '}'
+    );
   }
 }

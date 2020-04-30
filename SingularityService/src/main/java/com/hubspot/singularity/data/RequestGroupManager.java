@@ -1,12 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.utils.ZKPaths;
-
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +8,11 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 
 @Singleton
 public class RequestGroupManager extends CuratorAsyncManager {
@@ -24,8 +22,13 @@ public class RequestGroupManager extends CuratorAsyncManager {
   private final SingularityWebCache webCache;
 
   @Inject
-  public RequestGroupManager(CuratorFramework curator, SingularityConfiguration configuration,
-                             MetricRegistry metricRegistry, Transcoder<SingularityRequestGroup> requestGroupTranscoder, SingularityWebCache webCache) {
+  public RequestGroupManager(
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    Transcoder<SingularityRequestGroup> requestGroupTranscoder,
+    SingularityWebCache webCache
+  ) {
     super(curator, configuration, metricRegistry);
     this.requestGroupTranscoder = requestGroupTranscoder;
     this.webCache = webCache;
@@ -39,7 +42,10 @@ public class RequestGroupManager extends CuratorAsyncManager {
     if (useWebCache && webCache.useCachedRequestGroups()) {
       return webCache.getRequestGroups();
     }
-    List<SingularityRequestGroup> requestGroups = getAsyncChildren(REQUEST_GROUP_ROOT, requestGroupTranscoder);
+    List<SingularityRequestGroup> requestGroups = getAsyncChildren(
+      REQUEST_GROUP_ROOT,
+      requestGroupTranscoder
+    );
     if (useWebCache) {
       webCache.cacheRequestGroups(requestGroups);
     }
@@ -51,7 +57,11 @@ public class RequestGroupManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveRequestGroup(SingularityRequestGroup requestGroup) {
-    return save(getRequestGroupPath(requestGroup.getId()), requestGroup, requestGroupTranscoder);
+    return save(
+      getRequestGroupPath(requestGroup.getId()),
+      requestGroup,
+      requestGroupTranscoder
+    );
   }
 
   public SingularityDeleteResult deleteRequestGroup(String requestGroupId) {
@@ -59,21 +69,22 @@ public class RequestGroupManager extends CuratorAsyncManager {
   }
 
   public void removeFromAllGroups(String requestId) {
-    getRequestGroups(false).stream()
-        .filter((g) -> g.getRequestIds().contains(requestId))
-        .forEach((g) -> {
+    getRequestGroups(false)
+      .stream()
+      .filter(g -> g.getRequestIds().contains(requestId))
+      .forEach(
+        g -> {
           List<String> ids = new ArrayList<>();
           ids.addAll(g.getRequestIds());
           ids.remove(requestId);
           if (ids.isEmpty()) {
             deleteRequestGroup(g.getId());
           } else {
-            saveRequestGroup(new SingularityRequestGroup(
-                g.getId(),
-                ids,
-                g.getMetadata()
-            ));
+            saveRequestGroup(
+              new SingularityRequestGroup(g.getId(), ids, g.getMetadata())
+            );
           }
-        });
+        }
+      );
   }
 }

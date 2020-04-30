@@ -3,7 +3,6 @@ package com.hubspot.singularity.helpers;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.dmfs.rfc5545.DateTime;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
@@ -25,7 +24,8 @@ public class RFC5545Schedule {
     if (matcher.find()) {
       DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
       this.dtStart = formatter.parseDateTime(matcher.group(1));
-      this.recurrenceRule = new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
+      this.recurrenceRule =
+        new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
     } else {
       this.recurrenceRule = new RecurrenceRule(schedule);
       this.dtStart = org.joda.time.DateTime.now().withSecondOfMinute(0);
@@ -38,13 +38,25 @@ public class RFC5545Schedule {
 
   public Date getNextValidTime() {
     final long now = System.currentTimeMillis();
-    DateTime startDateTime = new DateTime(dtStart.getYear(), (dtStart.getMonthOfYear() - 1), dtStart.getDayOfMonth(),
-      dtStart.getHourOfDay(), dtStart.getMinuteOfHour(), dtStart.getSecondOfMinute());
+    DateTime startDateTime = new DateTime(
+      dtStart.getYear(),
+      (dtStart.getMonthOfYear() - 1),
+      dtStart.getDayOfMonth(),
+      dtStart.getHourOfDay(),
+      dtStart.getMinuteOfHour(),
+      dtStart.getSecondOfMinute()
+    );
     RecurrenceRuleIterator timeIterator = recurrenceRule.iterator(startDateTime);
 
     int count = 0;
-    while (timeIterator.hasNext() && (count < MAX_ITERATIONS || (recurrenceRule.hasPart(Part.COUNT) && count < recurrenceRule.getCount()))) {
-      count ++;
+    while (
+      timeIterator.hasNext() &&
+      (
+        count < MAX_ITERATIONS ||
+        (recurrenceRule.hasPart(Part.COUNT) && count < recurrenceRule.getCount())
+      )
+    ) {
+      count++;
       long nextRunAtTimestamp = timeIterator.nextMillis();
       if (nextRunAtTimestamp >= now) {
         return new Date(nextRunAtTimestamp);

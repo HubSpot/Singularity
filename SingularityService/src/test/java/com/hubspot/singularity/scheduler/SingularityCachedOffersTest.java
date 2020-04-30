@@ -1,13 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.mesos.v1.Protos.Offer;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -16,9 +8,14 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.mesos.OfferCache;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.apache.mesos.v1.Protos.Offer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
-
   @Inject
   private SingularitySchedulerPoller schedulerPoller;
 
@@ -26,10 +23,13 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
   private OfferCache offerCache;
 
   public SingularityCachedOffersTest() {
-    super(false, (configuration) -> {
-      configuration.setCacheOffers(true);
-      return null;
-    });
+    super(
+      false,
+      configuration -> {
+        configuration.setCacheOffers(true);
+        return null;
+      }
+    );
   }
 
   @Test
@@ -43,7 +43,14 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.postRequest(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)).setInstances(Optional.of(2)).build(), singularityUser);
+    requestResource.postRequest(
+      request
+        .toBuilder()
+        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setInstances(Optional.of(2))
+        .build(),
+      singularityUser
+    );
 
     schedulerPoller.runActionOnPoll();
 
@@ -65,15 +72,15 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
 
     requestManager.addToPendingQueue(
-        new SingularityPendingRequest(
-            requestId,
-            firstDeployId,
-            System.currentTimeMillis(),
-            Optional.empty(),
-            PendingType.TASK_DONE,
-            Optional.empty(),
-            Optional.empty()
-        )
+      new SingularityPendingRequest(
+        requestId,
+        firstDeployId,
+        System.currentTimeMillis(),
+        Optional.empty(),
+        PendingType.TASK_DONE,
+        Optional.empty(),
+        Optional.empty()
+      )
     );
 
     scheduler.drainPendingQueue();
@@ -87,27 +94,49 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
   public void testLeftoverCachedOffersAreReturnedToCache() throws Exception {
     configuration.setCacheOffers(true);
 
-    Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"80:81"});
-    Offer extraOffer = createOffer(4, 256, 1024, "slave1", "host1", Optional.empty(), Collections.emptyMap(), new String[]{"83:84"});
+    Offer neededOffer = createOffer(
+      1,
+      128,
+      1024,
+      "slave1",
+      "host1",
+      Optional.empty(),
+      Collections.emptyMap(),
+      new String[] { "80:81" }
+    );
+    Offer extraOffer = createOffer(
+      4,
+      256,
+      1024,
+      "slave1",
+      "host1",
+      Optional.empty(),
+      Collections.emptyMap(),
+      new String[] { "83:84" }
+    );
 
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer)).join();
 
     initRequest();
 
-    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
-        .setCommand(Optional.of("sleep 100")), Optional.of(new Resources(1, 128, 2, 0))
-    );
+    firstDeploy =
+      initAndFinishDeploy(
+        request,
+        new SingularityDeployBuilder(request.getId(), firstDeployId)
+        .setCommand(Optional.of("sleep 100")),
+        Optional.of(new Resources(1, 128, 2, 0))
+      );
 
     requestManager.addToPendingQueue(
-        new SingularityPendingRequest(
-            requestId,
-            firstDeployId,
-            System.currentTimeMillis(),
-            Optional.empty(),
-            PendingType.TASK_DONE,
-            Optional.empty(),
-            Optional.empty()
-        )
+      new SingularityPendingRequest(
+        requestId,
+        firstDeployId,
+        System.currentTimeMillis(),
+        Optional.empty(),
+        PendingType.TASK_DONE,
+        Optional.empty(),
+        Optional.empty()
+      )
     );
 
     schedulerPoller.runActionOnPoll();
@@ -127,8 +156,17 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
 
     initRequest();
     initFirstDeploy();
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.empty(), PendingType.TASK_DONE,
-        Optional.empty(), Optional.empty()));
+    requestManager.addToPendingQueue(
+      new SingularityPendingRequest(
+        requestId,
+        firstDeployId,
+        System.currentTimeMillis(),
+        Optional.empty(),
+        PendingType.TASK_DONE,
+        Optional.empty(),
+        Optional.empty()
+      )
+    );
 
     schedulerPoller.runActionOnPoll();
 

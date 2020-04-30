@@ -1,7 +1,6 @@
 package com.hubspot.singularity.config;
 
 import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
 
 public class S3GroupConfiguration {
@@ -47,9 +46,11 @@ public class S3GroupConfiguration {
       return false;
     }
     S3GroupConfiguration that = (S3GroupConfiguration) o;
-    return Objects.equals(s3Bucket, that.s3Bucket) &&
-            Objects.equals(s3AccessKey, that.s3AccessKey) &&
-            Objects.equals(s3SecretKey, that.s3SecretKey);
+    return (
+      Objects.equals(s3Bucket, that.s3Bucket) &&
+      Objects.equals(s3AccessKey, that.s3AccessKey) &&
+      Objects.equals(s3SecretKey, that.s3SecretKey)
+    );
   }
 
   @Override

@@ -1,24 +1,25 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
+import com.hubspot.singularity.runner.base.configuration.Configuration;
+import com.hubspot.singularity.runner.base.jackson.Obfuscate;
+import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
-import com.hubspot.singularity.runner.base.configuration.Configuration;
-import com.hubspot.singularity.runner.base.jackson.Obfuscate;
-import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
-
-@Configuration(filename = "/etc/singularity.s3uploader.yaml", consolidatedField = "s3uploader")
+@Configuration(
+  filename = "/etc/singularity.s3uploader.yaml",
+  consolidatedField = "s3uploader"
+)
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
   @Min(0)
   @JsonProperty
@@ -120,7 +121,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     return stopCheckingAfterMillisWithoutNewFile;
   }
 
-  public void setStopCheckingAfterMillisWithoutNewFile(long stopCheckingAfterMillisWithoutNewFile) {
+  public void setStopCheckingAfterMillisWithoutNewFile(
+    long stopCheckingAfterMillisWithoutNewFile
+  ) {
     this.stopCheckingAfterMillisWithoutNewFile = stopCheckingAfterMillisWithoutNewFile;
   }
 
@@ -192,7 +195,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     return s3BucketCredentials;
   }
 
-  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+  public void setS3BucketCredentials(
+    Map<String, SingularityS3Credentials> s3BucketCredentials
+  ) {
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
@@ -200,27 +205,46 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     return s3ContentHeaders;
   }
 
-  public void setS3ContentHeaders(List<SingularityS3UploaderContentHeaders> s3ContentHeaders) {
+  public void setS3ContentHeaders(
+    List<SingularityS3UploaderContentHeaders> s3ContentHeaders
+  ) {
     this.s3ContentHeaders = s3ContentHeaders;
   }
 
   @Override
   public String toString() {
-    return "SingularityS3UploaderConfiguration{" +
-        "pollForShutDownMillis=" + pollForShutDownMillis +
-        ", executorMaxUploadThreads=" + executorMaxUploadThreads +
-        ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
-        ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
-        ", s3AccessKey=" + s3AccessKey +
-        ", s3SecretKey=" + s3SecretKey +
-        ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
-        ", uploadPartSize=" + uploadPartSize +
-        ", retryWaitMs=" + retryWaitMs +
-        ", retryCount=" + retryCount +
-        ", checkForOpenFiles=" + checkForOpenFiles +
-        ", checkOpenFilesViaFuser=" + checkOpenFilesViaFuser +
-        ", s3BucketCredentials=" + s3BucketCredentials +
-        ", s3ContentHeaders=" + s3ContentHeaders +
-        "} " + super.toString();
+    return (
+      "SingularityS3UploaderConfiguration{" +
+      "pollForShutDownMillis=" +
+      pollForShutDownMillis +
+      ", executorMaxUploadThreads=" +
+      executorMaxUploadThreads +
+      ", checkUploadsEverySeconds=" +
+      checkUploadsEverySeconds +
+      ", stopCheckingAfterMillisWithoutNewFile=" +
+      stopCheckingAfterMillisWithoutNewFile +
+      ", s3AccessKey=" +
+      s3AccessKey +
+      ", s3SecretKey=" +
+      s3SecretKey +
+      ", maxSingleUploadSizeBytes=" +
+      maxSingleUploadSizeBytes +
+      ", uploadPartSize=" +
+      uploadPartSize +
+      ", retryWaitMs=" +
+      retryWaitMs +
+      ", retryCount=" +
+      retryCount +
+      ", checkForOpenFiles=" +
+      checkForOpenFiles +
+      ", checkOpenFilesViaFuser=" +
+      checkOpenFilesViaFuser +
+      ", s3BucketCredentials=" +
+      s3BucketCredentials +
+      ", s3ContentHeaders=" +
+      s3ContentHeaders +
+      "} " +
+      super.toString()
+    );
   }
 }

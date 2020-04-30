@@ -1,17 +1,15 @@
 package com.hubspot.singularity.executor.task;
 
+import com.hubspot.deploy.S3ArtifactSignature;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.slf4j.Logger;
-
-import com.hubspot.deploy.S3ArtifactSignature;
-import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
 public class SingularityExecutorArtifactVerifier {
   private final Logger log;
@@ -19,7 +17,12 @@ public class SingularityExecutorArtifactVerifier {
   private final SingularityS3Configuration s3Configuration;
   private final SingularityExecutorTaskDefinition taskDefinition;
 
-  public SingularityExecutorArtifactVerifier(SingularityExecutorTaskDefinition taskDefinition, Logger log, SingularityExecutorConfiguration executorConfiguration, SingularityS3Configuration s3Configuration) {
+  public SingularityExecutorArtifactVerifier(
+    SingularityExecutorTaskDefinition taskDefinition,
+    Logger log,
+    SingularityExecutorConfiguration executorConfiguration,
+    SingularityS3Configuration s3Configuration
+  ) {
     this.log = log;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
@@ -28,7 +31,9 @@ public class SingularityExecutorArtifactVerifier {
 
   public void checkSignatures(List<S3ArtifactSignature> s3ArtifactsWithSignatures) {
     if (s3ArtifactsWithSignatures.isEmpty()) {
-      log.info("No files containing artifact signatures specified, skipping verification.");
+      log.info(
+        "No files containing artifact signatures specified, skipping verification."
+      );
       return;
     }
 
@@ -38,18 +43,34 @@ public class SingularityExecutorArtifactVerifier {
   }
 
   private void checkArtifactSignature(S3ArtifactSignature s3ArtifactSignature) {
-    final Path artifactPath = Paths.get(s3Configuration.getArtifactCacheDirectory(), s3ArtifactSignature.getArtifactFilename());
-    final Path artifactSignaturePath = Paths.get(s3Configuration.getArtifactCacheDirectory(), s3ArtifactSignature.getFilename());
+    final Path artifactPath = Paths.get(
+      s3Configuration.getArtifactCacheDirectory(),
+      s3ArtifactSignature.getArtifactFilename()
+    );
+    final Path artifactSignaturePath = Paths.get(
+      s3Configuration.getArtifactCacheDirectory(),
+      s3ArtifactSignature.getFilename()
+    );
 
     if (!Files.exists(artifactPath)) {
-      log.warn("Artifact {} not found for signature {}", artifactPath, s3ArtifactSignature);
+      log.warn(
+        "Artifact {} not found for signature {}",
+        artifactPath,
+        s3ArtifactSignature
+      );
       return;
     }
 
-    final List<String> verifyCommand = new ArrayList<>(executorConfiguration.getArtifactSignatureVerificationCommand().size());
+    final List<String> verifyCommand = new ArrayList<>(
+      executorConfiguration.getArtifactSignatureVerificationCommand().size()
+    );
 
     for (String arg : executorConfiguration.getArtifactSignatureVerificationCommand()) {
-      verifyCommand.add(arg.replace("{artifactPath}", artifactPath.toString()).replace("{artifactSignaturePath}", artifactSignaturePath.toString()));
+      verifyCommand.add(
+        arg
+          .replace("{artifactPath}", artifactPath.toString())
+          .replace("{artifactSignaturePath}", artifactSignaturePath.toString())
+      );
     }
 
     try {
@@ -62,16 +83,26 @@ public class SingularityExecutorArtifactVerifier {
 
       final Process p = processBuilder.start();
 
-      p.waitFor();  // TODO: add some sort of timeout?
+      p.waitFor(); // TODO: add some sort of timeout?
 
       if (p.exitValue() != 0) {
-        log.error("Failed to validate signature in file {} for artifact file {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
+        log.error(
+          "Failed to validate signature in file {} for artifact file {}",
+          s3ArtifactSignature.getFilename(),
+          s3ArtifactSignature.getArtifactFilename()
+        );
 
         if (executorConfiguration.isFailTaskOnInvalidArtifactSignature()) {
-          throw new RuntimeException(String.format("Failed to validate signature for artifact %s", artifactPath));
+          throw new RuntimeException(
+            String.format("Failed to validate signature for artifact %s", artifactPath)
+          );
         }
       } else {
-        log.info("Signature in {} for artifact {} is valid!", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
+        log.info(
+          "Signature in {} for artifact {} is valid!",
+          s3ArtifactSignature.getFilename(),
+          s3ArtifactSignature.getArtifactFilename()
+        );
       }
     } catch (InterruptedException | IOException e) {
       throw new RuntimeException(e);

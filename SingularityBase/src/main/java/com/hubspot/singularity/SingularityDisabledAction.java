@@ -1,10 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
+import java.util.Optional;
 
 public class SingularityDisabledAction {
   private final SingularityAction type;
@@ -14,8 +13,13 @@ public class SingularityDisabledAction {
   private final Optional<Long> expiresAt;
 
   @JsonCreator
-  public SingularityDisabledAction(@JsonProperty("type") SingularityAction type, @JsonProperty("message") String message, @JsonProperty("user") Optional<String> user,
-                                   @JsonProperty("automaticallyClearable") boolean automaticallyClearable, @JsonProperty("expiresAt") Optional<Long> expiresAt) {
+  public SingularityDisabledAction(
+    @JsonProperty("type") SingularityAction type,
+    @JsonProperty("message") String message,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("automaticallyClearable") boolean automaticallyClearable,
+    @JsonProperty("expiresAt") Optional<Long> expiresAt
+  ) {
     this.type = type;
     this.message = message;
     this.user = user;
@@ -52,11 +56,13 @@ public class SingularityDisabledAction {
       return false;
     }
     SingularityDisabledAction that = (SingularityDisabledAction) o;
-    return automaticallyClearable == that.automaticallyClearable &&
-        type == that.type &&
-        Objects.equals(message, that.message) &&
-        Objects.equals(user, that.user) &&
-        Objects.equals(expiresAt, that.expiresAt);
+    return (
+      automaticallyClearable == that.automaticallyClearable &&
+      type == that.type &&
+      Objects.equals(message, that.message) &&
+      Objects.equals(user, that.user) &&
+      Objects.equals(expiresAt, that.expiresAt)
+    );
   }
 
   @Override
@@ -66,12 +72,20 @@ public class SingularityDisabledAction {
 
   @Override
   public String toString() {
-    return "SingularityDisabledAction{" +
-        "type=" + type +
-        ", message='" + message + '\'' +
-        ", user=" + user +
-        ", automaticallyClearable=" + automaticallyClearable +
-        ", expiresAt=" + expiresAt +
-        '}';
+    return (
+      "SingularityDisabledAction{" +
+      "type=" +
+      type +
+      ", message='" +
+      message +
+      '\'' +
+      ", user=" +
+      user +
+      ", automaticallyClearable=" +
+      automaticallyClearable +
+      ", expiresAt=" +
+      expiresAt +
+      '}'
+    );
   }
 }

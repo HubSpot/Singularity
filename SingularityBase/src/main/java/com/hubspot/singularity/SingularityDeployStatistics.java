@@ -1,20 +1,17 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Task statistics related to a particular deploy")
 public class SingularityDeployStatistics {
-
   private final String requestId;
   private final String deployId;
   private final int numTasks;
@@ -28,18 +25,24 @@ public class SingularityDeployStatistics {
   private final List<TaskFailureEvent> taskFailureEvents;
 
   @JsonCreator
-  public SingularityDeployStatistics(@JsonProperty("requestId") String requestId,
-                                     @JsonProperty("deployId") String deployId,
-                                     @JsonProperty("numSuccess") int numSuccess,
-                                     @JsonProperty("numFailures") int numFailures,
-                                     @JsonProperty("numSequentialRetries") int numSequentialRetries,
-                                     @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt,
-                                     @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
-                                     @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps,
-                                     @JsonProperty("numTasks") int numTasks,
-                                     @JsonProperty("averageRuntimeMillis") Optional<Long> averageRuntimeMillis,
-                                     @JsonProperty("averageSchedulingDelayMillis") Optional<Long> averageSchedulingDelayMillis,
-                                     @JsonProperty("taskFailureEvents") List<TaskFailureEvent> taskFailureEvents) {
+  public SingularityDeployStatistics(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") String deployId,
+    @JsonProperty("numSuccess") int numSuccess,
+    @JsonProperty("numFailures") int numFailures,
+    @JsonProperty("numSequentialRetries") int numSequentialRetries,
+    @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt,
+    @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
+    @JsonProperty(
+      "instanceSequentialFailureTimestamps"
+    ) ListMultimap<Integer, Long> instanceSequentialFailureTimestamps,
+    @JsonProperty("numTasks") int numTasks,
+    @JsonProperty("averageRuntimeMillis") Optional<Long> averageRuntimeMillis,
+    @JsonProperty(
+      "averageSchedulingDelayMillis"
+    ) Optional<Long> averageSchedulingDelayMillis,
+    @JsonProperty("taskFailureEvents") List<TaskFailureEvent> taskFailureEvents
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -50,20 +53,21 @@ public class SingularityDeployStatistics {
     this.numTasks = numTasks;
     this.averageRuntimeMillis = averageRuntimeMillis;
     this.averageSchedulingDelayMillis = averageSchedulingDelayMillis;
-    this.taskFailureEvents = taskFailureEvents == null ? Collections.emptyList() : taskFailureEvents;
+    this.taskFailureEvents =
+      taskFailureEvents == null ? Collections.emptyList() : taskFailureEvents;
   }
 
   public SingularityDeployStatisticsBuilder toBuilder() {
     return new SingularityDeployStatisticsBuilder(requestId, deployId)
-        .setLastFinishAt(lastFinishAt)
-        .setLastTaskState(lastTaskState)
-        .setNumSequentialRetries(numSequentialRetries)
-        .setNumFailures(numFailures)
-        .setNumSuccess(numSuccess)
-        .setNumTasks(numTasks)
-        .setAverageRuntimeMillis(averageRuntimeMillis)
-        .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
-        .setTaskFailureEvents(new ArrayList<>(taskFailureEvents));
+      .setLastFinishAt(lastFinishAt)
+      .setLastTaskState(lastTaskState)
+      .setNumSequentialRetries(numSequentialRetries)
+      .setNumFailures(numFailures)
+      .setNumSuccess(numSuccess)
+      .setNumTasks(numTasks)
+      .setAverageRuntimeMillis(averageRuntimeMillis)
+      .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
+      .setTaskFailureEvents(new ArrayList<>(taskFailureEvents));
   }
 
   @Schema(description = "The number of tasks associated with this deploy")
@@ -71,7 +75,10 @@ public class SingularityDeployStatistics {
     return numTasks;
   }
 
-  @Schema(description = "Average runtime of tasks associated with this deploy", nullable = true)
+  @Schema(
+    description = "Average runtime of tasks associated with this deploy",
+    nullable = true
+  )
   public Optional<Long> getAverageRuntimeMillis() {
     return averageRuntimeMillis;
   }
@@ -91,12 +98,16 @@ public class SingularityDeployStatistics {
     return deployId;
   }
 
-  @Schema(description = "Number of sequential successful tasks (used in cooldown calculations)")
+  @Schema(
+    description = "Number of sequential successful tasks (used in cooldown calculations)"
+  )
   public int getNumSuccess() {
     return numSuccess;
   }
 
-  @Schema(description = "Number of sequential failed tasks (used in cooldown calculations)")
+  @Schema(
+    description = "Number of sequential failed tasks (used in cooldown calculations)"
+  )
   public int getNumFailures() {
     return numFailures;
   }
@@ -111,7 +122,9 @@ public class SingularityDeployStatistics {
     return lastTaskState;
   }
 
-  @Schema(description = "Number of retries for tasks in this deploy, relevant for scheduled request types")
+  @Schema(
+    description = "Number of retries for tasks in this deploy, relevant for scheduled request types"
+  )
   public int getNumSequentialRetries() {
     return numSequentialRetries;
   }
@@ -129,17 +142,31 @@ public class SingularityDeployStatistics {
 
   @Override
   public String toString() {
-    return "SingularityDeployStatistics{" +
-        "requestId='" + requestId + '\'' +
-        ", deployId='" + deployId + '\'' +
-        ", numTasks=" + numTasks +
-        ", numSuccess=" + numSuccess +
-        ", numFailures=" + numFailures +
-        ", numSequentialRetries=" + numSequentialRetries +
-        ", lastFinishAt=" + lastFinishAt +
-        ", lastTaskState=" + lastTaskState +
-        ", averageRuntimeMillis=" + averageRuntimeMillis +
-        ", averageSchedulingDelayMillis=" + averageSchedulingDelayMillis +
-        '}';
+    return (
+      "SingularityDeployStatistics{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", deployId='" +
+      deployId +
+      '\'' +
+      ", numTasks=" +
+      numTasks +
+      ", numSuccess=" +
+      numSuccess +
+      ", numFailures=" +
+      numFailures +
+      ", numSequentialRetries=" +
+      numSequentialRetries +
+      ", lastFinishAt=" +
+      lastFinishAt +
+      ", lastTaskState=" +
+      lastTaskState +
+      ", averageRuntimeMillis=" +
+      averageRuntimeMillis +
+      ", averageSchedulingDelayMillis=" +
+      averageSchedulingDelayMillis +
+      '}'
+    );
   }
 }

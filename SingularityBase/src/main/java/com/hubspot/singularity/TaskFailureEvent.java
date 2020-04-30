@@ -9,9 +9,11 @@ public class TaskFailureEvent {
   private final TaskFailureType type;
 
   @JsonCreator
-  public TaskFailureEvent(@JsonProperty("instance") int instance,
-                          @JsonProperty("timestamp") long timestamp,
-                          @JsonProperty("type") TaskFailureType type) {
+  public TaskFailureEvent(
+    @JsonProperty("instance") int instance,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("type") TaskFailureType type
+  ) {
     this.instance = instance;
     this.timestamp = timestamp;
     this.type = type;
@@ -59,10 +61,15 @@ public class TaskFailureEvent {
 
   @Override
   public String toString() {
-    return "TaskFailureEvent{" +
-        "instance=" + instance +
-        ", timestamp=" + timestamp +
-        ", type=" + type +
-        '}';
+    return (
+      "TaskFailureEvent{" +
+      "instance=" +
+      instance +
+      ", timestamp=" +
+      timestamp +
+      ", type=" +
+      type +
+      '}'
+    );
   }
 }

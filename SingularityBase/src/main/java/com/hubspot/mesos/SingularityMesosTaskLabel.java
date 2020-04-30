@@ -1,15 +1,13 @@
 package com.hubspot.mesos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "A label for a mesos task")
 public class SingularityMesosTaskLabel {
@@ -22,7 +20,10 @@ public class SingularityMesosTaskLabel {
   }
 
   @JsonCreator
-  public SingularityMesosTaskLabel(@JsonProperty("key") String key, @JsonProperty("value") Optional<String> value) {
+  public SingularityMesosTaskLabel(
+    @JsonProperty("key") String key,
+    @JsonProperty("value") Optional<String> value
+  ) {
     this.key = key;
     this.value = value;
   }
@@ -37,10 +38,14 @@ public class SingularityMesosTaskLabel {
     return value;
   }
 
-  public static List<SingularityMesosTaskLabel> labelsFromMap(Map<String, String> parametersMap) {
+  public static List<SingularityMesosTaskLabel> labelsFromMap(
+    Map<String, String> parametersMap
+  ) {
     List<SingularityMesosTaskLabel> labels = new ArrayList<>();
     for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
-      labels.add(new SingularityMesosTaskLabel(entry.getKey(), Optional.of(entry.getValue())));
+      labels.add(
+        new SingularityMesosTaskLabel(entry.getKey(), Optional.of(entry.getValue()))
+      );
     }
     return labels;
   }
@@ -54,8 +59,7 @@ public class SingularityMesosTaskLabel {
       return false;
     }
     SingularityMesosTaskLabel that = (SingularityMesosTaskLabel) o;
-    return Objects.equals(key, that.key) &&
-        Objects.equals(value, that.value);
+    return Objects.equals(key, that.key) && Objects.equals(value, that.value);
   }
 
   @Override
@@ -65,9 +69,6 @@ public class SingularityMesosTaskLabel {
 
   @Override
   public String toString() {
-    return "SingularityMesosTaskLabel{" +
-        "key='" + key + '\'' +
-        ", value=" + value +
-        '}';
+    return "SingularityMesosTaskLabel{" + "key='" + key + '\'' + ", value=" + value + '}';
   }
 }

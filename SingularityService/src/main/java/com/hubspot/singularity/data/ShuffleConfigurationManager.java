@@ -5,12 +5,11 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class ShuffleConfigurationManager extends CuratorAsyncManager {
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
@@ -20,9 +19,9 @@ public class ShuffleConfigurationManager extends CuratorAsyncManager {
 
   @Inject
   public ShuffleConfigurationManager(
-      CuratorFramework curator,
-      SingularityConfiguration configuration,
-      MetricRegistry metricRegistry
+    CuratorFramework curator,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry
   ) {
     super(curator, configuration, metricRegistry);
   }

@@ -1,11 +1,5 @@
 package com.hubspot.singularity.executor.task;
 
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -30,9 +24,13 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class SingularityExecutorArtifactFetcher {
-
   private static final String LOCAL_DOWNLOAD_STRING_FORMAT = "http://localhost:%s%s";
 
   private final AsyncHttpClient localDownloadHttpClient;
@@ -44,8 +42,16 @@ public class SingularityExecutorArtifactFetcher {
   private final SingularityRunnerBaseConfiguration runnerBaseConfiguration;
 
   @Inject
-  public SingularityExecutorArtifactFetcher(@Named(SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT) AsyncHttpClient localDownloadHttpClient, SingularityS3Configuration s3Configuration,
-      SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper, SingularityRunnerExceptionNotifier exceptionNotifier, SingularityRunnerBaseConfiguration runnerBaseConfiguration) {
+  public SingularityExecutorArtifactFetcher(
+    @Named(
+      SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT
+    ) AsyncHttpClient localDownloadHttpClient,
+    SingularityS3Configuration s3Configuration,
+    SingularityExecutorConfiguration executorConfiguration,
+    ObjectMapper objectMapper,
+    SingularityRunnerExceptionNotifier exceptionNotifier,
+    SingularityRunnerBaseConfiguration runnerBaseConfiguration
+  ) {
     this.localDownloadHttpClient = localDownloadHttpClient;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
@@ -53,21 +59,36 @@ public class SingularityExecutorArtifactFetcher {
     this.exceptionNotifier = exceptionNotifier;
     this.runnerBaseConfiguration = runnerBaseConfiguration;
 
-    this.localDownloadUri = String.format(LOCAL_DOWNLOAD_STRING_FORMAT, s3Configuration.getLocalDownloadHttpPort(), s3Configuration.getLocalDownloadPath());
+    this.localDownloadUri =
+      String.format(
+        LOCAL_DOWNLOAD_STRING_FORMAT,
+        s3Configuration.getLocalDownloadHttpPort(),
+        s3Configuration.getLocalDownloadPath()
+      );
   }
 
-  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
-    ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
+  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(
+    ExecutorData executorData,
+    SingularityExecutorTask task
+  ) {
+    ArtifactManager artifactManager = new ArtifactManager(
+      runnerBaseConfiguration,
+      s3Configuration,
+      task.getLog(),
+      exceptionNotifier
+    );
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, task);
   }
 
   public class SingularityExecutorTaskArtifactFetcher {
-
     private final ArtifactManager artifactManager;
     private final SingularityExecutorTask task;
 
-    private SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, SingularityExecutorTask task) {
+    private SingularityExecutorTaskArtifactFetcher(
+      ArtifactManager artifactManager,
+      SingularityExecutorTask task
+    ) {
       this.artifactManager = artifactManager;
       this.task = task;
     }
@@ -77,35 +98,64 @@ public class SingularityExecutorArtifactFetcher {
       artifactManager.signalKillToProcessIfActive();
     }
 
-    public void fetchFiles(List<EmbeddedArtifact> embeddedArtifacts, List<S3Artifact> s3Artifacts, List<S3ArtifactSignature> s3ArtifactsWithSignature,
-        List<ExternalArtifact> remoteArtifacts)
-        throws InterruptedException {
+    public void fetchFiles(
+      List<EmbeddedArtifact> embeddedArtifacts,
+      List<S3Artifact> s3Artifacts,
+      List<S3ArtifactSignature> s3ArtifactsWithSignature,
+      List<ExternalArtifact> remoteArtifacts
+    )
+      throws InterruptedException {
       extractFiles(task, artifactManager, embeddedArtifacts);
 
       boolean fetchS3ArtifactsLocally = true;
 
-      final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList.<S3Artifact>builder()
-          .addAll(s3Artifacts)
-          .addAll(s3ArtifactsWithSignature)
-          .build();
+      final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList
+        .<S3Artifact>builder()
+        .addAll(s3Artifacts)
+        .addAll(s3ArtifactsWithSignature)
+        .build();
 
-      if (executorConfiguration.isUseLocalDownloadService() && !allS3Artifacts.isEmpty()) {
+      if (
+        executorConfiguration.isUseLocalDownloadService() && !allS3Artifacts.isEmpty()
+      ) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}", s3Artifacts.size(), s3ArtifactsWithSignature.size(), localDownloadUri);
+        task
+          .getLog()
+          .info(
+            "Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}",
+            s3Artifacts.size(),
+            s3ArtifactsWithSignature.size(),
+            localDownloadUri
+          );
 
         try {
           downloadFilesFromLocalDownloadService(allS3Artifacts, task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", s3Artifacts.size(), s3ArtifactsWithSignature.size(),
-              JavaUtils.duration(start));
+          task
+            .getLog()
+            .info(
+              "Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}",
+              s3Artifacts.size(),
+              s3ArtifactsWithSignature.size(),
+              JavaUtils.duration(start)
+            );
         } catch (InterruptedException ie) {
-          task.getLog().warn("Interrupted while downloading S3 artifacts from local download service");
+          task
+            .getLog()
+            .warn(
+              "Interrupted while downloading S3 artifacts from local download service"
+            );
           throw ie;
         } catch (Throwable t) {
-          task.getLog().error("Failed downloading S3 artifacts from local download service - falling back to in-task fetch", t);
+          task
+            .getLog()
+            .error(
+              "Failed downloading S3 artifacts from local download service - falling back to in-task fetch",
+              t
+            );
         }
       }
 
@@ -120,19 +170,29 @@ public class SingularityExecutorArtifactFetcher {
       }
     }
 
-    private void extractFiles(SingularityExecutorTask task, ArtifactManager artifactManager, List<EmbeddedArtifact> embeddedArtifacts) {
+    private void extractFiles(
+      SingularityExecutorTask task,
+      ArtifactManager artifactManager,
+      List<EmbeddedArtifact> embeddedArtifacts
+    ) {
       for (EmbeddedArtifact artifact : embeddedArtifacts) {
-        artifactManager.extract(artifact, task.getArtifactPath(artifact, task.getTaskDefinition().getTaskDirectoryPath()));
+        artifactManager.extract(
+          artifact,
+          task.getArtifactPath(artifact, task.getTaskDefinition().getTaskDirectoryPath())
+        );
       }
     }
 
     private class FutureHolder {
-
       private final ListenableFuture<Response> future;
       private final long start;
       private final S3Artifact s3Artifact;
 
-      public FutureHolder(ListenableFuture<Response> future, long start, S3Artifact s3Artifact) {
+      public FutureHolder(
+        ListenableFuture<Response> future,
+        long start,
+        S3Artifact s3Artifact
+      ) {
         this.future = future;
         this.start = start;
         this.s3Artifact = s3Artifact;
@@ -145,29 +205,49 @@ public class SingularityExecutorArtifactFetcher {
           throw new RuntimeException(e);
         }
       }
-
     }
 
-    private void downloadFilesFromLocalDownloadService(List<? extends S3Artifact> s3Artifacts, SingularityExecutorTask task) throws InterruptedException {
-      final List<FutureHolder> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
+    private void downloadFilesFromLocalDownloadService(
+      List<? extends S3Artifact> s3Artifacts,
+      SingularityExecutorTask task
+    )
+      throws InterruptedException {
+      final List<FutureHolder> futures = Lists.newArrayListWithCapacity(
+        s3Artifacts.size()
+      );
 
       for (S3Artifact s3Artifact : s3Artifacts) {
-        String destination = task.getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath()).toString();
-        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact,
-            Optional.of(SingularityExecutorArtifactFetcher.this.executorConfiguration.getLocalDownloadServiceTimeoutMillis()));
+        String destination = task
+          .getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath())
+          .toString();
+        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(
+          destination,
+          s3Artifact,
+          Optional.of(
+            SingularityExecutorArtifactFetcher.this.executorConfiguration.getLocalDownloadServiceTimeoutMillis()
+          )
+        );
 
-        task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
+        task
+          .getLog()
+          .debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
 
-        BoundRequestBuilder postRequestBldr = localDownloadHttpClient.preparePost(localDownloadUri);
+        BoundRequestBuilder postRequestBldr = localDownloadHttpClient.preparePost(
+          localDownloadUri
+        );
 
         try {
-          postRequestBldr.setBody(objectMapper.writeValueAsBytes(artifactDownloadRequest));
+          postRequestBldr.setBody(
+            objectMapper.writeValueAsBytes(artifactDownloadRequest)
+          );
         } catch (JsonProcessingException e) {
           throw new RuntimeException(e);
         }
 
         try {
-          ListenableFuture<Response> future = localDownloadHttpClient.executeRequest(postRequestBldr.build());
+          ListenableFuture<Response> future = localDownloadHttpClient.executeRequest(
+            postRequestBldr.build()
+          );
 
           futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
         } catch (Throwable t) {
@@ -178,7 +258,14 @@ public class SingularityExecutorArtifactFetcher {
       for (FutureHolder future : futures) {
         Response response = future.getReponse();
 
-        task.getLog().debug("Future for {} got status code {} after {}", future.s3Artifact.getName(), response.getStatusCode(), JavaUtils.duration(future.start));
+        task
+          .getLog()
+          .debug(
+            "Future for {} got status code {} after {}",
+            future.s3Artifact.getName(),
+            response.getStatusCode(),
+            JavaUtils.duration(future.start)
+          );
 
         if (response.getStatusCode() != 200) {
           throw new IllegalStateException("Got status code:" + response.getStatusCode());
@@ -186,16 +273,31 @@ public class SingularityExecutorArtifactFetcher {
       }
     }
 
-    private void downloadRemoteArtifact(RemoteArtifact remoteArtifact, ArtifactManager artifactManager, SingularityExecutorTask task) {
+    private void downloadRemoteArtifact(
+      RemoteArtifact remoteArtifact,
+      ArtifactManager artifactManager,
+      SingularityExecutorTask task
+    ) {
       Path fetched = artifactManager.fetch(remoteArtifact);
 
       if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
-        artifactManager.untar(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskDirectoryPath()));
+        artifactManager.untar(
+          fetched,
+          task.getArtifactPath(
+            remoteArtifact,
+            task.getTaskDefinition().getTaskDirectoryPath()
+          )
+        );
       } else {
-        artifactManager.copy(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskDirectoryPath()), remoteArtifact.getFilename());
+        artifactManager.copy(
+          fetched,
+          task.getArtifactPath(
+            remoteArtifact,
+            task.getTaskDefinition().getTaskDirectoryPath()
+          ),
+          remoteArtifact.getFilename()
+        );
       }
     }
-
   }
-
 }

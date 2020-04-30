@@ -1,15 +1,12 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Describes the state of a singularity scheduler instance")
 public class SingularityHostState {
-
   private final boolean master;
   private final long uptime;
 
@@ -28,17 +25,19 @@ public class SingularityHostState {
   private final boolean mesosConnected;
 
   @JsonCreator
-  public SingularityHostState(@JsonProperty("master") boolean master,
-                              @JsonProperty("uptime") long uptime,
-                              @JsonProperty("driverStatus") String driverStatus,
-                              @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
-                              @JsonProperty("hostAddress") String hostAddress,
-                              @JsonProperty("hostname") String hostname,
-                              @JsonProperty("mesosMaster") String mesosMaster,
-                              @JsonProperty("mesosConnected") boolean mesosConnected,
-                              @JsonProperty("offerCacheSize") int offerCacheSize,
-                              @JsonProperty("availableCachedCpus") double availableCachedCpus,
-                              @JsonProperty("availableCachedMemory") double availableCachedMemory) {
+  public SingularityHostState(
+    @JsonProperty("master") boolean master,
+    @JsonProperty("uptime") long uptime,
+    @JsonProperty("driverStatus") String driverStatus,
+    @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
+    @JsonProperty("hostAddress") String hostAddress,
+    @JsonProperty("hostname") String hostname,
+    @JsonProperty("mesosMaster") String mesosMaster,
+    @JsonProperty("mesosConnected") boolean mesosConnected,
+    @JsonProperty("offerCacheSize") int offerCacheSize,
+    @JsonProperty("availableCachedCpus") double availableCachedCpus,
+    @JsonProperty("availableCachedMemory") double availableCachedMemory
+  ) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -57,7 +56,9 @@ public class SingularityHostState {
     return hostAddress;
   }
 
-  @Schema(description = "`true` if this host is currently the leading singularity instance")
+  @Schema(
+    description = "`true` if this host is currently the leading singularity instance"
+  )
   public boolean isMaster() {
     return master;
   }
@@ -72,7 +73,9 @@ public class SingularityHostState {
     return driverStatus;
   }
 
-  @Schema(description = "Time since the last offer was received from mesos in milliseconds")
+  @Schema(
+    description = "Time since the last offer was received from mesos in milliseconds"
+  )
   public Optional<Long> getMillisSinceLastOffer() {
     return millisSinceLastOffer;
   }
@@ -87,7 +90,9 @@ public class SingularityHostState {
     return mesosMaster;
   }
 
-  @Schema(description = "`true` if currently connected to the mesos master (should only be true on the leading instance)")
+  @Schema(
+    description = "`true` if currently connected to the mesos master (should only be true on the leading instance)"
+  )
   public boolean isMesosConnected() {
     return mesosConnected;
   }
@@ -109,18 +114,35 @@ public class SingularityHostState {
 
   @Override
   public String toString() {
-    return "SingularityHostState{" +
-        "master=" + master +
-        ", uptime=" + uptime +
-        ", driverStatus='" + driverStatus + '\'' +
-        ", millisSinceLastOffer=" + millisSinceLastOffer +
-        ", offerCacheSize=" + offerCacheSize +
-        ", availableCachedCpus=" + availableCachedCpus +
-        ", availableCachedMemory=" + availableCachedMemory +
-        ", hostAddress='" + hostAddress + '\'' +
-        ", hostname='" + hostname + '\'' +
-        ", mesosMaster='" + mesosMaster + '\'' +
-        ", mesosConnected=" + mesosConnected +
-        '}';
+    return (
+      "SingularityHostState{" +
+      "master=" +
+      master +
+      ", uptime=" +
+      uptime +
+      ", driverStatus='" +
+      driverStatus +
+      '\'' +
+      ", millisSinceLastOffer=" +
+      millisSinceLastOffer +
+      ", offerCacheSize=" +
+      offerCacheSize +
+      ", availableCachedCpus=" +
+      availableCachedCpus +
+      ", availableCachedMemory=" +
+      availableCachedMemory +
+      ", hostAddress='" +
+      hostAddress +
+      '\'' +
+      ", hostname='" +
+      hostname +
+      '\'' +
+      ", mesosMaster='" +
+      mesosMaster +
+      '\'' +
+      ", mesosConnected=" +
+      mesosConnected +
+      '}'
+    );
   }
 }

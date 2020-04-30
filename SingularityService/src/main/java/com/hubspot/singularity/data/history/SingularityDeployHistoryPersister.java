@@ -1,20 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -25,24 +10,39 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularityDeployHistoryPersister extends SingularityHistoryPersister<SingularityDeployHistory> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeployHistoryPersister.class);
+public class SingularityDeployHistoryPersister
+  extends SingularityHistoryPersister<SingularityDeployHistory> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityDeployHistoryPersister.class
+  );
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
   private final SingularitySchedulerLock schedulerLock;
 
   @Inject
-  public SingularityDeployHistoryPersister(SingularityConfiguration configuration,
-                                           DeployManager deployManager,
-                                           HistoryManager historyManager,
-                                           SingularitySchedulerLock schedulerLock,
-                                           @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+  public SingularityDeployHistoryPersister(
+    SingularityConfiguration configuration,
+    DeployManager deployManager,
+    HistoryManager historyManager,
+    SingularitySchedulerLock schedulerLock,
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+  ) {
     super(configuration, persisterLock);
-
     this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -59,48 +59,84 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
       final long start = System.currentTimeMillis();
       final LongAdder numTotal = new LongAdder();
       final LongAdder numTransferred = new LongAdder();
-      final Map<String, List<SingularityDeployKey>> allDeployIdsByRequest = deployManager.getAllDeployIds()
-          .stream()
-          .collect(Collectors.groupingBy(
-              SingularityDeployKey::getRequestId,
-              Collectors.toList()
-          ));
+      final Map<String, List<SingularityDeployKey>> allDeployIdsByRequest = deployManager
+        .getAllDeployIds()
+        .stream()
+        .collect(
+          Collectors.groupingBy(SingularityDeployKey::getRequestId, Collectors.toList())
+        );
 
-
-      for (String requestId : deployManager.getAllRequestDeployStatesByRequestId().keySet()) {
+      for (String requestId : deployManager
+        .getAllRequestDeployStatesByRequestId()
+        .keySet()) {
         LOG.debug("Checking deploy histories to persist for request {}", requestId);
-        schedulerLock.runWithRequestLock(() -> {
-          Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
+        schedulerLock.runWithRequestLock(
+          () -> {
+            Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(
+              requestId
+            );
 
-          if (!deployState.isPresent()) {
-            LOG.warn("No request deploy state for {}", requestId);
-            return;
-          }
+            if (!deployState.isPresent()) {
+              LOG.warn("No request deploy state for {}", requestId);
+              return;
+            }
 
-          int i = 0;
-          List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest.getOrDefault(requestId, Collections.emptyList())
+            int i = 0;
+            List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest
+              .getOrDefault(requestId, Collections.emptyList())
               .stream()
-              .map((deployKey) -> deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true))
+              .map(
+                deployKey ->
+                  deployManager.getDeployHistory(
+                    deployKey.getRequestId(),
+                    deployKey.getDeployId(),
+                    true
+                  )
+              )
               .filter(Optional::isPresent)
               .map(Optional::get)
-              .sorted(Comparator.comparingLong(SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge).reversed())
+              .sorted(
+                Comparator
+                  .comparingLong(
+                    SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge
+                  )
+                  .reversed()
+              )
               .collect(Collectors.toList());
 
-          for (SingularityDeployHistory deployHistory : deployHistories) {
-            numTotal.increment();
-            if (!shouldTransferDeploy(requestId, deployState.get(), deployHistory.getDeployMarker().getDeployId())) {
-              continue;
-            }
+            for (SingularityDeployHistory deployHistory : deployHistories) {
+              numTotal.increment();
+              if (
+                !shouldTransferDeploy(
+                  requestId,
+                  deployState.get(),
+                  deployHistory.getDeployMarker().getDeployId()
+                )
+              ) {
+                continue;
+              }
 
-            LOG.info("Persisting deploy {} for request {}", deployHistory.getDeployMarker().getDeployId(), requestId);
-            if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
-              numTransferred.increment();
+              LOG.info(
+                "Persisting deploy {} for request {}",
+                deployHistory.getDeployMarker().getDeployId(),
+                requestId
+              );
+              if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
+                numTransferred.increment();
+              }
             }
-          }
-        }, requestId, getClass().getSimpleName());
+          },
+          requestId,
+          getClass().getSimpleName()
+        );
       }
 
-      LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
+      LOG.info(
+        "Transferred {} out of {} deploys in {}",
+        numTransferred,
+        numTotal,
+        JavaUtils.duration(start)
+      );
     } finally {
       persisterLock.unlock();
     }
@@ -108,7 +144,9 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   @Override
   protected long getMaxAgeInMillisOfItem() {
-    return TimeUnit.HOURS.toMillis(configuration.getDeleteDeploysFromZkWhenNoDatabaseAfterHours());
+    return TimeUnit.HOURS.toMillis(
+      configuration.getDeleteDeploysFromZkWhenNoDatabaseAfterHours()
+    );
   }
 
   @Override
@@ -116,17 +154,31 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     return configuration.getMaxStaleDeploysPerRequestInZkWhenNoDatabase();
   }
 
-  private boolean shouldTransferDeploy(String requestId, SingularityRequestDeployState deployState, String deployId) {
+  private boolean shouldTransferDeploy(
+    String requestId,
+    SingularityRequestDeployState deployState,
+    String deployId
+  ) {
     if (deployState == null) {
-      LOG.warn("Missing request deploy state for request {}. deploy {}", requestId, deployId);
+      LOG.warn(
+        "Missing request deploy state for request {}. deploy {}",
+        requestId,
+        deployId
+      );
       return true;
     }
 
-    if (deployState.getActiveDeploy().isPresent() && deployState.getActiveDeploy().get().getDeployId().equals(deployId)) {
+    if (
+      deployState.getActiveDeploy().isPresent() &&
+      deployState.getActiveDeploy().get().getDeployId().equals(deployId)
+    ) {
       return false;
     }
 
-    if (deployState.getPendingDeploy().isPresent() && deployState.getPendingDeploy().get().getDeployId().equals(deployId)) {
+    if (
+      deployState.getPendingDeploy().isPresent() &&
+      deployState.getPendingDeploy().get().getDeployId().equals(deployId)
+    ) {
       return false;
     }
 
@@ -138,7 +190,11 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     try {
       historyManager.saveDeployHistory(deployHistory);
     } catch (Throwable t) {
-      LOG.warn("Failed to persist deploy {}", SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()), t);
+      LOG.warn(
+        "Failed to persist deploy {}",
+        SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()),
+        t
+      );
       return false;
     }
 
@@ -147,7 +203,8 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   @Override
   protected SingularityDeleteResult purgeFromZk(SingularityDeployHistory deployHistory) {
-    return deployManager.deleteDeployHistory(SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()));
+    return deployManager.deleteDeployHistory(
+      SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker())
+    );
   }
-
 }

@@ -1,13 +1,12 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonIgnoreProperties (ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityRequestLbCleanup {
   private String requestId;
   private Set<String> loadBalancerGroups;
@@ -15,11 +14,15 @@ public class SingularityRequestLbCleanup {
   private List<String> activeTaskIds;
   private Optional<SingularityLoadBalancerUpdate> loadBalancerUpdate;
 
-  public SingularityRequestLbCleanup(@JsonProperty("requestId") String requestId,
-                                     @JsonProperty("loadBalancerGroups") Set<String> loadBalancerGroups,
-                                     @JsonProperty("serviceBasePath") String serviceBasePath,
-                                     @JsonProperty("activeTaskIds") List<String> activeTaskIds,
-                                     @JsonProperty("loadBalancerUpdate") Optional<SingularityLoadBalancerUpdate> loadBalancerUpdate) {
+  public SingularityRequestLbCleanup(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("loadBalancerGroups") Set<String> loadBalancerGroups,
+    @JsonProperty("serviceBasePath") String serviceBasePath,
+    @JsonProperty("activeTaskIds") List<String> activeTaskIds,
+    @JsonProperty(
+      "loadBalancerUpdate"
+    ) Optional<SingularityLoadBalancerUpdate> loadBalancerUpdate
+  ) {
     this.requestId = requestId;
     this.loadBalancerGroups = loadBalancerGroups;
     this.serviceBasePath = serviceBasePath;
@@ -63,18 +66,29 @@ public class SingularityRequestLbCleanup {
     return loadBalancerUpdate;
   }
 
-  public void setLoadBalancerUpdate(Optional<SingularityLoadBalancerUpdate> loadBalancerUpdate) {
+  public void setLoadBalancerUpdate(
+    Optional<SingularityLoadBalancerUpdate> loadBalancerUpdate
+  ) {
     this.loadBalancerUpdate = loadBalancerUpdate;
   }
 
   @Override
   public String toString() {
-    return "SingularityRequestLbCleanup{" +
-        "requestId='" + requestId + '\'' +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ", serviceBasePath='" + serviceBasePath + '\'' +
-        ", activeTaskIds=" + activeTaskIds +
-        ", loadBalancerUpdate=" + loadBalancerUpdate +
-        '}';
+    return (
+      "SingularityRequestLbCleanup{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", loadBalancerGroups=" +
+      loadBalancerGroups +
+      ", serviceBasePath='" +
+      serviceBasePath +
+      '\'' +
+      ", activeTaskIds=" +
+      activeTaskIds +
+      ", loadBalancerUpdate=" +
+      loadBalancerUpdate +
+      '}'
+    );
   }
 }

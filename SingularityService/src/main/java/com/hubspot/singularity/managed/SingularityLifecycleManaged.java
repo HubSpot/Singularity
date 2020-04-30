@@ -2,27 +2,24 @@ package com.hubspot.singularity.managed;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
-import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.ning.http.client.AsyncHttpClient;
-
 import io.dropwizard.lifecycle.Managed;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * All scheduler-related startup/shutdown behavior, other managed classes not represented here:
@@ -31,7 +28,9 @@ import io.dropwizard.lifecycle.Managed;
  */
 @Singleton
 public class SingularityLifecycleManaged implements Managed {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityLifecycleManaged.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityLifecycleManaged.class
+  );
 
   private final SingularityManagedThreadPoolFactory cachedThreadPoolFactory;
   private final SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory;
@@ -48,16 +47,18 @@ public class SingularityLifecycleManaged implements Managed {
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
   @Inject
-  public SingularityLifecycleManaged(SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
-                                     SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
-                                     AsyncHttpClient asyncHttpClient,
-                                     CuratorFramework curatorFramework,
-                                     SingularityLeaderController leaderController,
-                                     LeaderLatch leaderLatch,
-                                     SingularityMesosExecutorInfoSupport executorInfoSupport,
-                                     SingularityGraphiteReporter graphiteReporter,
-                                     ExecutorIdGenerator executorIdGenerator,
-                                     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers) {
+  public SingularityLifecycleManaged(
+    SingularityManagedThreadPoolFactory cachedThreadPoolFactory,
+    SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
+    AsyncHttpClient asyncHttpClient,
+    CuratorFramework curatorFramework,
+    SingularityLeaderController leaderController,
+    LeaderLatch leaderLatch,
+    SingularityMesosExecutorInfoSupport executorInfoSupport,
+    SingularityGraphiteReporter graphiteReporter,
+    ExecutorIdGenerator executorIdGenerator,
+    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers
+  ) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     this.asyncHttpClient = asyncHttpClient;
@@ -175,7 +176,10 @@ public class SingularityLifecycleManaged implements Managed {
     final long start = System.currentTimeMillis();
 
     try {
-      checkState(curatorFramework.getZookeeperClient().blockUntilConnectedOrTimedOut(), "did not connect to zookeeper");
+      checkState(
+        curatorFramework.getZookeeperClient().blockUntilConnectedOrTimedOut(),
+        "did not connect to zookeeper"
+      );
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }

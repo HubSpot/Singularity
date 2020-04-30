@@ -1,13 +1,11 @@
 package com.hubspot.singularity.data.zkmigrations;
 
-import javax.inject.Singleton;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.data.TaskManager;
+import javax.inject.Singleton;
 
 @Singleton
 public class TaskManagerRequiredParentsForTransactionsMigration extends ZkDataMigration {
-
   private final TaskManager taskManager;
 
   @Inject
@@ -20,5 +18,4 @@ public class TaskManagerRequiredParentsForTransactionsMigration extends ZkDataMi
   public void applyMigration() {
     taskManager.createRequiredParents();
   }
-
 }

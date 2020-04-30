@@ -1,5 +1,15 @@
 package com.hubspot.singularity.executor.task;
 
+import com.google.common.collect.ImmutableList;
+import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
+import com.hubspot.singularity.executor.utils.DockerUtils;
+import com.hubspot.singularity.runner.base.shared.ExceptionChainParser;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.spotify.docker.client.exceptions.ContainerNotFoundException;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.ContainerInfo;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -10,30 +20,22 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-
 import org.slf4j.Logger;
 
-import com.google.common.collect.ImmutableList;
-import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
-import com.hubspot.singularity.executor.utils.DockerUtils;
-import com.hubspot.singularity.runner.base.shared.ExceptionChainParser;
-import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.spotify.docker.client.exceptions.ContainerNotFoundException;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerInfo;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 public class SingularityExecutorTaskCleanup {
-
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorConfiguration configuration;
   private final Logger log;
   private final DockerUtils dockerUtils;
 
-  public SingularityExecutorTaskCleanup(SingularityExecutorTaskLogManager taskLogManager, SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, Logger log, DockerUtils dockerUtils) {
+  public SingularityExecutorTaskCleanup(
+    SingularityExecutorTaskLogManager taskLogManager,
+    SingularityExecutorConfiguration configuration,
+    SingularityExecutorTaskDefinition taskDefinition,
+    Logger log,
+    DockerUtils dockerUtils
+  ) {
     this.configuration = configuration;
     this.taskLogManager = taskLogManager;
     this.taskDefinition = taskDefinition;
@@ -41,21 +43,34 @@ public class SingularityExecutorTaskCleanup {
     this.dockerUtils = dockerUtils;
   }
 
-  public TaskCleanupResult cleanup(boolean cleanupTaskAppDirectory, boolean cleanupLogs, boolean isDocker) {
+  public TaskCleanupResult cleanup(
+    boolean cleanupTaskAppDirectory,
+    boolean cleanupLogs,
+    boolean isDocker
+  ) {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
 
     boolean dockerCleanSuccess = true;
     if (isDocker) {
       try {
-        String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskDefinition.getTaskId());
+        String containerName = String.format(
+          "%s%s",
+          configuration.getDockerPrefix(),
+          taskDefinition.getTaskId()
+        );
         ContainerInfo containerInfo = dockerUtils.inspectContainer(containerName);
         if (containerInfo.state().running()) {
           dockerUtils.stopContainer(containerName, configuration.getDockerStopTimeout());
         }
         dockerUtils.removeContainer(containerName, true);
       } catch (DockerException e) {
-        if (ExceptionChainParser.exceptionChainContains(e, ContainerNotFoundException.class)) {
-          log.trace("Container for task {} was already removed", taskDefinition.getTaskId());
+        if (
+          ExceptionChainParser.exceptionChainContains(e, ContainerNotFoundException.class)
+        ) {
+          log.trace(
+            "Container for task {} was already removed",
+            taskDefinition.getTaskId()
+          );
         } else {
           log.error("Could not ensure removal of container", e);
           dockerCleanSuccess = false;
@@ -73,14 +88,22 @@ public class SingularityExecutorTaskCleanup {
     }
 
     boolean logTearDownSuccess = taskLogManager.teardown();
-    log.info("Rotated and marked logs for upload for {} ({})", taskDirectory, logTearDownSuccess);
+    log.info(
+      "Rotated and marked logs for upload for {} ({})",
+      taskDirectory,
+      logTearDownSuccess
+    );
 
     if (!cleanupLogs) {
-      log.debug("Not finishing cleanup because log files will be preserved for 15 minutes after task termination");
+      log.debug(
+        "Not finishing cleanup because log files will be preserved for 15 minutes after task termination"
+      );
       return TaskCleanupResult.WAITING;
     }
 
-    boolean rotatedLogfileDeleteSuccess = checkForLogrotateAdditionalFilesToDelete(taskDefinition);
+    boolean rotatedLogfileDeleteSuccess = checkForLogrotateAdditionalFilesToDelete(
+      taskDefinition
+    );
     log.info("Deleted rotated logfiles ({})", rotatedLogfileDeleteSuccess);
 
     if (!cleanupTaskAppDirectory) {
@@ -109,7 +132,9 @@ public class SingularityExecutorTaskCleanup {
   }
 
   public boolean cleanTaskDefinitionFile() {
-    Path taskDefinitionPath = configuration.getTaskDefinitionPath(taskDefinition.getTaskId());
+    Path taskDefinitionPath = configuration.getTaskDefinitionPath(
+      taskDefinition.getTaskId()
+    );
 
     log.debug("Successful cleanup, deleting file {}", taskDefinitionPath);
 
@@ -131,11 +156,7 @@ public class SingularityExecutorTaskCleanup {
     log.debug("Deleting: {}", pathToDelete);
 
     try {
-      final List<String> cmd = ImmutableList.of(
-          "rm",
-          "-rf",
-          pathToDelete
-      );
+      final List<String> cmd = ImmutableList.of("rm", "-rf", pathToDelete);
 
       new SimpleProcessManager(log).runCommand(cmd);
 
@@ -147,17 +168,33 @@ public class SingularityExecutorTaskCleanup {
     return false;
   }
 
-  private boolean checkForLogrotateAdditionalFilesToDelete(SingularityExecutorTaskDefinition taskDefinition) {
-    return configuration.getLogrotateAdditionalFiles()
-        .stream()
-        .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
-        .allMatch(toDelete -> {
-          String glob = String.format("glob:%s/%s", taskDefinition.getTaskDirectoryPath().toAbsolutePath(), toDelete.getFilename());
+  private boolean checkForLogrotateAdditionalFilesToDelete(
+    SingularityExecutorTaskDefinition taskDefinition
+  ) {
+    return configuration
+      .getLogrotateAdditionalFiles()
+      .stream()
+      .filter(SingularityExecutorLogrotateAdditionalFile::isDeleteInExecutorCleanup)
+      .allMatch(
+        toDelete -> {
+          String glob = String.format(
+            "glob:%s/%s",
+            taskDefinition.getTaskDirectoryPath().toAbsolutePath(),
+            toDelete.getFilename()
+          );
 
-          log.debug("Trying to delete {} for task {} using glob {}...", toDelete.getFilename(), taskDefinition.getTaskId(), glob);
+          log.debug(
+            "Trying to delete {} for task {} using glob {}...",
+            toDelete.getFilename(),
+            taskDefinition.getTaskId(),
+            glob
+          );
 
           try {
-            List<Path> matches = findGlob(taskDefinition.getTaskDirectoryPath().toAbsolutePath(), taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob));
+            List<Path> matches = findGlob(
+              taskDefinition.getTaskDirectoryPath().toAbsolutePath(),
+              taskDefinition.getTaskDirectoryPath().getFileSystem().getPathMatcher(glob)
+            );
             for (Path match : matches) {
               Files.delete(match);
               log.debug("Deleted {}", match);
@@ -168,10 +205,14 @@ public class SingularityExecutorTaskCleanup {
             log.error("Unable to list files while trying to delete for {}", toDelete);
             return false;
           }
-        });
+        }
+      );
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "https://github.com/spotbugs/spotbugs/issues/259"
+  )
   private List<Path> findGlob(Path path, PathMatcher matcher) throws IOException {
     Deque<Path> stack = new ArrayDeque<>();
     List<Path> matched = new ArrayList<>();

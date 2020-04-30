@@ -12,7 +12,9 @@ public class HistoryPurgeRequestSettings {
     return deleteTaskHistoryAfterDays;
   }
 
-  public HistoryPurgeRequestSettings setDeleteTaskHistoryAfterDays(Optional<Integer> deleteTaskHistoryAfterDays) {
+  public HistoryPurgeRequestSettings setDeleteTaskHistoryAfterDays(
+    Optional<Integer> deleteTaskHistoryAfterDays
+  ) {
     this.deleteTaskHistoryAfterDays = deleteTaskHistoryAfterDays;
     return this;
   }
@@ -21,7 +23,9 @@ public class HistoryPurgeRequestSettings {
     return deleteTaskHistoryAfterTasksPerRequest;
   }
 
-  public void setDeleteTaskHistoryAfterTasksPerRequest(Optional<Integer> deleteTaskHistoryAfterTasksPerRequest) {
+  public void setDeleteTaskHistoryAfterTasksPerRequest(
+    Optional<Integer> deleteTaskHistoryAfterTasksPerRequest
+  ) {
     this.deleteTaskHistoryAfterTasksPerRequest = deleteTaskHistoryAfterTasksPerRequest;
   }
 
@@ -29,7 +33,9 @@ public class HistoryPurgeRequestSettings {
     return deleteTaskHistoryBytesAfterDays;
   }
 
-  public void setDeleteTaskHistoryBytesAfterDays(Optional<Integer> deleteTaskHistoryBytesAfterDays) {
+  public void setDeleteTaskHistoryBytesAfterDays(
+    Optional<Integer> deleteTaskHistoryBytesAfterDays
+  ) {
     this.deleteTaskHistoryBytesAfterDays = deleteTaskHistoryBytesAfterDays;
   }
 
@@ -37,17 +43,26 @@ public class HistoryPurgeRequestSettings {
     return deleteTaskHistoryBytesAfterTasksPerRequest;
   }
 
-  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(Optional<Integer> deleteTaskHistoryBytesAfterTasksPerRequest) {
-    this.deleteTaskHistoryBytesAfterTasksPerRequest = deleteTaskHistoryBytesAfterTasksPerRequest;
+  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(
+    Optional<Integer> deleteTaskHistoryBytesAfterTasksPerRequest
+  ) {
+    this.deleteTaskHistoryBytesAfterTasksPerRequest =
+      deleteTaskHistoryBytesAfterTasksPerRequest;
   }
 
   @Override
   public String toString() {
-    return "HistoryPurgeRequestSettings{" +
-      "deleteTaskHistoryAfterDays=" + deleteTaskHistoryAfterDays +
-      ", deleteTaskHistoryAfterTasksPerRequest=" + deleteTaskHistoryAfterTasksPerRequest +
-      ", deleteTaskHistoryBytesAfterDays=" + deleteTaskHistoryBytesAfterDays +
-      ", deleteTaskHistoryBytesAfterTasksPerRequest=" + deleteTaskHistoryBytesAfterTasksPerRequest +
-      '}';
+    return (
+      "HistoryPurgeRequestSettings{" +
+      "deleteTaskHistoryAfterDays=" +
+      deleteTaskHistoryAfterDays +
+      ", deleteTaskHistoryAfterTasksPerRequest=" +
+      deleteTaskHistoryAfterTasksPerRequest +
+      ", deleteTaskHistoryBytesAfterDays=" +
+      deleteTaskHistoryBytesAfterDays +
+      ", deleteTaskHistoryBytesAfterTasksPerRequest=" +
+      deleteTaskHistoryBytesAfterTasksPerRequest +
+      '}'
+    );
   }
 }

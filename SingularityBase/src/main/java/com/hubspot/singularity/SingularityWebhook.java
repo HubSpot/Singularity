@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Representation of a destination for a specific type of webhook")
 public class SingularityWebhook {
-
   private final String uri;
   private final WebhookType type;
   private final Optional<String> user;
@@ -18,7 +15,12 @@ public class SingularityWebhook {
   private final String id;
 
   @JsonCreator
-  public SingularityWebhook(@JsonProperty("uri") String uri, @JsonProperty("timestamp") Optional<Long> timestamp, @JsonProperty("user") Optional<String> user, @JsonProperty("type") WebhookType type) {
+  public SingularityWebhook(
+    @JsonProperty("uri") String uri,
+    @JsonProperty("timestamp") Optional<Long> timestamp,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("type") WebhookType type
+  ) {
     this.uri = uri;
     this.timestamp = timestamp.orElse(System.currentTimeMillis());
     this.user = user;
@@ -53,12 +55,21 @@ public class SingularityWebhook {
 
   @Override
   public String toString() {
-    return "SingularityWebhook{" +
-        "uri='" + uri + '\'' +
-        ", type=" + type +
-        ", user=" + user +
-        ", timestamp=" + timestamp +
-        ", id='" + id + '\'' +
-        '}';
+    return (
+      "SingularityWebhook{" +
+      "uri='" +
+      uri +
+      '\'' +
+      ", type=" +
+      type +
+      ", user=" +
+      user +
+      ", timestamp=" +
+      timestamp +
+      ", id='" +
+      id +
+      '\'' +
+      '}'
+    );
   }
 }

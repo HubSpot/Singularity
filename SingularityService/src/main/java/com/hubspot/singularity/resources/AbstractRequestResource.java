@@ -2,10 +2,6 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
-import java.util.Optional;
-
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
@@ -22,17 +18,26 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.ning.http.client.AsyncHttpClient;
+import java.util.Optional;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public class AbstractRequestResource extends AbstractLeaderAwareResource {
-
   protected final RequestManager requestManager;
   protected final DeployManager deployManager;
   protected final RequestHelper requestHelper;
   protected final SingularityValidator validator;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
-                                 AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper) {
+  public AbstractRequestResource(
+    RequestManager requestManager,
+    DeployManager deployManager,
+    SingularityValidator validator,
+    SingularityAuthorizationHelper authorizationHelper,
+    AsyncHttpClient httpClient,
+    LeaderLatch leaderLatch,
+    ObjectMapper objectMapper,
+    RequestHelper requestHelper
+  ) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
@@ -41,28 +46,49 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
     this.authorizationHelper = authorizationHelper;
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId, SingularityUser user) {
+  protected SingularityRequestWithState fetchRequestWithState(
+    String requestId,
+    SingularityUser user
+  ) {
     return fetchRequestWithState(requestId, false, user);
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache, SingularityUser user) {
-    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, useWebCache);
+  protected SingularityRequestWithState fetchRequestWithState(
+    String requestId,
+    boolean useWebCache,
+    SingularityUser user
+  ) {
+    Optional<SingularityRequestWithState> request = requestManager.getRequest(
+      requestId,
+      useWebCache
+    );
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 
-    authorizationHelper.checkForAuthorization(request.get().getRequest(), user, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(
+      request.get().getRequest(),
+      user,
+      SingularityAuthorizationScope.READ
+    );
 
     return request.get();
   }
 
-  protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
+  protected SingularityRequestParent fillEntireRequest(
+    SingularityRequestWithState requestWithState
+  ) {
     return fillEntireRequest(requestWithState, Optional.empty());
   }
 
-  protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState, Optional<SingularityRequest> newRequestData) {
+  protected SingularityRequestParent fillEntireRequest(
+    SingularityRequestWithState requestWithState,
+    Optional<SingularityRequest> newRequestData
+  ) {
     final String requestId = requestWithState.getRequest().getId();
 
-    final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
+    final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(
+      requestId
+    );
 
     Optional<SingularityDeploy> activeDeploy = Optional.empty();
     Optional<SingularityDeploy> pendingDeploy = Optional.empty();
@@ -72,19 +98,35 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
       pendingDeploy = fillDeploy(requestDeployState.get().getPendingDeploy());
     }
 
-    Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(requestId);
+    Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(
+      requestId
+    );
 
-    return new SingularityRequestParent(newRequestData.orElse(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
-        requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
-        requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getTaskIdsByStatusForRequest(requestId));
+    return new SingularityRequestParent(
+      newRequestData.orElse(requestWithState.getRequest()),
+      requestWithState.getState(),
+      requestDeployState,
+      activeDeploy,
+      pendingDeploy,
+      pendingDeployState,
+      requestManager.getExpiringBounce(requestId),
+      requestManager.getExpiringPause(requestId),
+      requestManager.getExpiringScale(requestId),
+      requestManager.getExpiringSkipHealthchecks(requestId),
+      requestHelper.getTaskIdsByStatusForRequest(requestId)
+    );
   }
 
-  protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {
+  protected Optional<SingularityDeploy> fillDeploy(
+    Optional<SingularityDeployMarker> deployMarker
+  ) {
     if (!deployMarker.isPresent()) {
       return Optional.empty();
     }
 
-    return deployManager.getDeploy(deployMarker.get().getRequestId(), deployMarker.get().getDeployId());
+    return deployManager.getDeploy(
+      deployMarker.get().getRequestId(),
+      deployMarker.get().getDeployId()
+    );
   }
-
 }

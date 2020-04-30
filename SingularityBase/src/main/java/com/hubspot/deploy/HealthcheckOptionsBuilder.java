@@ -1,11 +1,10 @@
 package com.hubspot.deploy;
 
+import com.hubspot.singularity.HealthcheckMethod;
+import com.hubspot.singularity.HealthcheckProtocol;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.hubspot.singularity.HealthcheckMethod;
-import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
   private Optional<String> uri;
@@ -91,7 +90,9 @@ public class HealthcheckOptionsBuilder {
     return startupTimeoutSeconds;
   }
 
-  public HealthcheckOptionsBuilder setStartupTimeoutSeconds(Optional<Integer> startupTimeoutSeconds) {
+  public HealthcheckOptionsBuilder setStartupTimeoutSeconds(
+    Optional<Integer> startupTimeoutSeconds
+  ) {
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     return this;
   }
@@ -100,7 +101,9 @@ public class HealthcheckOptionsBuilder {
     return startupDelaySeconds;
   }
 
-  public HealthcheckOptionsBuilder setStartupDelaySeconds(Optional<Integer> startupDelaySeconds) {
+  public HealthcheckOptionsBuilder setStartupDelaySeconds(
+    Optional<Integer> startupDelaySeconds
+  ) {
     this.startupDelaySeconds = startupDelaySeconds;
     return this;
   }
@@ -109,7 +112,9 @@ public class HealthcheckOptionsBuilder {
     return startupIntervalSeconds;
   }
 
-  public HealthcheckOptionsBuilder setStartupIntervalSeconds(Optional<Integer> startupIntervalSeconds) {
+  public HealthcheckOptionsBuilder setStartupIntervalSeconds(
+    Optional<Integer> startupIntervalSeconds
+  ) {
     this.startupIntervalSeconds = startupIntervalSeconds;
     return this;
   }
@@ -127,7 +132,9 @@ public class HealthcheckOptionsBuilder {
     return responseTimeoutSeconds;
   }
 
-  public HealthcheckOptionsBuilder setResponseTimeoutSeconds(Optional<Integer> responseTimeoutSeconds) {
+  public HealthcheckOptionsBuilder setResponseTimeoutSeconds(
+    Optional<Integer> responseTimeoutSeconds
+  ) {
     this.responseTimeoutSeconds = responseTimeoutSeconds;
     return this;
   }
@@ -145,7 +152,9 @@ public class HealthcheckOptionsBuilder {
     return failureStatusCodes;
   }
 
-  public HealthcheckOptionsBuilder setFailureStatusCodes(Optional<List<Integer>> failureStatusCodes) {
+  public HealthcheckOptionsBuilder setFailureStatusCodes(
+    Optional<List<Integer>> failureStatusCodes
+  ) {
     this.failureStatusCodes = failureStatusCodes;
     return this;
   }
@@ -154,13 +163,29 @@ public class HealthcheckOptionsBuilder {
     return healthcheckResultFilePath;
   }
 
-  public HealthcheckOptionsBuilder setHealthcheckResultFilePath(Optional<String> healthcheckResultFilePath) {
-    this.healthcheckResultFilePath= healthcheckResultFilePath;
+  public HealthcheckOptionsBuilder setHealthcheckResultFilePath(
+    Optional<String> healthcheckResultFilePath
+  ) {
+    this.healthcheckResultFilePath = healthcheckResultFilePath;
     return this;
   }
 
   public HealthcheckOptions build() {
-    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
+    return new HealthcheckOptions(
+      uri,
+      portIndex,
+      portNumber,
+      protocol,
+      method,
+      startupTimeoutSeconds,
+      startupDelaySeconds,
+      startupIntervalSeconds,
+      intervalSeconds,
+      responseTimeoutSeconds,
+      maxRetries,
+      failureStatusCodes,
+      healthcheckResultFilePath
+    );
   }
 
   @Override
@@ -172,42 +197,74 @@ public class HealthcheckOptionsBuilder {
       return false;
     }
     HealthcheckOptionsBuilder that = (HealthcheckOptionsBuilder) o;
-    return Objects.equals(uri, that.uri) &&
-        Objects.equals(portIndex, that.portIndex) &&
-        Objects.equals(portNumber, that.portNumber) &&
-        Objects.equals(protocol, that.protocol) &&
-        Objects.equals(method, that.method) &&
-        Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
-        Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
-        Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
-        Objects.equals(intervalSeconds, that.intervalSeconds) &&
-        Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
-        Objects.equals(maxRetries, that.maxRetries) &&
-        Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
-        Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath);
+    return (
+      Objects.equals(uri, that.uri) &&
+      Objects.equals(portIndex, that.portIndex) &&
+      Objects.equals(portNumber, that.portNumber) &&
+      Objects.equals(protocol, that.protocol) &&
+      Objects.equals(method, that.method) &&
+      Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
+      Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
+      Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
+      Objects.equals(intervalSeconds, that.intervalSeconds) &&
+      Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
+      Objects.equals(maxRetries, that.maxRetries) &&
+      Objects.equals(failureStatusCodes, that.failureStatusCodes) &&
+      Objects.equals(healthcheckResultFilePath, that.healthcheckResultFilePath)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes, healthcheckResultFilePath);
+    return Objects.hash(
+      uri,
+      portIndex,
+      portNumber,
+      protocol,
+      method,
+      startupTimeoutSeconds,
+      startupDelaySeconds,
+      startupIntervalSeconds,
+      intervalSeconds,
+      responseTimeoutSeconds,
+      maxRetries,
+      failureStatusCodes,
+      healthcheckResultFilePath
+    );
   }
 
   @Override
   public String toString() {
-    return "HealthcheckOptionsBuilder{" +
-        "uri='" + uri + '\'' +
-        ", portIndex=" + portIndex +
-        ", portNumber=" + portNumber +
-        ", protocol=" + protocol +
-        ", method=" + method +
-        ", startupTimeoutSeconds=" + startupTimeoutSeconds +
-        ", startupDelaySeconds=" + startupDelaySeconds +
-        ", startupIntervalSeconds=" + startupIntervalSeconds +
-        ", intervalSeconds=" + intervalSeconds +
-        ", responseTimeoutSeconds=" + responseTimeoutSeconds +
-        ", maxRetries=" + maxRetries +
-        ", failureStatusCodes=" + failureStatusCodes +
-        ", healthcheckResultFilePath=" + healthcheckResultFilePath +
-        '}';
+    return (
+      "HealthcheckOptionsBuilder{" +
+      "uri='" +
+      uri +
+      '\'' +
+      ", portIndex=" +
+      portIndex +
+      ", portNumber=" +
+      portNumber +
+      ", protocol=" +
+      protocol +
+      ", method=" +
+      method +
+      ", startupTimeoutSeconds=" +
+      startupTimeoutSeconds +
+      ", startupDelaySeconds=" +
+      startupDelaySeconds +
+      ", startupIntervalSeconds=" +
+      startupIntervalSeconds +
+      ", intervalSeconds=" +
+      intervalSeconds +
+      ", responseTimeoutSeconds=" +
+      responseTimeoutSeconds +
+      ", maxRetries=" +
+      maxRetries +
+      ", failureStatusCodes=" +
+      failureStatusCodes +
+      ", healthcheckResultFilePath=" +
+      healthcheckResultFilePath +
+      '}'
+    );
   }
 }

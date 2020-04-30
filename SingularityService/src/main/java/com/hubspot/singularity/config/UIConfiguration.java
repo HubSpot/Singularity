@@ -2,20 +2,17 @@ package com.hubspot.singularity.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
 import org.hibernate.validator.constraints.NotEmpty;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
-import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
 
@@ -86,7 +83,6 @@ public class UIConfiguration {
 
   @JsonProperty
   private Optional<String> redirectOnUnauthorizedUrl = Optional.empty();
-
 
   @JsonProperty
   private Optional<String> extraScript = Optional.empty();
@@ -198,9 +194,13 @@ public class UIConfiguration {
     return shellCommands;
   }
 
-  public boolean isShowTaskDiskResource() { return showTaskDiskResource; }
+  public boolean isShowTaskDiskResource() {
+    return showTaskDiskResource;
+  }
 
-  public void setShowTaskDiskResource(boolean showTaskDiskResource) { this.showTaskDiskResource = showTaskDiskResource; }
+  public void setShowTaskDiskResource(boolean showTaskDiskResource) {
+    this.showTaskDiskResource = showTaskDiskResource;
+  }
 
   public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
     this.shellCommands = shellCommands;
@@ -298,7 +298,9 @@ public class UIConfiguration {
     return quickLinks;
   }
 
-  public void setQuickLinks(Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks) {
+  public void setQuickLinks(
+    Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks
+  ) {
     this.quickLinks = quickLinks;
   }
 

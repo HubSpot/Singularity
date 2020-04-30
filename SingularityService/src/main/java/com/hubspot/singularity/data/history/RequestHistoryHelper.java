@@ -1,9 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -11,15 +7,22 @@ import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Singleton
-public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityRequestHistory, String> {
-
+public class RequestHistoryHelper
+  extends BlendedHistoryHelper<SingularityRequestHistory, String> {
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
 
   @Inject
-  public RequestHistoryHelper(RequestManager requestManager, HistoryManager historyManager, SingularityConfiguration configuration) {
+  public RequestHistoryHelper(
+    RequestManager requestManager,
+    HistoryManager historyManager,
+    SingularityConfiguration configuration
+  ) {
     super(configuration.getDatabaseConfiguration().isPresent());
     this.requestManager = requestManager;
     this.historyManager = historyManager;
@@ -27,7 +30,9 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
 
   @Override
   protected List<SingularityRequestHistory> getFromZk(String requestId) {
-    List<SingularityRequestHistory> requestHistory = requestManager.getRequestHistory(requestId);
+    List<SingularityRequestHistory> requestHistory = requestManager.getRequestHistory(
+      requestId
+    );
 
     Collections.sort(requestHistory);
 
@@ -35,12 +40,23 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
   }
 
   @Override
-  protected List<SingularityRequestHistory> getFromHistory(String requestId, int historyStart, int numFromHistory) {
-    return historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), historyStart, numFromHistory);
+  protected List<SingularityRequestHistory> getFromHistory(
+    String requestId,
+    int historyStart,
+    int numFromHistory
+  ) {
+    return historyManager.getRequestHistory(
+      requestId,
+      Optional.of(OrderDirection.DESC),
+      historyStart,
+      numFromHistory
+    );
   }
 
   public Optional<SingularityRequestHistory> getFirstHistory(String requestId) {
-    Optional<SingularityRequestHistory> firstHistory = JavaUtils.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.ASC), 0, 1));
+    Optional<SingularityRequestHistory> firstHistory = JavaUtils.getFirst(
+      historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.ASC), 0, 1)
+    );
 
     if (firstHistory.isPresent()) {
       return firstHistory;
@@ -50,13 +66,17 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
   }
 
   public Optional<SingularityRequestHistory> getLastHistory(String requestId) {
-    Optional<SingularityRequestHistory> lastHistory = JavaUtils.getFirst(getFromZk(requestId));
+    Optional<SingularityRequestHistory> lastHistory = JavaUtils.getFirst(
+      getFromZk(requestId)
+    );
 
     if (lastHistory.isPresent()) {
       return lastHistory;
     }
 
-    return JavaUtils.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 1));
+    return JavaUtils.getFirst(
+      historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 1)
+    );
   }
 
   @Override
@@ -71,5 +91,4 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
 
     return Optional.of(numFromZk + numFromHistory);
   }
-
 }

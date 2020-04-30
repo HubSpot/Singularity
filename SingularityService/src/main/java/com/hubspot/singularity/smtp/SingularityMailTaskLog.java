@@ -35,7 +35,16 @@ public class SingularityMailTaskLog {
 
   @Override
   public String toString() {
-    return "SingularityMailTaskLog [path=" + path +
-        " file=" + file + " link=" + link + " log=" + log + "]";
+    return (
+      "SingularityMailTaskLog [path=" +
+      path +
+      " file=" +
+      file +
+      " link=" +
+      link +
+      " log=" +
+      log +
+      "]"
+    );
   }
 }
