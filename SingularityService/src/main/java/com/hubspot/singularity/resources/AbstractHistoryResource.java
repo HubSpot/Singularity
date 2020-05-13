@@ -10,7 +10,7 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -22,7 +22,7 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
   protected final HistoryManager historyManager;
   protected final TaskManager taskManager;
   protected final DeployManager deployManager;
-  protected final SingularityAuthorizationHelper authorizationHelper;
+  protected final SingularityAuthorizer authorizationHelper;
 
   public AbstractHistoryResource(
     AsyncHttpClient httpClient,
@@ -31,7 +31,7 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
     HistoryManager historyManager,
     TaskManager taskManager,
     DeployManager deployManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.historyManager = historyManager;

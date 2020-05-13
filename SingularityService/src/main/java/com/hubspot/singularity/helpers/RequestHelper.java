@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -53,6 +54,7 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final AuthConfiguration authConfiguration;
 
   @Inject
   public RequestHelper(
@@ -62,7 +64,8 @@ public class RequestHelper {
     SingularityValidator validator,
     UserManager userManager,
     TaskManager taskManager,
-    SingularityDeployHealthHelper deployHealthHelper
+    SingularityDeployHealthHelper deployHealthHelper,
+    AuthConfiguration authConfiguration
   ) {
     this.requestManager = requestManager;
     this.mailer = mailer;
@@ -71,6 +74,7 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
+    this.authConfiguration = authConfiguration;
   }
 
   public long unpause(
@@ -597,7 +601,7 @@ public class RequestHelper {
     return (
       input.isPresent() &&
       (
-        user.getEmail().equals(input) ||
+        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()).equals(input) ||
         user.getId().equals(input.get()) ||
         user.getName().equals(input.get())
       )

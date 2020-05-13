@@ -8,7 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
-import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
+import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;

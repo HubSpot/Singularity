@@ -9,8 +9,9 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
@@ -50,8 +51,9 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
     LeaderLatch leaderLatch,
     @Singularity ObjectMapper objectMapper,
     SlaveManager slaveManager,
-    SingularityAuthorizationHelper authorizationHelper,
-    SingularityValidator validator
+    SingularityAuthorizer authorizationHelper,
+    SingularityValidator validator,
+    AuthConfiguration authConfiguration
   ) {
     super(
       httpClient,
@@ -59,7 +61,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       objectMapper,
       slaveManager,
       authorizationHelper,
-      validator
+      validator,
+      authConfiguration
     );
   }
 

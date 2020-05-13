@@ -30,7 +30,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTestAuthenticator;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.datastore.SingularityDisabledAuthDatastore;
@@ -274,7 +274,7 @@ public class SingularityTestModule implements Module {
     mainBinder
       .bind(SingularityAuthDatastore.class)
       .to(SingularityDisabledAuthDatastore.class);
-    mainBinder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
+    mainBinder.bind(SingularityAuthorizer.class).in(Scopes.SINGLETON);
     mainBinder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
 
     mainBinder.bind(DeployResource.class);

@@ -36,6 +36,7 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -286,14 +287,14 @@ class SingularityStartup {
     );
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(
       requestManager.getRequests(),
-      SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID
+      SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID::apply
     );
 
     AtomicInteger enqueuedNewTaskChecks = new AtomicInteger(0);
     AtomicInteger enqueuedHealthchecks = new AtomicInteger(0);
 
     List<CompletableFuture<Void>> enqueueFutures = new ArrayList<>();
-    for (Map.Entry<SingularityTaskId, SingularityTask> entry : activeTaskMap.entrySet()) {
+    for (Entry<SingularityTaskId, SingularityTask> entry : activeTaskMap.entrySet()) {
       enqueueFutures.add(
         CompletableFuture.runAsync(
           () -> {

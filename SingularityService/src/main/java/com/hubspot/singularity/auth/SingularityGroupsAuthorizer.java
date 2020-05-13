@@ -1,49 +1,37 @@
 package com.hubspot.singularity.auth;
 
 import static com.google.common.collect.ImmutableSet.copyOf;
-import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 
 @Singleton
-public class SingularityAuthorizationHelper {
-  private final RequestManager requestManager;
+public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
   private final ImmutableSet<String> adminGroups;
   private final ImmutableSet<String> requiredGroups;
   private final ImmutableSet<String> jitaGroups;
   private final ImmutableSet<String> defaultReadOnlyGroups;
   private final ImmutableSet<String> globalReadOnlyGroups;
-  private final boolean authEnabled;
 
   @Inject
-  public SingularityAuthorizationHelper(
+  public SingularityGroupsAuthorizer(
     RequestManager requestManager,
     SingularityConfiguration configuration
   ) {
-    this.requestManager = requestManager;
+    super(requestManager, configuration.getAuthConfiguration().isEnabled());
     this.adminGroups = copyOf(configuration.getAuthConfiguration().getAdminGroups());
     this.requiredGroups =
       copyOf(configuration.getAuthConfiguration().getRequiredGroups());
@@ -52,13 +40,9 @@ public class SingularityAuthorizationHelper {
       copyOf(configuration.getAuthConfiguration().getDefaultReadOnlyGroups());
     this.globalReadOnlyGroups =
       copyOf(configuration.getAuthConfiguration().getGlobalReadOnlyGroups());
-    this.authEnabled = configuration.getAuthConfiguration().isEnabled();
   }
 
-  public static boolean groupsIntersect(Set<String> a, Set<String> b) {
-    return !Sets.intersection(a, b).isEmpty();
-  }
-
+  @Override
   public boolean hasAdminAuthorization(SingularityUser user) {
     // disabled auth == no rules!
     if (!authEnabled) {
@@ -77,6 +61,7 @@ public class SingularityAuthorizationHelper {
     return groupsIntersect(user.getGroups(), adminGroups);
   }
 
+  @Override
   public void checkAdminAuthorization(SingularityUser user) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");
@@ -91,13 +76,13 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  @Override
   public void checkReadAuthorization(SingularityUser user) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");
       if (!adminGroups.isEmpty()) {
         final Set<String> userGroups = user.getGroups();
-        final boolean userIsAdmin =
-          !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+        final boolean userIsAdmin = groupsIntersect(userGroups, adminGroups);
         final boolean userIsJITA =
           !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
         final boolean userIsReadOnlyUser =
@@ -118,6 +103,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  @Override
   public void checkUserInRequiredGroups(SingularityUser user) {
     if (authEnabled) {
       final Set<String> userGroups = user.getGroups();
@@ -136,45 +122,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public void checkForAuthorizationByTaskId(
-    String taskId,
-    SingularityUser user,
-    SingularityAuthorizationScope scope
-  ) {
-    if (authEnabled) {
-      checkForbidden(user.isAuthenticated(), "Not Authenticated!");
-      try {
-        final SingularityTaskId taskIdObj = SingularityTaskId.valueOf(taskId);
-
-        final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
-          taskIdObj.getRequestId()
-        );
-
-        if (maybeRequest.isPresent()) {
-          checkForAuthorization(maybeRequest.get().getRequest(), user, scope);
-        }
-      } catch (InvalidSingularityTaskIdException e) {
-        badRequest(e.getMessage());
-      }
-    }
-  }
-
-  public void checkForAuthorizationByRequestId(
-    String requestId,
-    SingularityUser user,
-    SingularityAuthorizationScope scope
-  ) {
-    if (authEnabled) {
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
-        requestId
-      );
-
-      if (maybeRequest.isPresent()) {
-        checkForAuthorization(maybeRequest.get().getRequest(), user, scope);
-      }
-    }
-  }
-
+  @Override
   public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
@@ -191,7 +139,7 @@ public class SingularityAuthorizationHelper {
     final Set<String> userGroups = user.getGroups();
     final Set<String> readWriteGroups = Sets.union(
       request.getGroup().map(Collections::singleton).orElse(Collections.emptySet()),
-      request.getReadWriteGroups().orElse(Collections.<String>emptySet())
+      request.getReadWriteGroups().orElse(Collections.emptySet())
     );
     final Set<String> readOnlyGroups = request
       .getReadOnlyGroups()
@@ -226,6 +174,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  @Override
   public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
@@ -254,7 +203,7 @@ public class SingularityAuthorizationHelper {
     );
   }
 
-  public void checkForAuthorization(
+  private void checkForAuthorization(
     SingularityUser user,
     Set<String> readWriteGroups,
     Set<String> readOnlyGroups,
@@ -321,6 +270,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  @Override
   public void checkForAuthorizedChanges(
     SingularityRequest request,
     SingularityRequest oldRequest,
@@ -340,84 +290,5 @@ public class SingularityAuthorizationHelper {
       checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
       checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     }
-  }
-
-  public <T> List<T> filterByAuthorizedRequests(
-    final SingularityUser user,
-    List<T> objects,
-    final Function<T, String> requestIdFunction,
-    final SingularityAuthorizationScope scope
-  ) {
-    if (hasAdminAuthorization(user)) {
-      return objects;
-    }
-
-    final Set<String> requestIds = copyOf(
-      Iterables.transform(
-        objects,
-        new Function<T, String>() {
-
-          @Override
-          public String apply(@Nonnull T input) {
-            return requestIdFunction.apply(input);
-          }
-        }
-      )
-    );
-
-    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(
-      requestManager.getRequests(requestIds),
-      new Function<SingularityRequestWithState, String>() {
-
-        @Override
-        public String apply(@Nonnull SingularityRequestWithState input) {
-          return input.getRequest().getId();
-        }
-      }
-    );
-
-    return objects
-      .stream()
-      .filter(
-        input -> {
-          final String requestId = requestIdFunction.apply(input);
-          return (
-            requestMap.containsKey(requestId) &&
-            isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope)
-          );
-        }
-      )
-      .collect(Collectors.toList());
-  }
-
-  public List<String> filterAuthorizedRequestIds(
-    final SingularityUser user,
-    List<String> requestIds,
-    final SingularityAuthorizationScope scope,
-    boolean useWebCache
-  ) {
-    if (hasAdminAuthorization(user)) {
-      return requestIds;
-    }
-
-    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(
-      requestManager.getRequests(requestIds, useWebCache),
-      new Function<SingularityRequestWithState, String>() {
-
-        @Override
-        public String apply(@Nonnull SingularityRequestWithState input) {
-          return input.getRequest().getId();
-        }
-      }
-    );
-
-    return requestIds
-      .stream()
-      .filter(
-        input ->
-          requestMap.containsKey(input) &&
-          isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope)
-      )
-      .collect(Collectors.toList());
   }
 }

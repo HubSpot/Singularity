@@ -13,14 +13,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.Stage;
-import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.singularity.auth.SingularityAuthModule;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import io.dropwizard.Application;
 import io.dropwizard.Bundle;
@@ -34,7 +33,6 @@ import io.dropwizard.views.ViewBundle;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.Optional;
 
 @OpenAPIDefinition(
   info = @Info(title = "Singularity"),

@@ -1,16 +1,16 @@
-package com.hubspot.singularity;
+package com.hubspot.singularity.auth;
 
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
-import com.hubspot.singularity.auth.SingularityAuthFeature;
-import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.SingularityAsyncHttpClient;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityMultiMethodAuthenticator;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.auth.dw.SingularityAuthFeature;
+import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
@@ -25,6 +25,9 @@ public class SingularityAuthModule
 
   @Override
   public void configure(Binder binder) {
+    binder
+      .bind(AuthConfiguration.class)
+      .toInstance(getConfiguration().getAuthConfiguration());
     Multibinder<SingularityAuthenticator> multibinder = Multibinder.newSetBinder(
       binder,
       SingularityAuthenticator.class
@@ -50,6 +53,18 @@ public class SingularityAuthModule
       }
     }
 
+    if (getConfiguration().getAuthConfiguration().isEnableScopes()) {
+      binder
+        .bind(SingularityAuthorizer.class)
+        .to(SingularityGroupsScopesAuthorizer.class)
+        .in(Scopes.SINGLETON);
+    } else {
+      binder
+        .bind(SingularityAuthorizer.class)
+        .to(SingularityGroupsAuthorizer.class)
+        .in(Scopes.SINGLETON);
+    }
+
     binder.bind(SingularityAuthFeature.class);
     binder.bind(SingularityMultiMethodAuthenticator.class);
     binder
@@ -57,6 +72,6 @@ public class SingularityAuthModule
       .to(
         getConfiguration().getAuthConfiguration().getDatastore().getAuthDatastoreClass()
       );
-    binder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityAuthorizer.class).in(Scopes.SINGLETON);
   }
 }

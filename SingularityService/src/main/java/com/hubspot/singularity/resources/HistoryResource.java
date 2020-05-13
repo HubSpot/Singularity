@@ -18,7 +18,7 @@ import com.hubspot.singularity.SingularityTaskHistoryQuery;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -76,7 +76,7 @@ public class HistoryResource extends AbstractHistoryResource {
     DeployHistoryHelper deployHistoryHelper,
     TaskHistoryHelper taskHistoryHelper,
     RequestHistoryHelper requestHistoryHelper,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     DeployTaskHistoryHelper deployTaskHistoryHelper
   ) {
     super(
