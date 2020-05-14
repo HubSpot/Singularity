@@ -75,21 +75,12 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
     switch (scope) {
       case READ:
-        Set<String> allowedReadGroups = request
-          .getReadOnlyGroups()
-          .orElseGet(authConfiguration::getDefaultReadOnlyGroups);
+        Set<String> allowedReadGroups = getReadGroups(request);
         checkForbiddenForGroups(user, allowedReadGroups);
         checkReadScope(user);
         break;
       case WRITE:
-        Set<String> allowedWriteGroups = request
-          .getReadWriteGroups()
-          .orElseGet(HashSet::new);
-        request.getGroup().ifPresent(allowedWriteGroups::add);
-        if (allowedWriteGroups.isEmpty()) {
-          LOG.warn("No write-enabled groups set for {}", request.getId());
-          return;
-        }
+        Set<String> allowedWriteGroups = getWriteGroups(request);
         checkForbiddenForGroups(user, allowedWriteGroups);
         checkWriteScope(user);
         break;
@@ -116,21 +107,13 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     }
     switch (scope) {
       case READ:
-        Set<String> allowedReadGroups = request
-          .getReadOnlyGroups()
-          .orElseGet(authConfiguration::getDefaultReadOnlyGroups);
-        return groupsIntersect(allowedReadGroups, user.getGroups()) && hasReadScope(user);
-      case WRITE:
-        Set<String> allowedWriteGroups = request
-          .getReadWriteGroups()
-          .orElseGet(HashSet::new);
-        request.getGroup().ifPresent(allowedWriteGroups::add);
-        if (allowedWriteGroups.isEmpty()) {
-          LOG.warn("No write-enabled groups set for {}", request.getId());
-          return true;
-        }
         return (
-          groupsIntersect(allowedWriteGroups, user.getGroups()) && hasWriteScope(user)
+          groupsIntersect(getReadGroups(request), user.getGroups()) && hasReadScope(user)
+        );
+      case WRITE:
+        return (
+          groupsIntersect(getWriteGroups(request), user.getGroups()) &&
+          hasWriteScope(user)
         );
       case ADMIN:
       default:
@@ -166,20 +149,24 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   private boolean hasReadScope(SingularityUser user) {
-    return groupsIntersect(scopesConfiguration.getRead(), user.getScopes());
+    return (
+      groupsIntersect(scopesConfiguration.getRead(), user.getScopes()) ||
+      groupsIntersect(scopesConfiguration.getWrite(), user.getScopes())
+    );
   }
 
   private void checkReadScope(SingularityUser user) {
     checkForbidden(
       hasReadScope(user),
-      "%s must have one or more scopes to READ: %s",
+      "%s must have one or more scopes to READ: %s, %s",
       user.getId(),
-      scopesConfiguration.getRead()
+      scopesConfiguration.getRead(),
+      scopesConfiguration.getWrite()
     );
   }
 
   private boolean hasWriteScope(SingularityUser user) {
-    return groupsIntersect(scopesConfiguration.getRead(), user.getScopes());
+    return groupsIntersect(scopesConfiguration.getWrite(), user.getScopes());
   }
 
   private void checkWriteScope(SingularityUser user) {
@@ -198,5 +185,26 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       user.getId(),
       allowedGroups
     );
+  }
+
+  private Set<String> getReadGroups(SingularityRequest request) {
+    Set<String> allowedReadGroups = new HashSet<>();
+    request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
+    request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
+    request.getGroup().ifPresent(allowedReadGroups::add);
+    if (allowedReadGroups.isEmpty()) {
+      LOG.warn("No read-enabled groups set for {}", request.getId());
+    }
+    return allowedReadGroups;
+  }
+
+  private Set<String> getWriteGroups(SingularityRequest request) {
+    Set<String> allowedWriteGroups = new HashSet<>();
+    request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
+    request.getGroup().ifPresent(allowedWriteGroups::add);
+    if (allowedWriteGroups.isEmpty()) {
+      LOG.warn("No read/write-enabled groups set for {}", request.getId());
+    }
+    return allowedWriteGroups;
   }
 }
