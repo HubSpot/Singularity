@@ -53,16 +53,24 @@ public class SingularityAuthModule
       }
     }
 
-    if (getConfiguration().getAuthConfiguration().isEnableScopes()) {
-      binder
-        .bind(SingularityAuthorizer.class)
-        .to(SingularityGroupsScopesAuthorizer.class)
-        .in(Scopes.SINGLETON);
-    } else {
-      binder
-        .bind(SingularityAuthorizer.class)
-        .to(SingularityGroupsAuthorizer.class)
-        .in(Scopes.SINGLETON);
+    switch (getConfiguration().getAuthConfiguration().getAuthMode()) {
+      case GROUPS_SCOPES:
+        binder
+          .bind(SingularityAuthorizer.class)
+          .to(SingularityGroupsScopesAuthorizer.class)
+          .in(Scopes.SINGLETON);
+        break;
+      case GROUPS_LOG_SCOPES:
+        binder
+          .bind(SingularityAuthorizer.class)
+          .to(SingularityDualAuthorizer.class)
+          .in(Scopes.SINGLETON);
+      case GROUPS:
+      default:
+        binder
+          .bind(SingularityAuthorizer.class)
+          .to(SingularityGroupsAuthorizer.class)
+          .in(Scopes.SINGLETON);
     }
 
     binder.bind(SingularityAuthFeature.class);

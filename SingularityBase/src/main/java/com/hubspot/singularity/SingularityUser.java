@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.security.Principal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -46,6 +47,20 @@ public class SingularityUser implements Principal {
     boolean authenticated
   ) {
     this(id, name, email, groups, Collections.emptySet(), authenticated);
+  }
+
+  public SingularityUser withOnlyGroups() {
+    Set<String> mergedGroups = new HashSet<>();
+    mergedGroups.addAll(groups);
+    mergedGroups.addAll(scopes);
+    return new SingularityUser(
+      id,
+      name,
+      email,
+      mergedGroups,
+      Collections.emptySet(),
+      authenticated
+    );
   }
 
   @JsonCreator

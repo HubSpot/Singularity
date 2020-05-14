@@ -65,7 +65,7 @@ public class AuthConfiguration {
   private int webhookAuthConnectTimeoutMs = 2000;
 
   @JsonProperty
-  private boolean enableScopes = false;
+  private UserAuthMode authMode = UserAuthMode.GROUPS;
 
   @JsonProperty
   @Valid
@@ -187,12 +187,12 @@ public class AuthConfiguration {
     return this;
   }
 
-  public boolean isEnableScopes() {
-    return enableScopes;
+  public UserAuthMode getAuthMode() {
+    return authMode;
   }
 
-  public void setEnableScopes(boolean enableScopes) {
-    this.enableScopes = enableScopes;
+  public void setAuthMode(UserAuthMode authMode) {
+    this.authMode = authMode;
   }
 
   public ScopesConfiguration getScopes() {

@@ -148,9 +148,8 @@ public class AuthResource {
   )
     throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (tokenRequest.getUser().isPresent()) {
+      // only admins can create a token for another user
       authorizationHelper.checkAdminAuthorization(user);
-    } else {
-      authorizationHelper.checkUserInRequiredGroups(user);
     }
     SingularityUser userData = tokenRequest.getUser().orElse(user);
     authTokenManager.clearTokensForUser(userData.getName());

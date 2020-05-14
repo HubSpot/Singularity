@@ -40,8 +40,6 @@ public abstract class SingularityAuthorizer {
 
   public abstract void checkReadAuthorization(SingularityUser user);
 
-  public abstract void checkUserInRequiredGroups(SingularityUser user);
-
   public abstract void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,

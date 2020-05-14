@@ -104,25 +104,6 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
-  public void checkUserInRequiredGroups(SingularityUser user) {
-    if (authEnabled) {
-      final Set<String> userGroups = user.getGroups();
-      final boolean userIsAdmin =
-        !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
-      final boolean userIsPartOfRequiredGroups =
-        requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
-      if (!userIsAdmin) {
-        checkForbidden(
-          userIsPartOfRequiredGroups,
-          "%s must be part of one or more read only or jita groups: %s",
-          user.getId(),
-          JavaUtils.COMMA_JOINER.join(requiredGroups)
-        );
-      }
-    }
-  }
-
-  @Override
   public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,

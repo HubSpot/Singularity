@@ -1482,7 +1482,6 @@ public class RequestResource extends AbstractRequestResource {
     final SingularityAuthorizationScope scope,
     SingularityUser user
   ) {
-    authorizationHelper.checkUserInRequiredGroups(user);
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       return requests
         .stream()
