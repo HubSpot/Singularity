@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
+import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.UserAuthMode;
@@ -28,6 +31,15 @@ public class SingularityGroupsScopesAuthorizerTest {
     Optional.empty(),
     Collections.singleton("admin"),
     ImmutableSet.of("SINGULARITY_ADMIN"),
+    true
+  );
+
+  private static final SingularityUser GROUP_AB_READ_WRITE = new SingularityUser(
+    "a",
+    Optional.empty(),
+    Optional.empty(),
+    ImmutableSet.of("a", "b"),
+    ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE"),
     true
   );
 
@@ -76,6 +88,36 @@ public class SingularityGroupsScopesAuthorizerTest {
     true
   );
 
+  private static final SingularityRequest GROUP_A_REQUEST = new SingularityRequestBuilder(
+    "a",
+    RequestType.WORKER
+  )
+    .setGroup(Optional.of("a"))
+    .build();
+
+  private static final SingularityRequest GROUP_B_REQUEST = new SingularityRequestBuilder(
+    "b",
+    RequestType.WORKER
+  )
+    .setGroup(Optional.of("b"))
+    .build();
+
+  private static final SingularityRequest GROUP_A_REQUEST_W_READ_ONLY_B = new SingularityRequestBuilder(
+    "a",
+    RequestType.WORKER
+  )
+    .setGroup(Optional.of("a"))
+    .setReadOnlyGroups(Optional.of(Collections.singleton("b")))
+    .build();
+
+  private static final SingularityRequest GROUP_A_REQUEST_W_READ_WRITE_B = new SingularityRequestBuilder(
+    "a",
+    RequestType.WORKER
+  )
+    .setGroup(Optional.of("a"))
+    .setReadWriteGroups(Optional.of(Collections.singleton("b")))
+    .build();
+
   protected SingularityGroupsScopesAuthorizer authorizer;
 
   @BeforeEach
@@ -97,4 +139,25 @@ public class SingularityGroupsScopesAuthorizerTest {
       () -> authorizer.checkAdminAuthorization(GROUP_A_WRITE_ONLY)
     );
   }
+
+  @Test
+  public void itAllowsDefaultReadOnlyUserToReadWithNoOverride() {}
+
+  @Test
+  public void itDeniesDefaultGroupWhenOverriddenForWriteOrRead() {}
+
+  @Test
+  public void itDeniesAccessWhenNotInGroup() {}
+
+  @Test
+  public void itAllowsAccessWhenInGroup() {}
+
+  @Test
+  public void itAllowsAccessForDefaultAndOverridenGroups() {}
+
+  @Test
+  public void itAllowsChangeOfGroupWhenInBoth() {}
+
+  @Test
+  public void writeAlsoGrantsRead() {}
 }
