@@ -27,22 +27,21 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   @Inject
   public SingularityGroupsScopesAuthorizer(
     RequestManager requestManager,
-    boolean authEnabled,
     AuthConfiguration authConfiguration
   ) {
-    super(requestManager, authEnabled);
+    super(requestManager, authConfiguration.isEnabled());
     this.authConfiguration = authConfiguration;
     this.scopesConfiguration = authConfiguration.getScopes();
   }
 
   @Override
   public boolean hasAdminAuthorization(SingularityUser user) {
-    return !authConfiguration.isEnabled() || (user.isAuthenticated() && isAdmin(user));
+    return !authEnabled || (user.isAuthenticated() && isAdmin(user));
   }
 
   @Override
   public void checkAdminAuthorization(SingularityUser user) {
-    if (!authConfiguration.isEnabled()) {
+    if (!authEnabled) {
       return;
     }
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
@@ -56,7 +55,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
 
   @Override
   public void checkReadAuthorization(SingularityUser user) {
-    if (!authConfiguration.isEnabled() || isAdmin(user)) {
+    if (!authEnabled || isAdmin(user)) {
       return;
     }
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
@@ -69,7 +68,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     SingularityUser user,
     SingularityAuthorizationScope scope
   ) {
-    if (!authConfiguration.isEnabled() || isAdmin(user)) {
+    if (!authEnabled || isAdmin(user)) {
       return;
     }
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
@@ -96,7 +95,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     SingularityUser user,
     SingularityAuthorizationScope scope
   ) {
-    if (!authConfiguration.isEnabled() || isAdmin(user)) {
+    if (!authEnabled || isAdmin(user)) {
       return true;
     }
     if (!user.isAuthenticated()) {
@@ -127,7 +126,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     SingularityRequest oldRequest,
     SingularityUser user
   ) {
-    if (!authConfiguration.isEnabled()) {
+    if (!authEnabled) {
       return;
     }
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
@@ -189,6 +188,11 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
 
   private Set<String> getReadGroups(SingularityRequest request) {
     Set<String> allowedReadGroups = new HashSet<>();
+    boolean hasOverride =
+      request.getReadOnlyGroups().isPresent() || request.getReadWriteGroups().isPresent();
+    if (!hasOverride) {
+      allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups()); // TODO - keep this around?
+    }
     request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
     request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
     request.getGroup().ifPresent(allowedReadGroups::add);

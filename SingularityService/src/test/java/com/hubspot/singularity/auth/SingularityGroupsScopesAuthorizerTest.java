@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityUser;
@@ -61,6 +62,15 @@ public class SingularityGroupsScopesAuthorizerTest {
     true
   );
 
+  private static final SingularityUser GROUP_B_READ_ONLY = new SingularityUser(
+    "b",
+    Optional.empty(),
+    Optional.empty(),
+    Collections.singleton("b"),
+    ImmutableSet.of("SINGULARITY_READONLY"),
+    true
+  );
+
   private static final SingularityUser GROUP_A_READ_ONLY = new SingularityUser(
     "a",
     Optional.empty(),
@@ -95,13 +105,6 @@ public class SingularityGroupsScopesAuthorizerTest {
     .setGroup(Optional.of("a"))
     .build();
 
-  private static final SingularityRequest GROUP_B_REQUEST = new SingularityRequestBuilder(
-    "b",
-    RequestType.WORKER
-  )
-    .setGroup(Optional.of("b"))
-    .build();
-
   private static final SingularityRequest GROUP_A_REQUEST_W_READ_ONLY_B = new SingularityRequestBuilder(
     "a",
     RequestType.WORKER
@@ -126,7 +129,7 @@ public class SingularityGroupsScopesAuthorizerTest {
     authConfiguration.setEnabled(true);
     authConfiguration.setAuthMode(UserAuthMode.GROUPS_SCOPES);
     authConfiguration.setDefaultReadOnlyGroups(Collections.singleton("default-read"));
-    authorizer = new SingularityGroupsScopesAuthorizer(null, true, authConfiguration);
+    authorizer = new SingularityGroupsScopesAuthorizer(null, authConfiguration);
   }
 
   @Test
@@ -141,23 +144,256 @@ public class SingularityGroupsScopesAuthorizerTest {
   }
 
   @Test
-  public void itAllowsDefaultReadOnlyUserToReadWithNoOverride() {}
+  public void itAllowsDefaultReadOnlyUserToReadWithNoOverride() {
+    assertDoesNotThrow(() -> authorizer.checkReadAuthorization(DEFAULT_READ_GROUP));
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          DEFAULT_READ_GROUP,
+          SingularityAuthorizationScope.READ
+        )
+    );
+  }
 
   @Test
-  public void itDeniesDefaultGroupWhenOverriddenForWriteOrRead() {}
+  public void itDeniesDefaultGroupWhenOverriddenForWriteOrRead() {
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_ONLY_B,
+          DEFAULT_READ_GROUP,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          DEFAULT_READ_GROUP,
+          SingularityAuthorizationScope.READ
+        )
+    );
+  }
 
   @Test
-  public void itDeniesAccessWhenNotInGroup() {}
+  public void itAllowsAccessWhenInGroupAndDeniesOtherwise() {
+    // user and request in group a
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          GROUP_A_READ_ONLY,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST,
+        GROUP_A_READ_ONLY,
+        SingularityAuthorizationScope.READ
+      )
+    );
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          GROUP_A_READ_WRITE,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST,
+        GROUP_A_READ_WRITE,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          GROUP_A_WRITE_ONLY,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST,
+        GROUP_A_WRITE_ONLY,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+
+    // user in b not allowed a
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertFalse(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertFalse(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.READ
+      )
+    );
+
+    // user allowed when in override read group
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_ONLY_B,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_ONLY_B,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.READ
+      )
+    );
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_ONLY_B,
+          GROUP_B_READ_ONLY,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_ONLY_B,
+        GROUP_B_READ_ONLY,
+        SingularityAuthorizationScope.READ
+      )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_ONLY_B,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertFalse(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_ONLY_B,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+
+    // user allowed read/write when in override write group and has write
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_B_READ_ONLY,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        GROUP_B_READ_ONLY,
+        SingularityAuthorizationScope.READ
+      )
+    );
+
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_B_READ_ONLY,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertFalse(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        GROUP_B_READ_ONLY,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.READ
+      )
+    );
+
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_B_READ_WRITE,
+          SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertTrue(
+      authorizer.isAuthorizedForRequest(
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        GROUP_B_READ_WRITE,
+        SingularityAuthorizationScope.WRITE
+      )
+    );
+  }
 
   @Test
-  public void itAllowsAccessWhenInGroup() {}
-
-  @Test
-  public void itAllowsAccessForDefaultAndOverridenGroups() {}
-
-  @Test
-  public void itAllowsChangeOfGroupWhenInBoth() {}
-
-  @Test
-  public void writeAlsoGrantsRead() {}
+  public void itAllowsChangeOfGroupWhenInBoth() {
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorizedChanges(
+          GROUP_A_REQUEST,
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_AB_READ_WRITE
+        )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorizedChanges(
+          GROUP_A_REQUEST,
+          GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_B_READ_WRITE
+        )
+    );
+  }
 }
