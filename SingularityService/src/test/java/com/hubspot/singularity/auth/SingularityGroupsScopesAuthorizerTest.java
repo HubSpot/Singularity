@@ -1,17 +1,27 @@
 package com.hubspot.singularity.auth;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.common.collect.ImmutableSet;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.UserAuthMode;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import java.util.Collections;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.jupiter.api.BeforeAll;
+import javax.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class SingularityGroupsScopesAuthorizerTest {
+
+  static {
+    JerseyGuiceUtils.install((s, serviceLocator) -> null);
+  }
+
   private static final SingularityUser ADMIN_USER = new SingularityUser(
     "superman",
     Optional.empty(),
@@ -78,5 +88,13 @@ public class SingularityGroupsScopesAuthorizerTest {
   }
 
   @Test
-  public void itRecognizesAdminUsers() {}
+  public void itRecognizesAdminUsers() {
+    assertTrue(authorizer.hasAdminAuthorization(ADMIN_USER));
+    assertFalse(authorizer.hasAdminAuthorization(GROUP_A_WRITE_ONLY));
+    assertDoesNotThrow(() -> authorizer.checkAdminAuthorization(ADMIN_USER));
+    assertThrows(
+      WebApplicationException.class,
+      () -> authorizer.checkAdminAuthorization(GROUP_A_WRITE_ONLY)
+    );
+  }
 }
