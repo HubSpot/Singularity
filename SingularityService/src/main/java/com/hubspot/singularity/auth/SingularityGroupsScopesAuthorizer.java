@@ -118,6 +118,18 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         return (
           groupsIntersect(getReadGroups(request), user.getGroups()) && hasReadScope(user)
         );
+      case DEPLOY:
+        if (!scopesConfiguration.getDeploy().isEmpty()) {
+          return (
+            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
+            hasDeployScope(user)
+          );
+        } else {
+          return (
+            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
+            hasWriteScope(user)
+          );
+        }
       case WRITE:
         return (
           groupsIntersect(getWriteGroups(request), user.getGroups()) &&
