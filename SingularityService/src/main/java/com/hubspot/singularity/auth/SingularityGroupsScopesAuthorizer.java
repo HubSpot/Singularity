@@ -87,6 +87,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         } else {
           checkWriteScope(user);
         }
+        break;
       case WRITE:
         Set<String> allowedWriteGroups = getWriteGroups(request);
         checkForbiddenForGroups(user, allowedWriteGroups);
