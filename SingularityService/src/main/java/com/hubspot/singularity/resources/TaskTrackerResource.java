@@ -8,7 +8,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -36,14 +36,14 @@ public class TaskTrackerResource {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public TaskTrackerResource(
     TaskManager taskManager,
     RequestManager requestManager,
     HistoryManager historyManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     this.taskManager = taskManager;
     this.requestManager = requestManager;

@@ -11,7 +11,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.WebhookManager;
@@ -40,13 +40,13 @@ import javax.ws.rs.core.MediaType;
 @Tags({ @Tag(name = "Webhooks") })
 public class WebhookResource {
   private final WebhookManager webhookManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator validator;
 
   @Inject
   public WebhookResource(
     WebhookManager webhookManager,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityValidator validator
   ) {
     this.webhookManager = webhookManager;

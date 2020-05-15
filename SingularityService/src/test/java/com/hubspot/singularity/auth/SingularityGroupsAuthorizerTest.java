@@ -1,11 +1,17 @@
-package com.hubspot.singularity;
+package com.hubspot.singularity.auth;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import com.google.common.collect.ImmutableSet;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -19,7 +25,7 @@ import javax.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class SingularityAuthorizationHelperTest {
+public class SingularityGroupsAuthorizerTest {
 
   static {
     JerseyGuiceUtils.install((s, serviceLocator) -> null);
@@ -112,15 +118,15 @@ public class SingularityAuthorizationHelperTest {
     ImmutableSet.of("admin")
   );
 
-  private SingularityAuthorizationHelper buildAuthorizationHelper(
+  private SingularityAuthorizer buildAuthorizationHelper(
     SingularityConfiguration configuration
   ) {
-    return new SingularityAuthorizationHelper(requestManager, configuration);
+    return new SingularityGroupsAuthorizer(requestManager, configuration);
   }
 
   private final RequestManager requestManager;
 
-  public SingularityAuthorizationHelperTest() {
+  public SingularityGroupsAuthorizerTest() {
     requestManager = mock(RequestManager.class);
 
     when(requestManager.getRequest(REQUEST_WITH_NO_GROUP.getId()))
@@ -145,7 +151,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testAuthDisabled() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthDisabledConfig()
     );
 
@@ -193,7 +199,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testAuth() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig()
     );
 
@@ -266,7 +272,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testAuthRequiredGroup() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         ImmutableSet.of("a"),
         Collections.<String>emptySet(),
@@ -323,7 +329,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testAuthAdminGroup() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -363,7 +369,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testAuthJitaGroup() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -400,7 +406,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckAdminAuthorizationThrowsOnForbidden() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -416,7 +422,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckAdminAuthorizationDoesntThrowOnAuthorized() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -429,7 +435,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationByTaskIdDoesntThrowOnAuthorized() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -446,7 +452,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationByTaskIdThrowsOnForbidden() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -467,7 +473,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationDoesntThrowOnAuthorized() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -484,7 +490,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationThrowsOnForbidden() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -505,7 +511,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationDoesntThrowOnValidChange() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -522,7 +528,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void testCheckForAuthorizationThrowsOnForbiddenChange() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig(
         Collections.<String>emptySet(),
         ImmutableSet.of("admin"),
@@ -543,7 +549,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void itAllowsUserInReadWriteGroupsToUpdateReadWriteGroups() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig()
     );
 
@@ -573,7 +579,7 @@ public class SingularityAuthorizationHelperTest {
 
   @Test
   public void itRestrictsAUserFromUpdatingGroupsIfTheyWillNotHaveAccess() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(
+    final SingularityAuthorizer authorizationHelper = buildAuthorizationHelper(
       buildAuthEnabledConfig()
     );
 

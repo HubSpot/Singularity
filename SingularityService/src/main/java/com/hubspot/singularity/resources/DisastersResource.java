@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;
 import io.dropwizard.auth.Auth;
@@ -34,12 +34,12 @@ import javax.ws.rs.core.MediaType;
 @Tags({ @Tag(name = "Disasters") })
 public class DisastersResource {
   private final DisasterManager disasterManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public DisastersResource(
     DisasterManager disasterManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     this.disasterManager = disasterManager;
     this.authorizationHelper = authorizationHelper;
