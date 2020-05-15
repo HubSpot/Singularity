@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import javax.ws.rs.WebApplicationException;
 import org.slf4j.Logger;
@@ -28,11 +29,11 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
   @Inject
   public SingularityDualAuthorizer(
     RequestManager requestManager,
-    boolean authEnabled,
+    AuthConfiguration authConfiguration,
     SingularityGroupsAuthorizer groupsAuthorizer,
     SingularityGroupsScopesAuthorizer groupsScopesAuthorizer
   ) {
-    super(requestManager, authEnabled);
+    super(requestManager, authConfiguration.isEnabled());
     this.groupsAuthorizer = groupsAuthorizer;
     this.groupsScopesAuthorizer = groupsScopesAuthorizer;
   }

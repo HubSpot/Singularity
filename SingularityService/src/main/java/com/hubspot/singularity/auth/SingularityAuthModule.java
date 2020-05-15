@@ -15,6 +15,8 @@ import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SingularityAuthModule
   extends DropwizardAwareModule<SingularityConfiguration> {
@@ -32,9 +34,15 @@ public class SingularityAuthModule
       binder,
       SingularityAuthenticator.class
     );
+    // don't double bind, but maintain ordering
+    Set<SingularityAuthenticatorClass> bound = new HashSet<>();
     for (SingularityAuthenticatorClass clazz : getConfiguration()
       .getAuthConfiguration()
       .getAuthenticators()) {
+      if (bound.contains(clazz)) {
+        continue;
+      }
+      bound.add(clazz);
       multibinder.addBinding().to(clazz.getAuthenticatorClass());
       if (clazz == SingularityAuthenticatorClass.WEBHOOK) {
         AuthConfiguration authConfiguration = getConfiguration().getAuthConfiguration();
