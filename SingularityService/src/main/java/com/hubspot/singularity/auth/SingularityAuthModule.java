@@ -80,6 +80,5 @@ public class SingularityAuthModule
       .to(
         getConfiguration().getAuthConfiguration().getDatastore().getAuthDatastoreClass()
       );
-    binder.bind(SingularityAuthorizer.class).in(Scopes.SINGLETON);
   }
 }
