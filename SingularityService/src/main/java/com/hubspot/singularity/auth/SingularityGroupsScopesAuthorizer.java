@@ -78,6 +78,16 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         checkForbiddenForGroups(user, allowedReadGroups);
         checkReadScope(user);
         break;
+      case DEPLOY:
+        // same group constraints at write, with different scope if specified in config
+        Set<String> allowedDeployGroups = getWriteGroups(request);
+        checkForbiddenForGroups(user, allowedDeployGroups);
+        if (!scopesConfiguration.getDeploy().isEmpty()) {
+          checkDeployScope(user);
+        } else {
+          checkWriteScope(user);
+        }
+        break;
       case WRITE:
         Set<String> allowedWriteGroups = getWriteGroups(request);
         checkForbiddenForGroups(user, allowedWriteGroups);
@@ -109,6 +119,18 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         return (
           groupsIntersect(getReadGroups(request), user.getGroups()) && hasReadScope(user)
         );
+      case DEPLOY:
+        if (!scopesConfiguration.getDeploy().isEmpty()) {
+          return (
+            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
+            hasDeployScope(user)
+          );
+        } else {
+          return (
+            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
+            hasWriteScope(user)
+          );
+        }
       case WRITE:
         return (
           groupsIntersect(getWriteGroups(request), user.getGroups()) &&
@@ -175,6 +197,19 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       user.getId(),
       scopesConfiguration.getWrite()
     );
+  }
+
+  private void checkDeployScope(SingularityUser user) {
+    checkForbidden(
+      hasDeployScope(user),
+      "%s must have one or more scopes to DEPLOY: %s",
+      user.getId(),
+      scopesConfiguration.getDeploy()
+    );
+  }
+
+  private boolean hasDeployScope(SingularityUser user) {
+    return groupsIntersect(scopesConfiguration.getDeploy(), user.getScopes());
   }
 
   private void checkForbiddenForGroups(SingularityUser user, Set<String> allowedGroups) {

@@ -230,7 +230,10 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
           Iterables.concat(readOnlyGroups, readWriteGroups, jitaGroups)
         )
       );
-    } else if (scope == SingularityAuthorizationScope.WRITE) {
+    } else if (
+      scope == SingularityAuthorizationScope.WRITE ||
+      scope == SingularityAuthorizationScope.DEPLOY
+    ) {
       checkForbidden(
         userIsReadWriteUser || userIsJITA,
         "%s must be a member of one or more groups to %s %s: %s",
