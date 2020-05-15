@@ -65,12 +65,14 @@ public class SingularityAuthModule
           .bind(SingularityAuthorizer.class)
           .to(SingularityDualAuthorizer.class)
           .in(Scopes.SINGLETON);
+        break;
       case GROUPS:
       default:
         binder
           .bind(SingularityAuthorizer.class)
           .to(SingularityGroupsAuthorizer.class)
           .in(Scopes.SINGLETON);
+        break;
     }
 
     binder.bind(SingularityAuthFeature.class);
