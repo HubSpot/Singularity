@@ -162,7 +162,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
 
     SingularityRequest request = requestWithState.getRequest();
@@ -348,7 +348,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
     validator.checkActionEnabled(SingularityAction.CANCEL_DEPLOY);
 
@@ -414,7 +414,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(
