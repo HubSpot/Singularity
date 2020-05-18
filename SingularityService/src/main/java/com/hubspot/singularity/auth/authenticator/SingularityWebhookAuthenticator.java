@@ -21,6 +21,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +109,9 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     try {
       return permissionsCache.get(authHeaderValue);
     } catch (Throwable t) {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Exception verifying token", t);
+      }
       throw WebExceptions.unauthorized(
         String.format("Exception while verifying token: %s", t.getMessage())
       );
@@ -145,7 +149,14 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         return permissionsResponse;
       }
     } catch (Throwable t) {
-      throw new RuntimeException(t);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Exception verifying token", t);
+      }
+      if (t instanceof WebApplicationException) {
+        throw (WebApplicationException) t;
+      } else {
+        throw new RuntimeException(t);
+      }
     }
   }
 }
