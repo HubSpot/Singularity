@@ -54,7 +54,6 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
-  private final AuthConfiguration authConfiguration;
 
   @Inject
   public RequestHelper(
@@ -64,8 +63,7 @@ public class RequestHelper {
     SingularityValidator validator,
     UserManager userManager,
     TaskManager taskManager,
-    SingularityDeployHealthHelper deployHealthHelper,
-    AuthConfiguration authConfiguration
+    SingularityDeployHealthHelper deployHealthHelper
   ) {
     this.requestManager = requestManager;
     this.mailer = mailer;
@@ -74,7 +72,6 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
-    this.authConfiguration = authConfiguration;
   }
 
   public long unpause(
@@ -601,7 +598,7 @@ public class RequestHelper {
     return (
       input.isPresent() &&
       (
-        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()).equals(input) ||
+        user.getEmail().equals(input) ||
         user.getId().equals(input.get()) ||
         user.getName().equals(input.get())
       )

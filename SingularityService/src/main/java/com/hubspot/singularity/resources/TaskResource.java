@@ -47,7 +47,6 @@ import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
@@ -129,7 +128,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final RequestHelper requestHelper;
   private final MimetypesFileTypeMap fileTypeMap;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
-  private final AuthConfiguration authConfiguration;
 
   @Inject
   public TaskResource(
@@ -147,8 +145,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     @Singularity ObjectMapper objectMapper,
     RequestHelper requestHelper,
     MesosConfiguration configuration,
-    SingularityMesosSchedulerClient mesosSchedulerClient,
-    AuthConfiguration authConfiguration
+    SingularityMesosSchedulerClient mesosSchedulerClient
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
@@ -163,7 +160,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.requestHelper = requestHelper;
     this.httpClient = httpClient;
     this.configuration = configuration;
-    this.authConfiguration = authConfiguration;
     this.fileTypeMap = new MimetypesFileTypeMap();
     this.mesosSchedulerClient = mesosSchedulerClient;
   }
@@ -807,7 +803,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
       taskCleanup =
         new SingularityTaskCleanup(
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           cleanupType,
           now,
           task.getTaskId(),
@@ -819,7 +815,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     } else {
       taskCleanup =
         new SingularityTaskCleanup(
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           cleanupType,
           now,
           task.getTaskId(),
@@ -859,7 +855,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
           task.getTaskId().getRequestId(),
           task.getTaskId().getDeployId(),
           now,
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           PendingType.TASK_BOUNCE,
           Optional.<List<String>>empty(),
           Optional.<String>empty(),
@@ -970,7 +966,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       taskMetadataRequest.getType(),
       taskMetadataRequest.getTitle(),
       taskMetadataRequest.getMessage(),
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       taskMetadataRequest.getLevel()
     );
 
@@ -1039,7 +1035,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(
       taskId,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       System.currentTimeMillis(),
       shellCommand
     );

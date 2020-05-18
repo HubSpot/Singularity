@@ -30,7 +30,6 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -68,7 +67,6 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 public class DeployResource extends AbstractRequestResource {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
-  private final AuthConfiguration authConfiguration;
 
   @Inject
   public DeployResource(
@@ -95,7 +93,6 @@ public class DeployResource extends AbstractRequestResource {
     );
     this.configuration = configuration;
     this.taskManager = taskManager;
-    this.authConfiguration = configuration.getAuthConfiguration();
   }
 
   @GET
@@ -149,9 +146,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
 
-    final Optional<String> deployUser = user.getEmailOrDefault(
-      authConfiguration.getDefaultEmailDomain()
-    );
+    final Optional<String> deployUser = user.getEmail();
     final String requestId = checkNotNullBadRequest(
       deploy.getRequestId(),
       "DeployRequest must have a non-null requestId"
@@ -370,7 +365,7 @@ public class DeployResource extends AbstractRequestResource {
         requestId,
         deployId,
         System.currentTimeMillis(),
-        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+        user.getEmail(),
         Optional.<String>empty()
       )
     );

@@ -10,7 +10,6 @@ import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -29,7 +28,6 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   protected final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator validator;
-  private final AuthConfiguration authConfiguration;
 
   public AbstractMachineResource(
     AsyncHttpClient httpClient,
@@ -37,14 +35,12 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     ObjectMapper objectMapper,
     AbstractMachineManager<T> manager,
     SingularityAuthorizer authorizationHelper,
-    SingularityValidator validator,
-    AuthConfiguration authConfiguration
+    SingularityValidator validator
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.manager = manager;
     this.authorizationHelper = authorizationHelper;
     this.validator = validator;
-    this.authConfiguration = authConfiguration;
   }
 
   protected void remove(String objectId, SingularityUser user) {
@@ -131,7 +127,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
       objectId,
       MachineState.STARTING_DECOMMISSION,
       decommissionRequest,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
+      user.getEmail()
     );
     saveExpiring(decommissionRequest, user, objectId);
   }
@@ -149,12 +145,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
       MachineState.FROZEN,
       manager.getExpiringObject(objectId)
     );
-    changeState(
-      objectId,
-      MachineState.FROZEN,
-      freezeRequest,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
-    );
+    changeState(objectId, MachineState.FROZEN, freezeRequest, user.getEmail());
     saveExpiring(freezeRequest, user, objectId);
   }
 
@@ -171,12 +162,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
       MachineState.ACTIVE,
       manager.getExpiringObject(objectId)
     );
-    changeState(
-      objectId,
-      MachineState.ACTIVE,
-      activateRequest,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
-    );
+    changeState(objectId, MachineState.ACTIVE, activateRequest, user.getEmail());
     saveExpiring(activateRequest, user, objectId);
   }
 
@@ -190,7 +176,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     ) {
       manager.saveExpiringObject(
         new SingularityExpiringMachineState(
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           System.currentTimeMillis(),
           changeRequest.get().getActionId().orElse(UUID.randomUUID().toString()),
           changeRequest.get(),
