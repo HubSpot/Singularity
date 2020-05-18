@@ -6,8 +6,11 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.singularity.SingularityAsyncHttpClient;
+import com.hubspot.singularity.auth.authenticator.RawUserResponseParser;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityMultiMethodAuthenticator;
+import com.hubspot.singularity.auth.authenticator.WebhookResponseParser;
+import com.hubspot.singularity.auth.authenticator.WrappedUserResponseParser;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.dw.SingularityAuthFeature;
 import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
@@ -81,6 +84,20 @@ public class SingularityAuthModule
           .to(SingularityGroupsAuthorizer.class)
           .in(Scopes.SINGLETON);
         break;
+    }
+
+    switch (getConfiguration().getAuthConfiguration().getAuthResponseParser()) {
+      case RAW:
+        binder
+          .bind(WebhookResponseParser.class)
+          .to(RawUserResponseParser.class)
+          .in(Scopes.SINGLETON);
+      case WRAPPED:
+      default:
+        binder
+          .bind(WebhookResponseParser.class)
+          .to(WrappedUserResponseParser.class)
+          .in(Scopes.SINGLETON);
     }
 
     binder.bind(SingularityAuthFeature.class);

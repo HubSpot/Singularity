@@ -1,6 +1,5 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -11,7 +10,6 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthModule;
@@ -34,7 +32,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
 
   private final AsyncHttpClient asyncHttpClient;
   private final WebhookAuthConfiguration webhookAuthConfiguration;
-  private final ObjectMapper objectMapper;
+  private final WebhookResponseParser responseParser;
   private final LoadingCache<String, SingularityUserPermissionsResponse> permissionsCache;
 
   @Inject
@@ -43,14 +41,14 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
       SingularityAuthModule.WEBHOOK_AUTH_HTTP_CLIENT
     ) AsyncHttpClient asyncHttpClient,
     SingularityConfiguration configuration,
-    @Singularity ObjectMapper objectMapper
+    WebhookResponseParser responseParser
   ) {
     this.asyncHttpClient = asyncHttpClient;
     this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
-    this.objectMapper = objectMapper;
+    this.responseParser = responseParser;
     this.permissionsCache =
       CacheBuilder
-        .<String, SingularityUserPermissionsResponse>newBuilder()
+        .newBuilder()
         .refreshAfterWrite(
           webhookAuthConfiguration.getCacheValidationMs(),
           TimeUnit.MILLISECONDS
@@ -125,29 +123,11 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         .addHeader("Authorization", authHeaderValue)
         .execute()
         .get();
-      if (response.getStatusCode() > 299) {
-        throw WebExceptions.unauthorized(
-          String.format("Got status code %d when verifying jwt", response.getStatusCode())
-        );
-      } else {
-        String responseBody = response.getResponseBody();
-        SingularityUserPermissionsResponse permissionsResponse = objectMapper.readValue(
-          responseBody,
-          SingularityUserPermissionsResponse.class
-        );
-        if (!permissionsResponse.getUser().isPresent()) {
-          throw WebExceptions.unauthorized(
-            String.format("No user present in response %s", permissionsResponse)
-          );
-        }
-        if (!permissionsResponse.getUser().get().isAuthenticated()) {
-          throw WebExceptions.unauthorized(
-            String.format("User not authenticated (response: %s)", permissionsResponse)
-          );
-        }
-        permissionsCache.put(authHeaderValue, permissionsResponse);
-        return permissionsResponse;
-      }
+      SingularityUserPermissionsResponse permissionsResponse = responseParser.parse(
+        response
+      );
+      permissionsCache.put(authHeaderValue, permissionsResponse);
+      return permissionsResponse;
     } catch (Throwable t) {
       if (LOG.isTraceEnabled()) {
         LOG.trace("Exception verifying token", t);
