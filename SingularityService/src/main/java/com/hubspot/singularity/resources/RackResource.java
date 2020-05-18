@@ -11,7 +11,6 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
@@ -51,8 +50,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
     @Singularity ObjectMapper objectMapper,
     RackManager rackManager,
     SingularityAuthorizer authorizationHelper,
-    SingularityValidator validator,
-    AuthConfiguration authConfiguration
+    SingularityValidator validator
   ) {
     super(
       httpClient,
@@ -60,8 +58,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       objectMapper,
       rackManager,
       authorizationHelper,
-      validator,
-      authConfiguration
+      validator
     );
   }
 
