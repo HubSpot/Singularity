@@ -52,7 +52,6 @@ import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -119,7 +118,6 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
-  private final AuthConfiguration authConfiguration;
 
   @Inject
   public RequestResource(
@@ -157,7 +155,6 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.slaveAndRackManager = slaveAndRackManager;
-    this.authConfiguration = configuration.getAuthConfiguration();
   }
 
   private void submitRequest(
@@ -283,14 +280,14 @@ public class RequestResource extends AbstractRequestResource {
             rebalancingHelper.rebalanceRacks(
               request,
               remainingActiveTasks,
-              user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
+              user.getEmail()
             );
           }
         }
         if (request.getSlaveAttributeMinimums().isPresent()) {
           Set<SingularityTaskId> cleanedTasks = rebalancingHelper.rebalanceAttributeDistribution(
             request,
-            user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+            user.getEmail(),
             remainingActiveTasks
           );
           remainingActiveTasks.removeAll(cleanedTasks);
@@ -332,7 +329,7 @@ public class RequestResource extends AbstractRequestResource {
       oldRequest,
       requestState,
       historyType,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       skipHealthchecks,
       message,
       maybeBounceRequest
@@ -631,7 +628,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.createCleanupRequest(
       new SingularityRequestCleanup(
-        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+        user.getEmail(),
         isIncrementalBounce
           ? RequestCleanupType.INCREMENTAL_BOUNCE
           : RequestCleanupType.BOUNCE,
@@ -823,7 +820,7 @@ public class RequestResource extends AbstractRequestResource {
 
     final SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
       getAndCheckDeployId(requestId),
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       requestWithState.getRequest(),
       maybeRunNowRequest,
       activeTasks,
@@ -979,7 +976,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityCreateResult result = requestManager.createCleanupRequest(
       new SingularityRequestCleanup(
-        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+        user.getEmail(),
         RequestCleanupType.PAUSING,
         now,
         killTasks,
@@ -1003,21 +1000,16 @@ public class RequestResource extends AbstractRequestResource {
     mailer.sendRequestPausedMail(
       requestWithState.getRequest(),
       pauseRequest,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
+      user.getEmail()
     );
 
-    requestManager.pause(
-      requestWithState.getRequest(),
-      now,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
-      message
-    );
+    requestManager.pause(requestWithState.getRequest(), now, user.getEmail(), message);
 
     if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(
         new SingularityExpiringPause(
           requestId,
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           System.currentTimeMillis(),
           pauseRequest.get(),
           actionId.get()
@@ -1107,7 +1099,7 @@ public class RequestResource extends AbstractRequestResource {
 
     final long now = requestHelper.unpause(
       requestWithState.getRequest(),
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       message,
       skipHealthchecks
     );
@@ -1627,16 +1619,12 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.startDeletingRequest(
       request,
       deleteFromLoadBalancer,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+      user.getEmail(),
       actionId,
       message
     );
 
-    mailer.sendRequestRemovedMail(
-      request,
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
-      message
-    );
+    mailer.sendRequestRemovedMail(request, user.getEmail(), message);
 
     return request;
   }
@@ -1772,7 +1760,7 @@ public class RequestResource extends AbstractRequestResource {
       requestManager.saveExpiringObject(
         new SingularityExpiringScale(
           requestId,
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           System.currentTimeMillis(),
           scaleRequest,
           oldRequest.getInstances(),
@@ -1792,7 +1780,7 @@ public class RequestResource extends AbstractRequestResource {
         newRequest,
         Optional.of(scaleRequest),
         oldRequest.getInstances(),
-        user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
+        user.getEmail()
       );
     }
 
@@ -2007,7 +1995,7 @@ public class RequestResource extends AbstractRequestResource {
       requestManager.saveExpiringObject(
         new SingularityExpiringSkipHealthchecks(
           requestId,
-          user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain()),
+          user.getEmail(),
           System.currentTimeMillis(),
           skipHealthchecksRequest,
           oldRequest.getSkipHealthchecks(),

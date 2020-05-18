@@ -3,7 +3,6 @@ package com.hubspot.singularity;
 import static com.google.common.collect.ImmutableSet.copyOf;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.security.Principal;
@@ -63,10 +62,6 @@ public class SingularityUser implements Principal {
     );
   }
 
-  public SingularityUser withAuthenticated() {
-    return new SingularityUser(id, name, email, groups, scopes, true);
-  }
-
   @JsonCreator
   public SingularityUser(
     @JsonProperty("id") String id,
@@ -97,17 +92,6 @@ public class SingularityUser implements Principal {
   @Schema(description = "The user's email", nullable = true)
   public Optional<String> getEmail() {
     return email;
-  }
-
-  @JsonIgnore
-  public Optional<String> getEmailOrDefault(Optional<String> defaultDomain) {
-    if (email.isPresent()) {
-      return email;
-    }
-    if (defaultDomain.isPresent()) {
-      return Optional.of(String.format("%s@%s", id, defaultDomain));
-    }
-    return Optional.empty();
   }
 
   @Schema(description = "Groups this user is a part of")

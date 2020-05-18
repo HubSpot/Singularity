@@ -9,7 +9,6 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import io.dropwizard.auth.Auth;
@@ -36,19 +35,16 @@ public class PriorityResource {
   private final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator singularityValidator;
   private final PriorityManager priorityManager;
-  private final AuthConfiguration authConfiguration;
 
   @Inject
   public PriorityResource(
     SingularityAuthorizer authorizationHelper,
     SingularityValidator singularityValidator,
-    PriorityManager priorityManager,
-    AuthConfiguration authConfiguration
+    PriorityManager priorityManager
   ) {
     this.authorizationHelper = authorizationHelper;
     this.singularityValidator = singularityValidator;
     this.priorityManager = priorityManager;
-    this.authConfiguration = authConfiguration;
   }
 
   @GET
@@ -128,7 +124,7 @@ public class PriorityResource {
     final SingularityPriorityFreezeParent priorityFreezeRequestParent = new SingularityPriorityFreezeParent(
       priorityFreezeRequest,
       System.currentTimeMillis(),
-      user.getEmailOrDefault(authConfiguration.getDefaultEmailDomain())
+      user.getEmail()
     );
 
     priorityManager.createPriorityFreeze(priorityFreezeRequestParent);
