@@ -1,12 +1,22 @@
 package com.hubspot.singularity.auth;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,6 +209,73 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
         user
       );
     }
+  }
+
+  public <T> List<T> filterByAuthorizedRequests(
+    final SingularityUser user,
+    List<T> objects,
+    final Function<T, String> requestIdFunction,
+    final SingularityAuthorizationScope scope
+  ) {
+    if (hasAdminAuthorization(user)) {
+      return objects;
+    }
+
+    final Set<String> requestIds = copyOf(
+      objects.stream().map(requestIdFunction).collect(Collectors.toList())
+    );
+
+    final ImmutableMap<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(
+      requestManager.getRequests(requestIds),
+      input -> input.getRequest().getId()
+    );
+
+    return objects
+      .stream()
+      .filter(
+        input -> {
+          final String requestId = requestIdFunction.apply(input);
+          return (
+            requestMap.containsKey(requestId) &&
+            groupsAuthorizer.isAuthorizedForRequest(
+              requestMap.get(requestId).getRequest(),
+              user,
+              scope
+            )
+          );
+        }
+      )
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<String> filterAuthorizedRequestIds(
+    final SingularityUser user,
+    List<String> requestIds,
+    final SingularityAuthorizationScope scope,
+    boolean useWebCache
+  ) {
+    if (hasAdminAuthorization(user)) {
+      return requestIds;
+    }
+
+    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(
+      requestManager.getRequests(requestIds, useWebCache),
+      input -> input.getRequest().getId()
+    );
+
+    return requestIds
+      .stream()
+      .filter(
+        input ->
+          requestMap.containsKey(input) &&
+          groupsAuthorizer.isAuthorizedForRequest(
+            requestMap.get(input).getRequest(),
+            user,
+            scope
+          )
+      )
+      .collect(Collectors.toList());
   }
 
   private boolean checkGrantedByScopes(Runnable r) {
