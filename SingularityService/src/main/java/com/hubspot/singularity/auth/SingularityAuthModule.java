@@ -92,12 +92,14 @@ public class SingularityAuthModule
           .bind(WebhookResponseParser.class)
           .to(RawUserResponseParser.class)
           .in(Scopes.SINGLETON);
+        break;
       case WRAPPED:
       default:
         binder
           .bind(WebhookResponseParser.class)
           .to(WrappedUserResponseParser.class)
           .in(Scopes.SINGLETON);
+        break;
     }
 
     binder.bind(SingularityAuthFeature.class);
