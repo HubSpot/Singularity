@@ -2,6 +2,7 @@ package com.hubspot.singularity.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import com.hubspot.singularity.auth.authenticator.AuthResponseParser;
 import com.hubspot.singularity.auth.dw.SingularityAuthDatastoreClass;
 import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
 import java.util.HashSet;
@@ -73,6 +74,9 @@ public class AuthConfiguration {
 
   @JsonProperty
   private Optional<String> defaultEmailDomain = Optional.empty();
+
+  @JsonProperty
+  private AuthResponseParser authResponseParser = AuthResponseParser.WRAPPED;
 
   public boolean isEnabled() {
     return enabled;
@@ -209,5 +213,13 @@ public class AuthConfiguration {
 
   public void setDefaultEmailDomain(Optional<String> defaultEmailDomain) {
     this.defaultEmailDomain = defaultEmailDomain;
+  }
+
+  public AuthResponseParser getAuthResponseParser() {
+    return authResponseParser;
+  }
+
+  public void setAuthResponseParser(AuthResponseParser authResponseParser) {
+    this.authResponseParser = authResponseParser;
   }
 }

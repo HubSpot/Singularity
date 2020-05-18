@@ -63,6 +63,10 @@ public class SingularityUser implements Principal {
     );
   }
 
+  public SingularityUser withAuthenticated() {
+    return new SingularityUser(id, name, email, groups, scopes, true);
+  }
+
   @JsonCreator
   public SingularityUser(
     @JsonProperty("id") String id,
