@@ -75,13 +75,13 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     switch (scope) {
       case READ:
         Set<String> allowedReadGroups = getReadGroups(request);
-        checkForbiddenForGroups(user, allowedReadGroups);
+        checkForbiddenForGroups(user, allowedReadGroups, request.getId(), scope);
         checkReadScope(user);
         break;
       case DEPLOY:
         // same group constraints at write, with different scope if specified in config
         Set<String> allowedDeployGroups = getWriteGroups(request);
-        checkForbiddenForGroups(user, allowedDeployGroups);
+        checkForbiddenForGroups(user, allowedDeployGroups, request.getId(), scope);
         if (!scopesConfiguration.getDeploy().isEmpty()) {
           checkDeployScope(user);
         } else {
@@ -90,7 +90,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         break;
       case WRITE:
         Set<String> allowedWriteGroups = getWriteGroups(request);
-        checkForbiddenForGroups(user, allowedWriteGroups);
+        checkForbiddenForGroups(user, allowedWriteGroups, request.getId(), scope);
         checkWriteScope(user);
         break;
       case ADMIN:
@@ -116,26 +116,75 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     }
     switch (scope) {
       case READ:
-        return (
-          groupsIntersect(getReadGroups(request), user.getGroups()) && hasReadScope(user)
-        );
+        if (!hasReadScope(user)) {
+          return false;
+        }
+        if (groupsIntersect(getReadGroups(request), user.getGroups())) {
+          return true;
+        }
+        if (isJita(user)) {
+          LOG.warn(
+            "JITA ACTION - User: {}, RequestId: {}, Scope Used: {}",
+            user.getId(),
+            request.getId(),
+            scope
+          );
+          return true;
+        }
+        return false;
       case DEPLOY:
         if (!scopesConfiguration.getDeploy().isEmpty()) {
-          return (
-            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
-            hasDeployScope(user)
-          );
+          if (!hasDeployScope(user)) {
+            return false;
+          }
+          if (groupsIntersect(getWriteGroups(request), user.getGroups())) {
+            return true;
+          }
+          if (isJita(user)) {
+            LOG.warn(
+              "JITA ACTION - User: {}, RequestId: {}, Scope Used: {}",
+              user.getId(),
+              request.getId(),
+              scope
+            );
+            return true;
+          }
+          return false;
         } else {
-          return (
-            groupsIntersect(getWriteGroups(request), user.getGroups()) &&
-            hasWriteScope(user)
-          );
+          if (!hasWriteScope(user)) {
+            return false;
+          }
+          if (groupsIntersect(getWriteGroups(request), user.getGroups())) {
+            return true;
+          }
+          if (isJita(user)) {
+            LOG.warn(
+              "JITA ACTION - User: {}, RequestId: {}, Scope Used: {}",
+              user.getId(),
+              request.getId(),
+              scope
+            );
+            return true;
+          }
+          return false;
         }
       case WRITE:
-        return (
-          groupsIntersect(getWriteGroups(request), user.getGroups()) &&
-          hasWriteScope(user)
-        );
+        if (!hasWriteScope(user)) {
+          return false;
+        }
+        if (groupsIntersect(getWriteGroups(request), user.getGroups())) {
+          return true;
+        }
+        if (isJita(user)) {
+          LOG.warn(
+            "JITA ACTION - User: {}, RequestId: {}, Scope Used: {}",
+            user.getId(),
+            request.getId(),
+            scope
+          );
+          return true;
+        }
+        return false;
       case ADMIN:
       default:
         return hasAdminAuthorization(user);
@@ -163,6 +212,10 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
       checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     }
+  }
+
+  private boolean isJita(SingularityUser user) {
+    return groupsIntersect(authConfiguration.getJitaGroups(), user.getGroups());
   }
 
   private boolean isAdmin(SingularityUser user) {
@@ -212,9 +265,30 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     return groupsIntersect(scopesConfiguration.getDeploy(), user.getScopes());
   }
 
-  private void checkForbiddenForGroups(SingularityUser user, Set<String> allowedGroups) {
+  private void checkForbiddenForGroups(
+    SingularityUser user,
+    Set<String> allowedGroups,
+    String requestId,
+    SingularityAuthorizationScope scope
+  ) {
+    boolean inNormalGroups = groupsIntersect(allowedGroups, user.getGroups());
+    if (inNormalGroups) {
+      return;
+    }
+    boolean inJitaGroups = groupsIntersect(
+      authConfiguration.getJitaGroups(),
+      user.getGroups()
+    );
+    if (inJitaGroups) {
+      LOG.warn(
+        "JITA ACTION - User: {}, RequestId: {}, Scope Used: {}",
+        user.getId(),
+        requestId,
+        scope
+      );
+    }
     checkForbidden(
-      groupsIntersect(allowedGroups, user.getGroups()),
+      inJitaGroups,
       "%s must be part of one or more groups: %s",
       user.getId(),
       allowedGroups
@@ -226,7 +300,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     boolean hasOverride =
       request.getReadOnlyGroups().isPresent() || request.getReadWriteGroups().isPresent();
     if (!hasOverride) {
-      allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups()); // TODO - keep this around?
+      allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
     }
     request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
     request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
