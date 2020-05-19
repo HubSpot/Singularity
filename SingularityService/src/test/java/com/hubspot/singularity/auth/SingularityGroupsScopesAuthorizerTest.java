@@ -98,6 +98,15 @@ public class SingularityGroupsScopesAuthorizerTest {
     true
   );
 
+  private static final SingularityUser JITA_USER_READ = new SingularityUser(
+    "a",
+    Optional.empty(),
+    Optional.empty(),
+    Collections.singleton("jita"),
+    ImmutableSet.of("SINGULARITY_READONLY"),
+    true
+  );
+
   private static final SingularityRequest GROUP_A_REQUEST = new SingularityRequestBuilder(
     "a",
     RequestType.WORKER
@@ -128,6 +137,7 @@ public class SingularityGroupsScopesAuthorizerTest {
     AuthConfiguration authConfiguration = new AuthConfiguration();
     authConfiguration.setEnabled(true);
     authConfiguration.setAuthMode(UserAuthMode.GROUPS_SCOPES);
+    authConfiguration.setJitaGroups(Collections.singleton("jita"));
     authConfiguration.setDefaultReadOnlyGroups(Collections.singleton("default-read"));
     authorizer = new SingularityGroupsScopesAuthorizer(null, authConfiguration);
   }
@@ -140,6 +150,28 @@ public class SingularityGroupsScopesAuthorizerTest {
     assertThrows(
       WebApplicationException.class,
       () -> authorizer.checkAdminAuthorization(GROUP_A_WRITE_ONLY)
+    );
+  }
+
+  @Test
+  public void itAllowsJita() {
+    assertDoesNotThrow(() -> authorizer.checkReadAuthorization(JITA_USER_READ));
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          JITA_USER_READ,
+          SingularityAuthorizationScope.READ
+        )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          JITA_USER_READ,
+          SingularityAuthorizationScope.WRITE
+        )
     );
   }
 
