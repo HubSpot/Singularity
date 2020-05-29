@@ -296,7 +296,9 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   private Set<String> getReadGroups(SingularityRequest request) {
-    Set<String> allowedReadGroups = new HashSet<>();
+    Set<String> allowedReadGroups = new HashSet<>(
+      authConfiguration.getGlobalReadOnlyGroups()
+    );
     boolean hasOverride =
       request.getReadOnlyGroups().isPresent() || request.getReadWriteGroups().isPresent();
     if (!hasOverride) {
@@ -312,7 +314,9 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   private Set<String> getWriteGroups(SingularityRequest request) {
-    Set<String> allowedWriteGroups = new HashSet<>();
+    Set<String> allowedWriteGroups = new HashSet<>(
+      authConfiguration.getGlobalReadWriteGroups()
+    );
     request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
     request.getGroup().ifPresent(allowedWriteGroups::add);
     if (allowedWriteGroups.isEmpty()) {
