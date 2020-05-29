@@ -34,26 +34,6 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private Set<String> requiredGroups = new HashSet<>();
-
-  @JsonProperty
-  @NotNull
-  private Set<String> adminGroups = new HashSet<>();
-
-  @JsonProperty
-  @NotNull
-  private Set<String> jitaGroups = new HashSet<>();
-
-  @JsonProperty
-  @NotNull
-  private Set<String> defaultReadOnlyGroups = new HashSet<>();
-
-  @JsonProperty
-  @NotNull
-  private Set<String> globalReadOnlyGroups = new HashSet<>();
-
-  @JsonProperty
-  @NotNull
   private String requestUserHeaderName = "X-Username"; // used by SingularityHeaderPassthroughAuthenticator
 
   @JsonProperty
@@ -68,12 +48,45 @@ public class AuthConfiguration {
   @JsonProperty
   private UserAuthMode authMode = UserAuthMode.GROUPS;
 
+  // Properties relevant only for groups-based auth config
+  @JsonProperty
+  @NotNull
+  private Set<String> requiredGroups = new HashSet<>();
+
+  @JsonProperty
+  @NotNull
+  private Set<String> adminGroups = new HashSet<>();
+
+  // End properties for groups config
+
+  // Properties below relevant for both groups + groups/scopes auth
+  @JsonProperty
+  @NotNull
+  private Set<String> defaultReadOnlyGroups = new HashSet<>();
+
+  @JsonProperty
+  @NotNull
+  private Set<String> globalReadOnlyGroups = new HashSet<>();
+
+  @JsonProperty
+  @NotNull
+  private Set<String> jitaGroups = new HashSet<>();
+
+  // End properties for groups + scopes config
+
+  // Properties relevant for scopes auth only
+  @JsonProperty
+  @NotNull
+  private Set<String> globalReadWriteGroups = new HashSet<>();
+
   @JsonProperty
   @Valid
   private ScopesConfiguration scopes = new ScopesConfiguration();
 
   @JsonProperty
   private Optional<String> defaultEmailDomain = Optional.empty();
+
+  // end scopes auth config
 
   @JsonProperty
   private AuthResponseParser authResponseParser = AuthResponseParser.WRAPPED;
@@ -221,5 +234,13 @@ public class AuthConfiguration {
 
   public void setAuthResponseParser(AuthResponseParser authResponseParser) {
     this.authResponseParser = authResponseParser;
+  }
+
+  public Set<String> getGlobalReadWriteGroups() {
+    return globalReadWriteGroups;
+  }
+
+  public void setGlobalReadWriteGroups(Set<String> globalReadWriteGroups) {
+    this.globalReadWriteGroups = globalReadWriteGroups;
   }
 }
