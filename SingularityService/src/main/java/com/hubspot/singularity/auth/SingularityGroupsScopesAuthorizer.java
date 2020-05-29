@@ -206,11 +206,11 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     }
     if (
       !oldRequest.getReadWriteGroups().equals(request.getReadWriteGroups()) ||
+      !oldRequest.getReadOnlyGroups().equals(request.getReadOnlyGroups()) ||
       !oldRequest.getGroup().equals(request.getGroup())
     ) {
-      // If group or readWriteGroups are changing, a user must be authorized for both the old and new request groups
+      // If group or readWriteGroups are changing, a user must be authorized for at least the old one
       checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
-      checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     }
   }
 
