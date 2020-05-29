@@ -409,7 +409,7 @@ public class SingularityGroupsScopesAuthorizerTest {
   }
 
   @Test
-  public void itAllowsChangeOfGroupWhenInBoth() {
+  public void itAllowsChangeOfGroupWhenInOriginal() {
     assertDoesNotThrow(
       () ->
         authorizer.checkForAuthorizedChanges(
@@ -422,8 +422,8 @@ public class SingularityGroupsScopesAuthorizerTest {
       WebApplicationException.class,
       () ->
         authorizer.checkForAuthorizedChanges(
-          GROUP_A_REQUEST,
           GROUP_A_REQUEST_W_READ_WRITE_B,
+          GROUP_A_REQUEST,
           GROUP_B_READ_WRITE
         )
     );
