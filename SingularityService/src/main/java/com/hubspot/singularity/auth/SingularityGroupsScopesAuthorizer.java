@@ -299,6 +299,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     Set<String> allowedReadGroups = new HashSet<>(
       authConfiguration.getGlobalReadOnlyGroups()
     );
+    allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
     boolean hasOverride =
       request.getReadOnlyGroups().isPresent() || request.getReadWriteGroups().isPresent();
     if (!hasOverride) {
