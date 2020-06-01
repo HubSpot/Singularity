@@ -300,9 +300,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       authConfiguration.getGlobalReadOnlyGroups()
     );
     allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
-    boolean hasOverride =
-      request.getReadOnlyGroups().isPresent() || request.getReadWriteGroups().isPresent();
-    if (!hasOverride) {
+    if (!request.getReadOnlyGroups().isPresent()) {
       allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
     }
     request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);

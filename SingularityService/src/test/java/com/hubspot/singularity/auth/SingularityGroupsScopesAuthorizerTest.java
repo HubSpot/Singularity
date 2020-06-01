@@ -199,8 +199,7 @@ public class SingularityGroupsScopesAuthorizerTest {
           SingularityAuthorizationScope.READ
         )
     );
-    assertThrows(
-      WebApplicationException.class,
+    assertDoesNotThrow(
       () ->
         authorizer.checkForAuthorization(
           GROUP_A_REQUEST_W_READ_WRITE_B,
