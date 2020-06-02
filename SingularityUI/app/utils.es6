@@ -80,8 +80,8 @@ const Utils = {
     return moment.duration(millis).humanize();
   },
 
-  tailerPath(taskId, logpath) {
-    return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`;
+  tailerPath(taskId, logpath, file) {
+    return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}${this.getTailerArgs(file)}`;
   },
 
   requestTailerPath(requestId, logpath) {
@@ -95,6 +95,23 @@ const Utils = {
 
   setPreferredTailer(tailer) {
     window.localStorage.setItem('logTailer', tailer);
+  },
+
+  getTailerArgs(file) {
+    if (this.getPreferredTailer() !== 'less') {
+      return '';
+    }
+
+    // if file size is known, can enable line counting for small files
+    if (file) {
+      if (file.size >= 2**20 * 10) {
+        return '?command=-n'
+      } else {
+        return ''
+      }
+    }
+
+    return '?command=-n';
   },
 
   isLessEnabled() {
