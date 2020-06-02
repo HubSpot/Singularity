@@ -81,3 +81,9 @@ export const NewPriorityFreeze = buildJsonApiAction(
     body: message == null ? {minimumPriorityLevel: minPriority, killTasks: killTasks} : {minimumPriorityLevel: minPriority, killTasks: killTasks, message: message}
   })
 );
+
+export const ForceFailover = buildJsonApiAction(
+  'FORCE_FAILOVER',
+  'POST',
+  {url: '/disasters/failover'}
+);
