@@ -8,6 +8,7 @@ import AutomatedActionsButton from './AutomatedActionsButton';
 import DeletePriorityFreezeButton from './DeletePriorityFreezeButton';
 import NewPriorityFreezeButton from './NewPriorityFreezeButton';
 import EditPriorityFreezeButton from './EditPriorityFreezeButton';
+import ForceFailoverButton from './ForceFailoverButton';
 import Utils from '../../utils';
 
 const DISASTER_TYPES = ['EXCESSIVE_TASK_LAG', 'LOST_SLAVES', 'LOST_TASKS', 'USER_INITIATED']
@@ -85,11 +86,22 @@ function ManageDisasters (props) {
   return (
     <Section title="Manage">
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-2">
+          <h3>Leader Failover</h3>
+          <ForceFailoverButton>
+            <button
+              className="btn btn-danger"
+              alt="Force Failover"
+              title="forceFailover">
+              Force Failover
+            </button>
+          </ForceFailoverButton>
+        </div>
+        <div className="col-md-5">
           <h3>Priority Freeze</h3>
           {priority}
         </div>
-        <div className="col-md-6">
+        <div className="col-md-5">
           <h3>Disasters</h3>
           <div className="row">
             <AutomatedActionsButton

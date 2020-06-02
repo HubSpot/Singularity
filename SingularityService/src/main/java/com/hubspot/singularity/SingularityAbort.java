@@ -61,7 +61,8 @@ public class SingularityAbort {
     ERROR_IN_LEADER_ONLY_POLLER,
     TEST_ABORT,
     MESOS_ERROR,
-    LOST_MESOS_CONNECTION
+    LOST_MESOS_CONNECTION,
+    MANUAL
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
