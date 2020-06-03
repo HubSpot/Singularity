@@ -19,6 +19,7 @@ import com.hubspot.singularity.config.WebhookAuthConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -48,6 +49,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     this.asyncHttpClient = asyncHttpClient;
     this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
     this.responseParser = responseParser;
+    ExecutorService authRefresh = managedThreadPoolFactory.get("auth-refresh", 5);
     this.permissionsCache =
       CacheBuilder
         .newBuilder()
@@ -56,34 +58,32 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
           TimeUnit.MILLISECONDS
         )
         .build(
-          CacheLoader.asyncReloading(
-            new CacheLoader<String, SingularityUserPermissionsResponse>() {
+          new CacheLoader<String, SingularityUserPermissionsResponse>() {
 
-              @Override
-              public SingularityUserPermissionsResponse load(String authHeaderValue)
-                throws Exception {
-                return verifyUncached(authHeaderValue);
-              }
+            @Override
+            public SingularityUserPermissionsResponse load(String authHeaderValue) {
+              return verifyUncached(authHeaderValue);
+            }
 
-              @Override
-              public ListenableFuture<SingularityUserPermissionsResponse> reload(
-                String authHeaderVaule,
-                SingularityUserPermissionsResponse oldVaule
-              ) {
-                return ListenableFutureTask.create(
-                  () -> {
-                    try {
-                      return verifyUncached(authHeaderVaule);
-                    } catch (Throwable t) {
-                      LOG.warn("Unable to refresh user information", t);
-                      return oldVaule;
-                    }
+            @Override
+            public ListenableFuture<SingularityUserPermissionsResponse> reload(
+              String authHeaderVaule,
+              SingularityUserPermissionsResponse oldVaule
+            ) {
+              ListenableFutureTask<SingularityUserPermissionsResponse> task = ListenableFutureTask.create(
+                () -> {
+                  try {
+                    return verifyUncached(authHeaderVaule);
+                  } catch (Throwable t) {
+                    LOG.warn("Unable to refresh user information", t);
+                    return oldVaule;
                   }
-                );
-              }
-            },
-            managedThreadPoolFactory.get("auth-refresh", 10)
-          )
+                }
+              );
+              authRefresh.execute(task);
+              return task;
+            }
+          }
         );
   }
 
