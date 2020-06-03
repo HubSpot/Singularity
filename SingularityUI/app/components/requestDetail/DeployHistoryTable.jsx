@@ -31,6 +31,7 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
         paginated={true}
         fetchDataFromApi={(page, numberPerPage) => fetchDeploys(requestId, numberPerPage, page)}
         isFetching={isFetching}
+        showPageLoaderWhenFetching={true}
         defaultSortBy={'timestamp'}
       >
         <Column
