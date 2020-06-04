@@ -422,6 +422,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("crashLoop")
   private CrashLoopConfiguration crashLoopConfiguration = new CrashLoopConfiguration();
 
+  // If true, only allow artifacts with an attached signature. This disallows embedded + external artifacts, only allowing lists + s3
+  private boolean enforceSignedArtifacts = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1862,5 +1865,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReconcileLaunchAfterMillis(long reconcileLaunchAfterMillis) {
     this.reconcileLaunchAfterMillis = reconcileLaunchAfterMillis;
+  }
+
+  public boolean isEnforceSignedArtifacts() {
+    return enforceSignedArtifacts;
+  }
+
+  public void setEnforceSignedArtifacts(boolean enforceSignedArtifacts) {
+    this.enforceSignedArtifacts = enforceSignedArtifacts;
   }
 }
