@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -49,7 +49,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
     LeaderLatch leaderLatch,
     @Singularity ObjectMapper objectMapper,
     RackManager rackManager,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityValidator validator
   ) {
     super(

@@ -41,7 +41,9 @@ public class SingularityMultiMethodAuthenticator
           return maybeUser;
         }
       } catch (Throwable t) {
-        LOG.trace("Unauthenticated: {}", t.getMessage());
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Exception in {}", authenticator.getClass().getSimpleName(), t);
+        }
         if (t instanceof WebApplicationException) {
           WebApplicationException wae = (WebApplicationException) t;
           unauthorizedExceptionMessages.add(

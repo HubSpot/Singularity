@@ -11,7 +11,7 @@ import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;
 import com.ning.http.client.AsyncHttpClient;
@@ -49,13 +49,13 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(DisastersResource.class);
 
   private final DisasterManager disasterManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
   private final SingularityAbort abort;
 
   @Inject
   public DisastersResource(
     DisasterManager disasterManager,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     LeaderLatch leaderLatch,
     AsyncHttpClient httpClient,
     @Singularity ObjectMapper objectMapper,

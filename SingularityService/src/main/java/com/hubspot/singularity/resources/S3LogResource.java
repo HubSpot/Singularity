@@ -44,7 +44,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.ContinuationToken;
 import com.hubspot.singularity.api.SingularityS3SearchRequest;
 import com.hubspot.singularity.api.SingularityS3SearchResult;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
@@ -132,7 +132,7 @@ public class S3LogResource extends AbstractHistoryResource {
     TaskManager taskManager,
     DeployManager deployManager,
     Optional<S3Configuration> configuration,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityS3Services s3Services
   ) {
     super(

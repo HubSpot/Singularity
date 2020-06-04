@@ -1,6 +1,5 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -11,16 +10,18 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.SingularityAuthModule;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.auth.SingularityAuthModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookAuthConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
 
   private final AsyncHttpClient asyncHttpClient;
   private final WebhookAuthConfiguration webhookAuthConfiguration;
-  private final ObjectMapper objectMapper;
+  private final WebhookResponseParser responseParser;
   private final LoadingCache<String, SingularityUserPermissionsResponse> permissionsCache;
 
   @Inject
@@ -42,14 +43,16 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
       SingularityAuthModule.WEBHOOK_AUTH_HTTP_CLIENT
     ) AsyncHttpClient asyncHttpClient,
     SingularityConfiguration configuration,
-    @Singularity ObjectMapper objectMapper
+    WebhookResponseParser responseParser,
+    SingularityManagedThreadPoolFactory managedThreadPoolFactory
   ) {
     this.asyncHttpClient = asyncHttpClient;
     this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
-    this.objectMapper = objectMapper;
+    this.responseParser = responseParser;
+    ExecutorService authRefresh = managedThreadPoolFactory.get("auth-refresh", 5);
     this.permissionsCache =
       CacheBuilder
-        .<String, SingularityUserPermissionsResponse>newBuilder()
+        .newBuilder()
         .refreshAfterWrite(
           webhookAuthConfiguration.getCacheValidationMs(),
           TimeUnit.MILLISECONDS
@@ -58,8 +61,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
           new CacheLoader<String, SingularityUserPermissionsResponse>() {
 
             @Override
-            public SingularityUserPermissionsResponse load(String authHeaderValue)
-              throws Exception {
+            public SingularityUserPermissionsResponse load(String authHeaderValue) {
               return verifyUncached(authHeaderValue);
             }
 
@@ -68,7 +70,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
               String authHeaderVaule,
               SingularityUserPermissionsResponse oldVaule
             ) {
-              return ListenableFutureTask.create(
+              ListenableFutureTask<SingularityUserPermissionsResponse> task = ListenableFutureTask.create(
                 () -> {
                   try {
                     return verifyUncached(authHeaderVaule);
@@ -78,6 +80,8 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
                   }
                 }
               );
+              authRefresh.execute(task);
+              return task;
             }
           }
         );
@@ -108,6 +112,9 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     try {
       return permissionsCache.get(authHeaderValue);
     } catch (Throwable t) {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Exception verifying token", t);
+      }
       throw WebExceptions.unauthorized(
         String.format("Exception while verifying token: %s", t.getMessage())
       );
@@ -121,31 +128,20 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         .addHeader("Authorization", authHeaderValue)
         .execute()
         .get();
-      if (response.getStatusCode() > 299) {
-        throw WebExceptions.unauthorized(
-          String.format("Got status code %d when verifying jwt", response.getStatusCode())
-        );
-      } else {
-        String responseBody = response.getResponseBody();
-        SingularityUserPermissionsResponse permissionsResponse = objectMapper.readValue(
-          responseBody,
-          SingularityUserPermissionsResponse.class
-        );
-        if (!permissionsResponse.getUser().isPresent()) {
-          throw WebExceptions.unauthorized(
-            String.format("No user present in response %s", permissionsResponse)
-          );
-        }
-        if (!permissionsResponse.getUser().get().isAuthenticated()) {
-          throw WebExceptions.unauthorized(
-            String.format("User not authenticated (response: %s)", permissionsResponse)
-          );
-        }
-        permissionsCache.put(authHeaderValue, permissionsResponse);
-        return permissionsResponse;
-      }
+      SingularityUserPermissionsResponse permissionsResponse = responseParser.parse(
+        response
+      );
+      permissionsCache.put(authHeaderValue, permissionsResponse);
+      return permissionsResponse;
     } catch (Throwable t) {
-      throw new RuntimeException(t);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Exception verifying token", t);
+      }
+      if (t instanceof WebApplicationException) {
+        throw (WebApplicationException) t;
+      } else {
+        throw new RuntimeException(t);
+      }
     }
   }
 }

@@ -12,7 +12,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -26,13 +26,13 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   protected final DeployManager deployManager;
   protected final RequestHelper requestHelper;
   protected final SingularityValidator validator;
-  protected final SingularityAuthorizationHelper authorizationHelper;
+  protected final SingularityAuthorizer authorizationHelper;
 
   public AbstractRequestResource(
     RequestManager requestManager,
     DeployManager deployManager,
     SingularityValidator validator,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     AsyncHttpClient httpClient,
     LeaderLatch leaderLatch,
     ObjectMapper objectMapper,

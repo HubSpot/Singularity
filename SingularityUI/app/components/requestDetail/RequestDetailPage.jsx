@@ -84,7 +84,7 @@ const mapStateToProps = (state, ownProps) => {
   const history = Utils.maybe(state, ['api', 'requestHistory', ownProps.params.requestId, 'data']);
   return {
     notFound: statusCode === 404 && _.isEmpty(history),
-    deleted: statusCode === 404 && !_.isEmpty(history),
+    deleted: statusCode === 404,
     pathname: ownProps.location.pathname
   };
 };

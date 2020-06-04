@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.usage.UsageManager;
 import io.dropwizard.auth.Auth;
@@ -35,12 +35,12 @@ import javax.ws.rs.core.MediaType;
 @Tags({ @Tag(name = "Resource Usage") })
 public class UsageResource {
   private final UsageManager usageManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public UsageResource(
     UsageManager usageManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     this.usageManager = usageManager;
     this.authorizationHelper = authorizationHelper;

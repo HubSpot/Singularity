@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.security.Principal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,7 @@ public class SingularityUser implements Principal {
   private final Optional<String> name;
   private final Optional<String> email;
   private final Set<String> groups;
+  private final Set<String> scopes;
   private final boolean authenticated;
 
   public static SingularityUser DEFAULT_USER = new SingularityUser(
@@ -36,18 +38,44 @@ public class SingularityUser implements Principal {
     this(id, name, email, groups, true);
   }
 
+  public SingularityUser(
+    String id,
+    Optional<String> name,
+    Optional<String> email,
+    Set<String> groups,
+    boolean authenticated
+  ) {
+    this(id, name, email, groups, Collections.emptySet(), authenticated);
+  }
+
+  public SingularityUser withOnlyGroups() {
+    Set<String> mergedGroups = new HashSet<>();
+    mergedGroups.addAll(groups);
+    mergedGroups.addAll(scopes);
+    return new SingularityUser(
+      id,
+      name,
+      email,
+      mergedGroups,
+      Collections.emptySet(),
+      authenticated
+    );
+  }
+
   @JsonCreator
   public SingularityUser(
     @JsonProperty("id") String id,
     @JsonProperty("name") Optional<String> name,
     @JsonProperty("email") Optional<String> email,
     @JsonProperty("groups") Set<String> groups,
+    @JsonProperty("scopes") Set<String> scopes,
     @JsonProperty("authenticated") boolean authenticated
   ) {
     this.id = id;
     this.name = name;
     this.email = email;
     this.groups = copyOf(groups);
+    this.scopes = scopes != null ? copyOf(scopes) : Collections.emptySet();
     this.authenticated = authenticated;
   }
 
@@ -71,32 +99,38 @@ public class SingularityUser implements Principal {
     return groups;
   }
 
+  @Schema(description = "Scopes this user has")
+  public Set<String> getScopes() {
+    return scopes;
+  }
+
   @Schema(description = "True if the user was successfully authenticated")
   public boolean isAuthenticated() {
     return authenticated;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    if (obj instanceof SingularityUser) {
-      final SingularityUser that = (SingularityUser) obj;
-      return (
-        Objects.equals(this.authenticated, that.authenticated) &&
-        Objects.equals(this.id, that.id) &&
-        Objects.equals(this.name, that.name) &&
-        Objects.equals(this.email, that.email) &&
-        Objects.equals(this.groups, that.groups)
-      );
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
-    return false;
+    SingularityUser that = (SingularityUser) o;
+    return (
+      authenticated == that.authenticated &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(name, that.name) &&
+      Objects.equals(email, that.email) &&
+      Objects.equals(groups, that.groups) &&
+      Objects.equals(scopes, that.scopes)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, groups, authenticated);
+    return Objects.hash(id, name, email, groups, scopes, authenticated);
   }
 
   @Override
@@ -112,6 +146,8 @@ public class SingularityUser implements Principal {
       email +
       ", groups=" +
       groups +
+      ", scopes=" +
+      scopes +
       ", authenticated=" +
       authenticated +
       '}'

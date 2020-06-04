@@ -1,4 +1,4 @@
-package com.hubspot.singularity.auth;
+package com.hubspot.singularity.auth.dw;
 
 import com.hubspot.singularity.SingularityUser;
 import io.dropwizard.auth.Auth;

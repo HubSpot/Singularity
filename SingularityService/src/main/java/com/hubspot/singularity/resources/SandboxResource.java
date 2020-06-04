@@ -21,7 +21,7 @@ import com.hubspot.singularity.SingularitySandboxFile;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -71,7 +71,7 @@ public class SandboxResource extends AbstractHistoryResource {
     DeployManager deployManager,
     SingularityMesosExecutorInfoSupport logSupport,
     SingularityConfiguration configuration,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     super(
       httpClient,

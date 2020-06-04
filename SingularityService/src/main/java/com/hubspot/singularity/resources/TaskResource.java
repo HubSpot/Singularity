@@ -45,7 +45,7 @@ import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
@@ -121,7 +121,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final SingularityValidator validator;
   private final DisasterManager disasterManager;
@@ -136,7 +136,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     SlaveManager slaveManager,
     MesosClient mesosClient,
     SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     RequestManager requestManager,
     SingularityValidator validator,
     DisasterManager disasterManager,

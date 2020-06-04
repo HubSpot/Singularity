@@ -28,6 +28,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory})
         paginated={true}
         fetchDataFromApi={(page, numberPerPage) => fetchRequestHistory(requestId, numberPerPage, page)}
         isFetching={isFetching}
+        showPageLoaderWhenFetching={true}
         defaultSortBy={'createdAt'}
       >
         <Column

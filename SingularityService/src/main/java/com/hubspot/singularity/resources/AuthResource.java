@@ -6,7 +6,7 @@ import com.hubspot.singularity.SingularityTokenRequest;
 import com.hubspot.singularity.SingularityTokenResponse;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserHolder;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -40,7 +40,7 @@ import javax.ws.rs.core.Response;
 public class AuthResource {
   private final UserManager userManager;
   private final SingularityConfiguration configuration;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
   private final SingularityAuthDatastore authDatastore;
   private final AuthTokenManager authTokenManager;
 
@@ -48,7 +48,7 @@ public class AuthResource {
   public AuthResource(
     UserManager userManager,
     SingularityConfiguration configuration,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityAuthDatastore authDatastore,
     AuthTokenManager authTokenManager
   ) {
@@ -148,9 +148,8 @@ public class AuthResource {
   )
     throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (tokenRequest.getUser().isPresent()) {
+      // only admins can create a token for another user
       authorizationHelper.checkAdminAuthorization(user);
-    } else {
-      authorizationHelper.checkUserInRequiredGroups(user);
     }
     SingularityUser userData = tokenRequest.getUser().orElse(user);
     authTokenManager.clearTokensForUser(userData.getName());

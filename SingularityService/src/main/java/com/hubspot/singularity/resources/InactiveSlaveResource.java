@@ -2,7 +2,7 @@ package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.InactiveSlaveManager;
 import io.dropwizard.auth.Auth;
@@ -26,12 +26,12 @@ import javax.ws.rs.core.MediaType;
 @Tags({ @Tag(name = "Inactive Machines") })
 public class InactiveSlaveResource {
   private final InactiveSlaveManager inactiveSlaveManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public InactiveSlaveResource(
     InactiveSlaveManager inactiveSlaveManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     this.inactiveSlaveManager = inactiveSlaveManager;
     this.authorizationHelper = authorizationHelper;
