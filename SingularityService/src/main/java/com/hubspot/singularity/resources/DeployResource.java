@@ -28,7 +28,7 @@ import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -73,7 +73,7 @@ public class DeployResource extends AbstractRequestResource {
     RequestManager requestManager,
     DeployManager deployManager,
     SingularityValidator validator,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityConfiguration configuration,
     TaskManager taskManager,
     LeaderLatch leaderLatch,
@@ -157,7 +157,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
 
     SingularityRequest request = requestWithState.getRequest();
@@ -343,7 +343,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
     validator.checkActionEnabled(SingularityAction.CANCEL_DEPLOY);
 
@@ -409,7 +409,7 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.DEPLOY
     );
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(

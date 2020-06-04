@@ -7,7 +7,6 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.CrashLoopInfo;
@@ -27,6 +26,7 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBatch;
+import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
@@ -50,7 +50,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -79,7 +79,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +127,7 @@ public class RequestResource extends AbstractRequestResource {
     RebalancingHelper rebalancingHelper,
     RequestManager requestManager,
     SingularityMailer mailer,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     RequestHelper requestHelper,
     LeaderLatch leaderLatch,
     SlaveManager slaveManager,
@@ -488,18 +487,15 @@ public class RequestResource extends AbstractRequestResource {
       false
     );
     if (!maybeOldRequestWithState.isPresent()) {
+      // check against dummy request with same groups if none present in zk
       authorizationHelper.checkForAuthorization(
+        new SingularityRequestBuilder(requestId, RequestType.WORKER)
+          .setGroup(updateGroupsRequest.getGroup())
+          .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
+          .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+          .build(),
         user,
-        Sets.union(
-          updateGroupsRequest
-            .getGroup()
-            .map(Collections::singleton)
-            .orElse(Collections.emptySet()),
-          updateGroupsRequest.getReadWriteGroups()
-        ),
-        updateGroupsRequest.getReadOnlyGroups(),
-        SingularityAuthorizationScope.WRITE,
-        Optional.empty()
+        SingularityAuthorizationScope.WRITE
       );
       return Response.ok().build();
     }
@@ -1478,7 +1474,6 @@ public class RequestResource extends AbstractRequestResource {
     final SingularityAuthorizationScope scope,
     SingularityUser user
   ) {
-    authorizationHelper.checkUserInRequiredGroups(user);
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       return requests
         .stream()

@@ -78,7 +78,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
 
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(
       requestManager.getRequests(requestIdsToLookup),
-      SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID
+      SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID::apply
     );
 
     for (SingularityTaskId taskId : activeTaskIds) {

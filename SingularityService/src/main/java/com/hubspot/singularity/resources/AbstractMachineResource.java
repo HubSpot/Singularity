@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -26,7 +26,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   extends AbstractLeaderAwareResource {
   protected final AbstractMachineManager<T> manager;
 
-  protected final SingularityAuthorizationHelper authorizationHelper;
+  protected final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator validator;
 
   public AbstractMachineResource(
@@ -34,7 +34,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     LeaderLatch leaderLatch,
     ObjectMapper objectMapper,
     AbstractMachineManager<T> manager,
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityValidator validator
   ) {
     super(httpClient, leaderLatch, objectMapper);

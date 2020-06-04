@@ -7,7 +7,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -32,13 +32,13 @@ import javax.ws.rs.core.MediaType;
 @Schema(title = "Manages whether or not to schedule tasks based on their priority levels")
 @Tags({ @Tag(name = "Task Priorities") })
 public class PriorityResource {
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator singularityValidator;
   private final PriorityManager priorityManager;
 
   @Inject
   public PriorityResource(
-    SingularityAuthorizationHelper authorizationHelper,
+    SingularityAuthorizer authorizationHelper,
     SingularityValidator singularityValidator,
     PriorityManager priorityManager
   ) {

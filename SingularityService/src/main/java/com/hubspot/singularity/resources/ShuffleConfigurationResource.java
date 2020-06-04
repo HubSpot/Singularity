@@ -3,12 +3,9 @@ package com.hubspot.singularity.resources;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.ShuffleConfigurationManager;
 import com.ning.http.client.AsyncHttpClient;
 import io.dropwizard.auth.Auth;
@@ -18,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
-import java.util.Optional;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -40,7 +36,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
   );
 
   private final ShuffleConfigurationManager shuffleCfgManager;
-  private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public ShuffleConfigurationResource(
@@ -48,7 +44,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
     LeaderLatch leaderLatch,
     ObjectMapper objectMapper,
     ShuffleConfigurationManager shuffleCfgManager,
-    SingularityAuthorizationHelper authorizationHelper
+    SingularityAuthorizer authorizationHelper
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.shuffleCfgManager = shuffleCfgManager;

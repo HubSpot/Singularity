@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;

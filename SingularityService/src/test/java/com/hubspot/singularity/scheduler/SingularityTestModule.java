@@ -30,10 +30,12 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTestAuthenticator;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
+import com.hubspot.singularity.auth.SingularityGroupsAuthorizer;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.datastore.SingularityDisabledAuthDatastore;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -274,8 +276,14 @@ public class SingularityTestModule implements Module {
     mainBinder
       .bind(SingularityAuthDatastore.class)
       .to(SingularityDisabledAuthDatastore.class);
-    mainBinder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
+    mainBinder
+      .bind(SingularityAuthorizer.class)
+      .to(SingularityGroupsAuthorizer.class)
+      .in(Scopes.SINGLETON);
     mainBinder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
+    mainBinder
+      .bind(AuthConfiguration.class)
+      .toInstance(configuration.getAuthConfiguration());
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
