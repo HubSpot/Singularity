@@ -92,6 +92,34 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
+  public void checkGlobalReadAuthorization(SingularityUser user) {
+    boolean grantedByScopes = checkGrantedByScopes(
+      () -> groupsScopesAuthorizer.checkGlobalReadAuthorization(user)
+    );
+    try {
+      groupsAuthorizer.checkGlobalReadAuthorization(user.withOnlyGroups());
+    } catch (WebApplicationException e) {
+      if (grantedByScopes) {
+        LOG.warn(
+          "Difference in auth of user {} for GLOBAL READ, scopes authorizer: {}, groups authorizer: false, user: {}",
+          user.getId(),
+          grantedByScopes,
+          user
+        );
+      }
+      throw e;
+    }
+    if (!grantedByScopes) {
+      LOG.warn(
+        "Difference in auth of user {} for GLOBAL READ, scopes authorizer: {}, groups authorizer: true, user: {}",
+        user.getId(),
+        grantedByScopes,
+        user
+      );
+    }
+  }
+
+  @Override
   public void checkReadAuthorization(SingularityUser user) {
     boolean grantedByScopes = checkGrantedByScopes(
       () -> groupsScopesAuthorizer.checkReadAuthorization(user)
