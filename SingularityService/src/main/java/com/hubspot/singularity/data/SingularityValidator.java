@@ -105,6 +105,7 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final boolean allowBounceToSameHost;
   private final boolean enforceSignedArtifacts;
+  private final Set<String> validDockerRegistries;
   private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
@@ -173,6 +174,7 @@ public class SingularityValidator {
     this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
     this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
     this.enforceSignedArtifacts = configuration.isEnforceSignedArtifacts();
+    this.validDockerRegistries = configuration.getValidDockerRegistries();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -669,6 +671,19 @@ public class SingularityValidator {
               }
             ),
           "Only signed artifacts are allowed"
+        );
+      }
+    }
+
+    if (!validDockerRegistries.isEmpty()) {
+      if (
+        deploy.getContainerInfo().isPresent() &&
+        deploy.getContainerInfo().get().getDocker().isPresent()
+      ) {
+        String image = deploy.getContainerInfo().get().getDocker().get().getImage();
+        checkBadRequest(
+          validDockerRegistries.contains(URI.create(image).getHost()),
+          String.format("%s does not point to an allowed docker registry", image)
         );
       }
     }
