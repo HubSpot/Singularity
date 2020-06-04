@@ -131,6 +131,7 @@ class TaskHistoryTable extends Component {
           paginated={true}
           fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
           isFetching={isFetching}
+          showPageLoaderWhenFetching={true}
           initialPageNumber={this.props.initialPageNumber}
           onPageChange={this.props.onPageChange}
           defaultSortBy={'updatedAt'}
