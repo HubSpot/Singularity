@@ -38,6 +38,8 @@ public abstract class SingularityAuthorizer {
 
   public abstract void checkAdminAuthorization(SingularityUser user);
 
+  public abstract void checkGlobalReadAuthorization(SingularityUser user);
+
   public abstract void checkReadAuthorization(SingularityUser user);
 
   public abstract void checkForAuthorization(
