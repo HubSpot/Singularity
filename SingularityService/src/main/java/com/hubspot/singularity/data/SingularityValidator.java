@@ -683,7 +683,11 @@ public class SingularityValidator {
         String image = deploy.getContainerInfo().get().getDocker().get().getImage();
         checkBadRequest(
           validDockerRegistries.contains(URI.create(image).getHost()),
-          String.format("%s does not point to an allowed docker registry", image)
+          String.format(
+            "%s does not point to an allowed docker registry. Must be one of: %s",
+            image,
+            validDockerRegistries
+          )
         );
       }
     }
