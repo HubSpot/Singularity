@@ -49,6 +49,7 @@ import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.helpers.ImageName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -680,9 +681,11 @@ public class SingularityValidator {
         deploy.getContainerInfo().isPresent() &&
         deploy.getContainerInfo().get().getDocker().isPresent()
       ) {
-        String image = deploy.getContainerInfo().get().getDocker().get().getImage();
+        ImageName image = new ImageName(
+          deploy.getContainerInfo().get().getDocker().get().getImage()
+        );
         checkBadRequest(
-          validDockerRegistries.contains(URI.create(image).getHost()),
+          validDockerRegistries.contains(image.getRegistry()),
           String.format(
             "%s does not point to an allowed docker registry. Must be one of: %s",
             image,
