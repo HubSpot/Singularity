@@ -352,7 +352,7 @@ public class HistoryResource extends AbstractHistoryResource {
         SingularityAuthorizationScope.READ
       );
     } else {
-      authorizationHelper.checkAdminAuthorization(user);
+      authorizationHelper.checkGlobalReadAuthorization(user);
     }
 
     final Integer limitCount = getLimitCount(count);
@@ -429,7 +429,7 @@ public class HistoryResource extends AbstractHistoryResource {
         SingularityAuthorizationScope.READ
       );
     } else {
-      authorizationHelper.checkAdminAuthorization(user);
+      authorizationHelper.checkGlobalReadAuthorization(user);
     }
 
     final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(
