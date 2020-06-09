@@ -8,8 +8,10 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
+import com.hubspot.mesos.client.UserAndPassword;
 import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.IndexViewConfiguration;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityDbModule;
@@ -50,8 +52,24 @@ public class SingularityServiceModule
     binder.install(dbModuleProvider.apply(getConfiguration()));
     binder.install(new SingularityMesosModule());
     binder.install(new SingularityZkMigrationsModule());
-    binder.install(new SingularityMesosClientModule());
     binder.install(new SingularityJerseyModule());
+
+    MesosConfiguration mesosConfiguration = getConfiguration().getMesosConfiguration();
+    if (
+      mesosConfiguration.getMesosUsername().isPresent() &&
+      mesosConfiguration.getMesosPassword().isPresent()
+    ) {
+      binder.install(
+        new SingularityMesosClientModule(
+          new UserAndPassword(
+            mesosConfiguration.getMesosUsername().get(),
+            mesosConfiguration.getMesosPassword().get()
+          )
+        )
+      );
+    } else {
+      binder.install(new SingularityMesosClientModule());
+    }
 
     // API Docs
     getEnvironment().jersey().register(SingularityOpenApiResource.class);
