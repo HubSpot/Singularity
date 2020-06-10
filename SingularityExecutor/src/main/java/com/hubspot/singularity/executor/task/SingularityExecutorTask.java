@@ -12,7 +12,6 @@ import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.executor.utils.MesosUtils;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
-import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -54,7 +53,6 @@ public class SingularityExecutorTask {
     Logger log,
     JsonObjectFileHelper jsonObjectFileHelper,
     DockerUtils dockerUtils,
-    SingularityS3Configuration s3Configuration,
     ObjectMapper objectMapper
   ) {
     this.driver = driver;
@@ -102,12 +100,7 @@ public class SingularityExecutorTask {
         objectMapper
       );
     this.artifactVerifier =
-      new SingularityExecutorArtifactVerifier(
-        taskDefinition,
-        log,
-        executorConfiguration,
-        s3Configuration
-      );
+      new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration);
   }
 
   public void cleanup(TaskState state) {

@@ -18,7 +18,6 @@ import com.hubspot.singularity.executor.utils.MesosUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
-import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Path;
@@ -37,7 +36,6 @@ public class SingularityExecutorTaskBuilder {
 
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final SingularityS3Configuration s3Configuration;
   private final SingularityExecutorArtifactFetcher artifactFetcher;
   private final DockerUtils dockerUtils;
 
@@ -59,8 +57,7 @@ public class SingularityExecutorTaskBuilder {
     @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid,
     ExecutorUtils executorUtils,
     SingularityExecutorArtifactFetcher artifactFetcher,
-    DockerUtils dockerUtils,
-    SingularityS3Configuration s3Configuration
+    DockerUtils dockerUtils
   ) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
@@ -72,7 +69,6 @@ public class SingularityExecutorTaskBuilder {
     this.dockerUtils = dockerUtils;
     this.executorPid = executorPid;
     this.executorUtils = executorUtils;
-    this.s3Configuration = s3Configuration;
   }
 
   public Logger buildTaskLogger(String taskId, String executorId) {
@@ -136,7 +132,6 @@ public class SingularityExecutorTaskBuilder {
       log,
       jsonObjectFileHelper,
       dockerUtils,
-      s3Configuration,
       jsonObjectMapper
     );
   }
