@@ -3,9 +3,11 @@ package com.hubspot.singularity.executor.task;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,19 +17,21 @@ public class SingularityExecutorArtifactVerifier {
   private final Logger log;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityExecutorTaskDefinition taskDefinition;
+  private final SingularityS3Configuration s3Configuration;
 
   public SingularityExecutorArtifactVerifier(
     SingularityExecutorTaskDefinition taskDefinition,
     Logger log,
-    SingularityExecutorConfiguration executorConfiguration
+    SingularityExecutorConfiguration executorConfiguration,
+    SingularityS3Configuration s3Configuration
   ) {
     this.log = log;
     this.executorConfiguration = executorConfiguration;
     this.taskDefinition = taskDefinition;
+    this.s3Configuration = s3Configuration;
   }
 
   public void checkSignatures(
-    SingularityExecutorTask task,
     List<S3Artifact> s3Artifacts,
     List<S3ArtifactSignature> s3ArtifactsWithSignatures
   ) {
@@ -44,11 +48,7 @@ public class SingularityExecutorArtifactVerifier {
         .filter(s -> s3ArtifactSignature.getArtifactFilename().equals(s.getFilename()))
         .findFirst();
       if (maybeMatchingForSignature.isPresent()) {
-        checkArtifactSignature(
-          task,
-          maybeMatchingForSignature.get(),
-          s3ArtifactSignature
-        );
+        checkArtifactSignature(maybeMatchingForSignature.get(), s3ArtifactSignature);
       } else {
         log.warn("No matching artifact found for signature {}", s3ArtifactSignature);
         if (executorConfiguration.isFailOnSignatureWithNoMatchingArtifact()) {
@@ -64,19 +64,18 @@ public class SingularityExecutorArtifactVerifier {
   }
 
   private void checkArtifactSignature(
-    SingularityExecutorTask task,
     S3Artifact s3Artifact,
     S3ArtifactSignature s3ArtifactSignature
   ) {
-    final Path artifactPath = task
-      .getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath())
-      .resolve(s3Artifact.getFilename());
-    final Path artifactSignaturePath = task
-      .getArtifactPath(
-        s3ArtifactSignature,
-        task.getTaskDefinition().getTaskDirectoryPath()
-      )
-      .resolve(s3ArtifactSignature.getFilename());
+    final Path artifactPath = Paths.get(
+      s3Configuration.getArtifactCacheDirectory(),
+      s3Artifact.getFilenameForCache()
+    );
+    final Path artifactSignaturePath = Paths.get(
+      s3Configuration.getArtifactCacheDirectory(),
+      s3ArtifactSignature.getFilenameForCache()
+    );
+
     if (!Files.exists(artifactPath)) {
       log.warn(
         "Artifact {} not found for signature {}",
