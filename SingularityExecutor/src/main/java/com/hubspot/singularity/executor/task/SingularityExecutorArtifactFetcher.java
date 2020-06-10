@@ -28,47 +28,39 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
 
 public class SingularityExecutorArtifactFetcher {
-  private static final String LOCAL_DOWNLOAD_STRING_FORMAT = "http://localhost:%s%s";
-
-  private final AsyncHttpClient localDownloadHttpClient;
-  private final String localDownloadUri;
+  private final LocalDownloadServiceFetcher localDownloadServiceFetcher;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityS3Configuration s3Configuration;
-  private final ObjectMapper objectMapper;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
   private final SingularityRunnerBaseConfiguration runnerBaseConfiguration;
 
   @Inject
   public SingularityExecutorArtifactFetcher(
-    @Named(
-      SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT
-    ) AsyncHttpClient localDownloadHttpClient,
+    LocalDownloadServiceFetcher localDownloadServiceFetcher,
     SingularityS3Configuration s3Configuration,
     SingularityExecutorConfiguration executorConfiguration,
     ObjectMapper objectMapper,
     SingularityRunnerExceptionNotifier exceptionNotifier,
     SingularityRunnerBaseConfiguration runnerBaseConfiguration
   ) {
-    this.localDownloadHttpClient = localDownloadHttpClient;
+    this.localDownloadServiceFetcher = localDownloadServiceFetcher;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
-    this.objectMapper = objectMapper;
     this.exceptionNotifier = exceptionNotifier;
     this.runnerBaseConfiguration = runnerBaseConfiguration;
-
-    this.localDownloadUri =
-      String.format(
-        LOCAL_DOWNLOAD_STRING_FORMAT,
-        s3Configuration.getLocalDownloadHttpPort(),
-        s3Configuration.getLocalDownloadPath()
-      );
   }
 
   public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(
-    ExecutorData executorData,
     SingularityExecutorTask task
   ) {
     ArtifactManager artifactManager = new ArtifactManager(
@@ -123,15 +115,13 @@ public class SingularityExecutorArtifactFetcher {
         task
           .getLog()
           .info(
-            "Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}",
+            "Fetching {} (S3) artifacts and {} (S3) artifact signatures",
             s3Artifacts.size(),
-            s3ArtifactsWithSignature.size(),
-            localDownloadUri
+            s3ArtifactsWithSignature.size()
           );
 
         try {
-          downloadFilesFromLocalDownloadService(allS3Artifacts, task);
-
+          localDownloadServiceFetcher.downloadFiles(allS3Artifacts, task);
           fetchS3ArtifactsLocally = false;
 
           task
@@ -180,96 +170,6 @@ public class SingularityExecutorArtifactFetcher {
           artifact,
           task.getArtifactPath(artifact, task.getTaskDefinition().getTaskDirectoryPath())
         );
-      }
-    }
-
-    private class FutureHolder {
-      private final ListenableFuture<Response> future;
-      private final long start;
-      private final S3Artifact s3Artifact;
-
-      public FutureHolder(
-        ListenableFuture<Response> future,
-        long start,
-        S3Artifact s3Artifact
-      ) {
-        this.future = future;
-        this.start = start;
-        this.s3Artifact = s3Artifact;
-      }
-
-      public Response getReponse() throws InterruptedException {
-        try {
-          return future.get();
-        } catch (ExecutionException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }
-
-    private void downloadFilesFromLocalDownloadService(
-      List<? extends S3Artifact> s3Artifacts,
-      SingularityExecutorTask task
-    )
-      throws InterruptedException {
-      final List<FutureHolder> futures = Lists.newArrayListWithCapacity(
-        s3Artifacts.size()
-      );
-
-      for (S3Artifact s3Artifact : s3Artifacts) {
-        String destination = task
-          .getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath())
-          .toString();
-        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(
-          destination,
-          s3Artifact,
-          Optional.of(
-            SingularityExecutorArtifactFetcher.this.executorConfiguration.getLocalDownloadServiceTimeoutMillis()
-          )
-        );
-
-        task
-          .getLog()
-          .debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
-
-        BoundRequestBuilder postRequestBldr = localDownloadHttpClient.preparePost(
-          localDownloadUri
-        );
-
-        try {
-          postRequestBldr.setBody(
-            objectMapper.writeValueAsBytes(artifactDownloadRequest)
-          );
-        } catch (JsonProcessingException e) {
-          throw new RuntimeException(e);
-        }
-
-        try {
-          ListenableFuture<Response> future = localDownloadHttpClient.executeRequest(
-            postRequestBldr.build()
-          );
-
-          futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
-        } catch (Throwable t) {
-          throw new RuntimeException(t);
-        }
-      }
-
-      for (FutureHolder future : futures) {
-        Response response = future.getReponse();
-
-        task
-          .getLog()
-          .debug(
-            "Future for {} got status code {} after {}",
-            future.s3Artifact.getName(),
-            response.getStatusCode(),
-            JavaUtils.duration(future.start)
-          );
-
-        if (response.getStatusCode() != 200) {
-          throw new IllegalStateException("Got status code:" + response.getStatusCode());
-        }
       }
     }
 
