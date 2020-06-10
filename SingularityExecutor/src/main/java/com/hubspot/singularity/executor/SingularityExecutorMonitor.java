@@ -16,6 +16,7 @@ import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.task.ArtifactVerificationException;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
@@ -464,11 +465,15 @@ public class SingularityExecutorMonitor {
           try {
             onSuccessThrows(processBuilder);
           } catch (Throwable t) {
+            TaskState state = t instanceof ArtifactVerificationException
+              ? TaskState.TASK_FAILED
+              : TaskState.TASK_LOST;
             finishTask(
               task,
-              TaskState.TASK_LOST,
+              state,
               String.format(
-                "Task lost while transitioning due to: %s",
+                "%s while transitioning due to: %s",
+                state,
                 t.getClass().getSimpleName()
               ),
               Optional.of("While submitting process task"),
