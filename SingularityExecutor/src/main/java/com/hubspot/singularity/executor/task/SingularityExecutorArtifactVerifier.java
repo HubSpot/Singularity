@@ -51,6 +51,14 @@ public class SingularityExecutorArtifactVerifier {
         );
       } else {
         log.warn("No matching artifact found for signature {}", s3ArtifactSignature);
+        if (executorConfiguration.isFailOnSignatureWithNoMatchingArtifact()) {
+          throw new RuntimeException(
+            String.format(
+              "No matching artifact found for signature %s",
+              s3ArtifactSignature.getFilename()
+            )
+          );
+        }
       }
     }
   }
