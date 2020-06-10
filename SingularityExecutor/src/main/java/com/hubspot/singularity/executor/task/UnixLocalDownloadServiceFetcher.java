@@ -21,7 +21,7 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final String localDownloadUri;
+  private final SingularityS3Configuration s3Configuration;
 
   public UnixLocalDownloadServiceFetcher(
     HttpClient httpClient,
@@ -32,7 +32,7 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.executorConfiguration = executorConfiguration;
-    this.localDownloadUri = s3Configuration.getLocalDownloadSocket().get();
+    this.s3Configuration = s3Configuration;
   }
 
   @Override
@@ -75,12 +75,16 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
 
       task
         .getLog()
-        .debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
+        .debug(
+          "Requesting {} from {}",
+          artifactDownloadRequest,
+          s3Configuration.getLocalDownloadSocket().get()
+        );
 
       try {
         CompletableFuture<ContentResponse> future = new CompletableFuture<>();
         httpClient
-          .newRequest(localDownloadUri)
+          .newRequest("http://localhost")
           .method(HttpMethod.POST)
           .content(
             new BytesContentProvider(
