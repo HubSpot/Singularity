@@ -68,15 +68,15 @@ public class SingularityExecutorArtifactVerifier {
     S3Artifact s3Artifact,
     S3ArtifactSignature s3ArtifactSignature
   ) {
-    final Path artifactPath = task.getArtifactPath(
-      s3Artifact,
-      task.getTaskDefinition().getTaskDirectoryPath()
-    );
-    final Path artifactSignaturePath = task.getArtifactPath(
-      s3ArtifactSignature,
-      task.getTaskDefinition().getTaskDirectoryPath()
-    );
-
+    final Path artifactPath = task
+      .getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath())
+      .resolve(s3Artifact.getFilename());
+    final Path artifactSignaturePath = task
+      .getArtifactPath(
+        s3ArtifactSignature,
+        task.getTaskDefinition().getTaskDirectoryPath()
+      )
+      .resolve(s3ArtifactSignature.getFilename());
     if (!Files.exists(artifactPath)) {
       log.warn(
         "Artifact {} not found for signature {}",
