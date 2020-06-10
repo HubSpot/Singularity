@@ -261,6 +261,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean verifyAssignedPorts = false;
 
+  private boolean failOnSignatureWithNoMatchingArtifact = false;
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -810,6 +812,20 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     int defaultHealthcheckInternvalSeconds
   ) {
     this.defaultHealthcheckInternvalSeconds = defaultHealthcheckInternvalSeconds;
+  }
+
+  public void setLogrotateHourlyConfDirectory(String logrotateHourlyConfDirectory) {
+    this.logrotateHourlyConfDirectory = logrotateHourlyConfDirectory;
+  }
+
+  public boolean isFailOnSignatureWithNoMatchingArtifact() {
+    return failOnSignatureWithNoMatchingArtifact;
+  }
+
+  public void setFailOnSignatureWithNoMatchingArtifact(
+    boolean failOnSignatureWithNoMatchingArtifact
+  ) {
+    this.failOnSignatureWithNoMatchingArtifact = failOnSignatureWithNoMatchingArtifact;
   }
 
   @Override
