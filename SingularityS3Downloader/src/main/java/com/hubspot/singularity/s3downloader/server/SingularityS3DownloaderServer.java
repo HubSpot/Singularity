@@ -8,6 +8,7 @@ import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfig
 import java.util.Optional;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.unixsocket.UnixSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,14 +57,28 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
       s3Configuration.getS3SecretKey().isPresent(),
       "s3SecretKey not set!"
     );
+    Preconditions.checkState(
+      s3Configuration.getLocalDownloadHttpPort().isPresent() ||
+      s3Configuration.getLocalDownloadSocket().isPresent(),
+      "Must specify either unix socket (localDownloadSocket) or port (localDownloadHttpPort)"
+    );
 
     Server server = new Server();
 
-    ServerConnector http = new ServerConnector(server);
-    http.setHost("localhost");
-    http.setPort(s3Configuration.getLocalDownloadHttpPort());
-    http.setIdleTimeout(configuration.getHttpServerTimeout());
-    server.addConnector(http);
+    if (s3Configuration.getLocalDownloadHttpPort().isPresent()) {
+      ServerConnector http = new ServerConnector(server);
+      http.setHost("localhost");
+      http.setPort(s3Configuration.getLocalDownloadHttpPort().get());
+      http.setIdleTimeout(configuration.getHttpServerTimeout());
+      server.addConnector(http);
+    }
+
+    if (s3Configuration.getLocalDownloadSocket().isPresent()) {
+      UnixSocketConnector unix = new UnixSocketConnector(server);
+      unix.setAcceptQueueSize(128);
+      unix.setUnixSocket(s3Configuration.getLocalDownloadSocket().get());
+      server.addConnector(unix);
+    }
 
     server.setHandler(handler);
 
