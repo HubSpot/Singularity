@@ -136,11 +136,11 @@ const Slaves = (props) => {
 
   const clearInactiveSlavesButton = (
       <FormModalButton
-        name="Clear Inactive Slaves"
+        name="Clear Inactive Agents"
         buttonChildren={<Glyphicon glyph="remove-circle" />}
-        action="Clear Inactive Slaves"
+        action="Clear Inactive Agents"
         onConfirm={() => props.clearInactiveSlaves()}
-        tooltipText={`Clear inactive slaves list`}
+        tooltipText={`Clear inactive agents list`}
         formElements={[]}
       >
         <p>Are you sure you want to clear all dead slaves?</p>
@@ -150,61 +150,61 @@ const Slaves = (props) => {
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
       <FormModalButton
-        name="Reactivate Slave"
+        name="Reactivate Agent"
         buttonChildren={<Glyphicon glyph="new-window" />}
-        action="Reactivate Slave"
+        action="Reactivate Agent"
         onConfirm={(data) => props.reactivateSlave(slave, data)}
         tooltipText={`Reactivate ${slave.id}`}
         formElements={actionElements(slave, 'REACTIVATE')}>
-        <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
+        <p>Are you sure you want to cancel decommission and reactivate this agent?</p>
         <pre>{slave.id}</pre>
-        <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
+        <p>Reactivating an agent will cancel the decommission without erasing the agents's history and move it back to the active state.</p>
       </FormModalButton>
   ));
 
   const getMaybeFreezeButton = (slave) => (slave.currentState.state === 'ACTIVE' &&
     <FormModalButton
-      name="Freeze Slave"
+      name="Freeze Agent"
       buttonChildren={<Glyphicon glyph="stop" />}
-      action="Freeze Slave"
+      action="Freeze Agent"
       onConfirm={(data) => props.freezeSlave(slave, data)}
       tooltipText={`Freeze ${slave.id}`}
       formElements={actionElements(slave, 'FREEZE')}>
-      <p>Are you sure you want to freeze this slave?</p>
+      <p>Are you sure you want to freeze this agent?</p>
       <pre>{slave.id}</pre>
-      <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
+      <p>Freezing an agent will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
     </FormModalButton>
   );
 
   const getMaybeDecommissionButton = (slave) => (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
-      name="Decommission Slave"
+      name="Decommission Agent"
       buttonChildren={<Glyphicon glyph="trash" />}
-      action="Decommission Slave"
+      action="Decommission Agent"
       onConfirm={(data) => props.decommissionSlave(slave, data)}
       tooltipText={`Decommission ${slave.id}`}
       formElements={actionElements(slave, 'DECOMMISSION')}>
-      <p>Are you sure you want to decommission this slave?</p>
+      <p>Are you sure you want to decommission this agent?</p>
       <pre>{slave.id}</pre>
-      <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
-      as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution.
+      <p>Decommissioning an agent causes all tasks currently running on it to be rescheduled and executed elsewhere,
+      as new tasks will no longer consider the agent with id <code>{slave.id}</code> a valid target for execution.
       This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
     </FormModalButton>
   ));
 
   const getMaybeRemoveButton = (slave) => (!Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
-      name="Remove Slave"
+      name="Remove Agent"
       buttonChildren={<Glyphicon glyph="remove" />}
-      action="Remove Slave"
+      action="Remove Agent"
       onConfirm={(data) => props.removeSlave(slave, data)}
       tooltipText={`Remove ${slave.id}`}
       formElements={actionElements(slave, 'REMOVE')}>
-      <p>Are you sure you want to remove this slave?</p>
+      <p>Are you sure you want to remove this agent?</p>
       <pre>{slave.id}</pre>
       {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <p>
-        Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
+        Removing a decommissioned agent will cause that agent to become active again if the mesos-agent process is still running.
       </p>}
     </FormModalButton>
   ));
@@ -217,7 +217,7 @@ const Slaves = (props) => {
       onConfirm={(data) => props.removeExpiringState(slave.id)}
       tooltipText={`Cancel revert to ${expiringSlaveState(slave).revertToState}`}
       formElements={[]}>
-      <p>Are you sure you want to remove the expiring action for this slave? This will make the curretn state permanent.</p>
+      <p>Are you sure you want to remove the expiring action for this agent? This will make the curretn state permanent.</p>
       <pre>{slave.id}</pre>
     </FormModalButton>
   ));
@@ -446,35 +446,35 @@ const Slaves = (props) => {
   const states = [
     {
       stateName: 'Active',
-      emptyMessage: 'No Active Slaves',
+      emptyMessage: 'No Active Agents',
       hostsInState: activeSlaves,
       columns: getColumns('active'),
       paginated: props.paginated
     },
     {
       stateName: 'Frozen',
-      emptyMessage: 'No Frozen Slaves',
+      emptyMessage: 'No Frozen Agents',
       hostsInState: frozenSlaves,
       columns: getColumns('decommissioning'),
       paginated: props.paginated
     },
     {
       stateName: 'Decommissioning',
-      emptyMessage: 'No Decommissioning Slaves',
+      emptyMessage: 'No Decommissioning Agents',
       hostsInState: decommissioningSlaves,
       columns: getColumns('decommissioning'),
       paginated: props.paginated
     },
     {
       stateName: 'Decommissioned',
-      emptyMessage: 'No Decommissioned Slaves',
+      emptyMessage: 'No Decommissioned Agents',
       hostsInState: decommissionedSlaves,
       columns: getColumns('decommissioned'),
       paginated: props.paginated
     },
     {
       stateName: 'Inactive',
-      emptyMessage: 'No Inactive Slaves',
+      emptyMessage: 'No Inactive Agents',
       hostsInState: inactiveSlaves,
       columns: getColumns('inactive'),
       paginated: props.paginated,
@@ -498,7 +498,7 @@ const Slaves = (props) => {
         </button>
       </CustomizeSlavesTableButton>
       <MachinesPage
-        header = "Slaves"
+        header = "Agents"
         states = {states}
         error = {props.error}
       />
@@ -530,16 +530,16 @@ Slaves.propTypes = {
 function getErrorFromState(state) {
   const { freezeSlave, decommissionSlave, removeSlave, reactivateSlave } = state.api;
   if (freezeSlave.error) {
-    return `Error freezing slave: ${ state.api.freezeSlave.error.message }`;
+    return `Error freezing agent: ${ state.api.freezeSlave.error.message }`;
   }
   if (decommissionSlave.error) {
-    return `Error decommissioning slave: ${ state.api.decommissionSlave.error.message }`;
+    return `Error decommissioning agent: ${ state.api.decommissionSlave.error.message }`;
   }
   if (removeSlave.error) {
-    return `Error removing slave: ${ state.api.removeSlave.error.message }`;
+    return `Error removing agent: ${ state.api.removeSlave.error.message }`;
   }
   if (reactivateSlave.error) {
-    return `Error reactivating slave: ${ state.api.reactivateSlave.error.message }`;
+    return `Error reactivating agent: ${ state.api.reactivateSlave.error.message }`;
   }
   return null;
 }

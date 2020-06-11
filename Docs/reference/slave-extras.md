@@ -1,4 +1,4 @@
-## Singularity Extras for Mesos Slaves
+## Singularity Extras for Mesos Agents
 
 *This document assumes you've already followed the steps from [install.md](../getting-started/install.md)*
 
@@ -15,7 +15,7 @@
 
 ### 1. Create base property config files.
 
-`/etc/singularity.base.yaml` -- properties used by all Singularity slave helpers.
+`/etc/singularity.base.yaml` -- properties used by all Singularity agent helpers.
 
 ```yaml
 # Metadata folder for SingularityS3Uploader
@@ -49,7 +49,7 @@ artifactCacheDirectory: path/to/slugs
 
 ### 2. Install SingularityExecutor
 
-#### 2a. Create a `/etc/singularity.executor.yaml` file on each slave:
+#### 2a. Create a `/etc/singularity.executor.yaml` file on each agent:
 
 ```yaml
 # Folder to store task metadata in (used by SingularityExecutorCleanup)
@@ -79,9 +79,9 @@ logrotateCommand: /usr/sbin/logrotate
 useLocalDownloadService: true
 ```
 
-#### 2b. Store the SingularityExecutor JAR in a well-known place on each slave.
+#### 2b. Store the SingularityExecutor JAR in a well-known place on each agent.
 
-#### 2c. Create a shell script to start the executor on each slave.
+#### 2c. Create a shell script to start the executor on each agent.
 
 `/usr/local/bin/singularity-executor`:
 
@@ -107,7 +107,7 @@ This snippet will make Singularity launch tasks with an additional `128 MB` of m
 
 ### 3. Install SingularityExecutorCleanup (optional)
 
-#### 3a. Create an `/etc/singularity.executor.cleanup.yaml` file on each slave.
+#### 3a. Create an `/etc/singularity.executor.cleanup.yaml` file on each agent.
 
 ```yaml
 # Path to store executor cleanup results
@@ -122,9 +122,9 @@ singularityHosts:
 singularityContextPath: singularity/api
 ```
 
-#### 3b. Store the SingularityExecutorCleanup JAR in a well-known place on each slave.
+#### 3b. Store the SingularityExecutorCleanup JAR in a well-known place on each agent.
 
-#### 3c. Create a shell script to start the executor cleanup job on each slave.
+#### 3c. Create a shell script to start the executor cleanup job on each agent.
 
 `/usr/local/bin/singularity-executor-cleanup`:
 
@@ -142,9 +142,9 @@ exec java -jar path/to/SingularityExecutorCleanup-*-shaded.jar
 
 ### 4. Install SingularityS3Downloader (optional)
 
-#### 4a. Store the SingularityS3Downloader JAR in a well-known place on each slave.
+#### 4a. Store the SingularityS3Downloader JAR in a well-known place on each agent.
 
-#### 4b. Create a shell script to start the S3 downloader service on each slave.
+#### 4b. Create a shell script to start the S3 downloader service on each agent.
 
 `/usr/local/bin/singularity-s3-downloader`:
 
@@ -160,7 +160,7 @@ Consider using a tool like monit, supervisor, or systemd to ensure the service s
 
 ### 5. Install SingularityS3Uploader (optional)
 
-#### 5a. Create an `/etc/singularity.s3uploader.yaml` file on each slave.
+#### 5a. Create an `/etc/singularity.s3uploader.yaml` file on each agent.
 
 **Note**: This file only needed if you need to override the access/secret keys from `singularity.s3base.yaml`.
 
@@ -172,9 +172,9 @@ s3AccessKey: blah
 s3SecretKey: secret
 ```
 
-#### 5b. Store the SingularityS3Uploader JAR in a well-known place on each slave.
+#### 5b. Store the SingularityS3Uploader JAR in a well-known place on each agent.
 
-#### 5c. Create a shell script to start the S3 uploader service on each slave.
+#### 5c. Create a shell script to start the S3 uploader service on each agent.
 
 `/usr/local/bin/singularity-s3-uploader`:
 

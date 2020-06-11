@@ -8,7 +8,7 @@ Run `docker-compose pull` first to get all of the needed images. *Note: This may
 
 Then simply run `docker-compose up` and it will start containers for...
 - mesos master
-- mesos slave (docker/mesos containerizers enabled)
+- mesos agent (docker/mesos containerizers enabled)
 - zookeeper
 - Singularity
 - [Baragon Service](https://github.com/HubSpot/Baragon) for load balancer management
@@ -47,8 +47,8 @@ The output from the dev script will give you information about where the Singula
 Singularity uses the docker-maven-plugin for building its images. There are a few images related to Singularity:
 
 - `hubspot/singularityservice` - The Singularity scheduler itself
-- `hubspot/singularityexecutorslave` - A mesos slave with java/logrotate and the custom SingularityExecutor installed
-- `hubspot/singularitybase` - A base image for `singularityexecutorslave` that takes care of installing java/logrotate/etc on top of the mesos slave image (not built with maven plugin)
+- `hubspot/singularityexecutorslave` - A mesos agent with java/logrotate and the custom SingularityExecutor installed
+- `hubspot/singularitybase` - A base image for `singularityexecutorslave` that takes care of installing java/logrotate/etc on top of the mesos agent image (not built with maven plugin)
 
 ### Logs and Entering Containers
 
@@ -58,4 +58,4 @@ Need to see more than stdout? You can also get a shell inside the container and 
 
 ### Integration Tests
 
-The SingularityServiceIntegrationTests module will run tests on a cluster consisting of a singularity scheduler, zk instance, mesos master, and three mesos slaves. These will run during the `integration-test` lifecycle phase.
+The SingularityServiceIntegrationTests module will run tests on a cluster consisting of a singularity scheduler, zk instance, mesos master, and three mesos agents. These will run during the `integration-test` lifecycle phase.

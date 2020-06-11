@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import java.util.Optional;
 
-@Schema(description = "Describes an update to the state of a rack or slave")
+@Schema(description = "Describes an update to the state of a rack or agent")
 public class SingularityMachineStateHistoryUpdate {
   private final String objectId;
   private final MachineState state;

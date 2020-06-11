@@ -8,7 +8,7 @@ The above endpoint as well as `/api/history/request/{requestId}/tasks` now take 
 
 - `requestId`: Optional request id to match (only for `/api/history/tasks` endpoint as it is already specified in the path for `/request/{requestId}/tasks`)
 - `deployId`: Optional deploy id to match
-- `host`: Optional host (slave host name) to match
+- `host`: Optional host (agent host name) to match
 - `lastTaskStatus`: Optional [`ExtendedTaskState`](../reference/api-docs/models#model-ExtendedTaskState) to match
 - `startedAfter`: Optionally match only tasks started after this time (13 digit unix timestamp)
 - `startedBefore`: Optionally match only tasks started before this time (13 digit unix timestamp)

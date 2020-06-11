@@ -199,25 +199,25 @@ public class SingularityState {
     return cleaningTasks;
   }
 
-  @Schema(description = "The count of active slaves")
+  @Schema(description = "The count of active agents")
   public int getActiveSlaves() {
     return activeSlaves;
   }
 
   @Schema(
-    description = "The count of dead slaves (no longer reachable or considered lost by mesos)"
+    description = "The count of dead agents (no longer reachable or considered lost by mesos)"
   )
   public int getDeadSlaves() {
     return deadSlaves;
   }
 
-  @Schema(description = "The count of slaves currently decommissioning")
+  @Schema(description = "The count of agents currently decommissioning")
   public int getDecommissioningSlaves() {
     return decommissioningSlaves;
   }
 
   @Deprecated
-  @Schema(description = "The count of slaves currently decommissioning")
+  @Schema(description = "The count of agents currently decommissioning")
   public int getDecomissioningSlaves() {
     return decommissioningSlaves;
   }
@@ -358,7 +358,7 @@ public class SingularityState {
     return underProvisionedRequests;
   }
 
-  @Schema(description = "The count of slaves in an unknown state")
+  @Schema(description = "The count of agents in an unknown state")
   public int getUnknownSlaves() {
     return unknownSlaves;
   }

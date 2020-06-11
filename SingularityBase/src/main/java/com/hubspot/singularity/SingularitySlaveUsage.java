@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @Schema(
-  title = "A description of resources used on a mesos slave",
+  title = "A description of resources used on a mesos agent",
   subTypes = { SingularitySlaveUsageWithId.class }
 )
 public class SingularitySlaveUsage {
@@ -176,7 +176,7 @@ public class SingularitySlaveUsage {
     return systemMemFreeBytes;
   }
 
-  @Schema(description = "Number of CPUs available in this slave node")
+  @Schema(description = "Number of CPUs available in this agent node")
   public double getSystemCpusTotal() {
     return systemCpusTotal;
   }
@@ -197,14 +197,14 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(
-    title = "Total disk space used on the slave in bytes",
+    title = "Total disk space used on the agent in bytes",
     description = "Disk usage is only collected when disk enforcement is enable and disk resources for a task are > 0"
   )
   public double getSlaveDiskUsed() {
     return slaveDiskUsed;
   }
 
-  @Schema(description = "Total disk spave available on the slave in bytes")
+  @Schema(description = "Total disk spave available on the agent in bytes")
   public double getSlaveDiskTotal() {
     return slaveDiskTotal;
   }

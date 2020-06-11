@@ -44,4 +44,4 @@ See [#1648](https://github.com/HubSpot/Singularity/pull/1648) for more details.
 ### Other Mesos Considerations
 
 - The `--work_dir` flag _must_ be set on all mesos agents or they will error on startup
-- internally the slave -> agent rename is being used, but all apis endpoints and fields still reference slave as they did before. Singularity will tackle the slave -> agent rename in future versions
+- internally the agent -> agent rename is being used, but all apis endpoints and fields still reference agent as they did before. Singularity will tackle the agent -> agent rename in future versions
