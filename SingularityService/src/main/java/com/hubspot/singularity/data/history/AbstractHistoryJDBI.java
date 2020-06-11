@@ -41,6 +41,10 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     Optional<Long> updatedBefore,
     Optional<Long> updatedAfter
   ) {
+    if (host.isPresent() && (updatedAfter.isPresent() || updatedBefore.isPresent()) && !(requestId.isPresent() || deployId.isPresent() || runId.isPresent() || lastTaskStatus.isPresent())) {
+      sqlBuilder.append(" FORCE INDEX (hostUpdated) ");
+    }
+
     if (requestId.isPresent()) {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("requestId = :requestId");
