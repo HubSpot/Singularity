@@ -51,7 +51,7 @@
         data-chapter-title="How It Works"
         data-filepath="Docs/about/how-it-works.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -671,48 +671,48 @@
 <li><strong>On-Demand Processes</strong>. These are manually run processes that will be deployed and ready to run but Singularity will not automatically run them. Users can start them through an API call or using the Singularity Web UI, which allows them to pass command line parameters on-demand.</li>
 </ul>
 <h2 id="singularity-components">Singularity Components</h2>
-<p>Mesos frameworks have two major components. A <strong>scheduler component</strong> that registers with the <strong>Mesos master</strong> to be offered resources and an <strong>executor component</strong> that is launched on cluster slave nodes by the <strong>Mesos slave process</strong> to run the framework tasks. </p>
-<p>The <em>Mesos master</em> determines how many resources are offered to each framework and the <em>framework scheduler</em> selects which of the offered resources to use to run the required tasks. Mesos slaves do not directly run the tasks but delegate the running to the appropriate <em>executor</em> that has knowledge about the nature of the allocated task and the special handling that might be required.</p>
+<p>Mesos frameworks have two major components. A <strong>scheduler component</strong> that registers with the <strong>Mesos master</strong> to be offered resources and an <strong>executor component</strong> that is launched on cluster agent nodes by the <strong>Mesos agent process</strong> to run the framework tasks. </p>
+<p>The <em>Mesos master</em> determines how many resources are offered to each framework and the <em>framework scheduler</em> selects which of the offered resources to use to run the required tasks. Mesos agents do not directly run the tasks but delegate the running to the appropriate <em>executor</em> that has knowledge about the nature of the allocated task and the special handling that might be required.</p>
 <p><img src="../images/framework_components.png" alt="Singularity Components"></p>
 <p>As depicted in the figure, Singularity implements the two basic framework components as well as a few more to solve common complex / tedious problems such as task cleanup and log tailing / archiving without requiring developers to implement it for each task they want to run:</p>
 <h3 id="singularity-scheduler">Singularity Scheduler</h3>
 <p>The scheduler is the core of Singularity: a <a href="http://www.dropwizard.io/" target="_blank">DropWizard</a> API that implements the Mesos Scheduler Driver. The scheduler matches client deploy requests to Mesos resource offers and acts as a web service offering a JSON REST API for accepting deploy requests.</p>
 <p>Clients use the Singularity API to register the type of deployable item that they want to run (web service, worker, cron job) and the corresponding runtime settings (cron schedule, # of instances, whether instances are load balanced, rack awareness, etc.). </p>
-<p>After a deployable item (a <strong>request</strong>, in API terms) has been registered, clients can post <em>Deploy requests</em> for that item. Deploy requests contain information about the command to run, the executor to use, executor specific data, required cpu, memory and port resources, health check URLs and a variety of other runtime configuration options. The Singularity scheduler will then attempt to match Mesos offers (which in turn include resources as well as rack information and what else is running on slave hosts) with its list of <em>Deploy requests</em> that have yet to be fulfilled.</p>
+<p>After a deployable item (a <strong>request</strong>, in API terms) has been registered, clients can post <em>Deploy requests</em> for that item. Deploy requests contain information about the command to run, the executor to use, executor specific data, required cpu, memory and port resources, health check URLs and a variety of other runtime configuration options. The Singularity scheduler will then attempt to match Mesos offers (which in turn include resources as well as rack information and what else is running on agent hosts) with its list of <em>Deploy requests</em> that have yet to be fulfilled.</p>
 <p><a name="deploys"></a></p>
 <p>Rollback of failed deploys, health checking and load balancing are also part of the advanced functionality the Singularity Scheduler offers. A new deploy for a long runing service will run as shown in the diagram below.</p>
 <p><img src="../images/deploy.png" alt="Singularity Deploy"></p>
 <p>When a service or worker instance fails in a new deploy, the Singularity scheduler will rollback all instances to the version running before the deploy, keeping the deploys always consistent. After the scheduler makes sure that a Mesos task (corresponding to a service instance) has entered the TASK_RUNNING state it will use the provided health check URL and the specified health check timeout settings to perform health checks. If health checks go well, the next step is to perform load balancing of service instances. Load balancing is attempted only if the corresponding deployable item has been defined to be <em>loadBalanced</em>. To perform load balancing between service instances, Singularity supports a rich integration with a specific Load Balancer API. Singularity will post requests to the Load Balancer API to add the newly deployed service instances and to remove those that were previously running. Check <a href="../development/load-balancer-integration.html">Integration with Load Balancers</a> to learn more. Singularity also provides generic webhooks which allow third party integrations, which can be registered to follow request, deploy, or task updates.</p>
 <p><a name="placement"></a></p>
-<h4 id="slave-placement">Slave Placement</h4>
-<p>When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or <code>SlavePlacement</code> in Singularity terms. Available placement strategies are:</p>
+<h4 id="agent-placement">Agent Placement</h4>
+<p>When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or <code>AgentPlacement</code> in Singularity terms. Available placement strategies are:</p>
 <ul>
-<li><code>GREEDY</code>: uses whatever slaves are available</li>
-<li><code>SEPARATE_BY_DEPLOY</code>/<code>SEPARATE</code>: ensures no 2 instances / tasks of the same request <em>and</em> deploy id are ever placed on the same slave</li>
+<li><code>GREEDY</code>: uses whatever agents are available</li>
+<li><code>SEPARATE_BY_DEPLOY</code>/<code>SEPARATE</code>: ensures no 2 instances / tasks of the same request <em>and</em> deploy id are ever placed on the same agent</li>
 <li><code>SEPARATE_BY_REQUEST</code>: ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host</li>
-<li><code>OPTIMISTIC</code>: attempts to spread out tasks but may schedule some on the same slave</li>
-<li><code>SPREAD_ALL_SLAVES</code>: ensure the task is running on every slave. Some behaviour as <code>SEPARATE_BY_DEPLOY</code> but with autoscaling the Request to keep instances equal number of slaves. </li>
+<li><code>OPTIMISTIC</code>: attempts to spread out tasks but may schedule some on the same agent</li>
+<li><code>SPREAD_ALL_AGENTS</code>: ensure the task is running on every agent. Some behaviour as <code>SEPARATE_BY_DEPLOY</code> but with autoscaling the Request to keep instances equal number of agents. </li>
 </ul>
-<p>Slave placement can also be impacted by slave attributes. There are three scenarios that Singularity supports:</p>
+<p>Agent placement can also be impacted by agent attributes. There are three scenarios that Singularity supports:</p>
 <ol>
-<li><p><em>Specific Slaves -&gt; For a certain request, only run it on slaves with matching attributes</em> - In this case, you would specify <code>requiredSlaveAttributes</code> in the json for your request, and the tasks for that request would only be scheduled on slaves that have all of those attributes.</p>
+<li><p><em>Specific Agents -&gt; For a certain request, only run it on agents with matching attributes</em> - In this case, you would specify <code>requiredAgentAttributes</code> in the json for your request, and the tasks for that request would only be scheduled on agents that have all of those attributes.</p>
 </li>
-<li><p><em>Reserved Slaves -&gt; Reserve a slave for specific requests, only run those requests on those slaves</em> - In your Singularity config, specify the <code>reserveSlavesWithAttributes</code> field. Singularity will then only schedule tasks on slaves with those attributes if the request&apos;s required attributes also match those.</p>
+<li><p><em>Reserved Agents -&gt; Reserve a agent for specific requests, only run those requests on those agents</em> - In your Singularity config, specify the <code>reserveAgentsWithAttributes</code> field. Singularity will then only schedule tasks on agents with those attributes if the request&apos;s required attributes also match those.</p>
 </li>
-<li><p><em>Test Group of Slaves -&gt; Reserve a slave for specific requests, but don&apos;t restrict the requests to that slave</em> - In your Singularity config, specify the <code>reserveSlavesWithAttributes</code> field as in the previous example. But, in the request json, specify the <code>allowedSlaveAttributes</code> field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved slave.</p>
+<li><p><em>Test Group of Agents -&gt; Reserve a agent for specific requests, but don&apos;t restrict the requests to that agent</em> - In your Singularity config, specify the <code>reserveAgentsWithAttributes</code> field as in the previous example. But, in the request json, specify the <code>allowedAgentAttributes</code> field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved agent.</p>
 </li>
 </ol>
 <h4 id="singularity-scheduler-dependencies">Singularity Scheduler Dependencies</h4>
-<p>The Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same ZooKeeper quorum utilized by Mesos masters and slaves can be reused for Singularity.  </p>
+<p>The Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same ZooKeeper quorum utilized by Mesos masters and agents can be reused for Singularity.  </p>
 <p>Since ZooKeeper is not meant to handle large quantities of data, Singularity can optionally (and recommended for any real usage) utilize a database (MySQL or PostgreSQL) to periodically offload historical data from ZooKeeper and keep records of deployable item changes, deploy request history as well as the history of all launched tasks. </p>
 <p>In production environments Singularity should be run in high-availability mode by running multiple instances of the Singularity Scheduler component. As depicted in the drawing, only one instance is always active with all the other instances waiting in stand-by mode. While only one instance is registered for receiving resource offers, all instances can process API requests. Singularity uses ZooKeeper to perform leader election and maintain a single leader. Because of the ability for all instances to change state, Singularity internally uses queues which are consumed by the Singularity leader to make calls to Mesos.</p>
 <h4 id="singularity-ui">Singularity UI</h4>
 <p>The <a href="ui.html"><em>Singularity UI</em></a> is a single page static web application served from the Singularity Scheduler that uses the Singularity API to present information about deployed items.</p>
 <p>It is a fully-featured application which provides historical as well as active task information. It allows users to view task logs and interact directly with tasks and deploy requests.</p>
 <p><a name="optional-components"></a></p>
-<h3 id="optional-slave-components">Optional Slave Components</h3>
+<h3 id="optional-agent-components">Optional Agent Components</h3>
 <h4 id="singularity-executor">Singularity Executor</h4>
-<p>Users can opt for the default Mesos executor, the Docker container executor, or the Singularity executor. Like the other executors, the Singularity executor is executed directly by the Mesos slave process for each task that executes on a slave. The requests sent to the executor contain all the required data for setting up the running environment like the command to execute, environment variables, executable artifact URLs, application configuration files, etc. The Singularity executor provides some advanced (configurable) features:</p>
+<p>Users can opt for the default Mesos executor, the Docker container executor, or the Singularity executor. Like the other executors, the Singularity executor is executed directly by the Mesos agent process for each task that executes on a agent. The requests sent to the executor contain all the required data for setting up the running environment like the command to execute, environment variables, executable artifact URLs, application configuration files, etc. The Singularity executor provides some advanced (configurable) features:</p>
 <ul>
 <li><strong>Custom Fetcher</strong> Downloads and extracts artifacts over HTTP, directly from S3, or using the S3 Downloader component.</li>
 <li><strong>Log Rotation</strong> Sets up logrotate for specified log files inside the task directory.</li>
@@ -725,7 +725,7 @@
 <h4 id="s3-downloader">S3 Downloader</h4>
 <p>The S3 downloader downloads and extract artifacts from S3 outside of the context of an executor - this is useful to avoid using the memory (page cache) of the executor process and also downloads from S3 without pre-generating expiring URIs (a bad idea inside Mesos.)</p>
 <h4 id="singularity-executor-cleanup">Singularity Executor Cleanup</h4>
-<p>While the Mesos slave has the ability to garbage collect tasks, the cleanup process maintains consistent state with other Singularity services (like the uploader and log watcher). This is a utility that is meant to run in each slave on CRON (e.g once per hour) and will clean the sandbox of finished or failed tasks that the Singualrity executor failed to clean.</p>
+<p>While the Mesos agent has the ability to garbage collect tasks, the cleanup process maintains consistent state with other Singularity services (like the uploader and log watcher). This is a utility that is meant to run in each agent on CRON (e.g once per hour) and will clean the sandbox of finished or failed tasks that the Singualrity executor failed to clean.</p>
 <h4 id="log-watcher">Log Watcher</h4>
 <p>The log watcher is an experimental service that provides log tailing and streaming / forwarding of executor task log lines to third party services like <em>fluentd</em> or <em>logstash</em> to support real-time log viewing and searching.</p>
 <h4 id="oom-killer">OOM Killer</h4>

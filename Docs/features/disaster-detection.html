@@ -51,7 +51,7 @@
         data-chapter-title="Disaster Detection &amp; Disabled Actions"
         data-filepath="Docs/features/disaster-detection.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -659,7 +659,7 @@
 <p>Singularity can be configured to automatically detect &apos;disaster&apos; scenarios based on a number of indicators and can react in such a way as too limit further stress on the cluster while it is recovering.</p>
 <p>Disaster detection can be enabled by adding <code>enabled: true</code> to the <code>disasterDetection</code> portion of you Singularity config yaml. There are a number of other fields, explained below, that can control the behavior and thresholds for disaster detection.</p>
 <ul>
-<li><code>enabled</code> - set to <code>true</code> to start running disaster detection and collecting stats abotu lost tasks, lost slaves, and task lag</li>
+<li><code>enabled</code> - set to <code>true</code> to start running disaster detection and collecting stats abotu lost tasks, lost agents, and task lag</li>
 <li><code>runEveryMillis</code> - Run the poller on this interval (defaults to every <code>30</code> seconds)</li>
 </ul>
 <p><strong>Task Lag</strong></p>
@@ -668,15 +668,15 @@
 <li><code>criticalAvgTaskLagMillis</code> - If the average time past due for all pending tasks is greater than this, a disaster is in progress (likely due to a severe lack of resources in the cluster), defaults to <code>4 minutes (240000)</code></li>
 <li><code>criticalOverdueTaskPortion</code> - If the portion of tasks taht are considered overdue is this fraction of the total running tasks in the cluster, a disaster is in progress. Defaults to <code>0.1</code> or one tenth of tasks are pending and overdue.</li>
 </ul>
-<p><strong>Lost Slaves</strong></p>
+<p><strong>Lost Agents</strong></p>
 <ul>
-<li><code>checkLostSlaves</code> - Use lost slaves as a metric for determining if a disaster is in progress. Disaster detection only counts slaves that have transitioned from <code>ACTIVE</code> to <code>DEAD</code>. Slaves that are gracefully decommissioned and removed won&apos;t trigger a disaster. (defaults to <code>true</code>)</li>
-<li><code>criticalLostSlavePortion</code> - If, during the past run of the poller, this portion of the total <em>active</em> slaves in the clsuter have transitioned from <code>ACTIVE</code> to <code>DEAD</code> a disaster is in progress. Defaults to <code>0.2</code> or one fifth of the slaves in the cluster</li>
+<li><code>checkLostAgents</code> - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from <code>ACTIVE</code> to <code>DEAD</code>. Agents that are gracefully decommissioned and removed won&apos;t trigger a disaster. (defaults to <code>true</code>)</li>
+<li><code>criticalLostAgentPortion</code> - If, during the past run of the poller, this portion of the total <em>active</em> agents in the clsuter have transitioned from <code>ACTIVE</code> to <code>DEAD</code> a disaster is in progress. Defaults to <code>0.2</code> or one fifth of the agents in the cluster</li>
 </ul>
 <p><strong>Lost Tasks</strong></p>
 <ul>
 <li><code>checkLostTasks</code> - Use lost tasks as a metric for determining if a disaster is in progress (defaults to <code>true</code>)</li>
-<li><code>lostTaskReasons</code> - Consider status updates matching these reasons towards the lost tasks for disaster detection. This is a list of mesos <code>Reason</code> enum values (<code>org.apache.mesos.Protos.TaskStatus.Reason</code>) and defaults to <code>[REASON_INVALID_OFFERS, REASON_SLAVE_UNKNOWN, REASON_SLAVE_REMOVED, REASON_SLAVE_RESTARTED, REASON_MASTER_DISCONNECTED]</code></li>
+<li><code>lostTaskReasons</code> - Consider status updates matching these reasons towards the lost tasks for disaster detection. This is a list of mesos <code>Reason</code> enum values (<code>org.apache.mesos.Protos.TaskStatus.Reason</code>) and defaults to <code>[REASON_INVALID_OFFERS, REASON_AGENT_UNKNOWN, REASON_AGENT_REMOVED, REASON_AGENT_RESTARTED, REASON_MASTER_DISCONNECTED]</code></li>
 <li><code>criticalLostTaskPortion</code> - If this portion of the total <em>active</em> tasks in the cluster have transitioned to <code>LOST</code> for one of the above reasons in the last run of the poller, a disaster is in progress. Defaults to <code>0.2</code></li>
 </ul>
 <h3 id="disabled-actions">Disabled Actions</h3>

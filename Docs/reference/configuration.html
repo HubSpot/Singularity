@@ -51,7 +51,7 @@
         data-chapter-title="Configuration"
         data-filepath="Docs/reference/configuration.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -682,7 +682,7 @@
 <li><a href="#framework">Framework</a></li>
 <li><a href="#resource-limits">Resource Limits</a></li>
 <li><a href="#racks">Racks</a></li>
-<li><a href="#slaves">Slaves</a></li>
+<li><a href="#agents">Agents</a></li>
 </ul>
 </li>
 <li><a href="#network-configuration">Network Configuration</a></li>
@@ -724,10 +724,10 @@
 <td>string</td>
 </tr>
 <tr>
-<td>defaultSlavePlacement</td>
+<td>defaultAgentPlacement</td>
 <td>GREEDY</td>
-<td>See <a href="../about/how-it-works.html#user-content-placement">Slave Placement</a></td>
-<td>enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]</td>
+<td>See <a href="../about/how-it-works.html#user-content-placement">Agent Placement</a></td>
+<td>enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_AGENTS]</td>
 </tr>
 <tr>
 <td>defaultValueForKillTasksOfPausedRequests</td>
@@ -750,7 +750,7 @@
 <tr>
 <td>killNonLongRunningTasksInCleanupAfterSeconds</td>
 <td>86400 (1 day)</td>
-<td>Kills scheduled and one-off tasks after this amount of time if they have been scheduled for cleaning (a new deploy succeeds, the underlying slave is decomissioned)</td>
+<td>Kills scheduled and one-off tasks after this amount of time if they have been scheduled for cleaning (a new deploy succeeds, the underlying agent is decomissioned)</td>
 <td>long</td>
 </tr>
 <tr>
@@ -1222,9 +1222,9 @@
 <td>long</td>
 </tr>
 <tr>
-<td>deleteDeadSlavesAfterHours</td>
+<td>deleteDeadAgentsAfterHours</td>
 <td>168 (7 days)</td>
-<td>Remove dead slaves from the list after this amount of time</td>
+<td>Remove dead agents from the list after this amount of time</td>
 <td>long</td>
 </tr>
 <tr>
@@ -1254,7 +1254,7 @@
 <tr>
 <td>pendingDeployHoldTaskDuringDecommissionMillis</td>
 <td>600000ms (10 minutes)</td>
-<td>Don&apos;t kill tasks on a decommissioning slave that are part of a pending deploy for this amount of time to allow the deploy to complete</td>
+<td>Don&apos;t kill tasks on a decommissioning agent that are part of a pending deploy for this amount of time to allow the deploy to complete</td>
 <td>long</td>
 </tr>
 <tr>
@@ -1413,18 +1413,18 @@
 <tr>
 <td>rackIdAttributeKey</td>
 <td>rackid</td>
-<td>The Mesos slave attribute to denote a rack</td>
+<td>The Mesos agent attribute to denote a rack</td>
 <td>string</td>
 </tr>
 <tr>
 <td>defaultRackId</td>
 <td>DEFAULT</td>
-<td>The rackId to assign to a slave if no rackId attribute value is present</td>
+<td>The rackId to assign to a agent if no rackId attribute value is present</td>
 <td>string</td>
 </tr>
 </tbody>
 </table>
-<h4 id="slaves">Slaves</h4>
+<h4 id="agents">Agents</h4>
 <table>
 <thead>
 <tr>
@@ -1436,15 +1436,15 @@
 </thead>
 <tbody>
 <tr>
-<td>slaveHttpPort</td>
+<td>agentHttpPort</td>
 <td>5051</td>
-<td>The port to talk to slaves on</td>
+<td>The port to talk to agents on</td>
 <td>int</td>
 </tr>
 <tr>
-<td>slaveHttpsPort</td>
+<td>agentHttpsPort</td>
 <td>absent</td>
-<td>The HTTPS port to talk to slaves on</td>
+<td>The HTTPS port to talk to agents on</td>
 <td>Integer (Optional)</td>
 </tr>
 </tbody>
@@ -1463,31 +1463,31 @@
 <tr>
 <td>allocatedResourceWeight</td>
 <td>0.5</td>
-<td>This portion of an offer&apos;s score depends on the amount of resources currently allocated by mesos on the mesos slave/agent</td>
+<td>This portion of an offer&apos;s score depends on the amount of resources currently allocated by mesos on the mesos agent/agent</td>
 <td>double</td>
 </tr>
 <tr>
 <td>inUseResourceWeight</td>
 <td>0.5</td>
-<td>This portion of an offer&apos;s score depends on the currently used resources on a mesos slave/agent as reported by the slave statistics endpoint</td>
+<td>This portion of an offer&apos;s score depends on the currently used resources on a mesos agent/agent as reported by the agent statistics endpoint</td>
 <td>double</td>
 </tr>
 <tr>
 <td>cpuWeight</td>
 <td>0.4</td>
-<td>The weight the slave&apos;s cpu carries when scoring an offer</td>
+<td>The weight the agent&apos;s cpu carries when scoring an offer</td>
 <td>double</td>
 </tr>
 <tr>
 <td>memWeight</td>
 <td>0.4</td>
-<td>The weight the slave&apos;s memory carries when scoring an offer</td>
+<td>The weight the agent&apos;s memory carries when scoring an offer</td>
 <td>double</td>
 </tr>
 <tr>
 <td>diskWeight</td>
 <td>0.2</td>
-<td>The weight the slave&apos;s disk carries when scoring an offer</td>
+<td>The weight the agent&apos;s disk carries when scoring an offer</td>
 <td>double</td>
 </tr>
 </tbody>

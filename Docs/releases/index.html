@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -657,6 +657,7 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-120">Changes in 1.2.0</a></li>
 <li><a href="#changes-in-110">Changes in 1.1.0</a></li>
 <li><a href="#changes-in-100">Changes in 1.0.0</a></li>
 <li><a href="#changes-in-0230">Changes in 0.23.0</a></li>
@@ -700,6 +701,41 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-120">Changes in <code>1.2.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/43" target="_blank">1.2.0 milestone</a> to see new features / bugfixes in detail.</p>
+<h3 id="new-features">New Features</h3>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2074" target="_blank">2074</a> - Log extra information about the docker image we are about to use</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2071" target="_blank">2071</a> - Better exposure of LB status in UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2065" target="_blank">2065</a> - Quieter offer logging</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2062" target="_blank">2062</a> - Remove unused import in RequestResource</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2063" target="_blank">2063</a> - Debounce UI Request/Task Search</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2059" target="_blank">2059</a> - Do not retry ON_DEMAND tasks which were killed by user request.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2060" target="_blank">2060</a> - Self Service Shuffle Opt Out</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2057" target="_blank">2057</a> - Slightly Smarter Task Shuffling</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2058" target="_blank">2058</a> - Version SingularityUI assets</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2051" target="_blank">2051</a> - Better crash loop detection</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2052" target="_blank">2052</a> - Carry forward &quot;Task launched because&quot; message when retrying task.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2050" target="_blank">2050</a> - Better preferential scheduling</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2049" target="_blank">2049</a> - Prioritize memory shuffles over cpu</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2056" target="_blank">2056</a> - Validate counts of racks to avoid accidental addition </li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2072" target="_blank">2072</a> - Quiet down some exceptions that don&apos;t matter</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2073" target="_blank">2073</a> - Fix unauthorized error message</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2069" target="_blank">2069</a> - Fix run now modal not being able to tail task launch</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2067" target="_blank">2067</a> - Remove old static build settings</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2068" target="_blank">2068</a> - Consistently compare memory in GB, not MB/B</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2066" target="_blank">2066</a> - Automatically handle tasks that might be stuck in launching status</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2064" target="_blank">2064</a> - Prevent request action modals from closing upon regaining focus</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2061" target="_blank">2061</a> - Properly reconnect after losing mesos master connection</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2054" target="_blank">2054</a> - fix mismatch in http/https protocol</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2048" target="_blank">2048</a> - Don&apos;t mutate args in lb sync comparison</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/2046" target="_blank">2046</a> - Process a reconciliation for all tasks with missing state in zk</li>
+</ul>
+<hr>
 <h2 id="changes-in-110">Changes in <code>1.1.0</code></h2>
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/42" target="_blank">1.1.0 milestone</a> to see new features / bugfixes in detail.</p>
 <p>Singularity <code>1.1.0</code> is mainly focused on scheduler performance. Internally we have also begun testing this version on java 11. Some java 11 notes:</p>
@@ -809,7 +845,7 @@
 <li><a href="https://github.com/HubSpot/Singularity/pull/1963" target="_blank">1963</a> - Also purge old deploy and request history from SQL</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1920" target="_blank">1920</a> - Add ability to do sns-based updates instead of webhooks</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1922" target="_blank">1922</a> - The zoo is under new management (zk cleanup)</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1938" target="_blank">1938</a> - Make Slave/Rack Resource use proxy to leader</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1938" target="_blank">1938</a> - Make Agent/Rack Resource use proxy to leader</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1932" target="_blank">1932</a> - Refactor calling of offer evaluation</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1939" target="_blank">1939</a> - Add option to fetch a batch of requests</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1928" target="_blank">1928</a> - MySQL task resource usage storage</li>
@@ -891,7 +927,7 @@
 <li><a href="https://github.com/HubSpot/Singularity/pull/1880" target="_blank">1880</a> - Improve ExtendedTaskState readability</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1888" target="_blank">1888</a> - Report uploader/downloader metrics by writing to a file.</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1891" target="_blank">1891</a> - Add ability to set uploader additional files at deploy level</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1849" target="_blank">1849</a> - Slave attribute minimums</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1849" target="_blank">1849</a> - Agent attribute minimums</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1876" target="_blank">1876</a> - Better alerting for task lag</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1877" target="_blank">1877</a> - Update alert banner to only show when there&apos;s a widespread issue for task lag</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1878" target="_blank">1878</a> - Add support for inactive task history filtered by deploy ID</li>
@@ -933,15 +969,15 @@
 <li><a href="https://github.com/HubSpot/Singularity/pull/1852" target="_blank">1852</a> - Use a lock &amp; a timeout when checking whether an upload target file is open</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1851" target="_blank">1851</a> - lsof alternative for open files check</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1835" target="_blank">1835</a> - UI - Don&apos;t autofocus the search</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1834" target="_blank">1834</a> - Option to skip scheduling on slaves with missing usage data</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1834" target="_blank">1834</a> - Option to skip scheduling on agents with missing usage data</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1833" target="_blank">1833</a> - Move directory logging to trace level</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1801" target="_blank">1801</a> - Add deep link page number to task history page</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1829" target="_blank">1829</a> - Prepare a StreamingOutput response when serving file downloads</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1832" target="_blank">1832</a> - Nix the old dashboard and default to requests page</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1831" target="_blank">1831</a> - Only run a single history persister at once</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1822" target="_blank">1822</a> - Prevent new host overloading</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1826" target="_blank">1826</a> - Only require read authorization to view list of slaves</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1817" target="_blank">1817</a> - Proxy download from Mesos slave over Singularity. Users no longer require direct mesos slave api access to download files</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1826" target="_blank">1826</a> - Only require read authorization to view list of agents</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1817" target="_blank">1817</a> - Proxy download from Mesos agent over Singularity. Users no longer require direct mesos agent api access to download files</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1814" target="_blank">1814</a> - Updated logrotate frequency to allow for an override </li>
 </ul>
 <h3 id="bug-fixes">Bug Fixes</h3>
@@ -1008,7 +1044,7 @@ considerNonLongRunningTaskLongRunningAfterRunningForSeconds: 3600
 <h3 id="improvements">Improvements</h3>
 <ul>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1800" target="_blank">1800</a> - Ability to maintain the same path for custom nav bar links</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1795" target="_blank">1795</a> - Add clear all buttons for dead slaves and inactive hosts</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1795" target="_blank">1795</a> - Add clear all buttons for dead agents and inactive hosts</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1783" target="_blank">1783</a> - Simplify mesos master uri parsing</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1796" target="_blank">1796</a> - Allow a buffer for tasks near the cpu hard limit</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1639" target="_blank">1639</a> - reduce S3 uploader mem usage</li>
@@ -1021,7 +1057,7 @@ considerNonLongRunningTaskLongRunningAfterRunningForSeconds: 3600
 <li><a href="https://github.com/HubSpot/Singularity/pull/1769" target="_blank">1769</a> - Support placeholders in webhook URIs.</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1778" target="_blank">1778</a> - Include current task usage in the task shuffle cleanup messages</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1785" target="_blank">1785</a> - Send email on failing replacement tasks.</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1788" target="_blank">1788</a> - Add ability to set attributes that mark slave for only preemptible tasks</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1788" target="_blank">1788</a> - Add ability to set attributes that mark agent for only preemptible tasks</li>
 </ul>
 <h3 id="bug-fixes">Bug Fixes</h3>
 <ul>
@@ -1313,13 +1349,13 @@ in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</c
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.15.0+is%3Aclosed" target="_blank">0.15.0 milestone</a> to see new features / bugfixes in detail.</p>
 <h3 id="new-features">New Features</h3>
 <ul>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1519" target="_blank">1519</a> - Spread to all slaves</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1519" target="_blank">1519</a> - Spread to all agents</li>
 </ul>
-<p>Adds a best effort attempt to deploy a task on all slaves. You can enable this by adding <code>spreadAllSlavesEnabled: true</code> to your Singularity yaml file. You can then set <code>SPREAD_ALL_SLAVES</code> for the <code>placementStrategy</code> on a <code>SingularityRequest</code>.</p>
+<p>Adds a best effort attempt to deploy a task on all agents. You can enable this by adding <code>spreadAllAgentsEnabled: true</code> to your Singularity yaml file. You can then set <code>SPREAD_ALL_AGENTS</code> for the <code>placementStrategy</code> on a <code>SingularityRequest</code>.</p>
 <ul>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1405" target="_blank">1405</a> - Slave Usage Monitoring UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1405" target="_blank">1405</a> - Agent Usage Monitoring UI</li>
 </ul>
-<p>In the Admin drop-down on the UI, there is now a <code>Slave Usage</code> monitoring page. This page contains visualizations about resource usages amongst all the slaves. The circular progress meters display the percent of total resources utilized on all slaves. The resources (cpu and memory) heat map displays percentage utilized per slave.</p>
+<p>In the Admin drop-down on the UI, there is now a <code>Agent Usage</code> monitoring page. This page contains visualizations about resource usages amongst all the agents. The circular progress meters display the percent of total resources utilized on all agents. The resources (cpu and memory) heat map displays percentage utilized per agent.</p>
 <ul>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1456" target="_blank">1456</a> - Bump to java 8/Jersey 2/Dropwizard 1</li>
 </ul>
@@ -1345,7 +1381,7 @@ in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</c
 <li><a href="https://github.com/HubSpot/Singularity/pull/1487" target="_blank">1487</a> - Add a message to the request history when scaling</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1474" target="_blank">1474</a> - Allow expensive endpoints to be disabled for non-admins</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1477" target="_blank">1477</a> - Better zk cleanup for removed requests</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1480" target="_blank">1480</a> - Put a limit on number of slaves to decommission at once</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1480" target="_blank">1480</a> - Put a limit on number of agents to decommission at once</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1479" target="_blank">1479</a> - Reduce timeout on requests to task sandboxes</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1472" target="_blank">1472</a> - Add spacing line at the bottom of logs</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1476" target="_blank">1476</a> - Better zk performance logging</li>
@@ -1355,7 +1391,7 @@ in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</c
 <li><a href="https://github.com/HubSpot/Singularity/pull/1466" target="_blank">1466</a> - Add links between tailer versions</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1450" target="_blank">1450</a> - Allow new tabs from global search page</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1452" target="_blank">1452</a> - Add a task credit system</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1400" target="_blank">1400</a> - Add slave and task usage tracking inside singularity ZK</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1400" target="_blank">1400</a> - Add agent and task usage tracking inside singularity ZK</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1447" target="_blank">1447</a> - Set an optional max number of active tasks for ON_DEMAND requests</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1442" target="_blank">1442</a> - Display previous overridden cleanups</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1451" target="_blank">1451</a> - Additional disaster actions</li>
@@ -1375,7 +1411,7 @@ in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</c
 <li><a href="https://github.com/HubSpot/Singularity/pull/1470" target="_blank">1470</a> - Fix tailer when reloading file</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1469" target="_blank">1469</a> - Add jita access for updating readWriteAccessGroup</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1467" target="_blank">1467</a> - Fix task direct link to logs</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1428" target="_blank">1428</a> - Prevent flapping slave from rejoining cluster</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1428" target="_blank">1428</a> - Prevent flapping agent from rejoining cluster</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1443" target="_blank">1443</a> - Ignore 404s for <code>/priority/freeze</code> endpoint</li>
 </ul>
 <h3 id="documentation">Documentation</h3>
@@ -1504,8 +1540,8 @@ s3:
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A0.13.0+is%3Aclosed" target="_blank">0.13.0 milestone</a> to see new features / bugfixes in detail.</p>
 <h3 id="new-features">New Features</h3>
 <p><em><a href="https://github.com/HubSpot/Singularity/pull/1342" target="_blank">1342</a> - Introduce expiring machine state changes</em></p>
-<p>On the <code>Slaves</code> and <code>Racks</code> pages in the UI, there is now an <code>Expiration</code> field present when initiating a state change. When a duration is specified here, the slave or rack will revert to the specified state after time has elapsed. Note that if another state change takes place before the expiration time, the expiration will only remain active if the resulting state transition is still valid.</p>
-<p>For example, if decommissioning a slave with an expiration of 1 minute, with a <code>evertToState</code> of <code>ACTIVE</code>, it is possible the slave will finish decommissioning in that time. So, it&apos;s state would change from <code>DECOMMISSIONING</code> to <code>DECOMMISSIONED</code>. In this case, the expiring action will remain active, because <code>DECOMMISSIONED</code> -&gt; <code>ACTIVE</code> is still a valid state change.</p>
+<p>On the <code>Agents</code> and <code>Racks</code> pages in the UI, there is now an <code>Expiration</code> field present when initiating a state change. When a duration is specified here, the agent or rack will revert to the specified state after time has elapsed. Note that if another state change takes place before the expiration time, the expiration will only remain active if the resulting state transition is still valid.</p>
+<p>For example, if decommissioning a agent with an expiration of 1 minute, with a <code>evertToState</code> of <code>ACTIVE</code>, it is possible the agent will finish decommissioning in that time. So, it&apos;s state would change from <code>DECOMMISSIONING</code> to <code>DECOMMISSIONED</code>. In this case, the expiring action will remain active, because <code>DECOMMISSIONED</code> -&gt; <code>ACTIVE</code> is still a valid state change.</p>
 <p><em><a href="https://github.com/HubSpot/Singularity/pull/1219" target="_blank">1219</a> - Starred requests persistence</em></p>
 <p>User settings (so far only starred requests) are now stored server-side instead of client-side in <code>localStorage</code>. If a username is not found, you will be prompted for a username when you first load the ui. Any starred requests you currently have in <code>localStorage</code> will automatically be migrated to the server-side storage.</p>
 <h3 id="improvements">Improvements</h3>
@@ -1560,7 +1596,7 @@ s3:
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1291" target="_blank">#1291</a> Better messages for sentry reporting</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1293" target="_blank">#1293</a> Cache files with md5, add more detail for cache misses</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1295" target="_blank">#1295</a> Clean up tests + make travis build more reliable</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/#1298" target="_blank">#1298</a> Updates to slave information and reconciling slaves</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/#1298" target="_blank">#1298</a> Updates to agent information and reconciling agents</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1301" target="_blank">#1301</a> Add readWriteGroups to request form ui</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1304" target="_blank">#1304</a> More even distribution among racks</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/#1308" target="_blank">#1308</a> Get the SingularityClient up to date</li>
@@ -1631,7 +1667,7 @@ s3:
 </ul>
 <h3 id="documentation">Documentation</h3>
 <ul>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1265" target="_blank">#1265</a> - Update slave-extras.md</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1265" target="_blank">#1265</a> - Update agent-extras.md</li>
 </ul>
 <hr>
 <h2 id="changes-in-0101">Changes in <code>0.10.1</code></h2>
@@ -1680,7 +1716,7 @@ s3:
 <li><a href="https://github.com/HubSpot/Singularity/pull/1178" target="_blank">#1178</a> - Replace dashes with underscores when searching for matching hosts </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1186" target="_blank">#1186</a> - Add ability to show task disk resource if configured to do so </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1182" target="_blank">#1182</a> - Add timezone field and kill dropdowns if there are less than 5 options </li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1185" target="_blank">#1185</a> - Add JSON Button to the Racks and Slaves pages </li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1185" target="_blank">#1185</a> - Add JSON Button to the Racks and Agents pages </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1179" target="_blank">#1179</a> - Handle 404 properly</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1158" target="_blank">#1158</a> - Fix the request detail page bounce messages </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1165" target="_blank">#1165</a> - Improvements to task search</li>
@@ -1756,7 +1792,7 @@ s3:
 </ul>
 <h3 id="improvements">Improvements</h3>
 <ul>
-<li><a href="https://github.com/HubSpot/Singularity/pull/1021" target="_blank">#1021</a> Convert racks and slaves pages to react</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1021" target="_blank">#1021</a> Convert racks and agents pages to react</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1031" target="_blank">#1031</a> Better request and deploy id validation</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1032" target="_blank">#1032</a> Allow glob matching in addition to fuzzy matching on Requests and Tasks page</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1039" target="_blank">#1039</a> UI improvements with global search tool</li>
@@ -1839,7 +1875,7 @@ s3:
 <h3 id="bug-fixes">Bug Fixes</h3>
 <ul>
 <li><a href="https://github.com/HubSpot/Singularity/pull/984" target="_blank">#984</a> Corrected task failure count in deploy failure info</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/990" target="_blank">#990</a> Fix slaves link not filtering tasks properly</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/990" target="_blank">#990</a> Fix agents link not filtering tasks properly</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/991" target="_blank">#991</a> Fix missing user being treated as admin</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/996" target="_blank">#996</a> Don&apos;t get attributes from missing deployProgress</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/998" target="_blank">#998</a> Enable buttons on dashboard paused requests toable</li>
@@ -1865,7 +1901,7 @@ s3:
 <ul>
 <li><code>requestId</code>: Optional request id to match (only for <code>/api/history/tasks</code> endpoint as it is already specified in the path for <code>/request/{requestId}/tasks</code>)</li>
 <li><code>deployId</code>: Optional deploy id to match</li>
-<li><code>host</code>: Optional host (slave host name) to match</li>
+<li><code>host</code>: Optional host (agent host name) to match</li>
 <li><code>lastTaskStatus</code>: Optional <a href="../reference/api-docs/models#model-ExtendedTaskState"><code>ExtendedTaskState</code></a> to match</li>
 <li><code>startedAfter</code>: Optionally match only tasks started after this time (13 digit unix timestamp)</li>
 <li><code>startedBefore</code>: Optionally match only tasks started before this time (13 digit unix timestamp)</li>
@@ -1946,7 +1982,7 @@ autoAdvanceDeploySteps: true
 <li><a href="https://github.com/HubSpot/Singularity/pull/964" target="_blank">#964</a> Bump to latest horizon version</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/965" target="_blank">#965</a> Warning if singularity has no leader or leader has no mesos connection </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/966" target="_blank">#966</a> More consistent terminology and deploy failure on task page</li>
-<li><a href="https://github.com/HubSpot/Singularity/pull/968" target="_blank">#968</a> Better Slave Decommissioned / Offline Communication </li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/968" target="_blank">#968</a> Better Agent Decommissioned / Offline Communication </li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/969" target="_blank">#969</a> Add extra command line args to task finished email</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/970" target="_blank">#970</a> Task badge color for TASK_KILLED is now default (grey)</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/977" target="_blank">#977</a> Run now dialog improvements</li>
@@ -2022,20 +2058,20 @@ The UI build for this release is known to only contain partial css. Please use t
 <p>These endpoints were renamed to fix a typo in the URL:</p>
 <ul>
 <li><code>/racks/rack/{rackId}/decomission</code> --&gt; <code>/racks/rack/{rackId}/decommission</code></li>
-<li><code>/slaves/slave/{rackId}/decomission</code> --&gt; <code>/slaves/slave/{rackId}/decommission</code></li>
+<li><code>/agents/agent/{rackId}/decomission</code> --&gt; <code>/agents/agent/{rackId}/decommission</code></li>
 </ul>
 <h3 id="expiring-actions">Expiring Actions</h3>
 <p>Released in <code>0.4.9</code></p>
 <h3 id="action-expiration--additional-action-metadata">Action expiration + additional action metadata</h3>
 <p>Some actions in Singularity now have the concept of expiration (as in, giving up after a certain period of time). Corresponding endpoints have been updated to accept more information about action expiration and action metadata.</p>
-<h4 id="rack-and-slave-operations">Rack and slave operations</h4>
+<h4 id="rack-and-agent-operations">Rack and agent operations</h4>
 <ul>
 <li><code>/racks/rack/{rackId}/decommission</code></li>
 <li><code>/racks/rack/{rackId}/freeze</code></li>
 <li><code>/racks/rack/{rackId}/activate</code></li>
-<li><code>/slaves/slave/{slaveId}/decommission</code></li>
-<li><code>/slaves/slave/{slaveId}/freeze</code></li>
-<li><code>/slaves/slave/{slaveId}/activate</code></li>
+<li><code>/agents/agent/{agentId}/decommission</code></li>
+<li><code>/agents/agent/{agentId}/freeze</code></li>
+<li><code>/agents/agent/{agentId}/activate</code></li>
 </ul>
 <p>These URLs accept a JSON object with this format:</p>
 <table>
@@ -2534,7 +2570,7 @@ The UI build for this release is known to only contain partial css. Please use t
 </ul>
 <h3 id="config-changes">Config Changes</h3>
 <ul>
-<li><p><a href="https://github.com/HubSpot/Singularity/pull/750" target="_blank">#750</a> - Remove old property-style runnable config code. The <code>.properties</code> configuration format for Singularity slave helpers:</p>
+<li><p><a href="https://github.com/HubSpot/Singularity/pull/750" target="_blank">#750</a> - Remove old property-style runnable config code. The <code>.properties</code> configuration format for Singularity agent helpers:</p>
 <ul>
 <li>SingularityExecutor</li>
 <li>SingularityExecutorCleanup</li>
@@ -2543,7 +2579,7 @@ The UI build for this release is known to only contain partial css. Please use t
 <li>SingularityOOMKiller</li>
 <li>SingularityLogWatcher</li>
 </ul>
-<p>If you use any of these, please <a href="https://github.com/HubSpot/Singularity/blob/7bbdb4c190292813edc4585a5fb4edb4dcafefe6/Docs/slave_extras.md" target="_blank">convert</a> your configuration to the <code>.yaml</code> style.</p>
+<p>If you use any of these, please <a href="https://github.com/HubSpot/Singularity/blob/7bbdb4c190292813edc4585a5fb4edb4dcafefe6/Docs/agent_extras.md" target="_blank">convert</a> your configuration to the <code>.yaml</code> style.</p>
 </li>
 </ul>
 <hr>
@@ -2555,7 +2591,7 @@ The UI build for this release is known to only contain partial css. Please use t
 </ul>
 <h3 id="deprecated">Deprecated</h3>
 <ul>
-<li><p>The <code>.properties</code> configuration format for Singularity slave helpers:</p>
+<li><p>The <code>.properties</code> configuration format for Singularity agent helpers:</p>
 <ul>
 <li>SingularityExecutor</li>
 <li>SingularityExecutorCleanup</li>
@@ -2564,7 +2600,7 @@ The UI build for this release is known to only contain partial css. Please use t
 <li>SingularityOOMKiller</li>
 <li>SingularityLogWatcher</li>
 </ul>
-<p>If you use any of these, please <a href="https://github.com/HubSpot/Singularity/blob/7bbdb4c190292813edc4585a5fb4edb4dcafefe6/Docs/slave_extras.md" target="_blank">convert</a> your configuration to the <code>.yaml</code> style.</p>
+<p>If you use any of these, please <a href="https://github.com/HubSpot/Singularity/blob/7bbdb4c190292813edc4585a5fb4edb4dcafefe6/Docs/agent_extras.md" target="_blank">convert</a> your configuration to the <code>.yaml</code> style.</p>
 <p><em><code>.properties</code> support will be removed completely in 0.4.6.</em></p>
 </li>
 </ul>

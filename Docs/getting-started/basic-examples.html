@@ -51,7 +51,7 @@
         data-chapter-title="Examples"
         data-filepath="Docs/getting-started/basic-examples.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -703,7 +703,7 @@ http://localhost:7099/singularity/api/requests
 <li><code>https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml</code></li>
 </ul>
 </li>
-<li>CPUs: 0.1 (in the default docker setup there is only one CPU resource in the slave, to test multiple deployments and scaling we&apos;ll use less CPU resources.)</li>
+<li>CPUs: 0.1 (in the default docker setup there is only one CPU resource in the agent, to test multiple deployments and scaling we&apos;ll use less CPU resources.)</li>
 </ul>
 <p>The equivalent JSON which can be used instead of the web UI:</p>
 <pre><code class="lang-json">{
@@ -855,7 +855,7 @@ http://localhost:7099/singularity/api/requests
     }
 }
 </code></pre>
-<p>This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos slave host, so the service will be available again at <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>. The command to run is already set in the docker image, so in this case it is not set in the deploy. Any command set in the deploy json will override the command for the docker container (i.e CMD in Dockerfile)</p>
+<p>This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos agent host, so the service will be available again at <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>. The command to run is already set in the docker image, so in this case it is not set in the deploy. Any command set in the deploy json will override the command for the docker container (i.e CMD in Dockerfile)</p>
 <h2 id="docker-service-with-bridge-networking-and-dynamically-allocated-ports">Docker Service with Bridge Networking and Dynamically Allocated Ports</h2>
 <p>Instead of binding to the host network Docker can set up a bridge network and bind the container&apos;s ports to the external ports. The container doesn&apos;t have to know what the external ports are (or if they are bound at all), so you don&apos;t have to pass this configuration into the container.</p>
 <p>You could specify port mappings in the Singularity UI or POST JSON like the following:</p>

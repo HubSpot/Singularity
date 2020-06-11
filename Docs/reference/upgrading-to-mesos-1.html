@@ -51,7 +51,7 @@
         data-chapter-title="Upgrading to Mesos 1.x"
         data-filepath="Docs/reference/upgrading-to-mesos-1.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -660,7 +660,7 @@
 <h3 id="upgrade-order">Upgrade Order</h3>
 <ul>
 <li>Upgrade the mesos masters</li>
-<li>Upgrade the mesos slaves</li>
+<li>Upgrade the mesos agents</li>
 <li>Upgrade the scheduler</li>
 <li>Upgrade the Executors</li>
 </ul>
@@ -674,13 +674,13 @@
 <pre><code>mesos:
   master: my-mesos-master-host-1:5050,my-mesos-master-host-2:5050
 </code></pre><h3 id="recommended-version-and-future-version-bumps">Recommended Version and Future Version Bumps</h3>
-<p>We have targeted a move to mesos 1.1.2 To being with. In versions 1.2 and beyond, the mesos master will no longer accept calls from 0.x frameworks. With Singularity previously built on 0.28, we wanted to give a smoother upgrade path for users where the older scheduler or slaves/agents could still temporarily be registered with the newer mesos master.</p>
+<p>We have targeted a move to mesos 1.1.2 To being with. In versions 1.2 and beyond, the mesos master will no longer accept calls from 0.x frameworks. With Singularity previously built on 0.28, we wanted to give a smoother upgrade path for users where the older scheduler or agents/agents could still temporarily be registered with the newer mesos master.</p>
 <p>The SingularityService module now uses <a href="https://github.com/mesosphere/mesos-rxjava" target="_blank">mesos-rxjava</a> for communication with the mesos master. This library is meant to be compatible with all mesos 1.x versions. In future releases, the executor will also be modified to use this library. So, mesos version bumps i the 1.x family will be much easier to roll out due to the fact that no nativelibrary bindings will be required and the only version we will be updating will be the mesos package containing the protobufs.</p>
 <h3 id="other-gotchas-for-upgrading">Other Gotchas For Upgrading</h3>
 <p>There are a few more flags and deprecated fields to be aware of when upgrading to mesos 1.x</p>
 <ul>
-<li><code>--work_dir</code> flag for slaves/agents is now required. The process will not start without it set</li>
-<li>Internally in Singularity we have started the Slave -&gt; Agent rename. However all UIs and endpoints still use the previous terminology. We have created a few POJO wrappers for backwards compatibility so any <code>slaveId</code> fields written to json stored in zookeeper can still be read into the new <code>agentId</code> field and vice versa.</li>
+<li><code>--work_dir</code> flag for agents/agents is now required. The process will not start without it set</li>
+<li>Internally in Singularity we have started the Agent -&gt; Agent rename. However all UIs and endpoints still use the previous terminology. We have created a few POJO wrappers for backwards compatibility so any <code>agentId</code> fields written to json stored in zookeeper can still be read into the new <code>agentId</code> field and vice versa.</li>
 </ul>
 
                     

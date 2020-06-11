@@ -51,7 +51,7 @@
         data-chapter-title="Expiring Actions"
         data-filepath="Docs/features/expiring-actions.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -659,14 +659,14 @@
 <p>Released in <code>0.4.9</code></p>
 <h3 id="action-expiration--additional-action-metadata">Action expiration + additional action metadata</h3>
 <p>Some actions in Singularity now have the concept of expiration (as in, giving up after a certain period of time). Corresponding endpoints have been updated to accept more information about action expiration and action metadata.</p>
-<h4 id="rack-and-slave-operations">Rack and slave operations</h4>
+<h4 id="rack-and-agent-operations">Rack and agent operations</h4>
 <ul>
 <li><code>/racks/rack/{rackId}/decommission</code></li>
 <li><code>/racks/rack/{rackId}/freeze</code></li>
 <li><code>/racks/rack/{rackId}/activate</code></li>
-<li><code>/slaves/slave/{slaveId}/decommission</code></li>
-<li><code>/slaves/slave/{slaveId}/freeze</code></li>
-<li><code>/slaves/slave/{slaveId}/activate</code></li>
+<li><code>/agents/agent/{agentId}/decommission</code></li>
+<li><code>/agents/agent/{agentId}/freeze</code></li>
+<li><code>/agents/agent/{agentId}/activate</code></li>
 </ul>
 <p>These URLs accept a JSON object with this format:</p>
 <table>

@@ -51,7 +51,7 @@
         data-chapter-title="Container Options"
         data-filepath="Docs/reference/container-options.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -658,9 +658,9 @@
                         <h2 id="container-support">Container Support</h2>
 <p>Singularity supports containers in a few different contexts:</p>
 <h3 id="mesos-containerizer">Mesos Containerizer</h3>
-<p>The default <a href="http://mesos.apache.org/documentation/latest/mesos-containerizer/" target="_blank">mesos containerizer</a> for processes which sets resource limits/etc. Enabled by adding <code>mesos</code> to the <code>--containerizers</code> argument when running <code>mesos-slave</code>. The mesos containerizer can isolate the task via cpu, memory or other parameters specified using the <code>--isolation</code> flag when starting the mesos slave. Deploys with no <code>containerInfo</code> definition will try to run under this containerizer by default.</p>
+<p>The default <a href="http://mesos.apache.org/documentation/latest/mesos-containerizer/" target="_blank">mesos containerizer</a> for processes which sets resource limits/etc. Enabled by adding <code>mesos</code> to the <code>--containerizers</code> argument when running <code>mesos-agent</code>. The mesos containerizer can isolate the task via cpu, memory or other parameters specified using the <code>--isolation</code> flag when starting the mesos agent. Deploys with no <code>containerInfo</code> definition will try to run under this containerizer by default.</p>
 <h3 id="mesos-docker-containerizer">Mesos Docker Containerizer</h3>
-<p>The <a href="https://mesos.apache.org/documentation/latest/docker-containerizer/" target="_blank">docker containerizer</a> that ships with Mesos, will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. You can enable this containerizer by adding <code>docker</code> to the arguments of <code>--containerizers</code> when running <code>mesos-slave</code>.</p>
+<p>The <a href="https://mesos.apache.org/documentation/latest/docker-containerizer/" target="_blank">docker containerizer</a> that ships with Mesos, will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. You can enable this containerizer by adding <code>docker</code> to the arguments of <code>--containerizers</code> when running <code>mesos-agent</code>.</p>
 <p>To use Singularity with the Docker containerizer, add a <a href="api.html"><code>containerInfo</code> field</a> with a <code>type</code> of <code>DOCKER</code> to the <a href="api.html">SingularityDeploy</a> object when creating a deploy (without specifying a <code>customExecutorCmd</code>). The Singularity deploy object&apos;s <a href="api.html"><code>containerInfo</code> field</a> mirrors the Mesos <code>containerInfo</code> definition:</p>
 <pre><code>{
   &quot;type&quot;:&quot;DOCKER&quot;,
@@ -708,7 +708,7 @@
 </li>
 <li>The Docker working directory will be set to the <code>taskAppDirectory</code> in the Mesos sandbox</li>
 <li>The container name will be a configured prefix (<code>se-</code> by default) and the the task id (<code>SingularityExcutorCleanup</code> uses this to optionally clean up old contaienrs that are managed by Singularity)</li>
-<li>SingularityExecutor will explicitly try to pull the image (ie, must be from a repository reachable by the slave)</li>
+<li>SingularityExecutor will explicitly try to pull the image (ie, must be from a repository reachable by the agent)</li>
 </ul>
 <p>Here is an example deploy you can use with the <a href="../development/developing-with-docker.html">docker-compose</a> setup to get you started:</p>
 <pre><code>{

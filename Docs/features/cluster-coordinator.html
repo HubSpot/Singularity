@@ -51,7 +51,7 @@
         data-chapter-title="Cluster Coordinator"
         data-filepath="Docs/features/cluster-coordinator.md"
         data-basepath="../.."
-        data-revision="Wed Nov 20 2019 14:55:24 GMT-0500 (EST)"
+        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -661,11 +661,11 @@
 <p>When the proxy receives a request, it searches for key pieces of information to find out where it should route the request. Write operations or GETs for a specific task/request need to be routed to an individual cluster. The coordinator can route requests based on:</p>
 <ul>
 <li>Request ID (and therefore task ID since it contains the request ID)</li>
-<li>Slave/Agent ID or hostname</li>
+<li>Agent/Agent ID or hostname</li>
 <li>Request group ID</li>
 <li>The <code>dataCenter</code> field on the SingularityRequest object (when creating new requests)</li>
 </ul>
-<p>For other GET requests that gather lists of data, such as the <code>/slaves</code> or <code>/tasks</code> endpoints, will aggregate the data from all configured clusters.</p>
+<p>For other GET requests that gather lists of data, such as the <code>/agents</code> or <code>/tasks</code> endpoints, will aggregate the data from all configured clusters.</p>
 <p>Beacuse of this, for most general operations, the SingularityUI or SingularityClient can be pointed at the proxy to seamlessly interact with multiple installations of Singularity.</p>
 <p>Currently, the following endpoints are not implemented on the coordinator and will throw a <code>NotImpplementedException</code>:</p>
 <ul>
@@ -729,9 +729,9 @@
 <td><code>int</code></td>
 </tr>
 <tr>
-<td><code>slaveHttpPort</code></td>
+<td><code>agentHttpPort</code></td>
 <td>5051</td>
-<td>The port to talk to slaves on</td>
+<td>The port to talk to agents on</td>
 <td><code>int</code></td>
 </tr>
 <tr>
