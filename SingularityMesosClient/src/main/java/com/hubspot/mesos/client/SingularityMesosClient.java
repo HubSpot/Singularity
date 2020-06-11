@@ -23,6 +23,7 @@ public class SingularityMesosClient implements MesosClient {
   public static final String DEFAULT_HTTP_CLIENT_NAME = "mesos.http.client";
   public static final String SHORT_TIMEOUT_HTTP_CLIENT_NAME =
     "mesos.http.client.short.timeout";
+  public static final String MESOS_CREDENTIALS = "mesos.http.client.credentials";
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosClient.class);
 
@@ -39,14 +40,17 @@ public class SingularityMesosClient implements MesosClient {
 
   private final HttpClient httpClient;
   private final HttpClient shortTimeoutHttpClient;
+  private final UserAndPassword credentials;
 
   @Inject
   public SingularityMesosClient(
     @Named(DEFAULT_HTTP_CLIENT_NAME) HttpClient httpClient,
-    @Named(SHORT_TIMEOUT_HTTP_CLIENT_NAME) HttpClient shortTimeoutHttpClient
+    @Named(SHORT_TIMEOUT_HTTP_CLIENT_NAME) HttpClient shortTimeoutHttpClient,
+    @Named(MESOS_CREDENTIALS) UserAndPassword credentials
   ) {
     this.httpClient = httpClient;
     this.shortTimeoutHttpClient = shortTimeoutHttpClient;
+    this.credentials = credentials;
   }
 
   @Override
@@ -68,11 +72,11 @@ public class SingularityMesosClient implements MesosClient {
     LOG.debug("Fetching {} from mesos", uri);
 
     try {
-      response =
-        currentHttpClient.execute(
-          HttpRequest.newBuilder().setUrl(uri).build(),
-          new Options()
-        );
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().setUrl(uri);
+      if (credentials.hasCredentials()) {
+        requestBuilder.addBasicAuth(credentials.getUser(), credentials.getPassword());
+      }
+      response = currentHttpClient.execute(requestBuilder.build(), new Options());
 
       LOG.debug(
         "Response {} - {} after {}",
