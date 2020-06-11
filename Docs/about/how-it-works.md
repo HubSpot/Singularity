@@ -47,21 +47,21 @@ When a service or worker instance fails in a new deploy, the Singularity schedul
 
 #### Agent Placement
 
-When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or `AgentPlacement` in Singularity terms. Available placement strategies are:
+When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or `placement` in Singularity terms. Available placement strategies are:
 
 - `GREEDY`: uses whatever agents are available
 - `SEPARATE_BY_DEPLOY`/`SEPARATE`: ensures no 2 instances / tasks of the same request *and* deploy id are ever placed on the same agent
 - `SEPARATE_BY_REQUEST`: ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host
 - `OPTIMISTIC`: attempts to spread out tasks but may schedule some on the same agent
-- `SPREAD_ALL_AGENTS`: ensure the task is running on every agent. Some behaviour as `SEPARATE_BY_DEPLOY` but with autoscaling the Request to keep instances equal number of agents. 
+- `SPREAD_ALL_SLAVES`: ensure the task is running on every agent. Some behaviour as `SEPARATE_BY_DEPLOY` but with autoscaling the Request to keep instances equal number of agents. 
 
 Agent placement can also be impacted by agent attributes. There are three scenarios that Singularity supports:
 
-1. *Specific Agents -> For a certain request, only run it on agents with matching attributes* - In this case, you would specify `requiredAgentAttributes` in the json for your request, and the tasks for that request would only be scheduled on agents that have all of those attributes.
+1. *Specific Agents -> For a certain request, only run it on agents with matching attributes* - In this case, you would specify `requiredSlaveAttributes` in the json for your request, and the tasks for that request would only be scheduled on agents that have all of those attributes.
 
-2. *Reserved Agents -> Reserve a agent for specific requests, only run those requests on those agents* - In your Singularity config, specify the `reserveAgentsWithAttributes` field. Singularity will then only schedule tasks on agents with those attributes if the request's required attributes also match those.
+2. *Reserved Agents -> Reserve a agent for specific requests, only run those requests on those agents* - In your Singularity config, specify the `reserveSlavesWithAttributes` field. Singularity will then only schedule tasks on agents with those attributes if the request's required attributes also match those.
 
-3. *Test Group of Agents -> Reserve a agent for specific requests, but don't restrict the requests to that agent* - In your Singularity config, specify the `reserveAgentsWithAttributes` field as in the previous example. But, in the request json, specify the `allowedAgentAttributes` field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved agent.
+3. *Test Group of Agents -> Reserve a agent for specific requests, but don't restrict the requests to that agent* - In your Singularity config, specify the `reserveSlavesWithAttributes` field as in the previous example. But, in the request json, specify the `allowedSlaveAttributes` field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved agent.
 
 #### Singularity Scheduler Dependencies
 The Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same ZooKeeper quorum utilized by Mesos masters and agents can be reused for Singularity.  

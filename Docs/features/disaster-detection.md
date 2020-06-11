@@ -13,8 +13,8 @@ Disaster detection can be enabled by adding `enabled: true` to the `disasterDete
 - `criticalOverdueTaskPortion` - If the portion of tasks taht are considered overdue is this fraction of the total running tasks in the cluster, a disaster is in progress. Defaults to `0.1` or one tenth of tasks are pending and overdue.
 
 **Lost Agents**
-- `checkLostAgents` - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from `ACTIVE` to `DEAD`. Agents that are gracefully decommissioned and removed won't trigger a disaster. (defaults to `true`)
-- `criticalLostAgentPortion` - If, during the past run of the poller, this portion of the total _active_ agents in the clsuter have transitioned from `ACTIVE` to `DEAD` a disaster is in progress. Defaults to `0.2` or one fifth of the agents in the cluster
+- `checkLostSlaves` - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from `ACTIVE` to `DEAD`. Agents that are gracefully decommissioned and removed won't trigger a disaster. (defaults to `true`)
+- `criticalLostSlavePortion` - If, during the past run of the poller, this portion of the total _active_ agents in the clsuter have transitioned from `ACTIVE` to `DEAD` a disaster is in progress. Defaults to `0.2` or one fifth of the agents in the cluster
 
 **Lost Tasks**
 - `checkLostTasks` - Use lost tasks as a metric for determining if a disaster is in progress (defaults to `true`)
