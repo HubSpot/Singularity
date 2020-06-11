@@ -77,6 +77,11 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
+  public void checkGlobalReadAuthorization(SingularityUser user) {
+    checkAdminAuthorization(user);
+  }
+
+  @Override
   public void checkReadAuthorization(SingularityUser user) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");

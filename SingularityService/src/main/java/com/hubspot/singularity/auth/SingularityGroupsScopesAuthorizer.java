@@ -63,6 +63,26 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
+  public void checkGlobalReadAuthorization(SingularityUser user) {
+    if (!authEnabled || isAdmin(user)) {
+      return;
+    }
+    Set<String> allowedReadGroups = new HashSet<>(
+      authConfiguration.getGlobalReadWriteGroups()
+    );
+    allowedReadGroups.addAll(authConfiguration.getGlobalReadOnlyGroups());
+
+    checkForbidden(user.isAuthenticated(), "Not Authenticated!");
+    checkForbiddenForGroups(
+      user,
+      allowedReadGroups,
+      "all",
+      SingularityAuthorizationScope.READ
+    );
+    checkReadScope(user);
+  }
+
+  @Override
   public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
