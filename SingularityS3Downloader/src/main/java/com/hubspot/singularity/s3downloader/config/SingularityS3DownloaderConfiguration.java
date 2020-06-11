@@ -28,6 +28,9 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
   @JsonProperty
   private int numDownloaderThreads = 5;
 
+  @JsonProperty
+  private int unixAcceptQueueSize = 128;
+
   public SingularityS3DownloaderConfiguration() {
     super(Optional.of("singularity-s3downloader.log"));
   }
@@ -64,10 +67,19 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
     this.numDownloaderThreads = numDownloaderThreads;
   }
 
+  public int getUnixAcceptQueueSize() {
+    return unixAcceptQueueSize;
+  }
+
+  public void setUnixAcceptQueueSize(int unixAcceptQueueSize) {
+    this.unixAcceptQueueSize = unixAcceptQueueSize;
+  }
+
   @Override
   public String toString() {
     return (
-      "SingularityS3DownloaderConfiguration [httpServerTimeout=" +
+      "SingularityS3DownloaderConfiguration{" +
+      "httpServerTimeout=" +
       httpServerTimeout +
       ", numEnqueueThreads=" +
       numEnqueueThreads +
@@ -75,7 +87,10 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
       millisToWaitForReEnqueue +
       ", numDownloaderThreads=" +
       numDownloaderThreads +
-      "]"
+      ", unixAcceptQueueSize=" +
+      unixAcceptQueueSize +
+      "} " +
+      super.toString()
     );
   }
 }

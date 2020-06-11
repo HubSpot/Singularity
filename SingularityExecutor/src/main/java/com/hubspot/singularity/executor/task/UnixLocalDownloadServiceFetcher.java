@@ -110,7 +110,7 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
     }
 
     for (CompletableFutureHolder future : futures) {
-      ContentResponse response = future.getReponse();
+      ContentResponse response = future.getResponse();
 
       task
         .getLog()
@@ -142,7 +142,7 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
       this.s3Artifact = s3Artifact;
     }
 
-    public ContentResponse getReponse() throws InterruptedException {
+    public ContentResponse getResponse() throws InterruptedException {
       try {
         return future.get();
       } catch (ExecutionException e) {

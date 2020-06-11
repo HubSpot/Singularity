@@ -88,7 +88,7 @@ public class HttpLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
     }
 
     for (FutureHolder future : futures) {
-      Response response = future.getReponse();
+      Response response = future.getResponse();
 
       task
         .getLog()
@@ -120,7 +120,7 @@ public class HttpLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
       this.s3Artifact = s3Artifact;
     }
 
-    public Response getReponse() throws InterruptedException {
+    public Response getResponse() throws InterruptedException {
       try {
         return future.get();
       } catch (ExecutionException e) {
