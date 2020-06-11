@@ -75,7 +75,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
 
     if (s3Configuration.getLocalDownloadSocket().isPresent()) {
       UnixSocketConnector unix = new UnixSocketConnector(server);
-      unix.setAcceptQueueSize(128);
+      unix.setAcceptQueueSize(configuration.getUnixAcceptQueueSize());
       unix.setUnixSocket(s3Configuration.getLocalDownloadSocket().get());
       server.addConnector(unix);
     }
