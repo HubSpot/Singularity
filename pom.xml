@@ -124,6 +124,36 @@
       </dependency>
 
       <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jffi</artifactId>
+        <version>1.2.17</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jnr-enxio</artifactId>
+        <version>0.20</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jnr-ffi</artifactId>
+        <version>2.1.9</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jnr-posix</artifactId>
+        <version>3.0.47</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.jnr</groupId>
+        <artifactId>jnr-unixsocket</artifactId>
+        <version>0.22</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client</artifactId>
         <version>1.23.0</version>
@@ -305,7 +335,7 @@
       <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
-        <version>8.4.0</version>
+        <version>8.16.0</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -330,6 +360,10 @@
           <exclusion>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -562,6 +596,18 @@
         <groupId>org.dmfs</groupId>
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-unixsocket</artifactId>
+        <version>${dep.jetty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-unixsocket-http</artifactId>
+        <version>${dep.jetty.version}</version>
       </dependency>
 
       <dependency>

@@ -46,11 +46,13 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Min(0)
   @JsonProperty
-  private int localDownloadHttpPort = 7070;
+  private Optional<Integer> localDownloadHttpPort = Optional.of(7070);
 
   @NotEmpty
   @JsonProperty
   private String localDownloadPath = "/download";
+
+  private Optional<String> localDownloadSocket = Optional.empty();
 
   @NotNull
   @JsonProperty
@@ -118,11 +120,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3DownloadTimeoutMillis = s3DownloadTimeoutMillis;
   }
 
-  public int getLocalDownloadHttpPort() {
+  public Optional<Integer> getLocalDownloadHttpPort() {
     return localDownloadHttpPort;
   }
 
-  public void setLocalDownloadHttpPort(int localDownloadHttpPort) {
+  public void setLocalDownloadHttpPort(Optional<Integer> localDownloadHttpPort) {
     this.localDownloadHttpPort = localDownloadHttpPort;
   }
 
@@ -174,6 +176,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setMetricsFilePath(Optional<String> metricsFilePath) {
     this.metricsFilePath = metricsFilePath;
+  }
+
+  public Optional<String> getLocalDownloadSocket() {
+    return localDownloadSocket;
+  }
+
+  public void setLocalDownloadSocket(Optional<String> localDownloadSocket) {
+    this.localDownloadSocket = localDownloadSocket;
   }
 
   @Override

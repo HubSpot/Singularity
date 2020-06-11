@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.task.LocalDownloadServiceFetcher;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -41,6 +42,10 @@ public class SingularityExecutorRunner {
       final SingularityExecutorRunner executorRunner = injector.getInstance(
         SingularityExecutorRunner.class
       );
+      final LocalDownloadServiceFetcher downloadServiceFetcher = injector.getInstance(
+        LocalDownloadServiceFetcher.class
+      );
+      downloadServiceFetcher.start();
 
       final Protos.Status driverStatus = executorRunner.run();
 
@@ -50,6 +55,7 @@ public class SingularityExecutorRunner {
         driverStatus
       );
 
+      downloadServiceFetcher.stop();
       stopLog();
 
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
