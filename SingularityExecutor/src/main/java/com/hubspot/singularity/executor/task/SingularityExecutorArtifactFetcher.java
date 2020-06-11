@@ -115,9 +115,10 @@ public class SingularityExecutorArtifactFetcher {
         task
           .getLog()
           .info(
-            "Fetching {} (S3) artifacts and {} (S3) artifact signatures",
+            "Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}",
             s3Artifacts.size(),
-            s3ArtifactsWithSignature.size()
+            s3ArtifactsWithSignature.size(),
+            localDownloadServiceFetcher.getDownloadPath()
           );
 
         try {

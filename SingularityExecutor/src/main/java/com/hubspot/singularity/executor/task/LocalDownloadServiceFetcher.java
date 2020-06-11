@@ -10,6 +10,8 @@ public interface LocalDownloadServiceFetcher {
   )
     throws InterruptedException;
 
+  String getDownloadPath();
+
   default void start() {}
 
   default void stop() {}

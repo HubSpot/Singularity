@@ -42,6 +42,11 @@ public class HttpLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
   }
 
   @Override
+  public String getDownloadPath() {
+    return localDownloadUri;
+  }
+
+  @Override
   public void downloadFiles(
     List<? extends S3Artifact> s3Artifacts,
     SingularityExecutorTask task
