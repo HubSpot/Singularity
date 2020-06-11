@@ -9,9 +9,9 @@ Some actions in Singularity now have the concept of expiration (as in, giving up
 - `/racks/rack/{rackId}/decommission`
 - `/racks/rack/{rackId}/freeze`
 - `/racks/rack/{rackId}/activate`
-- `/agents/agent/{agentId}/decommission`
-- `/agents/agent/{agentId}/freeze`
-- `/agents/agent/{agentId}/activate`
+- `/slaves/slave/{agentId}/decommission`
+- `/slaves/slave/{agentId}/freeze`
+- `/slaves/slave/{agentId}/activate`
 
 These URLs accept a JSON object with this format:
 

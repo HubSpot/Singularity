@@ -47,8 +47,8 @@ The output from the dev script will give you information about where the Singula
 Singularity uses the docker-maven-plugin for building its images. There are a few images related to Singularity:
 
 - `hubspot/singularityservice` - The Singularity scheduler itself
-- `hubspot/singularityexecutoragent` - A mesos agent with java/logrotate and the custom SingularityExecutor installed
-- `hubspot/singularitybase` - A base image for `singularityexecutoragent` that takes care of installing java/logrotate/etc on top of the mesos agent image (not built with maven plugin)
+- `hubspot/singularityexecutorslave` - A mesos agent with java/logrotate and the custom SingularityExecutor installed
+- `hubspot/singularitybase` - A base image for `singularityexecutorslave` that takes care of installing java/logrotate/etc on top of the mesos agent image (not built with maven plugin)
 
 ### Logs and Entering Containers
 
