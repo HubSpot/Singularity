@@ -57,6 +57,11 @@ public class UnixLocalDownloadServiceFetcher implements LocalDownloadServiceFetc
   }
 
   @Override
+  public String getDownloadPath() {
+    return localDownloadPath;
+  }
+
+  @Override
   public void downloadFiles(
     List<? extends S3Artifact> s3Artifacts,
     SingularityExecutorTask task
