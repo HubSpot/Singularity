@@ -224,12 +224,12 @@ const StatusPage = (props) => {
         </div>
         <div className="col-md-4 col-sm-12">
           <StatusList
-            header="Slaves"
+            header="Agents"
             data={[
               {
                 component: (className) => (
                   <Link to="slaves/active" className={className}>
-                    {status.activeSlaves} Active Slaves
+                    {status.activeSlaves} Active Agents
                   </Link>
                 ),
                 value: status.activeSlaves,
@@ -238,7 +238,7 @@ const StatusPage = (props) => {
               {
                 component: (className) => (
                   <Link to="slaves/decommission" className={className}>
-                    {status.decomissioningSlaves} Decommissioning Slaves
+                    {status.decomissioningSlaves} Decommissioning Agents
                   </Link>
                 ),
                 value: status.decomissioningSlaves,
@@ -247,7 +247,7 @@ const StatusPage = (props) => {
               {
                 component: (className) => (
                   <Link to="slaves/inactive" className={className}>
-                    {status.deadSlaves} Inactive Slaves
+                    {status.deadSlaves} Inactive Agents
                   </Link>
                 ),
                 className: status.deadSlaves > 0 ? 'color-warning' : '',
@@ -257,7 +257,7 @@ const StatusPage = (props) => {
               status.unknownSlaves ? {
                 component: (className) => (
                   <Link to="slaves/inactive" className={className}>
-                    {status.unknownSlaves} Unknown Slaves
+                    {status.unknownSlaves} Unknown Agents
                   </Link>
                 ),
                 className: 'color-warning',

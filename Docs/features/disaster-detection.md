@@ -4,7 +4,7 @@ Singularity can be configured to automatically detect 'disaster' scenarios based
 
 Disaster detection can be enabled by adding `enabled: true` to the `disasterDetection` portion of you Singularity config yaml. There are a number of other fields, explained below, that can control the behavior and thresholds for disaster detection.
 
-- `enabled` - set to `true` to start running disaster detection and collecting stats abotu lost tasks, lost slaves, and task lag
+- `enabled` - set to `true` to start running disaster detection and collecting stats abotu lost tasks, lost agents, and task lag
 - `runEveryMillis` - Run the poller on this interval (defaults to every `30` seconds)
 
 **Task Lag**
@@ -12,13 +12,13 @@ Disaster detection can be enabled by adding `enabled: true` to the `disasterDete
 - `criticalAvgTaskLagMillis` - If the average time past due for all pending tasks is greater than this, a disaster is in progress (likely due to a severe lack of resources in the cluster), defaults to `4 minutes (240000)`
 - `criticalOverdueTaskPortion` - If the portion of tasks taht are considered overdue is this fraction of the total running tasks in the cluster, a disaster is in progress. Defaults to `0.1` or one tenth of tasks are pending and overdue.
 
-**Lost Slaves**
-- `checkLostSlaves` - Use lost slaves as a metric for determining if a disaster is in progress. Disaster detection only counts slaves that have transitioned from `ACTIVE` to `DEAD`. Slaves that are gracefully decommissioned and removed won't trigger a disaster. (defaults to `true`)
-- `criticalLostSlavePortion` - If, during the past run of the poller, this portion of the total _active_ slaves in the clsuter have transitioned from `ACTIVE` to `DEAD` a disaster is in progress. Defaults to `0.2` or one fifth of the slaves in the cluster
+**Lost Agents**
+- `checkLostAgents` - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from `ACTIVE` to `DEAD`. Agents that are gracefully decommissioned and removed won't trigger a disaster. (defaults to `true`)
+- `criticalLostAgentPortion` - If, during the past run of the poller, this portion of the total _active_ agents in the clsuter have transitioned from `ACTIVE` to `DEAD` a disaster is in progress. Defaults to `0.2` or one fifth of the agents in the cluster
 
 **Lost Tasks**
 - `checkLostTasks` - Use lost tasks as a metric for determining if a disaster is in progress (defaults to `true`)
-- `lostTaskReasons` - Consider status updates matching these reasons towards the lost tasks for disaster detection. This is a list of mesos `Reason` enum values (`org.apache.mesos.Protos.TaskStatus.Reason`) and defaults to `[REASON_INVALID_OFFERS, REASON_SLAVE_UNKNOWN, REASON_SLAVE_REMOVED, REASON_SLAVE_RESTARTED, REASON_MASTER_DISCONNECTED]`
+- `lostTaskReasons` - Consider status updates matching these reasons towards the lost tasks for disaster detection. This is a list of mesos `Reason` enum values (`org.apache.mesos.Protos.TaskStatus.Reason`) and defaults to `[REASON_INVALID_OFFERS, REASON_AGENT_UNKNOWN, REASON_AGENT_REMOVED, REASON_AGENT_RESTARTED, REASON_MASTER_DISCONNECTED]`
 - `criticalLostTaskPortion` - If this portion of the total _active_ tasks in the cluster have transitioned to `LOST` for one of the above reasons in the last run of the poller, a disaster is in progress. Defaults to `0.2`
 
 ### Disabled Actions

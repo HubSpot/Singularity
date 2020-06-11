@@ -56,7 +56,7 @@ The `webhookAuth.authVerificationUrl` will be sent a `GET` with the `Authorizati
 
 - `enabled` - defaults to `false`. If set to `true`, auth will be enforced
 - `authenticators` - a list of authentication types to use. For webhook auth, this is simply `- WEBHOOK`
-- `adminGroups` - If a user is part of these groups they are allowed admin actions in Singularity (actions on slaves, view all requests, etc)
+- `adminGroups` - If a user is part of these groups they are allowed admin actions in Singularity (actions on agents, view all requests, etc)
 - `requiredGroups` - A user must be part of one at least of these groups in order to access Singularity
 - `jitaGroups` - Groups that can be allowed access to any SingularityRequest (but not admin actions)
 - `defaultReadOnlyGroups` - If read only groups are not set for a SingularityRequest, these groups are used for read access

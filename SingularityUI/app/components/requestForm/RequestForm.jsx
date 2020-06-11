@@ -292,7 +292,7 @@ const RequestForm = (props) => {
   const slavePlacement = (
     <SelectFormGroup
       id="slave-placement"
-      label="Slave Placement"
+      label="Agent Placement"
       value={getValue('slavePlacement') || ''}
       defaultValue=""
       required={INDEXED_FIELDS.slavePlacement.required}
@@ -484,7 +484,7 @@ const RequestForm = (props) => {
       id="required-slave-attributes"
       onChange={newValue => updateField('requiredSlaveAttributes', newValue)}
       value={getValue('requiredSlaveAttributes') || []}
-      label="Required slave attributes"
+      label="Required agent attributes"
       required={INDEXED_FIELDS.requiredSlaveAttributes.required}
       doFeedback={true}
       keyHeader="Attribute"
@@ -497,7 +497,7 @@ const RequestForm = (props) => {
       id="allowed-slave-attributes"
       onChange={newValue => updateField('allowedSlaveAttributes', newValue)}
       value={getValue('allowedSlaveAttributes') || []}
-      label="Allowed slave attributes"
+      label="Allowed agent attributes"
       required={INDEXED_FIELDS.allowedSlaveAttributes.required}
       doFeedback={true}
       keyHeader="Attribute"
@@ -545,7 +545,7 @@ const RequestForm = (props) => {
       id="max-per-offer"
       onChange={event => updateField('maxTasksPerOffer', event.target.value)}
       value={getValue('maxTasksPerOffer')}
-      label="Schedule at most this many tasks using a single offer form a single slave"
+      label="Schedule at most this many tasks using a single offer form a single agent"
       required={INDEXED_FIELDS.maxTasksPerOffer.required}
       feedback={feedback('maxTasksPerOffer')}
     />

@@ -57,7 +57,7 @@ To deploy using the web UI:
 - Artifacts:
     - ```https://github.com/HubSpot/singularity-test-service/releases/download/1.0/singularitytest-1.0-SNAPSHOT.jar```
     - ```https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml```
-- CPUs: 0.1 (in the default docker setup there is only one CPU resource in the slave, to test multiple deployments and scaling we'll use less CPU resources.)
+- CPUs: 0.1 (in the default docker setup there is only one CPU resource in the agent, to test multiple deployments and scaling we'll use less CPU resources.)
 
 The equivalent JSON which can be used instead of the web UI:
 
@@ -252,7 +252,7 @@ The equivalent JSON:
 }
 ```
 
-This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos slave host, so the service will be available again at [http://localhost:8080/](http://localhost:8080/). The command to run is already set in the docker image, so in this case it is not set in the deploy. Any command set in the deploy json will override the command for the docker container (i.e CMD in Dockerfile)
+This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos agent host, so the service will be available again at [http://localhost:8080/](http://localhost:8080/). The command to run is already set in the docker image, so in this case it is not set in the deploy. Any command set in the deploy json will override the command for the docker container (i.e CMD in Dockerfile)
 
 ## Docker Service with Bridge Networking and Dynamically Allocated Ports
 

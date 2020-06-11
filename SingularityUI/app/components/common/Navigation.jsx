@@ -22,7 +22,7 @@ function isActive(navbarPath, fragment) {
   if (navbarPath === 'admin') {
     return (
       fragment === 'racks' ||
-      fragment === 'slaves' ||
+      fragment === 'agents' ||
       fragment === 'webhooks' ||
       fragment === 'task-search'
     );
@@ -99,7 +99,7 @@ const Navigation = (props) => {
               </a>
               <ul className="dropdown-menu">
                 <li><Link to="/racks">Racks</Link></li>
-                <li><Link to="/slaves">Slaves</Link></li>
+                <li><Link to="/agents">Agents</Link></li>
                 <li><Link to="/utilization">Utilization</Link></li>
                 <li><Link to="/webhooks">Webhooks</Link></li>
                 <li><Link to="/disasters">Disasters</Link></li>

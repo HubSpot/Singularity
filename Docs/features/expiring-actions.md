@@ -5,13 +5,13 @@ Released in `0.4.9`
 ### Action expiration + additional action metadata
 Some actions in Singularity now have the concept of expiration (as in, giving up after a certain period of time). Corresponding endpoints have been updated to accept more information about action expiration and action metadata.
 
-#### Rack and slave operations
+#### Rack and agent operations
 - `/racks/rack/{rackId}/decommission`
 - `/racks/rack/{rackId}/freeze`
 - `/racks/rack/{rackId}/activate`
-- `/slaves/slave/{slaveId}/decommission`
-- `/slaves/slave/{slaveId}/freeze`
-- `/slaves/slave/{slaveId}/activate`
+- `/agents/agent/{agentId}/decommission`
+- `/agents/agent/{agentId}/freeze`
+- `/agents/agent/{agentId}/activate`
 
 These URLs accept a JSON object with this format:
 
