@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import java.util.Optional;
 
-@Schema(description = "Singularity's view of a Mesos slave")
+@Schema(description = "Singularity's view of a Mesos agent")
 public class SingularitySlave extends SingularityMachineAbstraction<SingularitySlave> {
   private final String host;
   private final String rackId;
@@ -59,7 +59,7 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     );
   }
 
-  @Schema(description = "Slave hostname")
+  @Schema(description = "agent hostname")
   public String getHost() {
     return host;
   }
@@ -89,17 +89,17 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     );
   }
 
-  @Schema(description = "Slave rack ID")
+  @Schema(description = "agent rack ID")
   public String getRackId() {
     return rackId;
   }
 
-  @Schema(description = "Mesos attributes associated with this slave")
+  @Schema(description = "Mesos attributes associated with this agent")
   public Map<String, String> getAttributes() {
     return attributes;
   }
 
-  @Schema(description = "Resources available to allocate on this slave")
+  @Schema(description = "Resources available to allocate on this agent")
   public Optional<MesosResourcesObject> getResources() {
     return resources;
   }

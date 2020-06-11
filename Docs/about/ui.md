@@ -32,11 +32,11 @@ The Singularity UI contains functionality for performing certain actions on regi
 - **Remove a deployed item**. All running tasks (e.g. the service instances if it is a web service) are terminated and the item is unregistered from Singularity. Historical logs are not removed and will be connected with the item if it is re-registered to Singularity at a later stage.
 - **Pause a deployed item**. All running tasks are stopped but the item is not removed. Deploys of paused items are not possible. Users can un-pause the item to restart its tasks and be able to deploy.
 - **Manually run** a *Scheduled Job* or *On-Demand* item
-- **Kill a running task**. Tasks corresponding to instances of *web service* or *worker* items will be re-started instantly (if possible) - likely in another slave. Scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the job item has *numRetriesOnFailure* set.
-- **Decommission a slave** which means that all tasks running in the specific slave will be migrated to other slaves.
-- **Decommission a *logical rack***, meaning that all slave hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the Mesos slave process to specify which rack the slave belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/Mesos-slave --attributes=rackid:us-east-1e).
+- **Kill a running task**. Tasks corresponding to instances of *web service* or *worker* items will be re-started instantly (if possible) - likely in another agent. Scheduled tasks will behave as if the task failed and may be rescheduled to run in the future depending on whether or not the job item has *numRetriesOnFailure* set.
+- **Decommission a agent** which means that all tasks running in the specific agent will be migrated to other agents.
+- **Decommission a *logical rack***, meaning that all agent hosts in the rack will be decommissioned. The *rackid* attribute can be used when running the Mesos agent process to specify which rack the agent belongs to. For example when running in AWS a rack could corresponds to the availability zone ( /usr/local/sbin/Mesos-agent --attributes=rackid:us-east-1e).
 
-![Singularity UI Slaves screen](../images/singularity_ui_slaves.png)
+![Singularity UI Agents screen](../images/singularity_ui_agents.png)
 
 ![Singularity UI Racks screen](../images/singularity_ui_racks.png)
 

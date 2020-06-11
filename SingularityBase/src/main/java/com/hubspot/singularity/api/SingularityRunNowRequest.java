@@ -195,12 +195,12 @@ public class SingularityRunNowRequest {
     return envOverrides;
   }
 
-  @Schema(description = "Override the required slave attributes for launched tasks")
+  @Schema(description = "Override the required agent attributes for launched tasks")
   public Map<String, String> getRequiredSlaveAttributeOverrides() {
     return requiredSlaveAttributeOverrides;
   }
 
-  @Schema(description = "Override the allowed slave attributes for launched tasks")
+  @Schema(description = "Override the allowed agent attributes for launched tasks")
   public Map<String, String> getAllowedSlaveAttributeOverrides() {
     return allowedSlaveAttributeOverrides;
   }

@@ -8,11 +8,11 @@ The SingularityClusterCoordinator module is a proxy service that implements the 
 When the proxy receives a request, it searches for key pieces of information to find out where it should route the request. Write operations or GETs for a specific task/request need to be routed to an individual cluster. The coordinator can route requests based on:
 
 - Request ID (and therefore task ID since it contains the request ID)
-- Slave/Agent ID or hostname
+- Agent/Agent ID or hostname
 - Request group ID
 - The `dataCenter` field on the SingularityRequest object (when creating new requests)
 
-For other GET requests that gather lists of data, such as the `/slaves` or `/tasks` endpoints, will aggregate the data from all configured clusters.
+For other GET requests that gather lists of data, such as the `/agents` or `/tasks` endpoints, will aggregate the data from all configured clusters.
 
 Beacuse of this, for most general operations, the SingularityUI or SingularityClient can be pointed at the proxy to seamlessly interact with multiple installations of Singularity.
 
@@ -38,7 +38,7 @@ The following fields inform defaults or behavior of the UI (which can be served 
 | `uiConfiguration` | | mimics the settings in the [SingularityService UI Configuration](../reference/configuration.md#ui-configuration) | `UIConfiguration` |
 | `defaultCpus` | 1 | Number of CPUs to request for a task if none are specified | `int` |
 | `defaultMemory` | 64 | MB of memory to request for a task if none is specified | `int` |
-| `slaveHttpPort` | 5051 | The port to talk to slaves on | `int` |
+| `agentHttpPort` | 5051 | The port to talk to agents on | `int` |
 | `bounceExpirationMinutes` | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | `int` |
 | `healthcheckIntervalSeconds` | 5 | Default amount of time to wait in between attempting task healthchecks | `int` |
 | `healthcheckTimeoutSeconds` | 5 | Default amount of time to wait for healthchecks to return before considering them failed | `int` | 

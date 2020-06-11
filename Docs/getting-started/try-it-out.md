@@ -12,7 +12,7 @@ Run `docker-compose pull` first to get all of the needed images. *Note: This may
 
 Then simply run `docker-compose up` and it will start containers for...
 - mesos master
-- mesos slave (docker/mesos containerizers enabled)
+- mesos agent (docker/mesos containerizers enabled)
 - zookeeper
 - Singularity
 - [Baragon Service](https://github.com/HubSpot/Baragon) for load balancer management

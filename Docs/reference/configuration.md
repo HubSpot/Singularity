@@ -20,7 +20,7 @@ Singularity (Service) is configured by DropWizard via a YAML file referenced on 
     - [Framework](#framework)
     - [Resource Limits](#resource-limits)
     - [Racks](#racks)
-    - [Slaves](#slaves)
+    - [Agents](#agents)
   - [Network Configuration](#network-configuration)
   - [Database](#database)
     - [History Purging](#history-purging)
@@ -40,11 +40,11 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
-| defaultSlavePlacement | GREEDY | See [Slave Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]
+| defaultAgentPlacement | GREEDY | See [Agent Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_AGENTS]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
 | deltaAfterWhichTasksAreLateMillis | 30000 (30 seconds) | The amount of time after a task's schedule time that Singularity will classify it (in state API and dashboard) as a late task | long | 
 | deployHealthyBySeconds | 120 | Default amount of time to allow pending deploys to run for before transitioning them into active deploys. If more than this time passes before a deploy can be considered healthy (all of its tasks either make it to TASK_RUNNING or pass healthchecks), then the deploy will be rejected | long |
-| killNonLongRunningTasksInCleanupAfterSeconds | 86400 (1 day) | Kills scheduled and one-off tasks after this amount of time if they have been scheduled for cleaning (a new deploy succeeds, the underlying slave is decomissioned) | long | 
+| killNonLongRunningTasksInCleanupAfterSeconds | 86400 (1 day) | Kills scheduled and one-off tasks after this amount of time if they have been scheduled for cleaning (a new deploy succeeds, the underlying agent is decomissioned) | long | 
 | hostname | null | Hostname of this Singularity instance | string |
 
 #### Healthchecks and New Task Checks ####
@@ -148,12 +148,12 @@ These settings are less likely to be changed, but were included in the configura
 | deleteTasksFromZkWhenNoDatabaseAfterHours | 168 (7 days) | Delete old tasks from zk after this amount of time if we are not using a database | long |
 | maxStaleTasksPerRequestInZkWhenNoDatabase | infinite (disabled) | Delete oldest tasks from zk when there are more than this number for a given request, if we're not already persisting them to a database | int |
 | taskPersistAfterStartupBufferMillis | 60000ms (1 min) | Wait this long after a task starts before persisting it in history | long |
-| deleteDeadSlavesAfterHours | 168 (7 days) | Remove dead slaves from the list after this amount of time | long |
+| deleteDeadAgentsAfterHours | 168 (7 days) | Remove dead agents from the list after this amount of time | long |
 | deleteUndeliverableWebhooksAfterHours | 168 (7 days) | Delete (and stop retrying) failed webhooks after this amount of time | long |
 | waitForListeners | true | If true, the event system waits for all listeners having processed an event. | boolean |
 | warnIfScheduledJobIsRunningForAtLeastMillis | 86400000 (1 day) | Warn if a scheduled job has been running for this long | long |
 | warnIfScheduledJobIsRunningPastNextRunPct | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | int |
-| pendingDeployHoldTaskDuringDecommissionMillis | 600000ms (10 minutes) | Don't kill tasks on a decommissioning slave that are part of a pending deploy for this amount of time to allow the deploy to complete | long |
+| pendingDeployHoldTaskDuringDecommissionMillis | 600000ms (10 minutes) | Don't kill tasks on a decommissioning agent that are part of a pending deploy for this amount of time to allow the deploy to complete | long |
 | defaultBounceExpirationMinutes | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | int |
 | cacheOffers | false | Hold on to unused offers for up to `cacheOffersForMillis` | boolean |
 | cacheOffersForMillis | If `cacheOffers` is true, decline offers after this amount of time if they ahve not been used | long |
@@ -189,23 +189,23 @@ These settings should live under the "mesos" field inside the root configuration
 #### Racks ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| rackIdAttributeKey | rackid | The Mesos slave attribute to denote a rack | string |
-| defaultRackId | DEFAULT | The rackId to assign to a slave if no rackId attribute value is present | string | 
+| rackIdAttributeKey | rackid | The Mesos agent attribute to denote a rack | string |
+| defaultRackId | DEFAULT | The rackId to assign to a agent if no rackId attribute value is present | string | 
 
-#### Slaves ####
+#### Agents ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| slaveHttpPort | 5051 | The port to talk to slaves on | int |
-| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) |
+| agentHttpPort | 5051 | The port to talk to agents on | int |
+| agentHttpsPort | absent | The HTTPS port to talk to agents on | Integer (Optional) |
 
 #### Offers ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| allocatedResourceWeight | 0.5 | This portion of an offer's score depends on the amount of resources currently allocated by mesos on the mesos slave/agent | double |
-| inUseResourceWeight | 0.5 | This portion of an offer's score depends on the currently used resources on a mesos slave/agent as reported by the slave statistics endpoint | double |
-| cpuWeight | 0.4 | The weight the slave's cpu carries when scoring an offer | double |
-| memWeight | 0.4 | The weight the slave's memory carries when scoring an offer | double |
-| diskWeight | 0.2 | The weight the slave's disk carries when scoring an offer | double |
+| allocatedResourceWeight | 0.5 | This portion of an offer's score depends on the amount of resources currently allocated by mesos on the mesos agent/agent | double |
+| inUseResourceWeight | 0.5 | This portion of an offer's score depends on the currently used resources on a mesos agent/agent as reported by the agent statistics endpoint | double |
+| cpuWeight | 0.4 | The weight the agent's cpu carries when scoring an offer | double |
+| memWeight | 0.4 | The weight the agent's memory carries when scoring an offer | double |
+| diskWeight | 0.2 | The weight the agent's disk carries when scoring an offer | double |
 
 ## Database ##
 

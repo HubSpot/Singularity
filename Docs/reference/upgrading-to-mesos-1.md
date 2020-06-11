@@ -6,7 +6,7 @@ Singularity is moving to mesos 1.x, as well as moving to use of the new schedule
 ### Upgrade Order
 
 - Upgrade the mesos masters
-- Upgrade the mesos slaves
+- Upgrade the mesos agents
 - Upgrade the scheduler
 - Upgrade the Executors
 
@@ -30,7 +30,7 @@ mesos:
 
 ### Recommended Version and Future Version Bumps
 
-We have targeted a move to mesos 1.1.2 To being with. In versions 1.2 and beyond, the mesos master will no longer accept calls from 0.x frameworks. With Singularity previously built on 0.28, we wanted to give a smoother upgrade path for users where the older scheduler or slaves/agents could still temporarily be registered with the newer mesos master.
+We have targeted a move to mesos 1.1.2 To being with. In versions 1.2 and beyond, the mesos master will no longer accept calls from 0.x frameworks. With Singularity previously built on 0.28, we wanted to give a smoother upgrade path for users where the older scheduler or agents/agents could still temporarily be registered with the newer mesos master.
 
 The SingularityService module now uses [mesos-rxjava](https://github.com/mesosphere/mesos-rxjava) for communication with the mesos master. This library is meant to be compatible with all mesos 1.x versions. In future releases, the executor will also be modified to use this library. So, mesos version bumps i the 1.x family will be much easier to roll out due to the fact that no nativelibrary bindings will be required and the only version we will be updating will be the mesos package containing the protobufs.
 
@@ -38,5 +38,5 @@ The SingularityService module now uses [mesos-rxjava](https://github.com/mesosph
 
 There are a few more flags and deprecated fields to be aware of when upgrading to mesos 1.x
 
-- `--work_dir` flag for slaves/agents is now required. The process will not start without it set
-- Internally in Singularity we have started the Slave -> Agent rename. However all UIs and endpoints still use the previous terminology. We have created a few POJO wrappers for backwards compatibility so any `slaveId` fields written to json stored in zookeeper can still be read into the new `agentId` field and vice versa.
+- `--work_dir` flag for agents/agents is now required. The process will not start without it set
+- Internally in Singularity we have started the Agent -> Agent rename. However all UIs and endpoints still use the previous terminology. We have created a few POJO wrappers for backwards compatibility so any `agentId` fields written to json stored in zookeeper can still be read into the new `agentId` field and vice versa.

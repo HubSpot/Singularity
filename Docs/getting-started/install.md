@@ -109,6 +109,6 @@ It's a good idea to run a migration each time you upgrade to a new version of Si
 
 Once started the Singularity UI will be available at http://(host):7099/singularity
 
-### 8. Install extra Singularity tools on Mesos slaves (optional)
+### 8. Install extra Singularity tools on Mesos agents (optional)
 
-Singularity ships with a custom Mesos executor and extra background jobs to make running tasks easier. You can find more info about the slave extras [here](../reference/slave-extras.md).
+Singularity ships with a custom Mesos executor and extra background jobs to make running tasks easier. You can find more info about the agent extras [here](../reference/agent-extras.md).

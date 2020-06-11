@@ -1,6 +1,6 @@
 ### Shell Commands
 
-As of release `0.4.6`, when using the SingularityExecutor you have the ability to run pre-configured shell commands from the ui, eliminating the need to ssh to the mesos-slave.
+As of release `0.4.6`, when using the SingularityExecutor you have the ability to run pre-configured shell commands from the ui, eliminating the need to ssh to the mesos-agent.
 
 The following example shows how to configure SingularityService and the SingularityExecutor for the simple command `lsof`.
 
