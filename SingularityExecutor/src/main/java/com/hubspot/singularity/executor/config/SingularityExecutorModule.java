@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.google.inject.AbstractModule;
@@ -11,7 +12,11 @@ import com.hubspot.singularity.executor.handlebars.EscapeNewLinesAndQuotesHelper
 import com.hubspot.singularity.executor.handlebars.IfHasNewLinesOrBackticksHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
 import com.hubspot.singularity.executor.handlebars.ShellQuoteHelper;
+import com.hubspot.singularity.executor.task.HttpLocalDownloadServiceFetcher;
+import com.hubspot.singularity.executor.task.LocalDownloadServiceFetcher;
+import com.hubspot.singularity.executor.task.UnixLocalDownloadServiceFetcher;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.extra.ThrottleRequestFilter;
@@ -22,6 +27,8 @@ import com.spotify.docker.client.messages.RegistryAuth;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.unixsocket.client.HttpClientTransportOverUnixSockets;
 
 public class SingularityExecutorModule extends AbstractModule {
   public static final String RUNNER_TEMPLATE = "runner.sh";
@@ -30,8 +37,6 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String LOGROTATE_HOURLY_TEMPLATE = "logrotate.hourly.conf";
   public static final String LOGROTATE_CRON_TEMPLATE = "logrotate.cron";
   public static final String DOCKER_TEMPLATE = "docker.sh";
-  public static final String LOCAL_DOWNLOAD_HTTP_CLIENT =
-    "SingularityExecutorModule.local.download.http.client";
   public static final String ALREADY_SHUT_DOWN = "already.shut.down";
 
   @Override
@@ -39,22 +44,44 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(LOCAL_DOWNLOAD_HTTP_CLIENT)
-  public AsyncHttpClient providesHttpClient(
-    SingularityExecutorConfiguration configuration
+  public LocalDownloadServiceFetcher provideDownloadFetcher(
+    SingularityS3Configuration s3Configuration,
+    SingularityExecutorConfiguration executorConfiguration,
+    ObjectMapper objectMapper
   ) {
-    AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
-    configBldr.setRequestTimeout(
-      (int) configuration.getLocalDownloadServiceTimeoutMillis()
-    );
-    configBldr.setPooledConnectionIdleTimeout(
-      (int) configuration.getLocalDownloadServiceTimeoutMillis()
-    );
-    configBldr.addRequestFilter(
-      new ThrottleRequestFilter(configuration.getLocalDownloadServiceMaxConnections())
-    );
-
-    return new AsyncHttpClient(configBldr.build());
+    if (s3Configuration.getLocalDownloadSocket().isPresent()) {
+      HttpClient httpClient = new HttpClient(
+        new HttpClientTransportOverUnixSockets(
+          s3Configuration.getLocalDownloadSocket().get()
+        ),
+        null
+      );
+      return new UnixLocalDownloadServiceFetcher(
+        httpClient,
+        objectMapper,
+        executorConfiguration,
+        s3Configuration
+      );
+    } else {
+      AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
+      configBldr.setRequestTimeout(
+        (int) executorConfiguration.getLocalDownloadServiceTimeoutMillis()
+      );
+      configBldr.setPooledConnectionIdleTimeout(
+        (int) executorConfiguration.getLocalDownloadServiceTimeoutMillis()
+      );
+      configBldr.addRequestFilter(
+        new ThrottleRequestFilter(
+          executorConfiguration.getLocalDownloadServiceMaxConnections()
+        )
+      );
+      return new HttpLocalDownloadServiceFetcher(
+        new AsyncHttpClient(configBldr.build()),
+        objectMapper,
+        executorConfiguration,
+        s3Configuration
+      );
+    }
   }
 
   @Provides
