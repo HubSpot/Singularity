@@ -37,10 +37,9 @@ public class SingularityExecutorTaskBuilder {
 
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final SingularityS3Configuration s3Configuration;
   private final SingularityExecutorArtifactFetcher artifactFetcher;
   private final DockerUtils dockerUtils;
-
+  private final SingularityS3Configuration s3Configuration;
   private final SingularityExecutorLogging executorLogging;
   private final ExecutorUtils executorUtils;
 
@@ -136,8 +135,8 @@ public class SingularityExecutorTaskBuilder {
       log,
       jsonObjectFileHelper,
       dockerUtils,
-      s3Configuration,
-      jsonObjectMapper
+      jsonObjectMapper,
+      s3Configuration
     );
   }
 

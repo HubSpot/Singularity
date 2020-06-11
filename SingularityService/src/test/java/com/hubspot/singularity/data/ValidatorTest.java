@@ -112,13 +112,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     Assertions.assertThrows(
       WebApplicationException.class,
-      () ->
-        validator.checkDeploy(
-          singularityRequest,
-          singularityDeploy,
-          Collections.emptyList(),
-          Collections.emptyList()
-        )
+      () -> validator.checkDeploy(singularityRequest, singularityDeploy)
     );
   }
 
@@ -137,12 +131,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     boolean thrown = false;
     try {
-      validator.checkDeploy(
-        singularityRequest,
-        singularityDeploy,
-        Collections.emptyList(),
-        Collections.emptyList()
-      );
+      validator.checkDeploy(singularityRequest, singularityDeploy);
     } catch (WebApplicationException exn) {
       Assertions.assertTrue(
         ((String) exn.getResponse().getEntity()).contains("[a-zA-Z0-9_.]")
@@ -167,13 +156,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     Assertions.assertThrows(
       WebApplicationException.class,
-      () ->
-        validator.checkDeploy(
-          request,
-          deploy,
-          Collections.emptyList(),
-          Collections.emptyList()
-        )
+      () -> validator.checkDeploy(request, deploy)
     );
   }
 
@@ -318,12 +301,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       .setRunImmediately(runNowRequest)
       .build();
 
-    SingularityDeploy result = validator.checkDeploy(
-      request,
-      deploy,
-      Collections.emptyList(),
-      Collections.emptyList()
-    );
+    SingularityDeploy result = validator.checkDeploy(request, deploy);
     Assertions.assertTrue(result.getRunImmediately().isPresent());
     Assertions.assertTrue(result.getRunImmediately().get().getRunId().isPresent());
   }
@@ -349,13 +327,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     Assertions.assertThrows(
       WebApplicationException.class,
-      () ->
-        validator.checkDeploy(
-          request,
-          deploy,
-          Collections.emptyList(),
-          Collections.emptyList()
-        )
+      () -> validator.checkDeploy(request, deploy)
     );
   }
 
@@ -378,13 +350,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     Assertions.assertThrows(
       WebApplicationException.class,
-      () ->
-        validator.checkDeploy(
-          request,
-          deploy,
-          Collections.emptyList(),
-          Collections.emptyList()
-        )
+      () -> validator.checkDeploy(request, deploy)
     );
   }
 
@@ -430,12 +396,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     boolean thrown = false;
     try {
-      validator.checkDeploy(
-        request,
-        deploy,
-        Collections.emptyList(),
-        Collections.emptyList()
-      );
+      validator.checkDeploy(request, deploy);
     } catch (WebApplicationException exn) {
       thrown = true;
       Assertions.assertTrue(
@@ -474,12 +435,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
     boolean thrown = false;
     try {
-      validator.checkDeploy(
-        request,
-        deploy,
-        Collections.emptyList(),
-        Collections.emptyList()
-      );
+      validator.checkDeploy(request, deploy);
     } catch (WebApplicationException exn) {
       thrown = true;
       Assertions.assertTrue(

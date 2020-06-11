@@ -422,6 +422,12 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("crashLoop")
   private CrashLoopConfiguration crashLoopConfiguration = new CrashLoopConfiguration();
 
+  // If true, only allow artifacts with an attached signature. This disallows embedded + external artifacts, only allowing lists + s3
+  private boolean enforceSignedArtifacts = false;
+
+  // If not empty, disallow docker images in deploys unless they are in this list
+  private Set<String> validDockerRegistries = Collections.emptySet();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1862,5 +1868,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReconcileLaunchAfterMillis(long reconcileLaunchAfterMillis) {
     this.reconcileLaunchAfterMillis = reconcileLaunchAfterMillis;
+  }
+
+  public boolean isEnforceSignedArtifacts() {
+    return enforceSignedArtifacts;
+  }
+
+  public void setEnforceSignedArtifacts(boolean enforceSignedArtifacts) {
+    this.enforceSignedArtifacts = enforceSignedArtifacts;
+  }
+
+  public Set<String> getValidDockerRegistries() {
+    return validDockerRegistries;
+  }
+
+  public void setValidDockerRegistries(Set<String> validDockerRegistries) {
+    this.validDockerRegistries = validDockerRegistries;
   }
 }

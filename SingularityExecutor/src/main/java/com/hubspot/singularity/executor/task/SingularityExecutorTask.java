@@ -54,8 +54,8 @@ public class SingularityExecutorTask {
     Logger log,
     JsonObjectFileHelper jsonObjectFileHelper,
     DockerUtils dockerUtils,
-    SingularityS3Configuration s3Configuration,
-    ObjectMapper objectMapper
+    ObjectMapper objectMapper,
+    SingularityS3Configuration s3Configuration
   ) {
     this.driver = driver;
     this.taskInfo = taskInfo;

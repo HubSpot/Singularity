@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
+import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -30,13 +31,11 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.WebExceptions;
@@ -50,6 +49,7 @@ import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.helpers.ImageName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -105,6 +105,8 @@ public class SingularityValidator {
   private final boolean createDeployIds;
   private final int deployIdLength;
   private final boolean allowBounceToSameHost;
+  private final boolean enforceSignedArtifacts;
+  private final Set<String> validDockerRegistries;
   private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
@@ -170,9 +172,10 @@ public class SingularityValidator {
     this.defaultHealthcheckResponseTimeoutSeconds =
       configuration.getHealthcheckTimeoutSeconds();
     this.maxRunNowTaskLaunchDelay = configuration.getMaxRunNowTaskLaunchDelayDays();
-
     this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
     this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
+    this.enforceSignedArtifacts = configuration.isEnforceSignedArtifacts();
+    this.validDockerRegistries = configuration.getValidDockerRegistries();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -384,9 +387,7 @@ public class SingularityValidator {
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // false positive on deployId which is already checked for null
   public SingularityDeploy checkDeploy(
     SingularityRequest request,
-    SingularityDeploy deploy,
-    List<SingularityTaskId> activeTasks,
-    List<SingularityPendingTaskId> pendingTasks
+    SingularityDeploy deploy
   ) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
@@ -638,20 +639,69 @@ public class SingularityValidator {
       }
     }
 
+    if (enforceSignedArtifacts) {
+      checkBadRequest(
+        !deploy.getUris().isPresent() || deploy.getUris().get().isEmpty(),
+        "Only signed artifacts are allowed, cannot specify artifact uri"
+      );
+      if (deploy.getExecutorData().isPresent()) {
+        ExecutorData executorData = deploy.getExecutorData().get();
+        checkBadRequest(
+          executorData.getEmbeddedArtifacts().isEmpty(),
+          "Only signed artifacts are allowed, cannot specify embedded artifacts"
+        );
+        checkBadRequest(
+          executorData.getExternalArtifacts().isEmpty(),
+          "Only signed artifacts are allowed, cannot specify external artifacts"
+        );
+        checkBadRequest(
+          executorData
+            .getS3Artifacts()
+            .stream()
+            .noneMatch(
+              a -> {
+                if (!executorData.getS3ArtifactSignatures().isPresent()) {
+                  return false;
+                } else {
+                  return executorData
+                    .getS3ArtifactSignatures()
+                    .get()
+                    .stream()
+                    .anyMatch(s -> s.getArtifactFilename().equals(a.getFilename()));
+                }
+              }
+            ),
+          "Only signed artifacts are allowed"
+        );
+      }
+    }
+
+    if (!validDockerRegistries.isEmpty()) {
+      if (
+        deploy.getContainerInfo().isPresent() &&
+        deploy.getContainerInfo().get().getDocker().isPresent()
+      ) {
+        ImageName image = new ImageName(
+          deploy.getContainerInfo().get().getDocker().get().getImage()
+        );
+        checkBadRequest(
+          validDockerRegistries.contains(image.getRegistry()),
+          String.format(
+            "%s does not point to an allowed docker registry. Must be one of: %s",
+            image,
+            validDockerRegistries
+          )
+        );
+      }
+    }
+
     checkBadRequest(
       deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId),
       "Can not deploy a deploy that has already been deployed"
     );
 
     if (deploy.getRunImmediately().isPresent()) {
-      deploy =
-        checkImmediateRunDeploy(
-          request,
-          deploy,
-          deploy.getRunImmediately().get(),
-          activeTasks,
-          pendingTasks
-        );
+      deploy = checkImmediateRunDeploy(request, deploy, deploy.getRunImmediately().get());
     }
 
     if (request.isDeployable()) {
@@ -664,9 +714,7 @@ public class SingularityValidator {
   private SingularityDeploy checkImmediateRunDeploy(
     SingularityRequest request,
     SingularityDeploy deploy,
-    SingularityRunNowRequest runNowRequest,
-    List<SingularityTaskId> activeTasks,
-    List<SingularityPendingTaskId> pendingTasks
+    SingularityRunNowRequest runNowRequest
   ) {
     if (!request.isScheduled() && !request.isOneOff()) {
       throw badRequest(

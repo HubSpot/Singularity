@@ -115,7 +115,10 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       );
     task
       .getArtifactVerifier()
-      .checkSignatures(executorData.getS3ArtifactSignaturesOrEmpty());
+      .checkSignatures(
+        executorData.getS3Artifacts(),
+        executorData.getS3ArtifactSignaturesOrEmpty()
+      );
 
     List<ArtifactList> artifactLists = new ArrayList<>();
     artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3Artifacts()));
@@ -157,7 +160,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
           s3ArtifactSignatures,
           externalArtifacts
         );
-      task.getArtifactVerifier().checkSignatures(s3ArtifactSignatures);
+      task.getArtifactVerifier().checkSignatures(s3Artifacts, s3ArtifactSignatures);
     }
 
     ProcessBuilder processBuilder = buildProcessBuilder(

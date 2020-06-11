@@ -201,13 +201,7 @@ public class DeployResource extends AbstractRequestResource {
       );
     }
 
-    deploy =
-      validator.checkDeploy(
-        request,
-        deploy,
-        taskManager.getActiveTaskIdsForRequest(requestId),
-        taskManager.getPendingTaskIdsForRequest(requestId)
-      );
+    deploy = validator.checkDeploy(request, deploy);
 
     final long now = System.currentTimeMillis();
 

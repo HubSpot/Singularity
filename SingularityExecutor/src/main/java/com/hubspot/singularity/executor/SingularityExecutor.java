@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
+import com.hubspot.singularity.executor.task.ArtifactVerificationException;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.executor.utils.MesosUtils;
@@ -128,11 +129,13 @@ public class SingularityExecutor implements Executor {
       }
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
-
+      TaskState state = t instanceof ArtifactVerificationException
+        ? TaskState.TASK_FAILED
+        : TaskState.TASK_LOST;
       executorUtils.sendStatusUpdate(
         executorDriver,
         taskInfo.getTaskId(),
-        TaskState.TASK_LOST,
+        state,
         String.format(
           "Unexpected exception while launching task %s - %s",
           taskId,
