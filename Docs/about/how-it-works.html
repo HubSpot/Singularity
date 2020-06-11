@@ -51,7 +51,7 @@
         data-chapter-title="How It Works"
         data-filepath="Docs/about/how-it-works.md"
         data-basepath="../.."
-        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
+        data-revision="Thu Jun 11 2020 13:37:48 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -420,15 +420,7 @@
     
         <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
             
-                
-                    <a href="../../Docs/features/cluster-coordinator.html">
-                
-                        <i class="fa fa-check"></i>
-                        
-                            <b>5.7.</b>
-                        
-                        Cluster Coordinator
-                    </a>
+            <span><b>5.7.</b> Cluster Coordinator</span>
             
             
         </li>
@@ -685,21 +677,21 @@
 <p>When a service or worker instance fails in a new deploy, the Singularity scheduler will rollback all instances to the version running before the deploy, keeping the deploys always consistent. After the scheduler makes sure that a Mesos task (corresponding to a service instance) has entered the TASK_RUNNING state it will use the provided health check URL and the specified health check timeout settings to perform health checks. If health checks go well, the next step is to perform load balancing of service instances. Load balancing is attempted only if the corresponding deployable item has been defined to be <em>loadBalanced</em>. To perform load balancing between service instances, Singularity supports a rich integration with a specific Load Balancer API. Singularity will post requests to the Load Balancer API to add the newly deployed service instances and to remove those that were previously running. Check <a href="../development/load-balancer-integration.html">Integration with Load Balancers</a> to learn more. Singularity also provides generic webhooks which allow third party integrations, which can be registered to follow request, deploy, or task updates.</p>
 <p><a name="placement"></a></p>
 <h4 id="agent-placement">Agent Placement</h4>
-<p>When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or <code>AgentPlacement</code> in Singularity terms. Available placement strategies are:</p>
+<p>When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or <code>placement</code> in Singularity terms. Available placement strategies are:</p>
 <ul>
 <li><code>GREEDY</code>: uses whatever agents are available</li>
 <li><code>SEPARATE_BY_DEPLOY</code>/<code>SEPARATE</code>: ensures no 2 instances / tasks of the same request <em>and</em> deploy id are ever placed on the same agent</li>
 <li><code>SEPARATE_BY_REQUEST</code>: ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host</li>
 <li><code>OPTIMISTIC</code>: attempts to spread out tasks but may schedule some on the same agent</li>
-<li><code>SPREAD_ALL_AGENTS</code>: ensure the task is running on every agent. Some behaviour as <code>SEPARATE_BY_DEPLOY</code> but with autoscaling the Request to keep instances equal number of agents. </li>
+<li><code>SPREAD_ALL_SLAVES</code>: ensure the task is running on every agent. Some behaviour as <code>SEPARATE_BY_DEPLOY</code> but with autoscaling the Request to keep instances equal number of agents. </li>
 </ul>
 <p>Agent placement can also be impacted by agent attributes. There are three scenarios that Singularity supports:</p>
 <ol>
-<li><p><em>Specific Agents -&gt; For a certain request, only run it on agents with matching attributes</em> - In this case, you would specify <code>requiredAgentAttributes</code> in the json for your request, and the tasks for that request would only be scheduled on agents that have all of those attributes.</p>
+<li><p><em>Specific Agents -&gt; For a certain request, only run it on agents with matching attributes</em> - In this case, you would specify <code>requiredSlaveAttributes</code> in the json for your request, and the tasks for that request would only be scheduled on agents that have all of those attributes.</p>
 </li>
-<li><p><em>Reserved Agents -&gt; Reserve a agent for specific requests, only run those requests on those agents</em> - In your Singularity config, specify the <code>reserveAgentsWithAttributes</code> field. Singularity will then only schedule tasks on agents with those attributes if the request&apos;s required attributes also match those.</p>
+<li><p><em>Reserved Agents -&gt; Reserve a agent for specific requests, only run those requests on those agents</em> - In your Singularity config, specify the <code>reserveSlavesWithAttributes</code> field. Singularity will then only schedule tasks on agents with those attributes if the request&apos;s required attributes also match those.</p>
 </li>
-<li><p><em>Test Group of Agents -&gt; Reserve a agent for specific requests, but don&apos;t restrict the requests to that agent</em> - In your Singularity config, specify the <code>reserveAgentsWithAttributes</code> field as in the previous example. But, in the request json, specify the <code>allowedAgentAttributes</code> field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved agent.</p>
+<li><p><em>Test Group of Agents -&gt; Reserve a agent for specific requests, but don&apos;t restrict the requests to that agent</em> - In your Singularity config, specify the <code>reserveSlavesWithAttributes</code> field as in the previous example. But, in the request json, specify the <code>allowedSlaveAttributes</code> field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved agent.</p>
 </li>
 </ol>
 <h4 id="singularity-scheduler-dependencies">Singularity Scheduler Dependencies</h4>

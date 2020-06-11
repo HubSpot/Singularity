@@ -51,7 +51,7 @@
         data-chapter-title="Developing Using Docker"
         data-filepath="Docs/development/developing-with-docker.md"
         data-basepath="../.."
-        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
+        data-revision="Thu Jun 11 2020 13:37:48 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -420,15 +420,7 @@
     
         <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
             
-                
-                    <a href="../../Docs/features/cluster-coordinator.html">
-                
-                        <i class="fa fa-check"></i>
-                        
-                            <b>5.7.</b>
-                        
-                        Cluster Coordinator
-                    </a>
+            <span><b>5.7.</b> Cluster Coordinator</span>
             
             
         </li>
@@ -692,8 +684,8 @@
 <p>Singularity uses the docker-maven-plugin for building its images. There are a few images related to Singularity:</p>
 <ul>
 <li><code>hubspot/singularityservice</code> - The Singularity scheduler itself</li>
-<li><code>hubspot/singularityexecutoragent</code> - A mesos agent with java/logrotate and the custom SingularityExecutor installed</li>
-<li><code>hubspot/singularitybase</code> - A base image for <code>singularityexecutoragent</code> that takes care of installing java/logrotate/etc on top of the mesos agent image (not built with maven plugin)</li>
+<li><code>hubspot/singularityexecutorslave</code> - A mesos agent with java/logrotate and the custom SingularityExecutor installed</li>
+<li><code>hubspot/singularitybase</code> - A base image for <code>singularityexecutorslave</code> that takes care of installing java/logrotate/etc on top of the mesos agent image (not built with maven plugin)</li>
 </ul>
 <h3 id="logs-and-entering-containers">Logs and Entering Containers</h3>
 <p>If you are not attached to the docker-compose process, you can check the output of your containers using <code>docker logs</code>. Start by checking <code>docker ps</code> to see what containers are running. Generally they will have names like <code>singularity_(process name)</code>. From there you can run <code>docker logs (name)</code> to see the stdout for that container.</p>

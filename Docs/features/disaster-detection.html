@@ -35,7 +35,7 @@
         
     
     
-    <link rel="next" href="../../Docs/features/cluster-coordinator.html" />
+    <link rel="next" href="../../Docs/features/mesos-1.html" />
     
     
     <link rel="prev" href="../../Docs/features/incremental-deploys.html" />
@@ -51,7 +51,7 @@
         data-chapter-title="Disaster Detection &amp; Disabled Actions"
         data-filepath="Docs/features/disaster-detection.md"
         data-basepath="../.."
-        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
+        data-revision="Thu Jun 11 2020 13:37:48 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -420,15 +420,7 @@
     
         <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
             
-                
-                    <a href="../../Docs/features/cluster-coordinator.html">
-                
-                        <i class="fa fa-check"></i>
-                        
-                            <b>5.7.</b>
-                        
-                        Cluster Coordinator
-                    </a>
+            <span><b>5.7.</b> Cluster Coordinator</span>
             
             
         </li>
@@ -670,8 +662,8 @@
 </ul>
 <p><strong>Lost Agents</strong></p>
 <ul>
-<li><code>checkLostAgents</code> - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from <code>ACTIVE</code> to <code>DEAD</code>. Agents that are gracefully decommissioned and removed won&apos;t trigger a disaster. (defaults to <code>true</code>)</li>
-<li><code>criticalLostAgentPortion</code> - If, during the past run of the poller, this portion of the total <em>active</em> agents in the clsuter have transitioned from <code>ACTIVE</code> to <code>DEAD</code> a disaster is in progress. Defaults to <code>0.2</code> or one fifth of the agents in the cluster</li>
+<li><code>checkLostSlaves</code> - Use lost agents as a metric for determining if a disaster is in progress. Disaster detection only counts agents that have transitioned from <code>ACTIVE</code> to <code>DEAD</code>. Agents that are gracefully decommissioned and removed won&apos;t trigger a disaster. (defaults to <code>true</code>)</li>
+<li><code>criticalLostSlavePortion</code> - If, during the past run of the poller, this portion of the total <em>active</em> agents in the clsuter have transitioned from <code>ACTIVE</code> to <code>DEAD</code> a disaster is in progress. Defaults to <code>0.2</code> or one fifth of the agents in the cluster</li>
 </ul>
 <p><strong>Lost Tasks</strong></p>
 <ul>
@@ -694,7 +686,7 @@
         <a href="../../Docs/features/incremental-deploys.html" class="navigation navigation-prev " aria-label="Previous page: Incremental Deploys"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../../Docs/features/cluster-coordinator.html" class="navigation navigation-next " aria-label="Next page: Cluster Coordinator"><i class="fa fa-angle-right"></i></a>
+        <a href="../../Docs/features/mesos-1.html" class="navigation navigation-next " aria-label="Next page: Upgrading to Mesos 1"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

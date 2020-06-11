@@ -51,7 +51,7 @@
         data-chapter-title="Configuration"
         data-filepath="Docs/reference/configuration.md"
         data-basepath="../.."
-        data-revision="Thu Jun 11 2020 10:29:50 GMT-0400 (EDT)"
+        data-revision="Thu Jun 11 2020 13:37:48 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -420,15 +420,7 @@
     
         <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
             
-                
-                    <a href="../../Docs/features/cluster-coordinator.html">
-                
-                        <i class="fa fa-check"></i>
-                        
-                            <b>5.7.</b>
-                        
-                        Cluster Coordinator
-                    </a>
+            <span><b>5.7.</b> Cluster Coordinator</span>
             
             
         </li>
@@ -724,10 +716,10 @@
 <td>string</td>
 </tr>
 <tr>
-<td>defaultAgentPlacement</td>
+<td>defaultSlavePlacement</td>
 <td>GREEDY</td>
 <td>See <a href="../about/how-it-works.html#user-content-placement">Agent Placement</a></td>
-<td>enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_AGENTS]</td>
+<td>enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]</td>
 </tr>
 <tr>
 <td>defaultValueForKillTasksOfPausedRequests</td>
@@ -1222,7 +1214,7 @@
 <td>long</td>
 </tr>
 <tr>
-<td>deleteDeadAgentsAfterHours</td>
+<td>deleteDeadSlavesAfterHours</td>
 <td>168 (7 days)</td>
 <td>Remove dead agents from the list after this amount of time</td>
 <td>long</td>
@@ -1463,13 +1455,13 @@
 <tr>
 <td>allocatedResourceWeight</td>
 <td>0.5</td>
-<td>This portion of an offer&apos;s score depends on the amount of resources currently allocated by mesos on the mesos agent/agent</td>
+<td>This portion of an offer&apos;s score depends on the amount of resources currently allocated by mesos on the mesos agent</td>
 <td>double</td>
 </tr>
 <tr>
 <td>inUseResourceWeight</td>
 <td>0.5</td>
-<td>This portion of an offer&apos;s score depends on the currently used resources on a mesos agent/agent as reported by the agent statistics endpoint</td>
+<td>This portion of an offer&apos;s score depends on the currently used resources on a mesos agent as reported by the agent statistics endpoint</td>
 <td>double</td>
 </tr>
 <tr>
