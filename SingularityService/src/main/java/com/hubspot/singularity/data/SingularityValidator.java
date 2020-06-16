@@ -15,6 +15,7 @@ import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
+import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -62,6 +63,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.ArrayUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
@@ -654,24 +656,29 @@ public class SingularityValidator {
           executorData.getExternalArtifacts().isEmpty(),
           "Only signed artifacts are allowed, cannot specify external artifacts"
         );
-        checkBadRequest(
-          executorData
-            .getS3Artifacts()
-            .stream()
-            .noneMatch(
-              a -> {
-                if (!executorData.getS3ArtifactSignatures().isPresent()) {
-                  return false;
-                } else {
-                  return executorData
-                    .getS3ArtifactSignatures()
-                    .get()
-                    .stream()
-                    .anyMatch(s -> s.getArtifactFilename().equals(a.getFilename()));
-                }
+
+        Set<String> unsignedArtifacts = executorData
+          .getS3Artifacts()
+          .stream()
+          .filter(
+            a -> {
+              if (!executorData.getS3ArtifactSignatures().isPresent()) {
+                return true;
+              } else {
+                return executorData
+                  .getS3ArtifactSignatures()
+                  .get()
+                  .stream()
+                  .noneMatch(s -> s.getArtifactFilename().equals(a.getFilename()));
               }
-            ),
-          "Only signed artifacts are allowed"
+            }
+          )
+          .map(S3Artifact::getName)
+          .collect(Collectors.toSet());
+        checkBadRequest(
+          unsignedArtifacts.isEmpty(),
+          "Only signed artifacts are allowed. unsigned artifacts provided: %s",
+          unsignedArtifacts
         );
       }
     }
