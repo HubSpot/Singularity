@@ -2,8 +2,10 @@ package com.hubspot.singularity;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class SingularityDeployStatisticsBuilder {
   private final String requestId;
@@ -170,6 +172,16 @@ public class SingularityDeployStatisticsBuilder {
     TaskFailureEvent taskFailureEvent
   ) {
     taskFailureEvents.add(taskFailureEvent);
+    return this;
+  }
+
+  public SingularityDeployStatisticsBuilder trimTaskFailureEvents(int countToKeep) {
+    this.taskFailureEvents =
+      taskFailureEvents
+        .stream()
+        .sorted(Comparator.comparingLong(TaskFailureEvent::getTimestamp).reversed())
+        .limit(countToKeep)
+        .collect(Collectors.toList());
     return this;
   }
 
