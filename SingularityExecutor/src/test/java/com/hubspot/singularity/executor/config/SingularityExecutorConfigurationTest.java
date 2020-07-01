@@ -77,6 +77,41 @@ public class SingularityExecutorConfigurationTest {
   }
 
   @Test
+  public void itCreatesMutuallyExclusiveTimeAndSizeBasedRotationThresholds()
+    throws Exception {
+    Handlebars handlebars = new Handlebars();
+    Template hourlyTemplate = handlebars.compile(
+      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+    );
+
+    List<LogrotateAdditionalFile> testExtraFilesHourly = new ArrayList<>();
+    testExtraFilesHourly.add(
+      new LogrotateAdditionalFile(
+        "/tmp/testfile.txt",
+        "txt",
+        "%Y%m%d",
+        Optional.of(SingularityExecutorLogrotateFrequency.HOURLY),
+        Optional.of("10M")
+      )
+    );
+
+    LogrotateTemplateContext context = mock(LogrotateTemplateContext.class);
+
+    doReturn("weekly").when(context).getLogrotateFrequency();
+    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+    doReturn(false).when(context).isGlobalLogrotateHourly();
+
+    String hourlyOutput = hourlyTemplate.apply(context);
+
+    assertThat(hourlyOutput).contains("10M");
+    assertThat(hourlyOutput).contains("weekly"); // Global frequency
+
+    assertThat(hourlyOutput.indexOf("10M")).isGreaterThan(hourlyOutput.indexOf("weekly")); // Size should override global frequency
+    assertThat(hourlyOutput).doesNotContain("daily");
+    assertThat(hourlyOutput).doesNotContain("hourly");
+  }
+
+  @Test
   public void itProperlyGeneratesTwoLogrotateConfigs() throws Exception {
     Handlebars handlebars = new Handlebars();
     Template hourlyTemplate = handlebars.compile(
