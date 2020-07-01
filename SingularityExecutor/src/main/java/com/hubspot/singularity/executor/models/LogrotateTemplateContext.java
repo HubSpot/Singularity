@@ -150,7 +150,8 @@ public class LogrotateTemplateContext {
             ? additionalFile.getExtension().get()
             : Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename())), // Can't have possible null in .orElse()
           dateformat,
-          additionalFile.getLogrotateFrequencyOverride()
+          additionalFile.getLogrotateFrequencyOverride(),
+          additionalFile.getLogrotateSizeOverride()
         )
       );
     }

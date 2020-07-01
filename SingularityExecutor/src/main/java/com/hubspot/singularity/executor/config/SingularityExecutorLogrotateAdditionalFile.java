@@ -11,6 +11,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
   private final Optional<String> extension;
   private final Optional<String> dateformat;
   private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
+  private final Optional<String> logrotateSizeOverride;
   private final boolean deleteInExecutorCleanup;
 
   @JsonCreator
@@ -20,6 +21,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
       value,
       Optional.empty(),
       Optional.empty(),
+      null,
       null,
       false
     );
@@ -33,12 +35,14 @@ public class SingularityExecutorLogrotateAdditionalFile {
     @JsonProperty(
       "logrotateFrequencyOverride"
     ) SingularityExecutorLogrotateFrequency logrotateFrequencyOverride,
+    @JsonProperty("logrotateSizeOverride") String logrotateSizeOverride,
     @JsonProperty("deleteInExecutorCleanup") boolean deleteInExecutorCleanup
   ) {
     this.filename = filename;
     this.extension = extension;
     this.dateformat = dateformat;
     this.logrotateFrequencyOverride = Optional.ofNullable(logrotateFrequencyOverride);
+    this.logrotateSizeOverride = Optional.ofNullable(logrotateSizeOverride);
     this.deleteInExecutorCleanup = deleteInExecutorCleanup;
   }
 
@@ -56,6 +60,10 @@ public class SingularityExecutorLogrotateAdditionalFile {
 
   public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequencyOverride() {
     return logrotateFrequencyOverride;
+  }
+
+  public Optional<String> getLogrotateSizeOverride() {
+    return logrotateSizeOverride;
   }
 
   public boolean isDeleteInExecutorCleanup() {
