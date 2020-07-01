@@ -96,7 +96,8 @@ public class SingularityExecutorConfigurationTest {
         "/tmp/testfile.txt",
         "txt",
         "%Y%m%d",
-        Optional.of(SingularityExecutorLogrotateFrequency.MONTHLY)
+        Optional.of(SingularityExecutorLogrotateFrequency.MONTHLY),
+        Optional.empty()
       )
     );
 
@@ -105,7 +106,8 @@ public class SingularityExecutorConfigurationTest {
         "/tmp/testfile-hourly.txt",
         "txt",
         "%Y%m%d",
-        Optional.of(SingularityExecutorLogrotateFrequency.HOURLY)
+        Optional.of(SingularityExecutorLogrotateFrequency.HOURLY),
+        Optional.empty()
       )
     );
 
