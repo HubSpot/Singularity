@@ -37,7 +37,13 @@ notifempty
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{filename}}} {
-  {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
+  {{#if logrotateSizeOverride }}
+    size {{{logrotateSizeOverride}}}
+  {{else}}
+    {{#if logrotateFrequencyOverride }}
+      {{{logrotateFrequencyOverride}}}
+    {{/if}}
+  {{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 {{#if useFileAttributes}}
@@ -66,7 +72,13 @@ notifempty
 
 {{#if extrasFilesHourly}}
 {{#each extrasFilesHourly}}{{{filename}}} {
-  {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
+  {{#if logrotateSizeOverride }}
+    size {{{logrotateSizeOverride}}}
+  {{else}}
+    {{#if logrotateFrequencyOverride }}
+      {{{logrotateFrequencyOverride}}}
+    {{/if}}
+  {{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 {{#if useFileAttributes}}
