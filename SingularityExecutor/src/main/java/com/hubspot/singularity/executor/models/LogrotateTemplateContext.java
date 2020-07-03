@@ -100,7 +100,8 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate hourly. If these do not exist logrotate will continue without error.
+   * Extra files for logrotate to rotate hourly (either due to an hourly time-based rotation, or any kind of size-based rotation).
+   * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
@@ -110,7 +111,8 @@ public class LogrotateTemplateContext {
         p ->
           p
             .getLogrotateFrequencyOverride()
-            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue())
+            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()) ||
+          p.getLogrotateSizeOverride() != null
       )
       .collect(Collectors.toList());
   }
