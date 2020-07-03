@@ -9,6 +9,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -16,6 +17,12 @@ import java.util.stream.Collectors;
  * Check `man logrotate` for more information.
  */
 public class LogrotateTemplateContext {
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_LOGROTATE_CONF = p ->
+    p
+      .getLogrotateFrequencyOverride()
+      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()) ||
+    (p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty());
+
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
 
@@ -90,12 +97,7 @@ public class LogrotateTemplateContext {
   public List<LogrotateAdditionalFile> getExtrasFiles() {
     return getAllExtraFiles()
       .stream()
-      .filter(
-        p ->
-          !p
-            .getLogrotateFrequencyOverride()
-            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue())
-      )
+      .filter(BELONGS_IN_HOURLY_LOGROTATE_CONF.negate())
       .collect(Collectors.toList());
   }
 
@@ -107,16 +109,7 @@ public class LogrotateTemplateContext {
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
     return getAllExtraFiles()
       .stream()
-      .filter(
-        p ->
-          p
-            .getLogrotateFrequencyOverride()
-            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()) ||
-          (
-            p.getLogrotateSizeOverride() != null &&
-            !p.getLogrotateSizeOverride().isEmpty()
-          )
-      )
+      .filter(BELONGS_IN_HOURLY_LOGROTATE_CONF)
       .collect(Collectors.toList());
   }
 
