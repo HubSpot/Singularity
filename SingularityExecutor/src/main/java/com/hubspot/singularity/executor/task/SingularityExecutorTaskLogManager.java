@@ -229,7 +229,9 @@ public class SingularityExecutorTaskLogManager {
     // Get the frequency and cron schedule for an additional file with an HOURLY schedule, if there is any
     Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getAdditionalHourlyFileFrequency();
 
-    // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
+    // if any additional file or the global setting has an hourly rotation,
+    // or if any additional file has a size-based rotation threshold,
+    // write a separate rotate config and force rotate using a cron schedule
     if (
       additionalFileFrequency.isPresent() &&
       additionalFileFrequency.get().getCronSchedule().isPresent() ||
