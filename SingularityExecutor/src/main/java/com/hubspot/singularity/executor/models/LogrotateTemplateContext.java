@@ -112,7 +112,10 @@ public class LogrotateTemplateContext {
           p
             .getLogrotateFrequencyOverride()
             .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()) ||
-          p.getLogrotateSizeOverride() != null
+          (
+            p.getLogrotateSizeOverride() != null &&
+            !p.getLogrotateSizeOverride().isEmpty()
+          )
       )
       .collect(Collectors.toList());
   }
