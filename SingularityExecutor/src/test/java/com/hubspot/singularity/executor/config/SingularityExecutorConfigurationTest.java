@@ -77,11 +77,13 @@ public class SingularityExecutorConfigurationTest {
   }
 
   @Test
-  public void itCreatesMutuallyExclusiveTimeAndSizeBasedRotationThresholds()
-    throws Exception {
+  public void itKeepsSizeAndTimeBasedLogrotateThresholdsSeparate() throws Exception {
     Handlebars handlebars = new Handlebars();
     Template hourlyTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+    );
+    Template sizeBasedTemplate = handlebars.compile(
+      SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
     );
 
     List<LogrotateAdditionalFile> testExtraFilesHourly = new ArrayList<>();
@@ -90,7 +92,7 @@ public class SingularityExecutorConfigurationTest {
         "/tmp/testfile.txt",
         "txt",
         "%Y%m%d",
-        Optional.of(SingularityExecutorLogrotateFrequency.HOURLY),
+        Optional.empty(),
         Optional.of("10M")
       )
     );
@@ -98,22 +100,27 @@ public class SingularityExecutorConfigurationTest {
     LogrotateTemplateContext context = mock(LogrotateTemplateContext.class);
 
     doReturn("weekly").when(context).getLogrotateFrequency();
-    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+    doReturn(testExtraFilesHourly).when(context).getExtrasFilesSizeBased();
     doReturn(false).when(context).isGlobalLogrotateHourly();
 
     String hourlyOutput = hourlyTemplate.apply(context);
+    String sizeBasedOutput = sizeBasedTemplate.apply(context);
 
-    assertThat(hourlyOutput).contains("10M");
+    assertThat(sizeBasedOutput).contains("10M");
+    assertThat(sizeBasedOutput).doesNotContain("hourly");
+    assertThat(sizeBasedOutput).doesNotContain("daily");
+    assertThat(sizeBasedOutput).doesNotContain("weekly"); // Global frequency
+
+    assertThat(hourlyOutput).doesNotContain("10M");
     assertThat(hourlyOutput).contains("weekly"); // Global frequency
-
-    assertThat(hourlyOutput.indexOf("10M")).isGreaterThan(hourlyOutput.indexOf("weekly")); // Size should override global frequency
-    assertThat(hourlyOutput).doesNotContain("daily");
-    assertThat(hourlyOutput).doesNotContain("hourly");
   }
 
   @Test
-  public void itProperlyGeneratesTwoLogrotateConfigs() throws Exception {
+  public void itProperlyGeneratesThreeLogrotateConfigs() throws Exception {
     Handlebars handlebars = new Handlebars();
+    Template sizeBasedTemplate = handlebars.compile(
+      SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
+    );
     Template hourlyTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
     );
@@ -125,6 +132,7 @@ public class SingularityExecutorConfigurationTest {
 
     List<LogrotateAdditionalFile> testExtraFiles = new ArrayList<>();
     List<LogrotateAdditionalFile> testExtraFilesHourly = new ArrayList<>();
+    List<LogrotateAdditionalFile> testExtraFilesSizeBased = new ArrayList<>();
 
     testExtraFiles.add(
       new LogrotateAdditionalFile(
@@ -146,17 +154,29 @@ public class SingularityExecutorConfigurationTest {
       )
     );
 
+    testExtraFilesSizeBased.add(
+      new LogrotateAdditionalFile(
+        "/tmp/testfile-sizebased.txt",
+        "txt",
+        "%Y%m%d",
+        Optional.empty(),
+        Optional.of("10M")
+      )
+    );
+
     doReturn(SingularityExecutorLogrotateFrequency.WEEKLY.getLogrotateValue())
       .when(context)
       .getLogrotateFrequency();
     doReturn(testExtraFiles).when(context).getExtrasFiles();
     doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+    doReturn(testExtraFilesSizeBased).when(context).getExtrasFilesSizeBased();
     doReturn(false).when(context).isGlobalLogrotateHourly();
 
     // This sample output template, when copied into a staged Mesos slave and run with `logrotate -d <configFileName>`
     // confirms that a testfile.txt at the /tmp/testfile.txt will be cycled daily instead of weekly
     String hourlyOutput = hourlyTemplate.apply(context);
     String nonHourlyOutput = nonHourlyTemplate.apply(context);
+    String sizeBasedOutput = sizeBasedTemplate.apply(context);
 
     // Assert that our config has both weekly and daily scopes, and that daily occurs second (thus overrides weekly
     // in the /tmp/testfile-hourly.txt YAML object).
@@ -174,5 +194,11 @@ public class SingularityExecutorConfigurationTest {
     assertThat(nonHourlyOutput.contains("monthly")).isTrue();
     assertThat(nonHourlyOutput.indexOf("monthly"))
       .isGreaterThan(hourlyOutput.indexOf("weekly"));
+
+    assertThat(sizeBasedOutput.contains("hourly")).isFalse();
+    assertThat(sizeBasedOutput.contains("daily")).isFalse();
+    assertThat(sizeBasedOutput.contains("weekly")).isFalse();
+    assertThat(sizeBasedOutput.contains("monthly")).isFalse();
+    assertThat(sizeBasedOutput.contains("size 10M")).isTrue();
   }
 }
