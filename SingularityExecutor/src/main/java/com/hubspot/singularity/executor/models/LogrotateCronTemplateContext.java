@@ -3,27 +3,27 @@ package com.hubspot.singularity.executor.models;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
-import java.nio.file.Paths;
 
 public class LogrotateCronTemplateContext {
   private final String cronSchedule;
   private final String logrotateCommand;
   private final String logrotateStateFile;
-  private final String logrotateConfig;
+  private final String logrotateForceHourlyConfig;
+  private final String logrotateSizeBasedConfig;
   private final String outputRedirect;
 
   public LogrotateCronTemplateContext(
     SingularityExecutorConfiguration configuration,
     SingularityExecutorTaskDefinition taskDefinition,
-    SingularityExecutorLogrotateFrequency logrotateFrequency
+    SingularityExecutorLogrotateFrequency logrotateFrequency,
+    String logrotateForceHourlyConfig,
+    String logrotateSizeBasedConfig
   ) {
     this.logrotateCommand = configuration.getLogrotateCommand();
     this.logrotateStateFile = taskDefinition.getLogrotateStateFilePath().toString();
-    this.logrotateConfig =
-      Paths
-        .get(configuration.getLogrotateHourlyConfDirectory())
-        .resolve(taskDefinition.getTaskId())
-        .toString();
+    this.logrotateForceHourlyConfig = logrotateForceHourlyConfig;
+    this.logrotateSizeBasedConfig = logrotateSizeBasedConfig;
+
     this.cronSchedule = logrotateFrequency.getCronSchedule().get();
     this.outputRedirect =
       configuration.isIgnoreLogrotateOutput() ? "> /dev/null 2>&1" : "";
@@ -37,8 +37,12 @@ public class LogrotateCronTemplateContext {
     return logrotateStateFile;
   }
 
-  public String getLogrotateConfig() {
-    return logrotateConfig;
+  public String getLogrotateForceHourlyConfig() {
+    return logrotateForceHourlyConfig;
+  }
+
+  public String getLogrotateSizeBasedConfig() {
+    return logrotateSizeBasedConfig;
   }
 
   public String getCronSchedule() {

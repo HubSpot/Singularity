@@ -17,11 +17,13 @@ import java.util.stream.Collectors;
  * Check `man logrotate` for more information.
  */
 public class LogrotateTemplateContext {
-  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_LOGROTATE_CONF = p ->
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF = p ->
     p
       .getLogrotateFrequencyOverride()
-      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()) ||
-    (p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty());
+      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue());
+
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
+    p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
@@ -97,7 +99,11 @@ public class LogrotateTemplateContext {
   public List<LogrotateAdditionalFile> getExtrasFiles() {
     return getAllExtraFiles()
       .stream()
-      .filter(BELONGS_IN_HOURLY_LOGROTATE_CONF.negate())
+      .filter(
+        BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF
+          .negate()
+          .and(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF.negate())
+      )
       .collect(Collectors.toList());
   }
 
@@ -109,7 +115,14 @@ public class LogrotateTemplateContext {
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
     return getAllExtraFiles()
       .stream()
-      .filter(BELONGS_IN_HOURLY_LOGROTATE_CONF)
+      .filter(BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF)
+      .collect(Collectors.toList());
+  }
+
+  public List<LogrotateAdditionalFile> getExtrasFilesSizeBased() {
+    return getAllExtraFiles()
+      .stream()
+      .filter(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF)
       .collect(Collectors.toList());
   }
 
