@@ -6,7 +6,7 @@ zk:
     ZK_ID: 1
 
 master:
-  image: mesosphere/mesos-master:1.7.1
+  image: hubspot/mesos-master:1.0
   net: host
   environment:
     MESOS_ZK: zk://localhost:2181/mesos
