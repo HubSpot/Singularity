@@ -301,7 +301,9 @@ public class SingularityExecutorTaskLogManager {
           taskDefinition,
           // By running logrotate hourly via cron, we cover all HOURLY logrotate configs which require `-f`,
           // as well as all size-based configs which do not
-          SingularityExecutorLogrotateFrequency.HOURLY
+          SingularityExecutorLogrotateFrequency.HOURLY,
+          getLogrotateHourlyConfPath().toString(),
+          getLogrotateSizeBasedConfPath().toString()
         )
       );
     }

@@ -3,7 +3,6 @@ package com.hubspot.singularity.executor.models;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
-import java.nio.file.Paths;
 
 public class LogrotateCronTemplateContext {
   private final String cronSchedule;
@@ -16,20 +15,14 @@ public class LogrotateCronTemplateContext {
   public LogrotateCronTemplateContext(
     SingularityExecutorConfiguration configuration,
     SingularityExecutorTaskDefinition taskDefinition,
-    SingularityExecutorLogrotateFrequency logrotateFrequency
+    SingularityExecutorLogrotateFrequency logrotateFrequency,
+    String logrotateForceHourlyConfig,
+    String logrotateSizeBasedConfig
   ) {
     this.logrotateCommand = configuration.getLogrotateCommand();
     this.logrotateStateFile = taskDefinition.getLogrotateStateFilePath().toString();
-    this.logrotateForceHourlyConfig =
-      Paths
-        .get(configuration.getLogrotateHourlyConfDirectory())
-        .resolve(taskDefinition.getTaskId())
-        .toString();
-    this.logrotateSizeBasedConfig =
-      Paths
-        .get(configuration.getLogrotateHourlyConfDirectory())
-        .resolve(taskDefinition.getTaskId() + ".sizebased")
-        .toString();
+    this.logrotateForceHourlyConfig = logrotateForceHourlyConfig;
+    this.logrotateSizeBasedConfig = logrotateSizeBasedConfig;
 
     this.cronSchedule = logrotateFrequency.getCronSchedule().get();
     this.outputRedirect =
