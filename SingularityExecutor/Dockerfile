@@ -1,4 +1,4 @@
-FROM hubspot/mesos-agent:1.0
+FROM hubspot/mesos-agent:1.9.0
 ## mesos + java used to build hubspot/singularitybase
 
 MAINTAINER platform-infrastructure-groups@hubspot.com

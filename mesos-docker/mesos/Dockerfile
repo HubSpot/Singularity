@@ -9,4 +9,4 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# to build - docker build -t hubspot/mesos:1.0 .
+# to build - docker build -t hubspot/mesos:1.9.0 .

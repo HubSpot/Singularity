@@ -132,7 +132,7 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-master:${mesos.docker.tag}</name>
+                  <name>hubspot/mesos-master:${mesos.docker.tag}</name>
                   <alias>singularity-test-master</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
