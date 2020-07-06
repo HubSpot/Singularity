@@ -9,7 +9,8 @@ public class LogrotateCronTemplateContext {
   private final String cronSchedule;
   private final String logrotateCommand;
   private final String logrotateStateFile;
-  private final String logrotateConfig;
+  private final String logrotateForceHourlyConfig;
+  private final String logrotateSizeBasedConfig;
   private final String outputRedirect;
 
   public LogrotateCronTemplateContext(
@@ -19,11 +20,17 @@ public class LogrotateCronTemplateContext {
   ) {
     this.logrotateCommand = configuration.getLogrotateCommand();
     this.logrotateStateFile = taskDefinition.getLogrotateStateFilePath().toString();
-    this.logrotateConfig =
+    this.logrotateForceHourlyConfig =
       Paths
         .get(configuration.getLogrotateHourlyConfDirectory())
         .resolve(taskDefinition.getTaskId())
         .toString();
+    this.logrotateSizeBasedConfig =
+      Paths
+        .get(configuration.getLogrotateHourlyConfDirectory())
+        .resolve(taskDefinition.getTaskId() + ".sizebased")
+        .toString();
+
     this.cronSchedule = logrotateFrequency.getCronSchedule().get();
     this.outputRedirect =
       configuration.isIgnoreLogrotateOutput() ? "> /dev/null 2>&1" : "";
@@ -37,8 +44,12 @@ public class LogrotateCronTemplateContext {
     return logrotateStateFile;
   }
 
-  public String getLogrotateConfig() {
-    return logrotateConfig;
+  public String getLogrotateForceHourlyConfig() {
+    return logrotateForceHourlyConfig;
+  }
+
+  public String getLogrotateSizeBasedConfig() {
+    return logrotateSizeBasedConfig;
   }
 
   public String getCronSchedule() {
