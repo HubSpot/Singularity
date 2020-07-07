@@ -108,7 +108,8 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate hourly (either due to an hourly time-based rotation, or any kind of size-based rotation).
+   * Extra files for logrotate to rotate hourly.
+   * Since we don't want to rely on native `hourly` support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
    * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
@@ -119,6 +120,12 @@ public class LogrotateTemplateContext {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Extra files for logrotate to rotate based on size.
+   * We implement this via an hourly cron (without a force `-f` flag, so that the rotate only happens if the size threshold is exceeded).
+   * If these do not exist logrotate will continue without error.
+   * @return filenames to rotate.
+   */
   public List<LogrotateAdditionalFile> getExtrasFilesSizeBased() {
     return getAllExtraFiles()
       .stream()
