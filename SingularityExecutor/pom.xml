@@ -184,7 +184,7 @@
             <configuration>
               <images>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
                   <build>
                     <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
