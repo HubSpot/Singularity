@@ -1,4 +1,4 @@
-FROM mesosphere/mesos-slave:1.7.1
+FROM hubspot/mesos-agent:1.9.0
 ## mesos + java used to build hubspot/singularitybase
 
 MAINTAINER platform-infrastructure-groups@hubspot.com
@@ -13,9 +13,9 @@ ENV JAVA_SHA           d54c1d3a095b4ff2b6607d096fa80163
 RUN apt-get update && \
     apt-get install -y curl tar logrotate ca-certificates apt-transport-https lxc iptables && \
     apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
-    echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main"  > /etc/apt/sources.list.d/docker.list && \
+    echo "deb https://download.docker.com/linux/ubuntu xenial stable"  > /etc/apt/sources.list.d/docker.list && \
     apt-get update && \
-    apt-get -y install docker-engine && \
+    apt-get -y install docker.io && \
     curl -skLOH "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
     http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/${JAVA_SHA}/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz && \
     gunzip ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz && \

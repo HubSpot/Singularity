@@ -132,7 +132,7 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-master:${mesos.docker.tag}</name>
+                  <name>hubspot/mesos-master:${mesos.docker.tag}</name>
                   <alias>singularity-test-master</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
@@ -156,8 +156,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave1</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent1</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
@@ -189,8 +189,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave2</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent2</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
@@ -222,8 +222,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave3</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent3</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
