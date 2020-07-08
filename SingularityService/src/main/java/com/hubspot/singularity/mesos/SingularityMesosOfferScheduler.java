@@ -524,6 +524,7 @@ public class SingularityMesosOfferScheduler {
     LOG.debug("Found slave usages and scores after {}ms", startCheck - start);
 
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
+    Set<String> overloadedHosts = Sets.newConcurrentHashSet();
 
     // We spend much of the offer check loop for request level locks. Wait for the locks in parallel, but ensure that actual offer checks
     // are done in serial to not over commit a single offer
@@ -575,7 +576,8 @@ public class SingularityMesosOfferScheduler {
                                   scorePerOffer,
                                   activeTaskIdsForRequest,
                                   offerHolder,
-                                  deployStatsCache
+                                  deployStatsCache,
+                                  overloadedHosts
                                 ) >
                                 mesosConfiguration.getGoodEnoughScoreThreshold()
                               ) {
@@ -627,10 +629,11 @@ public class SingularityMesosOfferScheduler {
       .join();
 
     LOG.info(
-      "{} tasks scheduled, {} tasks remaining after examining {} offers",
+      "{} tasks scheduled, {} tasks remaining after examining {} offers ({} overloaded hosts)",
       tasksScheduled,
       numDueTasks - tasksScheduled.get(),
-      offers.size()
+      offers.size(),
+      overloadedHosts.size()
     );
 
     return offerHolders.values();
@@ -647,7 +650,8 @@ public class SingularityMesosOfferScheduler {
     Map<String, Double> scorePerOffer,
     List<SingularityTaskId> activeTaskIdsForRequest,
     SingularityOfferHolder offerHolder,
-    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache
+    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache,
+    Set<String> overloadedHosts
   ) {
     String slaveId = offerHolder.getSlaveId();
 
@@ -657,7 +661,8 @@ public class SingularityMesosOfferScheduler {
       taskRequestHolder,
       activeTaskIdsForRequest,
       requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()),
-      deployStatsCache
+      deployStatsCache,
+      overloadedHosts
     );
     if (score != 0) {
       scorePerOffer.put(slaveId, score);
@@ -758,7 +763,8 @@ public class SingularityMesosOfferScheduler {
     SingularityTaskRequestHolder taskRequestHolder,
     List<SingularityTaskId> activeTaskIdsForRequest,
     RequestUtilization requestUtilization,
-    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache
+    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache,
+    Set<String> overloadedHosts
   ) {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.ofNullable(
       currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId())
@@ -769,7 +775,8 @@ public class SingularityMesosOfferScheduler {
       maybeSlaveUsage,
       activeTaskIdsForRequest,
       requestUtilization,
-      deployStatsCache
+      deployStatsCache,
+      overloadedHosts
     );
     if (LOG.isTraceEnabled()) {
       LOG.trace(
@@ -816,7 +823,8 @@ public class SingularityMesosOfferScheduler {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage,
     List<SingularityTaskId> activeTaskIdsForRequest,
     RequestUtilization requestUtilization,
-    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache
+    Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache,
+    Set<String> overloadedHosts
   ) {
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityPendingTaskId pendingTaskId = taskRequest
@@ -833,6 +841,7 @@ public class SingularityMesosOfferScheduler {
       maybeSlaveUsage.isPresent() &&
       maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)
     ) {
+      overloadedHosts.add(offerHolder.getHostname());
       LOG.debug(
         "Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}, already committed cpus: {}), ignoring offer",
         offerHolder.getHostname(),
@@ -960,7 +969,7 @@ public class SingularityMesosOfferScheduler {
     );
 
     if (slaveMatchState == SlaveMatchState.PREFERRED_SLAVE) {
-      LOG.info(
+      LOG.debug(
         "Slave {} is preferred, will scale score by {}",
         hostname,
         configuration.getPreferredSlaveScaleFactor()
