@@ -525,6 +525,7 @@ public class SingularityMesosOfferScheduler {
 
     Map<SingularityDeployKey, Optional<SingularityDeployStatistics>> deployStatsCache = new ConcurrentHashMap<>();
     Set<String> overloadedHosts = Sets.newConcurrentHashSet();
+    AtomicInteger noMatches = new AtomicInteger();
 
     // We spend much of the offer check loop for request level locks. Wait for the locks in parallel, but ensure that actual offer checks
     // are done in serial to not over commit a single offer
@@ -612,6 +613,8 @@ public class SingularityMesosOfferScheduler {
                               bestOffer.getSlaveId(),
                               requestUtilizations
                             );
+                          } else {
+                            noMatches.getAndIncrement();
                           }
                         }
                       } finally {
@@ -629,11 +632,12 @@ public class SingularityMesosOfferScheduler {
       .join();
 
     LOG.info(
-      "{} tasks scheduled, {} tasks remaining after examining {} offers ({} overloaded hosts)",
+      "{} tasks scheduled, {} tasks remaining after examining {} offers ({} overloaded hosts, {} had no offer matches)",
       tasksScheduled,
       numDueTasks - tasksScheduled.get(),
       offers.size(),
-      overloadedHosts.size()
+      overloadedHosts.size(),
+      noMatches.get()
     );
 
     return offerHolders.values();
