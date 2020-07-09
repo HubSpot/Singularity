@@ -8,17 +8,20 @@ public class LogrotateAdditionalFile {
   private final String extension;
   private final String dateformat;
   private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
+  private final Optional<String> logrotateSizeOverride;
 
   public LogrotateAdditionalFile(
     String filename,
     String extension,
     String dateformat,
-    Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride
+    Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride,
+    Optional<String> logrotateSizeOverride
   ) {
     this.filename = filename;
     this.extension = extension;
     this.dateformat = dateformat;
     this.logrotateFrequencyOverride = logrotateFrequencyOverride;
+    this.logrotateSizeOverride = logrotateSizeOverride;
   }
 
   public String getFilename() {
@@ -39,6 +42,10 @@ public class LogrotateAdditionalFile {
       : "";
   }
 
+  public String getLogrotateSizeOverride() {
+    return logrotateSizeOverride.orElse("");
+  }
+
   @Override
   public String toString() {
     return (
@@ -54,6 +61,9 @@ public class LogrotateAdditionalFile {
       '\'' +
       ", frequency='" +
       logrotateFrequencyOverride +
+      '\'' +
+      ", size='" +
+      logrotateSizeOverride +
       '\'' +
       '}'
     );

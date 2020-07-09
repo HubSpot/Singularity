@@ -229,11 +229,23 @@ public class SingularityExecutorTaskLogManager {
     // Get the frequency and cron schedule for an additional file with an HOURLY schedule, if there is any
     Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getAdditionalHourlyFileFrequency();
 
-    // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
-    if (
+    // if any additional file or the global setting has an hourly rotation,
+    // or if any additional file has a size-based rotation threshold,
+    // write a separate rotate config and force rotate using a cron schedule
+    boolean needsHourlyCronWithForceLogrotate =
       additionalFileFrequency.isPresent() &&
-      additionalFileFrequency.get().getCronSchedule().isPresent() ||
-      logrotateFrequency.getCronSchedule().isPresent()
+      additionalFileFrequency.get().getCronSchedule().isPresent();
+
+    boolean globalLogrotateRequiresCronWithForceLogrotate = logrotateFrequency
+      .getCronSchedule()
+      .isPresent();
+
+    boolean needsHourlyCronWithNonForcedLogrotate = requiresSizeBasedRotation();
+
+    if (
+      needsHourlyCronWithForceLogrotate ||
+      globalLogrotateRequiresCronWithForceLogrotate ||
+      needsHourlyCronWithNonForcedLogrotate
     ) {
       File hourlyLogrotateDir = new File(configuration.getLogrotateHourlyConfDirectory());
       if (!hourlyLogrotateDir.exists()) {
@@ -244,6 +256,9 @@ public class SingularityExecutorTaskLogManager {
           );
         }
       }
+    }
+
+    if (needsHourlyCronWithForceLogrotate) {
       log.info(
         "Writing hourly logrotate configuration file to {}",
         getLogrotateHourlyConfPath()
@@ -252,15 +267,27 @@ public class SingularityExecutorTaskLogManager {
         getLogrotateHourlyConfPath(),
         new LogrotateTemplateContext(configuration, taskDefinition)
       );
+    }
 
-      SingularityExecutorLogrotateFrequency freq = additionalFileFrequency.isPresent() &&
-        additionalFileFrequency.get().getCronSchedule().isPresent()
-        ? additionalFileFrequency.get()
-        : logrotateFrequency;
+    if (requiresSizeBasedRotation()) {
+      log.info(
+        "Writing size-based logrotate configuration file to {}",
+        getLogrotateSizeBasedConfPath()
+      );
+      templateManager.writeSizeBasedLogrotateFile(
+        getLogrotateSizeBasedConfPath(),
+        new LogrotateTemplateContext(configuration, taskDefinition)
+      );
+    }
 
-      String cronScheduleString = freq.getCronSchedule().isPresent()
-        ? freq.getCronSchedule().get()
-        : "Error in cron schedule"; // This should never evaluate to false
+    if (
+      needsHourlyCronWithForceLogrotate ||
+      globalLogrotateRequiresCronWithForceLogrotate ||
+      needsHourlyCronWithNonForcedLogrotate
+    ) {
+      String cronScheduleString = SingularityExecutorLogrotateFrequency
+        .HOURLY.getCronSchedule()
+        .get();
 
       log.info(
         "Writing logrotate cron entry with schedule '{}' to {}",
@@ -269,7 +296,15 @@ public class SingularityExecutorTaskLogManager {
       );
       templateManager.writeCronEntryForLogrotate(
         getLogrotateCronPath(),
-        new LogrotateCronTemplateContext(configuration, taskDefinition, freq)
+        new LogrotateCronTemplateContext(
+          configuration,
+          taskDefinition,
+          // By running logrotate hourly via cron, we cover all HOURLY logrotate configs which require `-f`,
+          // as well as all size-based configs which do not
+          SingularityExecutorLogrotateFrequency.HOURLY,
+          getLogrotateHourlyConfPath().toString(),
+          getLogrotateSizeBasedConfPath().toString()
+        )
       );
     }
   }
@@ -292,6 +327,17 @@ public class SingularityExecutorTaskLogManager {
       }
     }
     return Optional.empty();
+  }
+
+  private boolean requiresSizeBasedRotation() {
+    return configuration
+      .getLogrotateAdditionalFiles()
+      .stream()
+      .anyMatch(
+        logrotateAdditionalFile ->
+          logrotateAdditionalFile.getLogrotateSizeOverride().isPresent() &&
+          !logrotateAdditionalFile.getLogrotateSizeOverride().get().isEmpty()
+      );
   }
 
   @SuppressFBWarnings
@@ -399,11 +445,28 @@ public class SingularityExecutorTaskLogManager {
         boolean hourlyConfDeleted =
           !Files.exists(getLogrotateHourlyConfPath()) ||
           Files.deleteIfExists(getLogrotateHourlyConfPath());
-        log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), deleted);
+        log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), hourlyConfDeleted);
         deleted = deleted && hourlyConfDeleted;
       }
     } catch (Throwable t) {
       log.debug("Couldn't delete {}", getLogrotateHourlyConfPath(), t);
+      return false;
+    }
+
+    try {
+      if (requiresSizeBasedRotation()) {
+        boolean sizeBasedConfDeleted =
+          !Files.exists(getLogrotateSizeBasedConfPath()) ||
+          Files.deleteIfExists(getLogrotateSizeBasedConfPath());
+        log.debug(
+          "Deleted {} : {}",
+          getLogrotateSizeBasedConfPath(),
+          sizeBasedConfDeleted
+        );
+        deleted = deleted && sizeBasedConfDeleted;
+      }
+    } catch (Throwable t) {
+      log.debug("Couldn't delete {}", getLogrotateSizeBasedConfPath(), t);
       return false;
     }
 
@@ -418,13 +481,14 @@ public class SingularityExecutorTaskLogManager {
         boolean cronDeleted =
           !Files.exists(getLogrotateCronPath()) ||
           Files.deleteIfExists(getLogrotateCronPath());
-        log.debug("Deleted {} : {}", getLogrotateCronPath(), deleted);
+        log.debug("Deleted {} : {}", getLogrotateCronPath(), cronDeleted);
         deleted = deleted && cronDeleted;
       }
     } catch (Throwable t) {
       log.debug("Couldn't delete {}", getLogrotateCronPath(), t);
       return false;
     }
+
     return deleted;
   }
 
@@ -535,6 +599,12 @@ public class SingularityExecutorTaskLogManager {
     return Paths
       .get(configuration.getLogrotateHourlyConfDirectory())
       .resolve(taskDefinition.getTaskId());
+  }
+
+  public Path getLogrotateSizeBasedConfPath() {
+    return Paths
+      .get(configuration.getLogrotateHourlyConfDirectory())
+      .resolve(taskDefinition.getTaskId() + ".sizebased");
   }
 
   public Path getLogrotateCronPath() {
