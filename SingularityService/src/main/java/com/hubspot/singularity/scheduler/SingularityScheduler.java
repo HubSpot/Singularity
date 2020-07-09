@@ -1372,6 +1372,7 @@ public class SingularityScheduler {
       bldr.setNumSequentialRetries(0);
     }
 
+    bldr.trimTaskFailureEvents(50);
     final SingularityDeployStatistics newStatistics = bldr.build();
 
     LOG.trace("Saving new deploy statistics {}", newStatistics);
