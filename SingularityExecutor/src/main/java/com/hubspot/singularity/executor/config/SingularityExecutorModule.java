@@ -35,6 +35,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
   public static final String LOGROTATE_HOURLY_TEMPLATE = "logrotate.hourly.conf";
+  public static final String LOGROTATE_SIZE_BASED_TEMPLATE = "logrotate.sizebased.conf";
   public static final String LOGROTATE_CRON_TEMPLATE = "logrotate.cron";
   public static final String DOCKER_TEMPLATE = "docker.sh";
   public static final String ALREADY_SHUT_DOWN = "already.shut.down";
@@ -111,6 +112,14 @@ public class SingularityExecutorModule extends AbstractModule {
   public Template providesLogrotateHourlyTemplate(Handlebars handlebars)
     throws IOException {
     return handlebars.compile(LOGROTATE_HOURLY_TEMPLATE);
+  }
+
+  @Provides
+  @Singleton
+  @Named(LOGROTATE_SIZE_BASED_TEMPLATE)
+  public Template providesLogrotateSizeBasedTemplate(Handlebars handlebars)
+    throws IOException {
+    return handlebars.compile(LOGROTATE_SIZE_BASED_TEMPLATE);
   }
 
   @Provides

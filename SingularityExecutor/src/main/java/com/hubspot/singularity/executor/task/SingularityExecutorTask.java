@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import org.apache.mesos.ExecutorDriver;
@@ -29,7 +30,7 @@ public class SingularityExecutorTask {
   private final Protos.TaskInfo taskInfo;
   private final Logger log;
   private final ReentrantLock lock;
-  private final AtomicBoolean killed;
+  private final AtomicLong killed;
   private final AtomicInteger threadCountAtOverage;
   private final AtomicBoolean killedAfterThreadOverage;
   private final AtomicBoolean destroyedAfterWaiting;
@@ -62,7 +63,7 @@ public class SingularityExecutorTask {
     this.log = log;
 
     this.lock = new ReentrantLock();
-    this.killed = new AtomicBoolean(false);
+    this.killed = new AtomicLong(-1);
     this.destroyedAfterWaiting = new AtomicBoolean(false);
     this.forceDestroyed = new AtomicBoolean(false);
     this.killedBy = new AtomicReference<>(Optional.<String>empty());
@@ -183,11 +184,15 @@ public class SingularityExecutorTask {
   }
 
   public boolean wasKilled() {
+    return killed.get() != -1;
+  }
+
+  public long getKilledAt() {
     return killed.get();
   }
 
   public void markKilled(Optional<String> maybeUser) {
-    this.killed.set(true);
+    this.killed.set(System.currentTimeMillis());
     this.killedBy.set(maybeUser);
   }
 

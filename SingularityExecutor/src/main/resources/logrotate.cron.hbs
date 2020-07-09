@@ -1,1 +1,6 @@
-{{{ cronSchedule }}} root {{{ logrotateCommand }}} -f -s {{{ logrotateStateFile }}} {{{ logrotateConfig }}} {{{ outputRedirect }}}
+{{#if logrotateForceHourlyConfig}}
+{{{ cronSchedule }}} root {{{ logrotateCommand }}} -f -s {{{ logrotateStateFile }}} {{{ logrotateForceHourlyConfig }}} {{{ outputRedirect }}}
+{{/if}}
+{{#if logrotateSizeBasedConfig}}
+{{{ cronSchedule }}} root {{{ logrotateCommand }}} -s {{{ logrotateStateFile }}} {{{ logrotateSizeBasedConfig }}} {{{ outputRedirect }}}
+{{/if}}

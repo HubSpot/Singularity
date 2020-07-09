@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -7,6 +8,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import org.jdbi.v3.json.Json;
 import org.jdbi.v3.sqlobject.SingleValue;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -252,6 +254,20 @@ public interface PostgresHistoryJDBI extends AbstractHistoryJDBI {
     @Bind("deployId") String deployId,
     @Bind("json") @Json SingularityDeployHistory deployHistory
   );
+
+  //Postgres doesn't support index hinting
+  @Override
+  default boolean shouldAddForceIndexClause(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  ) {
+    return false;
+  }
 
   default void close() {}
 }
