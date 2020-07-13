@@ -93,6 +93,9 @@ class KillTaskModal extends Component {
               to run in the future depending on whether or not the request
               has <code>numRetriesOnFailure</code> set.
           </p>
+          {this.props.destroy && (<p>
+              Note, a kill -9 of this task will bypass any load balancer cleanup operations that may still be in progress.
+          </p>)}
         </span>
       </FormModal>
     );
