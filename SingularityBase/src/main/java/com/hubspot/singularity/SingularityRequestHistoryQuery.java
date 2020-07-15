@@ -84,7 +84,7 @@ public class SingularityRequestHistoryQuery {
   @Override
   public String toString() {
     return (
-      "SingularityTaskHistoryQuery{" +
+      "SingularityRequestHistoryQuery{" +
       "requestId=" +
       requestId +
       ", createdBefore=" +

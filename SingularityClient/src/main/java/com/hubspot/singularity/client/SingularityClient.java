@@ -1682,14 +1682,14 @@ public class SingularityClient {
    *    A list of {@link SingularityRequestHistory}
    */
   public Collection<SingularityRequestHistory> getHistoryForRequest(
-      String requestId,
-      Optional<Long> createdBefore,
-      Optional<Long> createdAfter,
-      Optional<Integer> count,
-      Optional<Integer> page
+    String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter,
+    Optional<Integer> count,
+    Optional<Integer> page
   ) {
     final Function<String, String> requestUri = host ->
-        String.format(REQUEST_HISTORY_FORMAT, getApiBase(host), requestId);
+      String.format(REQUEST_HISTORY_FORMAT, getApiBase(host), requestId);
 
     Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
@@ -1717,10 +1717,10 @@ public class SingularityClient {
     }
 
     return getCollectionWithParams(
-        requestUri,
-        "request history",
-        maybeQueryParams,
-        REQUEST_HISTORY_COLLECTION
+      requestUri,
+      "request history",
+      maybeQueryParams,
+      REQUEST_HISTORY_COLLECTION
     );
   }
 
@@ -1729,7 +1729,13 @@ public class SingularityClient {
     Optional<Integer> count,
     Optional<Integer> page
   ) {
-    return getHistoryForRequest(requestId, Optional.empty(), Optional.empty(), count, page);
+    return getHistoryForRequest(
+      requestId,
+      Optional.empty(),
+      Optional.empty(),
+      count,
+      page
+    );
   }
 
   //
