@@ -9,6 +9,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRequestHistoryQuery;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
@@ -36,6 +37,8 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
     when(
         hm.getRequestHistory(
           ArgumentMatchers.anyString(),
+          ArgumentMatchers.<Optional<Long>>any(),
+          ArgumentMatchers.<Optional<Long>>any(),
           ArgumentMatchers.<Optional<OrderDirection>>any(),
           ArgumentMatchers.anyInt(),
           ArgumentMatchers.anyInt()
@@ -65,6 +68,12 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
   public void testBlendedRequestHistory() {
     HistoryManager hm = mock(HistoryManager.class);
     String rid = "rid";
+    SingularityRequestHistoryQuery requestHistoryQuery = new SingularityRequestHistoryQuery(
+      rid,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty()
+    );
     request = new SingularityRequestBuilder(rid, RequestType.WORKER).build();
     RequestHistoryHelper rhh = new RequestHistoryHelper(
       requestManager,
@@ -74,7 +83,7 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
 
     mockRequestHistory(hm, Collections.<SingularityRequestHistory>emptyList());
 
-    Assertions.assertTrue(rhh.getBlendedHistory(rid, 0, 100).isEmpty());
+    Assertions.assertTrue(rhh.getBlendedHistory(requestHistoryQuery, 0, 100).isEmpty());
     Assertions.assertTrue(!rhh.getFirstHistory(rid).isPresent());
     Assertions.assertTrue(!rhh.getLastHistory(rid).isPresent());
 
@@ -87,26 +96,30 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
       )
     );
 
-    List<SingularityRequestHistory> history = rhh.getBlendedHistory(rid, 0, 5);
+    List<SingularityRequestHistory> history = rhh.getBlendedHistory(
+      requestHistoryQuery,
+      0,
+      5
+    );
 
     Assertions.assertTrue(history.size() == 3);
 
     saveHistory(100, RequestHistoryType.DELETED);
     saveHistory(120, RequestHistoryType.CREATED);
 
-    history = rhh.getBlendedHistory(rid, 0, 5);
+    history = rhh.getBlendedHistory(requestHistoryQuery, 0, 5);
 
     Assertions.assertTrue(history.size() == 5);
     Assertions.assertTrue(history.get(0).getCreatedAt() == 120);
     Assertions.assertTrue(history.get(4).getCreatedAt() == 50);
 
-    history = rhh.getBlendedHistory(rid, 1, 5);
+    history = rhh.getBlendedHistory(requestHistoryQuery, 1, 5);
 
     Assertions.assertTrue(history.size() == 4);
     Assertions.assertTrue(history.get(0).getCreatedAt() == 100);
     Assertions.assertTrue(history.get(3).getCreatedAt() == 50);
 
-    history = rhh.getBlendedHistory(rid, 2, 5);
+    history = rhh.getBlendedHistory(requestHistoryQuery, 2, 5);
 
     Assertions.assertTrue(history.size() == 3);
     Assertions.assertTrue(history.get(0).getCreatedAt() == 52);
@@ -114,10 +127,10 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
 
     mockRequestHistory(hm, Collections.<SingularityRequestHistory>emptyList());
 
-    history = rhh.getBlendedHistory(rid, 3, 5);
+    history = rhh.getBlendedHistory(requestHistoryQuery, 3, 5);
     Assertions.assertTrue(history.isEmpty());
 
-    history = rhh.getBlendedHistory(rid, 1, 5);
+    history = rhh.getBlendedHistory(requestHistoryQuery, 1, 5);
     Assertions.assertTrue(history.size() == 1);
     Assertions.assertTrue(history.get(0).getCreatedAt() == 100);
 

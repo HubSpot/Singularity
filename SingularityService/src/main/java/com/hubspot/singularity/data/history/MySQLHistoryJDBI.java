@@ -93,15 +93,15 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
   @SqlQuery("SELECT COUNT(*) FROM deployHistory WHERE requestId = :requestId")
   int getDeployHistoryForRequestCount(@Bind("requestId") String requestId);
 
-  @SqlQuery(
-    "SELECT json, request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount"
-  )
-  List<SingularityRequestHistory> getRequestHistory(
-    @Bind("requestId") String requestId,
-    @Define("orderDirection") String orderDirection,
-    @Bind("limitStart") Integer limitStart,
-    @Bind("limitCount") Integer limitCount
-  );
+  //  @SqlQuery(
+  //    "SELECT json, request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount"
+  //  )
+  //  List<SingularityRequestHistory> getRequestHistory(
+  //    @Bind("requestId") String requestId,
+  //    @Define("orderDirection") String orderDirection,
+  //    @Bind("limitStart") Integer limitStart,
+  //    @Bind("limitCount") Integer limitCount
+  //  );
 
   @SqlQuery("SELECT COUNT(*) FROM requestHistory WHERE requestId = :requestId")
   int getRequestHistoryCount(@Bind("requestId") String requestId);
@@ -252,6 +252,11 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
     @Bind("deployId") String deployId,
     @Bind("json") @Json SingularityDeployHistory deployHistory
   );
+
+  @Override
+  default String getRequestHistoryBaseQuery() {
+    return "SELECT json, request, createdAt, requestState, user, message FROM requestHistory";
+  }
 
   default void close() {}
 }

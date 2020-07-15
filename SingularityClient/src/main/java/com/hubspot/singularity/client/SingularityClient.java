@@ -47,6 +47,7 @@ import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistoryQuery;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
@@ -1669,6 +1670,10 @@ public class SingularityClient {
    *
    * @param requestId
    *    Request ID to look up
+   * @param createdBefore
+   *    Long millis to filter request histories created before
+   * @param createdAfter
+   *    Long millis to filter request histories created after
    * @param count
    *    Number of items to return per page
    * @param page
@@ -1677,16 +1682,26 @@ public class SingularityClient {
    *    A list of {@link SingularityRequestHistory}
    */
   public Collection<SingularityRequestHistory> getHistoryForRequest(
-    String requestId,
-    Optional<Integer> count,
-    Optional<Integer> page
+      String requestId,
+      Optional<Long> createdBefore,
+      Optional<Long> createdAfter,
+      Optional<Integer> count,
+      Optional<Integer> page
   ) {
     final Function<String, String> requestUri = host ->
-      String.format(REQUEST_HISTORY_FORMAT, getApiBase(host), requestId);
+        String.format(REQUEST_HISTORY_FORMAT, getApiBase(host), requestId);
 
     Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
     ImmutableMap.Builder<String, Object> queryParamsBuilder = ImmutableMap.builder();
+
+    if (createdBefore.isPresent()) {
+      queryParamsBuilder.put("createdBefore", createdBefore.get());
+    }
+
+    if (createdAfter.isPresent()) {
+      queryParamsBuilder.put("createdAfter", createdAfter.get());
+    }
 
     if (count.isPresent()) {
       queryParamsBuilder.put("count", count.get());
@@ -1702,11 +1717,19 @@ public class SingularityClient {
     }
 
     return getCollectionWithParams(
-      requestUri,
-      "request history",
-      maybeQueryParams,
-      REQUEST_HISTORY_COLLECTION
+        requestUri,
+        "request history",
+        maybeQueryParams,
+        REQUEST_HISTORY_COLLECTION
     );
+  }
+
+  public Collection<SingularityRequestHistory> getHistoryForRequest(
+    String requestId,
+    Optional<Integer> count,
+    Optional<Integer> page
+  ) {
+    return getHistoryForRequest(requestId, Optional.empty(), Optional.empty(), count, page);
   }
 
   //
