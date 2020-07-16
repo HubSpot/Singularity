@@ -4,7 +4,6 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
