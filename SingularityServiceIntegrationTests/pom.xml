@@ -77,9 +77,9 @@
       </activation>
       <properties>
         <mesos.master.hostname>singularity-test-master</mesos.master.hostname>
-        <mesos.slave1.hostname>singularity-test-slave1</mesos.slave1.hostname>
-        <mesos.slave2.hostname>singularity-test-slave2</mesos.slave2.hostname>
-        <mesos.slave3.hostname>singularity-test-slave3</mesos.slave3.hostname>
+        <mesos.agent1.hostname>singularity-test-agent1</mesos.agent1.hostname>
+        <mesos.agent2.hostname>singularity-test-agent2</mesos.agent2.hostname>
+        <mesos.agent3.hostname>singularity-test-agent3</mesos.agent3.hostname>
       </properties>
       <build>
         <plugins>
@@ -91,9 +91,9 @@
                      Maven, you little sneaky beast ... -->
                 <zk.port>${zk.port}</zk.port>
                 <mesos.master.port>${mesos.master.port}</mesos.master.port>
-                <mesos.slave1.port>${mesos.slave.1.port}</mesos.slave1.port>
-                <mesos.slave2.port>${mesos.slave.2.port}</mesos.slave2.port>
-                <mesos.slave3.port>${mesos.slave.3.port}</mesos.slave3.port>
+                <mesos.agent1.port>${mesos.agent.1.port}</mesos.agent1.port>
+                <mesos.agent2.port>${mesos.agent.2.port}</mesos.agent2.port>
+                <mesos.agent3.port>${mesos.agent.3.port}</mesos.agent3.port>
                 <singularity.port>${singularity.port}</singularity.port>
               </systemPropertyVariables>
             </configuration>
@@ -132,7 +132,7 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-master:${mesos.docker.tag}</name>
+                  <name>hubspot/mesos-master:${mesos.docker.tag}</name>
                   <alias>singularity-test-master</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
@@ -156,8 +156,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave1</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent1</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
@@ -166,13 +166,13 @@
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave1.port:5051</port>
+                      <port>mesos.agent1.port:5051</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
                       <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
-                      <MESOS_HOSTNAME>${mesos.slave1.hostname}</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.agent1.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:a</MESOS_ATTRIBUTES>
                     </env>
@@ -189,8 +189,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave2</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent2</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
@@ -199,13 +199,13 @@
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave2.port:5051</port>
+                      <port>mesos.agent2.port:5051</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
                       <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
-                      <MESOS_HOSTNAME>${mesos.slave2.hostname}</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.agent2.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:b</MESOS_ATTRIBUTES>
                     </env>
@@ -222,8 +222,8 @@
                   </run>
                 </image>
                 <image>
-                  <name>hubspot/singularityexecutorslave:${project.version}</name>
-                  <alias>singularity-test-slave3</alias>
+                  <name>hubspot/singularityexecutoragent:${project.version}</name>
+                  <alias>singularity-test-agent3</alias>
                   <run>
                     <namingStrategy>alias</namingStrategy>
                     <privileged>true</privileged>
@@ -232,13 +232,13 @@
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave3.port:5051</port>
+                      <port>mesos.agent3.port:5051</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
                       <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
-                      <MESOS_HOSTNAME>${mesos.slave3.hostname}</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.agent3.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:c</MESOS_ATTRIBUTES>
                     </env>
@@ -293,9 +293,9 @@
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
-                      <link>singularity-test-slave1</link>
-                      <link>singularity-test-slave2</link>
-                      <link>singularity-test-slave3</link>
+                      <link>singularity-test-agent1</link>
+                      <link>singularity-test-agent2</link>
+                      <link>singularity-test-agent3</link>
                       <link>singularity-mysql</link>
                       <link>singularity-mailhog</link>
                     </links>
