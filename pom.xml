@@ -73,8 +73,8 @@
     <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
     <dropwizard.version>1.3.12</dropwizard.version>
     <horizon.version>0.1.2</horizon.version>
-    <mesos.docker.tag>1.7.1</mesos.docker.tag> <!-- 1.8.0 not available yet, still compatible -->
-    <mesos.version>1.8.0</mesos.version>
+    <mesos.docker.tag>1.9.0</mesos.docker.tag> <!-- 1.10.0 not available yet, still compatible -->
+    <mesos.version>1.10.0</mesos.version>
     <ning.async.version>1.9.38</ning.async.version>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>
