@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +26,32 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
       sqlBuilder.append(" WHERE ");
     } else {
       sqlBuilder.append(" AND ");
+    }
+  }
+
+  String getRequestHistoryBaseQuery();
+
+  default void applyRequestHistoryBaseQuery(
+    StringBuilder sqlBuilder,
+    Map<String, Object> binds,
+    String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter
+  ) {
+    addWhereOrAnd(sqlBuilder, binds.isEmpty());
+    sqlBuilder.append("requestId = :requestId");
+    binds.put("requestId", requestId);
+
+    if (createdBefore.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("createdAt < :createdBefore");
+      binds.put("createdBefore", new Date(createdBefore.get()));
+    }
+
+    if (createdAfter.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("createdAt > :createdAfter");
+      binds.put("createdAfter", new Date(createdAfter.get()));
     }
   }
 
@@ -154,6 +181,47 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     binds.forEach(query::bind);
 
     return query.mapTo(SingularityTaskIdHistory.class).list();
+  }
+
+  default List<SingularityRequestHistory> getRequestHistory(
+    String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter,
+    String orderDirection,
+    Integer limitStart,
+    Integer limitCount
+  ) {
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(getRequestHistoryBaseQuery());
+
+    applyRequestHistoryBaseQuery(
+      sqlBuilder,
+      binds,
+      requestId,
+      createdBefore,
+      createdAfter
+    );
+
+    sqlBuilder.append(" ORDER BY createdAt ");
+    sqlBuilder.append(orderDirection);
+    if (limitCount != null) {
+      sqlBuilder.append(" LIMIT :limitCount");
+      binds.put("limitCount", limitCount);
+    }
+
+    if (limitStart != null) {
+      sqlBuilder.append(" OFFSET :limitStart ");
+      binds.put("limitStart", limitStart);
+    }
+
+    final String sql = sqlBuilder.toString();
+
+    LOG.trace("Generated sql for request history search: {}, binds: {}", sql, binds);
+
+    Query query = getHandle().createQuery(sql);
+    binds.forEach(query::bind);
+
+    return query.mapTo(SingularityRequestHistory.class).list();
   }
 
   default int getTaskIdHistoryCount(

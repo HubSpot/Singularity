@@ -105,6 +105,8 @@ public class NoopHistoryManager implements HistoryManager {
   @Override
   public List<SingularityRequestHistory> getRequestHistory(
     String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter,
     Optional<OrderDirection> orderDirection,
     Integer limitStart,
     Integer limitCount

@@ -1252,6 +1252,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     List<SingularityRequestHistory> history = historyManager.getRequestHistory(
       requestId,
+      Optional.empty(),
+      Optional.empty(),
       Optional.of(OrderDirection.DESC),
       0,
       100
@@ -1273,6 +1275,92 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testGetRequestHistoryWithCreatedAtFilters() {
+    SingularityRequest request = new SingularityRequestBuilder(
+      requestId,
+      RequestType.ON_DEMAND
+    )
+    .build();
+    SingularityRequestHistory firstRequestHistory = new SingularityRequestHistory(
+      0L,
+      Optional.empty(),
+      RequestHistoryType.CREATED,
+      request,
+      Optional.empty()
+    );
+
+    SingularityRequestHistory secondRequestHistory = new SingularityRequestHistory(
+      10L,
+      Optional.empty(),
+      RequestHistoryType.BOUNCED,
+      request,
+      Optional.empty()
+    );
+
+    SingularityRequestHistory thirdRequestHistory = new SingularityRequestHistory(
+      20L,
+      Optional.empty(),
+      RequestHistoryType.SCALED,
+      request,
+      Optional.empty()
+    );
+
+    historyManager.saveRequestHistoryUpdate(firstRequestHistory);
+    historyManager.saveRequestHistoryUpdate(secondRequestHistory);
+    historyManager.saveRequestHistoryUpdate(thirdRequestHistory);
+
+    List<SingularityRequestHistory> firstHistory = historyManager.getRequestHistory(
+      requestId,
+      Optional.of(10L), //createdBefore
+      Optional.empty(), //createdAfter
+      Optional.of(OrderDirection.DESC),
+      0,
+      100
+    );
+
+    Assertions.assertEquals(1, firstHistory.size());
+    Assertions.assertTrue(firstHistory.get(0).getCreatedAt() == 0);
+
+    List<SingularityRequestHistory> secondHistory = historyManager.getRequestHistory(
+      requestId,
+      Optional.of(20L), //createdBefore
+      Optional.of(0L), //createdAfter
+      Optional.of(OrderDirection.DESC),
+      0,
+      100
+    );
+
+    Assertions.assertEquals(1, secondHistory.size());
+    Assertions.assertTrue(secondHistory.get(0).getCreatedAt() == 10);
+
+    List<SingularityRequestHistory> thirdHistory = historyManager.getRequestHistory(
+      requestId,
+      Optional.empty(), //createdBefore
+      Optional.of(10L), //createdAfter
+      Optional.of(OrderDirection.DESC),
+      0,
+      100
+    );
+
+    Assertions.assertEquals(1, thirdHistory.size());
+    Assertions.assertTrue(thirdHistory.get(0).getCreatedAt() == 20);
+
+    //test ascending order
+    List<SingularityRequestHistory> historyAscending = historyManager.getRequestHistory(
+      requestId,
+      Optional.empty(), //createdBefore
+      Optional.empty(), //createdAfter
+      Optional.of(OrderDirection.ASC),
+      0,
+      100
+    );
+
+    Assertions.assertEquals(3, historyAscending.size());
+    Assertions.assertTrue(historyAscending.get(0).getCreatedAt() == 0);
+    Assertions.assertTrue(historyAscending.get(2).getCreatedAt() == 20);
+  }
+
+  @Test
   public void testDuplicatePersist() {
     initRequest();
     requestResource.scale(
@@ -1291,7 +1379,14 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     );
     requestHistoryPersister.runActionOnPoll();
     SingularityRequestHistory history = historyManager
-      .getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100)
+      .getRequestHistory(
+        requestId,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(OrderDirection.DESC),
+        0,
+        100
+      )
       .get(0);
     historyManager.saveRequestHistoryUpdate(history);
     // Should not throw exception
@@ -1375,7 +1470,14 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
       configuration.setSqlFallBackToBytesFields(true);
       SingularityRequestHistory requestHistoryBefore = historyManager
-        .getRequestHistory(request.getId(), Optional.empty(), 0, 1)
+        .getRequestHistory(
+          request.getId(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          0,
+          1
+        )
         .get(0);
       Assertions.assertNotNull(requestHistoryBefore);
       Assertions.assertEquals(
@@ -1400,7 +1502,14 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       configuration.setSqlFallBackToBytesFields(false);
 
       SingularityRequestHistory requestHistoryAfter = historyManager
-        .getRequestHistory(request.getId(), Optional.empty(), 0, 1)
+        .getRequestHistory(
+          request.getId(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          0,
+          1
+        )
         .get(0);
       Assertions.assertNotNull(requestHistoryAfter);
       Assertions.assertEquals(

@@ -271,20 +271,26 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public List<SingularityRequestHistory> getRequestHistory(
     String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter,
     Optional<OrderDirection> orderDirection,
     Integer limitStart,
     Integer limitCount
   ) {
     List<SingularityRequestHistory> singularityRequestHistoryList = history.getRequestHistory(
       requestId,
+      createdBefore,
+      createdAfter,
       getOrderDirection(orderDirection),
       limitStart,
       limitCount
     );
     if (LOG.isTraceEnabled()) {
       LOG.trace(
-        "getRequestHistory requestId {}, orderDirection {}, limitStart {} , limitCount {}, requestHistory{}",
+        "getRequestHistory requestId {}, createdBefore {}, createdAfter {}, orderDirection {}, limitStart {} , limitCount {}, requestHistory{}",
         requestId,
+        createdBefore,
+        createdAfter,
         orderDirection,
         limitStart,
         limitCount,
