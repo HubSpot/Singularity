@@ -1707,7 +1707,7 @@ public class SingularityClient {
     }
 
     if (orderDirection.isPresent()) {
-      queryParamsBuilder.put("orderDirection", orderDirection.get());
+      queryParamsBuilder.put("orderDirection", orderDirection.get().toString());
     }
 
     if (count.isPresent()) {
