@@ -1674,6 +1674,8 @@ public class SingularityClient {
    *    Long millis to filter request histories created before
    * @param createdAfter
    *    Long millis to filter request histories created after
+   * @param orderDirection
+   *    Sort order by createdAt
    * @param count
    *    Number of items to return per page
    * @param page
@@ -1685,6 +1687,7 @@ public class SingularityClient {
     String requestId,
     Optional<Long> createdBefore,
     Optional<Long> createdAfter,
+    Optional<OrderDirection> orderDirection,
     Optional<Integer> count,
     Optional<Integer> page
   ) {
@@ -1701,6 +1704,10 @@ public class SingularityClient {
 
     if (createdAfter.isPresent()) {
       queryParamsBuilder.put("createdAfter", createdAfter.get());
+    }
+
+    if (orderDirection.isPresent()) {
+      queryParamsBuilder.put("orderDirection", orderDirection.get());
     }
 
     if (count.isPresent()) {
@@ -1731,6 +1738,7 @@ public class SingularityClient {
   ) {
     return getHistoryForRequest(
       requestId,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       count,
