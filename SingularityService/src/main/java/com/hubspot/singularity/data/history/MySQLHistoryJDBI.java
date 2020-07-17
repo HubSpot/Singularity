@@ -3,7 +3,6 @@ package com.hubspot.singularity.data.history;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import java.util.Date;
@@ -12,7 +11,6 @@ import java.util.Optional;
 import org.jdbi.v3.json.Json;
 import org.jdbi.v3.sqlobject.SingleValue;
 import org.jdbi.v3.sqlobject.customizer.Bind;
-import org.jdbi.v3.sqlobject.customizer.Define;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -94,16 +92,6 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
 
   @SqlQuery("SELECT COUNT(*) FROM deployHistory WHERE requestId = :requestId")
   int getDeployHistoryForRequestCount(@Bind("requestId") String requestId);
-
-  @SqlQuery(
-    "SELECT json, request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount"
-  )
-  List<SingularityRequestHistory> getRequestHistory(
-    @Bind("requestId") String requestId,
-    @Define("orderDirection") String orderDirection,
-    @Bind("limitStart") Integer limitStart,
-    @Bind("limitCount") Integer limitCount
-  );
 
   @SqlQuery("SELECT COUNT(*) FROM requestHistory WHERE requestId = :requestId")
   int getRequestHistoryCount(@Bind("requestId") String requestId);
@@ -277,6 +265,11 @@ public interface MySQLHistoryJDBI extends AbstractHistoryJDBI {
         lastTaskStatus.isPresent()
       )
     );
+  }
+
+  @Override
+  default String getRequestHistoryBaseQuery() {
+    return "SELECT json, request, createdAt, requestState, user, message FROM requestHistory";
   }
 
   default void close() {}

@@ -772,6 +772,7 @@ public class SingularityExecutorMonitor {
                 task.getExecutorData().getMaxTaskThreads().get()
               );
           } else if (task.wasKilled()) {
+            long shutdownTimeMs = System.currentTimeMillis() - task.getKilledAt();
             taskState = TaskState.TASK_KILLED;
 
             if (task.wasDestroyedAfterWaiting()) {
@@ -782,19 +783,32 @@ public class SingularityExecutorMonitor {
 
               message =
                 String.format(
-                  "Task killed forcibly after waiting at least %s",
-                  JavaUtils.durationFromMillis(millisWaited)
+                  "Task killed forcibly after waiting at least %s (shutdownTime: %dms)",
+                  JavaUtils.durationFromMillis(millisWaited),
+                  shutdownTimeMs
                 );
             } else if (task.wasForceDestroyed()) {
               if (maybeKilledBy.isPresent()) {
                 message =
-                  String.format("Task killed forcibly by %s", maybeKilledBy.get());
+                  String.format(
+                    "Task killed forcibly by %s (shutdownTime: %dms)",
+                    maybeKilledBy.get(),
+                    shutdownTimeMs
+                  );
               } else {
                 message =
-                  "Task killed forcibly after multiple kill requests from framework";
+                  String.format(
+                    "Task killed forcibly after multiple kill requests from framework, (shutdownTime: %dms)",
+                    shutdownTimeMs
+                  );
               }
             } else {
-              message = "Task killed. Process exited gracefully with code " + exitCode;
+              message =
+                String.format(
+                  "Task killed. Process exited gracefully with code %d (shutdownTime: %dms)",
+                  exitCode,
+                  shutdownTimeMs
+                );
             }
           } else if (task.isSuccessExitCode(exitCode)) {
             taskState = TaskState.TASK_FINISHED;

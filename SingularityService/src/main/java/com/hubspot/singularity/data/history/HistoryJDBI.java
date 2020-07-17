@@ -62,6 +62,8 @@ public interface HistoryJDBI extends SqlObject {
 
   List<SingularityRequestHistory> getRequestHistory(
     String requestId,
+    Optional<Long> createdBefore,
+    Optional<Long> createdAfter,
     String orderDirection,
     Integer limitStart,
     Integer limitCount

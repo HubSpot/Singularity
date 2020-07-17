@@ -9,6 +9,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -16,6 +17,14 @@ import java.util.stream.Collectors;
  * Check `man logrotate` for more information.
  */
 public class LogrotateTemplateContext {
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF = p ->
+    p
+      .getLogrotateFrequencyOverride()
+      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue());
+
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
+    p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
+
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
 
@@ -91,27 +100,36 @@ public class LogrotateTemplateContext {
     return getAllExtraFiles()
       .stream()
       .filter(
-        p ->
-          !p
-            .getLogrotateFrequencyOverride()
-            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue())
+        BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF
+          .negate()
+          .and(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF.negate())
       )
       .collect(Collectors.toList());
   }
 
   /**
-   * Extra files for logrotate to rotate hourly. If these do not exist logrotate will continue without error.
+   * Extra files for logrotate to rotate hourly.
+   * Since we don't want to rely on native `hourly` support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
+   * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
     return getAllExtraFiles()
       .stream()
-      .filter(
-        p ->
-          p
-            .getLogrotateFrequencyOverride()
-            .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue())
-      )
+      .filter(BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Extra files for logrotate to rotate based on size.
+   * We implement this via an hourly cron (without a force `-f` flag, so that the rotate only happens if the size threshold is exceeded).
+   * If these do not exist logrotate will continue without error.
+   * @return filenames to rotate.
+   */
+  public List<LogrotateAdditionalFile> getExtrasFilesSizeBased() {
+    return getAllExtraFiles()
+      .stream()
+      .filter(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF)
       .collect(Collectors.toList());
   }
 
@@ -150,7 +168,8 @@ public class LogrotateTemplateContext {
             ? additionalFile.getExtension().get()
             : Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename())), // Can't have possible null in .orElse()
           dateformat,
-          additionalFile.getLogrotateFrequencyOverride()
+          additionalFile.getLogrotateFrequencyOverride(),
+          additionalFile.getLogrotateSizeOverride()
         )
       );
     }

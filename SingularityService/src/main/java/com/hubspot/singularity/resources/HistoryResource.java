@@ -12,6 +12,7 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistoryQuery;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
@@ -759,6 +760,15 @@ public class HistoryResource extends AbstractHistoryResource {
     @Parameter(required = true, description = "Request ID to look up") @PathParam(
       "requestId"
     ) String requestId,
+    @Parameter(
+      description = "Optionally match request histories created before"
+    ) @QueryParam("createdBefore") Optional<Long> createdBefore,
+    @Parameter(
+      description = "Optionally match request histories created after"
+    ) @QueryParam("createdAfter") Optional<Long> createdAfter,
+    @Parameter(description = "Sort direction") @QueryParam(
+      "orderDirection"
+    ) Optional<OrderDirection> orderDirection,
     @Parameter(description = "Maximum number of items to return") @QueryParam(
       "count"
     ) Integer count,
@@ -777,9 +787,15 @@ public class HistoryResource extends AbstractHistoryResource {
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
+    SingularityRequestHistoryQuery requestHistoryQuery = new SingularityRequestHistoryQuery(
+      requestId,
+      createdBefore,
+      createdAfter,
+      orderDirection
+    );
 
     return requestHistoryHelper.getBlendedHistory(
-      requestId,
+      requestHistoryQuery,
       limitStart,
       limitCount,
       skipZk
@@ -810,14 +826,20 @@ public class HistoryResource extends AbstractHistoryResource {
       SingularityAuthorizationScope.READ
     );
 
-    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(
+    SingularityRequestHistoryQuery requestHistoryQuery = new SingularityRequestHistoryQuery(
       requestId,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty()
+    );
+    final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(
+      requestHistoryQuery,
       skipZk
     );
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
     final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(
-      requestId,
+      requestHistoryQuery,
       limitStart,
       limitCount,
       skipZk
