@@ -29,6 +29,16 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     }
   }
 
+  boolean shouldAddForceIndexClause(
+    Optional<String> requestId,
+    Optional<String> deployId,
+    Optional<String> runId,
+    Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus,
+    Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter
+  );
+
   String getRequestHistoryBaseQuery();
 
   default void applyRequestHistoryBaseQuery(
@@ -68,6 +78,20 @@ public interface AbstractHistoryJDBI extends HistoryJDBI {
     Optional<Long> updatedBefore,
     Optional<Long> updatedAfter
   ) {
+    if (
+      shouldAddForceIndexClause(
+        requestId,
+        deployId,
+        runId,
+        host,
+        lastTaskStatus,
+        updatedBefore,
+        updatedAfter
+      )
+    ) {
+      sqlBuilder.append(" FORCE INDEX (hostUpdated) ");
+    }
+
     if (requestId.isPresent()) {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("requestId = :requestId");
