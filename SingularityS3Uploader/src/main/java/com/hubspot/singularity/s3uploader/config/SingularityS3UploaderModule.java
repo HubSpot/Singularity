@@ -6,6 +6,7 @@ import com.hubspot.singularity.s3.base.SingularityS3BaseModule;
 import com.hubspot.singularity.s3uploader.SingularityS3UploaderDriver;
 
 public class SingularityS3UploaderModule extends AbstractModule {
+
   @Override
   protected void configure() {
     install(new SingularityS3BaseModule());

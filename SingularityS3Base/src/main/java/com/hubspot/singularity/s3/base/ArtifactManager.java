@@ -1,21 +1,5 @@
 package com.hubspot.singularity.s3.base;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -29,22 +13,39 @@ import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNoti
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import org.slf4j.Logger;
 
 public class ArtifactManager extends SimpleProcessManager {
-
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
   private final Optional<String> useCompressProgram;
 
-  public ArtifactManager(SingularityRunnerBaseConfiguration runnerBaseConfiguration, SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public ArtifactManager(
+    SingularityRunnerBaseConfiguration runnerBaseConfiguration,
+    SingularityS3Configuration configuration,
+    Logger log,
+    SingularityRunnerExceptionNotifier exceptionNotifier
+  ) {
     super(log);
-
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
-    this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log, exceptionNotifier);
+    this.s3ArtifactDownloader =
+      new S3ArtifactDownloader(configuration, log, exceptionNotifier);
     this.useCompressProgram = runnerBaseConfiguration.getUseCompressProgram();
   }
 
@@ -57,16 +58,29 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   private boolean filesSizeMatches(RemoteArtifact artifact, Path path) {
-    return !artifact.getFilesize().isPresent() || (artifact.getFilesize().get() == getSize(path));
+    return (
+      !artifact.getFilesize().isPresent() ||
+      (artifact.getFilesize().get() == getSize(path))
+    );
   }
 
   private boolean md5Matches(Artifact artifact, Path path) {
-    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equalsIgnoreCase(calculateMd5sum(path));
+    return (
+      !artifact.getMd5sum().isPresent() ||
+      artifact.getMd5sum().get().equalsIgnoreCase(calculateMd5sum(path))
+    );
   }
 
   private void checkFilesize(RemoteArtifact artifact, Path path) {
     if (!filesSizeMatches(artifact, path)) {
-      throw new RuntimeException(String.format("Filesize %s (%s) does not match expected (%s)", getSize(path), path, artifact.getFilesize()));
+      throw new RuntimeException(
+        String.format(
+          "Filesize %s (%s) does not match expected (%s)",
+          getSize(path),
+          path,
+          artifact.getFilesize()
+        )
+      );
     }
   }
 
@@ -80,7 +94,14 @@ public class ArtifactManager extends SimpleProcessManager {
 
   private void checkMd5(Artifact artifact, Path path) {
     if (!md5Matches(artifact, path)) {
-      throw new RuntimeException(String.format("Md5sum %s (%s) does not match expected (%s)", calculateMd5sum(path), path, artifact.getMd5sum().get()));
+      throw new RuntimeException(
+        String.format(
+          "Md5sum %s (%s) does not match expected (%s)",
+          calculateMd5sum(path),
+          path,
+          artifact.getMd5sum().get()
+        )
+      );
     }
   }
 
@@ -88,7 +109,10 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       return Files.createTempFile(cacheDirectory, filename, null);
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't create temporary file for %s", filename), e);
+      throw new RuntimeException(
+        String.format("Couldn't create temporary file for %s", filename),
+        e
+      );
     }
   }
 
@@ -106,7 +130,10 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(artifact, downloadTo);
   }
 
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "https://github.com/spotbugs/spotbugs/issues/259")
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "https://github.com/spotbugs/spotbugs/issues/259"
+  )
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {
     final Path extractTo = directory.resolve(embeddedArtifact.getFilename());
 
@@ -116,22 +143,46 @@ public class ArtifactManager extends SimpleProcessManager {
         Files.createDirectories(parent);
       }
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't extract %s, unable to create directory %s", embeddedArtifact.getName(), parent), e);
+      throw new RuntimeException(
+        String.format(
+          "Couldn't extract %s, unable to create directory %s",
+          embeddedArtifact.getName(),
+          parent
+        ),
+        e
+      );
     }
 
-    log.info("Extracting {} bytes of {} to {}", embeddedArtifact.getContent().length, embeddedArtifact.getName(), extractTo);
+    log.info(
+      "Extracting {} bytes of {} to {}",
+      embeddedArtifact.getContent().length,
+      embeddedArtifact.getName(),
+      extractTo
+    );
 
-    try (SeekableByteChannel byteChannel = Files.newByteChannel(extractTo, EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))) {
+    try (
+      SeekableByteChannel byteChannel = Files.newByteChannel(
+        extractTo,
+        EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+      )
+    ) {
       byteChannel.write(ByteBuffer.wrap(embeddedArtifact.getContent()));
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't extract %s", embeddedArtifact.getName()), e);
+      throw new RuntimeException(
+        String.format("Couldn't extract %s", embeddedArtifact.getName()),
+        e
+      );
     }
 
     chmodReadOnly(extractTo);
     checkMd5(embeddedArtifact, extractTo);
   }
 
-  private Path downloadAndCache(RemoteArtifact artifact, String filename, String cacheMissMessage) {
+  private Path downloadAndCache(
+    RemoteArtifact artifact,
+    String filename,
+    String cacheMissMessage
+  ) {
     Path tempFilePath = createTempPath(filename);
 
     downloadAndCheck(artifact, tempFilePath);
@@ -141,7 +192,15 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       Files.move(tempFilePath, cachedPath, StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't move %s to cache at %s (Not cached because %s)", tempFilePath, cachedPath, cacheMissMessage), e);
+      throw new RuntimeException(
+        String.format(
+          "Couldn't move %s to cache at %s (Not cached because %s)",
+          tempFilePath,
+          cachedPath,
+          cacheMissMessage
+        ),
+        e
+      );
     }
 
     return cachedPath;
@@ -159,13 +218,23 @@ public class ArtifactManager extends SimpleProcessManager {
     }
 
     if (!filesSizeMatches(artifact, cachedPath)) {
-      String message = String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifact.getFilesize());
+      String message = String.format(
+        "Cached %s (%s) did not match file size %s",
+        cachedPath,
+        getSize(cachedPath),
+        artifact.getFilesize()
+      );
       log.debug(message);
       return new CacheCheck(CacheCheckResult.FILE_SIZE_MISMATCH, message);
     }
 
     if (!md5Matches(artifact, cachedPath)) {
-      String message = String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
+      String message = String.format(
+        "Cached %s (%s) did not match md5 %s",
+        cachedPath,
+        calculateMd5sum(cachedPath),
+        artifact.getMd5sum().get()
+      );
       log.debug(message);
       return new CacheCheck(CacheCheckResult.MD5_MISMATCH, message);
     }
@@ -189,7 +258,10 @@ public class ArtifactManager extends SimpleProcessManager {
     return cachedPath;
   }
 
-  private void downloadExternalArtifact(ExternalArtifact externalArtifact, Path downloadTo) {
+  private void downloadExternalArtifact(
+    ExternalArtifact externalArtifact,
+    Path downloadTo
+  ) {
     downloadUri(externalArtifact.getUrl(), downloadTo);
   }
 
@@ -201,12 +273,13 @@ public class ArtifactManager extends SimpleProcessManager {
     log.info("Downloading {} to {}", uri, path);
 
     final List<String> command = ImmutableList.of(
-        "wget",
-        uri,
-        "-O",
-        path.toString(),
-        "-nv",
-        "--no-check-certificate");
+      "wget",
+      uri,
+      "-O",
+      path.toString(),
+      "-nv",
+      "--no-check-certificate"
+    );
 
     runCommandAndThrowRuntimeException(command);
   }
@@ -222,8 +295,7 @@ public class ArtifactManager extends SimpleProcessManager {
       if (!calculateMd5sum(source).equals(calculateMd5sum(destinationPath))) {
         throw new RuntimeException(e);
       }
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -231,7 +303,9 @@ public class ArtifactManager extends SimpleProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
 
-    final ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder().add("tar", "-oxf", source.toString(), "-C", destination.toString());
+    final ImmutableList.Builder<String> commandBuilder = ImmutableList
+      .<String>builder()
+      .add("tar", "-oxf", source.toString(), "-C", destination.toString());
 
     if (useCompressProgram.isPresent()) {
       commandBuilder.add("--use-compress-program=" + useCompressProgram.get());
@@ -252,7 +326,9 @@ public class ArtifactManager extends SimpleProcessManager {
 
   private String calculateMd5sum(Path path) {
     try {
-      HashCode hc = com.google.common.io.Files.asByteSource(path.toFile()).hash(Hashing.md5());
+      HashCode hc = com
+        .google.common.io.Files.asByteSource(path.toFile())
+        .hash(Hashing.md5());
       return hc.toString();
     } catch (IOException e) {
       throw new RuntimeException(e);

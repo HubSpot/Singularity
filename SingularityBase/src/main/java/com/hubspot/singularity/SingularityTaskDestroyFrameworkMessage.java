@@ -1,17 +1,19 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
+import java.util.Optional;
 
 public class SingularityTaskDestroyFrameworkMessage extends SingularityFrameworkMessage {
   private final SingularityTaskId taskId;
   private final Optional<String> user;
 
   @JsonCreator
-  public SingularityTaskDestroyFrameworkMessage(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("user") Optional<String> user) {
+  public SingularityTaskDestroyFrameworkMessage(
+    @JsonProperty("taskId") SingularityTaskId taskId,
+    @JsonProperty("user") Optional<String> user
+  ) {
     this.taskId = taskId;
     this.user = user;
   }
@@ -33,8 +35,7 @@ public class SingularityTaskDestroyFrameworkMessage extends SingularityFramework
       return false;
     }
     SingularityTaskDestroyFrameworkMessage that = (SingularityTaskDestroyFrameworkMessage) o;
-    return Objects.equals(taskId, that.taskId) &&
-        Objects.equals(user, that.user);
+    return Objects.equals(taskId, that.taskId) && Objects.equals(user, that.user);
   }
 
   @Override
@@ -44,9 +45,14 @@ public class SingularityTaskDestroyFrameworkMessage extends SingularityFramework
 
   @Override
   public String toString() {
-    return "SingularityTaskDestroyFrameworkMessage{" +
-        "taskId=" + taskId +
-        ", user=" + user +
-        "} " + super.toString();
+    return (
+      "SingularityTaskDestroyFrameworkMessage{" +
+      "taskId=" +
+      taskId +
+      ", user=" +
+      user +
+      "} " +
+      super.toString()
+    );
   }
 }

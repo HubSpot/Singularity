@@ -1,30 +1,49 @@
 package com.hubspot.singularity.mesos;
 
+import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.SingularityTaskRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.SingularityTaskRequest;
-
 public class SingularityTaskRequestHolder {
-
   private final SingularityTaskRequest taskRequest;
   private final Resources executorResources;
   private final Resources taskResources;
   private final Resources totalResources;
   private final List<Long> requestedPorts;
 
-  public SingularityTaskRequestHolder(SingularityTaskRequest taskRequest, Resources defaultResources, Resources defaultCustomExecutorResources) {
+  public SingularityTaskRequestHolder(
+    SingularityTaskRequest taskRequest,
+    Resources defaultResources,
+    Resources defaultCustomExecutorResources
+  ) {
     this.taskRequest = taskRequest;
-    this.executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ?
-        taskRequest.getDeploy().getCustomExecutorResources().orElse(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;;
-    this.taskResources = taskRequest.getPendingTask().getResources().isPresent() ?
-        taskRequest.getPendingTask().getResources().get() :
-        taskRequest.getDeploy().getResources().orElse(defaultResources);
+    this.executorResources =
+      taskRequest.getDeploy().getCustomExecutorCmd().isPresent()
+        ? taskRequest
+          .getDeploy()
+          .getCustomExecutorResources()
+          .orElse(defaultCustomExecutorResources)
+        : Resources.EMPTY_RESOURCES;
+    this.taskResources =
+      taskRequest.getPendingTask().getResources().isPresent()
+        ? taskRequest.getPendingTask().getResources().get()
+        : taskRequest.getDeploy().getResources().orElse(defaultResources);
     this.totalResources = Resources.add(taskResources, executorResources);
     this.requestedPorts = new ArrayList<>();
-    if (taskRequest.getDeploy().getContainerInfo().isPresent() && taskRequest.getDeploy().getContainerInfo().get().getDocker().isPresent()) {
-      requestedPorts.addAll(taskRequest.getDeploy().getContainerInfo().get().getDocker().get().getLiteralHostPorts());
+    if (
+      taskRequest.getDeploy().getContainerInfo().isPresent() &&
+      taskRequest.getDeploy().getContainerInfo().get().getDocker().isPresent()
+    ) {
+      requestedPorts.addAll(
+        taskRequest
+          .getDeploy()
+          .getContainerInfo()
+          .get()
+          .getDocker()
+          .get()
+          .getLiteralHostPorts()
+      );
     }
   }
 
@@ -50,9 +69,14 @@ public class SingularityTaskRequestHolder {
 
   @Override
   public String toString() {
-    return "SingularityTaskRequestHolder [" + (taskRequest != null ? "taskRequest=" + taskRequest + ", " : "") + (executorResources != null ? "executorResources=" + executorResources + ", " : "")
-        + (taskResources != null ? "taskResources=" + taskResources + ", " : "") + (totalResources != null ? "totalResources=" + totalResources + ", " : "")
-        + (requestedPorts != null ? "requestedPorts=" + requestedPorts : "") + "]";
+    return (
+      "SingularityTaskRequestHolder [" +
+      (taskRequest != null ? "taskRequest=" + taskRequest + ", " : "") +
+      (executorResources != null ? "executorResources=" + executorResources + ", " : "") +
+      (taskResources != null ? "taskResources=" + taskResources + ", " : "") +
+      (totalResources != null ? "totalResources=" + totalResources + ", " : "") +
+      (requestedPorts != null ? "requestedPorts=" + requestedPorts : "") +
+      "]"
+    );
   }
-
 }

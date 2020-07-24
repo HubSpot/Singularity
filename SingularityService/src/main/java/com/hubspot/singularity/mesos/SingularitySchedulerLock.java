@@ -1,20 +1,19 @@
 package com.hubspot.singularity.mesos;
 
+import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
-
 public class SingularitySchedulerLock {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerLock.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularitySchedulerLock.class
+  );
 
   private final ReentrantLock stateLock;
   private final ReentrantLock offersLock;
@@ -30,9 +29,17 @@ public class SingularitySchedulerLock {
   private long lock(String requestId, String name) {
     final long start = System.currentTimeMillis();
     LOG.trace("{} - Locking {}", name, requestId);
-    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
+    ReentrantLock lock = requestLocks.computeIfAbsent(
+      requestId,
+      r -> new ReentrantLock()
+    );
     lock.lock();
-    LOG.trace("{} - Acquired lock on {} ({})", name, requestId, JavaUtils.duration(start));
+    LOG.trace(
+      "{} - Acquired lock on {} ({})",
+      name,
+      requestId,
+      JavaUtils.duration(start)
+    );
     return System.currentTimeMillis();
   }
 
@@ -43,7 +50,10 @@ public class SingularitySchedulerLock {
     } else {
       LOG.trace("{} - Unlocking {} after {}ms", name, requestId, duration);
     }
-    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
+    ReentrantLock lock = requestLocks.computeIfAbsent(
+      requestId,
+      r -> new ReentrantLock()
+    );
     lock.unlock();
   }
 
@@ -56,7 +66,11 @@ public class SingularitySchedulerLock {
     }
   }
 
-  public <T> T runWithRequestLockAndReturn(Callable<T> function, String requestId, String name) {
+  public <T> T runWithRequestLockAndReturn(
+    Callable<T> function,
+    String requestId,
+    String name
+  ) {
     long start = lock(requestId, name);
     try {
       return function.call();
@@ -89,7 +103,7 @@ public class SingularitySchedulerLock {
     stateLock.unlock();
   }
 
-  public void runWithOffersLock(Runnable function,  String name) {
+  public void runWithOffersLock(Runnable function, String name) {
     long start = lockOffers(name);
     try {
       function.run();
@@ -98,12 +112,21 @@ public class SingularitySchedulerLock {
     }
   }
 
-  public void runWithOffersLockAndtimeout(Function<Boolean, Void> function, String name, long timeoutMillis) {
+  public void runWithOffersLockAndtimeout(
+    Function<Boolean, Void> function,
+    String name,
+    long timeoutMillis
+  ) {
     final long start = System.currentTimeMillis();
     LOG.debug("{} - Locking offers lock", name);
     try {
       boolean acquired = offersLock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS);
-      LOG.debug("{} - Acquired offers lock ({}) ({})", name, acquired, JavaUtils.duration(start));
+      LOG.debug(
+        "{} - Acquired offers lock ({}) ({})",
+        name,
+        acquired,
+        JavaUtils.duration(start)
+      );
       long functionStart = System.currentTimeMillis();
       try {
         function.apply(acquired);
@@ -129,5 +152,4 @@ public class SingularitySchedulerLock {
     LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
     offersLock.unlock();
   }
-
 }

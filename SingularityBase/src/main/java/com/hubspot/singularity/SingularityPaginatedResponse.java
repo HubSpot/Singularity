@@ -1,19 +1,22 @@
 package com.hubspot.singularity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Optional;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Schema(description = "Holds a page of responses and metadata")
 public class SingularityPaginatedResponse<Q> {
-
   private final Optional<Integer> dataCount;
   private final Optional<Integer> pageCount;
   private final int page;
   private final List<Q> objects;
 
-  public SingularityPaginatedResponse(final Optional<Integer> dataCount, final Optional<Integer> pageCount, final Optional<Integer> page, final List<Q> objects) {
+  public SingularityPaginatedResponse(
+    final Optional<Integer> dataCount,
+    final Optional<Integer> pageCount,
+    final Optional<Integer> page,
+    final List<Q> objects
+  ) {
     this.dataCount = dataCount;
     this.pageCount = pageCount;
     this.page = page.orElse(1);
@@ -42,11 +45,17 @@ public class SingularityPaginatedResponse<Q> {
 
   @Override
   public String toString() {
-    return "SingularityPaginatedResponse{" +
-        "dataCount=" + dataCount +
-        ", pageCount=" + pageCount +
-        ", page=" + page +
-        ", objects=" + objects +
-        '}';
+    return (
+      "SingularityPaginatedResponse{" +
+      "dataCount=" +
+      dataCount +
+      ", pageCount=" +
+      pageCount +
+      ", page=" +
+      page +
+      ", objects=" +
+      objects +
+      '}'
+    );
   }
 }

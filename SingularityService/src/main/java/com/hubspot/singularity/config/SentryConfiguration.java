@@ -1,11 +1,9 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class SentryConfiguration {
-
   @NotEmpty
   @JsonProperty("dsn")
   private String dsn;

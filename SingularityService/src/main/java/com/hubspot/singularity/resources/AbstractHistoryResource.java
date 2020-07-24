@@ -3,10 +3,6 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
-import java.util.Optional;
-
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
@@ -14,20 +10,29 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.ning.http.client.AsyncHttpClient;
+import java.util.Optional;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public abstract class AbstractHistoryResource extends AbstractLeaderAwareResource {
-
   protected final HistoryManager historyManager;
   protected final TaskManager taskManager;
   protected final DeployManager deployManager;
-  protected final SingularityAuthorizationHelper authorizationHelper;
+  protected final SingularityAuthorizer authorizationHelper;
 
-  public AbstractHistoryResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper) {
+  public AbstractHistoryResource(
+    AsyncHttpClient httpClient,
+    LeaderLatch leaderLatch,
+    ObjectMapper objectMapper,
+    HistoryManager historyManager,
+    TaskManager taskManager,
+    DeployManager deployManager,
+    SingularityAuthorizer authorizationHelper
+  ) {
     super(httpClient, leaderLatch, objectMapper);
     this.historyManager = historyManager;
     this.taskManager = taskManager;
@@ -43,8 +48,15 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
     }
   }
 
-  protected Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId, SingularityUser user) {
-    authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user, SingularityAuthorizationScope.READ);
+  protected Optional<SingularityTaskHistory> getTaskHistory(
+    SingularityTaskId taskId,
+    SingularityUser user
+  ) {
+    authorizationHelper.checkForAuthorizationByRequestId(
+      taskId.getRequestId(),
+      user,
+      SingularityAuthorizationScope.READ
+    );
 
     Optional<SingularityTaskHistory> history = taskManager.getTaskHistory(taskId);
 
@@ -55,7 +67,10 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
     return history;
   }
 
-  protected SingularityTaskHistory getTaskHistoryRequired(SingularityTaskId taskId, SingularityUser user) {
+  protected SingularityTaskHistory getTaskHistoryRequired(
+    SingularityTaskId taskId,
+    SingularityUser user
+  ) {
     Optional<SingularityTaskHistory> history = getTaskHistory(taskId, user);
 
     checkNotFound(history.isPresent(), "No history for task %s", taskId);
@@ -63,10 +78,22 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
     return history.get();
   }
 
-  protected SingularityDeployHistory getDeployHistory(String requestId, String deployId, SingularityUser user) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+  protected SingularityDeployHistory getDeployHistory(
+    String requestId,
+    String deployId,
+    SingularityUser user
+  ) {
+    authorizationHelper.checkForAuthorizationByRequestId(
+      requestId,
+      user,
+      SingularityAuthorizationScope.READ
+    );
 
-    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
+    Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(
+      requestId,
+      deployId,
+      true
+    );
 
     if (deployHistory.isPresent()) {
       return deployHistory.get();
@@ -74,9 +101,13 @@ public abstract class AbstractHistoryResource extends AbstractLeaderAwareResourc
 
     deployHistory = historyManager.getDeployHistory(requestId, deployId);
 
-    checkNotFound(deployHistory.isPresent(), "Deploy history for request %s and deploy %s not found", requestId, deployId);
+    checkNotFound(
+      deployHistory.isPresent(),
+      "Deploy history for request %s and deploy %s not found",
+      requestId,
+      deployId
+    );
 
     return deployHistory.get();
   }
-
 }

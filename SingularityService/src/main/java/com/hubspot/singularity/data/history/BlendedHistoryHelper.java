@@ -1,5 +1,11 @@
 package com.hubspot.singularity.data.history;
 
+import com.google.common.collect.Lists;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.data.TaskManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,16 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.data.TaskManager;
 
 public abstract class BlendedHistoryHelper<T, Q> {
   private static final Logger LOG = LoggerFactory.getLogger(BlendedHistoryHelper.class);
@@ -30,21 +28,35 @@ public abstract class BlendedHistoryHelper<T, Q> {
   }
 
   protected abstract List<T> getFromZk(Q id);
+
   protected abstract List<T> getFromHistory(Q id, int historyStart, int numFromHistory);
 
   protected abstract Optional<Integer> getTotalCount(Q id, boolean canSkipZk);
 
-  public List<SingularityTaskIdHistory> getTaskHistoriesFor(TaskManager taskManager, Collection<SingularityTaskId> taskIds) {
+  public List<SingularityTaskIdHistory> getTaskHistoriesFor(
+    TaskManager taskManager,
+    Collection<SingularityTaskId> taskIds
+  ) {
     Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
-    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(
+      taskIds
+    );
 
-    List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
+    List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(
+      taskIds.size()
+    );
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
       SingularityTask task = tasks.get(taskId);
       if (task != null) {
-        histories.add(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskId, task, historyUpdates));
+        histories.add(
+          SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(
+            taskId,
+            task,
+            historyUpdates
+          )
+        );
       }
     }
 
@@ -57,7 +69,9 @@ public abstract class BlendedHistoryHelper<T, Q> {
   }
 
   protected Comparator<T> getComparator(Q id) {
-    throw new IllegalStateException("Comparator requested for query which doesn't implement it");
+    throw new IllegalStateException(
+      "Comparator requested for query which doesn't implement it"
+    );
   }
 
   public Optional<Integer> getBlendedHistoryCount(Q id, boolean canSkipZk) {
@@ -68,7 +82,12 @@ public abstract class BlendedHistoryHelper<T, Q> {
     return getBlendedHistory(id, limitStart, limitCount, false);
   }
 
-  public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount, boolean canSkipZk) {
+  public List<T> getBlendedHistory(
+    Q id,
+    Integer limitStart,
+    Integer limitCount,
+    boolean canSkipZk
+  ) {
     final List<T> fromZk;
     if (sqlEnabled && canSkipZk) {
       fromZk = new ArrayList<>();
@@ -100,7 +119,12 @@ public abstract class BlendedHistoryHelper<T, Q> {
     return returned;
   }
 
-  private List<T> getOrderedFromHistory(Q id, Integer limitStart, Integer limitCount, List<T> fromZk) {
+  private List<T> getOrderedFromHistory(
+    Q id,
+    Integer limitStart,
+    Integer limitCount,
+    List<T> fromZk
+  ) {
     SortedMap<T, Boolean> returnedMap = new TreeMap<>(getComparator(id));
     for (T item : fromZk) {
       returnedMap.put(item, false);
@@ -113,7 +137,16 @@ public abstract class BlendedHistoryHelper<T, Q> {
     }
 
     int currentStartIndex = 0;
-    while (!foundAllFromHistoryAndTrimResults(returnedMap, currentStartIndex, getLastRelevantHistoryItemIndex(returnedMap, currentStartIndex), limitStart, limitCount, fromHistory.size())) {
+    while (
+      !foundAllFromHistoryAndTrimResults(
+        returnedMap,
+        currentStartIndex,
+        getLastRelevantHistoryItemIndex(returnedMap, currentStartIndex),
+        limitStart,
+        limitCount,
+        fromHistory.size()
+      )
+    ) {
       if (returnedMap.isEmpty()) {
         return getFromHistory(id, limitStart - currentStartIndex, limitCount);
       } else {
@@ -127,28 +160,52 @@ public abstract class BlendedHistoryHelper<T, Q> {
     return new ArrayList<>(returnedMap.keySet());
   }
 
-  private int getLastRelevantHistoryItemIndex(SortedMap<T, Boolean> returnedMap, Integer currentStartIndex) {
+  private int getLastRelevantHistoryItemIndex(
+    SortedMap<T, Boolean> returnedMap,
+    Integer currentStartIndex
+  ) {
     int highestHistoryItemIndex = 0;
     int index = 0;
     for (Map.Entry<T, Boolean> entry : returnedMap.entrySet()) {
       if (entry.getValue()) {
         highestHistoryItemIndex = index;
       }
-      index ++;
+      index++;
     }
     return currentStartIndex + highestHistoryItemIndex;
   }
 
-  private boolean foundAllFromHistoryAndTrimResults(SortedMap<T, Boolean> returnedMap, Integer currentStartIndex, Integer lastRelevantHistoryItemIndex, Integer limitStart, Integer limitCount, int numFromHistory) {
+  private boolean foundAllFromHistoryAndTrimResults(
+    SortedMap<T, Boolean> returnedMap,
+    Integer currentStartIndex,
+    Integer lastRelevantHistoryItemIndex,
+    Integer limitStart,
+    Integer limitCount,
+    int numFromHistory
+  ) {
     boolean foundAllFromHistory = false;
     List<T> toRemove = new ArrayList<>();
     if (numFromHistory == 0 || lastRelevantHistoryItemIndex > limitStart + limitCount) {
       List<T> current = new ArrayList<>(returnedMap.keySet());
-      toRemove.addAll(current.subList(0, Math.min(limitStart - currentStartIndex, current.size())));
-      toRemove.addAll(current.subList(Math.min(limitStart - currentStartIndex + limitCount, current.size()), current.size()));
+      toRemove.addAll(
+        current.subList(0, Math.min(limitStart - currentStartIndex, current.size()))
+      );
+      toRemove.addAll(
+        current.subList(
+          Math.min(limitStart - currentStartIndex + limitCount, current.size()),
+          current.size()
+        )
+      );
       foundAllFromHistory = true;
     } else {
-      toRemove = toRemove.subList(0, Math.min(Math.min(lastRelevantHistoryItemIndex, limitStart - currentStartIndex), toRemove.size()));
+      toRemove =
+        toRemove.subList(
+          0,
+          Math.min(
+            Math.min(lastRelevantHistoryItemIndex, limitStart - currentStartIndex),
+            toRemove.size()
+          )
+        );
       currentStartIndex += toRemove.size();
     }
     for (T item : toRemove) {
@@ -156,10 +213,12 @@ public abstract class BlendedHistoryHelper<T, Q> {
     }
 
     if (!foundAllFromHistory) {
-      LOG.trace("Current start index is {}, querying for more history", currentStartIndex);
+      LOG.trace(
+        "Current start index is {}, querying for more history",
+        currentStartIndex
+      );
     }
 
     return foundAllFromHistory;
   }
-
 }

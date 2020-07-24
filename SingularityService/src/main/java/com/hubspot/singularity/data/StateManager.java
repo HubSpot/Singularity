@@ -1,24 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-
-import javax.inject.Singleton;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.imps.CuratorFrameworkState;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException.NoNodeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
@@ -44,15 +25,31 @@ import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import javax.inject.Singleton;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException.NoNodeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class StateManager extends CuratorManager {
-
   private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
 
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "/STATE";
-  private static final String TASK_RECONCILIATION_STATISTICS_PATH = STATE_PATH + "/taskReconciliation";
+  private static final String TASK_RECONCILIATION_STATISTICS_PATH =
+    STATE_PATH + "/taskReconciliation";
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;
@@ -69,24 +66,27 @@ public class StateManager extends CuratorManager {
   private final AtomicLong lastHeartbeatTime;
 
   @Inject
-  public StateManager(CuratorFramework curatorFramework,
-                      SingularityConfiguration configuration,
-                      MetricRegistry metricRegistry,
-                      RequestManager requestManager,
-                      TaskManager taskManager,
-                      DeployManager deployManager,
-                      SlaveManager slaveManager,
-                      RackManager rackManager,
-                      Transcoder<SingularityState> stateTranscoder,
-                      Transcoder<SingularityHostState> hostStateTranscoder,
-                      SingularityConfiguration singularityConfiguration,
-                      SingularityAuthDatastore authDatastore,
-                      PriorityManager priorityManager,
-                      Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
-                      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas,
-                      @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
+  public StateManager(
+    CuratorFramework curatorFramework,
+    SingularityConfiguration configuration,
+    MetricRegistry metricRegistry,
+    RequestManager requestManager,
+    TaskManager taskManager,
+    DeployManager deployManager,
+    SlaveManager slaveManager,
+    RackManager rackManager,
+    Transcoder<SingularityState> stateTranscoder,
+    Transcoder<SingularityHostState> hostStateTranscoder,
+    SingularityConfiguration singularityConfiguration,
+    SingularityAuthDatastore authDatastore,
+    PriorityManager priorityManager,
+    Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
+    @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) Histogram statusUpdateDeltas,
+    @Named(
+      SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME
+    ) AtomicLong lastHeartbeatTime
+  ) {
     super(curatorFramework, configuration, metricRegistry);
-
     this.requestManager = requestManager;
     this.taskManager = taskManager;
     this.stateTranscoder = stateTranscoder;
@@ -102,12 +102,21 @@ public class StateManager extends CuratorManager {
     this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
-  public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
-    return save(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatistics, taskReconciliationStatisticsTranscoder);
+  public SingularityCreateResult saveTaskReconciliationStatistics(
+    SingularityTaskReconciliationStatistics taskReconciliationStatistics
+  ) {
+    return save(
+      TASK_RECONCILIATION_STATISTICS_PATH,
+      taskReconciliationStatistics,
+      taskReconciliationStatisticsTranscoder
+    );
   }
 
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
-    return getData(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatisticsTranscoder);
+    return getData(
+      TASK_RECONCILIATION_STATISTICS_PATH,
+      taskReconciliationStatisticsTranscoder
+    );
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -119,7 +128,11 @@ public class StateManager extends CuratorManager {
         if (exists(path)) {
           curator.setData().forPath(path, data);
         } else {
-          curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
+          curator
+            .create()
+            .creatingParentsIfNeeded()
+            .withMode(CreateMode.EPHEMERAL)
+            .forPath(path, data);
         }
       } catch (Throwable t) {
         throw new RuntimeException(t);
@@ -180,11 +193,18 @@ public class StateManager extends CuratorManager {
           break;
       }
 
-      updatePossiblyUnderProvisionedAndOverProvisionedIds(requestWithState, numInstances, overProvisionedRequestIds, possiblyUnderProvisionedRequestIds);
+      updatePossiblyUnderProvisionedAndOverProvisionedIds(
+        requestWithState,
+        numInstances,
+        overProvisionedRequestIds,
+        possiblyUnderProvisionedRequestIds
+      );
     }
 
     filterForPendingRequests(possiblyUnderProvisionedRequestIds);
-    final List<String> underProvisionedRequestIds = getUnderProvisionedRequestIds(possiblyUnderProvisionedRequestIds);
+    final List<String> underProvisionedRequestIds = getUnderProvisionedRequestIds(
+      possiblyUnderProvisionedRequestIds
+    );
 
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
     final int cleaningRequests = requestManager.getSizeOfCleanupQueue();
@@ -257,8 +277,12 @@ public class StateManager extends CuratorManager {
 
     for (SingularityPendingDeploy pendingDeploy : deployManager.getPendingDeploys()) {
       activeDeploys.add(pendingDeploy.getDeployMarker());
-      if (pendingDeploy.getDeployProgress().isPresent() && !pendingDeploy.getDeployProgress().get().isStepComplete()) {
-        long deployStepDelta = now - pendingDeploy.getDeployProgress().get().getTimestamp();
+      if (
+        pendingDeploy.getDeployProgress().isPresent() &&
+        !pendingDeploy.getDeployProgress().get().isStepComplete()
+      ) {
+        long deployStepDelta =
+          now - pendingDeploy.getDeployProgress().get().getTimestamp();
         if (deployStepDelta > oldestDeployStep) {
           oldestDeployStep = deployStepDelta;
         }
@@ -274,25 +298,72 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
-    return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getLateTasks().size(),
-        scheduledTasksInfo.getLateTasks(), scheduledTasksInfo.getOnDemandLateTasks().size(), scheduledTasksInfo.getOnDemandLateTasks(),
-        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
-        (long) statusUpdateDeltas.getSnapshot().getMean(), lastHeartbeatTime.get());
+    return new SingularityState(
+      activeTasks,
+      launchingTasks,
+      numActiveRequests,
+      cooldownRequests,
+      numPausedRequests,
+      scheduledTasks,
+      pendingRequests,
+      lbCleanupTasks,
+      lbCleanupRequests,
+      cleaningRequests,
+      activeSlaves,
+      deadSlaves,
+      decommissioningSlaves,
+      activeRacks,
+      deadRacks,
+      decommissioningRacks,
+      cleaningTasks,
+      states,
+      oldestDeploy,
+      numDeploys,
+      oldestDeployStep,
+      activeDeploys,
+      scheduledTasksInfo.getLateTasks().size(),
+      scheduledTasksInfo.getLateTasks(),
+      scheduledTasksInfo.getOnDemandLateTasks().size(),
+      scheduledTasksInfo.getOnDemandLateTasks(),
+      scheduledTasksInfo.getNumFutureTasks(),
+      scheduledTasksInfo.getMaxTaskLag(),
+      System.currentTimeMillis(),
+      includeRequestIds ? overProvisionedRequestIds : null,
+      includeRequestIds ? underProvisionedRequestIds : null,
+      overProvisionedRequestIds.size(),
+      underProvisionedRequestIds.size(),
+      numFinishedRequests,
+      unknownRacks,
+      unknownSlaves,
+      authDatastoreHealthy,
+      minimumPriorityLevel,
+      (long) statusUpdateDeltas.getSnapshot().getMean(),
+      lastHeartbeatTime.get()
+    );
   }
 
   private SingularityScheduledTasksInfo getScheduledTasksInfo() {
     long now = System.currentTimeMillis();
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
-    List<SingularityPendingTaskId> lateTasks = allPendingTaskIds.stream()
-        .filter((p) -> now - p.getNextRunAt() > singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis())
-        .collect(Collectors.toList());
+    List<SingularityPendingTaskId> lateTasks = allPendingTaskIds
+      .stream()
+      .filter(
+        p ->
+          now -
+          p.getNextRunAt() >
+          singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis()
+      )
+      .collect(Collectors.toList());
 
-    Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = lateTasks.stream()
-        .collect(Collectors.partitioningBy(this::requestTypeIsOnDemand));
-    List<SingularityPendingTaskId> generalLateTasks = lateTasksPartitionedByOnDemand.get(false);
-    List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(lateTasksPartitionedByOnDemand.get(true));
+    Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = lateTasks
+      .stream()
+      .collect(Collectors.partitioningBy(this::requestTypeIsOnDemand));
+    List<SingularityPendingTaskId> generalLateTasks = lateTasksPartitionedByOnDemand.get(
+      false
+    );
+    List<SingularityPendingTaskId> onDemandLateTasks = getOnDemandLateTasks(
+      lateTasksPartitionedByOnDemand.get(true)
+    );
     long maxTaskLag = 0L;
     for (SingularityPendingTaskId pendingTaskId : generalLateTasks) {
       long delta = now - pendingTaskId.getNextRunAt();
@@ -307,29 +378,46 @@ public class StateManager extends CuratorManager {
       }
     }
     return new SingularityScheduledTasksInfo(
-        generalLateTasks,
-        onDemandLateTasks,
-        allPendingTaskIds.size() - generalLateTasks.size() - onDemandLateTasks.size(),
-        maxTaskLag,
-        now
-      );
+      generalLateTasks,
+      onDemandLateTasks,
+      allPendingTaskIds.size() - generalLateTasks.size() - onDemandLateTasks.size(),
+      maxTaskLag,
+      now
+    );
   }
 
   private boolean requestTypeIsOnDemand(SingularityPendingTaskId taskId) {
     if (requestManager.getRequest(taskId.getRequestId()).isPresent()) {
-      return requestManager.getRequest(taskId.getRequestId()).get().getRequest().getRequestType().equals(RequestType.ON_DEMAND);
+      return requestManager
+        .getRequest(taskId.getRequestId())
+        .get()
+        .getRequest()
+        .getRequestType()
+        .equals(RequestType.ON_DEMAND);
     }
     return false;
   }
 
-  private List<SingularityPendingTaskId> getOnDemandLateTasks(List<SingularityPendingTaskId> maybeOnDemandLateTasks) {
+  private List<SingularityPendingTaskId> getOnDemandLateTasks(
+    List<SingularityPendingTaskId> maybeOnDemandLateTasks
+  ) {
     List<SingularityPendingTaskId> onDemandLateTasks = new ArrayList<>();
     for (SingularityPendingTaskId maybeOnDemandLateTask : maybeOnDemandLateTasks) {
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(maybeOnDemandLateTask.getRequestId());
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
+        maybeOnDemandLateTask.getRequestId()
+      );
       if (maybeRequest.isPresent()) {
-        final Optional<Integer> maybeInstancesLimit = maybeRequest.get().getRequest().getInstances();
+        final Optional<Integer> maybeInstancesLimit = maybeRequest
+          .get()
+          .getRequest()
+          .getInstances();
         if (maybeInstancesLimit.isPresent()) {
-          if (taskManager.getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId()).size() < maybeInstancesLimit.get()) {
+          if (
+            taskManager
+              .getActiveTaskIdsForRequest(maybeOnDemandLateTask.getRequestId())
+              .size() <
+            maybeInstancesLimit.get()
+          ) {
             onDemandLateTasks.add(maybeOnDemandLateTask);
           }
         }
@@ -350,7 +438,9 @@ public class StateManager extends CuratorManager {
     }
 
     for (SingularityTaskId cleaningTaskId : taskManager.getCleanupTaskIds()) {
-      Optional<SingularityRequestWithState> request = requestManager.getRequest(cleaningTaskId.getRequestId());
+      Optional<SingularityRequestWithState> request = requestManager.getRequest(
+        cleaningTaskId.getRequestId()
+      );
       if (request.isPresent() && request.get().getRequest().isScheduled()) {
         continue;
       }
@@ -361,8 +451,16 @@ public class StateManager extends CuratorManager {
     return numTasks.toCountMap();
   }
 
-  private void updatePossiblyUnderProvisionedAndOverProvisionedIds(SingularityRequestWithState requestWithState, Map<String, Long> numInstances, List<String> overProvisionedRequestIds, Set<String> possiblyUnderProvisionedRequestIds) {
-    if (requestWithState.getState().isRunnable() && requestWithState.getRequest().isAlwaysRunning()) {
+  private void updatePossiblyUnderProvisionedAndOverProvisionedIds(
+    SingularityRequestWithState requestWithState,
+    Map<String, Long> numInstances,
+    List<String> overProvisionedRequestIds,
+    Set<String> possiblyUnderProvisionedRequestIds
+  ) {
+    if (
+      requestWithState.getState().isRunnable() &&
+      requestWithState.getRequest().isAlwaysRunning()
+    ) {
       SingularityRequest request = requestWithState.getRequest();
       final int expectedInstances = request.getInstancesSafe();
 
@@ -381,18 +479,31 @@ public class StateManager extends CuratorManager {
       return;
     }
 
-    final Set<String> pendingRequestIds = requestManager.getPendingRequests().stream().map((r) -> r.getRequestId()).collect(Collectors.toCollection(HashSet::new));
+    final Set<String> pendingRequestIds = requestManager
+      .getPendingRequests()
+      .stream()
+      .map(r -> r.getRequestId())
+      .collect(Collectors.toCollection(HashSet::new));
     possiblyUnderProvisionedRequestIds.removeAll(pendingRequestIds);
   }
 
-  private List<String> getUnderProvisionedRequestIds(Set<String> possiblyUnderProvisionedRequestIds) {
-    final List<String> underProvisionedRequestIds = new ArrayList<>(possiblyUnderProvisionedRequestIds.size());
+  private List<String> getUnderProvisionedRequestIds(
+    Set<String> possiblyUnderProvisionedRequestIds
+  ) {
+    final List<String> underProvisionedRequestIds = new ArrayList<>(
+      possiblyUnderProvisionedRequestIds.size()
+    );
 
     if (!possiblyUnderProvisionedRequestIds.isEmpty()) {
-      Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(possiblyUnderProvisionedRequestIds);
+      Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(
+        possiblyUnderProvisionedRequestIds
+      );
 
       for (SingularityRequestDeployState deployState : deployStates.values()) {
-        if (deployState.getActiveDeploy().isPresent() || deployState.getPendingDeploy().isPresent()) {
+        if (
+          deployState.getActiveDeploy().isPresent() ||
+          deployState.getPendingDeploy().isPresent()
+        ) {
           underProvisionedRequestIds.add(deployState.getRequestId());
         }
       }
@@ -406,13 +517,11 @@ public class StateManager extends CuratorManager {
     List<SingularityHostState> states = Lists.newArrayListWithCapacity(children.size());
 
     for (String child : children) {
-
       try {
         byte[] bytes = curator.getData().forPath(ZKPaths.makePath(ROOT_PATH, child));
 
         states.add(hostStateTranscoder.fromBytes(bytes));
-      } catch (NoNodeException nne) {
-      } catch (Exception e) {
+      } catch (NoNodeException nne) {} catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
@@ -421,6 +530,14 @@ public class StateManager extends CuratorManager {
   }
 
   private Optional<Double> getMinimumPriorityLevel() {
-    return priorityManager.getActivePriorityFreeze().isPresent() ? Optional.of(priorityManager.getActivePriorityFreeze().get().getPriorityFreeze().getMinimumPriorityLevel()) : Optional.empty();
+    return priorityManager.getActivePriorityFreeze().isPresent()
+      ? Optional.of(
+        priorityManager
+          .getActivePriorityFreeze()
+          .get()
+          .getPriorityFreeze()
+          .getMinimumPriorityLevel()
+      )
+      : Optional.empty();
   }
 }

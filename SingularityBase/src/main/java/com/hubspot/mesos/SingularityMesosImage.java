@@ -1,14 +1,12 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Describes a container image to be launched in mesos")
@@ -19,10 +17,12 @@ public class SingularityMesosImage {
   private final boolean cached;
 
   @JsonCreator
-  public SingularityMesosImage(@JsonProperty("type") SingularityMesosImageType type,
-                               @JsonProperty("appc") Optional<SingularityAppcImage> appc,
-                               @JsonProperty("docker") Optional<SingularityDockerImage> docker,
-                               @JsonProperty("cached") Boolean cached) {
+  public SingularityMesosImage(
+    @JsonProperty("type") SingularityMesosImageType type,
+    @JsonProperty("appc") Optional<SingularityAppcImage> appc,
+    @JsonProperty("docker") Optional<SingularityDockerImage> docker,
+    @JsonProperty("cached") Boolean cached
+  ) {
     this.type = type;
     this.appc = appc;
     this.docker = docker;
@@ -35,23 +35,19 @@ public class SingularityMesosImage {
   }
 
   @Schema(description = "Appc image configuration")
-  public Optional<SingularityAppcImage> getAppc()
-  {
+  public Optional<SingularityAppcImage> getAppc() {
     return appc;
   }
 
   @Schema(description = "Docker image configuration")
-  public Optional<SingularityDockerImage> getDocker()
-  {
+  public Optional<SingularityDockerImage> getDocker() {
     return docker;
   }
 
   @Schema(description = "Determines if a cached image is considered up to date")
-  public boolean isCached()
-  {
+  public boolean isCached() {
     return cached;
   }
-
 
   @Override
   public boolean equals(Object o) {
@@ -62,10 +58,12 @@ public class SingularityMesosImage {
       return false;
     }
     SingularityMesosImage that = (SingularityMesosImage) o;
-    return Objects.equals(type, that.type) &&
-        Objects.equals(appc, that.appc) &&
-        Objects.equals(docker, that.docker) &&
-        Objects.equals(cached, that.cached);
+    return (
+      Objects.equals(type, that.type) &&
+      Objects.equals(appc, that.appc) &&
+      Objects.equals(docker, that.docker) &&
+      Objects.equals(cached, that.cached)
+    );
   }
 
   @Override
@@ -75,11 +73,21 @@ public class SingularityMesosImage {
 
   @Override
   public String toString() {
-    return "SingularityMesosImage{" +
-        "type='" + type + '\'' +
-        "appc='" + appc + '\'' +
-        "docker='" + docker + '\'' +
-        "cached='" + cached + '\'' +
-        '}';
+    return (
+      "SingularityMesosImage{" +
+      "type='" +
+      type +
+      '\'' +
+      "appc='" +
+      appc +
+      '\'' +
+      "docker='" +
+      docker +
+      '\'' +
+      "cached='" +
+      cached +
+      '\'' +
+      '}'
+    );
   }
 }

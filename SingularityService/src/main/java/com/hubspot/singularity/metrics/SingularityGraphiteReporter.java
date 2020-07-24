@@ -1,14 +1,5 @@
 package com.hubspot.singularity.metrics;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.SocketFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
@@ -24,10 +15,18 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.GraphiteConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import javax.net.SocketFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityGraphiteReporter {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityGraphiteReporter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityGraphiteReporter.class
+  );
 
   private final GraphiteConfiguration graphiteConfiguration;
   private final MetricRegistry registry;
@@ -36,10 +35,21 @@ public class SingularityGraphiteReporter {
   private final String hostname;
 
   @Inject
-  public SingularityGraphiteReporter(SingularityConfiguration configuration, MetricRegistry registry, @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname) {
+  public SingularityGraphiteReporter(
+    SingularityConfiguration configuration,
+    MetricRegistry registry,
+    @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname
+  ) {
     this.graphiteConfiguration = configuration.getGraphiteConfiguration();
     this.registry = registry;
-    this.hostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
+    this.hostname =
+      !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) &&
+        hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix())
+        ? hostname.substring(
+          0,
+          hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()
+        )
+        : hostname;
   }
 
   private String buildGraphitePrefix() {
@@ -69,29 +79,50 @@ public class SingularityGraphiteReporter {
     final String prefix = buildGraphitePrefix();
     final Map<String, String> tags = buildGraphiteTags();
 
-    LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}', predicates '{}', and tags '{}'.", graphiteConfiguration.getHostname(),
-        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()), JavaUtils.COMMA_EQUALS_MAP_JOINER.join(tags));
+    LOG.info(
+      "Reporting data points to graphite server {}:{} every {} seconds with prefix '{}', predicates '{}', and tags '{}'.",
+      graphiteConfiguration.getHostname(),
+      graphiteConfiguration.getPort(),
+      graphiteConfiguration.getPeriodSeconds(),
+      prefix,
+      JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()),
+      JavaUtils.COMMA_EQUALS_MAP_JOINER.join(tags)
+    );
 
-    graphite = new GraphiteWithTags(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()), SocketFactory.getDefault(), Charsets.UTF_8, tags);
+    graphite =
+      new GraphiteWithTags(
+        new InetSocketAddress(
+          graphiteConfiguration.getHostname(),
+          graphiteConfiguration.getPort()
+        ),
+        SocketFactory.getDefault(),
+        Charsets.UTF_8,
+        tags
+      );
 
-    final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
+    final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(
+      registry
+    );
 
     if (!Strings.isNullOrEmpty(prefix)) {
       reporterBuilder.prefixedWith(prefix);
     }
 
     if (!graphiteConfiguration.getPredicates().isEmpty()) {
-      reporterBuilder.filter(new MetricFilter() {
-        @Override
-        public boolean matches(String name, Metric metric) {
-          for (String predicate : graphiteConfiguration.getPredicates()) {
-            if (name.startsWith(predicate)) {
-              return true;
+      reporterBuilder.filter(
+        new MetricFilter() {
+
+          @Override
+          public boolean matches(String name, Metric metric) {
+            for (String predicate : graphiteConfiguration.getPredicates()) {
+              if (name.startsWith(predicate)) {
+                return true;
+              }
             }
+            return false;
           }
-          return false;
         }
-      });
+      );
     }
 
     reporter = reporterBuilder.build(graphite);
@@ -110,5 +141,4 @@ public class SingularityGraphiteReporter {
       LOG.info("Closed GraphiteReporter");
     }
   }
-
 }

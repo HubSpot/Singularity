@@ -1,18 +1,15 @@
 package com.hubspot.singularity.config;
 
+import com.hubspot.singularity.SingularityS3UploaderFile;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.NotNull;
 
-import com.hubspot.singularity.SingularityS3UploaderFile;
-
 public class S3Configuration {
-
   @NotNull
   private int maxS3Threads = 3;
 
@@ -59,7 +56,9 @@ public class S3Configuration {
   private String s3SecretKey;
 
   @NotNull
-  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(
+    SingularityS3UploaderFile.fromString("service.log")
+  );
 
   private Optional<String> s3StorageClass = Optional.empty();
 
@@ -89,7 +88,9 @@ public class S3Configuration {
     return missingTaskDefaultS3SearchPeriodMillis;
   }
 
-  public void setMissingTaskDefaultS3SearchPeriodMillis(long missingTaskDefaultS3SearchPeriodMillis) {
+  public void setMissingTaskDefaultS3SearchPeriodMillis(
+    long missingTaskDefaultS3SearchPeriodMillis
+  ) {
     this.missingTaskDefaultS3SearchPeriodMillis = missingTaskDefaultS3SearchPeriodMillis;
   }
 
@@ -149,7 +150,9 @@ public class S3Configuration {
     return groupS3SearchConfigs;
   }
 
-  public S3Configuration setGroupS3SearchConfigs(Map<String, S3GroupConfiguration> groupS3SearchConfigs) {
+  public S3Configuration setGroupS3SearchConfigs(
+    Map<String, S3GroupConfiguration> groupS3SearchConfigs
+  ) {
     this.groupS3SearchConfigs = groupS3SearchConfigs;
     return this;
   }
@@ -158,7 +161,9 @@ public class S3Configuration {
     return s3UploaderAdditionalFiles;
   }
 
-  public void setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+  public void setS3UploaderAdditionalFiles(
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+  ) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
   }
 
@@ -174,7 +179,9 @@ public class S3Configuration {
     return applyS3StorageClassAfterBytes;
   }
 
-  public void setApplyS3StorageClassAfterBytes(Optional<Long> applyS3StorageClassAfterBytes) {
+  public void setApplyS3StorageClassAfterBytes(
+    Optional<Long> applyS3StorageClassAfterBytes
+  ) {
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
   }
 }

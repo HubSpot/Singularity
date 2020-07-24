@@ -1,17 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -25,11 +13,23 @@ import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
+import java.io.IOException;
+import java.io.Reader;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 
 @Singleton
 public class SandboxManager {
   private static final String REPLACEMENT_CHARACTER = "\ufffd";
-  private static final String TWO_REPLACEMENT_CHARACTERS = REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER;
+  private static final String TWO_REPLACEMENT_CHARACTERS =
+    REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER;
 
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
@@ -38,7 +38,11 @@ public class SandboxManager {
   private static final TypeReference<Collection<MesosFileObject>> MESOS_FILE_OBJECTS = new TypeReference<Collection<MesosFileObject>>() {};
 
   @Inject
-  public SandboxManager(AsyncHttpClient asyncHttpClient, SingularityConfiguration configuration, @Singularity ObjectMapper objectMapper) {
+  public SandboxManager(
+    AsyncHttpClient asyncHttpClient,
+    SingularityConfiguration configuration,
+    @Singularity ObjectMapper objectMapper
+  ) {
     this.asyncHttpClient = asyncHttpClient;
     this.objectMapper = objectMapper;
     this.configuration = configuration;
@@ -46,33 +50,45 @@ public class SandboxManager {
 
   @SuppressWarnings("serial")
   public static class SlaveNotFoundException extends RuntimeException {
+
     public SlaveNotFoundException(Exception e) {
       super(e);
     }
   }
 
-  public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
+  public Collection<MesosFileObject> browse(String slaveHostname, String fullPath)
+    throws SlaveNotFoundException {
     try {
       Response response = asyncHttpClient
-          .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
-          .setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis())
-          .addQueryParam("path", fullPath)
-          .execute()
-          .get();
-
-
+        .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
+        .setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis())
+        .addQueryParam("path", fullPath)
+        .execute()
+        .get();
 
       if (response.getStatusCode() == 404) {
         return Collections.emptyList();
       }
 
       if (response.getStatusCode() != 200) {
-        throw new RuntimeException(String.format("Got HTTP %s from Mesos slave", response.getStatusCode()));
+        throw new RuntimeException(
+          String.format("Got HTTP %s from Mesos slave", response.getStatusCode())
+        );
       }
 
-      return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
+      return objectMapper.readValue(
+        response.getResponseBodyAsStream(),
+        MESOS_FILE_OBJECTS
+      );
     } catch (Exception e) {
-      if (Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof UnknownHostException || t instanceof ConnectException)) {
+      if (
+        Throwables
+          .getCausalChain(e)
+          .stream()
+          .anyMatch(
+            t -> t instanceof UnknownHostException || t instanceof ConnectException
+          )
+      ) {
         throw new SlaveNotFoundException(e);
       } else {
         throw new RuntimeException(e);
@@ -81,10 +97,17 @@ public class SandboxManager {
   }
 
   @SuppressWarnings("deprecation")
-  public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
+  public Optional<MesosFileChunkObject> read(
+    String slaveHostname,
+    String fullPath,
+    Optional<Long> offset,
+    Optional<Long> length
+  )
+    throws SlaveNotFoundException {
     try {
-      final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
-          .addQueryParam("path", fullPath);
+      final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient
+        .prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
+        .addQueryParam("path", fullPath);
 
       builder.setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis());
 
@@ -103,12 +126,21 @@ public class SandboxManager {
       }
 
       if (response.getStatusCode() != 200) {
-        throw new RuntimeException(String.format("Got HTTP %s from Mesos slave", response.getStatusCode()));
+        throw new RuntimeException(
+          String.format("Got HTTP %s from Mesos slave", response.getStatusCode())
+        );
       }
 
       return Optional.of(parseResponseBody(response));
     } catch (Exception e) {
-      if (Throwables.getCausalChain(e).stream().anyMatch((t) -> t instanceof UnknownHostException || t instanceof ConnectException)) {
+      if (
+        Throwables
+          .getCausalChain(e)
+          .stream()
+          .anyMatch(
+            t -> t instanceof UnknownHostException || t instanceof ConnectException
+          )
+      ) {
         throw new SlaveNotFoundException(e);
       } else {
         throw new RuntimeException(e);
@@ -124,16 +156,23 @@ public class SandboxManager {
   @VisibleForTesting
   MesosFileChunkObject parseResponseBody(Response response) throws IOException {
     // not thread-safe, need to make a new one each time;
-    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
-        .onMalformedInput(CodingErrorAction.REPLACE)
-        .replaceWith(REPLACEMENT_CHARACTER);
+    CharsetDecoder decoder = StandardCharsets
+      .UTF_8.newDecoder()
+      .onMalformedInput(CodingErrorAction.REPLACE)
+      .replaceWith(REPLACEMENT_CHARACTER);
 
     ByteBuffer responseBuffer = response.getResponseBodyAsByteBuffer();
     Reader sanitizedReader = CharSource.wrap(decoder.decode(responseBuffer)).openStream();
-    final MesosFileChunkObject initialChunk = objectMapper.readValue(sanitizedReader, MesosFileChunkObject.class);
+    final MesosFileChunkObject initialChunk = objectMapper.readValue(
+      sanitizedReader,
+      MesosFileChunkObject.class
+    );
 
     // bail early if no replacement characters
-    if (!initialChunk.getData().startsWith(REPLACEMENT_CHARACTER) && !initialChunk.getData().endsWith(REPLACEMENT_CHARACTER)) {
+    if (
+      !initialChunk.getData().startsWith(REPLACEMENT_CHARACTER) &&
+      !initialChunk.getData().endsWith(REPLACEMENT_CHARACTER)
+    ) {
       return initialChunk;
     }
 
@@ -141,7 +180,11 @@ public class SandboxManager {
 
     // if we requested data between two characters, return nothing and advance the offset to the end
     if (data.length() <= 4 && data.replace(REPLACEMENT_CHARACTER, "").length() == 0) {
-      return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>empty());
+      return new MesosFileChunkObject(
+        "",
+        initialChunk.getOffset() + data.length(),
+        Optional.<Long>empty()
+      );
     }
 
     // trim incomplete character at the beginning of the string
@@ -160,6 +203,10 @@ public class SandboxManager {
       endIndex -= 1;
     }
 
-    return new MesosFileChunkObject(data.substring(startIndex, endIndex), initialChunk.getOffset() + startIndex, Optional.<Long>empty());
+    return new MesosFileChunkObject(
+      data.substring(startIndex, endIndex),
+      initialChunk.getOffset() + startIndex,
+      Optional.<Long>empty()
+    );
   }
 }

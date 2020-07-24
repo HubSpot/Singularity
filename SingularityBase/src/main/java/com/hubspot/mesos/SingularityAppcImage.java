@@ -1,13 +1,11 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Settings for an appc image")
@@ -16,20 +14,21 @@ public class SingularityAppcImage {
   private final Optional<String> id;
 
   @JsonCreator
-  public SingularityAppcImage(@JsonProperty("name") String name, @JsonProperty("id") Optional<String> id) {
+  public SingularityAppcImage(
+    @JsonProperty("name") String name,
+    @JsonProperty("id") Optional<String> id
+  ) {
     this.name = name;
     this.id = id;
   }
 
   @Schema(required = true, description = "Appc image name")
-  public String getName()
-  {
+  public String getName() {
     return name;
   }
 
   @Schema(description = "The image id")
-  public Optional<String> getId()
-  {
+  public Optional<String> getId() {
     return id;
   }
 
@@ -42,8 +41,7 @@ public class SingularityAppcImage {
       return false;
     }
     SingularityAppcImage that = (SingularityAppcImage) o;
-    return Objects.equals(name, that.name) &&
-        Objects.equals(id, that.id);
+    return Objects.equals(name, that.name) && Objects.equals(id, that.id);
   }
 
   @Override
@@ -53,9 +51,6 @@ public class SingularityAppcImage {
 
   @Override
   public String toString() {
-    return "SingularityAppcImage{" +
-        "name='" + name + '\'' +
-        "id='" + id + '\'' +
-        '}';
+    return "SingularityAppcImage{" + "name='" + name + '\'' + "id='" + id + '\'' + '}';
   }
 }

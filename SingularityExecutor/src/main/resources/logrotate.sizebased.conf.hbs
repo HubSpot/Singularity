@@ -1,0 +1,40 @@
+dateext
+compress
+{{#if compressCmd}}compresscmd {{{compressCmd}}}{{/if}}
+{{#if uncompressCmd}}uncompresscmd {{{uncompressCmd}}}{{/if}}
+{{#if compressOptions}}compressoptions {{{compressOptions}}}{{/if}}
+{{#if compressExt}}compressext {{{compressExt}}}{{/if}}
+copytruncate
+nomail
+nosharedscripts
+rotate {{{ rotateCount }}}
+maxage {{{ maxageDays }}}
+notifempty
+
+{{#if extrasFilesSizeBased}}
+  {{#each extrasFilesSizeBased}}{{{filename}}} {
+    size {{{logrotateSizeOverride}}}
+  dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
+  missingok
+  {{#if useFileAttributes}}
+    lastaction
+    NOW="$(($(date +%s%N)/1000000))"
+    for oldfile in $@
+    do
+    LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
+    timestring=`date +%Y-%m-%d-%s`
+    for filename in "$oldfile-${timestring%???}"*
+    do
+    if [ "$LOGSTART" != "" ]; then
+    setfattr -n user.logstart -v "$LOGSTART" $filename
+    fi
+    setfattr -n user.logend -v "$NOW" $filename
+    done
+    setfattr -n user.logstart -v "$NOW" $oldfile
+    done
+    endscript
+  {{/if}}
+  }
+
+  {{/each}}
+{{/if}}

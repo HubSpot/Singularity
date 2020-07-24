@@ -14,7 +14,10 @@ public class SingularityS3Services {
     this.defaultS3Service = null;
   }
 
-  public SingularityS3Services(List<SingularityS3Service> s3Services, SingularityS3Service defaultS3Service) {
+  public SingularityS3Services(
+    List<SingularityS3Service> s3Services,
+    SingularityS3Service defaultS3Service
+  ) {
     this.s3ConfigPresent = true;
     this.s3Services = s3Services;
     this.defaultS3Service = defaultS3Service;
@@ -32,7 +35,10 @@ public class SingularityS3Services {
     return defaultS3Service;
   }
 
-  public SingularityS3Service getServiceByGroupAndBucketOrDefault(String group, String bucket) {
+  public SingularityS3Service getServiceByGroupAndBucketOrDefault(
+    String group,
+    String bucket
+  ) {
     for (SingularityS3Service s3Service : s3Services) {
       if (s3Service.getGroup().equals(group) && s3Service.getBucket().equals(bucket)) {
         return s3Service;

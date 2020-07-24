@@ -2,6 +2,9 @@ package com.hubspot.singularity.runner.base.shared;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,15 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
-
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
-
 public class JsonObjectFileHelper {
-
   private final ObjectMapper objectMapper;
 
   @Inject
@@ -30,14 +27,19 @@ public class JsonObjectFileHelper {
   public <T> Optional<T> read(Path file, Logger log, Class<T> clazz) throws IOException {
     final long start = System.currentTimeMillis();
 
-    log.info("Reading {}", file);
+    log.trace("Reading {}", file);
 
     byte[] bytes = new byte[0];
 
     try {
       bytes = Files.readAllBytes(file);
 
-      log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
+      log.trace(
+        "Read {} bytes from {} in {}",
+        bytes.length,
+        file,
+        JavaUtils.duration(start)
+      );
 
       if (bytes.length == 0) {
         return Optional.empty();
@@ -48,7 +50,13 @@ public class JsonObjectFileHelper {
     } catch (NoSuchFileException nsfe) {
       log.warn("File {} does not exist", file);
     } catch (IOException e) {
-      log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), new String(bytes, UTF_8), e);
+      log.warn(
+        "File {} is not a valid {} ({})",
+        file,
+        clazz.getSimpleName(),
+        new String(bytes, UTF_8),
+        e
+      );
     }
 
     return Optional.empty();
@@ -66,7 +74,13 @@ public class JsonObjectFileHelper {
 
       log.info("Writing {} bytes of {} to {}", bytes.length, object, path);
 
-      Files.write(path, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+      Files.write(
+        path,
+        bytes,
+        StandardOpenOption.WRITE,
+        StandardOpenOption.CREATE,
+        StandardOpenOption.TRUNCATE_EXISTING
+      );
 
       return true;
     } catch (Throwable t) {
@@ -76,5 +90,4 @@ public class JsonObjectFileHelper {
       log.trace("Finishing writing {} after {}", object, JavaUtils.duration(start));
     }
   }
-
 }

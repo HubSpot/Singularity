@@ -1,11 +1,6 @@
 package com.hubspot.singularity.executor;
 
-import org.apache.mesos.MesosExecutorDriver;
-import org.apache.mesos.Protos;
-import org.slf4j.ILoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -15,27 +10,52 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.executor.task.LocalDownloadServiceFetcher;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-
-import ch.qos.logback.classic.LoggerContext;
+import org.apache.mesos.MesosExecutorDriver;
+import org.apache.mesos.Protos;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingularityExecutorRunner {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorRunner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityExecutorRunner.class
+  );
 
   public static void main(String... args) {
     final long start = System.currentTimeMillis();
 
     try {
-      final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(SingularityExecutorConfiguration.class, ImmutableSet.<Class<? extends BaseRunnerConfiguration>>of(SingularityS3Configuration.class)), new SingularityExecutorModule());
-      final SingularityExecutorRunner executorRunner = injector.getInstance(SingularityExecutorRunner.class);
+      final Injector injector = Guice.createInjector(
+        Stage.PRODUCTION,
+        new SingularityRunnerBaseModule(
+          SingularityExecutorConfiguration.class,
+          ImmutableSet.<Class<? extends BaseRunnerConfiguration>>of(
+            SingularityS3Configuration.class
+          )
+        ),
+        new SingularityExecutorModule()
+      );
+      final SingularityExecutorRunner executorRunner = injector.getInstance(
+        SingularityExecutorRunner.class
+      );
+      final LocalDownloadServiceFetcher downloadServiceFetcher = injector.getInstance(
+        LocalDownloadServiceFetcher.class
+      );
+      downloadServiceFetcher.start();
 
       final Protos.Status driverStatus = executorRunner.run();
 
-      LOG.info("Executor finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
+      LOG.info(
+        "Executor finished after {} with status: {}",
+        JavaUtils.duration(start),
+        driverStatus
+      );
 
+      downloadServiceFetcher.stop();
       stopLog();
 
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
@@ -49,7 +69,7 @@ public class SingularityExecutorRunner {
   }
 
   private static void stopLog() {
-   ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+    ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
     if (loggerFactory instanceof LoggerContext) {
       LoggerContext context = (LoggerContext) loggerFactory;
       context.stop();
@@ -61,7 +81,11 @@ public class SingularityExecutorRunner {
   private final SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorRunner(@Named(SingularityRunnerBaseModule.PROCESS_NAME) String name, SingularityExecutor singularityExecutor, SingularityExecutorMonitor monitor) {
+  public SingularityExecutorRunner(
+    @Named(SingularityRunnerBaseModule.PROCESS_NAME) String name,
+    SingularityExecutor singularityExecutor,
+    SingularityExecutorMonitor monitor
+  ) {
     this.name = name;
     this.singularityExecutor = singularityExecutor;
     this.monitor = monitor;
@@ -73,17 +97,19 @@ public class SingularityExecutorRunner {
     final MesosExecutorDriver driver = new MesosExecutorDriver(singularityExecutor);
     monitor.start(driver);
 
-    Runtime.getRuntime().addShutdownHook(new Thread("SingularityExecutorRunnerGracefulShutdown") {
+    Runtime
+      .getRuntime()
+      .addShutdownHook(
+        new Thread("SingularityExecutorRunnerGracefulShutdown") {
 
-      @Override
-      public void run() {
-        LOG.info("Executor is shutting down, ensuring shutdown via shutdown hook");
-        monitor.shutdown(driver);
-      }
-
-    });
+          @Override
+          public void run() {
+            LOG.info("Executor is shutting down, ensuring shutdown via shutdown hook");
+            monitor.shutdown(driver);
+          }
+        }
+      );
 
     return driver.run();
   }
-
 }

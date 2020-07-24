@@ -131,6 +131,7 @@ class TaskHistoryTable extends Component {
           paginated={true}
           fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
           isFetching={isFetching}
+          showPageLoaderWhenFetching={true}
           initialPageNumber={this.props.initialPageNumber}
           onPageChange={this.props.onPageChange}
           defaultSortBy={'updatedAt'}
@@ -181,7 +182,7 @@ class TaskHistoryTable extends Component {
             cellData={(task) => (
               <span>
                 <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
-                  <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                  <Link to={Utils.tailerPath(task.taskId.id, config.finishedTaskLogPath)}>
                     <Glyphicon glyph="file" />
                   </Link>
                 </OverlayTrigger>

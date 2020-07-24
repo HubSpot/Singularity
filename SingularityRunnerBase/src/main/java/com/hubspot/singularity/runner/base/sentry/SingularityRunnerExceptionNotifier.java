@@ -1,13 +1,11 @@
 package com.hubspot.singularity.runner.base.sentry;
 
-import java.util.Map;
-import java.util.Optional;
-
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
-
+import java.util.Map;
+import java.util.Optional;
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
 import net.kencochrane.raven.event.Event;
@@ -20,10 +18,13 @@ public class SingularityRunnerExceptionNotifier {
   private final SingularityRunnerBaseConfiguration configuration;
 
   @Inject
-  public SingularityRunnerExceptionNotifier(SingularityRunnerBaseConfiguration configuration) {
+  public SingularityRunnerExceptionNotifier(
+    SingularityRunnerBaseConfiguration configuration
+  ) {
     this.configuration = configuration;
     if (configuration.getSentryDsn().isPresent()) {
-      this.raven = Optional.of(RavenFactory.ravenInstance(configuration.getSentryDsn().get()));
+      this.raven =
+        Optional.of(RavenFactory.ravenInstance(configuration.getSentryDsn().get()));
     } else {
       this.raven = Optional.empty();
     }
@@ -56,14 +57,16 @@ public class SingularityRunnerExceptionNotifier {
       return;
     }
 
-    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
+    final StackTraceElement[] currentThreadStackTrace = Thread
+      .currentThread()
+      .getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .withCulprit(getPrefix() + message)
-            .withMessage(Strings.nullToEmpty(message))
-            .withLevel(Event.Level.ERROR)
-            .withLogger(getCallingClassName(currentThreadStackTrace))
-            .withSentryInterface(new ExceptionInterface(t));
+      .withCulprit(getPrefix() + message)
+      .withMessage(Strings.nullToEmpty(message))
+      .withLevel(Event.Level.ERROR)
+      .withLogger(getCallingClassName(currentThreadStackTrace))
+      .withSentryInterface(new ExceptionInterface(t));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
@@ -79,12 +82,14 @@ public class SingularityRunnerExceptionNotifier {
       return;
     }
 
-    final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
+    final StackTraceElement[] currentThreadStackTrace = Thread
+      .currentThread()
+      .getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .withMessage(getPrefix() + subject)
-            .withLevel(Event.Level.ERROR)
-            .withLogger(getCallingClassName(currentThreadStackTrace));
+      .withMessage(getPrefix() + subject)
+      .withLevel(Event.Level.ERROR)
+      .withLogger(getCallingClassName(currentThreadStackTrace));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {

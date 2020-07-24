@@ -1,14 +1,12 @@
 package com.hubspot.mesos.json;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class MesosMasterStateObject {
-
   private final String version;
   private final String gitSha;
   private final String gitTag;
@@ -30,11 +28,27 @@ public class MesosMasterStateObject {
   private final List<MesosFrameworkObject> frameworks;
 
   @JsonCreator
-  public MesosMasterStateObject(@JsonProperty("version") String version, @JsonProperty("git_sha") String gitSha, @JsonProperty("git_tag") String gitTag, @JsonProperty("build_date") String buildDate,
-      @JsonProperty("build_time") long buildTime, @JsonProperty("build_user") String buildUser, @JsonProperty("start_time") double startTime, @JsonProperty("elected_time") double electedTime,
-      @JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("activated_slaves") int activatedSlaves,
-      @JsonProperty("deactivated_slaves") int deactivatedSlaves, @JsonProperty("cluster") String cluster, @JsonProperty("leader") String leader, @JsonProperty("log_dir") String logDir,
-      @JsonProperty("flags") Map<String, String> flags, @JsonProperty("slaves") List<MesosMasterSlaveObject> slaves, @JsonProperty("frameworks") List<MesosFrameworkObject> frameworks) {
+  public MesosMasterStateObject(
+    @JsonProperty("version") String version,
+    @JsonProperty("git_sha") String gitSha,
+    @JsonProperty("git_tag") String gitTag,
+    @JsonProperty("build_date") String buildDate,
+    @JsonProperty("build_time") long buildTime,
+    @JsonProperty("build_user") String buildUser,
+    @JsonProperty("start_time") double startTime,
+    @JsonProperty("elected_time") double electedTime,
+    @JsonProperty("id") String id,
+    @JsonProperty("pid") String pid,
+    @JsonProperty("hostname") String hostname,
+    @JsonProperty("activated_slaves") int activatedSlaves,
+    @JsonProperty("deactivated_slaves") int deactivatedSlaves,
+    @JsonProperty("cluster") String cluster,
+    @JsonProperty("leader") String leader,
+    @JsonProperty("log_dir") String logDir,
+    @JsonProperty("flags") Map<String, String> flags,
+    @JsonProperty("slaves") List<MesosMasterSlaveObject> slaves,
+    @JsonProperty("frameworks") List<MesosFrameworkObject> frameworks
+  ) {
     this.version = version;
     this.gitSha = gitSha;
     this.gitTag = gitTag;
@@ -141,54 +155,108 @@ public class MesosMasterStateObject {
       return false;
     }
     MesosMasterStateObject that = (MesosMasterStateObject) o;
-    return buildTime == that.buildTime &&
-        Double.compare(that.startTime, startTime) == 0 &&
-        Double.compare(that.electedTime, electedTime) == 0 &&
-        activatedSlaves == that.activatedSlaves &&
-        deactivatedSlaves == that.deactivatedSlaves &&
-        Objects.equals(version, that.version) &&
-        Objects.equals(gitSha, that.gitSha) &&
-        Objects.equals(gitTag, that.gitTag) &&
-        Objects.equals(buildDate, that.buildDate) &&
-        Objects.equals(buildUser, that.buildUser) &&
-        Objects.equals(id, that.id) &&
-        Objects.equals(pid, that.pid) &&
-        Objects.equals(hostname, that.hostname) &&
-        Objects.equals(cluster, that.cluster) &&
-        Objects.equals(leader, that.leader) &&
-        Objects.equals(logDir, that.logDir) &&
-        Objects.equals(flags, that.flags) &&
-        Objects.equals(slaves, that.slaves) &&
-        Objects.equals(frameworks, that.frameworks);
+    return (
+      buildTime == that.buildTime &&
+      Double.compare(that.startTime, startTime) == 0 &&
+      Double.compare(that.electedTime, electedTime) == 0 &&
+      activatedSlaves == that.activatedSlaves &&
+      deactivatedSlaves == that.deactivatedSlaves &&
+      Objects.equals(version, that.version) &&
+      Objects.equals(gitSha, that.gitSha) &&
+      Objects.equals(gitTag, that.gitTag) &&
+      Objects.equals(buildDate, that.buildDate) &&
+      Objects.equals(buildUser, that.buildUser) &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(pid, that.pid) &&
+      Objects.equals(hostname, that.hostname) &&
+      Objects.equals(cluster, that.cluster) &&
+      Objects.equals(leader, that.leader) &&
+      Objects.equals(logDir, that.logDir) &&
+      Objects.equals(flags, that.flags) &&
+      Objects.equals(slaves, that.slaves) &&
+      Objects.equals(frameworks, that.frameworks)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(version, gitSha, gitTag, buildDate, buildTime, buildUser, startTime, electedTime, id, pid, hostname, activatedSlaves, deactivatedSlaves, cluster, leader, logDir, flags, slaves, frameworks);
+    return Objects.hash(
+      version,
+      gitSha,
+      gitTag,
+      buildDate,
+      buildTime,
+      buildUser,
+      startTime,
+      electedTime,
+      id,
+      pid,
+      hostname,
+      activatedSlaves,
+      deactivatedSlaves,
+      cluster,
+      leader,
+      logDir,
+      flags,
+      slaves,
+      frameworks
+    );
   }
 
   @Override
   public String toString() {
-    return "MesosMasterStateObject{" +
-        "version='" + version + '\'' +
-        ", gitSha='" + gitSha + '\'' +
-        ", gitTag='" + gitTag + '\'' +
-        ", buildDate='" + buildDate + '\'' +
-        ", buildTime=" + buildTime +
-        ", buildUser='" + buildUser + '\'' +
-        ", startTime=" + startTime +
-        ", electedTime=" + electedTime +
-        ", id='" + id + '\'' +
-        ", pid='" + pid + '\'' +
-        ", hostname='" + hostname + '\'' +
-        ", activatedSlaves=" + activatedSlaves +
-        ", deactivatedSlaves=" + deactivatedSlaves +
-        ", cluster='" + cluster + '\'' +
-        ", leader='" + leader + '\'' +
-        ", logDir='" + logDir + '\'' +
-        ", flags=" + flags +
-        ", slaves=" + slaves +
-        ", frameworks=" + frameworks +
-        '}';
+    return (
+      "MesosMasterStateObject{" +
+      "version='" +
+      version +
+      '\'' +
+      ", gitSha='" +
+      gitSha +
+      '\'' +
+      ", gitTag='" +
+      gitTag +
+      '\'' +
+      ", buildDate='" +
+      buildDate +
+      '\'' +
+      ", buildTime=" +
+      buildTime +
+      ", buildUser='" +
+      buildUser +
+      '\'' +
+      ", startTime=" +
+      startTime +
+      ", electedTime=" +
+      electedTime +
+      ", id='" +
+      id +
+      '\'' +
+      ", pid='" +
+      pid +
+      '\'' +
+      ", hostname='" +
+      hostname +
+      '\'' +
+      ", activatedSlaves=" +
+      activatedSlaves +
+      ", deactivatedSlaves=" +
+      deactivatedSlaves +
+      ", cluster='" +
+      cluster +
+      '\'' +
+      ", leader='" +
+      leader +
+      '\'' +
+      ", logDir='" +
+      logDir +
+      '\'' +
+      ", flags=" +
+      flags +
+      ", slaves=" +
+      slaves +
+      ", frameworks=" +
+      frameworks +
+      '}'
+    );
   }
 }

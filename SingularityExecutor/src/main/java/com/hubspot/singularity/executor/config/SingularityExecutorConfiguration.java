@@ -1,18 +1,5 @@
 package com.hubspot.singularity.executor.config;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.SingularityShellCommand;
@@ -23,8 +10,22 @@ import com.hubspot.singularity.executor.utils.MesosUtils;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
-@Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
+@Configuration(
+  filename = "/etc/singularity.executor.yaml",
+  consolidatedField = "executor"
+)
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
@@ -118,7 +119,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
-  private String logrotateDateformat= "%Y%m%d%s";
+  private String logrotateDateformat = "%Y%m%d%s";
 
   @NotEmpty
   @JsonProperty
@@ -160,6 +161,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private int dockerStopTimeout = 15;
 
+  @JsonProperty
+  @NotNull
+  private List<String> dockerInheritVariables = new ArrayList<>();
+
   @NotEmpty
   @JsonProperty
   private String cgroupsMesosCpuTasksFormat = "/cgroup/cpu/%s/tasks";
@@ -174,7 +179,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
+  private List<String> artifactSignatureVerificationCommand = Arrays.asList(
+    "/usr/bin/gpg",
+    "--verify",
+    "{artifactSignaturePath}"
+  );
 
   @JsonProperty
   private boolean failTaskOnInvalidArtifactSignature = true;
@@ -224,7 +233,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
 
   @JsonProperty
-  private SingularityExecutorLogrotateFrequency logrotateFrequency = SingularityExecutorLogrotateFrequency.DAILY;
+  private SingularityExecutorLogrotateFrequency logrotateFrequency =
+    SingularityExecutorLogrotateFrequency.DAILY;
 
   @NotEmpty
   @JsonProperty
@@ -251,6 +261,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean verifyAssignedPorts = false;
 
+  private boolean failOnSignatureWithNoMatchingArtifact = false;
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -275,7 +287,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return logrotateAdditionalFiles;
   }
 
-  public void setLogrotateAdditionalFiles(List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles) {
+  public void setLogrotateAdditionalFiles(
+    List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles
+  ) {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
@@ -307,7 +321,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return localDownloadServiceMaxConnections;
   }
 
-  public void setLocalDownloadServiceMaxConnections(int localDownloadServiceMaxConnections) {
+  public void setLocalDownloadServiceMaxConnections(
+    int localDownloadServiceMaxConnections
+  ) {
     this.localDownloadServiceMaxConnections = localDownloadServiceMaxConnections;
   }
 
@@ -411,9 +427,21 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return dockerStopTimeout;
   }
 
+  public List<String> getDockerInheritVariables() {
+    return dockerInheritVariables;
+  }
+
+  public void setDockerInheritVariables(List<String> dockerInheritVariables) {
+    this.dockerInheritVariables = dockerInheritVariables;
+  }
+
   @JsonIgnore
   public Path getTaskDefinitionPath(String taskId) {
-    return Paths.get(getGlobalTaskDefinitionDirectory()).resolve(MesosUtils.getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix());
+    return Paths
+      .get(getGlobalTaskDefinitionDirectory())
+      .resolve(
+        MesosUtils.getSafeTaskIdForDirectory(taskId) + getGlobalTaskDefinitionSuffix()
+      );
   }
 
   public void setExecutorJavaLog(String executorJavaLog) {
@@ -512,7 +540,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.useLocalDownloadService = useLocalDownloadService;
   }
 
-  public void setLocalDownloadServiceTimeoutMillis(long localDownloadServiceTimeoutMillis) {
+  public void setLocalDownloadServiceTimeoutMillis(
+    long localDownloadServiceTimeoutMillis
+  ) {
     this.localDownloadServiceTimeoutMillis = localDownloadServiceTimeoutMillis;
   }
 
@@ -556,7 +586,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return artifactSignatureVerificationCommand;
   }
 
-  public void setArtifactSignatureVerificationCommand(List<String> artifactSignatureVerificationCommand) {
+  public void setArtifactSignatureVerificationCommand(
+    List<String> artifactSignatureVerificationCommand
+  ) {
     this.artifactSignatureVerificationCommand = artifactSignatureVerificationCommand;
   }
 
@@ -564,7 +596,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return failTaskOnInvalidArtifactSignature;
   }
 
-  public void setFailTaskOnInvalidArtifactSignature(boolean failTaskOnInvalidArtifactSignature) {
+  public void setFailTaskOnInvalidArtifactSignature(
+    boolean failTaskOnInvalidArtifactSignature
+  ) {
     this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
   }
 
@@ -575,11 +609,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public void setSignatureVerifyOut(String signatureVerifyOut) {
     this.signatureVerifyOut = signatureVerifyOut;
   }
+
   public List<SingularityExecutorShellCommandDescriptor> getShellCommands() {
     return shellCommands;
   }
 
-  public void setShellCommands(List<SingularityExecutorShellCommandDescriptor> shellCommands) {
+  public void setShellCommands(
+    List<SingularityExecutorShellCommandDescriptor> shellCommands
+  ) {
     this.shellCommands = shellCommands;
   }
 
@@ -611,7 +648,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return runShellCommandBeforeKillDueToThreads;
   }
 
-  public void setRunShellCommandBeforeKillDueToThreads(Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads) {
+  public void setRunShellCommandBeforeKillDueToThreads(
+    Optional<SingularityShellCommand> runShellCommandBeforeKillDueToThreads
+  ) {
     this.runShellCommandBeforeKillDueToThreads = runShellCommandBeforeKillDueToThreads;
   }
 
@@ -643,7 +682,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return dockerAuthConfig;
   }
 
-  public void setDockerAuthConfig(Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig) {
+  public void setDockerAuthConfig(
+    Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig
+  ) {
     this.dockerAuthConfig = dockerAuthConfig;
   }
 
@@ -659,7 +700,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return logrotateFrequency;
   }
 
-  public void setLogrotateFrequency(SingularityExecutorLogrotateFrequency logrotateFrequency) {
+  public void setLogrotateFrequency(
+    SingularityExecutorLogrotateFrequency logrotateFrequency
+  ) {
     this.logrotateFrequency = logrotateFrequency;
   }
 
@@ -675,7 +718,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return useFileAttributes;
   }
 
-  public SingularityExecutorConfiguration setUseFileAttributes(boolean useFileAttributes) {
+  public SingularityExecutorConfiguration setUseFileAttributes(
+    boolean useFileAttributes
+  ) {
     this.useFileAttributes = useFileAttributes;
     return this;
   }
@@ -684,7 +729,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return logrotateCompressionSettings;
   }
 
-  public void setLogrotateCompressionSettings(LogrotateCompressionSettings logrotateCompressionSettings) {
+  public void setLogrotateCompressionSettings(
+    LogrotateCompressionSettings logrotateCompressionSettings
+  ) {
     this.logrotateCompressionSettings = logrotateCompressionSettings;
   }
 
@@ -692,7 +739,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return initialIdleExecutorShutdownWaitMillis;
   }
 
-  public void setInitialIdleExecutorShutdownWaitMillis(long initialIdleExecutorShutdownWaitMillis) {
+  public void setInitialIdleExecutorShutdownWaitMillis(
+    long initialIdleExecutorShutdownWaitMillis
+  ) {
     this.initialIdleExecutorShutdownWaitMillis = initialIdleExecutorShutdownWaitMillis;
   }
 
@@ -721,7 +770,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.extraDockerScriptContent = extraDockerScriptContent;
   }
 
-
   public int getDefaultHealthcheckMaxRetries() {
     return defaultHealthcheckMaxRetries;
   }
@@ -736,7 +784,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setMaxServiceLogSizeMb(Optional<Long> maxServiceLogSizeMb) {
     this.maxServiceLogSizeMb = maxServiceLogSizeMb;
-
   }
 
   public boolean isVerifyAssignedPorts() {
@@ -751,7 +798,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return defaultHealthcheckBaseTimeoutSeconds;
   }
 
-  public void setDefaultHealthcheckBaseTimeoutSeconds(int defaultHealthcheckBaseTimeoutSeconds) {
+  public void setDefaultHealthcheckBaseTimeoutSeconds(
+    int defaultHealthcheckBaseTimeoutSeconds
+  ) {
     this.defaultHealthcheckBaseTimeoutSeconds = defaultHealthcheckBaseTimeoutSeconds;
   }
 
@@ -759,76 +808,183 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return defaultHealthcheckInternvalSeconds;
   }
 
-  public void setDefaultHealthcheckInternvalSeconds(int defaultHealthcheckInternvalSeconds) {
+  public void setDefaultHealthcheckInternvalSeconds(
+    int defaultHealthcheckInternvalSeconds
+  ) {
     this.defaultHealthcheckInternvalSeconds = defaultHealthcheckInternvalSeconds;
+  }
+
+  public void setLogrotateHourlyConfDirectory(String logrotateHourlyConfDirectory) {
+    this.logrotateHourlyConfDirectory = logrotateHourlyConfDirectory;
+  }
+
+  public boolean isFailOnSignatureWithNoMatchingArtifact() {
+    return failOnSignatureWithNoMatchingArtifact;
+  }
+
+  public void setFailOnSignatureWithNoMatchingArtifact(
+    boolean failOnSignatureWithNoMatchingArtifact
+  ) {
+    this.failOnSignatureWithNoMatchingArtifact = failOnSignatureWithNoMatchingArtifact;
   }
 
   @Override
   public String toString() {
-    return "SingularityExecutorConfiguration{" +
-        "executorJavaLog='" + executorJavaLog + '\'' +
-        ", executorBashLog='" + executorBashLog + '\'' +
-        ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
-        ", taskAppDirectory='" + taskAppDirectory + '\'' +
-        ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
-        ", initialIdleExecutorShutdownWaitMillis=" + initialIdleExecutorShutdownWaitMillis +
-        ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
-        ", stopDriverAfterMillis=" + stopDriverAfterMillis +
-        ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
-        ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
-        ", hardKillAfterMillis=" + hardKillAfterMillis +
-        ", killThreads=" + killThreads +
-        ", threadCheckThreads=" + threadCheckThreads +
-        ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
-        ", maxTaskMessageLength=" + maxTaskMessageLength +
-        ", logrotateCommand='" + logrotateCommand + '\'' +
-        ", logrotateStateFile='" + logrotateStateFile + '\'' +
-        ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
-        ", logrotateHourlyConfDirectory='" + logrotateHourlyConfDirectory + '\'' +
-        ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
-        ", logrotateMaxageDays=" + logrotateMaxageDays +
-        ", logrotateCount=" + logrotateCount +
-        ", logrotateDateformat='" + logrotateDateformat + '\'' +
-        ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-        ", ignoreLogrotateOutput=" + ignoreLogrotateOutput +
-        ", logrotateCompressionSettings=" + logrotateCompressionSettings +
-        ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
-        ", tailLogLinesToSave=" + tailLogLinesToSave +
-        ", useLocalDownloadService=" + useLocalDownloadService +
-        ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
-        ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
-        ", maxTaskThreads=" + maxTaskThreads +
-        ", dockerPrefix='" + dockerPrefix + '\'' +
-        ", dockerStopTimeout=" + dockerStopTimeout +
-        ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
-        ", procCgroupFormat='" + procCgroupFormat + '\'' +
-        ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
-        ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
-        ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
-        ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
-        ", shellCommands=" + shellCommands +
-        ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
-        ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
-        ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
-        ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
-        ", shellCommandPrefix=" + shellCommandPrefix +
-        ", runShellCommandBeforeKillDueToThreads=" + runShellCommandBeforeKillDueToThreads +
-        ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
-        ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
-        ", maxDockerPullAttempts=" + maxDockerPullAttempts +
-        ", dockerAuthConfig=" + dockerAuthConfig +
-        ", threadCheckerType=" + threadCheckerType +
-        ", logrotateFrequency=" + logrotateFrequency +
-        ", cronDirectory='" + cronDirectory + '\'' +
-        ", useFileAttributes=" + useFileAttributes +
-        ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
-        ", defaultHealthcheckBaseTimeoutSeconds=" + defaultHealthcheckBaseTimeoutSeconds +
-        ", defaultHealthcheckInternvalSeconds=" + defaultHealthcheckInternvalSeconds +
-        ", defaultCfsPeriod=" + defaultCfsPeriod +
-        ", extraScriptContent='" + extraScriptContent + '\'' +
-        ", extraDockerScriptContent='" + extraDockerScriptContent + '\'' +
-        ", maxServiceLogSizeMb=" + maxServiceLogSizeMb +
-        ", verifyAssignedPorts=" + verifyAssignedPorts +
-        "} " + super.toString();
+    return (
+      "SingularityExecutorConfiguration{" +
+      "executorJavaLog='" +
+      executorJavaLog +
+      '\'' +
+      ", executorBashLog='" +
+      executorBashLog +
+      '\'' +
+      ", defaultRunAsUser='" +
+      defaultRunAsUser +
+      '\'' +
+      ", taskAppDirectory='" +
+      taskAppDirectory +
+      '\'' +
+      ", shutdownTimeoutWaitMillis=" +
+      shutdownTimeoutWaitMillis +
+      ", initialIdleExecutorShutdownWaitMillis=" +
+      initialIdleExecutorShutdownWaitMillis +
+      ", idleExecutorShutdownWaitMillis=" +
+      idleExecutorShutdownWaitMillis +
+      ", stopDriverAfterMillis=" +
+      stopDriverAfterMillis +
+      ", globalTaskDefinitionDirectory='" +
+      globalTaskDefinitionDirectory +
+      '\'' +
+      ", globalTaskDefinitionSuffix='" +
+      globalTaskDefinitionSuffix +
+      '\'' +
+      ", hardKillAfterMillis=" +
+      hardKillAfterMillis +
+      ", killThreads=" +
+      killThreads +
+      ", threadCheckThreads=" +
+      threadCheckThreads +
+      ", checkThreadsEveryMillis=" +
+      checkThreadsEveryMillis +
+      ", maxTaskMessageLength=" +
+      maxTaskMessageLength +
+      ", logrotateCommand='" +
+      logrotateCommand +
+      '\'' +
+      ", logrotateStateFile='" +
+      logrotateStateFile +
+      '\'' +
+      ", logrotateConfDirectory='" +
+      logrotateConfDirectory +
+      '\'' +
+      ", logrotateHourlyConfDirectory='" +
+      logrotateHourlyConfDirectory +
+      '\'' +
+      ", logrotateToDirectory='" +
+      logrotateToDirectory +
+      '\'' +
+      ", logrotateMaxageDays=" +
+      logrotateMaxageDays +
+      ", logrotateCount=" +
+      logrotateCount +
+      ", logrotateDateformat='" +
+      logrotateDateformat +
+      '\'' +
+      ", logrotateExtrasDateformat='" +
+      logrotateExtrasDateformat +
+      '\'' +
+      ", ignoreLogrotateOutput=" +
+      ignoreLogrotateOutput +
+      ", logrotateCompressionSettings=" +
+      logrotateCompressionSettings +
+      ", logrotateAdditionalFiles=" +
+      logrotateAdditionalFiles +
+      ", tailLogLinesToSave=" +
+      tailLogLinesToSave +
+      ", useLocalDownloadService=" +
+      useLocalDownloadService +
+      ", localDownloadServiceTimeoutMillis=" +
+      localDownloadServiceTimeoutMillis +
+      ", localDownloadServiceMaxConnections=" +
+      localDownloadServiceMaxConnections +
+      ", maxTaskThreads=" +
+      maxTaskThreads +
+      ", dockerPrefix='" +
+      dockerPrefix +
+      '\'' +
+      ", dockerStopTimeout=" +
+      dockerStopTimeout +
+      ", cgroupsMesosCpuTasksFormat='" +
+      cgroupsMesosCpuTasksFormat +
+      '\'' +
+      ", procCgroupFormat='" +
+      procCgroupFormat +
+      '\'' +
+      ", switchUserCommandFormat='" +
+      switchUserCommandFormat +
+      '\'' +
+      ", artifactSignatureVerificationCommand=" +
+      artifactSignatureVerificationCommand +
+      ", failTaskOnInvalidArtifactSignature=" +
+      failTaskOnInvalidArtifactSignature +
+      ", signatureVerifyOut='" +
+      signatureVerifyOut +
+      '\'' +
+      ", shellCommands=" +
+      shellCommands +
+      ", shellCommandOutFile='" +
+      shellCommandOutFile +
+      '\'' +
+      ", shellCommandPidPlaceholder='" +
+      shellCommandPidPlaceholder +
+      '\'' +
+      ", shellCommandUserPlaceholder='" +
+      shellCommandUserPlaceholder +
+      '\'' +
+      ", shellCommandPidFile='" +
+      shellCommandPidFile +
+      '\'' +
+      ", shellCommandPrefix=" +
+      shellCommandPrefix +
+      ", runShellCommandBeforeKillDueToThreads=" +
+      runShellCommandBeforeKillDueToThreads +
+      ", dockerClientTimeLimitSeconds=" +
+      dockerClientTimeLimitSeconds +
+      ", dockerClientConnectionPoolSize=" +
+      dockerClientConnectionPoolSize +
+      ", maxDockerPullAttempts=" +
+      maxDockerPullAttempts +
+      ", dockerAuthConfig=" +
+      dockerAuthConfig +
+      ", threadCheckerType=" +
+      threadCheckerType +
+      ", logrotateFrequency=" +
+      logrotateFrequency +
+      ", cronDirectory='" +
+      cronDirectory +
+      '\'' +
+      ", useFileAttributes=" +
+      useFileAttributes +
+      ", defaultHealthcheckMaxRetries=" +
+      defaultHealthcheckMaxRetries +
+      ", defaultHealthcheckBaseTimeoutSeconds=" +
+      defaultHealthcheckBaseTimeoutSeconds +
+      ", defaultHealthcheckInternvalSeconds=" +
+      defaultHealthcheckInternvalSeconds +
+      ", defaultCfsPeriod=" +
+      defaultCfsPeriod +
+      ", extraScriptContent='" +
+      extraScriptContent +
+      '\'' +
+      ", extraDockerScriptContent='" +
+      extraDockerScriptContent +
+      '\'' +
+      ", maxServiceLogSizeMb=" +
+      maxServiceLogSizeMb +
+      ", verifyAssignedPorts=" +
+      verifyAssignedPorts +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import com.google.common.io.Closeables;
+import com.hubspot.mesos.JavaUtils;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -9,15 +11,10 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Closeables;
-import com.hubspot.mesos.JavaUtils;
-
 public abstract class WatchServiceHelper implements Closeable {
-
   private static final Logger LOG = LoggerFactory.getLogger(WatchServiceHelper.class);
 
   private final WatchService watchService;
@@ -27,7 +24,11 @@ public abstract class WatchServiceHelper implements Closeable {
 
   private volatile boolean stopped;
 
-  public WatchServiceHelper(long pollWaitCheckShutdownMillis, Path watchDirectory, List<WatchEvent.Kind<Path>> watchEvents) {
+  public WatchServiceHelper(
+    long pollWaitCheckShutdownMillis,
+    Path watchDirectory,
+    List<WatchEvent.Kind<Path>> watchEvents
+  ) {
     this.pollWaitCheckShutdownMillis = pollWaitCheckShutdownMillis;
 
     this.watchDirectory = watchDirectory;
@@ -77,11 +78,13 @@ public abstract class WatchServiceHelper implements Closeable {
   public void watch() throws IOException, InterruptedException {
     LOG.info("Watching directory {} for event(s) {}", watchDirectory, watchEvents);
 
-    WatchKey watchKey = watchDirectory.register(watchService, watchEvents.toArray(new WatchEvent.Kind[watchEvents.size()]));
+    WatchKey watchKey = watchDirectory.register(
+      watchService,
+      watchEvents.toArray(new WatchEvent.Kind[watchEvents.size()])
+    );
 
     while (!stopped) {
       if (watchKey != null) {
-
         processWatchKey(watchKey);
 
         if (!watchKey.reset()) {
@@ -94,7 +97,8 @@ public abstract class WatchServiceHelper implements Closeable {
     }
   }
 
-  protected abstract boolean processEvent(WatchEvent.Kind<?> kind, Path filename) throws IOException;
+  protected abstract boolean processEvent(WatchEvent.Kind<?> kind, Path filename)
+    throws IOException;
 
   @SuppressWarnings("unchecked")
   private WatchEvent<Path> cast(WatchEvent<?> event) {
@@ -111,7 +115,7 @@ public abstract class WatchServiceHelper implements Closeable {
       WatchEvent.Kind<?> kind = event.kind();
 
       if (!watchEvents.contains(kind)) {
-        LOG.trace("Ignoring an {} event to {}", event.context());
+        LOG.trace("Ignoring an {} event to {}", event.kind(), event.context());
         continue;
       }
 
@@ -123,7 +127,12 @@ public abstract class WatchServiceHelper implements Closeable {
       }
     }
 
-    LOG.debug("Handled {} out of {} event(s) for {} in {}", processed, events.size(), watchDirectory, JavaUtils.duration(start));
+    LOG.debug(
+      "Handled {} out of {} event(s) for {} in {}",
+      processed,
+      events.size(),
+      watchDirectory,
+      JavaUtils.duration(start)
+    );
   }
-
 }

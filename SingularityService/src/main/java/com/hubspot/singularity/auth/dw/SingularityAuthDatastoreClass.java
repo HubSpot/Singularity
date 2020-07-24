@@ -1,4 +1,4 @@
-package com.hubspot.singularity.auth;
+package com.hubspot.singularity.auth.dw;
 
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.datastore.SingularityDisabledAuthDatastore;
@@ -12,7 +12,9 @@ public enum SingularityAuthDatastoreClass {
 
   private final Class<? extends SingularityAuthDatastore> authDatastoreClass;
 
-  SingularityAuthDatastoreClass(Class<? extends SingularityAuthDatastore> authDatastoreClass) {
+  SingularityAuthDatastoreClass(
+    Class<? extends SingularityAuthDatastore> authDatastoreClass
+  ) {
     this.authDatastoreClass = authDatastoreClass;
   }
 

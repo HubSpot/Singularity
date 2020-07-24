@@ -1,5 +1,7 @@
 package com.hubspot.singularity.async;
 
+import com.google.common.base.Suppliers;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.Callable;
@@ -11,10 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
-
-import com.google.common.base.Suppliers;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * AsyncSemaphore guarantees that at most N executions
@@ -44,8 +42,14 @@ public class AsyncSemaphore<T> {
    *
    * @param concurrentRequestLimit - A supplier saying how many concurrent requests are allowed
    */
-  public static AsyncSemaphoreBuilder newBuilder(Supplier<Integer> concurrentRequestLimit, ScheduledExecutorService flushingExecutor) {
-    return new AsyncSemaphoreBuilder(new PermitSource(concurrentRequestLimit), flushingExecutor);
+  public static AsyncSemaphoreBuilder newBuilder(
+    Supplier<Integer> concurrentRequestLimit,
+    ScheduledExecutorService flushingExecutor
+  ) {
+    return new AsyncSemaphoreBuilder(
+      new PermitSource(concurrentRequestLimit),
+      flushingExecutor
+    );
   }
 
   /**
@@ -53,19 +57,25 @@ public class AsyncSemaphore<T> {
    *
    * @param permitSource - A source for the permits used by the semaphore
    */
-  public static AsyncSemaphoreBuilder newBuilder(PermitSource permitSource, ScheduledExecutorService flushingExecutor) {
+  public static AsyncSemaphoreBuilder newBuilder(
+    PermitSource permitSource,
+    ScheduledExecutorService flushingExecutor
+  ) {
     return new AsyncSemaphoreBuilder(permitSource, flushingExecutor);
   }
 
-  AsyncSemaphore(PermitSource permitSource,
-                 Queue<DelayedExecution<T>> requestQueue,
-                 Supplier<Integer> queueRejectionThreshold,
-                 Supplier<Exception> timeoutExceptionSupplier,
-                 boolean flushQueuePeriodically,
-                 ScheduledExecutorService flushingExecutor) {
+  AsyncSemaphore(
+    PermitSource permitSource,
+    Queue<DelayedExecution<T>> requestQueue,
+    Supplier<Integer> queueRejectionThreshold,
+    Supplier<Exception> timeoutExceptionSupplier,
+    boolean flushQueuePeriodically,
+    ScheduledExecutorService flushingExecutor
+  ) {
     this.permitSource = permitSource;
     this.requestQueue = requestQueue;
-    this.queueRejectionThreshold = Suppliers.memoizeWithExpiration(queueRejectionThreshold::get, 1, TimeUnit.MINUTES);
+    this.queueRejectionThreshold =
+      Suppliers.memoizeWithExpiration(queueRejectionThreshold::get, 1, TimeUnit.MINUTES);
     this.timeoutExceptionSupplier = timeoutExceptionSupplier;
     if (flushQueuePeriodically) {
       flushingExecutor.scheduleAtFixedRate(() -> flushQueue(), 1, 1, TimeUnit.SECONDS);
@@ -88,26 +98,36 @@ public class AsyncSemaphore<T> {
    * @param timeUnit
    * @return
    */
-  public CompletableFuture<T> callWithQueueTimeout(Callable<CompletableFuture<T>> execution, long timeout, TimeUnit timeUnit) {
-    return callWithQueueTimeout(execution, Optional.of(TimeUnit.MILLISECONDS.convert(timeout, timeUnit)));
+  public CompletableFuture<T> callWithQueueTimeout(
+    Callable<CompletableFuture<T>> execution,
+    long timeout,
+    TimeUnit timeUnit
+  ) {
+    return callWithQueueTimeout(
+      execution,
+      Optional.of(TimeUnit.MILLISECONDS.convert(timeout, timeUnit))
+    );
   }
 
-  private CompletableFuture<T> callWithQueueTimeout(Callable<CompletableFuture<T>> execution,
-                                                    Optional<Long> timeoutInMillis) {
-
+  private CompletableFuture<T> callWithQueueTimeout(
+    Callable<CompletableFuture<T>> execution,
+    Optional<Long> timeoutInMillis
+  ) {
     if (timeoutInMillis.isPresent() && timeoutInMillis.get() <= 0) {
       return CompletableFutures.exceptionalFuture(timeoutExceptionSupplier.get());
-
     } else if (tryAcquirePermit()) {
       CompletableFuture<T> responseFuture = executeCall(execution);
       pollQueueOnCompletion(responseFuture);
       return responseFuture;
-
     } else {
-      DelayedExecution<T> delayedExecution = new DelayedExecution<>(execution, timeoutExceptionSupplier, timeoutInMillis);
+      DelayedExecution<T> delayedExecution = new DelayedExecution<>(
+        execution,
+        timeoutExceptionSupplier,
+        timeoutInMillis
+      );
       if (!tryEnqueueAttempt(delayedExecution)) {
         return CompletableFutures.exceptionalFuture(
-            new RejectedExecutionException("Could not queue future for execution.")
+          new RejectedExecutionException("Could not queue future for execution.")
         );
       }
       return delayedExecution.getResponseFuture();
@@ -115,31 +135,32 @@ public class AsyncSemaphore<T> {
   }
 
   private <U> void pollQueueOnCompletion(CompletableFuture<U> future) {
-    future.whenComplete((ignored1, ignored2) -> {
+    future.whenComplete(
+      (ignored1, ignored2) -> {
+        // iterate through expired executions rather than using callbacks
+        // to avoid StackoverflowError if futures are completed or expired
+        while (true) {
+          DelayedExecution<T> nextExecutionDue = requestQueue.poll();
 
-      // iterate through expired executions rather than using callbacks
-      // to avoid StackoverflowError if futures are completed or expired
-      while (true) {
-        DelayedExecution<T> nextExecutionDue = requestQueue.poll();
-
-        if (nextExecutionDue == null) {
-          releasePermit();
-          return;
-
-        } else if (nextExecutionDue.isExpired()) {
-          nextExecutionDue.getResponseFuture().completeExceptionally(timeoutExceptionSupplier.get());
-
-        } else {
-          // reuse the previous permit for the queued request
-          CompletableFuture<Void> nextExecution = nextExecutionDue.execute();
-
-          if (!nextExecution.isDone()) {
-            pollQueueOnCompletion(nextExecution);
+          if (nextExecutionDue == null) {
+            releasePermit();
             return;
+          } else if (nextExecutionDue.isExpired()) {
+            nextExecutionDue
+              .getResponseFuture()
+              .completeExceptionally(timeoutExceptionSupplier.get());
+          } else {
+            // reuse the previous permit for the queued request
+            CompletableFuture<Void> nextExecution = nextExecutionDue.execute();
+
+            if (!nextExecution.isDone()) {
+              pollQueueOnCompletion(nextExecution);
+              return;
+            }
           }
         }
       }
-    });
+    );
   }
 
   private boolean tryAcquirePermit() {
@@ -157,7 +178,9 @@ public class AsyncSemaphore<T> {
     return concurrentRequests.decrementAndGet();
   }
 
-  private static <T> CompletableFuture<T> executeCall(Callable<CompletableFuture<T>> execution) {
+  private static <T> CompletableFuture<T> executeCall(
+    Callable<CompletableFuture<T>> execution
+  ) {
     try {
       return execution.call();
     } catch (Throwable t) {
@@ -193,7 +216,7 @@ public class AsyncSemaphore<T> {
     }
   }
 
-  private void  flushQueue() {
+  private void flushQueue() {
     if (tryAcquirePermit()) {
       // Pass in an already completed future so that we execute the callback on this thread
       pollQueueOnCompletion(CompletableFuture.completedFuture(true));
@@ -202,23 +225,27 @@ public class AsyncSemaphore<T> {
 
   static class DelayedExecution<T> {
     private static final AtomicIntegerFieldUpdater<DelayedExecution> EXECUTED_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
-        DelayedExecution.class,
-        "executed"
+      DelayedExecution.class,
+      "executed"
     );
     private final Callable<CompletableFuture<T>> execution;
     private final CompletableFuture<T> responseFuture;
     private final Supplier<Exception> timeoutExceptionSupplier;
     private final long deadlineEpochMillis;
-    @SuppressWarnings( "unused" ) // use the EXECUTED_UPDATER
+
+    @SuppressWarnings("unused") // use the EXECUTED_UPDATER
     private volatile int executed = 0;
 
-    private DelayedExecution(Callable<CompletableFuture<T>> execution,
-                             Supplier<Exception> timeoutExceptionSupplier,
-                             Optional<Long> timeoutMillis) {
+    private DelayedExecution(
+      Callable<CompletableFuture<T>> execution,
+      Supplier<Exception> timeoutExceptionSupplier,
+      Optional<Long> timeoutMillis
+    ) {
       this.execution = execution;
       this.responseFuture = new CompletableFuture<>();
       this.timeoutExceptionSupplier = timeoutExceptionSupplier;
-      this.deadlineEpochMillis = timeoutMillis.map(x -> System.currentTimeMillis() + x).orElse(0L);
+      this.deadlineEpochMillis =
+        timeoutMillis.map(x -> System.currentTimeMillis() + x).orElse(0L);
     }
 
     private CompletableFuture<T> getResponseFuture() {
@@ -231,13 +258,17 @@ public class AsyncSemaphore<T> {
         return CompletableFuture.completedFuture(null);
       }
 
-      return executeCall(execution).whenComplete((response, ex) -> {
-        if (ex == null) {
-          responseFuture.complete(response);
-        } else {
-          responseFuture.completeExceptionally(ex);
-        }
-      }).thenApply(ignored -> null);
+      return executeCall(execution)
+        .whenComplete(
+          (response, ex) -> {
+            if (ex == null) {
+              responseFuture.complete(response);
+            } else {
+              responseFuture.completeExceptionally(ex);
+            }
+          }
+        )
+        .thenApply(ignored -> null);
     }
 
     private boolean isExpired() {

@@ -2,22 +2,6 @@ package com.hubspot.mesos;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,16 +15,34 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 public final class JavaUtils {
+  public static final String LOGBACK_LOGGING_PATTERN =
+    "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
-  public static final String LOGBACK_LOGGING_PATTERN = "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
-
-  public static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
+  public static final Splitter COMMA_SPLITTER = Splitter
+    .on(',')
+    .omitEmptyStrings()
+    .trimResults();
   public static final Joiner COMMA_JOINER = Joiner.on(',');
-  public static final Joiner.MapJoiner COMMA_EQUALS_MAP_JOINER = COMMA_JOINER.withKeyValueSeparator("=");
+  public static final Joiner.MapJoiner COMMA_EQUALS_MAP_JOINER = COMMA_JOINER.withKeyValueSeparator(
+    "="
+  );
 
   public static final Joiner SPACE_JOINER = Joiner.on(" ");
 
@@ -50,14 +52,17 @@ public final class JavaUtils {
     }
 
     if (value.length() > 4) {
-      return String.format("***************%s", value.substring(value.length() - 4, value.length()));
+      return String.format(
+        "***************%s",
+        value.substring(value.length() - 4, value.length())
+      );
     } else {
       return "(OMITTED)";
     }
   }
 
   public static String obfuscateValue(Optional<String> value) {
-    return value.isPresent() ?  obfuscateValue(value.get()) : "**empty**";
+    return value.isPresent() ? obfuscateValue(value.get()) : "**empty**";
   }
 
   public static String urlEncode(String string) {
@@ -79,7 +84,13 @@ public final class JavaUtils {
   public static String[] reverseSplit(String string, int numItems, String separator) {
     final String[] splits = string.split("\\" + separator);
 
-    Preconditions.checkState(splits.length >= numItems, "There must be at least %s instances of %s (there were %s)", numItems - 1, separator, splits.length - 1);
+    Preconditions.checkState(
+      splits.length >= numItems,
+      "There must be at least %s instances of %s (there were %s)",
+      numItems - 1,
+      separator,
+      splits.length - 1
+    );
 
     final String[] reverseSplit = new String[numItems];
 
@@ -108,7 +119,10 @@ public final class JavaUtils {
   private static final String DURATION_FORMAT = "mm:ss.S";
 
   public static String duration(final long start) {
-    return DurationFormatUtils.formatDuration(Math.max(System.currentTimeMillis() - start, 0), DURATION_FORMAT);
+    return DurationFormatUtils.formatDuration(
+      Math.max(System.currentTimeMillis() - start, 0),
+      DURATION_FORMAT
+    );
   }
 
   public static String durationFromMillis(final long millis) {
@@ -119,14 +133,19 @@ public final class JavaUtils {
     return DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(millis);
   }
 
-  public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
+  public static Thread awaitTerminationWithLatch(
+    final CountDownLatch latch,
+    final String threadNameSuffix,
+    final ExecutorService service,
+    final long millis
+  ) {
     Thread t = new Thread("ExecutorServiceTerminationWaiter-" + threadNameSuffix) {
+
       @Override
       public void run() {
         try {
           service.awaitTermination(millis, TimeUnit.MILLISECONDS);
-        } catch (Throwable t) {
-        } finally {
+        } catch (Throwable t) {} finally {
           latch.countDown();
         }
       }
@@ -171,8 +190,19 @@ public final class JavaUtils {
     return mapper;
   }
 
-  public static ThreadPoolExecutor newFixedTimingOutThreadPool(int maxThreads, long timeoutMillis, String nameFormat) {
-    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(maxThreads, maxThreads, timeoutMillis, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setNameFormat(nameFormat).build());
+  public static ThreadPoolExecutor newFixedTimingOutThreadPool(
+    int maxThreads,
+    long timeoutMillis,
+    String nameFormat
+  ) {
+    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+      maxThreads,
+      maxThreads,
+      timeoutMillis,
+      TimeUnit.MILLISECONDS,
+      new LinkedBlockingQueue<Runnable>(),
+      new ThreadFactoryBuilder().setNameFormat(nameFormat).build()
+    );
     threadPoolExecutor.allowCoreThreadTimeOut(true);
     return threadPoolExecutor;
   }

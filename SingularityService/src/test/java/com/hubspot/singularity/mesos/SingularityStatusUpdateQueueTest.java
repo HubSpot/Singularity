@@ -1,15 +1,13 @@
 package com.hubspot.singularity.mesos;
 
+import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
-
 public class SingularityStatusUpdateQueueTest extends SingularitySchedulerTestBase {
-
   @Inject
   StatusUpdateQueue statusUpdateQueue;
 
@@ -23,7 +21,12 @@ public class SingularityStatusUpdateQueueTest extends SingularitySchedulerTestBa
       configuration.getMesosConfiguration().setMaxStatusUpdateQueueSize(1);
       initRequest();
       initFirstDeploy();
-      SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+      SingularityTask firstTask = launchTask(
+        request,
+        firstDeploy,
+        1,
+        TaskState.TASK_RUNNING
+      );
       sms.pauseForDatastoreReconnect();
       statusUpdate(firstTask, TaskState.TASK_RUNNING);
       statusUpdate(firstTask, TaskState.TASK_FINISHED);

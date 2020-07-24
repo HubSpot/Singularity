@@ -1,24 +1,26 @@
 package com.hubspot.singularity.api;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.hubspot.singularity.MetadataLevel;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Request to add custom metadata to a task")
 public class SingularityTaskMetadataRequest {
-
   private final String type;
   private final String title;
   private final Optional<String> message;
   private final Optional<MetadataLevel> level;
 
   @JsonCreator
-  public SingularityTaskMetadataRequest(@JsonProperty("type") String type, @JsonProperty("title") String title, @JsonProperty("message") Optional<String> message, @JsonProperty("level") Optional<MetadataLevel> level) {
+  public SingularityTaskMetadataRequest(
+    @JsonProperty("type") String type,
+    @JsonProperty("title") String title,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("level") Optional<MetadataLevel> level
+  ) {
     Preconditions.checkNotNull(type);
     Preconditions.checkState(!type.contains("/"));
     this.type = type;
@@ -43,15 +45,25 @@ public class SingularityTaskMetadataRequest {
   }
 
   @Schema(description = "Level of metadata, can be INFO, WARN, or ERROR", nullable = true)
-  public Optional<MetadataLevel> getLevel() { return level; }
+  public Optional<MetadataLevel> getLevel() {
+    return level;
+  }
 
   @Override
   public String toString() {
-    return "SingularityTaskMetadataRequest{" +
-        "type='" + type + '\'' +
-        ", title='" + title + '\'' +
-        ", message=" + message +
-        ", level=" + level +
-        '}';
+    return (
+      "SingularityTaskMetadataRequest{" +
+      "type='" +
+      type +
+      '\'' +
+      ", title='" +
+      title +
+      '\'' +
+      ", message=" +
+      message +
+      ", level=" +
+      level +
+      '}'
+    );
   }
 }

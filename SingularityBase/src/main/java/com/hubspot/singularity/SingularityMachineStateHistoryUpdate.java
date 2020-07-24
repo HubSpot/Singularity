@@ -1,16 +1,13 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
-@Schema(description = "Describes an update to the state of a rack or slave")
+@Schema(description = "Describes an update to the state of a rack or agent")
 public class SingularityMachineStateHistoryUpdate {
-
   private final String objectId;
   private final MachineState state;
   private final Optional<String> user;
@@ -18,8 +15,13 @@ public class SingularityMachineStateHistoryUpdate {
   private final long timestamp;
 
   @JsonCreator
-  public SingularityMachineStateHistoryUpdate(@JsonProperty("objectId") String objectId, @JsonProperty("state") MachineState state, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("message") Optional<String> message) {
+  public SingularityMachineStateHistoryUpdate(
+    @JsonProperty("objectId") String objectId,
+    @JsonProperty("state") MachineState state,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("message") Optional<String> message
+  ) {
     this.objectId = objectId;
     this.state = state;
     this.timestamp = timestamp;
@@ -61,11 +63,13 @@ public class SingularityMachineStateHistoryUpdate {
       return false;
     }
     SingularityMachineStateHistoryUpdate that = (SingularityMachineStateHistoryUpdate) o;
-    return timestamp == that.timestamp &&
-        Objects.equals(objectId, that.objectId) &&
-        state == that.state &&
-        Objects.equals(user, that.user) &&
-        Objects.equals(message, that.message);
+    return (
+      timestamp == that.timestamp &&
+      Objects.equals(objectId, that.objectId) &&
+      state == that.state &&
+      Objects.equals(user, that.user) &&
+      Objects.equals(message, that.message)
+    );
   }
 
   @Override
@@ -75,12 +79,20 @@ public class SingularityMachineStateHistoryUpdate {
 
   @Override
   public String toString() {
-    return "SingularityMachineStateHistoryUpdate{" +
-        "objectId='" + objectId + '\'' +
-        ", state=" + state +
-        ", user=" + user +
-        ", message=" + message +
-        ", timestamp=" + timestamp +
-        '}';
+    return (
+      "SingularityMachineStateHistoryUpdate{" +
+      "objectId='" +
+      objectId +
+      '\'' +
+      ", state=" +
+      state +
+      ", user=" +
+      user +
+      ", message=" +
+      message +
+      ", timestamp=" +
+      timestamp +
+      '}'
+    );
   }
 }

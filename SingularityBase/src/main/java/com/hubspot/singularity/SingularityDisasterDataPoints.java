@@ -1,22 +1,25 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityDisasterDataPoints {
   private final List<SingularityDisasterDataPoint> dataPoints;
 
   @JsonCreator
-  public SingularityDisasterDataPoints(@JsonProperty("dataPoints") List<SingularityDisasterDataPoint> dataPoints) {
+  public SingularityDisasterDataPoints(
+    @JsonProperty("dataPoints") List<SingularityDisasterDataPoint> dataPoints
+  ) {
     this.dataPoints = dataPoints;
   }
 
   public static SingularityDisasterDataPoints empty() {
-    return new SingularityDisasterDataPoints(new ArrayList<SingularityDisasterDataPoint>());
+    return new SingularityDisasterDataPoints(
+      new ArrayList<SingularityDisasterDataPoint>()
+    );
   }
 
   public List<SingularityDisasterDataPoint> getDataPoints() {
@@ -42,8 +45,6 @@ public class SingularityDisasterDataPoints {
 
   @Override
   public String toString() {
-    return "SingularityDisasterDataPoints{" +
-        "dataPoints=" + dataPoints +
-        '}';
+    return "SingularityDisasterDataPoints{" + "dataPoints=" + dataPoints + '}';
   }
 }

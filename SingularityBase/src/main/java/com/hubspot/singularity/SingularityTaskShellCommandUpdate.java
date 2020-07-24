@@ -1,14 +1,17 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Optional;
 
 public class SingularityTaskShellCommandUpdate {
 
   public enum UpdateType {
-    INVALID(true), ACKED(false), STARTED(false), FINISHED(true), FAILED(true);
+    INVALID(true),
+    ACKED(false),
+    STARTED(false),
+    FINISHED(true),
+    FAILED(true);
 
     private final boolean finished;
 
@@ -28,8 +31,13 @@ public class SingularityTaskShellCommandUpdate {
   private final UpdateType updateType;
 
   @JsonCreator
-  public SingularityTaskShellCommandUpdate(@JsonProperty("shellRequestId") SingularityTaskShellCommandRequestId shellRequestId, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("outputFilename") Optional<String> outputFilename, @JsonProperty("updateType") UpdateType updateType) {
+  public SingularityTaskShellCommandUpdate(
+    @JsonProperty("shellRequestId") SingularityTaskShellCommandRequestId shellRequestId,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("outputFilename") Optional<String> outputFilename,
+    @JsonProperty("updateType") UpdateType updateType
+  ) {
     this.shellRequestId = shellRequestId;
     this.timestamp = timestamp;
     this.message = message;
@@ -59,12 +67,19 @@ public class SingularityTaskShellCommandUpdate {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandUpdate{" +
-        "shellRequestId=" + shellRequestId +
-        ", timestamp=" + timestamp +
-        ", message=" + message +
-        ", outputFilename=" + outputFilename +
-        ", updateType=" + updateType +
-        '}';
+    return (
+      "SingularityTaskShellCommandUpdate{" +
+      "shellRequestId=" +
+      shellRequestId +
+      ", timestamp=" +
+      timestamp +
+      ", message=" +
+      message +
+      ", outputFilename=" +
+      outputFilename +
+      ", updateType=" +
+      updateType +
+      '}'
+    );
   }
 }

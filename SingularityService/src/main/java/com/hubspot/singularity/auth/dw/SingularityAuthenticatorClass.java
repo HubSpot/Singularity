@@ -1,4 +1,4 @@
-package com.hubspot.singularity.auth;
+package com.hubspot.singularity.auth.dw;
 
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityDisabledAuthenticator;
@@ -16,7 +16,9 @@ public enum SingularityAuthenticatorClass {
 
   private final Class<? extends SingularityAuthenticator> authenticatorClass;
 
-  SingularityAuthenticatorClass(Class<? extends SingularityAuthenticator> authenticatorClass) {
+  SingularityAuthenticatorClass(
+    Class<? extends SingularityAuthenticator> authenticatorClass
+  ) {
     this.authenticatorClass = authenticatorClass;
   }
 

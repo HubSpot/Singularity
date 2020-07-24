@@ -1,13 +1,11 @@
 package com.hubspot.mesos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Settings for launching a container in mesos")
 public class SingularityContainerInfo {
@@ -18,19 +16,21 @@ public class SingularityContainerInfo {
   private final Optional<List<SingularityNetworkInfo>> networkInfos;
 
   public SingularityContainerInfo(
-      SingularityContainerType type,
-      Optional<List<SingularityVolume>> volumes,
-      Optional<SingularityDockerInfo> docker) {
+    SingularityContainerType type,
+    Optional<List<SingularityVolume>> volumes,
+    Optional<SingularityDockerInfo> docker
+  ) {
     this(type, volumes, docker, Optional.empty(), Optional.empty());
   }
 
   @JsonCreator
   public SingularityContainerInfo(
-      @JsonProperty("type") SingularityContainerType type,
-      @JsonProperty("volumes") Optional<List<SingularityVolume>> volumes,
-      @JsonProperty("docker") Optional<SingularityDockerInfo> docker,
-      @JsonProperty("mesos") Optional<SingularityMesosInfo> mesos,
-      @JsonProperty("networkInfos") Optional<List<SingularityNetworkInfo>> networkInfos) {
+    @JsonProperty("type") SingularityContainerType type,
+    @JsonProperty("volumes") Optional<List<SingularityVolume>> volumes,
+    @JsonProperty("docker") Optional<SingularityDockerInfo> docker,
+    @JsonProperty("mesos") Optional<SingularityMesosInfo> mesos,
+    @JsonProperty("networkInfos") Optional<List<SingularityNetworkInfo>> networkInfos
+  ) {
     this.type = type;
     this.volumes = volumes;
     this.docker = docker;
@@ -38,12 +38,17 @@ public class SingularityContainerInfo {
     this.networkInfos = networkInfos;
   }
 
-  @Schema(required = true, description = "Container type, can be MESOS or DOCKER. Default is MESOS")
+  @Schema(
+    required = true,
+    description = "Container type, can be MESOS or DOCKER. Default is MESOS"
+  )
   public SingularityContainerType getType() {
     return type;
   }
 
-  @Schema(description = "List of volumes to mount. Applicable only to DOCKER container type")
+  @Schema(
+    description = "List of volumes to mount. Applicable only to DOCKER container type"
+  )
   public Optional<List<SingularityVolume>> getVolumes() {
     return volumes;
   }
@@ -72,11 +77,13 @@ public class SingularityContainerInfo {
       return false;
     }
     SingularityContainerInfo that = (SingularityContainerInfo) o;
-    return type == that.type &&
-        Objects.equals(volumes, that.volumes) &&
-        Objects.equals(docker, that.docker) &&
-        Objects.equals(mesos, that.mesos) &&
-        Objects.equals(networkInfos, that.networkInfos);
+    return (
+      type == that.type &&
+      Objects.equals(volumes, that.volumes) &&
+      Objects.equals(docker, that.docker) &&
+      Objects.equals(mesos, that.mesos) &&
+      Objects.equals(networkInfos, that.networkInfos)
+    );
   }
 
   @Override
@@ -86,12 +93,19 @@ public class SingularityContainerInfo {
 
   @Override
   public String toString() {
-    return "SingularityContainerInfo{" +
-        "type=" + type +
-        ", volumes=" + volumes +
-        ", docker=" + docker +
-        ", mesos=" + mesos +
-        ", networkInfos=" + networkInfos +
-        '}';
+    return (
+      "SingularityContainerInfo{" +
+      "type=" +
+      type +
+      ", volumes=" +
+      volumes +
+      ", docker=" +
+      docker +
+      ", mesos=" +
+      mesos +
+      ", networkInfos=" +
+      networkInfos +
+      '}'
+    );
   }
 }

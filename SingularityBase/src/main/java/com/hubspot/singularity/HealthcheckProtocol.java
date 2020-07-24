@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema
 public enum HealthcheckProtocol {
-
-  HTTP("http"), HTTPS("https"), HTTP2("http"), HTTPS2("https");
+  HTTP("http"),
+  HTTPS("https"),
+  HTTP2("http"),
+  HTTPS2("https");
 
   private final String protocol;
 
@@ -16,5 +18,4 @@ public enum HealthcheckProtocol {
   public String getProtocol() {
     return protocol;
   }
-
 }

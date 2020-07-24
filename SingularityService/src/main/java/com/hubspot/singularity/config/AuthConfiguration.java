@@ -1,15 +1,16 @@
 package com.hubspot.singularity.config;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
-import com.hubspot.singularity.auth.SingularityAuthDatastoreClass;
-import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
+import com.hubspot.singularity.auth.authenticator.AuthResponseParser;
+import com.hubspot.singularity.auth.dw.SingularityAuthDatastoreClass;
+import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public class AuthConfiguration {
   @JsonProperty
@@ -18,16 +19,36 @@ public class AuthConfiguration {
   @JsonProperty
   @NotNull
   @Deprecated
-  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
+  private SingularityAuthenticatorClass authenticator =
+    SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
 
   @JsonProperty
   @NotNull
-  private List<SingularityAuthenticatorClass> authenticators = Lists.newArrayList(SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH);
+  private List<SingularityAuthenticatorClass> authenticators = Lists.newArrayList(
+    SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH
+  );
 
   @JsonProperty
   @NotNull
   private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DUMMY;
 
+  @JsonProperty
+  @NotNull
+  private String requestUserHeaderName = "X-Username"; // used by SingularityHeaderPassthroughAuthenticator
+
+  @JsonProperty
+  private int webhookAuthRequestTimeoutMs = 2000;
+
+  @JsonProperty
+  private int webhookAuthRetries = 2;
+
+  @JsonProperty
+  private int webhookAuthConnectTimeoutMs = 2000;
+
+  @JsonProperty
+  private UserAuthMode authMode = UserAuthMode.GROUPS;
+
+  // Properties relevant only for groups-based auth config
   @JsonProperty
   @NotNull
   private Set<String> requiredGroups = new HashSet<>();
@@ -36,10 +57,9 @@ public class AuthConfiguration {
   @NotNull
   private Set<String> adminGroups = new HashSet<>();
 
-  @JsonProperty
-  @NotNull
-  private Set<String> jitaGroups = new HashSet<>();
+  // End properties for groups config
 
+  // Properties below relevant for both groups + groups/scopes auth
   @JsonProperty
   @NotNull
   private Set<String> defaultReadOnlyGroups = new HashSet<>();
@@ -50,16 +70,26 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
+  private Set<String> jitaGroups = new HashSet<>();
+
+  // End properties for groups + scopes config
+
+  // Properties relevant for scopes auth only
+  @JsonProperty
+  @NotNull
+  private Set<String> globalReadWriteGroups = new HashSet<>();
 
   @JsonProperty
-  private int webhookAuthRequestTimeoutMs = 2000;
+  @Valid
+  private ScopesConfiguration scopes = new ScopesConfiguration();
 
   @JsonProperty
-  private int webhookAuthRetries = 2;
+  private Optional<String> defaultEmailDomain = Optional.empty();
+
+  // end scopes auth config
 
   @JsonProperty
-  private int webhookAuthConnectTimeoutMs = 2000;
+  private AuthResponseParser authResponseParser = AuthResponseParser.WRAPPED;
 
   public boolean isEnabled() {
     return enabled;
@@ -147,7 +177,9 @@ public class AuthConfiguration {
     return webhookAuthRequestTimeoutMs;
   }
 
-  public AuthConfiguration setWebhookAuthRequestTimeoutMs(int webhookAuthRequestTimeoutMs) {
+  public AuthConfiguration setWebhookAuthRequestTimeoutMs(
+    int webhookAuthRequestTimeoutMs
+  ) {
     this.webhookAuthRequestTimeoutMs = webhookAuthRequestTimeoutMs;
     return this;
   }
@@ -165,8 +197,50 @@ public class AuthConfiguration {
     return webhookAuthConnectTimeoutMs;
   }
 
-  public AuthConfiguration setWebhookAuthConnectTimeoutMs(int webhookAuthConnectTimeoutMs) {
+  public AuthConfiguration setWebhookAuthConnectTimeoutMs(
+    int webhookAuthConnectTimeoutMs
+  ) {
     this.webhookAuthConnectTimeoutMs = webhookAuthConnectTimeoutMs;
     return this;
+  }
+
+  public UserAuthMode getAuthMode() {
+    return authMode;
+  }
+
+  public void setAuthMode(UserAuthMode authMode) {
+    this.authMode = authMode;
+  }
+
+  public ScopesConfiguration getScopes() {
+    return scopes;
+  }
+
+  public void setScopes(ScopesConfiguration scopes) {
+    this.scopes = scopes;
+  }
+
+  public Optional<String> getDefaultEmailDomain() {
+    return defaultEmailDomain;
+  }
+
+  public void setDefaultEmailDomain(Optional<String> defaultEmailDomain) {
+    this.defaultEmailDomain = defaultEmailDomain;
+  }
+
+  public AuthResponseParser getAuthResponseParser() {
+    return authResponseParser;
+  }
+
+  public void setAuthResponseParser(AuthResponseParser authResponseParser) {
+    this.authResponseParser = authResponseParser;
+  }
+
+  public Set<String> getGlobalReadWriteGroups() {
+    return globalReadWriteGroups;
+  }
+
+  public void setGlobalReadWriteGroups(Set<String> globalReadWriteGroups) {
+    this.globalReadWriteGroups = globalReadWriteGroups;
   }
 }

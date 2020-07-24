@@ -1,15 +1,14 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
-@Schema(description = "Represents an action requiring tasks for a request to possibly be cleaned or replaced")
+@Schema(
+  description = "Represents an action requiring tasks for a request to possibly be cleaned or replaced"
+)
 public class SingularityRequestCleanup {
-
   private final Optional<String> user;
   private final RequestCleanupType cleanupType;
   private final Optional<Boolean> killTasks;
@@ -23,17 +22,21 @@ public class SingularityRequestCleanup {
   private final Optional<SingularityShellCommand> runShellCommandBeforeKill;
 
   @JsonCreator
-  public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user,
-                                   @JsonProperty("cleanupType") RequestCleanupType cleanupType,
-                                   @JsonProperty("timestamp") long timestamp,
-                                   @JsonProperty("killTasks") Optional<Boolean> killTasks,
-                                   @JsonProperty("removeFromLoadBalancer") Optional<Boolean> removeFromLoadBalancer,
-                                   @JsonProperty("requestId") String requestId,
-                                   @JsonProperty("deployId") Optional<String> deployId,
-                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                   @JsonProperty("message") Optional<String> message,
-                                   @JsonProperty("actionId") Optional<String> actionId,
-                                   @JsonProperty("runShellCommandBeforeKill") Optional<SingularityShellCommand> runShellCommandBeforeKill) {
+  public SingularityRequestCleanup(
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("cleanupType") RequestCleanupType cleanupType,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("killTasks") Optional<Boolean> killTasks,
+    @JsonProperty("removeFromLoadBalancer") Optional<Boolean> removeFromLoadBalancer,
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") Optional<String> deployId,
+    @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("actionId") Optional<String> actionId,
+    @JsonProperty(
+      "runShellCommandBeforeKill"
+    ) Optional<SingularityShellCommand> runShellCommandBeforeKill
+  ) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
@@ -47,17 +50,26 @@ public class SingularityRequestCleanup {
     this.runShellCommandBeforeKill = runShellCommandBeforeKill;
   }
 
-  @Schema(description = "If `true`, skip health checks for new tasks created", nullable = true)
+  @Schema(
+    description = "If `true`, skip health checks for new tasks created",
+    nullable = true
+  )
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
-  @Schema(description = "Override the system default behavior for immediately kiiling a task (relevant for pause-related cleanups)", nullable = true)
+  @Schema(
+    description = "Override the system default behavior for immediately kiiling a task (relevant for pause-related cleanups)",
+    nullable = true
+  )
   public Optional<Boolean> getKillTasks() {
     return killTasks;
   }
 
-  @Schema(description = "For deletes, remove the service from the load balancer when all tasks are cleaned", nullable = true)
+  @Schema(
+    description = "For deletes, remove the service from the load balancer when all tasks are cleaned",
+    nullable = true
+  )
   public Optional<Boolean> getRemoveFromLoadBalancer() {
     return removeFromLoadBalancer;
   }
@@ -87,7 +99,10 @@ public class SingularityRequestCleanup {
     return deployId;
   }
 
-  @Schema(description = "An optional message stating the reason for this cleanup", nullable = true)
+  @Schema(
+    description = "An optional message stating the reason for this cleanup",
+    nullable = true
+  )
   public Optional<String> getMessage() {
     return message;
   }
@@ -97,25 +112,42 @@ public class SingularityRequestCleanup {
     return actionId;
   }
 
-  @Schema(description = "A shell command to run on tasks before they are killed", nullable = true)
+  @Schema(
+    description = "A shell command to run on tasks before they are killed",
+    nullable = true
+  )
   public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
     return runShellCommandBeforeKill;
   }
 
   @Override
   public String toString() {
-    return "SingularityRequestCleanup{" +
-        "user=" + user +
-        ", cleanupType=" + cleanupType +
-        ", killTasks=" + killTasks +
-        ", removeFromLoadBalancer=" + removeFromLoadBalancer +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", deployId=" + deployId +
-        ", timestamp=" + timestamp +
-        ", requestId='" + requestId + '\'' +
-        ", message=" + message +
-        ", actionId=" + actionId +
-        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
-        '}';
+    return (
+      "SingularityRequestCleanup{" +
+      "user=" +
+      user +
+      ", cleanupType=" +
+      cleanupType +
+      ", killTasks=" +
+      killTasks +
+      ", removeFromLoadBalancer=" +
+      removeFromLoadBalancer +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", deployId=" +
+      deployId +
+      ", timestamp=" +
+      timestamp +
+      ", requestId='" +
+      requestId +
+      '\'' +
+      ", message=" +
+      message +
+      ", actionId=" +
+      actionId +
+      ", runShellCommandBeforeKill=" +
+      runShellCommandBeforeKill +
+      '}'
+    );
   }
 }

@@ -1,16 +1,12 @@
 package com.hubspot.singularity.config.shell;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.List;
-
 import javax.validation.constraints.NotNull;
-
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class ShellCommandDescriptor {
-
   @NotEmpty
   @JsonProperty
   private String name;
@@ -51,7 +47,14 @@ public class ShellCommandDescriptor {
 
   @Override
   public String toString() {
-    return "ShellCommandDescriptor [name=" + name + ", description=" + description + ", options=" + options + "]";
+    return (
+      "ShellCommandDescriptor [name=" +
+      name +
+      ", description=" +
+      description +
+      ", options=" +
+      options +
+      "]"
+    );
   }
-
 }

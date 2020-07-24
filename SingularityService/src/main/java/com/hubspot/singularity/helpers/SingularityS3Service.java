@@ -27,10 +27,17 @@ public class SingularityS3Service {
 
   @Override
   public String toString() {
-    return "SingularityS3Service{" +
-        "group='" + group + '\'' +
-        ", bucket='" + bucket + '\'' +
-        ", s3Client=" + s3Client +
-        '}';
+    return (
+      "SingularityS3Service{" +
+      "group='" +
+      group +
+      '\'' +
+      ", bucket='" +
+      bucket +
+      '\'' +
+      ", s3Client=" +
+      s3Client +
+      '}'
+    );
   }
 }

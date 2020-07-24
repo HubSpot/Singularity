@@ -1,13 +1,11 @@
 package com.hubspot.singularity.executor.handlebars;
 
+import com.github.jknack.handlebars.Helper;
+import com.github.jknack.handlebars.Options;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.github.jknack.handlebars.Helper;
-import com.github.jknack.handlebars.Options;
-
 public class IfPresentHelper implements Helper<Object> {
-
   public static final String NAME = "ifPresent";
 
   @SuppressWarnings("unchecked")
@@ -23,5 +21,4 @@ public class IfPresentHelper implements Helper<Object> {
       return options.inverse();
     }
   }
-
 }

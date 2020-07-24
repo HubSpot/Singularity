@@ -1,20 +1,17 @@
 package com.hubspot.singularity.s3.base.config;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Configuration(filename = "/etc/singularity.s3base.yaml", consolidatedField = "s3")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
@@ -49,11 +46,13 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Min(0)
   @JsonProperty
-  private int localDownloadHttpPort = 7070;
+  private Optional<Integer> localDownloadHttpPort = Optional.of(7070);
 
   @NotEmpty
   @JsonProperty
   private String localDownloadPath = "/download";
+
+  private Optional<String> localDownloadSocket = Optional.empty();
 
   @NotNull
   @JsonProperty
@@ -121,11 +120,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3DownloadTimeoutMillis = s3DownloadTimeoutMillis;
   }
 
-  public int getLocalDownloadHttpPort() {
+  public Optional<Integer> getLocalDownloadHttpPort() {
     return localDownloadHttpPort;
   }
 
-  public void setLocalDownloadHttpPort(int localDownloadHttpPort) {
+  public void setLocalDownloadHttpPort(Optional<Integer> localDownloadHttpPort) {
     this.localDownloadHttpPort = localDownloadHttpPort;
   }
 
@@ -149,7 +148,9 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     return s3BucketCredentials;
   }
 
-  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+  public void setS3BucketCredentials(
+    Map<String, SingularityS3Credentials> s3BucketCredentials
+  ) {
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
@@ -177,19 +178,42 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.metricsFilePath = metricsFilePath;
   }
 
+  public Optional<String> getLocalDownloadSocket() {
+    return localDownloadSocket;
+  }
+
+  public void setLocalDownloadSocket(Optional<String> localDownloadSocket) {
+    this.localDownloadSocket = localDownloadSocket;
+  }
+
   @Override
   public String toString() {
-    return "SingularityS3Configuration{" +
-        "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
-        ", s3AccessKey=" + s3AccessKey +
-        ", s3SecretKey=" + s3SecretKey +
-        ", s3ChunkSize=" + s3ChunkSize +
-        ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
-        ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis +
-        ", s3ChunkRetries=" + s3ChunkRetries +
-        ", localDownloadHttpPort=" + localDownloadHttpPort +
-        ", localDownloadPath='" + localDownloadPath + '\'' +
-        ", s3BucketCredentials=" + s3BucketCredentials +
-        "} " + super.toString();
+    return (
+      "SingularityS3Configuration{" +
+      "artifactCacheDirectory='" +
+      artifactCacheDirectory +
+      '\'' +
+      ", s3AccessKey=" +
+      s3AccessKey +
+      ", s3SecretKey=" +
+      s3SecretKey +
+      ", s3ChunkSize=" +
+      s3ChunkSize +
+      ", s3DownloadTimeoutMillis=" +
+      s3DownloadTimeoutMillis +
+      ", s3ChunkDownloadTimeoutMillis=" +
+      s3ChunkDownloadTimeoutMillis +
+      ", s3ChunkRetries=" +
+      s3ChunkRetries +
+      ", localDownloadHttpPort=" +
+      localDownloadHttpPort +
+      ", localDownloadPath='" +
+      localDownloadPath +
+      '\'' +
+      ", s3BucketCredentials=" +
+      s3BucketCredentials +
+      "} " +
+      super.toString()
+    );
   }
 }

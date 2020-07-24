@@ -2,19 +2,16 @@ package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import javax.inject.Singleton;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.retry.RetryOneTime;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 @Singleton
 public class ExecutorIdGenerator {
-
   private volatile DistributedAtomicInteger distributedGenerator = null;
   private final char[] alphabet;
 
@@ -29,7 +26,8 @@ public class ExecutorIdGenerator {
   }
 
   public void start() {
-    this.distributedGenerator = new DistributedAtomicInteger(curator, COUNTER_PATH, new RetryOneTime(1));
+    this.distributedGenerator =
+      new DistributedAtomicInteger(curator, COUNTER_PATH, new RetryOneTime(1));
   }
 
   public String getNextExecutorId() {
@@ -71,5 +69,4 @@ public class ExecutorIdGenerator {
 
     return alphabet;
   }
-
 }

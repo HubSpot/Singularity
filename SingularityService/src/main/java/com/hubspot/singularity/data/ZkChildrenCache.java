@@ -1,21 +1,18 @@
 package com.hubspot.singularity.data;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-
 public class ZkChildrenCache {
-
   private static final Logger LOG = LoggerFactory.getLogger(ZkChildrenCache.class);
 
   private List<String> cache;
@@ -36,14 +33,20 @@ public class ZkChildrenCache {
     this.lock = new ReentrantLock();
 
     this.hitMeter = registry.meter(String.format("zk.children.caches.%s.hits", name));
-    this.refreshMeter = registry.meter(String.format("zk.children.caches.%s.refresh", name));
+    this.refreshMeter =
+      registry.meter(String.format("zk.children.caches.%s.refresh", name));
     this.clearMeter = registry.meter(String.format("zk.children.caches.%s.clears", name));
 
-    registry.register(String.format("zk.children.caches.%s.size", name), new Gauge<Long>() {
-      @Override
-      public Long getValue() {
+    registry.register(
+      String.format("zk.children.caches.%s.size", name),
+      new Gauge<Long>() {
+
+        @Override
+        public Long getValue() {
           return Long.valueOf(cache.size());
-      }});
+        }
+      }
+    );
   }
 
   public void lock() {
@@ -99,7 +102,4 @@ public class ZkChildrenCache {
 
     return cacheUpToDate;
   }
-
 }
-
-

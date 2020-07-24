@@ -13,13 +13,13 @@ const getLink = (status, taskId, files) => {
 
   if (status === TaskStatus.RUNNING || runningTaskLogFound) {
     return (
-      <Link to={Utils.tailerPath(taskId, config.runningTaskLogPath)} title="Log">
+      <Link to={Utils.tailerPath(taskId, config.runningTaskLogPath, runningTaskLogFound)} title="Log">
           <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
       </Link>
     );
   } else if (status === TaskStatus.STOPPED) {
     return (
-      <Link to={Utils.tailerPath(taskId, config.finishedTaskLogPath)} title="Log">
+      <Link to={Utils.tailerPath(taskId, config.finishedTaskLogPath, runningTaskLogFound)} title="Log">
           <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
       </Link>
     );

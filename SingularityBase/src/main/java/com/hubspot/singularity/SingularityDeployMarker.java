@@ -1,17 +1,14 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Schema(description = "Uniquely identifies a deploy")
 public class SingularityDeployMarker implements Comparable<SingularityDeployMarker> {
-
   private final String requestId;
   private final String deployId;
   private final long timestamp;
@@ -19,8 +16,13 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
   private final Optional<String> message;
 
   @JsonCreator
-  public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("message") Optional<String> message) {
+  public SingularityDeployMarker(
+    @JsonProperty("requestId") String requestId,
+    @JsonProperty("deployId") String deployId,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("user") Optional<String> user,
+    @JsonProperty("message") Optional<String> message
+  ) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -30,10 +32,11 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
 
   @Override
   public int compareTo(SingularityDeployMarker o) {
-    return ComparisonChain.start()
-        .compare(timestamp, o.getTimestamp())
-        .compare(deployId, o.getDeployId())
-        .result();
+    return ComparisonChain
+      .start()
+      .compare(timestamp, o.getTimestamp())
+      .compare(deployId, o.getDeployId())
+      .result();
   }
 
   @Override
@@ -45,8 +48,9 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
       return false;
     }
     SingularityDeployMarker that = (SingularityDeployMarker) o;
-    return Objects.equals(requestId, that.requestId) &&
-        Objects.equals(deployId, that.deployId);
+    return (
+      Objects.equals(requestId, that.requestId) && Objects.equals(deployId, that.deployId)
+    );
   }
 
   @Override
@@ -74,19 +78,31 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
     return user;
   }
 
-  @Schema(description = "An optional message associated with this deploy", nullable = true)
+  @Schema(
+    description = "An optional message associated with this deploy",
+    nullable = true
+  )
   public Optional<String> getMessage() {
     return message;
   }
 
   @Override
   public String toString() {
-    return "SingularityDeployMarker{" +
-        "requestId='" + requestId + '\'' +
-        ", deployId='" + deployId + '\'' +
-        ", timestamp=" + timestamp +
-        ", user=" + user +
-        ", message=" + message +
-        '}';
+    return (
+      "SingularityDeployMarker{" +
+      "requestId='" +
+      requestId +
+      '\'' +
+      ", deployId='" +
+      deployId +
+      '\'' +
+      ", timestamp=" +
+      timestamp +
+      ", user=" +
+      user +
+      ", message=" +
+      message +
+      '}'
+    );
   }
 }

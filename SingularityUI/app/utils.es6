@@ -80,8 +80,42 @@ const Utils = {
     return moment.duration(millis).humanize();
   },
 
-  tailerPath(taskId, logpath) {
-    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
+  tailerPath(taskId, logpath, file) {
+    return `task/${taskId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}${this.getTailerArgs(file)}`;
+  },
+
+  requestTailerPath(requestId, logpath) {
+    return `request/${requestId}/${Utils.getPreferredTailer()}/${Utils.substituteTaskId(logpath, taskId)}`
+  },
+
+  getPreferredTailer() {
+    const saved = window.localStorage.getItem('logTailer');
+    return saved || 'tail';
+  },
+
+  setPreferredTailer(tailer) {
+    window.localStorage.setItem('logTailer', tailer);
+  },
+
+  getTailerArgs(file) {
+    if (this.getPreferredTailer() !== 'less') {
+      return '';
+    }
+
+    // if file size is known, can enable line counting for small files
+    if (file) {
+      if (file.size >= 2**20 * 10) {
+        return '?command=-n'
+      } else {
+        return ''
+      }
+    }
+
+    return '?command=-n';
+  },
+
+  isLessEnabled() {
+    return Boolean(window.config.lessTerminalPath);
   },
 
   substituteTaskId(value, taskId) {
@@ -531,17 +565,21 @@ const Utils = {
     return array.join('&');
   },
 
-  getAuthTokenHeader() {
+  getAuthToken() {
     if (!config.authCookieName) {
       return null;
     }
+
     const encodedKey = encodeURIComponent(config.authCookieName).replace(/[\-\.\+\*]/g, '\\$&');
     const authCookie = decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodedKey}\\s*\\=\\s*([^;]*).*$)|^.*$`), '$1')) || null;
     if (!authCookie) {
       return '';
     }
-    const authToken = JSON.parse(authCookie)[config.authTokenKey];
-    return `Bearer ${ authToken }`;
+    return JSON.parse(authCookie)[config.authTokenKey];
+  },
+
+  getAuthTokenHeader() {
+    return `Bearer ${ this.getAuthToken() }`;
   },
 
   template(template, data) {

@@ -1,15 +1,14 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import java.util.Optional;
-
-import javax.ws.rs.container.ContainerRequestContext;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
+import java.util.Optional;
+import javax.ws.rs.container.ContainerRequestContext;
 
 @Singleton
 public class SingularityDisabledAuthenticator implements SingularityAuthenticator {
+
   @Inject
   public SingularityDisabledAuthenticator() {}
 

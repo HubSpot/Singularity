@@ -1,9 +1,8 @@
 package com.hubspot.mesos.protos;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
 
 public class MesosStringValue {
   private final String value;
@@ -36,8 +35,6 @@ public class MesosStringValue {
 
   @Override
   public String toString() {
-    return "SingularityMesosIdObject{" +
-        "value='" + value + '\'' +
-        '}';
+    return "SingularityMesosIdObject{" + "value='" + value + '\'' + '}';
   }
 }

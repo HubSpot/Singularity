@@ -3,7 +3,6 @@ package com.hubspot.singularity;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import com.hubspot.singularity.config.SingularityConfiguration;
-
 import io.dropwizard.Bundle;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -17,19 +16,27 @@ import io.dropwizard.setup.Environment;
  * into the service and by building a separate artifact, it is possible to package the code differently or add
  * additional runtime dependencies without having to modify the main SingularityService build itself.
  */
-public class EmbeddedSingularityExample extends SingularityService<SingularityConfiguration> {
+public class EmbeddedSingularityExample
+  extends SingularityService<SingularityConfiguration> {
+
   @Override
-  public Iterable<? extends Module> getGuiceModules(final Bootstrap<SingularityConfiguration> bootstrap) {
+  public Iterable<? extends Module> getGuiceModules(
+    final Bootstrap<SingularityConfiguration> bootstrap
+  ) {
     return ImmutableSet.of();
   }
 
   @Override
-  public Iterable<? extends Bundle> getDropwizardBundles(final Bootstrap<SingularityConfiguration> bootstrap) {
+  public Iterable<? extends Bundle> getDropwizardBundles(
+    final Bootstrap<SingularityConfiguration> bootstrap
+  ) {
     return ImmutableSet.of();
   }
 
   @Override
-  public Iterable<? extends ConfiguredBundle<SingularityConfiguration>> getDropwizardConfiguredBundles(final Bootstrap<SingularityConfiguration> bootstrap) {
+  public Iterable<? extends ConfiguredBundle<SingularityConfiguration>> getDropwizardConfiguredBundles(
+    final Bootstrap<SingularityConfiguration> bootstrap
+  ) {
     return ImmutableSet.of();
   }
 
@@ -39,7 +46,11 @@ public class EmbeddedSingularityExample extends SingularityService<SingularityCo
   }
 
   @Override
-  public void run(final SingularityConfiguration configuration, final Environment environment) throws Exception {
+  public void run(
+    final SingularityConfiguration configuration,
+    final Environment environment
+  )
+    throws Exception {
     super.run(configuration, environment);
   }
 

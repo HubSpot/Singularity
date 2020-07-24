@@ -1,13 +1,11 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Tasks in all states for a particular request")
 public class SingularityTaskIdsByStatus {
@@ -19,12 +17,14 @@ public class SingularityTaskIdsByStatus {
   private List<SingularityTaskId> killed;
 
   @JsonCreator
-  public SingularityTaskIdsByStatus(@JsonProperty("healthy") List<SingularityTaskId> healthy,
-                                    @JsonProperty("notYetHealthy") List<SingularityTaskId> notYetHealthy,
-                                    @JsonProperty("pending") List<SingularityPendingTaskId> pending,
-                                    @JsonProperty("cleaning") List<SingularityTaskId> cleaning,
-                                    @JsonProperty("loadBalanced") List<SingularityTaskId> loadBalanced,
-                                    @JsonProperty("killed") List<SingularityTaskId> killed) {
+  public SingularityTaskIdsByStatus(
+    @JsonProperty("healthy") List<SingularityTaskId> healthy,
+    @JsonProperty("notYetHealthy") List<SingularityTaskId> notYetHealthy,
+    @JsonProperty("pending") List<SingularityPendingTaskId> pending,
+    @JsonProperty("cleaning") List<SingularityTaskId> cleaning,
+    @JsonProperty("loadBalanced") List<SingularityTaskId> loadBalanced,
+    @JsonProperty("killed") List<SingularityTaskId> killed
+  ) {
     this.healthy = healthy;
     this.notYetHealthy = notYetHealthy;
     this.pending = pending;
@@ -33,12 +33,16 @@ public class SingularityTaskIdsByStatus {
     this.killed = killed != null ? killed : Collections.emptyList();
   }
 
-  @Schema(description = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully")
+  @Schema(
+    description = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully"
+  )
   public List<SingularityTaskId> getHealthy() {
     return healthy;
   }
 
-  @Schema(description = "Active tasks whose healthchecks and load balancer updates (when applicable) have not yet finished successfully")
+  @Schema(
+    description = "Active tasks whose healthchecks and load balancer updates (when applicable) have not yet finished successfully"
+  )
   public List<SingularityTaskId> getNotYetHealthy() {
     return notYetHealthy;
   }
@@ -77,7 +81,11 @@ public class SingularityTaskIdsByStatus {
     if (healthy != null ? !healthy.equals(that.healthy) : that.healthy != null) {
       return false;
     }
-    if (notYetHealthy != null ? !notYetHealthy.equals(that.notYetHealthy) : that.notYetHealthy != null) {
+    if (
+      notYetHealthy != null
+        ? !notYetHealthy.equals(that.notYetHealthy)
+        : that.notYetHealthy != null
+    ) {
       return false;
     }
     if (pending != null ? !pending.equals(that.pending) : that.pending != null) {
@@ -86,7 +94,11 @@ public class SingularityTaskIdsByStatus {
     if (cleaning != null ? !cleaning.equals(that.cleaning) : that.cleaning != null) {
       return false;
     }
-    if (loadBalanced != null ? !loadBalanced.equals(that.loadBalanced) : that.loadBalanced != null) {
+    if (
+      loadBalanced != null
+        ? !loadBalanced.equals(that.loadBalanced)
+        : that.loadBalanced != null
+    ) {
       return false;
     }
     return killed != null ? killed.equals(that.killed) : that.killed == null;
@@ -105,13 +117,21 @@ public class SingularityTaskIdsByStatus {
 
   @Override
   public String toString() {
-    return "SingularityTaskIdsByStatus{" +
-        "healthy=" + healthy +
-        ", notYetHealthy=" + notYetHealthy +
-        ", pending=" + pending +
-        ", cleaning=" + cleaning +
-        ", loadBalanced=" + loadBalanced +
-        ", killed=" + killed +
-        '}';
+    return (
+      "SingularityTaskIdsByStatus{" +
+      "healthy=" +
+      healthy +
+      ", notYetHealthy=" +
+      notYetHealthy +
+      ", pending=" +
+      pending +
+      ", cleaning=" +
+      cleaning +
+      ", loadBalanced=" +
+      loadBalanced +
+      ", killed=" +
+      killed +
+      '}'
+    );
   }
 }

@@ -48,5 +48,4 @@ public abstract class ZkDataMigration implements Comparable<ZkDataMigration> {
   public int compareTo(ZkDataMigration o) {
     return Integer.compare(migrationNumber, o.migrationNumber);
   }
-
 }

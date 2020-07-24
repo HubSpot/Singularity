@@ -100,7 +100,7 @@ export default class FormModal extends React.Component {
         try {
           juration.parse(this.state.formState[formElement.name]);
         } catch (exception) {
-          errors[formElement.name] = 'Invalid duraton specified.';
+          errors[formElement.name] = 'Invalid duration specified.';
         }
       }
     });

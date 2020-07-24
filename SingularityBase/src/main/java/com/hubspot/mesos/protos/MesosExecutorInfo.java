@@ -1,21 +1,22 @@
 package com.hubspot.mesos.protos;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MesosExecutorInfo {
   private final Optional<MesosStringValue> executorId;
   private final Map<String, Object> allOtherFields;
 
   @JsonCreator
-  public MesosExecutorInfo(@JsonProperty("executorId") Optional<MesosStringValue> executorId) {
+  public MesosExecutorInfo(
+    @JsonProperty("executorId") Optional<MesosStringValue> executorId
+  ) {
     this.executorId = executorId;
     this.allOtherFields = new HashMap<>();
   }
@@ -46,8 +47,10 @@ public class MesosExecutorInfo {
     }
     if (obj instanceof MesosExecutorInfo) {
       final MesosExecutorInfo that = (MesosExecutorInfo) obj;
-      return Objects.equals(this.executorId, that.executorId) &&
-          Objects.equals(this.allOtherFields, that.allOtherFields);
+      return (
+        Objects.equals(this.executorId, that.executorId) &&
+        Objects.equals(this.allOtherFields, that.allOtherFields)
+      );
     }
     return false;
   }
@@ -59,9 +62,13 @@ public class MesosExecutorInfo {
 
   @Override
   public String toString() {
-    return "MesosExecutorInfo{" +
-        "executorId=" + executorId +
-        ", allOtherFields=" + allOtherFields +
-        '}';
+    return (
+      "MesosExecutorInfo{" +
+      "executorId=" +
+      executorId +
+      ", allOtherFields=" +
+      allOtherFields +
+      '}'
+    );
   }
 }

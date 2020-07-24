@@ -1,15 +1,13 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(
-    title = "A description of resources used on a mesos slave",
-    subTypes = {SingularitySlaveUsageWithId.class}
+  title = "A description of resources used on a mesos agent",
+  subTypes = { SingularitySlaveUsageWithId.class }
 )
 public class SingularitySlaveUsage {
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
@@ -35,25 +33,27 @@ public class SingularitySlaveUsage {
   private final double slaveDiskTotal;
 
   @JsonCreator
-  public SingularitySlaveUsage(@JsonProperty("cpusUsed") double cpusUsed,
-                               @JsonProperty("cpusReserved") double cpusReserved,
-                               @JsonProperty("cpusTotal") Optional<Double> cpusTotal,
-                               @JsonProperty("memoryBytesUsed") double memoryBytesUsed,
-                               @JsonProperty("memoryMbReserved") double memoryMbReserved,
-                               @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
-                               @JsonProperty("diskBytesUsed") double diskBytesUsed,
-                               @JsonProperty("diskMbReserved") double diskMbReserved,
-                               @JsonProperty("diskMbTotal") Optional<Long> diskMbTotal,
-                               @JsonProperty("numTasks") int numTasks,
-                               @JsonProperty("timestamp") long timestamp,
-                               @JsonProperty("systemMemTotalBytes") double systemMemTotalBytes,
-                               @JsonProperty("systemMemFreeBytes") double systemMemFreeBytes,
-                               @JsonProperty("systemCpusTotal") double systemCpusTotal,
-                               @JsonProperty("systemLoad1Min") double systemLoad1Min,
-                               @JsonProperty("systemLoad5Min") double systemLoad5Min,
-                               @JsonProperty("systemLoad15Min") double systemLoad15Min,
-                               @JsonProperty("slaveDiskUsed") double slaveDiskUsed,
-                               @JsonProperty("slaveDiskTotal") double slaveDiskTotal) {
+  public SingularitySlaveUsage(
+    @JsonProperty("cpusUsed") double cpusUsed,
+    @JsonProperty("cpusReserved") double cpusReserved,
+    @JsonProperty("cpusTotal") Optional<Double> cpusTotal,
+    @JsonProperty("memoryBytesUsed") double memoryBytesUsed,
+    @JsonProperty("memoryMbReserved") double memoryMbReserved,
+    @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
+    @JsonProperty("diskBytesUsed") double diskBytesUsed,
+    @JsonProperty("diskMbReserved") double diskMbReserved,
+    @JsonProperty("diskMbTotal") Optional<Long> diskMbTotal,
+    @JsonProperty("numTasks") int numTasks,
+    @JsonProperty("timestamp") long timestamp,
+    @JsonProperty("systemMemTotalBytes") double systemMemTotalBytes,
+    @JsonProperty("systemMemFreeBytes") double systemMemFreeBytes,
+    @JsonProperty("systemCpusTotal") double systemCpusTotal,
+    @JsonProperty("systemLoad1Min") double systemLoad1Min,
+    @JsonProperty("systemLoad5Min") double systemLoad5Min,
+    @JsonProperty("systemLoad15Min") double systemLoad15Min,
+    @JsonProperty("slaveDiskUsed") double slaveDiskUsed,
+    @JsonProperty("slaveDiskTotal") double slaveDiskTotal
+  ) {
     this.cpusUsed = cpusUsed;
     this.cpusReserved = cpusReserved;
     this.cpusTotal = cpusTotal;
@@ -86,9 +86,9 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(
-      title = "Total cpus available to allocate",
-      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
-      nullable = true
+    title = "Total cpus available to allocate",
+    description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+    nullable = true
   )
   public Optional<Double> getCpusTotal() {
     return cpusTotal;
@@ -105,21 +105,25 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(
-      title = "Total memory available to allocate in bytes",
-      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
-      nullable = true
+    title = "Total memory available to allocate in bytes",
+    description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+    nullable = true
   )
   public Optional<Long> getMemoryMbTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.empty();
+    return memoryMbTotal.isPresent()
+      ? Optional.of(memoryMbTotal.get())
+      : Optional.empty();
   }
 
   @Schema(
-      title = "Total memory available to allocate in bytes",
-      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
-      nullable = true
+    title = "Total memory available to allocate in bytes",
+    description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+    nullable = true
   )
   public Optional<Long> getMemoryBytesTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
+    return memoryMbTotal.isPresent()
+      ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE)
+      : Optional.empty();
   }
 
   @Schema(description = "Total disk currently used by tasks in bytes")
@@ -133,21 +137,23 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(
-      title = "Total disk available to allocate in MB",
-      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
-      nullable = true
+    title = "Total disk available to allocate in MB",
+    description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+    nullable = true
   )
   public Optional<Long> getDiskMbTotal() {
     return diskMbTotal;
   }
 
   @Schema(
-      title = "Total disk available to allocate in bytes",
-      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
-      nullable = true
+    title = "Total disk available to allocate in bytes",
+    description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+    nullable = true
   )
   public Optional<Long> getDiskBytesTotal() {
-    return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
+    return diskMbTotal.isPresent()
+      ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE)
+      : Optional.empty();
   }
 
   @Schema(description = "Number of active tasks on this salve")
@@ -170,7 +176,7 @@ public class SingularitySlaveUsage {
     return systemMemFreeBytes;
   }
 
-  @Schema(description = "Number of CPUs available in this slave node")
+  @Schema(description = "Number of CPUs available in this agent node")
   public double getSystemCpusTotal() {
     return systemCpusTotal;
   }
@@ -191,40 +197,61 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(
-      title = "Total disk space used on the slave in bytes",
-      description = "Disk usage is only collected when disk enforcement is enable and disk resources for a task are > 0"
+    title = "Total disk space used on the agent in bytes",
+    description = "Disk usage is only collected when disk enforcement is enable and disk resources for a task are > 0"
   )
   public double getSlaveDiskUsed() {
     return slaveDiskUsed;
   }
 
-  @Schema(description = "Total disk spave available on the slave in bytes")
+  @Schema(description = "Total disk spave available on the agent in bytes")
   public double getSlaveDiskTotal() {
     return slaveDiskTotal;
   }
 
   @Override
   public String toString() {
-    return "SingularitySlaveUsage{" +
-        "cpusUsed=" + cpusUsed +
-        ", cpusReserved=" + cpusReserved +
-        ", cpusTotal=" + cpusTotal +
-        ", memoryBytesUsed=" + memoryBytesUsed +
-        ", memoryMbReserved=" + memoryMbReserved +
-        ", memoryMbTotal=" + memoryMbTotal +
-        ", diskBytesUsed=" + diskBytesUsed +
-        ", diskMbReserved=" + diskMbReserved +
-        ", diskMbTotal=" + diskMbTotal +
-        ", numTasks=" + numTasks +
-        ", timestamp=" + timestamp +
-        ", systemMemTotalBytes=" + systemMemTotalBytes +
-        ", systemMemFreeBytes=" + systemMemFreeBytes +
-        ", systemCpusTotal=" + systemCpusTotal +
-        ", systemLoad1Min=" + systemLoad1Min +
-        ", systemLoad5Min=" + systemLoad5Min +
-        ", systemLoad15Min=" + systemLoad15Min +
-        ", slaveDiskUsed=" + slaveDiskUsed +
-        ", slaveDiskTotal=" + slaveDiskTotal +
-        '}';
+    return (
+      "SingularitySlaveUsage{" +
+      "cpusUsed=" +
+      cpusUsed +
+      ", cpusReserved=" +
+      cpusReserved +
+      ", cpusTotal=" +
+      cpusTotal +
+      ", memoryBytesUsed=" +
+      memoryBytesUsed +
+      ", memoryMbReserved=" +
+      memoryMbReserved +
+      ", memoryMbTotal=" +
+      memoryMbTotal +
+      ", diskBytesUsed=" +
+      diskBytesUsed +
+      ", diskMbReserved=" +
+      diskMbReserved +
+      ", diskMbTotal=" +
+      diskMbTotal +
+      ", numTasks=" +
+      numTasks +
+      ", timestamp=" +
+      timestamp +
+      ", systemMemTotalBytes=" +
+      systemMemTotalBytes +
+      ", systemMemFreeBytes=" +
+      systemMemFreeBytes +
+      ", systemCpusTotal=" +
+      systemCpusTotal +
+      ", systemLoad1Min=" +
+      systemLoad1Min +
+      ", systemLoad5Min=" +
+      systemLoad5Min +
+      ", systemLoad15Min=" +
+      systemLoad15Min +
+      ", slaveDiskUsed=" +
+      slaveDiskUsed +
+      ", slaveDiskTotal=" +
+      slaveDiskTotal +
+      '}'
+    );
   }
 }

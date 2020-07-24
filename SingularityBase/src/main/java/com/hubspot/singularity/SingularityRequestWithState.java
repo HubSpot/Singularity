@@ -1,41 +1,42 @@
 package com.hubspot.singularity;
 
-import java.util.Optional;
-
-import javax.annotation.Nonnull;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class SingularityRequestWithState {
-
   private final SingularityRequest request;
   private final RequestState state;
   private final long timestamp;
 
-  public static Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = new Function<SingularityRequestWithState, String>() {
+  public static Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = input ->
+    input.getRequest().getId();
 
-    @Override
-    public String apply(@Nonnull SingularityRequestWithState input) {
-      return input.getRequest().getId();
-    }
-
-  };
-
-  public static String getRequestState(Optional<SingularityRequestWithState> maybeRequestWithState) {
+  public static String getRequestState(
+    Optional<SingularityRequestWithState> maybeRequestWithState
+  ) {
     if (maybeRequestWithState.isPresent()) {
       return maybeRequestWithState.get().getState().name();
     }
     return "MISSING";
   }
 
-  public static boolean isActive(Optional<SingularityRequestWithState> maybeRequestWithState) {
-    return maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState().isRunnable();
+  public static boolean isActive(
+    Optional<SingularityRequestWithState> maybeRequestWithState
+  ) {
+    return (
+      maybeRequestWithState.isPresent() &&
+      maybeRequestWithState.get().getState().isRunnable()
+    );
   }
 
   @JsonCreator
-  public SingularityRequestWithState(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state, @JsonProperty("timestamp") long timestamp) {
+  public SingularityRequestWithState(
+    @JsonProperty("request") SingularityRequest request,
+    @JsonProperty("state") RequestState state,
+    @JsonProperty("timestamp") long timestamp
+  ) {
     this.request = request;
     this.state = state;
     this.timestamp = timestamp;
@@ -55,10 +56,15 @@ public class SingularityRequestWithState {
 
   @Override
   public String toString() {
-    return "SingularityRequestWithState{" +
-        "request=" + request +
-        ", state=" + state +
-        ", timestamp=" + timestamp +
-        '}';
+    return (
+      "SingularityRequestWithState{" +
+      "request=" +
+      request +
+      ", state=" +
+      state +
+      ", timestamp=" +
+      timestamp +
+      '}'
+    );
   }
 }

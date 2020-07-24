@@ -3,24 +3,6 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
-
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Histogram;
@@ -83,7 +65,6 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
-
 import de.neuland.jade4j.JadeConfiguration;
 import de.neuland.jade4j.template.ClasspathTemplateLoader;
 import de.neuland.jade4j.template.JadeTemplate;
@@ -92,13 +73,27 @@ import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.jetty.HttpsConnectorFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.servlet.http.HttpServletRequest;
 import okhttp3.OkHttpClient;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 
 public class SingularityMainModule implements Module {
-
   public static final String TASK_TEMPLATE = "task.template";
-  public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
+  public static final String REQUEST_IN_COOLDOWN_TEMPLATE =
+    "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
   public static final String DISASTERS_TEMPLATE = "disasters.template";
@@ -113,7 +108,8 @@ public class SingularityMainModule implements Module {
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
-  public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME = "singularity.last.mesos.master.heartbeat.time";
+  public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME =
+    "singularity.last.mesos.master.heartbeat.time";
 
   private final SingularityConfiguration configuration;
 
@@ -123,13 +119,26 @@ public class SingularityMainModule implements Module {
 
   @Override
   public void configure(Binder binder) {
-    binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toProvider(SingularityHostAndPortProvider.class).in(Scopes.SINGLETON);
+    binder
+      .bind(HostAndPort.class)
+      .annotatedWith(named(HTTP_HOST_AND_PORT))
+      .toProvider(SingularityHostAndPortProvider.class)
+      .in(Scopes.SINGLETON);
 
     binder.bind(LeaderLatch.class).to(SingularityLeaderLatch.class).in(Scopes.SINGLETON);
-    binder.bind(CuratorFramework.class).toProvider(SingularityCuratorProvider.class).in(Scopes.SINGLETON);
+    binder
+      .bind(CuratorFramework.class)
+      .toProvider(SingularityCuratorProvider.class)
+      .in(Scopes.SINGLETON);
 
-    Multibinder<LeaderLatchListener> leaderLatchListeners = Multibinder.newSetBinder(binder, LeaderLatchListener.class);
-    leaderLatchListeners.addBinding().to(SingularityLeaderController.class).in(Scopes.SINGLETON);
+    Multibinder<LeaderLatchListener> leaderLatchListeners = Multibinder.newSetBinder(
+      binder,
+      LeaderLatchListener.class
+    );
+    leaderLatchListeners
+      .addBinding()
+      .to(SingularityLeaderController.class)
+      .in(Scopes.SINGLETON);
 
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     if (configuration.getSmtpConfigurationOptional().isPresent()) {
@@ -140,34 +149,59 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
     binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
-    binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
+    binder
+      .bind(LoadBalancerClient.class)
+      .to(LoadBalancerClientImpl.class)
+      .in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
     binder.bind(StatusUpdateQueue.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
-    if (configuration.getWebhookQueueConfiguration().getQueueType() == WebhookQueueType.SNS) {
+    if (
+      configuration.getWebhookQueueConfiguration().getQueueType() == WebhookQueueType.SNS
+    ) {
       binder.bind(SnsWebhookManager.class).in(Scopes.SINGLETON);
-      binder.bind(AbstractWebhookChecker.class).to(SnsWebhookRetryer.class).in(Scopes.SINGLETON);
+      binder
+        .bind(AbstractWebhookChecker.class)
+        .to(SnsWebhookRetryer.class)
+        .in(Scopes.SINGLETON);
     } else {
-      binder.bind(AbstractWebhookChecker.class).to(SingularityWebhookSender.class).in(Scopes.SINGLETON);
+      binder
+        .bind(AbstractWebhookChecker.class)
+        .to(SingularityWebhookSender.class)
+        .in(Scopes.SINGLETON);
     }
 
     binder.bind(SingularityUsageHelper.class).in(Scopes.SINGLETON);
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
-    binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
+    binder
+      .bind(MetricRegistry.class)
+      .toProvider(DropwizardMetricRegistryProvider.class)
+      .in(Scopes.SINGLETON);
 
-    binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
-    binder.bind(OkHttpClient.class).to(SingularityOkHttpClient.class).in(Scopes.SINGLETON);
+    binder
+      .bind(AsyncHttpClient.class)
+      .to(SingularityAsyncHttpClient.class)
+      .in(Scopes.SINGLETON);
+    binder
+      .bind(OkHttpClient.class)
+      .to(SingularityOkHttpClient.class)
+      .in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
-    binder.bindConstant().annotatedWith(Names.named(SERVER_ID_PROPERTY)).to(UUID.randomUUID().toString());
+    binder
+      .bindConstant()
+      .annotatedWith(Names.named(SERVER_ID_PROPERTY))
+      .to(UUID.randomUUID().toString());
 
-    binder.bind(SingularityManagedScheduledExecutorServiceFactory.class).in(Scopes.SINGLETON);
+    binder
+      .bind(SingularityManagedScheduledExecutorServiceFactory.class)
+      .in(Scopes.SINGLETON);
     binder.bind(SingularityManagedThreadPoolFactory.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporter.class).in(Scopes.SINGLETON);
@@ -179,7 +213,10 @@ public class SingularityMainModule implements Module {
     if (configuration.isCacheOffers()) {
       binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
     } else {
-      binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
+      binder
+        .bind(OfferCache.class)
+        .to(SingularityNoOfferCache.class)
+        .in(Scopes.SINGLETON);
     }
   }
 
@@ -196,17 +233,22 @@ public class SingularityMainModule implements Module {
 
       return addr.getHostName();
     } catch (UnknownHostException e) {
-      throw new RuntimeException("No local hostname found, unable to start without functioning local networking (or configured hostname)", e);
+      throw new RuntimeException(
+        "No local hostname found, unable to start without functioning local networking (or configured hostname)",
+        e
+      );
     }
   }
 
   public static class SingularityHostAndPortProvider implements Provider<HostAndPort> {
-
     private final String hostname;
     private final int httpPort;
 
     @Inject
-    SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_NAME_PROPERTY) String hostname) {
+    SingularityHostAndPortProvider(
+      final SingularityConfiguration configuration,
+      @Named(HOST_NAME_PROPERTY) String hostname
+    ) {
       checkNotNull(configuration, "configuration is null");
       this.hostname = configuration.getHostname().orElse(hostname);
 
@@ -220,7 +262,10 @@ public class SingularityMainModule implements Module {
         DefaultServerFactory defaultServerFactory = (DefaultServerFactory) configuration.getServerFactory();
         for (ConnectorFactory connectorFactory : defaultServerFactory.getApplicationConnectors()) {
           // Currently we will default to needing an http connector for service -> service communication
-          if (connectorFactory instanceof HttpConnectorFactory && !(connectorFactory instanceof HttpsConnectorFactory)) {
+          if (
+            connectorFactory instanceof HttpConnectorFactory &&
+            !(connectorFactory instanceof HttpsConnectorFactory)
+          ) {
             HttpConnectorFactory httpFactory = (HttpConnectorFactory) connectorFactory;
             port = httpFactory.getPort();
           }
@@ -242,29 +287,53 @@ public class SingularityMainModule implements Module {
   @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
     final String singularityUiPrefix;
-    if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    if (configuration.getServerFactory() instanceof SimpleServerFactory) {
+      singularityUiPrefix =
+        configuration
+          .getUiConfiguration()
+          .getBaseUrl()
+          .orElse(
+            (
+              (SimpleServerFactory) configuration.getServerFactory()
+            ).getApplicationContextPath()
+          );
     } else {
-      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().orElse(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+      singularityUiPrefix =
+        configuration
+          .getUiConfiguration()
+          .getBaseUrl()
+          .orElse(
+            (
+              (DefaultServerFactory) configuration.getServerFactory()
+            ).getApplicationContextPath()
+          );
     }
-    return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
+    return (singularityUiPrefix.endsWith("/"))
+      ? singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1)
+      : singularityUiPrefix;
   }
 
   @Provides
   @Singleton
-  public ZooKeeperConfiguration zooKeeperConfiguration(final SingularityConfiguration config) {
+  public ZooKeeperConfiguration zooKeeperConfiguration(
+    final SingularityConfiguration config
+  ) {
     return config.getZooKeeperConfiguration();
   }
 
   @Provides
   @Singleton
-  public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
+  public Optional<SentryConfiguration> sentryConfiguration(
+    final SingularityConfiguration config
+  ) {
     return config.getSentryConfigurationOptional();
   }
 
   @Provides
   @Singleton
-  public SingularityTaskMetadataConfiguration taskMetadataConfiguration(SingularityConfiguration config) {
+  public SingularityTaskMetadataConfiguration taskMetadataConfiguration(
+    SingularityConfiguration config
+  ) {
     return config.getTaskMetadataConfiguration();
   }
 
@@ -276,13 +345,50 @@ public class SingularityMainModule implements Module {
     }
 
     final ImmutableList.Builder<SingularityS3Service> s3ServiceBuilder = ImmutableList.builder();
-    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
-      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+    for (Map.Entry<String, S3GroupConfiguration> entry : config
+      .get()
+      .getGroupOverrides()
+      .entrySet()) {
+      s3ServiceBuilder.add(
+        new SingularityS3Service(
+          entry.getKey(),
+          entry.getValue().getS3Bucket(),
+          new AmazonS3Client(
+            new BasicAWSCredentials(
+              entry.getValue().getS3AccessKey(),
+              entry.getValue().getS3SecretKey()
+            )
+          )
+        )
+      );
     }
-    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupS3SearchConfigs().entrySet()) {
-      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+    for (Map.Entry<String, S3GroupConfiguration> entry : config
+      .get()
+      .getGroupS3SearchConfigs()
+      .entrySet()) {
+      s3ServiceBuilder.add(
+        new SingularityS3Service(
+          entry.getKey(),
+          entry.getValue().getS3Bucket(),
+          new AmazonS3Client(
+            new BasicAWSCredentials(
+              entry.getValue().getS3AccessKey(),
+              entry.getValue().getS3SecretKey()
+            )
+          )
+        )
+      );
     }
-    SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
+    SingularityS3Service defaultService = new SingularityS3Service(
+      SingularityS3FormatHelper.DEFAULT_GROUP_NAME,
+      config.get().getS3Bucket(),
+      new AmazonS3Client(
+        new BasicAWSCredentials(
+          config.get().getS3AccessKey(),
+          config.get().getS3SecretKey()
+        )
+      )
+    );
 
     return new SingularityS3Services(s3ServiceBuilder.build(), defaultService);
   }
@@ -301,25 +407,33 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  public CustomExecutorConfiguration customExecutorConfiguration(final SingularityConfiguration config) {
+  public CustomExecutorConfiguration customExecutorConfiguration(
+    final SingularityConfiguration config
+  ) {
     return config.getCustomExecutorConfiguration();
   }
 
   @Provides
   @Singleton
-  public Optional<SMTPConfiguration> smtpConfiguration(final SingularityConfiguration config) {
+  public Optional<SMTPConfiguration> smtpConfiguration(
+    final SingularityConfiguration config
+  ) {
     return config.getSmtpConfigurationOptional();
   }
 
   @Provides
   @Singleton
-  public Optional<S3Configuration> s3Configuration(final SingularityConfiguration config) {
+  public Optional<S3Configuration> s3Configuration(
+    final SingularityConfiguration config
+  ) {
     return config.getS3ConfigurationOptional();
   }
 
   @Provides
   @Singleton
-  public HistoryPurgingConfiguration historyPurgingConfiguration(final SingularityConfiguration config) {
+  public HistoryPurgingConfiguration historyPurgingConfiguration(
+    final SingularityConfiguration config
+  ) {
     return config.getHistoryPurgingConfiguration();
   }
 
@@ -366,10 +480,12 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Named(CURRENT_HTTP_REQUEST)
-  public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
+  public Optional<HttpServletRequest> providesUrl(
+    Provider<HttpServletRequest> requestProvider
+  ) {
     try {
       return Optional.of(requestProvider.get());
-    } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
+    } catch (ProvisionException pe) { // this will happen if we're not in the REQUEST scope
       return Optional.empty();
     }
   }
@@ -400,8 +516,14 @@ public class SingularityMainModule implements Module {
   public Set<SingularityLeaderOnlyPoller> provideLeaderOnlyPollers(Injector injector) {
     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers = new HashSet<>();
     for (Key<?> key : injector.getAllBindings().keySet()) {
-      if (SingularityLeaderOnlyPoller.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
-        SingularityLeaderOnlyPoller poller = (SingularityLeaderOnlyPoller) injector.getInstance(key);
+      if (
+        SingularityLeaderOnlyPoller.class.isAssignableFrom(
+            key.getTypeLiteral().getRawType()
+          )
+      ) {
+        SingularityLeaderOnlyPoller poller = (SingularityLeaderOnlyPoller) injector.getInstance(
+          key
+        );
         leaderOnlyPollers.add(poller);
       }
     }

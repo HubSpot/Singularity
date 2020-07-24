@@ -1,19 +1,5 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.primitives.Longs;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -25,36 +11,53 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister.SingularityRequestHistoryParent;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularityRequestHistoryPersister extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityRequestHistoryPersister.class);
+public class SingularityRequestHistoryPersister
+  extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityRequestHistoryPersister.class
+  );
 
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
   private final SingularitySchedulerLock lock;
 
   @Inject
-  public SingularityRequestHistoryPersister(SingularityConfiguration configuration,
-                                            RequestManager requestManager,
-                                            HistoryManager historyManager,
-                                            SingularitySchedulerLock lock,
-                                            @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+  public SingularityRequestHistoryPersister(
+    SingularityConfiguration configuration,
+    RequestManager requestManager,
+    HistoryManager historyManager,
+    SingularitySchedulerLock lock,
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+  ) {
     super(configuration, persisterLock);
-
     this.requestManager = requestManager;
     this.historyManager = historyManager;
     this.lock = lock;
   }
 
-  public static class SingularityRequestHistoryParent implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
-
+  public static class SingularityRequestHistoryParent
+    implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
     private final List<SingularityRequestHistory> history;
     private final String requestId;
     private final long createTime;
 
-    public SingularityRequestHistoryParent(List<SingularityRequestHistory> history, String requestId) {
+    public SingularityRequestHistoryParent(
+      List<SingularityRequestHistory> history,
+      String requestId
+    ) {
       this.history = history;
       this.requestId = requestId;
 
@@ -80,7 +83,10 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
     @Override
     public int compareTo(SingularityRequestHistoryParent o) {
-      return Longs.compare(this.getCreateTimestampForCalculatingHistoryAge(), o.getCreateTimestampForCalculatingHistoryAge());
+      return Longs.compare(
+        this.getCreateTimestampForCalculatingHistoryAge(),
+        o.getCreateTimestampForCalculatingHistoryAge()
+      );
     }
 
     @Override
@@ -92,9 +98,11 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
         return false;
       }
       SingularityRequestHistoryParent that = (SingularityRequestHistoryParent) o;
-      return createTime == that.createTime &&
-          Objects.equals(history, that.history) &&
-          Objects.equals(requestId, that.requestId);
+      return (
+        createTime == that.createTime &&
+        Objects.equals(history, that.history) &&
+        Objects.equals(requestId, that.requestId)
+      );
     }
 
     @Override
@@ -104,11 +112,17 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
     @Override
     public String toString() {
-      return "SingularityRequestHistoryParent[" +
-          "history=" + history +
-          ", requestId='" + requestId + '\'' +
-          ", createTime=" + createTime +
-          ']';
+      return (
+        "SingularityRequestHistoryParent[" +
+        "history=" +
+        history +
+        ", requestId='" +
+        requestId +
+        '\'' +
+        ", createTime=" +
+        createTime +
+        ']'
+      );
     }
   }
 
@@ -126,21 +140,35 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
       AtomicInteger numHistoryTransferred = new AtomicInteger();
 
       for (String requestId : requestManager.getRequestIdsWithHistory()) {
-        requestHistoryParents.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
+        requestHistoryParents.add(
+          new SingularityRequestHistoryParent(
+            requestManager.getRequestHistory(requestId),
+            requestId
+          )
+        );
       }
 
-      Collections.sort(requestHistoryParents, Collections.reverseOrder());  // createdAt descending
+      Collections.sort(requestHistoryParents, Collections.reverseOrder()); // createdAt descending
 
       AtomicInteger i = new AtomicInteger();
       for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
-        lock.runWithRequestLock(() -> {
-          if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
-            numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
-          }
-        }, requestHistoryParent.requestId, "request history purger");
+        lock.runWithRequestLock(
+          () -> {
+            if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
+              numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
+            }
+          },
+          requestHistoryParent.requestId,
+          "request history purger"
+        );
       }
 
-      LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestHistoryParents.size(), JavaUtils.duration(start));
+      LOG.info(
+        "Transferred {} history updates for {} requests in {}",
+        numHistoryTransferred,
+        requestHistoryParents.size(),
+        JavaUtils.duration(start)
+      );
     } finally {
       persisterLock.unlock();
     }
@@ -148,7 +176,9 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
   @Override
   protected long getMaxAgeInMillisOfItem() {
-    return TimeUnit.HOURS.toMillis(configuration.getDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours());
+    return TimeUnit.HOURS.toMillis(
+      configuration.getDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours()
+    );
   }
 
   @Override
@@ -176,5 +206,4 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
   protected SingularityDeleteResult purgeFromZk(SingularityRequestHistoryParent object) {
     return requestManager.deleteHistoryParent(object.requestId);
   }
-
 }

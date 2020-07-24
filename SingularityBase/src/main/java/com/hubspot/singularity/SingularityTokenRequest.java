@@ -1,12 +1,9 @@
 package com.hubspot.singularity;
 
-
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Optional;
 
 @Schema(description = "Request to create a new long lived auth token")
 public class SingularityTokenRequest {
@@ -14,18 +11,26 @@ public class SingularityTokenRequest {
   private final Optional<SingularityUser> user;
 
   @JsonCreator
-  public SingularityTokenRequest(@JsonProperty("token") Optional<String> token,
-                                 @JsonProperty("user") Optional<SingularityUser> user) {
+  public SingularityTokenRequest(
+    @JsonProperty("token") Optional<String> token,
+    @JsonProperty("user") Optional<SingularityUser> user
+  ) {
     this.token = token;
     this.user = user;
   }
 
-  @Schema(description = "Optional token, will be auto-genearted if not specified", required = false)
+  @Schema(
+    description = "Optional token, will be auto-genearted if not specified",
+    required = false
+  )
   public Optional<String> getToken() {
     return token;
   }
 
-  @Schema(description = "User data associated with the token, will be the current logged in user if not provided", required = true)
+  @Schema(
+    description = "User data associated with the token, will be the current logged in user if not provided",
+    required = true
+  )
   public Optional<SingularityUser> getUser() {
     return user;
   }
@@ -56,9 +61,6 @@ public class SingularityTokenRequest {
 
   @Override
   public String toString() {
-    return "SingularityTokenRequest{" +
-        "token=" + token +
-        ", user=" + user +
-        '}';
+    return "SingularityTokenRequest{" + "token=" + token + ", user=" + user + '}';
   }
 }

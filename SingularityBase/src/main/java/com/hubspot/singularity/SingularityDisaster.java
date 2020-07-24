@@ -1,11 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 @Schema(description = "Representation of an active disaster")
 public class SingularityDisaster {
@@ -13,7 +11,10 @@ public class SingularityDisaster {
   private final boolean active;
 
   @JsonCreator
-  public SingularityDisaster(@JsonProperty("type") SingularityDisasterType type, @JsonProperty("boolean") boolean active) {
+  public SingularityDisaster(
+    @JsonProperty("type") SingularityDisasterType type,
+    @JsonProperty("boolean") boolean active
+  ) {
     this.type = type;
     this.active = active;
   }
@@ -37,8 +38,7 @@ public class SingularityDisaster {
       return false;
     }
     SingularityDisaster that = (SingularityDisaster) o;
-    return active == that.active &&
-        type == that.type;
+    return active == that.active && type == that.type;
   }
 
   @Override
@@ -48,9 +48,6 @@ public class SingularityDisaster {
 
   @Override
   public String toString() {
-    return "SingularityDisaster{" +
-        "type=" + type +
-        ", active=" + active +
-        '}';
+    return "SingularityDisaster{" + "type=" + type + ", active=" + active + '}';
   }
 }

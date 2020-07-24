@@ -1,12 +1,5 @@
 package com.hubspot.singularity.executor.utils;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import com.github.rholder.retry.AttemptTimeLimiter;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -20,6 +13,12 @@ import com.spotify.docker.client.DockerClient.RemoveContainerParam;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class DockerUtils {
   private final SingularityExecutorConfiguration configuration;
@@ -27,7 +26,10 @@ public class DockerUtils {
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   @Inject
-  public DockerUtils(SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
+  public DockerUtils(
+    SingularityExecutorConfiguration configuration,
+    DockerClient dockerClient
+  ) {
     this.configuration = configuration;
     this.dockerClient = dockerClient;
   }
@@ -40,9 +42,12 @@ public class DockerUtils {
     return inspectContainer(containerName).state().running();
   }
 
-  public ContainerInfo inspectContainer(final String containerName) throws DockerException {
+  public ContainerInfo inspectContainer(final String containerName)
+    throws DockerException {
     Callable<ContainerInfo> callable = new Callable<ContainerInfo>() {
-      @Override public ContainerInfo call() throws Exception {
+
+      @Override
+      public ContainerInfo call() throws Exception {
         return dockerClient.inspectContainer(containerName);
       }
     };
@@ -56,14 +61,19 @@ public class DockerUtils {
 
   public void pull(final String imageName) throws DockerException {
     Callable<Void> callable = new Callable<Void>() {
-      @Override public Void call() throws Exception {
+
+      @Override
+      public Void call() throws Exception {
         dockerClient.pull(imageName);
         return null;
       }
     };
 
     try {
-      callWithRetriesAndTimeout(callable, Optional.of(configuration.getMaxDockerPullAttempts()));
+      callWithRetriesAndTimeout(
+        callable,
+        Optional.of(configuration.getMaxDockerPullAttempts())
+      );
     } catch (Exception e) {
       throw new DockerException(e);
     }
@@ -71,7 +81,9 @@ public class DockerUtils {
 
   public List<Container> listContainers() throws DockerException {
     Callable<List<Container>> callable = new Callable<List<Container>>() {
-      @Override public List<Container> call() throws Exception {
+
+      @Override
+      public List<Container> call() throws Exception {
         return dockerClient.listContainers();
       }
     };
@@ -83,9 +95,12 @@ public class DockerUtils {
     }
   }
 
-  public void stopContainer(final String containerId, final int timeout) throws DockerException {
+  public void stopContainer(final String containerId, final int timeout)
+    throws DockerException {
     Callable<Void> callable = new Callable<Void>() {
-      @Override public Void call() throws Exception {
+
+      @Override
+      public Void call() throws Exception {
         dockerClient.stopContainer(containerId, timeout);
         return null;
       }
@@ -98,10 +113,16 @@ public class DockerUtils {
     }
   }
 
-  public void removeContainer(final String containerId, final boolean removeRunning) throws DockerException {
+  public void removeContainer(final String containerId, final boolean removeRunning)
+    throws DockerException {
     Callable<Void> callable = new Callable<Void>() {
-      @Override public Void call() throws Exception {
-        dockerClient.removeContainer(containerId, RemoveContainerParam.removeVolumes(removeRunning));
+
+      @Override
+      public Void call() throws Exception {
+        dockerClient.removeContainer(
+          containerId,
+          RemoveContainerParam.removeVolumes(removeRunning)
+        );
         return null;
       }
     };
@@ -117,9 +138,20 @@ public class DockerUtils {
     return callWithRetriesAndTimeout(callable, Optional.<Integer>empty());
   }
 
-  private <T> T callWithRetriesAndTimeout(Callable<T> callable, Optional<Integer> retryCount) throws Exception {
-    RetryerBuilder<T> retryerBuilder = RetryerBuilder.<T>newBuilder()
-      .withAttemptTimeLimiter(new FixedTimeLimit(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS, executor));
+  private <T> T callWithRetriesAndTimeout(
+    Callable<T> callable,
+    Optional<Integer> retryCount
+  )
+    throws Exception {
+    RetryerBuilder<T> retryerBuilder = RetryerBuilder
+      .<T>newBuilder()
+      .withAttemptTimeLimiter(
+        new FixedTimeLimit(
+          configuration.getDockerClientTimeLimitSeconds(),
+          TimeUnit.SECONDS,
+          executor
+        )
+      );
     if (retryCount.isPresent()) {
       retryerBuilder.withStopStrategy(StopStrategies.stopAfterAttempt(retryCount.get()));
     }
@@ -127,12 +159,15 @@ public class DockerUtils {
   }
 
   private static final class FixedTimeLimit<V> implements AttemptTimeLimiter<V> {
-
     private final TimeLimiter timeLimiter;
     private final long duration;
     private final TimeUnit timeUnit;
 
-    public FixedTimeLimit(long duration, TimeUnit timeUnit, ExecutorService executorService) {
+    public FixedTimeLimit(
+      long duration,
+      TimeUnit timeUnit,
+      ExecutorService executorService
+    ) {
       this(SimpleTimeLimiter.create(executorService), duration, timeUnit);
     }
 

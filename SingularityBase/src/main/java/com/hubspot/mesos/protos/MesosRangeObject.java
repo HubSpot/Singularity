@@ -1,19 +1,20 @@
 package com.hubspot.mesos.protos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MesosRangeObject {
   private final Optional<Long> begin;
   private final Optional<Long> end;
 
   @JsonCreator
-  public MesosRangeObject(@JsonProperty("begin") Optional<Long> begin,
-                          @JsonProperty("end") Optional<Long> end) {
+  public MesosRangeObject(
+    @JsonProperty("begin") Optional<Long> begin,
+    @JsonProperty("end") Optional<Long> end
+  ) {
     this.begin = begin;
     this.end = end;
   }
@@ -43,8 +44,7 @@ public class MesosRangeObject {
     }
     if (obj instanceof MesosRangeObject) {
       final MesosRangeObject that = (MesosRangeObject) obj;
-      return Objects.equals(this.begin, that.begin) &&
-          Objects.equals(this.end, that.end);
+      return Objects.equals(this.begin, that.begin) && Objects.equals(this.end, that.end);
     }
     return false;
   }
@@ -56,9 +56,6 @@ public class MesosRangeObject {
 
   @Override
   public String toString() {
-    return "MesosRangeObject{" +
-        "begin=" + begin +
-        ", end=" + end +
-        '}';
+    return "MesosRangeObject{" + "begin=" + begin + ", end=" + end + '}';
   }
 }

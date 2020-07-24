@@ -3,8 +3,11 @@ package com.hubspot.singularity;
 import java.util.Optional;
 
 public enum RequestType {
-
-  SERVICE(true, true, true), WORKER(true, true, true), SCHEDULED(false, true, false), ON_DEMAND(false, false, false), RUN_ONCE(false, false, false);
+  SERVICE(true, true, true),
+  WORKER(true, true, true),
+  SCHEDULED(false, true, false),
+  ON_DEMAND(false, false, false),
+  RUN_ONCE(false, false, false);
 
   private final boolean longRunning;
   private final boolean alwaysRunning;
@@ -29,7 +32,11 @@ public enum RequestType {
   }
 
   @Deprecated
-  public static RequestType fromDaemonAndScheduleAndLoadBalanced(Optional<String> schedule, Optional<Boolean> daemon, Optional<Boolean> loadBalanced) {
+  public static RequestType fromDaemonAndScheduleAndLoadBalanced(
+    Optional<String> schedule,
+    Optional<Boolean> daemon,
+    Optional<Boolean> loadBalanced
+  ) {
     if (schedule.isPresent()) {
       return RequestType.SCHEDULED;
     }
@@ -44,5 +51,4 @@ public enum RequestType {
 
     return RequestType.WORKER;
   }
-
 }

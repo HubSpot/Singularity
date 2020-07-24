@@ -2,18 +2,16 @@ package com.hubspot.singularity.data;
 
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.ning.http.client.Response;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class SandboxManagerTest extends SingularitySchedulerTestBase {
   private static final int DEFAULT_OFFSET = 123;
@@ -22,7 +20,9 @@ public class SandboxManagerTest extends SingularitySchedulerTestBase {
   private static final String JSON_END = "\",\"offset\":" + DEFAULT_OFFSET + "}";
 
   private static final String SNOWMAN = "☃";
-  private static final byte[] SNOWMAN_UTF8_BYTES = SNOWMAN.getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SNOWMAN_UTF8_BYTES = SNOWMAN.getBytes(
+    StandardCharsets.UTF_8
+  );
   private static final byte FIRST_SNOWMAN_BYTE = SNOWMAN_UTF8_BYTES[0];
   private static final byte SECOND_SNOWMAN_BYTE = SNOWMAN_UTF8_BYTES[1];
 
@@ -52,7 +52,13 @@ public class SandboxManagerTest extends SingularitySchedulerTestBase {
   @Test
   public void testInvalidUtf8WithTwoBytesOfThreeByteCharacter() throws IOException {
     // data contains a ☃ character and the first two bytes of another ☃ character
-    byte[] bytes = toBytes(JSON_START, SNOWMAN_UTF8_BYTES, FIRST_SNOWMAN_BYTE, SECOND_SNOWMAN_BYTE, JSON_END);
+    byte[] bytes = toBytes(
+      JSON_START,
+      SNOWMAN_UTF8_BYTES,
+      FIRST_SNOWMAN_BYTE,
+      SECOND_SNOWMAN_BYTE,
+      JSON_END
+    );
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial ☃ should be dropped
@@ -85,7 +91,13 @@ public class SandboxManagerTest extends SingularitySchedulerTestBase {
   @Test
   public void testInvalidUtf8WithLastTwoBytes() throws IOException {
     // data contains last two bytes of a fire character and a ☃ character
-    byte[] bytes = toBytes(JSON_START, SECOND_BALLOON_BYTE, THIRD_BALLOON_BYTE, SNOWMAN_UTF8_BYTES, JSON_END);
+    byte[] bytes = toBytes(
+      JSON_START,
+      SECOND_BALLOON_BYTE,
+      THIRD_BALLOON_BYTE,
+      SNOWMAN_UTF8_BYTES,
+      JSON_END
+    );
 
     MesosFileChunkObject chunk = sandboxManager.parseResponseBody(response(bytes));
     // the partial fire should be dropped and the offset should be advanced by two bytes

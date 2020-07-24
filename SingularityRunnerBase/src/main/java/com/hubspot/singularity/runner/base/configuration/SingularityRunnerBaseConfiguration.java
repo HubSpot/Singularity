@@ -1,13 +1,10 @@
 package com.hubspot.singularity.runner.base.configuration;
 
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
@@ -100,12 +97,23 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
 
   @Override
   public String toString() {
-    return "SingularityRunnerBaseConfiguration[" +
-            "s3UploaderMetadataDirectory='" + s3UploaderMetadataDirectory + '\'' +
-            ", s3UploaderMetadataSuffix='" + s3UploaderMetadataSuffix + '\'' +
-            ", logWatcherMetadataDirectory='" + logWatcherMetadataDirectory + '\'' +
-            ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
-            ", useCompressProgram=" + useCompressProgram +
-            ']';
+    return (
+      "SingularityRunnerBaseConfiguration[" +
+      "s3UploaderMetadataDirectory='" +
+      s3UploaderMetadataDirectory +
+      '\'' +
+      ", s3UploaderMetadataSuffix='" +
+      s3UploaderMetadataSuffix +
+      '\'' +
+      ", logWatcherMetadataDirectory='" +
+      logWatcherMetadataDirectory +
+      '\'' +
+      ", logWatcherMetadataSuffix='" +
+      logWatcherMetadataSuffix +
+      '\'' +
+      ", useCompressProgram=" +
+      useCompressProgram +
+      ']'
+    );
   }
 }

@@ -74,7 +74,9 @@ public class CrashLoopConfiguration {
     return singleInstanceFailureBucketSizeMinutes;
   }
 
-  public void setSingleInstanceFailureBucketSizeMinutes(int singleInstanceFailureBucketSizeMinutes) {
+  public void setSingleInstanceFailureBucketSizeMinutes(
+    int singleInstanceFailureBucketSizeMinutes
+  ) {
     this.singleInstanceFailureBucketSizeMinutes = singleInstanceFailureBucketSizeMinutes;
   }
 
@@ -98,7 +100,9 @@ public class CrashLoopConfiguration {
     return multiInstanceFailureBucketSizeMinutes;
   }
 
-  public void setMultiInstanceFailureBucketSizeMinutes(int multiInstanceFailureBucketSizeMinutes) {
+  public void setMultiInstanceFailureBucketSizeMinutes(
+    int multiInstanceFailureBucketSizeMinutes
+  ) {
     this.multiInstanceFailureBucketSizeMinutes = multiInstanceFailureBucketSizeMinutes;
   }
 

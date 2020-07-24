@@ -15,8 +15,10 @@ public class AsyncSemaphoreBuilder {
   private Supplier<Exception> timeoutExceptionSupplier = TimeoutException::new;
   private boolean flushQueuePeriodically = false;
 
-
-  AsyncSemaphoreBuilder(PermitSource permitSource, ScheduledExecutorService flushingExecutor) {
+  AsyncSemaphoreBuilder(
+    PermitSource permitSource,
+    ScheduledExecutorService flushingExecutor
+  ) {
     this.permitSource = permitSource;
     this.flushingExecutor = flushingExecutor;
   }
@@ -35,7 +37,9 @@ public class AsyncSemaphoreBuilder {
    * to reject requests. Otherwise, this number is the effective
    * number of allowed tasks.
    */
-  public AsyncSemaphoreBuilder withQueueRejectionThreshold(Supplier<Integer> queueRejectionThreshold) {
+  public AsyncSemaphoreBuilder withQueueRejectionThreshold(
+    Supplier<Integer> queueRejectionThreshold
+  ) {
     this.queueRejectionThreshold = queueRejectionThreshold;
     return this;
   }
@@ -44,7 +48,9 @@ public class AsyncSemaphoreBuilder {
    * Sets the type of the exception to be thrown when the {@code callWithQueueTimeout}
    * method is called and the call is queued for longer than the timeout.
    */
-  public AsyncSemaphoreBuilder withTimeoutExceptionSupplier(Supplier<Exception> timeoutExceptionSupplier) {
+  public AsyncSemaphoreBuilder withTimeoutExceptionSupplier(
+    Supplier<Exception> timeoutExceptionSupplier
+  ) {
     this.timeoutExceptionSupplier = timeoutExceptionSupplier;
     return this;
   }
@@ -63,12 +69,14 @@ public class AsyncSemaphoreBuilder {
 
   public <T> AsyncSemaphore<T> build() {
     return new AsyncSemaphore<>(
-        permitSource,
-        queueSize == -1 ? new ConcurrentLinkedQueue<>() : new ArrayBlockingQueue<>(queueSize),
-        queueRejectionThreshold,
-        timeoutExceptionSupplier,
-        flushQueuePeriodically,
-        flushingExecutor
+      permitSource,
+      queueSize == -1
+        ? new ConcurrentLinkedQueue<>()
+        : new ArrayBlockingQueue<>(queueSize),
+      queueRejectionThreshold,
+      timeoutExceptionSupplier,
+      flushQueuePeriodically,
+      flushingExecutor
     );
   }
 }

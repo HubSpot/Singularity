@@ -1,15 +1,16 @@
 package com.hubspot.singularity.s3downloader.config;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import javax.validation.constraints.Min;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.Min;
 
-@Configuration(filename = "/etc/singularity.s3downloader.yaml", consolidatedField = "s3downloader")
+@Configuration(
+  filename = "/etc/singularity.s3downloader.yaml",
+  consolidatedField = "s3downloader"
+)
 public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguration {
   @Min(1)
   @JsonProperty
@@ -26,6 +27,9 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
   @Min(1)
   @JsonProperty
   private int numDownloaderThreads = 5;
+
+  @JsonProperty
+  private int unixAcceptQueueSize = 128;
 
   public SingularityS3DownloaderConfiguration() {
     super(Optional.of("singularity-s3downloader.log"));
@@ -63,9 +67,30 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
     this.numDownloaderThreads = numDownloaderThreads;
   }
 
+  public int getUnixAcceptQueueSize() {
+    return unixAcceptQueueSize;
+  }
+
+  public void setUnixAcceptQueueSize(int unixAcceptQueueSize) {
+    this.unixAcceptQueueSize = unixAcceptQueueSize;
+  }
+
   @Override
   public String toString() {
-    return "SingularityS3DownloaderConfiguration [httpServerTimeout=" + httpServerTimeout + ", numEnqueueThreads=" + numEnqueueThreads + ", millisToWaitForReEnqueue=" + millisToWaitForReEnqueue
-        + ", numDownloaderThreads=" + numDownloaderThreads + "]";
+    return (
+      "SingularityS3DownloaderConfiguration{" +
+      "httpServerTimeout=" +
+      httpServerTimeout +
+      ", numEnqueueThreads=" +
+      numEnqueueThreads +
+      ", millisToWaitForReEnqueue=" +
+      millisToWaitForReEnqueue +
+      ", numDownloaderThreads=" +
+      numDownloaderThreads +
+      ", unixAcceptQueueSize=" +
+      unixAcceptQueueSize +
+      "} " +
+      super.toString()
+    );
   }
 }

@@ -1,17 +1,16 @@
 package com.hubspot.singularity.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class CorsConfiguration {
-
   @JsonProperty
   private boolean enabled = false;
 
   @JsonProperty
   @NotNull
-  private String allowedHeaders = "X-Requested-With,Content-Type,Accept,Origin,Authorization";
+  private String allowedHeaders =
+    "X-Requested-With,Content-Type,Accept,Origin,Authorization";
 
   @JsonProperty
   @NotNull

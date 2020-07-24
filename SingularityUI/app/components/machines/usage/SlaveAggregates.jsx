@@ -33,7 +33,7 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks, utilization}) => {
   return (
     <div>
       <div className="slave-aggregates row">
-        <Aggregate width={2} value={slaves.length} label="Active Slaves" />
+        <Aggregate width={2} value={slaves.length} label="Active Agents" />
         <Aggregate width={2} value={activeTasks} label="Tasks Running" />
       </div>
       <div className="slave-aggregates row">

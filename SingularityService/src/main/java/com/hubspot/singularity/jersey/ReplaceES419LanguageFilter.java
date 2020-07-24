@@ -1,7 +1,6 @@
 package com.hubspot.singularity.jersey;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -12,13 +11,11 @@ import javax.ws.rs.core.MultivaluedMap;
  * Replaces language header containing es-419 (LATAM spanish) with es-ES.
  */
 public class ReplaceES419LanguageFilter implements ContainerRequestFilter {
-
   public static final String ES_419 = "es-419";
   public static final String ES_ES = "es-ES";
 
   @Inject
-  ReplaceES419LanguageFilter()
-  {}
+  ReplaceES419LanguageFilter() {}
 
   @Override
   public void filter(ContainerRequestContext request) {

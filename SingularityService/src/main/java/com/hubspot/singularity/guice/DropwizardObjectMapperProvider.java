@@ -2,12 +2,10 @@ package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.setup.Environment;
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.dropwizard.setup.Environment;
 
 public class DropwizardObjectMapperProvider implements Provider<ObjectMapper> {
   private final Environment environment;

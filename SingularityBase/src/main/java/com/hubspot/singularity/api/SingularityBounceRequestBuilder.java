@@ -1,11 +1,9 @@
 package com.hubspot.singularity.api;
 
+import com.hubspot.singularity.SingularityShellCommand;
 import java.util.Optional;
 
-import com.hubspot.singularity.SingularityShellCommand;
-
 public class SingularityBounceRequestBuilder {
-
   private Optional<Boolean> incremental;
   private Optional<Boolean> skipHealthchecks;
   private Optional<SingularityShellCommand> runShellCommandBeforeKill;
@@ -25,14 +23,23 @@ public class SingularityBounceRequestBuilder {
   }
 
   public SingularityBounceRequest build() {
-    return new SingularityBounceRequest(incremental, skipHealthchecks, durationMillis, actionId, message, runShellCommandBeforeKill);
+    return new SingularityBounceRequest(
+      incremental,
+      skipHealthchecks,
+      durationMillis,
+      actionId,
+      message,
+      runShellCommandBeforeKill
+    );
   }
 
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }
 
-  public SingularityBounceRequestBuilder setDurationMillis(Optional<Long> durationMillis) {
+  public SingularityBounceRequestBuilder setDurationMillis(
+    Optional<Long> durationMillis
+  ) {
     this.durationMillis = durationMillis;
     return this;
   }
@@ -68,7 +75,9 @@ public class SingularityBounceRequestBuilder {
     return skipHealthchecks;
   }
 
-  public SingularityBounceRequestBuilder setSkipHealthchecks(Optional<Boolean> skipHealthchecks) {
+  public SingularityBounceRequestBuilder setSkipHealthchecks(
+    Optional<Boolean> skipHealthchecks
+  ) {
     this.skipHealthchecks = skipHealthchecks;
     return this;
   }
@@ -77,20 +86,30 @@ public class SingularityBounceRequestBuilder {
     return runShellCommandBeforeKill;
   }
 
-  public SingularityBounceRequestBuilder setRunShellCommandBeforeKill(Optional<SingularityShellCommand> runShellCommandBeforeKill) {
+  public SingularityBounceRequestBuilder setRunShellCommandBeforeKill(
+    Optional<SingularityShellCommand> runShellCommandBeforeKill
+  ) {
     this.runShellCommandBeforeKill = runShellCommandBeforeKill;
     return this;
   }
 
   @Override
   public String toString() {
-    return "SingularityBounceRequestBuilder{" +
-        "incremental=" + incremental +
-        ", skipHealthchecks=" + skipHealthchecks +
-        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
-        ", durationMillis=" + durationMillis +
-        ", actionId=" + actionId +
-        ", message=" + message +
-        '}';
+    return (
+      "SingularityBounceRequestBuilder{" +
+      "incremental=" +
+      incremental +
+      ", skipHealthchecks=" +
+      skipHealthchecks +
+      ", runShellCommandBeforeKill=" +
+      runShellCommandBeforeKill +
+      ", durationMillis=" +
+      durationMillis +
+      ", actionId=" +
+      actionId +
+      ", message=" +
+      message +
+      '}'
+    );
   }
 }

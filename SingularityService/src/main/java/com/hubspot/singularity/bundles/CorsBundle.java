@@ -1,30 +1,25 @@
 package com.hubspot.singularity.bundles;
 
+import com.google.common.collect.Iterators;
+import com.hubspot.singularity.config.CorsConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
-
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
-
 import org.eclipse.jetty.servlets.CrossOriginFilter;
-
-import com.google.common.collect.Iterators;
-import com.hubspot.singularity.config.CorsConfiguration;
-import com.hubspot.singularity.config.SingularityConfiguration;
-
-import io.dropwizard.ConfiguredBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
 
 /**
  * Adds a CORS filter.
  */
 public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
-
   private static final String FILTER_NAME = "Cross Origin Request Filter";
 
   @Override
@@ -67,12 +62,26 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
       throw new RuntimeException(e);
     }
 
-    FilterRegistration.Dynamic filter = environment.servlets().addFilter(FILTER_NAME, corsFilter);
+    FilterRegistration.Dynamic filter = environment
+      .servlets()
+      .addFilter(FILTER_NAME, corsFilter);
 
-    filter.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, corsConfiguration.getAllowedOrigins());
-    filter.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, corsConfiguration.getAllowedHeaders());
-    filter.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, corsConfiguration.getAllowedMethods());
-    filter.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, corsConfiguration.isAllowCredentials() ? "true" : "false");
+    filter.setInitParameter(
+      CrossOriginFilter.ALLOWED_ORIGINS_PARAM,
+      corsConfiguration.getAllowedOrigins()
+    );
+    filter.setInitParameter(
+      CrossOriginFilter.ALLOWED_HEADERS_PARAM,
+      corsConfiguration.getAllowedHeaders()
+    );
+    filter.setInitParameter(
+      CrossOriginFilter.ALLOWED_METHODS_PARAM,
+      corsConfiguration.getAllowedMethods()
+    );
+    filter.setInitParameter(
+      CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
+      corsConfiguration.isAllowCredentials() ? "true" : "false"
+    );
 
     filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
   }

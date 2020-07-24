@@ -1,13 +1,11 @@
 package com.hubspot.mesos.json;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class MesosMasterSlaveObject {
-
   private final String id;
   private final String pid;
   private final String hostname;
@@ -22,10 +20,20 @@ public class MesosMasterSlaveObject {
   private final boolean active;
 
   @JsonCreator
-  public MesosMasterSlaveObject(@JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("registered_time") long registeredTime,
-      @JsonProperty("resources") MesosResourcesObject resources, @JsonProperty("attributes") Map<String, String> attributes, @JsonProperty("used_resources") MesosResourcesObject usedResources,
-      @JsonProperty("offered_resources") MesosResourcesObject offeredResources, @JsonProperty("reserved_resources") MesosResourcesObject reservedResources, @JsonProperty("unreserved_resources") MesosResourcesObject unreservedResources,
-      @JsonProperty("version") String version, @JsonProperty("active") boolean active) {
+  public MesosMasterSlaveObject(
+    @JsonProperty("id") String id,
+    @JsonProperty("pid") String pid,
+    @JsonProperty("hostname") String hostname,
+    @JsonProperty("registered_time") long registeredTime,
+    @JsonProperty("resources") MesosResourcesObject resources,
+    @JsonProperty("attributes") Map<String, String> attributes,
+    @JsonProperty("used_resources") MesosResourcesObject usedResources,
+    @JsonProperty("offered_resources") MesosResourcesObject offeredResources,
+    @JsonProperty("reserved_resources") MesosResourcesObject reservedResources,
+    @JsonProperty("unreserved_resources") MesosResourcesObject unreservedResources,
+    @JsonProperty("version") String version,
+    @JsonProperty("active") boolean active
+  ) {
     this.id = id;
     this.pid = pid;
     this.hostname = hostname;
@@ -97,40 +105,73 @@ public class MesosMasterSlaveObject {
       return false;
     }
     MesosMasterSlaveObject that = (MesosMasterSlaveObject) o;
-    return registeredTime == that.registeredTime &&
-        active == that.active &&
-        Objects.equals(id, that.id) &&
-        Objects.equals(pid, that.pid) &&
-        Objects.equals(hostname, that.hostname) &&
-        Objects.equals(attributes, that.attributes) &&
-        Objects.equals(resources, that.resources) &&
-        Objects.equals(usedResources, that.usedResources) &&
-        Objects.equals(offeredResources, that.offeredResources) &&
-        Objects.equals(reservedResources, that.reservedResources) &&
-        Objects.equals(unreservedResources, that.unreservedResources) &&
-        Objects.equals(version, that.version);
+    return (
+      registeredTime == that.registeredTime &&
+      active == that.active &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(pid, that.pid) &&
+      Objects.equals(hostname, that.hostname) &&
+      Objects.equals(attributes, that.attributes) &&
+      Objects.equals(resources, that.resources) &&
+      Objects.equals(usedResources, that.usedResources) &&
+      Objects.equals(offeredResources, that.offeredResources) &&
+      Objects.equals(reservedResources, that.reservedResources) &&
+      Objects.equals(unreservedResources, that.unreservedResources) &&
+      Objects.equals(version, that.version)
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, pid, hostname, attributes, registeredTime, resources, usedResources, offeredResources, reservedResources, unreservedResources, version, active);
+    return Objects.hash(
+      id,
+      pid,
+      hostname,
+      attributes,
+      registeredTime,
+      resources,
+      usedResources,
+      offeredResources,
+      reservedResources,
+      unreservedResources,
+      version,
+      active
+    );
   }
 
   @Override
   public String toString() {
-    return "MesosMasterSlaveObject{" +
-        "id='" + id + '\'' +
-        ", pid='" + pid + '\'' +
-        ", hostname='" + hostname + '\'' +
-        ", attributes=" + attributes +
-        ", registeredTime=" + registeredTime +
-        ", resources=" + resources +
-        ", usedResources=" + usedResources +
-        ", offeredResources=" + offeredResources +
-        ", reservedResources=" + reservedResources +
-        ", unreservedResources=" + unreservedResources +
-        ", version='" + version + '\'' +
-        ", active=" + active +
-        '}';
+    return (
+      "MesosMasterSlaveObject{" +
+      "id='" +
+      id +
+      '\'' +
+      ", pid='" +
+      pid +
+      '\'' +
+      ", hostname='" +
+      hostname +
+      '\'' +
+      ", attributes=" +
+      attributes +
+      ", registeredTime=" +
+      registeredTime +
+      ", resources=" +
+      resources +
+      ", usedResources=" +
+      usedResources +
+      ", offeredResources=" +
+      offeredResources +
+      ", reservedResources=" +
+      reservedResources +
+      ", unreservedResources=" +
+      unreservedResources +
+      ", version='" +
+      version +
+      '\'' +
+      ", active=" +
+      active +
+      '}'
+    );
   }
 }

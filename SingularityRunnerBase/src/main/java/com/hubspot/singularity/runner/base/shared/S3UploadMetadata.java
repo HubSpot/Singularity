@@ -1,13 +1,12 @@
 package com.hubspot.singularity.runner.base.shared;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  *
@@ -41,7 +40,6 @@ import com.google.common.base.Preconditions;
  *
  */
 public class S3UploadMetadata {
-
   private final String directory;
   private final String fileGlob;
   private final String s3Bucket;
@@ -63,25 +61,31 @@ public class S3UploadMetadata {
   private final Optional<Boolean> useS3ServerSideEncryption;
 
   @JsonCreator
-  public S3UploadMetadata(@JsonProperty("directory") String directory,
-                          @JsonProperty("fileGlob") String fileGlob,
-                          @JsonProperty("s3Bucket") String s3Bucket,
-                          @JsonProperty("s3KeyFormat") String s3KeyFormat,
-                          @JsonProperty("finished") boolean finished,
-                          @JsonProperty("onFinishGlob") Optional<String> onFinishGlob,
-                          @JsonProperty("pid") Optional<Integer> pid,
-                          @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
-                          @JsonProperty("s3SecretKey") Optional<String> s3SecretKey,
-                          @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile,
-                          @JsonProperty("storageClass") Optional<String> s3StorageClass,
-                          @JsonProperty("applyStorageClassIfOverBytes") Optional<Long> applyStorageClassIfOverBytes,
-                          @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
-                          @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
-                          @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
-                          @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
-                          @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
-                          @JsonProperty("encryptionKey") Optional<String> encryptionKey,
-                          @JsonProperty("useS3ServerSideEncryption") Optional<Boolean> useS3ServerSideEncryption) {
+  public S3UploadMetadata(
+    @JsonProperty("directory") String directory,
+    @JsonProperty("fileGlob") String fileGlob,
+    @JsonProperty("s3Bucket") String s3Bucket,
+    @JsonProperty("s3KeyFormat") String s3KeyFormat,
+    @JsonProperty("finished") boolean finished,
+    @JsonProperty("onFinishGlob") Optional<String> onFinishGlob,
+    @JsonProperty("pid") Optional<Integer> pid,
+    @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
+    @JsonProperty("s3SecretKey") Optional<String> s3SecretKey,
+    @JsonProperty(
+      "finishedAfterMillisWithoutNewFile"
+    ) Optional<Long> finishedAfterMillisWithoutNewFile,
+    @JsonProperty("storageClass") Optional<String> s3StorageClass,
+    @JsonProperty(
+      "applyStorageClassIfOverBytes"
+    ) Optional<Long> applyStorageClassIfOverBytes,
+    @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
+    @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
+    @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
+    @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
+    @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
+    @JsonProperty("encryptionKey") Optional<String> encryptionKey,
+    @JsonProperty("useS3ServerSideEncryption") Optional<Boolean> useS3ServerSideEncryption
+  ) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -102,13 +106,12 @@ public class S3UploadMetadata {
     this.uploadImmediately = uploadImmediately;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
-    this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
+    this.gcsCredentials =
+      gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
     this.gcsStorageClass = gcsStorageClass;
     this.encryptionKey = encryptionKey;
     this.useS3ServerSideEncryption = useS3ServerSideEncryption;
   }
-
-
 
   @Override
   public int hashCode() {
@@ -231,25 +234,49 @@ public class S3UploadMetadata {
 
   @Override
   public String toString() {
-    return "S3UploadMetadata{" +
-        "directory='" + directory + '\'' +
-        ", fileGlob='" + fileGlob + '\'' +
-        ", s3Bucket='" + s3Bucket + '\'' +
-        ", s3KeyFormat='" + s3KeyFormat + '\'' +
-        ", finished=" + finished +
-        ", onFinishGlob=" + onFinishGlob +
-        ", pid=" + pid +
-        ", s3AccessKey=" + s3AccessKey +
-        ", s3SecretKey=" + s3SecretKey +
-        ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile +
-        ", s3StorageClass=" + s3StorageClass +
-        ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes +
-        ", uploadImmediately=" + uploadImmediately +
-        ", checkSubdirectories=" + checkSubdirectories +
-        ", uploaderType=" + uploaderType +
-        ", gcsStorageClass=" + gcsStorageClass +
-        ", encryptionKey=" + encryptionKey +
-        ", useS3ServerSideEncryption=" + useS3ServerSideEncryption +
-        '}';
+    return (
+      "S3UploadMetadata{" +
+      "directory='" +
+      directory +
+      '\'' +
+      ", fileGlob='" +
+      fileGlob +
+      '\'' +
+      ", s3Bucket='" +
+      s3Bucket +
+      '\'' +
+      ", s3KeyFormat='" +
+      s3KeyFormat +
+      '\'' +
+      ", finished=" +
+      finished +
+      ", onFinishGlob=" +
+      onFinishGlob +
+      ", pid=" +
+      pid +
+      ", s3AccessKey=" +
+      s3AccessKey +
+      ", s3SecretKey=" +
+      s3SecretKey +
+      ", finishedAfterMillisWithoutNewFile=" +
+      finishedAfterMillisWithoutNewFile +
+      ", s3StorageClass=" +
+      s3StorageClass +
+      ", applyStorageClassIfOverBytes=" +
+      applyStorageClassIfOverBytes +
+      ", uploadImmediately=" +
+      uploadImmediately +
+      ", checkSubdirectories=" +
+      checkSubdirectories +
+      ", uploaderType=" +
+      uploaderType +
+      ", gcsStorageClass=" +
+      gcsStorageClass +
+      ", encryptionKey=" +
+      encryptionKey +
+      ", useS3ServerSideEncryption=" +
+      useS3ServerSideEncryption +
+      '}'
+    );
   }
 }

@@ -10,9 +10,11 @@ public class ShuffleBlacklistMigration extends ZkDataMigration {
   private final SingularityConfiguration configuration;
   private final ShuffleConfigurationManager manager;
 
-
   @Inject
-  public ShuffleBlacklistMigration(SingularityConfiguration configuration, ShuffleConfigurationManager manager) {
+  public ShuffleBlacklistMigration(
+    SingularityConfiguration configuration,
+    ShuffleConfigurationManager manager
+  ) {
     super(16);
     this.configuration = configuration;
     this.manager = manager;

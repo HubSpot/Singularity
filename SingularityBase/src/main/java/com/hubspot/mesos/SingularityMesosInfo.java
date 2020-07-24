@@ -1,13 +1,11 @@
 package com.hubspot.mesos;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import java.util.Optional;
 
 @Beta
 @Schema(description = "Holds the description of an image to be launched in mesos")
@@ -15,7 +13,9 @@ public class SingularityMesosInfo {
   private final Optional<SingularityMesosImage> image;
 
   @JsonCreator
-  public SingularityMesosInfo(@JsonProperty("image") Optional<SingularityMesosImage> image) {
+  public SingularityMesosInfo(
+    @JsonProperty("image") Optional<SingularityMesosImage> image
+  ) {
     this.image = image;
   }
 
@@ -23,7 +23,6 @@ public class SingularityMesosInfo {
   public Optional<SingularityMesosImage> getImage() {
     return image;
   }
-
 
   @Override
   public boolean equals(Object o) {
@@ -44,8 +43,6 @@ public class SingularityMesosInfo {
 
   @Override
   public String toString() {
-    return "SingularityMesosInfo{" +
-        "image='" + image + '\'' +
-        '}';
+    return "SingularityMesosInfo{" + "image='" + image + '\'' + '}';
   }
 }

@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 public abstract class SingularityId {
-
   private final String id;
 
   public SingularityId(String id) {
@@ -31,6 +30,4 @@ public abstract class SingularityId {
     SingularityId other = (SingularityId) obj;
     return id.equals(other.id);
   }
-
-
 }

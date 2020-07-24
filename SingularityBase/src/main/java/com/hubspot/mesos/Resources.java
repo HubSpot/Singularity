@@ -2,20 +2,24 @@ package com.hubspot.mesos;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 @Schema(description = "Describes the resources requested by a particular task")
 public class Resources {
+
   public static Resources add(Resources a, Resources b) {
     checkNotNull(a, "first argument of Resources.add() is null");
     checkNotNull(b, "second argument of Resources.add() is null");
 
-    return new Resources(a.getCpus() + b.getCpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts(), a.getDiskMb() + b.getDiskMb());
+    return new Resources(
+      a.getCpus() + b.getCpus(),
+      a.getMemoryMb() + b.getMemoryMb(),
+      a.getNumPorts() + b.getNumPorts(),
+      a.getDiskMb() + b.getDiskMb()
+    );
   }
 
   public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0, 0);
@@ -30,7 +34,12 @@ public class Resources {
   }
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
+  public Resources(
+    @JsonProperty("cpus") double cpus,
+    @JsonProperty("memoryMb") double memoryMb,
+    @JsonProperty("numPorts") int numPorts,
+    @JsonProperty("diskMb") double diskMb
+  ) {
     this.cpus = cpus;
     this.memoryMb = memoryMb;
     this.numPorts = numPorts;
@@ -66,10 +75,12 @@ public class Resources {
       return false;
     }
     Resources resources = (Resources) o;
-    return Double.compare(resources.cpus, cpus) == 0 &&
-        Double.compare(resources.memoryMb, memoryMb) == 0 &&
-        numPorts == resources.numPorts &&
-        Double.compare(resources.diskMb, diskMb) == 0;
+    return (
+      Double.compare(resources.cpus, cpus) == 0 &&
+      Double.compare(resources.memoryMb, memoryMb) == 0 &&
+      numPorts == resources.numPorts &&
+      Double.compare(resources.diskMb, diskMb) == 0
+    );
   }
 
   @Override
@@ -79,11 +90,17 @@ public class Resources {
 
   @Override
   public String toString() {
-    return "Resources{" +
-        "cpus=" + cpus +
-        ", memoryMb=" + memoryMb +
-        ", numPorts=" + numPorts +
-        ", diskMb=" + diskMb +
-        '}';
+    return (
+      "Resources{" +
+      "cpus=" +
+      cpus +
+      ", memoryMb=" +
+      memoryMb +
+      ", numPorts=" +
+      numPorts +
+      ", diskMb=" +
+      diskMb +
+      '}'
+    );
   }
 }
