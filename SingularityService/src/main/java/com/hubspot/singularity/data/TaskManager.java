@@ -696,7 +696,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityTaskId> getLaunchingTasks() {
     return getActiveTaskIds().stream()
-        .filter((t) -> !exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)))
+        .filter((t) -> exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)))
         .collect(Collectors.toList());
   }
 
