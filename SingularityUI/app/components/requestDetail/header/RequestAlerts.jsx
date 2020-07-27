@@ -38,6 +38,8 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
     const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
+    const { pendingDeployState } = requestParent;
+
     let instances = requestParent.request.instances;
     if (pendingDeployState.updatedRequest && pendingDeployState.updatedRequest.instances) {
       instances = pendingDeployState.updatedRequest.instances
@@ -49,7 +51,6 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
     let maybeDeployProgress;
     let maybeAdvanceDeploy;
 
-    const { pendingDeployState } = requestParent;
     if (pendingDeployState && pendingDeployState.deployProgress) {
       const { deployProgress, deployMarker } = pendingDeployState;
       const {
