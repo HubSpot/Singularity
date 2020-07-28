@@ -40,8 +40,15 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
     const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
     const { pendingDeployState } = requestParent;
 
+    console.log('PAUL');
+    console.log(pendingDeployState);
+    console.log(pendingDeployState.updatedRequest);
+    console.log(pendingDeployState.updatedRequest.instances);
+    console.log(pendingDeployState.updatedRequest && pendingDeployState.updatedRequest.instances);
+    
     let instances = requestParent.request.instances;
     if (pendingDeployState.updatedRequest && pendingDeployState.updatedRequest.instances) {
+      console.log('Updating instances');
       instances = pendingDeployState.updatedRequest.instances
     }
     const pendingDeployProgress = (
