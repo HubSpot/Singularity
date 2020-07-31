@@ -38,9 +38,11 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
     const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
+    const { pendingDeployState } = requestParent;
+
     let instances = requestParent.request.instances;
-    if (pendingDeploy.updatedRequest && pendingDeploy.updatedRequest.instances) {
-      instances = pendingDeploy.updatedRequest.instances
+    if (pendingDeployState.updatedRequest && pendingDeployState.updatedRequest.instances) {
+      instances = pendingDeployState.updatedRequest.instances
     }
     const pendingDeployProgress = (
       <span>{`${deployingInstanceCount} of ${instances} new tasks are currently running`}</span>
@@ -49,7 +51,6 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
     let maybeDeployProgress;
     let maybeAdvanceDeploy;
 
-    const { pendingDeployState } = requestParent;
     if (pendingDeployState && pendingDeployState.deployProgress) {
       const { deployProgress, deployMarker } = pendingDeployState;
       const {
@@ -90,7 +91,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
           maybeDeployProgress = (
             <span>
               {
-                `Trying to deploy ${targetActiveInstances}
+                `Current deploy step trying to deploy ${targetActiveInstances} of ${instances}
                 instances, ${deployingInstanceCount} of
                 ${targetActiveInstances} new tasks are currently running.`
               }
