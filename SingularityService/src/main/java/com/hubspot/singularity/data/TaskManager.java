@@ -907,7 +907,8 @@ public class TaskManager extends CuratorAsyncManager {
           } else {
             return (
               !exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)) &&
-              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STAGING))
+              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STAGING)) &&
+              !exists(getUpdatePath(t, ExtendedTaskState.TASK_RUNNING))
             );
           }
         }
