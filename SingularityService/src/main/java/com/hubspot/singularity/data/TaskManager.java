@@ -893,7 +893,25 @@ public class TaskManager extends CuratorAsyncManager {
   public List<SingularityTaskId> getLaunchingTasks() {
     return getActiveTaskIds()
       .stream()
-      .filter(t -> exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)))
+      .filter(
+        t -> {
+          if (leaderCache.active()) {
+            List<SingularityTaskHistoryUpdate> historyUpdates = leaderCache.getTaskHistoryUpdates(
+              t
+            );
+            return (
+              historyUpdates.isEmpty() ||
+              historyUpdates.get(historyUpdates.size() - 1).getTaskState() ==
+              ExtendedTaskState.TASK_LAUNCHED
+            );
+          } else {
+            return (
+              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)) &&
+              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STAGING))
+            );
+          }
+        }
+      )
       .collect(Collectors.toList());
   }
 
