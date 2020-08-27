@@ -47,7 +47,6 @@ import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistoryQuery;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
@@ -790,10 +789,17 @@ public class SingularityClient {
             retryExn.getLastFailedAttempt().getExceptionCause()
           );
         } else {
-          LOG.error("Failed request to Singularity", exn);
+          LOG.error(
+            "Failed request to Singularity",
+            retryExn.getCause() == null ? retryExn : retryExn.getCause()
+          );
         }
       } else {
-        LOG.error("Failed request to Singularity", exn);
+        ExecutionException eexn = (ExecutionException) exn;
+        LOG.error(
+          "Failed request to Singularity",
+          eexn.getCause() == null ? eexn : eexn.getCause()
+        );
       }
       throw new SingularityClientException("Failed request to Singularity", exn);
     }
