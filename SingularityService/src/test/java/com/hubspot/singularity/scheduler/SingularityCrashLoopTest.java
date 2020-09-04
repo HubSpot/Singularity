@@ -184,8 +184,9 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.WORKER, false);
     initFirstDeploy();
     long now = System.currentTimeMillis();
-    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(10), TaskFailureType.OOM);
-    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(15), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(1), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(11), TaskFailureType.OOM);
+    createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(16), TaskFailureType.OOM);
     createTaskFailure(1, now - TimeUnit.MINUTES.toMillis(20), TaskFailureType.OOM);
 
     SingularityDeployStatistics deployStatistics = deployManager
@@ -196,6 +197,36 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(
       active.stream().map(CrashLoopInfo::getType).anyMatch(l -> l == CrashLoopType.OOM)
     );
+  }
+
+  @Test
+  public void itDoesNotTriggerWhenFailuresAreNotRecentEnough() {
+    initRequestWithType(RequestType.WORKER, false);
+    initFirstDeploy();
+    long now = System.currentTimeMillis();
+    // 3 failures meets threshold, but latest must be < ~8mins ago for single instance fail loop
+    createTaskFailure(
+      1,
+      now - TimeUnit.MINUTES.toMillis(10),
+      TaskFailureType.BAD_EXIT_CODE
+    );
+    createTaskFailure(
+      1,
+      now - TimeUnit.MINUTES.toMillis(15),
+      TaskFailureType.BAD_EXIT_CODE
+    );
+    createTaskFailure(
+      1,
+      now - TimeUnit.MINUTES.toMillis(20),
+      TaskFailureType.BAD_EXIT_CODE
+    );
+
+    SingularityDeployStatistics deployStatistics = deployManager
+      .getDeployStatistics(requestId, firstDeployId)
+      .get();
+    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+
+    Assertions.assertTrue(active.isEmpty());
   }
 
   @Test
