@@ -8,19 +8,22 @@ public class CrashLoopConfiguration {
   private int startupFailureThreshold = 5;
 
   private int evaluateOomsOverMinutes = 30;
-  private int oomFailureThreshold = 3;
+  private int oomFailureThreshold = 4;
 
   private int singleInstanceFailureBucketSizeMinutes = 3;
   private int singleInstanceFailureBuckets = 10;
   private double singleInstanceFailureThreshold = 0.25;
+  private int singleInstanceMinBucketIndexPercent = 75; // i.e. must have a failure in most recent 50% of bucket
 
   private int multiInstanceFailureBucketSizeMinutes = 3;
   private int multiInstanceFailureBuckets = 10;
   private double multiInstanceFailureThreshold = 0.4;
+  private int multiInstanceMinBucketIndexPercent = 75; // i.e. must have a failure in most recent 50% of bucket
 
   private int slowFailureBucketSizeMinutes = 30;
   private int slowFailureBuckets = 15;
   private double slowFailureThreshold = 0.7;
+  private int slowFailureMinBucketIndexPercent = 75; // i.e. must have a failure in most recent 70% of bucket
 
   public int getEvaluateCooldownOverMinutes() {
     return evaluateCooldownOverMinutes;
@@ -96,6 +99,16 @@ public class CrashLoopConfiguration {
     this.singleInstanceFailureThreshold = singleInstanceFailureThreshold;
   }
 
+  public int getSingleInstanceMinBucketIndexPercent() {
+    return singleInstanceMinBucketIndexPercent;
+  }
+
+  public void setSingleInstanceMinBucketIndexPercent(
+    int singleInstanceMinBucketIndexPercent
+  ) {
+    this.singleInstanceMinBucketIndexPercent = singleInstanceMinBucketIndexPercent;
+  }
+
   public int getMultiInstanceFailureBucketSizeMinutes() {
     return multiInstanceFailureBucketSizeMinutes;
   }
@@ -122,6 +135,16 @@ public class CrashLoopConfiguration {
     this.multiInstanceFailureThreshold = multiInstanceFailureThreshold;
   }
 
+  public int getMultiInstanceMinBucketIndexPercent() {
+    return multiInstanceMinBucketIndexPercent;
+  }
+
+  public void setMultiInstanceMinBucketIndexPercent(
+    int multiInstanceMinBucketIndexPercent
+  ) {
+    this.multiInstanceMinBucketIndexPercent = multiInstanceMinBucketIndexPercent;
+  }
+
   public int getSlowFailureBucketSizeMinutes() {
     return slowFailureBucketSizeMinutes;
   }
@@ -144,5 +167,13 @@ public class CrashLoopConfiguration {
 
   public void setSlowFailureThreshold(double slowFailureThreshold) {
     this.slowFailureThreshold = slowFailureThreshold;
+  }
+
+  public int getSlowFailureMinBucketIndexPercent() {
+    return slowFailureMinBucketIndexPercent;
+  }
+
+  public void setSlowFailureMinBucketIndexPercent(int slowFailureMinBucketIndexPercent) {
+    this.slowFailureMinBucketIndexPercent = slowFailureMinBucketIndexPercent;
   }
 }

@@ -299,7 +299,8 @@ public class SingularityCrashLoops {
           configuration.getSingleInstanceFailureBucketSizeMinutes()
         ),
         configuration.getSingleInstanceFailureBuckets(),
-        configuration.getSingleInstanceFailureThreshold()
+        configuration.getSingleInstanceFailureThreshold(),
+        configuration.getSingleInstanceMinBucketIndexPercent()
       );
       if (maybeCrashStart.isPresent()) {
         active.add(
@@ -324,7 +325,8 @@ public class SingularityCrashLoops {
         .collect(Collectors.toList()),
       TimeUnit.MINUTES.toMillis(configuration.getMultiInstanceFailureBucketSizeMinutes()),
       configuration.getMultiInstanceFailureBuckets(),
-      configuration.getMultiInstanceFailureThreshold()
+      configuration.getMultiInstanceFailureThreshold(),
+      configuration.getMultiInstanceMinBucketIndexPercent()
     );
 
     if (recentFailuresByInstance.size() > 1 && maybeMultiCrashStart.isPresent()) {
@@ -348,7 +350,8 @@ public class SingularityCrashLoops {
           recentFailuresByInstance,
           TimeUnit.MINUTES.toMillis(configuration.getSlowFailureBucketSizeMinutes()),
           configuration.getSlowFailureBuckets(),
-          configuration.getSlowFailureThreshold()
+          configuration.getSlowFailureThreshold(),
+          configuration.getSlowFailureMinBucketIndexPercent()
         )
         .ifPresent(
           start ->
@@ -409,7 +412,8 @@ public class SingularityCrashLoops {
     Map<Integer, List<Long>> recentFailuresByInstance,
     long bucketSizeMillis,
     int numBuckets,
-    double percentThreshold
+    double percentThreshold,
+    int minBucketIndexPercent
   ) {
     return getStartForFailuresInBuckets(
       now,
@@ -420,7 +424,8 @@ public class SingularityCrashLoops {
         .collect(Collectors.toList()),
       bucketSizeMillis,
       numBuckets,
-      percentThreshold
+      percentThreshold,
+      minBucketIndexPercent
     );
   }
 
@@ -429,20 +434,39 @@ public class SingularityCrashLoops {
     List<Long> recentFailures,
     long bucketSizeMillis,
     int numBuckets,
-    double percentThreshold
+    double percentThreshold,
+    int minBucketIndexPercent
   ) {
     long thresholdFailTimeMillis = now - (bucketSizeMillis * numBuckets);
-    Map<Long, List<Long>> bucketedFailures = recentFailures
-      .stream()
-      .filter(t -> t > thresholdFailTimeMillis)
-      .collect(Collectors.groupingBy(e -> e / bucketSizeMillis));
-    long bucketsWithFailure = bucketedFailures
-      .entrySet()
-      .stream()
-      .filter(e -> !e.getValue().isEmpty())
-      .count();
+    long[] bucketThresholds = new long[numBuckets];
+    for (int i = 0; i < numBuckets; i++) {
+      bucketThresholds[i] = thresholdFailTimeMillis + i * bucketSizeMillis;
+    }
+
+    int bucketsWithFailure = 0;
+    int maxBucketIndex = -1;
+    for (int i = 0; i < bucketThresholds.length; i++) {
+      for (long t : recentFailures) {
+        if (
+          t > bucketThresholds[i] &&
+          (i == bucketThresholds.length - 1 || t <= bucketThresholds[i + 1])
+        ) {
+          bucketsWithFailure++;
+          maxBucketIndex = i;
+          break;
+        }
+      }
+    }
+
+    // Check that there are enough failures to trigger the condition overall
     if ((double) bucketsWithFailure / numBuckets > percentThreshold) {
-      return recentFailures.stream().min(Comparator.comparingLong(Long::longValue));
+      // Check that there is a failure in the most recent X% of buckets
+      boolean failuresAreRecentEnough =
+        maxBucketIndex >= 0 && maxBucketIndex * 100 / numBuckets > minBucketIndexPercent;
+
+      if (failuresAreRecentEnough) {
+        return recentFailures.stream().min(Comparator.comparingLong(Long::longValue));
+      }
     }
     return Optional.empty();
   }
