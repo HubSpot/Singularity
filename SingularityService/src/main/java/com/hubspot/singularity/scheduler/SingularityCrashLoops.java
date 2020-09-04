@@ -16,6 +16,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -438,18 +440,18 @@ public class SingularityCrashLoops {
     int minBucketIndexPercent
   ) {
     long thresholdFailTimeMillis = now - (bucketSizeMillis * numBuckets);
-    long[] bucketThresholds = new long[numBuckets];
-    for (int i = 0; i < numBuckets; i++) {
-      bucketThresholds[i] = thresholdFailTimeMillis + i * bucketSizeMillis;
-    }
+    List<Long> bucketThresholds = IntStream
+      .range(0, numBuckets - 1)
+      .mapToLong(i -> thresholdFailTimeMillis + i * bucketSizeMillis)
+      .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
     int bucketsWithFailure = 0;
     int maxBucketIndex = -1;
-    for (int i = 0; i < bucketThresholds.length; i++) {
+    for (int i = 0; i < bucketThresholds.size(); i++) {
       for (long t : recentFailures) {
         if (
-          t > bucketThresholds[i] &&
-          (i == bucketThresholds.length - 1 || t <= bucketThresholds[i + 1])
+          t > bucketThresholds.get(i) &&
+          (i == bucketThresholds.size() - 1 || t <= bucketThresholds.get(i + 1))
         ) {
           bucketsWithFailure++;
           maxBucketIndex = i;
