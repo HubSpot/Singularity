@@ -12,9 +12,9 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -350,20 +350,14 @@ public class SingularityMesosStatusUpdateHandler {
         maybeTaskHistory.isPresent() &&
         status.getReason() == Reason.REASON_AGENT_REREGISTERED
       ) {
-        boolean lbRemovalStarted = maybeTaskHistory
-          .get()
-          .getLoadBalancerUpdates()
-          .stream()
-          .anyMatch(
-            lbUpdate ->
-              lbUpdate.getMethod() == LoadBalancerMethod.CANCEL ||
-              lbUpdate.getMethod() == LoadBalancerMethod.DELETE
-          );
+        boolean lbRemovalStarted = taskManager
+          .getLoadBalancerState(taskIdObj, LoadBalancerRequestType.REMOVE)
+          .isPresent();
         if (lbRemovalStarted) {
           taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
               null,
-              TaskCleanupType.PRIORITY_KILL,
+              TaskCleanupType.DECOMISSIONING,
               System.currentTimeMillis(),
               taskIdObj,
               Optional.of(
@@ -373,7 +367,7 @@ public class SingularityMesosStatusUpdateHandler {
               Optional.empty()
             )
           );
-          return StatusUpdateResult.IGNORED;
+          return StatusUpdateResult.DONE;
         }
       }
       boolean reactivated = taskManager.reactivateTask(
