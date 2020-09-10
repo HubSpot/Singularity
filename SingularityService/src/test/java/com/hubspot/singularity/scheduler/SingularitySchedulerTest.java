@@ -16,6 +16,7 @@ import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -29,6 +30,7 @@ import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -4226,6 +4228,68 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.statusUpdate(recovered).join();
 
     Assertions.assertEquals(1, taskManager.getNumActiveTasks());
+    Assertions.assertEquals(1, requestManager.getSizeOfPendingQueue());
+  }
+
+  @Test
+  public void testRecoveredTaskIsCleanedIfLoadBalancerRemoveIsStarted() {
+    // set up the slave first
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))
+      )
+      .join();
+
+    initRequest();
+    initFirstDeploy();
+    SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    Assertions.assertEquals(1, taskManager.getNumActiveTasks());
+    TaskStatus lost = TaskStatus
+      .newBuilder()
+      .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+      .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
+      .setReason(Reason.REASON_AGENT_REMOVED)
+      .setMessage("health check timed out")
+      .setState(TaskState.TASK_LOST)
+      .build();
+
+    sms.statusUpdate(lost).join();
+
+    Assertions.assertEquals(0, taskManager.getNumActiveTasks());
+    SingularityTaskId taskId = task.getTaskId();
+    Assertions.assertTrue(taskManager.getTaskHistory(taskId).isPresent());
+
+    taskManager.saveLoadBalancerState(
+      taskId,
+      LoadBalancerRequestType.REMOVE,
+      new SingularityLoadBalancerUpdate(
+        BaragonRequestState.UNKNOWN,
+        new LoadBalancerRequestId(
+          taskId.getId(),
+          LoadBalancerRequestType.REMOVE,
+          Optional.<Integer>empty()
+        ),
+        Optional.empty(),
+        System.currentTimeMillis(),
+        LoadBalancerMethod.DELETE,
+        Optional.empty()
+      )
+    );
+
+    TaskStatus recovered = TaskStatus
+      .newBuilder()
+      .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+      .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
+      .setReason(Reason.REASON_AGENT_REREGISTERED)
+      .setMessage("agent reregistered")
+      .setState(TaskState.TASK_RUNNING)
+      .build();
+
+    sms.statusUpdate(recovered).join();
+
+    Assertions.assertEquals(0, taskManager.getNumActiveTasks());
+    Assertions.assertEquals(1, taskManager.getNumCleanupTasks());
     Assertions.assertEquals(1, requestManager.getSizeOfPendingQueue());
   }
 

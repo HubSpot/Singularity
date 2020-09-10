@@ -356,7 +356,7 @@ public class SingularityMesosStatusUpdateHandler {
         if (lbRemovalStarted) {
           taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
-              null,
+              Optional.empty(),
               TaskCleanupType.DECOMISSIONING,
               System.currentTimeMillis(),
               taskIdObj,
