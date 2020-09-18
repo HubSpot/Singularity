@@ -29,10 +29,10 @@ public interface PostgresTaskUsageJDBI extends TaskUsageJDBI {
     @Bind("cpusThrottledTimeSecs") double cpusThrottledTimeSecs
   );
 
-  @SqlQuery("SELECT " + FIELDS + "FROM taskUsage WHERE taskId = :taskId")
+  @SqlQuery("SELECT " + FIELDS + " FROM taskUsage WHERE taskId = :taskId")
   List<SingularityTaskUsage> getTaskUsage(@Bind("taskId") String taskId);
 
-  @SqlQuery("SELECT DISTINCT taskId FROM taskUsage")
+  @SqlQuery("SELECT DISTINCT taskId AS id FROM taskUsage")
   List<String> getUniqueTaskIds();
 
   @SqlQuery("SELECT DISTINCT timestamp FROM taskUsage WHERE taskId = :taskId")
