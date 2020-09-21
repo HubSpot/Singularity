@@ -12,10 +12,10 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -24,10 +24,12 @@ import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.async.ExecutorAndQueue;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -344,6 +346,29 @@ public class SingularityMesosStatusUpdateHandler {
           taskIdObj
         );
         return StatusUpdateResult.KILL_TASK;
+      } else if (
+        maybeTaskHistory.isPresent() &&
+        status.getReason() == Reason.REASON_AGENT_REREGISTERED
+      ) {
+        boolean lbRemovalStarted = taskManager
+          .getLoadBalancerState(taskIdObj, LoadBalancerRequestType.REMOVE)
+          .isPresent();
+        if (lbRemovalStarted) {
+          taskManager.createTaskCleanup(
+            new SingularityTaskCleanup(
+              Optional.empty(),
+              TaskCleanupType.DECOMISSIONING,
+              System.currentTimeMillis(),
+              taskIdObj,
+              Optional.of(
+                "Agent re-registered after load balancer removal started. Task cannot be reactivated."
+              ),
+              Optional.empty(),
+              Optional.empty()
+            )
+          );
+          return StatusUpdateResult.DONE;
+        }
       }
       boolean reactivated = taskManager.reactivateTask(
         taskIdObj,
