@@ -98,14 +98,14 @@ public class SingularityService<T extends SingularityConfiguration>
       "getDropwizardConfiguredBundles() returned null"
     );
 
-    guiceBundle =
-      GuiceBundle
-        .defaultBuilder(SingularityConfiguration.class)
-        .modules(getServiceModule(), getObjectMapperModule(), new SingularityAuthModule())
-        .modules(additionalModules)
-        .enableGuiceEnforcer(false)
-        .stage(getGuiceStage())
-        .build();
+    GuiceBundle.Builder<SingularityConfiguration> guiceBundleBuilder = GuiceBundle
+      .defaultBuilder(SingularityConfiguration.class)
+      .modules(getServiceModule(), getObjectMapperModule(), new SingularityAuthModule())
+      .modules(additionalModules)
+      .enableGuiceEnforcer(false)
+      .stage(getGuiceStage());
+    modifyGuiceBundle(guiceBundleBuilder);
+    guiceBundle = guiceBundleBuilder.build();
     bootstrap.addBundle(guiceBundle);
 
     bootstrap.addBundle(new CorsBundle());
@@ -184,6 +184,13 @@ public class SingularityService<T extends SingularityConfiguration>
   ) {
     return ImmutableList.of();
   }
+
+  /**
+   * Allow for modification of GuiceBundle (e.g. injector factory settings)
+   */
+  public void modifyGuiceBundle(
+    GuiceBundle.Builder<SingularityConfiguration> bundleBuilder
+  ) {}
 
   public static void main(final String[] args) throws Exception {
     try {
