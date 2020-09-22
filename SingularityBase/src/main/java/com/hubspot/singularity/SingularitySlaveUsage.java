@@ -10,6 +10,7 @@ import java.util.Optional;
 @Deprecated
 public class SingularitySlaveUsage extends SingularityAgentUsage {
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularitySlaveUsage(
     double cpusUsed,
     double cpusReserved,

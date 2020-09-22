@@ -19,6 +19,7 @@ public class SingularityDisasterDataPoint
   private final int numActiveAgents;
   private final int numLostAgents;
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityDisasterDataPoint(
     long timestamp,
     int numActiveTasks,

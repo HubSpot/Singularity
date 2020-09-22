@@ -28,6 +28,7 @@ public class SingularityRunNowRequest {
   private final Map<String, String> allowedAgentAttributeOverrides;
   private final Optional<Long> runAt;
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -52,6 +53,7 @@ public class SingularityRunNowRequest {
   }
 
   @Deprecated
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -76,6 +78,7 @@ public class SingularityRunNowRequest {
     );
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,

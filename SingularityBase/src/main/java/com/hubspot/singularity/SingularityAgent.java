@@ -30,6 +30,7 @@ public class SingularityAgent extends SingularityMachineAbstraction<SingularityA
     this.resources = resources;
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityAgent(
     String agentId,
     long firstSeenAt,

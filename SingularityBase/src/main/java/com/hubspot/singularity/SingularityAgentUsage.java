@@ -33,6 +33,7 @@ public class SingularityAgentUsage {
   private final double diskUsed;
   private final double diskTotal;
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityAgentUsage(
     double cpusUsed,
     double cpusReserved,

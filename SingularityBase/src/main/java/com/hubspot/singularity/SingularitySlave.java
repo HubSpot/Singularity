@@ -22,6 +22,7 @@ public class SingularitySlave extends SingularityAgent {
     super(agentId, host, rackId, attributes, resources);
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularitySlave(
     String agentId,
     long firstSeenAt,

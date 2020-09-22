@@ -41,6 +41,7 @@ public class SingularityPendingTask {
     return input -> input.getPendingTaskId().getDeployId().equals(deployId);
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingTask(
     SingularityPendingTaskId pendingTaskId,
     Optional<List<String>> cmdLineArgsList,

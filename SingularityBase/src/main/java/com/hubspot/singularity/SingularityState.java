@@ -64,6 +64,7 @@ public class SingularityState {
   private final long avgStatusUpdateDelayMs;
   private final long lastHeartbeatAt;
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityState(
     int activeTasks,
     int launchingTasks,

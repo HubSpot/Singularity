@@ -55,6 +55,7 @@ public class SingularityPendingRequest {
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -86,6 +87,7 @@ public class SingularityPendingRequest {
     );
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -122,6 +124,7 @@ public class SingularityPendingRequest {
     );
   }
 
+  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
