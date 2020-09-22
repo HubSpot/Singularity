@@ -75,6 +75,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Singleton;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -1467,7 +1468,16 @@ public class SingularityScheduler {
       if (
         taskHistoryUpdate.isPresent() &&
         request.getRequestType() == RequestType.ON_DEMAND &&
-        taskHistoryUpdate.get().getStatusMessage().orElse("").contains("USER_REQUESTED")
+        Stream
+          .of("USER_REQUESTED", "PAUSE")
+          .anyMatch(
+            cleaningReason ->
+              taskHistoryUpdate
+                .get()
+                .getStatusMessage()
+                .orElse("")
+                .contains(cleaningReason)
+          )
       ) {
         return false; // don't retry one-off launches of on-demand jobs if they were killed by the user
       }
