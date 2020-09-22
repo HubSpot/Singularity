@@ -49,15 +49,15 @@ public class SandboxManager {
   }
 
   @SuppressWarnings("serial")
-  public static class SlaveNotFoundException extends RuntimeException {
+  public static class AgentNotFoundException extends RuntimeException {
 
-    public SlaveNotFoundException(Exception e) {
+    public AgentNotFoundException(Exception e) {
       super(e);
     }
   }
 
   public Collection<MesosFileObject> browse(String slaveHostname, String fullPath)
-    throws SlaveNotFoundException {
+    throws AgentNotFoundException {
     try {
       Response response = asyncHttpClient
         .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
@@ -89,7 +89,7 @@ public class SandboxManager {
             t -> t instanceof UnknownHostException || t instanceof ConnectException
           )
       ) {
-        throw new SlaveNotFoundException(e);
+        throw new AgentNotFoundException(e);
       } else {
         throw new RuntimeException(e);
       }
@@ -103,7 +103,7 @@ public class SandboxManager {
     Optional<Long> offset,
     Optional<Long> length
   )
-    throws SlaveNotFoundException {
+    throws AgentNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient
         .prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
@@ -141,7 +141,7 @@ public class SandboxManager {
             t -> t instanceof UnknownHostException || t instanceof ConnectException
           )
       ) {
-        throw new SlaveNotFoundException(e);
+        throw new AgentNotFoundException(e);
       } else {
         throw new RuntimeException(e);
       }

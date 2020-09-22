@@ -3,20 +3,20 @@ package com.hubspot.singularity.mesos;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.singularity.AgentMatchState;
 import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAgentUsage;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -52,7 +52,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   protected SingularityMesosOfferScheduler offerScheduler;
 
   @Inject
-  protected SingularitySlaveAndRackManager slaveAndRackManager;
+  protected SingularityAgentAndRackManager slaveAndRackManager;
 
   @Inject
   protected UsageManager usageManager;
@@ -100,7 +100,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
-    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty(), SlaveMatchState.OK));
+    assertValueIs(0.50, scheduler.score(SLAVE_ID, Optional.empty(), AgentMatchState.OK));
 
     // NLR - no deployStatistics -> default weights
     setRequestType(RequestType.ON_DEMAND);
@@ -109,7 +109,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
   }
@@ -124,7 +124,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 0, 10, 0, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -134,7 +134,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -142,7 +142,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -152,7 +152,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -160,7 +160,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -170,7 +170,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -178,7 +178,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -188,7 +188,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -196,7 +196,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -206,7 +206,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 0, 10, 0, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -214,7 +214,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 0, 10, 0, 8, 10, 8)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -224,7 +224,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 5, 10, 5, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -232,7 +232,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(0, 10, 0, 8, 10, 8, 8, 10, 8)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
 
@@ -242,7 +242,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -250,7 +250,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
   }
@@ -262,7 +262,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -270,7 +270,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
-        SlaveMatchState.PREFERRED_SLAVE
+        AgentMatchState.PREFERRED_AGENT
       )
     );
 
@@ -279,7 +279,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
-        SlaveMatchState.OK
+        AgentMatchState.OK
       )
     );
     assertValueIs(
@@ -287,7 +287,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       scheduler.score(
         SLAVE_ID,
         Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
-        SlaveMatchState.PREFERRED_SLAVE
+        AgentMatchState.PREFERRED_AGENT
       )
     );
   }
@@ -318,9 +318,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       (double) (taskId.getStartedAt() + 5000) / 1000,
       1000
     );
-    mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
+    mesosClient.setAgentResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
-    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(
+    SingularityAgentUsage smallUsage = new SingularityAgentUsage(
       0.1,
       0.1,
       Optional.of(10.0),
@@ -343,13 +343,13 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     );
 
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host1")
+      new SingularityAgentUsageWithId(smallUsage, "host1")
     );
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host2")
+      new SingularityAgentUsageWithId(smallUsage, "host2")
     );
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host3")
+      new SingularityAgentUsageWithId(smallUsage, "host3")
     );
 
     requestResource.scale(
@@ -422,7 +422,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       getTimestampSeconds(taskId, 5),
       1000
     );
-    mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
+    mesosClient.setAgentResourceUsage("host1", Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 1 cpus used
@@ -432,9 +432,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       getTimestampSeconds(taskId, 6),
       1000
     );
-    mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u2));
+    mesosClient.setAgentResourceUsage("host1", Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
-    SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(
+    SingularityAgentUsage smallUsage = new SingularityAgentUsage(
       0.1,
       0.1,
       Optional.of(10.0),
@@ -457,13 +457,13 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     );
 
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host1")
+      new SingularityAgentUsageWithId(smallUsage, "host1")
     );
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host2")
+      new SingularityAgentUsageWithId(smallUsage, "host2")
     );
     usageManager.saveCurrentSlaveUsage(
-      new SingularitySlaveUsageWithId(smallUsage, "host3")
+      new SingularityAgentUsageWithId(smallUsage, "host3")
     );
 
     requestResource.scale(
@@ -530,17 +530,17 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     long diskMbTotal,
     long diskMbInUse
   ) {
-    long totalMemBytes = memMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
-    long memBytesInUse = memMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+    long totalMemBytes = memMbTotal * SingularityAgentUsage.BYTES_PER_MEGABYTE;
+    long memBytesInUse = memMbInUse * SingularityAgentUsage.BYTES_PER_MEGABYTE;
     return new SingularitySlaveUsageWithCalculatedScores(
-      new SingularitySlaveUsage(
+      new SingularityAgentUsage(
         cpuInUse,
         cpusReserved,
         Optional.of(cpusTotal),
         memBytesInUse,
         memMbReserved,
         Optional.of(memMbTotal),
-        diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE,
+        diskMbInUse * SingularityAgentUsage.BYTES_PER_MEGABYTE,
         diskMbReserved,
         Optional.of(diskMbTotal),
         1,
@@ -551,8 +551,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
         cpuInUse,
         cpuInUse,
         cpuInUse,
-        diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE,
-        diskMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE
+        diskMbInUse * SingularityAgentUsage.BYTES_PER_MEGABYTE,
+        diskMbTotal * SingularityAgentUsage.BYTES_PER_MEGABYTE
       ),
       MachineLoadMetric.LOAD_5,
       new MaxProbableUsage(0, 0, 0),

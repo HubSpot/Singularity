@@ -4,8 +4,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.data.usage.UsageManager;
@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
+public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
   private static final Logger LOG = LoggerFactory.getLogger(SlaveManager.class);
 
   private static final String SLAVE_ROOT = "/slaves";
@@ -30,7 +30,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
     CuratorFramework curator,
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry,
-    Transcoder<SingularitySlave> slaveTranscoder,
+    Transcoder<SingularityAgent> slaveTranscoder,
     Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
     Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
     SingularityLeaderCache leaderCache,
@@ -58,7 +58,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public Optional<SingularitySlave> getObjectFromLeaderCache(String slaveId) {
+  public Optional<SingularityAgent> getObjectFromLeaderCache(String slaveId) {
     if (leaderCache.active()) {
       return leaderCache.getSlave(slaveId);
     }
@@ -67,7 +67,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public List<SingularitySlave> getObjectsFromLeaderCache() {
+  public List<SingularityAgent> getObjectsFromLeaderCache() {
     if (leaderCache.active()) {
       return leaderCache.getSlaves();
     }
@@ -75,9 +75,9 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
   }
 
   @Override
-  public void saveObjectToLeaderCache(SingularitySlave singularitySlave) {
+  public void saveObjectToLeaderCache(SingularityAgent singularityAgent) {
     if (leaderCache.active()) {
-      leaderCache.putSlave(singularitySlave);
+      leaderCache.putSlave(singularityAgent);
     } else {
       LOG.info("Asked to save slaves to leader cache when not active");
     }
@@ -94,14 +94,14 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   @Override
   public StateChangeResult changeState(
-    SingularitySlave singularitySlave,
+    SingularityAgent singularityAgent,
     MachineState newState,
     Optional<String> message,
     Optional<String> user
   ) {
     if (newState == MachineState.DEAD) {
-      usageManager.deleteSlaveUsage(singularitySlave.getId());
+      usageManager.deleteSlaveUsage(singularityAgent.getId());
     }
-    return super.changeState(singularitySlave, newState, message, user);
+    return super.changeState(singularityAgent, newState, message, user);
   }
 }

@@ -14,6 +14,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -32,7 +33,6 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -200,11 +200,11 @@ public class SingularityScheduler {
 
     final Collection<SingularityTaskId> activeTaskIds = leaderCache.getActiveTaskIds();
 
-    final Map<SingularitySlave, MachineState> slaves = getDefaultMap(
+    final Map<SingularityAgent, MachineState> slaves = getDefaultMap(
       slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION)
     );
 
-    for (SingularitySlave slave : slaves.keySet()) {
+    for (SingularityAgent slave : slaves.keySet()) {
       boolean foundTask = false;
 
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(
@@ -827,7 +827,7 @@ public class SingularityScheduler {
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         rebalanceRacks(request, state, pendingRequest, remainingActiveTasks);
       }
-      if (request.getSlaveAttributeMinimums().isPresent()) {
+      if (request.getAgentAttributeMinimums().isPresent()) {
         rebalanceAttributeDistribution(
           request,
           state,
@@ -1629,8 +1629,8 @@ public class SingularityScheduler {
           pendingRequest.getS3UploaderAdditionalFiles(),
           pendingRequest.getRunAsUserOverride(),
           pendingRequest.getEnvOverrides(),
-          pendingRequest.getRequiredSlaveAttributeOverrides(),
-          pendingRequest.getAllowedSlaveAttributeOverrides(),
+          pendingRequest.getRequiredAgentAttributeOverrides(),
+          pendingRequest.getAllowedAgentAttributeOverrides(),
           pendingRequest.getExtraArtifacts(),
           pendingRequest.getActionId()
         )

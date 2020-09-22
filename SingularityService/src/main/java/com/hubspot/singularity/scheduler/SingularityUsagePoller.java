@@ -4,10 +4,10 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgentUsage;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
-import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -76,12 +76,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     AtomicLong totalDiskBytesUsed = new AtomicLong(0);
     AtomicLong totalDiskBytesAvailable = new AtomicLong(0);
 
-    Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts = new ConcurrentHashMap<>();
+    Map<SingularityAgentUsage, List<TaskIdWithUsage>> overLoadedHosts = new ConcurrentHashMap<>();
 
     List<CompletableFuture<Void>> usageFutures = new ArrayList<>();
 
     usageHelper
-      .getSlavesToTrackUsageFor()
+      .getAgentsToTrackUsageFor()
       .forEach(
         slave -> {
           usageFutures.add(
@@ -177,7 +177,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         String requestId = utilization.getRequestId();
         long memoryBytesReserved = (long) (
           maybeDeploy.get().getResources().get().getMemoryMb() *
-          SingularitySlaveUsage.BYTES_PER_MEGABYTE
+          SingularityAgentUsage.BYTES_PER_MEGABYTE
         );
         double cpuReserved = maybeDeploy.get().getResources().get().getCpus();
         long diskBytesReserved = (long) maybeDeploy
@@ -185,7 +185,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           .getResources()
           .get()
           .getDiskMb() *
-        SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+        SingularityAgentUsage.BYTES_PER_MEGABYTE;
 
         double unusedCpu = cpuReserved - utilization.getAvgCpuUsed();
         long unusedMemBytes = (long) (

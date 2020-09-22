@@ -26,7 +26,7 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
-import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
+import com.hubspot.singularity.data.SandboxManager.AgentNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
@@ -184,7 +184,7 @@ public class SandboxResource extends AbstractHistoryResource {
         currentDirectory,
         slaveHostname
       );
-    } catch (SlaveNotFoundException snfe) {
+    } catch (AgentNotFoundException snfe) {
       throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
   }
@@ -269,7 +269,7 @@ public class SandboxResource extends AbstractHistoryResource {
       }
 
       return maybeChunk.get();
-    } catch (SlaveNotFoundException snfe) {
+    } catch (AgentNotFoundException snfe) {
       throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
     }
   }

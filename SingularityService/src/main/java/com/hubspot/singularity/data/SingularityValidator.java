@@ -24,6 +24,7 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
@@ -38,7 +39,6 @@ import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
@@ -110,7 +110,7 @@ public class SingularityValidator {
   private final boolean enforceSignedArtifacts;
   private final Set<String> validDockerRegistries;
   private final UIConfiguration uiConfiguration;
-  private final SlavePlacement defaultSlavePlacement;
+  private final AgentPlacement defaultAgentPlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
@@ -140,7 +140,7 @@ public class SingularityValidator {
     int defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
     this.defaultBounceExpirationMinutes =
       configuration.getDefaultBounceExpirationMinutes();
-    this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
+    this.defaultAgentPlacement = configuration.getDefaultAgentPlacement();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
@@ -798,8 +798,8 @@ public class SingularityValidator {
       runNowRequest.getS3UploaderAdditionalFiles(),
       runNowRequest.getRunAsUserOverride(),
       runNowRequest.getEnvOverrides(),
-      runNowRequest.getRequiredSlaveAttributeOverrides(),
-      runNowRequest.getAllowedSlaveAttributeOverrides(),
+      runNowRequest.getRequiredAgentAttributeOverrides(),
+      runNowRequest.getAllowedAgentAttributeOverrides(),
       runNowRequest.getExtraArtifacts(),
       runNowRequest.getRunAt()
     );
@@ -819,8 +819,8 @@ public class SingularityValidator {
         request.getS3UploaderAdditionalFiles(),
         request.getRunAsUserOverride(),
         request.getEnvOverrides(),
-        request.getRequiredSlaveAttributeOverrides(),
-        request.getAllowedSlaveAttributeOverrides(),
+        request.getRequiredAgentAttributeOverrides(),
+        request.getAllowedAgentAttributeOverrides(),
         request.getExtraArtifacts(),
         request.getRunAt()
       );
@@ -1145,17 +1145,17 @@ public class SingularityValidator {
   }
 
   public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
-    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
+    AgentPlacement placement = request.getAgentPlacement().orElse(defaultAgentPlacement);
 
     if (
       (
         isAllowBounceToSameHost(request) &&
-        placement == SlavePlacement.SEPARATE_BY_REQUEST
+        placement == AgentPlacement.SEPARATE_BY_REQUEST
       ) ||
       (
         !isAllowBounceToSameHost(request) &&
-        placement != SlavePlacement.GREEDY &&
-        placement != SlavePlacement.OPTIMISTIC
+        placement != AgentPlacement.GREEDY &&
+        placement != AgentPlacement.OPTIMISTIC
       )
     ) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
@@ -1185,15 +1185,15 @@ public class SingularityValidator {
   }
 
   public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
-    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
+    AgentPlacement placement = request.getAgentPlacement().orElse(defaultAgentPlacement);
 
-    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+    if (placement != AgentPlacement.GREEDY && placement != AgentPlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
         MachineState.ACTIVE
       );
       int requiredSlaveCount = request.getInstancesSafe();
 
-      if (previousScale.isPresent() && placement == SlavePlacement.SEPARATE_BY_REQUEST) {
+      if (previousScale.isPresent() && placement == AgentPlacement.SEPARATE_BY_REQUEST) {
         requiredSlaveCount += previousScale.get();
       }
 

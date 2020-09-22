@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema
 public enum SingularityDisasterType {
   EXCESSIVE_TASK_LAG(true),
+  @Deprecated
   LOST_SLAVES(false),
+  LOST_AGENTS(false),
   LOST_TASKS(false),
   USER_INITIATED(false);
 

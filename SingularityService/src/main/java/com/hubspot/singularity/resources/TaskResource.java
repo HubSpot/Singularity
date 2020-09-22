@@ -17,6 +17,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -27,7 +28,6 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -51,7 +51,7 @@ import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
+import com.hubspot.singularity.data.SandboxManager.AgentNotFoundException;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -189,7 +189,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
         authorizationHelper.filterByAuthorizedRequests(
           user,
           taskManager.getPendingTasks(useWebCache(useWebCache)),
-          SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID,
+          SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID::apply,
           SingularityAuthorizationScope.READ
         )
       )
@@ -213,7 +213,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       .filterByAuthorizedRequests(
         user,
         taskManager.getPendingTaskIds(useWebCache(useWebCache)),
-        SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID,
+        SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID::apply,
         SingularityAuthorizationScope.READ
       )
       .stream()
@@ -412,7 +412,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+    Optional<SingularityAgent> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(
       maybeSlave.isPresent(),
@@ -426,7 +426,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
         taskManager.getActiveTaskIds(useWebCache(useWebCache)),
         maybeSlave.get()
       ),
-      SingularityTransformHelpers.TASK_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -451,7 +451,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+    Optional<SingularityAgent> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(
       maybeSlave.isPresent(),
@@ -465,7 +465,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
         taskManager.getActiveTaskIds(useWebCache(useWebCache)),
         maybeSlave.get()
       ),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -483,7 +483,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTasks(useWebCache(useWebCache)),
-      SingularityTransformHelpers.TASK_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -501,7 +501,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTaskIds(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -519,7 +519,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     List<SingularityTaskId> activeTaskIds = authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTaskIds(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
     return taskManager.getTaskHistoryUpdates(activeTaskIds);
@@ -548,7 +548,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getCleanupTasks(useWebCache(useWebCache)),
-      SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -565,7 +565,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getKilledTaskIdRecords(),
-      SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID,
+      SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -580,7 +580,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getLBCleanupTasks(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -925,7 +925,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     );
     validator.checkActionEnabled(SingularityAction.ADD_METADATA);
 
-    WebExceptions.checkBadRequest(
+    checkBadRequest(
       taskMetadataRequest.getTitle().length() <
       taskMetadataConfiguration.getMaxMetadataTitleLength(),
       "Task metadata title too long, must be less than %s bytes",
@@ -935,7 +935,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     int messageLength = taskMetadataRequest.getMessage().isPresent()
       ? taskMetadataRequest.getMessage().get().length()
       : 0;
-    WebExceptions.checkBadRequest(
+    checkBadRequest(
       !taskMetadataRequest.getMessage().isPresent() ||
       messageLength < taskMetadataConfiguration.getMaxMetadataMessageLength(),
       "Task metadata message too long, must be less than %s bytes",
@@ -943,7 +943,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     );
 
     if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
-      WebExceptions.checkBadRequest(
+      checkBadRequest(
         taskMetadataConfiguration
           .getAllowedMetadataTypes()
           .get()
@@ -954,7 +954,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       );
     }
 
-    WebExceptions.checkNotFound(
+    checkNotFound(
       taskManager.taskExistsInZk(taskIdObj),
       "Task %s not found in ZooKeeper (can not save metadata to tasks which have been persisted",
       taskIdObj
@@ -1016,7 +1016,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
     if (!taskManager.isActiveTask(taskIdObj)) {
-      throw WebExceptions.badRequest(
+      throw badRequest(
         "%s is not an active task, can't run %s on it",
         taskId,
         shellCommand.getName()
@@ -1163,7 +1163,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       return responseBuilder.build();
     } catch (Exception e) {
       if (e.getCause().getClass() == ConnectException.class) {
-        throw new SlaveNotFoundException(e);
+        throw new AgentNotFoundException(e);
       } else {
         throw new RuntimeException(e);
       }

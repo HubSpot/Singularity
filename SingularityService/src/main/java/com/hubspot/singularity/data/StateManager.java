@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityHostState;
@@ -18,7 +19,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
@@ -238,14 +238,14 @@ public class StateManager extends CuratorManager {
       }
     }
 
-    List<SingularitySlave> slaves = slaveManager.getObjects();
+    List<SingularityAgent> slaves = slaveManager.getObjects();
 
     int activeSlaves = 0;
     int deadSlaves = 0;
     int decommissioningSlaves = 0;
     int unknownSlaves = 0;
 
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       switch (slave.getCurrentState().getState()) {
         case ACTIVE:
           activeSlaves++;

@@ -3,10 +3,10 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.mesos.OfferCache;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +46,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(
       request
         .toBuilder()
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
         .setInstances(Optional.of(2))
         .build(),
       singularityUser

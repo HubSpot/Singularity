@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.data.InactiveSlaveManager;
+import com.hubspot.singularity.data.InactiveAgentManager;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,22 +25,22 @@ import javax.ws.rs.core.MediaType;
 @Schema(title = "Manage Singularity machines that should be marked as inactive")
 @Tags({ @Tag(name = "Inactive Machines") })
 public class InactiveSlaveResource {
-  private final InactiveSlaveManager inactiveSlaveManager;
+  private final InactiveAgentManager inactiveAgentManager;
   private final SingularityAuthorizer authorizationHelper;
 
   @Inject
   public InactiveSlaveResource(
-    InactiveSlaveManager inactiveSlaveManager,
+    InactiveAgentManager inactiveAgentManager,
     SingularityAuthorizer authorizationHelper
   ) {
-    this.inactiveSlaveManager = inactiveSlaveManager;
+    this.inactiveAgentManager = inactiveAgentManager;
     this.authorizationHelper = authorizationHelper;
   }
 
   @GET
   @Operation(summary = "Retrieve a list of slaves marked as inactive")
   public Set<String> getInactiveSlaves() {
-    return inactiveSlaveManager.getInactiveSlaves();
+    return inactiveAgentManager.getInactiveAgents();
   }
 
   @POST
@@ -52,7 +52,7 @@ public class InactiveSlaveResource {
     ) String host
   ) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.deactivateSlave(host);
+    inactiveAgentManager.deactivateAgent(host);
   }
 
   @DELETE
@@ -65,13 +65,13 @@ public class InactiveSlaveResource {
     ) @QueryParam("host") String host
   ) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.activateSlave(host);
+    inactiveAgentManager.activateAgent(host);
   }
 
   @DELETE
   @Path("/all")
   public void clearAllInactiveHosts(@Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.getInactiveSlaves().forEach(inactiveSlaveManager::activateSlave);
+    inactiveAgentManager.getInactiveAgents().forEach(inactiveAgentManager::activateAgent);
   }
 }

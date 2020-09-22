@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SlavePlacement;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import java.util.ArrayList;
@@ -125,7 +125,7 @@ public class SingularityConfiguration extends Configuration {
   private int defaultBounceExpirationMinutes = 60;
 
   @NotNull
-  private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
+  private AgentPlacement defaultAgentPlacement = AgentPlacement.GREEDY;
 
   @Min(value = 0, message = "Must be non-negative")
   private double placementLeniency = 0.09d;
@@ -592,8 +592,13 @@ public class SingularityConfiguration extends Configuration {
     this.defaultBounceExpirationMinutes = defaultBounceExpirationMinutes;
   }
 
-  public SlavePlacement getDefaultSlavePlacement() {
-    return defaultSlavePlacement;
+  public AgentPlacement getDefaultAgentPlacement() {
+    return defaultAgentPlacement;
+  }
+
+  @Deprecated
+  public AgentPlacement getDefaultSlavePlacement() {
+    return defaultAgentPlacement;
   }
 
   public double getPlacementLeniency() {
@@ -1031,8 +1036,13 @@ public class SingularityConfiguration extends Configuration {
     this.databaseConfiguration = databaseConfiguration;
   }
 
-  public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
-    this.defaultSlavePlacement = defaultSlavePlacement;
+  public void setDefaultAgentPlacement(AgentPlacement defaultAgentPlacement) {
+    this.defaultAgentPlacement = defaultAgentPlacement;
+  }
+
+  @Deprecated
+  public void setDefaultSlavePlacement(AgentPlacement defaultAgentPlacement) {
+    this.defaultAgentPlacement = defaultAgentPlacement;
   }
 
   public void setPlacementLeniency(double placementLeniency) {

@@ -1,11 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -26,7 +26,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
 
   private final SlaveManager slaveManager;
   private final RequestManager requestManager;
-  private final SlavePlacement defaultSlavePlacement;
+  private final AgentPlacement defaultAgentPlacement;
   private final RequestHelper requestHelper;
   private final boolean spreadAllSlavesEnabled;
   private final SingularitySchedulerLock lock;
@@ -42,7 +42,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS);
     this.slaveManager = slaveManager;
     this.requestManager = requestManager;
-    this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
+    this.defaultAgentPlacement = configuration.getDefaultAgentPlacement();
     this.requestHelper = requestHelper;
     this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
     this.lock = lock;
@@ -56,11 +56,14 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
       lock.runWithRequestLock(
         () -> {
           SingularityRequest request = requestWithState.getRequest();
-          SlavePlacement placement = request
-            .getSlavePlacement()
-            .orElse(defaultSlavePlacement);
+          AgentPlacement placement = request
+            .getAgentPlacement()
+            .orElse(defaultAgentPlacement);
 
-          if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
+          if (
+            placement != AgentPlacement.SPREAD_ALL_SLAVES &&
+            placement != AgentPlacement.SPREAD_ALL_AGENTS
+          ) {
             return;
           }
 

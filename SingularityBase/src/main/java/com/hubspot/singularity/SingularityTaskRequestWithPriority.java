@@ -19,16 +19,8 @@ public class SingularityTaskRequestWithPriority {
   }
 
   public static Comparator<SingularityTaskRequestWithPriority> weightedPriorityComparator() {
-    return new Comparator<SingularityTaskRequestWithPriority>() {
-
-      @Override
-      public int compare(
-        SingularityTaskRequestWithPriority o1,
-        SingularityTaskRequestWithPriority o2
-      ) {
-        return Doubles.compare(o2.getWeightedPriority(), o1.getWeightedPriority());
-      }
-    };
+    return (o1, o2) ->
+      Doubles.compare(o2.getWeightedPriority(), o1.getWeightedPriority());
   }
 
   public SingularityTaskRequest getTaskRequest() {

@@ -32,10 +32,10 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> rackSensitive;
 
   private Optional<List<String>> rackAffinity;
-  private Optional<SlavePlacement> slavePlacement;
-  private Optional<Map<String, String>> requiredSlaveAttributes;
-  private Optional<Map<String, String>> allowedSlaveAttributes;
-  private Optional<Map<String, Map<String, Integer>>> slaveAttributeMinimums;
+  private Optional<AgentPlacement> agentPlacement;
+  private Optional<Map<String, String>> requiredAgentAttributes;
+  private Optional<Map<String, String>> allowedAgentAttributes;
+  private Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums;
   private Optional<Boolean> loadBalanced;
   private Optional<String> requiredRole;
 
@@ -69,10 +69,10 @@ public class SingularityRequestBuilder {
     this.quartzSchedule = Optional.empty();
     this.scheduleTimeZone = Optional.empty();
     this.rackAffinity = Optional.empty();
-    this.slavePlacement = Optional.empty();
-    this.requiredSlaveAttributes = Optional.empty();
-    this.allowedSlaveAttributes = Optional.empty();
-    this.slaveAttributeMinimums = Optional.empty();
+    this.agentPlacement = Optional.empty();
+    this.requiredAgentAttributes = Optional.empty();
+    this.allowedAgentAttributes = Optional.empty();
+    this.agentAttributeMinimums = Optional.empty();
     this.scheduledExpectedRuntimeMillis = Optional.empty();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.empty();
     this.group = Optional.empty();
@@ -107,10 +107,10 @@ public class SingularityRequestBuilder {
       quartzSchedule,
       scheduleTimeZone,
       rackAffinity,
-      slavePlacement,
-      requiredSlaveAttributes,
-      allowedSlaveAttributes,
-      slaveAttributeMinimums,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       scheduledExpectedRuntimeMillis,
       waitAtLeastMillisAfterTaskFinishesForReschedule,
       group,
@@ -127,7 +127,11 @@ public class SingularityRequestBuilder {
       maxTasksPerOffer,
       allowBounceToSameHost,
       requiredRole,
-      dataCenter
+      dataCenter,
+      requiredAgentAttributes,
+      allowedAgentAttributes,
+      agentAttributeMinimums,
+      agentPlacement
     );
   }
 
@@ -272,14 +276,27 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Optional<SlavePlacement> getSlavePlacement() {
-    return slavePlacement;
+  public Optional<AgentPlacement> getAgentPlacement() {
+    return agentPlacement;
   }
 
-  public SingularityRequestBuilder setSlavePlacement(
-    Optional<SlavePlacement> slavePlacement
+  public SingularityRequestBuilder setAgentPlacement(
+    Optional<AgentPlacement> agentPlacement
   ) {
-    this.slavePlacement = slavePlacement;
+    this.agentPlacement = agentPlacement;
+    return this;
+  }
+
+  @Deprecated
+  public Optional<AgentPlacement> getSlavePlacement() {
+    return agentPlacement;
+  }
+
+  @Deprecated
+  public SingularityRequestBuilder setSlavePlacement(
+    Optional<AgentPlacement> agentPlacement
+  ) {
+    this.agentPlacement = agentPlacement;
     return this;
   }
 
@@ -335,24 +352,48 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredAgentAttributes(
+    Optional<Map<String, String>> requiredAgentAttributes
+  ) {
+    this.requiredAgentAttributes = requiredAgentAttributes;
+    return this;
+  }
+
+  public SingularityRequestBuilder setAllowedAgentAttributes(
+    Optional<Map<String, String>> allowedAgentAttributes
+  ) {
+    this.allowedAgentAttributes = allowedAgentAttributes;
+    return this;
+  }
+
+  public SingularityRequestBuilder setAgentAttributeMinimums(
+    Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums
+  ) {
+    this.agentAttributeMinimums = agentAttributeMinimums;
+    return this;
+  }
+
+  @Deprecated
   public SingularityRequestBuilder setRequiredSlaveAttributes(
-    Optional<Map<String, String>> requiredSlaveAttributes
+    Optional<Map<String, String>> requiredAgentAttributes
   ) {
-    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    this.requiredAgentAttributes = requiredAgentAttributes;
     return this;
   }
 
+  @Deprecated
   public SingularityRequestBuilder setAllowedSlaveAttributes(
-    Optional<Map<String, String>> allowedSlaveAttributes
+    Optional<Map<String, String>> allowedAgentAttributes
   ) {
-    this.allowedSlaveAttributes = allowedSlaveAttributes;
+    this.allowedAgentAttributes = allowedAgentAttributes;
     return this;
   }
 
+  @Deprecated
   public SingularityRequestBuilder setSlaveAttributeMinimums(
-    Optional<Map<String, Map<String, Integer>>> slaveAttributeMinimums
+    Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums
   ) {
-    this.slaveAttributeMinimums = slaveAttributeMinimums;
+    this.agentAttributeMinimums = agentAttributeMinimums;
     return this;
   }
 
@@ -501,10 +542,10 @@ public class SingularityRequestBuilder {
       Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
       Objects.equals(rackSensitive, that.rackSensitive) &&
       Objects.equals(rackAffinity, that.rackAffinity) &&
-      Objects.equals(slavePlacement, that.slavePlacement) &&
-      Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
-      Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
-      Objects.equals(slaveAttributeMinimums, that.slaveAttributeMinimums) &&
+      Objects.equals(agentPlacement, that.agentPlacement) &&
+      Objects.equals(requiredAgentAttributes, that.requiredAgentAttributes) &&
+      Objects.equals(allowedAgentAttributes, that.allowedAgentAttributes) &&
+      Objects.equals(agentAttributeMinimums, that.agentAttributeMinimums) &&
       Objects.equals(loadBalanced, that.loadBalanced) &&
       Objects.equals(requiredRole, that.requiredRole) &&
       Objects.equals(group, that.group) &&
@@ -544,10 +585,10 @@ public class SingularityRequestBuilder {
       skipHealthchecks,
       rackSensitive,
       rackAffinity,
-      slavePlacement,
-      requiredSlaveAttributes,
-      allowedSlaveAttributes,
-      slaveAttributeMinimums,
+      agentPlacement,
+      requiredAgentAttributes,
+      allowedAgentAttributes,
+      agentAttributeMinimums,
       loadBalanced,
       requiredRole,
       group,
@@ -602,14 +643,14 @@ public class SingularityRequestBuilder {
       rackSensitive +
       ", rackAffinity=" +
       rackAffinity +
-      ", slavePlacement=" +
-      slavePlacement +
-      ", requiredSlaveAttributes=" +
-      requiredSlaveAttributes +
-      ", allowedSlaveAttributes=" +
-      allowedSlaveAttributes +
-      ", slaveAttributeMinimums=" +
-      slaveAttributeMinimums +
+      ", agentPlacement=" +
+      agentPlacement +
+      ", requiredAgentAttributes=" +
+      requiredAgentAttributes +
+      ", allowedAgentAttributes=" +
+      allowedAgentAttributes +
+      ", agentAttributeMinimums=" +
+      agentAttributeMinimums +
       ", loadBalanced=" +
       loadBalanced +
       ", requiredRole=" +

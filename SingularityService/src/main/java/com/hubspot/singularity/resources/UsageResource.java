@@ -2,9 +2,9 @@ package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.SingularityUser;
@@ -49,7 +49,7 @@ public class UsageResource {
   @GET
   @Path("/slaves")
   @Operation(summary = "Retrieve a list of slave resource usage models with slave ids")
-  public Collection<SingularitySlaveUsageWithId> getSlavesWithUsage(
+  public Collection<SingularityAgentUsageWithId> getSlavesWithUsage(
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     authorizationHelper.checkAdminAuthorization(user);

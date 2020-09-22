@@ -1,6 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosAgentMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosAgentStateObject;
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
@@ -12,26 +14,26 @@ import java.util.List;
 import java.util.Map;
 
 public class TestingMesosClient implements MesosClient {
-  private Map<String, List<MesosTaskMonitorObject>> slaveResourceUsage;
-  private Map<String, MesosSlaveMetricsSnapshotObject> slaveMetrics;
+  private Map<String, List<MesosTaskMonitorObject>> agentResourceUsage;
+  private Map<String, MesosAgentMetricsSnapshotObject> agentMetrics;
 
   public TestingMesosClient() {
-    this.slaveResourceUsage = new HashMap<>();
-    this.slaveMetrics = new HashMap<>();
+    this.agentResourceUsage = new HashMap<>();
+    this.agentMetrics = new HashMap<>();
   }
 
-  public void setSlaveResourceUsage(
+  public void setAgentResourceUsage(
     String hostname,
     List<MesosTaskMonitorObject> taskMonitorObjects
   ) {
-    slaveResourceUsage.put(hostname, taskMonitorObjects);
+    agentResourceUsage.put(hostname, taskMonitorObjects);
   }
 
-  public void setSlaveMetricsSnapshot(
+  public void setAgentMetricsSnapshot(
     String hostname,
-    MesosSlaveMetricsSnapshotObject snapshotObject
+    MesosAgentMetricsSnapshotObject snapshotObject
   ) {
-    slaveMetrics.put(hostname, snapshotObject);
+    agentMetrics.put(hostname, snapshotObject);
   }
 
   @Override
@@ -55,28 +57,58 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
+  @Deprecated
   public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(
     String hostname,
     boolean useShortTimeout
   ) {
-    return slaveMetrics.get(hostname);
+    return null;
   }
 
   @Override
+  public MesosAgentMetricsSnapshotObject getAgentMetricsSnapshot(
+    String hostname,
+    boolean useShortTimeout
+  ) {
+    return agentMetrics.get(hostname);
+  }
+
+  @Override
+  @Deprecated
   public String getSlaveUri(String hostname) {
     return null;
   }
 
   @Override
+  public String getAgentUri(String hostname) {
+    return null;
+  }
+
+  @Override
+  @Deprecated
   public MesosSlaveStateObject getSlaveState(String uri) {
     return null;
   }
 
   @Override
+  public MesosAgentStateObject getAgentState(String uri) {
+    return null;
+  }
+
+  @Override
+  @Deprecated
   public List<MesosTaskMonitorObject> getSlaveResourceUsage(
     String hostname,
     boolean useShortTimeout
   ) {
-    return slaveResourceUsage.getOrDefault(hostname, Collections.emptyList());
+    return agentResourceUsage.getOrDefault(hostname, Collections.emptyList());
+  }
+
+  @Override
+  public List<MesosTaskMonitorObject> getAgentResourceUsage(
+    String hostname,
+    boolean useShortTimeout
+  ) {
+    return agentResourceUsage.getOrDefault(hostname, Collections.emptyList());
   }
 }

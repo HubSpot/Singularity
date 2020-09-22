@@ -20,6 +20,6 @@ public class SingularityStateIT {
       Optional.<Boolean>empty()
     );
 
-    assertEquals(3, state.getActiveSlaves());
+    assertEquals(3, state.getActiveAgents());
   }
 }

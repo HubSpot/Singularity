@@ -1,11 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +43,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
       );
 
       bldr.setInstances(Optional.of(5));
-      bldr.setSlavePlacement(Optional.of(SlavePlacement.GREEDY));
+      bldr.setAgentPlacement(Optional.of(AgentPlacement.GREEDY));
       SingularityRequest request = bldr.build();
       saveRequest(request);
       deployRequest(request, cpuIterator.next(), memoryIterator.next());

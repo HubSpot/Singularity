@@ -3,6 +3,10 @@ package com.hubspot.mesos.json;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * @deprecated use {@link MesosAgentMetricsSnapshotObject}
+ */
+@Deprecated
 public class MesosSlaveMetricsSnapshotObject {
   private final double slaveDiskUsed;
   private final double slaveValidStatusUpdates;

@@ -9,8 +9,8 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityClientCredentials;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -388,11 +388,11 @@ public class SingularityExecutorCleanup {
   }
 
   private boolean isDecommissioned() {
-    Collection<SingularitySlave> slaves = singularityClient.getSlaves(
+    Collection<SingularityAgent> slaves = singularityClient.getAgents(
       Optional.of(MachineState.DECOMMISSIONED)
     );
     boolean decommissioned = false;
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       if (slave.getHost().equals(hostname)) {
         decommissioned = true;
       }

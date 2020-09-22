@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -31,10 +32,10 @@ public class SingularityState {
   private final int cleaningRequests;
   private final int finishedRequests;
 
-  private final int activeSlaves;
-  private final int deadSlaves;
-  private final int decommissioningSlaves;
-  private final int unknownSlaves;
+  private final int activeAgents;
+  private final int deadAgents;
+  private final int decommissioningAgents;
+  private final int unknownAgents;
 
   private final int activeRacks;
   private final int deadRacks;
@@ -63,6 +64,96 @@ public class SingularityState {
   private final long avgStatusUpdateDelayMs;
   private final long lastHeartbeatAt;
 
+  public SingularityState(
+    int activeTasks,
+    int launchingTasks,
+    int activeRequests,
+    int cooldownRequests,
+    int pausedRequests,
+    int scheduledTasks,
+    int pendingRequests,
+    int lbCleanupTasks,
+    int lbCleanupRequests,
+    int cleaningRequests,
+    int activeAgents,
+    int deadAgents,
+    int decommissioningAgents,
+    int activeRacks,
+    int deadRacks,
+    int decommissioningRacks,
+    int cleaningTasks,
+    List<SingularityHostState> hostStates,
+    long oldestDeploy,
+    int numDeploys,
+    long oldestDeployStep,
+    List<SingularityDeployMarker> activeDeploys,
+    int lateTasks,
+    List<SingularityPendingTaskId> listLateTasks,
+    int onDemandLateTasks,
+    List<SingularityPendingTaskId> onDemandListLateTasks,
+    int futureTasks,
+    long maxTaskLag,
+    long generatedAt,
+    List<String> overProvisionedRequestIds,
+    List<String> underProvisionedRequestIds,
+    int overProvisionedRequests,
+    int underProvisionedRequests,
+    int finishedRequests,
+    int unknownRacks,
+    int unknownAgents,
+    Optional<Boolean> authDatastoreHealthy,
+    Optional<Double> minimumPriorityLevel,
+    long avgStatusUpdateDelayMs,
+    long lastHeartbeatAt
+  ) {
+    this(
+      activeTasks,
+      launchingTasks,
+      activeRequests,
+      cooldownRequests,
+      pausedRequests,
+      scheduledTasks,
+      pendingRequests,
+      lbCleanupTasks,
+      lbCleanupRequests,
+      cleaningRequests,
+      null,
+      null,
+      null,
+      activeRacks,
+      deadRacks,
+      decommissioningRacks,
+      cleaningTasks,
+      hostStates,
+      oldestDeploy,
+      numDeploys,
+      oldestDeployStep,
+      activeDeploys,
+      lateTasks,
+      listLateTasks,
+      onDemandLateTasks,
+      onDemandListLateTasks,
+      futureTasks,
+      maxTaskLag,
+      generatedAt,
+      overProvisionedRequestIds,
+      underProvisionedRequestIds,
+      overProvisionedRequests,
+      underProvisionedRequests,
+      finishedRequests,
+      unknownRacks,
+      null,
+      authDatastoreHealthy,
+      minimumPriorityLevel,
+      avgStatusUpdateDelayMs,
+      lastHeartbeatAt,
+      activeAgents,
+      deadAgents,
+      decommissioningAgents,
+      unknownAgents
+    );
+  }
+
   @JsonCreator
   public SingularityState(
     @JsonProperty("activeTasks") int activeTasks,
@@ -75,9 +166,9 @@ public class SingularityState {
     @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
     @JsonProperty("lbCleanupRequests") int lbCleanupRequests,
     @JsonProperty("cleaningRequests") int cleaningRequests,
-    @JsonProperty("activeSlaves") int activeSlaves,
-    @JsonProperty("deadSlaves") int deadSlaves,
-    @JsonProperty("decommissioningSlaves") int decommissioningSlaves,
+    @JsonProperty("activeSlaves") Integer activeSlaves,
+    @JsonProperty("deadSlaves") Integer deadSlaves,
+    @JsonProperty("decommissioningSlaves") Integer decommissioningSlaves,
     @JsonProperty("activeRacks") int activeRacks,
     @JsonProperty("deadRacks") int deadRacks,
     @JsonProperty("decommissioningRacks") int decommissioningRacks,
@@ -102,11 +193,15 @@ public class SingularityState {
     @JsonProperty("underProvisionedRequests") int underProvisionedRequests,
     @JsonProperty("finishedRequests") int finishedRequests,
     @JsonProperty("unknownRacks") int unknownRacks,
-    @JsonProperty("unknownSlaves") int unknownSlaves,
+    @JsonProperty("unknownSlaves") Integer unknownSlaves,
     @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
     @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
     @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs,
-    @JsonProperty("lastHeartbeatAt") long lastHeartbeatAt
+    @JsonProperty("lastHeartbeatAt") long lastHeartbeatAt,
+    @JsonProperty("activeAgents") Integer activeAgents,
+    @JsonProperty("deadAgents") Integer deadAgents,
+    @JsonProperty("decommissioningAgents") Integer decommissioningAgents,
+    @JsonProperty("unknownAgents") Integer unknownAgents
   ) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
@@ -118,13 +213,14 @@ public class SingularityState {
     this.cleaningRequests = cleaningRequests;
     this.activeRacks = activeRacks;
     this.generatedAt = generatedAt;
-    this.activeSlaves = activeSlaves;
+    this.activeAgents = MoreObjects.firstNonNull(activeAgents, activeSlaves);
     this.deadRacks = deadRacks;
-    this.deadSlaves = deadSlaves;
-    this.unknownSlaves = unknownSlaves;
+    this.deadAgents = MoreObjects.firstNonNull(deadAgents, deadSlaves);
+    this.unknownAgents = MoreObjects.firstNonNull(unknownAgents, unknownSlaves);
     this.unknownRacks = unknownRacks;
     this.decommissioningRacks = decommissioningRacks;
-    this.decommissioningSlaves = decommissioningSlaves;
+    this.decommissioningAgents =
+      MoreObjects.firstNonNull(decommissioningAgents, decommissioningSlaves);
     this.cleaningTasks = cleaningTasks;
     this.hostStates = hostStates;
     this.lateTasks = lateTasks;
@@ -200,26 +296,46 @@ public class SingularityState {
   }
 
   @Schema(description = "The count of active agents")
-  public int getActiveSlaves() {
-    return activeSlaves;
+  public int getActiveAgents() {
+    return activeAgents;
   }
 
   @Schema(
     description = "The count of dead agents (no longer reachable or considered lost by mesos)"
   )
-  public int getDeadSlaves() {
-    return deadSlaves;
+  public int getDeadAgents() {
+    return deadAgents;
   }
 
   @Schema(description = "The count of agents currently decommissioning")
+  public int getDecommissioningAgents() {
+    return decommissioningAgents;
+  }
+
+  @Schema(description = "The count of active agents")
+  @Deprecated
+  public int getActiveSlaves() {
+    return activeAgents;
+  }
+
+  @Schema(
+    description = "The count of dead agents (no longer reachable or considered lost by mesos)"
+  )
+  @Deprecated
+  public int getDeadSlaves() {
+    return deadAgents;
+  }
+
+  @Schema(description = "The count of agents currently decommissioning")
+  @Deprecated
   public int getDecommissioningSlaves() {
-    return decommissioningSlaves;
+    return decommissioningAgents;
   }
 
   @Deprecated
   @Schema(description = "The count of agents currently decommissioning")
   public int getDecomissioningSlaves() {
-    return decommissioningSlaves;
+    return decommissioningAgents;
   }
 
   @Schema(description = "The count of active racks")
@@ -359,8 +475,14 @@ public class SingularityState {
   }
 
   @Schema(description = "The count of agents in an unknown state")
+  public int getUnknownAgents() {
+    return unknownAgents;
+  }
+
+  @Schema(description = "The count of agents in an unknown state")
+  @Deprecated
   public int getUnknownSlaves() {
-    return unknownSlaves;
+    return unknownAgents;
   }
 
   @Schema(description = "The count of racks in an unknown state")
@@ -438,14 +560,14 @@ public class SingularityState {
       cleaningRequests +
       ", finishedRequests=" +
       finishedRequests +
-      ", activeSlaves=" +
-      activeSlaves +
-      ", deadSlaves=" +
-      deadSlaves +
-      ", decommissioningSlaves=" +
-      decommissioningSlaves +
-      ", unknownSlaves=" +
-      unknownSlaves +
+      ", activeAgents=" +
+      activeAgents +
+      ", deadAgents=" +
+      deadAgents +
+      ", decommissioningAgents=" +
+      decommissioningAgents +
+      ", unknownAgents=" +
+      unknownAgents +
       ", activeRacks=" +
       activeRacks +
       ", deadRacks=" +
@@ -480,6 +602,8 @@ public class SingularityState {
       minimumPriorityLevel +
       ", avgStatusUpdateDelayMs=" +
       avgStatusUpdateDelayMs +
+      ", lastHeartbeatAt=" +
+      lastHeartbeatAt +
       '}'
     );
   }

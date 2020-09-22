@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -23,7 +24,6 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -550,7 +550,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityTask> getTasksOnSlave(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularitySlave slave
+    SingularityAgent slave
   ) {
     final List<SingularityTask> tasks = Lists.newArrayList();
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
@@ -574,7 +574,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityTaskId> getTaskIdsOnSlave(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularitySlave slave
+    SingularityAgent slave
   ) {
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
       slave.getHost()

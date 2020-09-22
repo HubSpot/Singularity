@@ -4,13 +4,13 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.DisasterDetectionConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
@@ -52,7 +52,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       SingularityMesosModule.TASK_LOST_REASONS_COUNTER
     ) Multiset<Reason> taskLostReasons,
     @Named(
-      SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER
+      SingularityMesosModule.ACTIVE_AGENTS_LOST_COUNTER
     ) AtomicInteger activeSlavesLost
   ) {
     super(
@@ -152,9 +152,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     long avgTaskLagMillis = totalTaskLagMillis / Math.max(numPastDueTasks, 1);
 
-    List<SingularitySlave> slaves = slaveManager.getObjects();
+    List<SingularityAgent> slaves = slaveManager.getObjects();
     int numRunningSlaves = 0;
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       if (
         slave.getCurrentState().getState() != MachineState.DEAD &&
         slave.getCurrentState().getState() != MachineState.MISSING_ON_STARTUP
@@ -197,7 +197,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       if (
         disasterConfiguration.isCheckLostSlaves() && tooManyLostSlaves(now, dataPoints)
       ) {
-        activeDisasters.add(SingularityDisasterType.LOST_SLAVES);
+        activeDisasters.add(SingularityDisasterType.LOST_AGENTS);
       }
       if (disasterConfiguration.isCheckLostTasks() && tooManyLostTasks(now, dataPoints)) {
         activeDisasters.add(SingularityDisasterType.LOST_TASKS);
@@ -299,14 +299,14 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
         dataPoint.getTimestamp() <
         disasterConfiguration.getIncludeLostSlavesInLastMillis()
       ) {
-        totalLostSlaves += dataPoint.getNumLostSlaves();
+        totalLostSlaves += dataPoint.getNumLostAgents();
       }
     }
     double lostSlavesPortion =
       totalLostSlaves /
       (double) (
         Math.max(
-          dataPoints.get(0).getNumActiveSlaves() + dataPoints.get(0).getNumLostSlaves(),
+          dataPoints.get(0).getNumActiveAgents() + dataPoints.get(0).getNumLostAgents(),
           1
         )
       );

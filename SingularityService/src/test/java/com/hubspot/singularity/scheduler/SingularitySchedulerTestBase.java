@@ -8,6 +8,7 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -39,13 +40,12 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.InactiveSlaveManager;
+import com.hubspot.singularity.data.InactiveAgentManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -125,7 +125,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RackManager rackManager;
 
   @Inject
-  protected InactiveSlaveManager inactiveSlaveManager;
+  protected InactiveAgentManager inactiveAgentManager;
 
   @Inject
   protected SingularityScheduler scheduler;
@@ -793,7 +793,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     );
 
     bldr.setInstances(Optional.of(5));
-    bldr.setSlavePlacement(Optional.of(SlavePlacement.SEPARATE));
+    bldr.setAgentPlacement(Optional.of(AgentPlacement.SEPARATE));
 
     SingularityRequest request = bldr.build();
 

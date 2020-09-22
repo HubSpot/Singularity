@@ -1,9 +1,9 @@
 package com.hubspot.singularity.scheduler;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityAgentUsage;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -98,12 +98,12 @@ public class SingularityTaskShuffler {
   }
 
   static class OverusedSlave {
-    SingularitySlaveUsage usage;
+    SingularityAgentUsage usage;
     List<TaskIdWithUsage> tasks;
     OverusedResource resource;
 
     OverusedSlave(
-      SingularitySlaveUsage usage,
+      SingularityAgentUsage usage,
       List<TaskIdWithUsage> tasks,
       OverusedResource resource
     ) {
@@ -113,7 +113,7 @@ public class SingularityTaskShuffler {
     }
   }
 
-  public void shuffle(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overloadedHosts) {
+  public void shuffle(Map<SingularityAgentUsage, List<TaskIdWithUsage>> overloadedHosts) {
     LOG.debug("Beginning task shuffle for {} slaves", overloadedHosts.size());
 
     if (overloadedHosts.size() <= 0) {
@@ -347,7 +347,7 @@ public class SingularityTaskShuffler {
     }
   }
 
-  private double getTargetMemoryUtilizationForHost(SingularitySlaveUsage usage) {
+  private double getTargetMemoryUtilizationForHost(SingularityAgentUsage usage) {
     return (
       configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() *
       usage.getSystemMemTotalBytes()
@@ -355,7 +355,7 @@ public class SingularityTaskShuffler {
   }
 
   private OverusedResource getMostOverusedResource(
-    SingularitySlaveUsage overloadedSlave
+    SingularityAgentUsage overloadedSlave
   ) {
     double currentCpuLoad = getSystemCpuLoadForShuffle(overloadedSlave);
     double currentMemUsageBytes = overloadedSlave.getMemoryBytesUsed();
@@ -420,7 +420,7 @@ public class SingularityTaskShuffler {
       .collect(Collectors.toSet());
   }
 
-  private double getSystemCpuLoadForShuffle(SingularitySlaveUsage usage) {
+  private double getSystemCpuLoadForShuffle(SingularityAgentUsage usage) {
     switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
       case LOAD_1:
         return usage.getSystemLoad1Min();
@@ -432,7 +432,7 @@ public class SingularityTaskShuffler {
     }
   }
 
-  private double getSystemMemLoadForShuffle(SingularitySlaveUsage usage) {
+  private double getSystemMemLoadForShuffle(SingularityAgentUsage usage) {
     // usage.getMemoryBytesUsed() does not take external memory pressure into account
     return usage.getSystemMemTotalBytes() - usage.getSystemMemFreeBytes();
   }

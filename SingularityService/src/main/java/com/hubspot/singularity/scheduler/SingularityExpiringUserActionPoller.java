@@ -8,6 +8,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -15,7 +16,6 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -501,7 +501,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       SingularityMachineAbstraction machine,
       String message
     ) {
-      SingularitySlave slave = (SingularitySlave) machine;
+      SingularityAgent slave = (SingularityAgent) machine;
       slaveManager.changeState(
         slave,
         expiringObject.getRevertToState(),
@@ -545,7 +545,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     protected void checkExpiringObjects() {
       for (SingularityExpiringMachineState expiringObject : slaveManager.getExpiringObjects()) {
         if (isExpiringDue(expiringObject)) {
-          Optional<SingularitySlave> slave = slaveManager.getObject(
+          Optional<SingularityAgent> slave = slaveManager.getObject(
             expiringObject.getMachineId()
           );
 

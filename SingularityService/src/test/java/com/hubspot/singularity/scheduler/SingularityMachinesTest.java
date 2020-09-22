@@ -3,24 +3,24 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFrameworkObject;
-import com.hubspot.mesos.json.MesosMasterSlaveObject;
+import com.hubspot.mesos.json.MesosMasterAgentObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRunNowRequestBuilder;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
+import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import com.hubspot.singularity.resources.SlaveResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +46,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   protected SingularitySlaveReconciliationPoller slaveReconciliationPoller;
 
   @Inject
-  private SingularitySlaveAndRackManager singularitySlaveAndRackManager;
+  private SingularityAgentAndRackManager singularityAgentAndRackManager;
 
   @Inject
   private SlaveResource slaveResource;
@@ -57,14 +57,14 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testDeadSlavesArePurged() {
-    SingularitySlave liveSlave = new SingularitySlave(
+    SingularityAgent liveSlave = new SingularityAgent(
       "1",
       "h1",
       "r1",
       ImmutableMap.of("uniqueAttribute", "1"),
       Optional.empty()
     );
-    SingularitySlave deadSlave = new SingularitySlave(
+    SingularityAgent deadSlave = new SingularityAgent(
       "2",
       "h1",
       "r1",
@@ -804,7 +804,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(2))
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
     );
 
     resourceOffers();
@@ -868,7 +868,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     saveAndSchedule(
       request
         .toBuilder()
-        .setSlavePlacement(Optional.of(SlavePlacement.GREEDY))
+        .setAgentPlacement(Optional.of(AgentPlacement.GREEDY))
         .setInstances(Optional.of(2))
     );
 
@@ -997,12 +997,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testLoadSlavesFromMasterDataOnStartup() {
     MesosMasterStateObject state = getMasterState(3);
-    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    singularityAgentAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
-    List<SingularitySlave> slaves = slaveManager.getObjects();
+    List<SingularityAgent> slaves = slaveManager.getObjects();
 
     Assertions.assertEquals(3, slaves.size());
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       Assertions.assertEquals(MachineState.ACTIVE, slave.getCurrentState().getState());
     }
   }
@@ -1011,15 +1011,15 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   public void testReconcileSlaves() {
     // Load 3 slaves on startup
     MesosMasterStateObject state = getMasterState(3);
-    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    singularityAgentAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
     MesosMasterStateObject newState = getMasterState(2); // 2 slaves, third has died
-    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(newState, false);
-    List<SingularitySlave> slaves = slaveManager.getObjects();
+    singularityAgentAndRackManager.loadSlavesAndRacksFromMaster(newState, false);
+    List<SingularityAgent> slaves = slaveManager.getObjects();
 
     Assertions.assertEquals(3, slaves.size());
 
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       if (slave.getId().equals("2")) {
         Assertions.assertEquals(MachineState.DEAD, slave.getCurrentState().getState());
       } else {
@@ -1037,10 +1037,10 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     Map<String, String> attributes = new HashMap<>();
     attributes.put("testKey", "testValue");
 
-    List<MesosMasterSlaveObject> slaves = new ArrayList<>();
+    List<MesosMasterAgentObject> agents = new ArrayList<>();
     for (Integer i = 0; i < numSlaves; i++) {
-      slaves.add(
-        new MesosMasterSlaveObject(
+      agents.add(
+        new MesosMasterAgentObject(
           i.toString(),
           i.toString(),
           String.format("localhost:505%s", i),
@@ -1094,7 +1094,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       "",
       "",
       Collections.emptyMap(),
-      slaves,
+      agents,
       Collections.singletonList(framework)
     );
   }
@@ -1102,9 +1102,9 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testExpiringMachineState() {
     MesosMasterStateObject state = getMasterState(1);
-    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    singularityAgentAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
-    SingularitySlave slave = slaveManager.getObjects().get(0);
+    SingularityAgent slave = slaveManager.getObjects().get(0);
 
     slaveResource.freezeSlave(
       singularityUser,
@@ -1131,15 +1131,15 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     );
   }
 
-  private SingularitySlave getSingleSlave() {
+  private SingularityAgent getSingleSlave() {
     MesosMasterStateObject state = getMasterState(1);
-    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    singularityAgentAndRackManager.loadSlavesAndRacksFromMaster(state, true);
     return slaveManager.getObjects().get(0);
   }
 
   @Test
   public void testCannotUseStateReservedForSystem() {
-    SingularitySlave slave = getSingleSlave();
+    SingularityAgent slave = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
@@ -1159,7 +1159,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testBadExpiringStateTransition() {
-    SingularitySlave slave = getSingleSlave();
+    SingularityAgent slave = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
@@ -1179,7 +1179,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testInvalidTransitionToDecommissioned() {
-    SingularitySlave slave = getSingleSlave();
+    SingularityAgent slave = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
@@ -1207,7 +1207,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     );
     scheduler.drainPendingQueue();
     resourceOffers(1);
-    SingularitySlave slave = slaveManager.getObjects().get(0);
+    SingularityAgent slave = slaveManager.getObjects().get(0);
 
     slaveResource.decommissionSlave(
       singularityUser,
@@ -1244,7 +1244,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testSystemChangeClearsExpiringChangeIfInvalid() {
-    SingularitySlave slave = getSingleSlave();
+    SingularityAgent slave = getSingleSlave();
     slaveResource.freezeSlave(singularityUser, slave.getId(), null);
     slaveResource.activateSlave(
       singularityUser,
@@ -1264,27 +1264,27 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void itShouldContainAnInactiveHostWhenHostDeactivated() {
-    inactiveSlaveManager.deactivateSlave("localhost");
+    inactiveAgentManager.deactivateAgent("localhost");
 
-    Assertions.assertTrue(inactiveSlaveManager.getInactiveSlaves().contains("localhost"));
+    Assertions.assertTrue(inactiveAgentManager.getInactiveAgents().contains("localhost"));
   }
 
   @Test
   public void itShouldNotContainHostAfterActivatingHost() {
-    inactiveSlaveManager.deactivateSlave("localhost");
-    inactiveSlaveManager.activateSlave("localhost");
+    inactiveAgentManager.deactivateAgent("localhost");
+    inactiveAgentManager.activateAgent("localhost");
 
     Assertions.assertFalse(
-      inactiveSlaveManager.getInactiveSlaves().contains("localhost")
+      inactiveAgentManager.getInactiveAgents().contains("localhost")
     );
   }
 
   @Test
   public void itShouldMarkSlavesFromInactiveHostAsDecommissioned() {
-    inactiveSlaveManager.deactivateSlave("host1");
+    inactiveAgentManager.deactivateAgent("host1");
 
     resourceOffers();
-    SingularitySlave slave = slaveManager.getObject("slave1").get();
+    SingularityAgent slave = slaveManager.getObject("slave1").get();
     Assertions.assertTrue(slave.getCurrentState().getState().isDecommissioning());
   }
 
@@ -1297,7 +1297,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(2))
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
     );
 
     sms
@@ -1343,7 +1343,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(1))
-        .setSlavePlacement(Optional.of(SlavePlacement.SPREAD_ALL_SLAVES))
+        .setAgentPlacement(Optional.of(AgentPlacement.SPREAD_ALL_AGENTS))
     );
 
     sms
@@ -1433,7 +1433,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(20))
-        .setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC))
+        .setAgentPlacement(Optional.of(AgentPlacement.OPTIMISTIC))
     );
 
     // Default behavior if we don't have info about other hosts that can run this task: be greedy.
@@ -1482,7 +1482,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(3))
-        .setSlavePlacement(Optional.of(SlavePlacement.GREEDY))
+        .setAgentPlacement(Optional.of(AgentPlacement.GREEDY))
     );
 
     sms
@@ -1575,7 +1575,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(1))
-        .setRequiredSlaveAttributes(Optional.of(reservedAttributesMap))
+        .setRequiredAgentAttributes(Optional.of(reservedAttributesMap))
     );
 
     sms
@@ -1632,7 +1632,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(1))
-        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setAllowedAgentAttributes(Optional.of(allowedAttributes))
     );
 
     sms
@@ -1665,7 +1665,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(1))
-        .setRequiredSlaveAttributes(Optional.of(requiredAttributes))
+        .setRequiredAgentAttributes(Optional.of(requiredAttributes))
     );
 
     sms
@@ -1732,7 +1732,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       singularityUser,
       requestId,
       new SingularityRunNowRequestBuilder()
-        .setRequiredSlaveAttributeOverrides(requiredAttributes)
+        .setRequiredAgentAttributeOverrides(requiredAttributes)
         .build()
     );
 
@@ -1802,7 +1802,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(1))
-        .setRequiredSlaveAttributes(Optional.of(requiredAttributes))
+        .setRequiredAgentAttributes(Optional.of(requiredAttributes))
     );
 
     sms
@@ -2202,7 +2202,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       .toBuilder()
       .setInstances(Optional.of(2))
       .setRackSensitive(Optional.of(true))
-      .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+      .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
       .setAllowBounceToSameHost(Optional.of(true))
       .build();
     saveAndSchedule(newRequest.toBuilder());
@@ -2276,8 +2276,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(10))
-        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
-        .setSlaveAttributeMinimums(Optional.of(attributeMinimums))
+        .setAllowedAgentAttributes(Optional.of(allowedAttributes))
+        .setAgentAttributeMinimums(Optional.of(attributeMinimums))
     );
 
     // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
@@ -2362,8 +2362,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       request
         .toBuilder()
         .setInstances(Optional.of(10))
-        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
-        .setSlaveAttributeMinimums(Optional.of(attributeMinimums))
+        .setAllowedAgentAttributes(Optional.of(allowedAttributes))
+        .setAgentAttributeMinimums(Optional.of(attributeMinimums))
     );
 
     // Ensure we can go over the minimum if there are enough resources available

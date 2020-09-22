@@ -5,8 +5,8 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
@@ -42,7 +42,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Manages Singularity slaves")
 @Tags({ @Tag(name = "Slaves") })
-public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
+public class SlaveResource extends AbstractMachineResource<SingularityAgent> {
 
   @Inject
   public SlaveResource(
@@ -73,7 +73,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Operation(
     summary = "Retrieve the list of all known slaves, optionally filtering by a particular state"
   )
-  public List<SingularitySlave> getSlaves(
+  public List<SingularityAgent> getSlaves(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(
       description = "Optionally specify a particular state to filter slaves by"
@@ -99,7 +99,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @GET
   @Path("/slave/{slaveId}/details")
   @Operation(summary = "Get information about a particular slave")
-  public Optional<SingularitySlave> getSlave(
+  public Optional<SingularityAgent> getSlave(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(required = true, description = "Slave ID") @PathParam(
       "slaveId"

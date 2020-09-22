@@ -73,7 +73,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager slaveAndRackManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
   private final SingularityLeaderCache leaderCache;
@@ -96,7 +96,7 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityExceptionNotifier exceptionNotifier,
     SingularityHealthchecker healthchecker,
     SingularityNewTaskChecker newTaskChecker,
-    SingularitySlaveAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager slaveAndRackManager,
     SingularityMesosExecutorInfoSupport logSupport,
     SingularityScheduler scheduler,
     @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,

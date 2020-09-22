@@ -81,7 +81,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularityAbort abort;
   private final SingularityLeaderCacheCoordinator leaderCacheCoordinator;
   private final SingularityMesosFrameworkMessageHandler messageHandler;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager slaveAndRackManager;
   private final OfferCache offerCache;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
@@ -114,7 +114,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     SingularityLeaderCacheCoordinator leaderCacheCoordinator,
     SingularityAbort abort,
     SingularityMesosFrameworkMessageHandler messageHandler,
-    SingularitySlaveAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager slaveAndRackManager,
     OfferCache offerCache,
     SingularityMesosOfferScheduler offerScheduler,
     SingularityMesosStatusUpdateHandler statusUpdateHandler,

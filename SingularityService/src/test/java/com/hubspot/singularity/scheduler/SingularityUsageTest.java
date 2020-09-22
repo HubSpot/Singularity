@@ -3,12 +3,14 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosAgentMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgentUsage;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -18,16 +20,12 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.data.ShuffleConfigurationManager;
-import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +81,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       5,
       100
     );
-    mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
+    mesosClient.setAgentResourceUsage(hostname, Collections.singletonList(usage));
     usagePoller.runActionOnPoll();
 
     String slaveId = firstTask.getAgentId().getValue();
@@ -124,7 +122,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
     MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, 5, 1000);
 
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
@@ -181,7 +179,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 2, 5, 100);
     MesosTaskMonitorObject t2u1 = getTaskMonitor(t2.getId(), 10, 5, 1024);
 
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
@@ -193,7 +191,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     MesosTaskMonitorObject t1u2 = getTaskMonitor(t1.getId(), 7, 10, 125);
     MesosTaskMonitorObject t2u2 = getTaskMonitor(t2.getId(), 22.5, 10, 750);
 
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u2, t2u2));
 
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
@@ -228,7 +226,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     MesosTaskMonitorObject t1u3 = getTaskMonitor(t1.getId(), 8, 11, 125);
     MesosTaskMonitorObject t2u3 = getTaskMonitor(t2.getId(), 23.5, 11, 1024);
 
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u3, t2u3));
 
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
@@ -278,7 +276,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 5),
       800
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // used 8 cpu
@@ -288,7 +286,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 10),
       850
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -347,7 +345,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 5),
       1024
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 2 cpus used
@@ -357,7 +355,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 10),
       900
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -415,7 +413,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 5),
       1024
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 4 cpus used
@@ -425,7 +423,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(taskId, 10),
       1024
     );
-    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
+    mesosClient.setAgentResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -489,7 +487,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(t2, 5),
       800
     );
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u1, t2u1));
     usagePoller.runActionOnPoll();
 
     // used 8 cpu
@@ -506,7 +504,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(t2, 10),
       850
     );
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u2, t2u2));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -535,7 +533,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(
       Math.round(
         memMbReserved *
-        SingularitySlaveUsage.BYTES_PER_MEGABYTE *
+        SingularityAgentUsage.BYTES_PER_MEGABYTE *
         (t1TaskUsages + t2TaskUsages)
       ),
       requestUtilizations.get(0).getMemBytesReserved(),
@@ -571,7 +569,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(t2, 5),
       700
     );
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u1, t2u1));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -616,7 +614,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(t2, 10),
       600
     );
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u2, t2u2));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -657,7 +655,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       getTimestampSeconds(t2, 15),
       700
     );
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
+    mesosClient.setAgentResourceUsage(host, Arrays.asList(t1u3, t2u3));
     usagePoller.runActionOnPoll();
 
     Assertions.assertTrue(
@@ -703,7 +701,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           .setInstances(Optional.of(3))
       );
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highUsage = new SingularityAgentUsage(
         15,
         10,
         Optional.of(10.0),
@@ -725,7 +723,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highUsage, "host1")
+        new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -777,10 +775,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5,
         1024
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -877,7 +875,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           .setInstances(Optional.of(3))
       );
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highUsage = new SingularityAgentUsage(
         10,
         10,
         Optional.of(10.0),
@@ -899,7 +897,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highUsage, "host1")
+        new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -944,10 +942,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5,
         31667
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1054,7 +1052,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           )
         )
         .join();
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         10,
         10,
         Optional.of(10.0),
@@ -1075,7 +1073,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      SingularitySlaveUsage highCpuUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highCpuUsage = new SingularityAgentUsage(
         15,
         10,
         Optional.of(10.0),
@@ -1098,10 +1096,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       );
 
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highCpuUsage, "host2")
+        new SingularityAgentUsageWithId(highCpuUsage, "host2")
       );
 
       SingularityTaskId host1Task = null;
@@ -1139,10 +1137,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(host2Task.getStartedAt()) + 5,
         63333
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1202,10 +1200,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         )
       );
 
-      mesosClient.setSlaveResourceUsage("host2", Arrays.asList(t2u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host2", Arrays.asList(t2u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host2",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1301,7 +1299,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           .setInstances(Optional.of(3))
       );
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highUsage = new SingularityAgentUsage(
         15,
         10,
         Optional.of(10.0),
@@ -1323,7 +1321,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highUsage, "host1")
+        new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -1368,10 +1366,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5,
         1024
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1466,7 +1464,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           .setInstances(Optional.of(3))
       );
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highUsage = new SingularityAgentUsage(
         15,
         10,
         Optional.of(10.0),
@@ -1488,7 +1486,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highUsage, "host1")
+        new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -1519,10 +1517,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(taskId2.getStartedAt()) + 5,
         1024
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1618,7 +1616,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           .setInstances(Optional.of(3))
       );
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highUsage = new SingularityAgentUsage(
         15,
         10,
         Optional.of(10.0),
@@ -1640,7 +1638,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highUsage, "host1")
+        new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -1685,10 +1683,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5,
         1024
       );
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1794,7 +1792,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       startTask(task2);
       startTask(task3);
 
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         1,
         10,
         Optional.of(10.0),
@@ -1816,7 +1814,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
       MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -1838,10 +1836,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         10000
       );
 
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -1956,7 +1954,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       startTask(task3);
 
       // not actually necessary to trigger shuffle, but worth leaving in case that changes
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         1,
         10,
         Optional.of(10.0),
@@ -1978,7 +1976,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
       MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -2000,10 +1998,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         1000
       );
 
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -2125,7 +2123,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       startTask(task4);
 
       // not actually necessary to trigger shuffle, but worth leaving in case that changes
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         1,
         10,
         Optional.of(10.0),
@@ -2147,7 +2145,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
       MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -2175,10 +2173,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         1000
       );
 
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -2303,7 +2301,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       startTask(task4);
 
       // not actually necessary to trigger shuffle, but worth leaving in case that changes
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         1,
         10,
         Optional.of(10.0),
@@ -2325,7 +2323,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
       MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -2353,10 +2351,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         5000
       );
 
-      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1, t4u1));
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -2498,7 +2496,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       }
 
       // not actually necessary to trigger shuffle, but worth leaving in case that changes
-      SingularitySlaveUsage highMemUsage = new SingularitySlaveUsage(
+      SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         1,
         10,
         Optional.of(10.0),
@@ -2520,13 +2518,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host1")
+        new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host2")
+        new SingularityAgentUsageWithId(highMemUsage, "host2")
       );
       usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(highMemUsage, "host3")
+        new SingularityAgentUsageWithId(highMemUsage, "host3")
       );
 
       for (String host : taskIdMap.keySet()) {
@@ -2573,11 +2571,11 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           usages.add(usage);
         }
 
-        mesosClient.setSlaveResourceUsage(host, usages);
+        mesosClient.setAgentResourceUsage(host, usages);
       }
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentMetricsSnapshot(
         "host1",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -2636,9 +2634,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           0
         )
       );
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentMetricsSnapshot(
         "host2",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,
@@ -2697,9 +2695,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           0
         )
       );
-      mesosClient.setSlaveMetricsSnapshot(
+      mesosClient.setAgentMetricsSnapshot(
         "host3",
-        new MesosSlaveMetricsSnapshotObject(
+        new MesosAgentMetricsSnapshotObject(
           0,
           0,
           0,

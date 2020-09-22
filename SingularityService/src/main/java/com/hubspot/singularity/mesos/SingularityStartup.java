@@ -56,7 +56,7 @@ class SingularityStartup {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final DisasterManager disasterManager;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager slaveAndRackManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
@@ -69,7 +69,7 @@ class SingularityStartup {
     MesosClient mesosClient,
     SingularityHealthchecker healthchecker,
     SingularityNewTaskChecker newTaskChecker,
-    SingularitySlaveAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager slaveAndRackManager,
     TaskManager taskManager,
     RequestManager requestManager,
     DeployManager deployManager,

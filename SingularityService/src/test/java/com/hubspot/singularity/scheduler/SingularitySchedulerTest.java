@@ -13,6 +13,7 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.mesos.protos.MesosTaskState;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -51,7 +52,6 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
@@ -155,7 +155,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(
       request
         .toBuilder()
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
         .setInstances(Optional.of(2))
         .build(),
       singularityUser
@@ -2127,7 +2127,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(
       request
         .toBuilder()
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE_BY_REQUEST))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE_BY_REQUEST))
         .setInstances(Optional.of(2))
         .build(),
       singularityUser

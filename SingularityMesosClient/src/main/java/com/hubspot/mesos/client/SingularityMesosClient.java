@@ -9,6 +9,8 @@ import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Options;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosAgentMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosAgentStateObject;
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
@@ -28,12 +30,12 @@ public class SingularityMesosClient implements MesosClient {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosClient.class);
 
   private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
-  private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
-  private static final String MESOS_SLAVE_STATISTICS_URL =
+  private static final String MESOS_AGENT_JSON_URL = "http://%s:5051/slave(1)/state";
+  private static final String MESOS_AGENT_STATISTICS_URL =
     "http://%s:5051/monitor/statistics";
   private static final String MESOS_MASTER_METRICS_SNAPSHOT_URL =
     "http://%s/metrics/snapshot";
-  private static final String MESOS_SLAVE_METRICS_SNAPSHOT_URL =
+  private static final String MESOS_AGENT_METRICS_SNAPSHOT_URL =
     "http://%s:5051/metrics/snapshot";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
@@ -128,33 +130,67 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
+  @Deprecated
   public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(
     String hostname,
     boolean useShortTimeout
   ) {
     return getFromMesos(
-      String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname),
+      String.format(MESOS_AGENT_METRICS_SNAPSHOT_URL, hostname),
       MesosSlaveMetricsSnapshotObject.class,
       useShortTimeout
     );
   }
 
   @Override
-  public String getSlaveUri(String hostname) {
-    return String.format(MESOS_SLAVE_JSON_URL, hostname);
+  public MesosAgentMetricsSnapshotObject getAgentMetricsSnapshot(
+    String hostname,
+    boolean useShortTimeout
+  ) {
+    return getFromMesos(
+      String.format(MESOS_AGENT_METRICS_SNAPSHOT_URL, hostname),
+      MesosAgentMetricsSnapshotObject.class,
+      useShortTimeout
+    );
   }
 
   @Override
+  @Deprecated
+  public String getSlaveUri(String hostname) {
+    return String.format(MESOS_AGENT_JSON_URL, hostname);
+  }
+
+  @Override
+  public String getAgentUri(String hostname) {
+    return String.format(MESOS_AGENT_JSON_URL, hostname);
+  }
+
+  @Override
+  @Deprecated
   public MesosSlaveStateObject getSlaveState(String uri) {
     return getFromMesos(uri, MesosSlaveStateObject.class);
   }
 
   @Override
+  public MesosAgentStateObject getAgentState(String uri) {
+    return getFromMesos(uri, MesosAgentStateObject.class);
+  }
+
+  @Override
+  public List<MesosTaskMonitorObject> getAgentResourceUsage(
+    String hostname,
+    boolean useShortTimeout
+  ) {
+    return getSlaveResourceUsage(hostname, useShortTimeout);
+  }
+
+  @Override
+  @Deprecated
   public List<MesosTaskMonitorObject> getSlaveResourceUsage(
     String hostname,
     boolean useShortTimeout
   ) {
-    final String uri = String.format(MESOS_SLAVE_STATISTICS_URL, hostname);
+    final String uri = String.format(MESOS_AGENT_STATISTICS_URL, hostname);
 
     HttpResponse response = getFromMesos(uri, useShortTimeout);
 

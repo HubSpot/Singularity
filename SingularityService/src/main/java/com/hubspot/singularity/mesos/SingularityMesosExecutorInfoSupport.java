@@ -5,8 +5,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosAgentFrameworkObject;
 import com.hubspot.mesos.json.MesosExecutorObject;
-import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityTask;
@@ -93,10 +93,10 @@ public class SingularityMesosExecutorInfoSupport {
     Optional<String> directory = Optional.empty();
     Optional<String> containerId = Optional.empty();
 
-    for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
+    for (MesosAgentFrameworkObject agentFramework : slaveState.getFrameworks()) {
       Optional<MesosExecutorObject> maybeExecutor = findExecutor(
         task.getTaskId(),
-        slaveFramework.getExecutors()
+        agentFramework.getExecutors()
       );
       if (maybeExecutor.isPresent()) {
         directory = Optional.of(maybeExecutor.get().getDirectory());
@@ -105,7 +105,7 @@ public class SingularityMesosExecutorInfoSupport {
       }
 
       maybeExecutor =
-        findExecutor(task.getTaskId(), slaveFramework.getCompletedExecutors());
+        findExecutor(task.getTaskId(), agentFramework.getCompletedExecutors());
       if (maybeExecutor.isPresent()) {
         directory = Optional.of(maybeExecutor.get().getDirectory());
         containerId = Optional.of(maybeExecutor.get().getContainer());

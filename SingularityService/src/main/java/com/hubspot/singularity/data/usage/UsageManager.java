@@ -4,10 +4,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -31,7 +31,7 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   private static final String REQUESTS_PATH = ROOT_PATH + "/requests";
   private static final String USAGE_SUMMARY_PATH = ROOT_PATH + "/summary";
 
-  private final Transcoder<SingularitySlaveUsageWithId> slaveUsageTranscoder;
+  private final Transcoder<SingularityAgentUsageWithId> slaveUsageTranscoder;
   private final Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder;
   private final Transcoder<RequestUtilization> requestUtilizationTranscoder;
   private final SingularityWebCache webCache;
@@ -46,7 +46,7 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
     TaskUsageManager taskUsageManager,
-    Transcoder<SingularitySlaveUsageWithId> slaveUsageTranscoder,
+    Transcoder<SingularityAgentUsageWithId> slaveUsageTranscoder,
     Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder,
     Transcoder<RequestUtilization> requestUtilizationTranscoder
   ) {
@@ -143,33 +143,33 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   }
 
   public SingularityCreateResult saveCurrentSlaveUsage(
-    SingularitySlaveUsageWithId usageWithId
+    SingularityAgentUsageWithId usageWithId
   ) {
     if (leaderCache.active()) {
       leaderCache.putSlaveUsage(usageWithId);
     }
     return set(
-      getSlaveUsagePath(usageWithId.getSlaveId()),
+      getSlaveUsagePath(usageWithId.getAgentId()),
       usageWithId,
       slaveUsageTranscoder
     );
   }
 
-  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
+  public Optional<SingularityAgentUsageWithId> getSlaveUsage(String slaveId) {
     if (leaderCache.active()) {
       return leaderCache.getSlaveUsage(slaveId);
     }
     return getData(getSlaveUsagePath(slaveId), slaveUsageTranscoder);
   }
 
-  public Map<String, SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+  public Map<String, SingularityAgentUsageWithId> getAllCurrentSlaveUsage() {
     if (leaderCache.active()) {
       return leaderCache.getSlaveUsages();
     }
     return getAsyncChildren(SLAVE_PATH, slaveUsageTranscoder)
       .stream()
       .collect(
-        Collectors.toMap(SingularitySlaveUsageWithId::getSlaveId, Function.identity())
+        Collectors.toMap(SingularityAgentUsageWithId::getAgentId, Function.identity())
       );
   }
 

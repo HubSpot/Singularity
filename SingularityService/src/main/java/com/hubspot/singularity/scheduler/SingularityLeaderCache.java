@@ -4,14 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgent;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -41,11 +41,11 @@ public class SingularityLeaderCache {
   private Map<String, SingularityRequestDeployState> requestIdToDeployState;
   private Map<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
   private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
-  private Map<String, SingularitySlave> slaves;
+  private Map<String, SingularityAgent> slaves;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
   private Map<String, RequestUtilization> requestUtilizations;
-  private Map<String, SingularitySlaveUsageWithId> slaveUsages;
+  private Map<String, SingularityAgentUsageWithId> slaveUsages;
 
   private volatile boolean active;
 
@@ -155,12 +155,12 @@ public class SingularityLeaderCache {
       );
   }
 
-  public void cacheSlaves(List<SingularitySlave> slaves) {
+  public void cacheSlaves(List<SingularityAgent> slaves) {
     this.slaves =
       slaves
         .stream()
         .collect(
-          Collectors.toConcurrentMap(SingularitySlave::getId, Function.identity())
+          Collectors.toConcurrentMap(SingularityAgent::getId, Function.identity())
         );
   }
 
@@ -181,7 +181,7 @@ public class SingularityLeaderCache {
     this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
   }
 
-  public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
+  public void cacheSlaveUsages(Map<String, SingularityAgentUsageWithId> slaveUsages) {
     this.slaveUsages = new ConcurrentHashMap<>(slaveUsages);
   }
 
@@ -511,15 +511,15 @@ public class SingularityLeaderCache {
     historyUpdates.remove(taskId);
   }
 
-  public List<SingularitySlave> getSlaves() {
+  public List<SingularityAgent> getSlaves() {
     return new ArrayList<>(slaves.values());
   }
 
-  public Optional<SingularitySlave> getSlave(String slaveId) {
+  public Optional<SingularityAgent> getSlave(String slaveId) {
     return Optional.ofNullable(slaves.get(slaveId));
   }
 
-  public void putSlave(SingularitySlave slave) {
+  public void putSlave(SingularityAgent slave) {
     if (!active) {
       LOG.warn("putSlave {}, but not active", slave);
     }
@@ -579,12 +579,12 @@ public class SingularityLeaderCache {
     return new HashMap<>(requestUtilizations);
   }
 
-  public void putSlaveUsage(SingularitySlaveUsageWithId slaveUsage) {
+  public void putSlaveUsage(SingularityAgentUsageWithId slaveUsage) {
     if (!active) {
       LOG.warn("putSlaveUsage {}, but not active", slaveUsage);
     }
 
-    slaveUsages.put(slaveUsage.getSlaveId(), slaveUsage);
+    slaveUsages.put(slaveUsage.getAgentId(), slaveUsage);
   }
 
   public void removeSlaveUsage(String slaveId) {
@@ -595,11 +595,11 @@ public class SingularityLeaderCache {
     slaveUsages.remove(slaveId);
   }
 
-  public Map<String, SingularitySlaveUsageWithId> getSlaveUsages() {
+  public Map<String, SingularityAgentUsageWithId> getSlaveUsages() {
     return new HashMap<>(slaveUsages);
   }
 
-  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
+  public Optional<SingularityAgentUsageWithId> getSlaveUsage(String slaveId) {
     return Optional.ofNullable(slaveUsages.get(slaveId));
   }
 }
