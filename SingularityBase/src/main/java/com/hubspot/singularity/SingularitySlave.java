@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.json.MesosResourcesObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ public class SingularitySlave extends SingularityAgent {
     super(agentId, host, rackId, attributes, resources);
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularitySlave(
     String agentId,
     long firstSeenAt,

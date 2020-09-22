@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityS3UploaderFile;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +29,7 @@ public class SingularityRunNowRequest {
   private final Map<String, String> allowedAgentAttributeOverrides;
   private final Optional<Long> runAt;
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -53,7 +54,7 @@ public class SingularityRunNowRequest {
   }
 
   @Deprecated
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -78,7 +79,7 @@ public class SingularityRunNowRequest {
     );
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,

@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +65,7 @@ public class SingularityState {
   private final long avgStatusUpdateDelayMs;
   private final long lastHeartbeatAt;
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityState(
     int activeTasks,
     int launchingTasks,

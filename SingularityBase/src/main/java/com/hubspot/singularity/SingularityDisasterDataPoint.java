@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.primitives.Longs;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 
@@ -19,7 +20,7 @@ public class SingularityDisasterDataPoint
   private final int numActiveAgents;
   private final int numLostAgents;
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityDisasterDataPoint(
     long timestamp,
     int numActiveTasks,

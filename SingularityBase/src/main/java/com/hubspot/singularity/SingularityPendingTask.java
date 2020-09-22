@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +42,7 @@ public class SingularityPendingTask {
     return input -> input.getPendingTaskId().getDeployId().equals(deployId);
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingTask(
     SingularityPendingTaskId pendingTaskId,
     Optional<List<String>> cmdLineArgsList,

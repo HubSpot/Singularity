@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +56,7 @@ public class SingularityPendingRequest {
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -87,7 +88,7 @@ public class SingularityPendingRequest {
     );
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -124,7 +125,7 @@ public class SingularityPendingRequest {
     );
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
