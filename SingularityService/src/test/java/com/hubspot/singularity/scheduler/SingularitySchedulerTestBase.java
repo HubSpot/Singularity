@@ -261,7 +261,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory, double disk) {
-    return createOffer(cpus, memory, disk, "slave1", "host1", Optional.<String>empty());
+    return createOffer(cpus, memory, disk, "agent1", "host1", Optional.<String>empty());
   }
 
   protected Offer createOffer(
@@ -274,7 +274,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       cpus,
       memory,
       disk,
-      "slave1",
+      "agent1",
       "host1",
       Optional.<String>empty(),
       Collections.<String, String>emptyMap(),
@@ -287,17 +287,17 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     double cpus,
     double memory,
     double disk,
-    String slave,
+    String agent,
     String host
   ) {
-    return createOffer(cpus, memory, disk, slave, host, Optional.<String>empty());
+    return createOffer(cpus, memory, disk, agent, host, Optional.<String>empty());
   }
 
   protected Offer createOffer(
     double cpus,
     double memory,
     double disk,
-    String slave,
+    String agent,
     String host,
     Optional<String> rack
   ) {
@@ -305,7 +305,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       cpus,
       memory,
       disk,
-      slave,
+      agent,
       host,
       rack,
       Collections.<String, String>emptyMap(),
@@ -318,7 +318,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     double cpus,
     double memory,
     double disk,
-    String slave,
+    String agent,
     String host,
     Optional<String> rack,
     Map<String, String> attributes
@@ -327,7 +327,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       cpus,
       memory,
       disk,
-      slave,
+      agent,
       host,
       rack,
       attributes,
@@ -340,7 +340,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     double cpus,
     double memory,
     double disk,
-    String slave,
+    String agent,
     String host,
     Optional<String> rack,
     Map<String, String> attributes,
@@ -350,7 +350,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       cpus,
       memory,
       disk,
-      slave,
+      agent,
       host,
       rack,
       attributes,
@@ -363,14 +363,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     double cpus,
     double memory,
     double disk,
-    String slave,
+    String agent,
     String host,
     Optional<String> rack,
     Map<String, String> attributes,
     String[] portRanges,
     Optional<String> role
   ) {
-    AgentID slaveId = AgentID.newBuilder().setValue(slave).build();
+    AgentID agentId = AgentID.newBuilder().setValue(agent).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
     Random r = new Random();
@@ -412,7 +412,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       .newBuilder()
       .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
       .setFrameworkId(frameworkId)
-      .setAgentId(slaveId)
+      .setAgentId(agentId)
       .setHostname(host)
       .setUrl(
         URL
@@ -590,7 +590,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     int instanceNo,
     boolean separateHosts,
     Optional<String> runId,
-    Optional<String> slaveAndRack
+    Optional<String> agentAndRack
   ) {
     SingularityPendingTask pendingTask = buildPendingTask(
       request,
@@ -606,15 +606,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     );
 
     Offer offer;
-    if (separateHosts || slaveAndRack.isPresent()) {
+    if (separateHosts || agentAndRack.isPresent()) {
       offer =
         createOffer(
           125,
           1024,
           2048,
-          slaveAndRack.orElse(String.format("slave%s", instanceNo)),
-          slaveAndRack.orElse(String.format("host%s", instanceNo)),
-          slaveAndRack
+          agentAndRack.orElse(String.format("agent%s", instanceNo)),
+          agentAndRack.orElse(String.format("host%s", instanceNo)),
+          agentAndRack
         );
     } else {
       offer = createOffer(125, 1024, 2048);
@@ -626,7 +626,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       launchTime,
       instanceNo,
       offer.getHostname(),
-      slaveAndRack.orElse("rack1")
+      agentAndRack.orElse("rack1")
     );
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
@@ -676,7 +676,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     TaskState initialTaskState,
     boolean separateHost,
     Optional<String> runId,
-    Optional<String> slave
+    Optional<String> agent
   ) {
     SingularityTask task = prepTask(
       request,
@@ -685,7 +685,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       instanceNo,
       separateHost,
       runId,
-      slave
+      agent
     );
 
     taskManager.createTaskAndDeletePendingTask(task);
@@ -785,22 +785,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void initOnDemandRequest() {
     initRequestWithType(RequestType.ON_DEMAND, false);
-  }
-
-  protected SingularityRequest createRequest(String requestId) {
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(
-      requestId,
-      RequestType.SERVICE
-    );
-
-    bldr.setInstances(Optional.of(5));
-    bldr.setAgentPlacement(Optional.of(AgentPlacement.SEPARATE));
-
-    SingularityRequest request = bldr.build();
-
-    saveRequest(bldr.build());
-
-    return request;
   }
 
   protected SingularityDeploy deployRequest(
@@ -1096,8 +1080,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected List<Offer> resourceOffers() {
-    Offer offer1 = createOffer(20, 20000, 50000, "slave1", "host1");
-    Offer offer2 = createOffer(20, 20000, 50000, "slave2", "host2");
+    Offer offer1 = createOffer(20, 20000, 50000, "agent1", "host1");
+    Offer offer2 = createOffer(20, 20000, 50000, "agent2", "host2");
 
     List<Offer> offers = Arrays.asList(offer1, offer2);
 
@@ -1110,21 +1094,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     List<Offer> offers = new ArrayList<>();
     for (int i = 1; i <= numTasks; i++) {
       offers.add(
-        createOffer(1, 128, 1024, String.format("slave%s", i), String.format("host%s", i))
+        createOffer(1, 128, 1024, String.format("agent%s", i), String.format("host%s", i))
       );
     }
     sms.resourceOffers(offers).join();
   }
 
-  protected void resourceOffers(int numSlaves) {
+  protected void resourceOffers(int numAgents) {
     List<Offer> offers = new ArrayList<>();
-    for (int i = 1; i <= numSlaves; i++) {
+    for (int i = 1; i <= numAgents; i++) {
       offers.add(
         createOffer(
           20,
           20000,
           50000,
-          String.format("slave%s", i),
+          String.format("agent%s", i),
           String.format("host%s", i)
         )
       );
@@ -1262,7 +1246,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         taskStatus,
         System.currentTimeMillis() + millisAdjustment,
         serverId,
-        Optional.of("slaveId")
+        Optional.of("agentId")
       )
     );
   }
