@@ -3,7 +3,6 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.json.MesosResourcesObject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -53,9 +52,9 @@ public class SingularityAgent extends SingularityMachineAbstraction<SingularityA
     @JsonProperty("rackId") String rackId,
     @JsonProperty("attributes") Map<String, String> attributes,
     @JsonProperty("resources") Optional<MesosResourcesObject> resources,
-    @JsonProperty("agentId") String agentId
+    @JsonProperty("id") String agentId
   ) {
-    super(MoreObjects.firstNonNull(agentId, slaveId), firstSeenAt, currentState);
+    super(agentId != null ? agentId : slaveId, firstSeenAt, currentState);
     this.host = host;
     this.rackId = rackId;
     this.attributes = attributes;
