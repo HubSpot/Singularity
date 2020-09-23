@@ -8,12 +8,12 @@ export const STAT_NAMES = {
   cpusUsedStat : 'cpusUsed',
   memoryBytesUsedStat : 'memoryBytesUsed',
   numTasksStat : 'numTasks',
-  slaveIdStat : 'slaveId',
+  agentIdStat : 'agentId',
   timestampStat : 'timestamp',
   diskBytesUsedStat : 'diskBytesUsed'
 };
 
-export const SLAVE_HEALTH_MENU_ITEM_ORDER = [
+export const AGENT_HEALTH_MENU_ITEM_ORDER = [
   'host',
   STAT_NAMES.cpusUsedStat,
   STAT_NAMES.memoryBytesUsedStat,

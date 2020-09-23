@@ -1,31 +1,31 @@
-import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates } from '../../actions/api/slaves';
+import { FetchAgents, FreezeAgent, DecommissionAgent, RemoveAgent, ReactivateAgent, FetchExpiringAgentStates } from '../../actions/api/agents';
 import { FetchInactiveHosts } from '../api/inactive';
 
-export const UPDATE_SLAVES_TABLE_SETTINGS = 'UPDATE_SLAVES_TABLE_SETTINGS';
+export const UPDATE_AGENTS_TABLE_SETTINGS = 'UPDATE_AGENTS_TABLE_SETTINGS';
 
-export const UpdateSlavesTableSettings = (columns, paginated) => {
+export const UpdateAgentsTableSettings = (columns, paginated) => {
   return (dispatch) => {
-    localStorage['slaves.columns'] = JSON.stringify(columns);
-    localStorage['slaves.paginated'] = paginated;
+    localStorage['agents.columns'] = JSON.stringify(columns);
+    localStorage['agents.paginated'] = paginated;
     dispatch({
       columns: columns,
       paginated: paginated,
-      type: UPDATE_SLAVES_TABLE_SETTINGS
+      type: UPDATE_AGENTS_TABLE_SETTINGS
     });
   };
 };
 
 export const refresh = () => (dispatch) =>
   Promise.all([
-    dispatch(FetchSlaves.trigger()),
-    dispatch(FetchExpiringSlaveStates.trigger()),
+    dispatch(FetchAgents.trigger()),
+    dispatch(FetchExpiringAgentStates.trigger()),
     dispatch(FetchInactiveHosts.trigger()),
   ]);
 
 export const initialize = () => (dispatch) =>
   Promise.all([
-    dispatch(FreezeSlave.clear()),
-    dispatch(DecommissionSlave.clear()),
-    dispatch(RemoveSlave.clear()),
-    dispatch(ReactivateSlave.clear())
+    dispatch(FreezeAgent.clear()),
+    dispatch(DecommissionAgent.clear()),
+    dispatch(RemoveAgent.clear()),
+    dispatch(ReactivateAgent.clear())
   ]).then(() => dispatch(refresh()));

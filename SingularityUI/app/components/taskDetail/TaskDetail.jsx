@@ -167,10 +167,10 @@ class TaskDetail extends Component {
       for (const file of files.files) {
         file.isDirectory = file.mode[0] === 'd';
         let httpPrefix = 'http';
-        let httpPort = config.slaveHttpPort;
-        if (config.slaveHttpsPort) {
+        let httpPort = config.agentHttpPort;
+        if (config.agentHttpsPort) {
           httpPrefix = 'https';
-          httpPort = config.slaveHttpsPort;
+          httpPort = config.agentHttpsPort;
         }
 
         if (files.currentDirectory) {
@@ -180,10 +180,10 @@ class TaskDetail extends Component {
         }
 
         file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
-        file.downloadLink = `${config.apiRoot}/tasks/download?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
+        file.downloadLink = `${config.apiRoot}/tasks/download?agentHostname=${files.agentHostname}&path=${file.fullPath}`;
         const extensionMatcher = /(?:\.([^.]+))?$/;
         if (!file.isDirectory && Utils.OPENABLE_EXTENSIONS.includes(extensionMatcher.exec(file.name)[1])) {
-          file.openLink = `${config.apiRoot}/tasks/open?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
+          file.openLink = `${config.apiRoot}/tasks/open?agentHostname=${files.agentHostname}&path=${file.fullPath}`;
         }
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
@@ -218,7 +218,7 @@ class TaskDetail extends Component {
       <Section title="Files">
         <TaskFileBrowser
           taskId={this.props.taskId}
-          host={files.slaveHostname}
+          host={files.agentHostname}
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
@@ -390,7 +390,7 @@ class TaskDetail extends Component {
     if (this.props.resourceUsageNotFound) {
       maybeResourceUsage = (
         <div className="empty-table-message">
-          Could not establish communication with the slave to find resource usage.
+          Could not establish communication with the agent to find resource usage.
         </div>
       );
     } else {

@@ -228,41 +228,41 @@ const StatusPage = (props) => {
             data={[
               {
                 component: (className) => (
-                  <Link to="slaves/active" className={className}>
-                    {status.activeSlaves} Active Agents
+                  <Link to="agents/active" className={className}>
+                    {status.activeAgents} Active Agents
                   </Link>
                 ),
-                value: status.activeSlaves,
-                id: 'activeslaves'
+                value: status.activeAgents,
+                id: 'activeagents'
               },
               {
                 component: (className) => (
-                  <Link to="slaves/decommission" className={className}>
-                    {status.decomissioningSlaves} Decommissioning Agents
+                  <Link to="agents/decommission" className={className}>
+                    {status.decomissioningAgents} Decommissioning Agents
                   </Link>
                 ),
-                value: status.decomissioningSlaves,
-                id: 'decomslaves'
+                value: status.decomissioningAgents,
+                id: 'decomagents'
               },
               {
                 component: (className) => (
-                  <Link to="slaves/inactive" className={className}>
-                    {status.deadSlaves} Inactive Agents
+                  <Link to="agents/inactive" className={className}>
+                    {status.deadAgents} Inactive Agents
                   </Link>
                 ),
-                className: status.deadSlaves > 0 ? 'color-warning' : '',
-                value: status.deadSlaves,
-                id: 'deadslaves'
+                className: status.deadAgents > 0 ? 'color-warning' : '',
+                value: status.deadAgents,
+                id: 'deadagents'
               },
-              status.unknownSlaves ? {
+              status.unknownAgents ? {
                 component: (className) => (
-                  <Link to="slaves/inactive" className={className}>
-                    {status.unknownSlaves} Unknown Agents
+                  <Link to="agents/inactive" className={className}>
+                    {status.unknownAgents} Unknown Agents
                   </Link>
                 ),
                 className: 'color-warning',
-                value: status.unknownSlaves,
-                id: 'unknownslaves'
+                value: status.unknownAgents,
+                id: 'unknownagents'
               } : null
             ]}
           />

@@ -142,7 +142,7 @@ class TaskHistoryTable extends Component {
             key="instanceNo"
             cellData={(task) => (
               <Link to={`task/${task.taskId.id}`}>
-                {task.taskId.instanceNo} - {Utils.humanizeSlaveHostName(task.taskId.host)}
+                {task.taskId.instanceNo} - {Utils.humanizeAgentHostName(task.taskId.host)}
               </Link>
             )}
           />

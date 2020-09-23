@@ -1,8 +1,8 @@
 import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchAgents = buildApiAction(
-  'FETCH_SLAVES',
-  {url: '/slaves'}
+  'FETCH_AGENTS',
+  {url: '/agents'}
 );
 
 export const FreezeAgent = buildJsonApiAction(
@@ -46,23 +46,23 @@ export const FetchExpiringAgentStates = buildApiAction(
   {url: '/agnets/expiring'}
 );
 
-export const RemoveExpiringSlaveState = buildJsonApiAction(
-  'REMOVE_EXPIRING_SLAVE_STATE',
+export const RemoveExpiringAgentState = buildJsonApiAction(
+  'REMOVE_EXPIRING_AGENT_STATE',
   'DELETE',
-  (slaveId) => ({
-    url: `/slaves/slave/${slaveId}/expiring`
+  (agentId) => ({
+    url: `/agents/agent/${agentId}/expiring`
   })
 );
 
-export const FetchSlaveUsages = buildApiAction(
-  'FETCH_SLAVE_USAGES',
-  {url : '/usage/slaves'}
+export const FetchAgentUsages = buildApiAction(
+  'FETCH_AGENT_USAGES',
+  {url : '/usage/agents'}
 );
 
-export const ClearInactiveSlaves = buildApiAction(
-  'FETCH_SLAVE_USAGES',
+export const ClearInactiveAgents = buildApiAction(
+  'FETCH_AGENT_USAGES',
   {
     method: 'DELETE',
-    url : '/slaves/dead'
+    url : '/agents/dead'
   }
 );

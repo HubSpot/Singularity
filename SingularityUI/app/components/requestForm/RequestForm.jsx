@@ -289,21 +289,21 @@ const RequestForm = (props) => {
       <strong>Note:</strong> changes made below will only affect new tasks
     </div>
   );
-  const slavePlacement = (
+  const agentPlacement = (
     <SelectFormGroup
-      id="slave-placement"
+      id="agent-placement"
       label="Agent Placement"
-      value={getValue('slavePlacement') || ''}
+      value={getValue('agentPlacement') || ''}
       defaultValue=""
-      required={INDEXED_FIELDS.slavePlacement.required}
-      onChange={newValue => updateField('slavePlacement', newValue.value)}
+      required={INDEXED_FIELDS.agentPlacement.required}
+      onChange={newValue => updateField('agentPlacement', newValue.value)}
       options={[
         { label: 'Default', value: '' },
         { label: 'Separate', value: 'SEPARATE' },
         { label: 'Optimistic', value: 'OPTIMISTIC' },
         { label: 'Greedy', value: 'GREEDY' },
         { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'},
-        { label: 'Spread all workers', value: 'SPREAD_ALL_SLAVES'}
+        { label: 'Spread all workers', value: 'SPREAD_ALL_AGENTS'}
       ]}
     />
   );
@@ -479,26 +479,26 @@ const RequestForm = (props) => {
     </a>
   );
 
-  const requiredSlaveAttributes = (
+  const requiredAgentAttributes = (
     <MapInputFormGroup
-      id="required-slave-attributes"
-      onChange={newValue => updateField('requiredSlaveAttributes', newValue)}
-      value={getValue('requiredSlaveAttributes') || []}
+      id="required-agent-attributes"
+      onChange={newValue => updateField('requiredAgentAttributes', newValue)}
+      value={getValue('requiredAgentAttributes') || []}
       label="Required agent attributes"
-      required={INDEXED_FIELDS.requiredSlaveAttributes.required}
+      required={INDEXED_FIELDS.requiredAgentAttributes.required}
       doFeedback={true}
       keyHeader="Attribute"
       valueHeader="Value"
     />
   );
 
-  const allowedSlaveAttributes = (
+  const allowedAgentAttributes = (
     <MapInputFormGroup
-      id="allowed-slave-attributes"
-      onChange={newValue => updateField('allowedSlaveAttributes', newValue)}
-      value={getValue('allowedSlaveAttributes') || []}
+      id="allowed-agent-attributes"
+      onChange={newValue => updateField('allowedAgentAttributes', newValue)}
+      value={getValue('allowedAgentAttributes') || []}
       label="Allowed agent attributes"
-      required={INDEXED_FIELDS.allowedSlaveAttributes.required}
+      required={INDEXED_FIELDS.allowedAgentAttributes.required}
       doFeedback={true}
       keyHeader="Attribute"
       valueHeader="Value"
@@ -600,7 +600,7 @@ const RequestForm = (props) => {
       onChange={newValue => updateField('emailConfigurationOverrides', newValue)}
       value={getValue('emailConfigurationOverrides') || []}
       label="Email configuration overrides"
-      required={INDEXED_FIELDS.requiredSlaveAttributes.required}
+      required={INDEXED_FIELDS.requiredAgentAttributes.required}
       renderKeyField={renderEmailTypeSelector}
       renderValueField={renderEmailDestinationSelector}
       valueDefault={[]}
@@ -660,7 +660,7 @@ const RequestForm = (props) => {
           { owners }
           { requestTypeSelectors }
           { isEditing && onlyAffectsNewTasksWarning }
-          { slavePlacement }
+          { agentPlacement }
           { shouldRenderField('instances') && instances }
           { shouldRenderField('rackSensitive') && rackSensitive }
           { shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
@@ -682,8 +682,8 @@ const RequestForm = (props) => {
               <div className="well">
                 <h4>Advanced Request Options</h4>
                 <fieldset>
-                  { shouldRenderField('requiredSlaveAttributes') && requiredSlaveAttributes }
-                  { shouldRenderField('allowedSlaveAttributes') && allowedSlaveAttributes }
+                  { shouldRenderField('requiredAgentAttributes') && requiredAgentAttributes }
+                  { shouldRenderField('allowedAgentAttributes') && allowedAgentAttributes }
                   { shouldRenderField('group') && group }
                   { shouldRenderField('readOnlyGroups') && readOnlyGroups }
                   { shouldRenderField('readWriteGroups') && readWriteGroups }
@@ -715,7 +715,7 @@ RequestForm.propTypes = {
   request: PropTypes.shape({
     request: PropTypes.shape({
       id: PropTypes.string.isRequired,
-      slavePlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC'])
+      agentPlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC'])
     })
   }),
   saveApiCall: PropTypes.shape({
@@ -731,7 +731,7 @@ RequestForm.propTypes = {
     })
   }).isRequired,
   form: PropTypes.shape({
-    slavePlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC']),
+    agentPlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC']),
     scheduleType: PropTypes.string
   }),
   router: PropTypes.object.isRequired
