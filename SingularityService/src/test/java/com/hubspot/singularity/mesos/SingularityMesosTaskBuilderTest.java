@@ -92,7 +92,7 @@ public class SingularityMesosTaskBuilderTest {
         .setUser(user)
         .build();
 
-    final SingularityAgentAndRackHelper slaveAndRackHelper = mock(
+    final SingularityAgentAndRackHelper agentAndRackHelper = mock(
       SingularityAgentAndRackHelper.class
     );
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
@@ -112,9 +112,9 @@ public class SingularityMesosTaskBuilderTest {
     taskResources = new Resources(1, 1, 0, 0);
     executorResources = new Resources(0.1, 1, 0, 0);
 
-    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.empty());
-    when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
-    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
+    when(agentAndRackHelper.getRackId(offer)).thenReturn(Optional.empty());
+    when(agentAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
+    when(agentAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
 
     offer =
       Offer

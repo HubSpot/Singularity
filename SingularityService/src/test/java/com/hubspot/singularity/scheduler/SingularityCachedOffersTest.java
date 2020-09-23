@@ -65,8 +65,8 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
   public void testLeftoverNewOffersAreCached() {
     configuration.setCacheOffers(true);
 
-    Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1");
-    Offer extraOffer = createOffer(4, 256, 0, "slave1", "host1");
+    Offer neededOffer = createOffer(1, 128, 1024, "agent1", "host1");
+    Offer extraOffer = createOffer(4, 256, 0, "agent1", "host1");
 
     initRequest();
     initFirstDeploy();
@@ -98,7 +98,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
       1,
       128,
       1024,
-      "slave1",
+      "agent1",
       "host1",
       Optional.empty(),
       Collections.emptyMap(),
@@ -108,7 +108,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
       4,
       256,
       1024,
-      "slave1",
+      "agent1",
       "host1",
       Optional.empty(),
       Collections.emptyMap(),
@@ -150,8 +150,8 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     configuration.setOfferCacheSize(2);
 
     // Each are half of needed memory
-    Offer offer1 = createOffer(1, 64, 1024, "slave1", "host1");
-    Offer offer2 = createOffer(1, 64, 1024, "slave1", "host1");
+    Offer offer1 = createOffer(1, 64, 1024, "agent1", "host1");
+    Offer offer2 = createOffer(1, 64, 1024, "agent1", "host1");
     sms.resourceOffers(ImmutableList.of(offer1, offer2)).join();
 
     initRequest();

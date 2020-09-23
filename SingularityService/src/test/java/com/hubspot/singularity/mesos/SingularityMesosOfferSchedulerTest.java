@@ -52,7 +52,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   protected SingularityMesosOfferScheduler offerScheduler;
 
   @Inject
-  protected SingularityAgentAndRackManager slaveAndRackManager;
+  protected SingularityAgentAndRackManager agentAndRackManager;
 
   @Inject
   protected UsageManager usageManager;
@@ -63,7 +63,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Inject
   protected SingularityUsagePoller usagePoller;
 
-  private static final String SLAVE_ID = "slave";
+  private static final String SLAVE_ID = "agent";
 
   private SingularityTaskRequest taskRequest = Mockito.mock(SingularityTaskRequest.class);
   private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
@@ -118,7 +118,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   public void itCorrectlyScoresLongRunningTasks() {
     setRequestType(RequestType.SERVICE);
 
-    // new slave (no resources used) -> perfect score
+    // new agent (no resources used) -> perfect score
     assertValueIs(
       1,
       scheduler.score(
@@ -374,9 +374,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     );
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
-    slaveAndRackManager.checkOffer(host2Offer);
+    agentAndRackManager.checkOffer(host2Offer);
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
-    slaveAndRackManager.checkOffer(host3Offer);
+    agentAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(
@@ -488,9 +488,9 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     );
 
     Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
-    slaveAndRackManager.checkOffer(host2Offer);
+    agentAndRackManager.checkOffer(host2Offer);
     Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
-    slaveAndRackManager.checkOffer(host3Offer);
+    agentAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(

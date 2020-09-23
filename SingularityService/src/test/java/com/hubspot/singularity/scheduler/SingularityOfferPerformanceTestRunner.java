@@ -57,7 +57,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
           cpuIterator.next(),
           memoryIterator.next(),
           diskIterator.next(),
-          "slave-" + i,
+          "agent-" + i,
           "host-" + i
         )
       );

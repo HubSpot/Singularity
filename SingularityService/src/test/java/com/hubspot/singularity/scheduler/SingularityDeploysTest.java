@@ -1272,7 +1272,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     sms
-      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")))
+      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
       .join();
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
@@ -1296,7 +1296,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     sms
-      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")))
+      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
       .join();
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);

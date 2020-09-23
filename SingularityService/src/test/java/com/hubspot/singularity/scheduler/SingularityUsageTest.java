@@ -64,7 +64,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testUsagePollerSimple() {
-    // works with no slaves
+    // works with no agents
     usagePoller.runActionOnPoll();
     cleaner.runActionOnPoll();
 
@@ -84,16 +84,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setAgentResourceUsage(hostname, Collections.singletonList(usage));
     usagePoller.runActionOnPoll();
 
-    String slaveId = firstTask.getAgentId().getValue();
+    String agentId = firstTask.getAgentId().getValue();
 
     Assertions.assertEquals(
       0,
-      usageManager.getAgentUsage(slaveId).get().getCpusUsed(),
+      usageManager.getAgentUsage(agentId).get().getCpusUsed(),
       0
     );
     Assertions.assertEquals(
       100,
-      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(agentId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -116,7 +116,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String t1 = taskIds.get(0).getId();
     String t2 = taskIds.get(1).getId();
 
-    String slaveId = agentManager.getObjectIds().get(0);
+    String agentId = agentManager.getObjectIds().get(0);
     String host = agentManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
@@ -132,7 +132,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(
       1100,
-      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(agentId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -146,7 +146,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(1, usageManager.getAllCurrentAgentUsage().size());
 
     agentManager.changeState(
-      slaveId,
+      agentId,
       MachineState.DEAD,
       Optional.empty(),
       Optional.empty()
@@ -173,7 +173,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     SingularityTaskId t1 = taskIds.get(0);
     SingularityTaskId t2 = taskIds.get(1);
 
-    String slaveId = agentManager.getObjectIds().get(0);
+    String agentId = agentManager.getObjectIds().get(0);
     String host = agentManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 2, 5, 100);
@@ -199,17 +199,17 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     // check usage now
     Assertions.assertEquals(
       3.5,
-      usageManager.getAgentUsage(slaveId).get().getCpusUsed(),
+      usageManager.getAgentUsage(agentId).get().getCpusUsed(),
       0
     );
     Assertions.assertEquals(
       875,
-      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(agentId).get().getMemoryBytesUsed(),
       0
     );
     Assertions.assertEquals(
       2,
-      usageManager.getAgentUsage(slaveId).get().getNumTasks(),
+      usageManager.getAgentUsage(agentId).get().getNumTasks(),
       0
     );
 
@@ -249,7 +249,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(
       1149,
-      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(agentId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -1047,8 +1047,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       sms
         .resourceOffers(
           ImmutableList.of(
-            createOffer(1, 128, 50000, "slave1", "host1"),
-            createOffer(1, 128, 50000, "slave2", "host2")
+            createOffer(1, 128, 50000, "agent1", "host1"),
+            createOffer(1, 128, 50000, "agent2", "host2")
           )
         )
         .join();
@@ -1777,7 +1777,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000, 100000, "slave1", "host1"))
+          ImmutableList.of(createOffer(10, 100000, 100000, "agent1", "host1"))
         )
         .join();
 
@@ -1938,7 +1938,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000, 100000, "slave1", "host1"))
+          ImmutableList.of(createOffer(10, 100000, 100000, "agent1", "host1"))
         )
         .join();
 
@@ -2105,7 +2105,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000, 100000, "slave1", "host1"))
+          ImmutableList.of(createOffer(10, 100000, 100000, "agent1", "host1"))
         )
         .join();
 
@@ -2283,7 +2283,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "slave1", "host1"))
+          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "agent1", "host1"))
         )
         .join();
 
@@ -2459,7 +2459,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "slave1", "host1"))
+          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "agent1", "host1"))
         )
         .join();
 
@@ -2470,14 +2470,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "slave2", "host2"))
+          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "agent2", "host2"))
         )
         .join();
 
       scheduleTask(t1id, 1, 100000, 3);
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000, 100000, "slave3", "host3"))
+          ImmutableList.of(createOffer(10, 100000, 100000, "agent3", "host3"))
         )
         .join();
 
@@ -2775,7 +2775,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       scheduler.drainPendingQueue();
       sms
         .resourceOffers(
-          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "slave4", "host4"))
+          ImmutableList.of(createOffer(10, 100000 * 4, 100000, "agent4", "host4"))
         )
         .join();
 

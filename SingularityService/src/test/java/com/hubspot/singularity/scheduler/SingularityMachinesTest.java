@@ -43,7 +43,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(OrderAnnotation.class)
 public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Inject
-  protected SingularityAgentReconciliationPoller slaveReconciliationPoller;
+  protected SingularityAgentReconciliationPoller agentReconciliationPoller;
 
   @Inject
   private SingularityAgentAndRackManager singularityAgentAndRackManager;
@@ -98,7 +98,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     agentManager.saveObject(liveSlave);
     agentManager.saveObject(deadSlave);
 
-    slaveReconciliationPoller.runActionOnPoll();
+    agentReconciliationPoller.runActionOnPoll();
 
     Assertions.assertEquals(
       1,
@@ -108,7 +108,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     configuration.setDeleteDeadAgentsAfterHours(1);
 
-    slaveReconciliationPoller.runActionOnPoll();
+    agentReconciliationPoller.runActionOnPoll();
 
     Assertions.assertEquals(
       1,
@@ -880,7 +880,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       .resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2")))
       .join();
 
-    // freeze slave1
+    // freeze agent1
     Assertions.assertEquals(
       StateChangeResult.SUCCESS,
       agentManager.changeState(
@@ -905,7 +905,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       statusUpdate(task, TaskState.TASK_RUNNING);
     }
 
-    // assert Request is spread over the two slaves
+    // assert Request is spread over the two agents
     Assertions.assertEquals(
       1,
       taskManager
@@ -925,7 +925,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         .size()
     );
 
-    // decommission frozen slave1
+    // decommission frozen agent1
     Assertions.assertEquals(
       StateChangeResult.SUCCESS,
       agentManager.changeState(
@@ -941,7 +941,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     resourceOffers();
     cleaner.drainCleanupQueue();
 
-    // assert slave1 is decommissioning
+    // assert agent1 is decommissioning
     Assertions.assertTrue(
       agentManager.getObject("agent1").get().getCurrentState().getState() ==
       MachineState.DECOMMISSIONING
@@ -969,7 +969,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       TaskState.TASK_KILLED
     );
 
-    // assert all tasks on slave2 + slave1 is decommissioned
+    // assert all tasks on agent2 + agent1 is decommissioned
     Assertions.assertEquals(
       0,
       taskManager
@@ -999,31 +999,31 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     MesosMasterStateObject state = getMasterState(3);
     singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
 
-    List<SingularityAgent> slaves = agentManager.getObjects();
+    List<SingularityAgent> agents = agentManager.getObjects();
 
-    Assertions.assertEquals(3, slaves.size());
-    for (SingularityAgent slave : slaves) {
-      Assertions.assertEquals(MachineState.ACTIVE, slave.getCurrentState().getState());
+    Assertions.assertEquals(3, agents.size());
+    for (SingularityAgent agent : agents) {
+      Assertions.assertEquals(MachineState.ACTIVE, agent.getCurrentState().getState());
     }
   }
 
   @Test
   public void testReconcileSlaves() {
-    // Load 3 slaves on startup
+    // Load 3 agents on startup
     MesosMasterStateObject state = getMasterState(3);
     singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
 
-    MesosMasterStateObject newState = getMasterState(2); // 2 slaves, third has died
+    MesosMasterStateObject newState = getMasterState(2); // 2 agents, third has died
     singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(newState, false);
-    List<SingularityAgent> slaves = agentManager.getObjects();
+    List<SingularityAgent> agents = agentManager.getObjects();
 
-    Assertions.assertEquals(3, slaves.size());
+    Assertions.assertEquals(3, agents.size());
 
-    for (SingularityAgent slave : slaves) {
-      if (slave.getId().equals("2")) {
-        Assertions.assertEquals(MachineState.DEAD, slave.getCurrentState().getState());
+    for (SingularityAgent agent : agents) {
+      if (agent.getId().equals("2")) {
+        Assertions.assertEquals(MachineState.DEAD, agent.getCurrentState().getState());
       } else {
-        Assertions.assertEquals(MachineState.ACTIVE, slave.getCurrentState().getState());
+        Assertions.assertEquals(MachineState.ACTIVE, agent.getCurrentState().getState());
       }
     }
   }
@@ -1104,11 +1104,11 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     MesosMasterStateObject state = getMasterState(1);
     singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
 
-    SingularityAgent slave = agentManager.getObjects().get(0);
+    SingularityAgent agent = agentManager.getObjects().get(0);
 
     agentResource.freezeAgent(
       singularityUser,
-      slave.getId(),
+      agent.getId(),
       new SingularityMachineChangeRequest(
         Optional.of(1L),
         Optional.empty(),
@@ -1139,13 +1139,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testCannotUseStateReservedForSystem() {
-    SingularityAgent slave = getSingleSlave();
+    SingularityAgent agent = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
         agentResource.freezeAgent(
           singularityUser,
-          slave.getId(),
+          agent.getId(),
           new SingularityMachineChangeRequest(
             Optional.of(1L),
             Optional.empty(),
@@ -1159,13 +1159,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testBadExpiringStateTransition() {
-    SingularityAgent slave = getSingleSlave();
+    SingularityAgent agent = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
         agentResource.decommissionAgent(
           singularityUser,
-          slave.getId(),
+          agent.getId(),
           new SingularityMachineChangeRequest(
             Optional.of(1L),
             Optional.empty(),
@@ -1179,13 +1179,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testInvalidTransitionToDecommissioned() {
-    SingularityAgent slave = getSingleSlave();
+    SingularityAgent agent = getSingleSlave();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
         agentResource.decommissionAgent(
           singularityUser,
-          slave.getId(),
+          agent.getId(),
           new SingularityMachineChangeRequest(
             Optional.of(1L),
             Optional.empty(),
@@ -1207,11 +1207,11 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     );
     scheduler.drainPendingQueue();
     resourceOffers(1);
-    SingularityAgent slave = agentManager.getObjects().get(0);
+    SingularityAgent agent = agentManager.getObjects().get(0);
 
     agentResource.decommissionAgent(
       singularityUser,
-      slave.getId(),
+      agent.getId(),
       new SingularityMachineChangeRequest(
         Optional.of(1L),
         Optional.empty(),
@@ -1244,11 +1244,11 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testSystemChangeClearsExpiringChangeIfInvalid() {
-    SingularityAgent slave = getSingleSlave();
-    agentResource.freezeAgent(singularityUser, slave.getId(), null);
+    SingularityAgent agent = getSingleSlave();
+    agentResource.freezeAgent(singularityUser, agent.getId(), null);
     agentResource.activateAgent(
       singularityUser,
-      slave.getId(),
+      agent.getId(),
       new SingularityMachineChangeRequest(
         Optional.of(1L),
         Optional.empty(),
@@ -1257,9 +1257,9 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Optional.empty()
       )
     );
-    Assertions.assertTrue(agentManager.getExpiringObject(slave.getId()).isPresent());
-    agentResource.decommissionAgent(singularityUser, slave.getId(), null);
-    Assertions.assertFalse(agentManager.getExpiringObject(slave.getId()).isPresent());
+    Assertions.assertTrue(agentManager.getExpiringObject(agent.getId()).isPresent());
+    agentResource.decommissionAgent(singularityUser, agent.getId(), null);
+    Assertions.assertFalse(agentManager.getExpiringObject(agent.getId()).isPresent());
   }
 
   @Test
@@ -1284,8 +1284,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     inactiveAgentManager.deactivateAgent("host1");
 
     resourceOffers();
-    SingularityAgent slave = agentManager.getObject("agent1").get();
-    Assertions.assertTrue(slave.getCurrentState().getState().isDecommissioning());
+    SingularityAgent agent = agentManager.getObject("agent1").get();
+    Assertions.assertTrue(agent.getCurrentState().getState().isDecommissioning());
   }
 
   @Test
@@ -1354,7 +1354,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       )
       .join();
 
-    // assert one Request on one slave.
+    // assert one Request on one agent.
     Assertions.assertTrue(agentManager.getNumObjectsAtState(MachineState.ACTIVE) == 1);
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 0);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
@@ -1371,7 +1371,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent2", "host2")))
       .join();
 
-    // assert Request is spread over the two slaves
+    // assert Request is spread over the two agents
     Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 0);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 2);
     Assertions.assertEquals(
@@ -1393,7 +1393,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         .size()
     );
 
-    // decommission slave and kill task
+    // decommission agent and kill task
     agentManager.changeState(
       "agent2",
       MachineState.FROZEN,

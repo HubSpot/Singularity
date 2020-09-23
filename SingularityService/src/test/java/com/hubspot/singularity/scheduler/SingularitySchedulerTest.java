@@ -793,13 +793,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
     scheduler.drainPendingQueue();
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent2", "host2", Optional.of("rack1")))
       )
       .join();
 
@@ -813,7 +813,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(
       StateChangeResult.SUCCESS,
       agentManager.changeState(
-        "slave1",
+        "agent1",
         MachineState.STARTING_DECOMMISSION,
         Optional.<String>empty(),
         Optional.of("user1")
@@ -824,7 +824,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent2", "host2", Optional.of("rack1")))
       )
       .join();
 
@@ -833,7 +833,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue();
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent2", "host2", Optional.of("rack1")))
       )
       .join();
 
@@ -875,7 +875,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(5, 5, 5, "slave1", "host1", Optional.of("rack1")))
+        Arrays.asList(createOffer(5, 5, 5, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
 
@@ -2118,7 +2118,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testIncrementalBounce() {
     initRequest();
-    resourceOffers(2); // set up slaves so scale validate will pass
+    resourceOffers(2); // set up agents so scale validate will pass
 
     SingularityRequest request = requestResource
       .getRequest(requestId, singularityUser)
@@ -2382,7 +2382,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     TaskStatus.Builder bldr = TaskStatus
       .newBuilder()
       .setTaskId(TaskID.newBuilder().setValue("task"))
-      .setAgentId(AgentID.newBuilder().setValue("slave1"))
+      .setAgentId(AgentID.newBuilder().setValue("agent1"))
       .setState(TaskState.TASK_RUNNING);
 
     // should not throw exception:
@@ -2771,7 +2771,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     agentManager.changeState(
-      "slave1",
+      "agent1",
       MachineState.STARTING_DECOMMISSION,
       Optional.<String>empty(),
       Optional.of("user1")
@@ -3192,8 +3192,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(
         Arrays.asList(
-          createOffer(20, 20000, 50000, "slave1", "host1"),
-          createOffer(20, 20000, 50000, "slave2", "host2")
+          createOffer(20, 20000, 50000, "agent1", "host1"),
+          createOffer(20, 20000, 50000, "agent2", "host2")
         )
       )
       .join();
@@ -3227,7 +3227,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
             20,
             20000,
             50000,
-            "slave1",
+            "agent1",
             "host1",
             Optional.<String>empty(),
             Collections.<String, String>emptyMap(),
@@ -3246,7 +3246,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
             20,
             20000,
             50000,
-            "slave1",
+            "agent1",
             "host1",
             Optional.<String>empty(),
             Collections.<String, String>emptyMap(),
@@ -3265,7 +3265,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
             20,
             20000,
             50000,
-            "slave1",
+            "agent1",
             "host1",
             Optional.<String>empty(),
             Collections.<String, String>emptyMap(),
@@ -3284,7 +3284,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
             20,
             20000,
             50000,
-            "slave1",
+            "agent1",
             "host1",
             Optional.<String>empty(),
             Collections.<String, String>emptyMap(),
@@ -3957,7 +3957,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testCleanerFindsTasksWithSkippedHealthchecks() {
     initRequest();
-    resourceOffers(2); // set up slaves so scale validate will pass
+    resourceOffers(2); // set up agents so scale validate will pass
 
     SingularityRequest request = requestResource
       .getRequest(requestId, singularityUser)
@@ -4294,10 +4294,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRecoveredTask() {
-    // set up the slave first
+    // set up the agent first
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
 
@@ -4337,10 +4337,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRecoveredTaskIsCleanedIfLoadBalancerRemoveIsStarted() {
-    // set up the slave first
+    // set up the agent first
     sms
       .resourceOffers(
-        Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1")))
+        Arrays.asList(createOffer(1, 129, 1025, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
 
