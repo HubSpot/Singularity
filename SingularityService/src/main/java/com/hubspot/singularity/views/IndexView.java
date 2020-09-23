@@ -31,8 +31,8 @@ public class IndexView extends View {
 
   private final String title;
 
-  private final Integer slaveHttpPort;
-  private final Integer slaveHttpsPort;
+  private final Integer agentHttpPort;
+  private final Integer agentHttpsPort;
 
   private final int defaultBounceExpirationMinutes;
   private final long defaultHealthcheckIntervalSeconds;
@@ -51,7 +51,7 @@ public class IndexView extends View {
 
   private final String shellCommands;
 
-  private final boolean shortenSlaveUsageHostname;
+  private final boolean shortenAgentUsageHostname;
 
   private final String timestampFormat;
 
@@ -107,8 +107,8 @@ public class IndexView extends View {
 
     this.title = uiConfiguration.getTitle();
 
-    this.slaveHttpPort = configuration.getAgentHttpPort();
-    this.slaveHttpsPort = configuration.getAgentHttpsPort().orElse(null);
+    this.agentHttpPort = configuration.getAgentHttpPort();
+    this.agentHttpsPort = configuration.getAgentHttpsPort().orElse(null);
 
     this.defaultCpus = configuration.getDefaultCpus();
     this.defaultMemory = configuration.getDefaultMemory();
@@ -151,7 +151,7 @@ public class IndexView extends View {
       throw new RuntimeException(e);
     }
 
-    this.shortenSlaveUsageHostname = uiConfiguration.isShortenAgentUsageHostname();
+    this.shortenAgentUsageHostname = uiConfiguration.isShortenAgentUsageHostname();
 
     this.timestampFormat = uiConfiguration.getTimestampFormat();
 
@@ -214,12 +214,12 @@ public class IndexView extends View {
     return navColor;
   }
 
-  public Integer getSlaveHttpPort() {
-    return slaveHttpPort;
+  public Integer getAgentHttpPort() {
+    return agentHttpPort;
   }
 
-  public Integer getSlaveHttpsPort() {
-    return slaveHttpsPort;
+  public Integer getAgentHttpsPort() {
+    return agentHttpsPort;
   }
 
   public Integer getDefaultMemory() {
@@ -310,8 +310,8 @@ public class IndexView extends View {
     return redirectOnUnauthorizedUrl;
   }
 
-  public boolean isShortenSlaveUsageHostname() {
-    return shortenSlaveUsageHostname;
+  public boolean isShortenAgentUsageHostname() {
+    return shortenAgentUsageHostname;
   }
 
   public boolean isGenerateAuthHeader() {
@@ -384,10 +384,10 @@ public class IndexView extends View {
       ", title='" +
       title +
       '\'' +
-      ", slaveHttpPort=" +
-      slaveHttpPort +
-      ", slaveHttpsPort=" +
-      slaveHttpsPort +
+      ", agentHttpPort=" +
+      agentHttpPort +
+      ", agentHttpsPort=" +
+      agentHttpsPort +
       ", defaultBounceExpirationMinutes=" +
       defaultBounceExpirationMinutes +
       ", defaultHealthcheckIntervalSeconds=" +
@@ -415,8 +415,8 @@ public class IndexView extends View {
       ", shellCommands='" +
       shellCommands +
       '\'' +
-      ", shortenSlaveUsageHostname=" +
-      shortenSlaveUsageHostname +
+      ", shortenAgentUsageHostname=" +
+      shortenAgentUsageHostname +
       ", timestampFormat='" +
       timestampFormat +
       '\'' +
