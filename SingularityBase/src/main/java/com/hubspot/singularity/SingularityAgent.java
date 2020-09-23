@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.json.MesosResourcesObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class SingularityAgent extends SingularityMachineAbstraction<SingularityA
     this.resources = resources;
   }
 
-  @SuppressWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  @SuppressFBWarnings(value = "NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityAgent(
     String agentId,
     long firstSeenAt,
