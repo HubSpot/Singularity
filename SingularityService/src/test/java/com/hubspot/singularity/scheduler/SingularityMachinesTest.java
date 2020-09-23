@@ -1123,6 +1123,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       agentManager.getObjects().get(0).getCurrentState().getState()
     );
 
+    try {
+      Thread.sleep(10);
+    } catch (Exception e) {
+      // didn't see that
+    }
+
     expiringUserActionPoller.runActionOnPoll();
 
     Assertions.assertEquals(

@@ -3375,7 +3375,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assertions.assertEquals(
+      2,
+      taskManager.getPendingTaskIds().size() + taskManager.getActiveTaskIds().size()
+    );
   }
 
   @Test
