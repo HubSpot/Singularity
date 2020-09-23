@@ -40,7 +40,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
-| defaultSlavePlacement | GREEDY | See [Agent Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]
+| defaultAgentPlacement | GREEDY | See [Agent Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_AGENTS]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
 | deltaAfterWhichTasksAreLateMillis | 30000 (30 seconds) | The amount of time after a task's schedule time that Singularity will classify it (in state API and dashboard) as a late task | long | 
 | deployHealthyBySeconds | 120 | Default amount of time to allow pending deploys to run for before transitioning them into active deploys. If more than this time passes before a deploy can be considered healthy (all of its tasks either make it to TASK_RUNNING or pass healthchecks), then the deploy will be rejected | long |
@@ -148,7 +148,7 @@ These settings are less likely to be changed, but were included in the configura
 | deleteTasksFromZkWhenNoDatabaseAfterHours | 168 (7 days) | Delete old tasks from zk after this amount of time if we are not using a database | long |
 | maxStaleTasksPerRequestInZkWhenNoDatabase | infinite (disabled) | Delete oldest tasks from zk when there are more than this number for a given request, if we're not already persisting them to a database | int |
 | taskPersistAfterStartupBufferMillis | 60000ms (1 min) | Wait this long after a task starts before persisting it in history | long |
-| deleteDeadSlavesAfterHours | 168 (7 days) | Remove dead agents from the list after this amount of time | long |
+| deleteDeadAgentsAfterHours | 168 (7 days) | Remove dead agents from the list after this amount of time | long |
 | deleteUndeliverableWebhooksAfterHours | 168 (7 days) | Delete (and stop retrying) failed webhooks after this amount of time | long |
 | waitForListeners | true | If true, the event system waits for all listeners having processed an event. | boolean |
 | warnIfScheduledJobIsRunningForAtLeastMillis | 86400000 (1 day) | Warn if a scheduled job has been running for this long | long |
