@@ -43,7 +43,7 @@ export const ReactivateAgent = buildJsonApiAction(
 
 export const FetchExpiringAgentStates = buildApiAction(
   'FETCH_EXPIRING_AGENT_STATES',
-  {url: '/agnets/expiring'}
+  {url: '/agents/expiring'}
 );
 
 export const RemoveExpiringAgentState = buildJsonApiAction(
