@@ -349,7 +349,7 @@ public class SingularityTaskShuffler {
 
   private double getTargetMemoryUtilizationForHost(SingularityAgentUsage usage) {
     return (
-      configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() *
+      configuration.getShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds() *
       usage.getSystemMemTotalBytes()
     );
   }

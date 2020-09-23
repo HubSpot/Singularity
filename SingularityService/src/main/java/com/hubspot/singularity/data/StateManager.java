@@ -54,7 +54,7 @@ public class StateManager extends CuratorManager {
   private final RequestManager requestManager;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final RackManager rackManager;
   private final Transcoder<SingularityState> stateTranscoder;
   private final Transcoder<SingularityHostState> hostStateTranscoder;
@@ -73,7 +73,7 @@ public class StateManager extends CuratorManager {
     RequestManager requestManager,
     TaskManager taskManager,
     DeployManager deployManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     RackManager rackManager,
     Transcoder<SingularityState> stateTranscoder,
     Transcoder<SingularityHostState> hostStateTranscoder,
@@ -91,7 +91,7 @@ public class StateManager extends CuratorManager {
     this.taskManager = taskManager;
     this.stateTranscoder = stateTranscoder;
     this.hostStateTranscoder = hostStateTranscoder;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.rackManager = rackManager;
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
@@ -238,7 +238,7 @@ public class StateManager extends CuratorManager {
       }
     }
 
-    List<SingularityAgent> slaves = slaveManager.getObjects();
+    List<SingularityAgent> slaves = agentManager.getObjects();
 
     int activeSlaves = 0;
     int deadSlaves = 0;

@@ -20,16 +20,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path(ApiPaths.INACTIVE_SLAVES_RESOURCE_PATH)
+@Path(ApiPaths.INACTIVE_AGENTS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @Schema(title = "Manage Singularity machines that should be marked as inactive")
 @Tags({ @Tag(name = "Inactive Machines") })
-public class InactiveSlaveResource {
+public class InactiveAgentResource {
   private final InactiveAgentManager inactiveAgentManager;
   private final SingularityAuthorizer authorizationHelper;
 
   @Inject
-  public InactiveSlaveResource(
+  public InactiveAgentResource(
     InactiveAgentManager inactiveAgentManager,
     SingularityAuthorizer authorizationHelper
   ) {
@@ -38,13 +38,13 @@ public class InactiveSlaveResource {
   }
 
   @GET
-  @Operation(summary = "Retrieve a list of slaves marked as inactive")
+  @Operation(summary = "Retrieve a list of agents marked as inactive")
   public Set<String> getInactiveSlaves() {
     return inactiveAgentManager.getInactiveAgents();
   }
 
   @POST
-  @Operation(summary = "Mark a slave as inactive")
+  @Operation(summary = "Mark an agent as inactive")
   public void deactivateSlave(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(required = true, description = "The host to deactivate") @QueryParam(

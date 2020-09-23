@@ -44,23 +44,24 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.InactiveAgentManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.resources.AgentResource;
+import com.hubspot.singularity.resources.AgentResourceDeprecated;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
-import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -119,7 +120,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected PriorityManager priorityManager;
 
   @Inject
-  protected SlaveManager slaveManager;
+  protected AgentManager agentManager;
 
   @Inject
   protected RackManager rackManager;
@@ -140,7 +141,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RackResource rackResource;
 
   @Inject
-  protected SlaveResource slaveResource;
+  protected AgentResource agentResource;
 
   @Inject
   protected TaskResource taskResource;
@@ -820,10 +821,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     );
 
     return deploy;
-  }
-
-  protected void createAndDeployRequest(String requestId, double cpus, double memory) {
-    deployRequest(createRequest(requestId), cpus, memory);
   }
 
   protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {

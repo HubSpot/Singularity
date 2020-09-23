@@ -24,11 +24,11 @@ import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
@@ -60,7 +60,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final TaskManager taskManager;
   private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final RackManager rackManager;
   private final List<SingularityExpiringUserActionHandler<?, ?>> handlers;
   private final SingularityConfiguration configuration;
@@ -73,7 +73,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     RequestManager requestManager,
     DeployManager deployManager,
     TaskManager taskManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     RackManager rackManager,
     SingularitySchedulerLock lock,
     RequestHelper requestHelper,
@@ -86,7 +86,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     this.requestHelper = requestHelper;
     this.mailer = mailer;
     this.taskManager = taskManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.rackManager = rackManager;
     this.configuration = configuration;
     this.disasterManager = disasterManager;
@@ -502,7 +502,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       String message
     ) {
       SingularityAgent slave = (SingularityAgent) machine;
-      slaveManager.changeState(
+      agentManager.changeState(
         slave,
         expiringObject.getRevertToState(),
         Optional.of("Updated due to expiring action"),
@@ -543,9 +543,9 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected void checkExpiringObjects() {
-      for (SingularityExpiringMachineState expiringObject : slaveManager.getExpiringObjects()) {
+      for (SingularityExpiringMachineState expiringObject : agentManager.getExpiringObjects()) {
         if (isExpiringDue(expiringObject)) {
-          Optional<SingularityAgent> slave = slaveManager.getObject(
+          Optional<SingularityAgent> slave = agentManager.getObject(
             expiringObject.getMachineId()
           );
 
@@ -571,7 +571,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
             }
           }
 
-          slaveManager.deleteExpiringObject(expiringObject.getMachineId());
+          agentManager.deleteExpiringObject(expiringObject.getMachineId());
         }
       }
     }

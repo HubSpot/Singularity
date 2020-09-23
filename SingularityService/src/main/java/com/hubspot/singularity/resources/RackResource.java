@@ -160,7 +160,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       "rackId"
     ) String rackId,
     @RequestBody(
-      description = "Settings related to changing the state of a slave"
+      description = "Settings related to changing the state of a rack"
     ) SingularityMachineChangeRequest changeRequest
   ) {
     return maybeProxyToLeader(
@@ -189,7 +189,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       "rackId"
     ) String rackId,
     @RequestBody(
-      description = "Settings related to changing the state of a slave"
+      description = "Settings related to changing the state of a rack"
     ) SingularityMachineChangeRequest changeRequest
   ) {
     return maybeProxyToLeader(

@@ -53,10 +53,10 @@ import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
@@ -114,10 +114,10 @@ public class RequestResource extends AbstractRequestResource {
   private final TaskManager taskManager;
   private final RebalancingHelper rebalancingHelper;
   private final RequestHelper requestHelper;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
-  private final SingularityAgentAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
 
   @Inject
   public RequestResource(
@@ -130,12 +130,12 @@ public class RequestResource extends AbstractRequestResource {
     SingularityAuthorizer authorizationHelper,
     RequestHelper requestHelper,
     LeaderLatch leaderLatch,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     AsyncHttpClient httpClient,
     @Singularity ObjectMapper objectMapper,
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier,
-    SingularityAgentAndRackManager slaveAndRackManager
+    SingularityAgentAndRackManager agentAndRackManager
   ) {
     super(
       requestManager,
@@ -151,10 +151,10 @@ public class RequestResource extends AbstractRequestResource {
     this.taskManager = taskManager;
     this.rebalancingHelper = rebalancingHelper;
     this.requestHelper = requestHelper;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
   }
 
   private void submitRequest(
@@ -209,14 +209,14 @@ public class RequestResource extends AbstractRequestResource {
       )
     ) {
       checkBadRequest(
-        validator.isSpreadAllSlavesEnabled(),
-        "You must enabled spread to all slaves in order to use the SPREAD_ALL_SLAVES request type"
+        validator.isSpreadAllAgentsEnabled(),
+        "You must enabled spread to all agents in order to use the SPREAD_ALL_AGENTS request type"
       );
-      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
+      int currentActiveAgentCount = agentManager.getNumObjectsAtState(
         MachineState.ACTIVE
       );
       request =
-        request.toBuilder().setInstances(Optional.of(currentActiveSlaveCount)).build();
+        request.toBuilder().setInstances(Optional.of(currentActiveAgentCount)).build();
     }
 
     if (
@@ -277,7 +277,7 @@ public class RequestResource extends AbstractRequestResource {
             }
           );
 
-        int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
+        int activeRacksWithCapacityCount = agentAndRackManager.getActiveRacksWithCapacityCount();
         if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
             rebalancingHelper.rebalanceRacks(

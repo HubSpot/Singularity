@@ -388,12 +388,12 @@ public class SingularityExecutorCleanup {
   }
 
   private boolean isDecommissioned() {
-    Collection<SingularityAgent> slaves = singularityClient.getAgents(
+    Collection<SingularityAgent> agents = singularityClient.getAgents(
       Optional.of(MachineState.DECOMMISSIONED)
     );
     boolean decommissioned = false;
-    for (SingularityAgent slave : slaves) {
-      if (slave.getHost().equals(hostname)) {
+    for (SingularityAgent agent : agents) {
+      if (agent.getHost().equals(hostname)) {
         decommissioned = true;
       }
     }
@@ -401,12 +401,12 @@ public class SingularityExecutorCleanup {
   }
 
   private Set<String> getRunningTaskIds() {
-    final String slaveId = mesosClient
-      .getSlaveState(mesosClient.getSlaveUri(hostname))
+    final String agentId = mesosClient
+      .getAgentState(mesosClient.getAgentUri(hostname))
       .getId();
 
     return singularityClient
-      .getActiveTaskIdsOnSlave(slaveId)
+      .getActiveTaskIdsOnAgent(agentId)
       .stream()
       .map(SingularityTaskId::getId)
       .collect(Collectors.toSet());

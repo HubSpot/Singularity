@@ -101,8 +101,8 @@ public class SingularityValidator {
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
   private final int maxRunNowTaskLaunchDelay;
-  private final int maxDecommissioningSlaves;
-  private final boolean spreadAllSlavesEnabled;
+  private final int maxDecommissioningAgents;
+  private final boolean spreadAllAgentsEnabled;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -115,7 +115,7 @@ public class SingularityValidator {
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
 
   @Inject
   public SingularityValidator(
@@ -123,7 +123,7 @@ public class SingularityValidator {
     DeployHistoryHelper deployHistoryHelper,
     PriorityManager priorityManager,
     DisasterManager disasterManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     UIConfiguration uiConfiguration
   ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
@@ -174,15 +174,15 @@ public class SingularityValidator {
     this.defaultHealthcheckResponseTimeoutSeconds =
       configuration.getHealthcheckTimeoutSeconds();
     this.maxRunNowTaskLaunchDelay = configuration.getMaxRunNowTaskLaunchDelayDays();
-    this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
-    this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
+    this.maxDecommissioningAgents = configuration.getMaxDecommissioningAgents();
+    this.spreadAllAgentsEnabled = configuration.isSpreadAllAgentsEnabled();
     this.enforceSignedArtifacts = configuration.isEnforceSignedArtifacts();
     this.validDockerRegistries = configuration.getValidDockerRegistries();
 
     this.uiConfiguration = uiConfiguration;
 
     this.disasterManager = disasterManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
   }
 
   public SingularityRequest checkSingularityRequest(
@@ -1158,20 +1158,20 @@ public class SingularityValidator {
         placement != AgentPlacement.OPTIMISTIC
       )
     ) {
-      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
+      int currentActiveAgentCount = agentManager.getNumObjectsAtState(
         MachineState.ACTIVE
       );
-      int requiredSlaveCount = isIncremental
+      int requiredAgentCount = isIncremental
         ? request.getInstancesSafe() + 1
         : request.getInstancesSafe() * 2;
 
       checkBadRequest(
-        currentActiveSlaveCount >= requiredSlaveCount,
-        "Not enough active slaves to successfully scale request %s to %s instances (minimum required: %s, current: %s).",
+        currentActiveAgentCount >= requiredAgentCount,
+        "Not enough active agents to successfully scale request %s to %s instances (minimum required: %s, current: %s).",
         request.getId(),
         request.getInstancesSafe(),
-        requiredSlaveCount,
-        currentActiveSlaveCount
+        requiredAgentCount,
+        currentActiveAgentCount
       );
     }
   }
@@ -1188,21 +1188,21 @@ public class SingularityValidator {
     AgentPlacement placement = request.getAgentPlacement().orElse(defaultAgentPlacement);
 
     if (placement != AgentPlacement.GREEDY && placement != AgentPlacement.OPTIMISTIC) {
-      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
+      int currentActiveAgentCount = agentManager.getNumObjectsAtState(
         MachineState.ACTIVE
       );
-      int requiredSlaveCount = request.getInstancesSafe();
+      int requiredAgentCount = request.getInstancesSafe();
 
       if (previousScale.isPresent() && placement == AgentPlacement.SEPARATE_BY_REQUEST) {
-        requiredSlaveCount += previousScale.get();
+        requiredAgentCount += previousScale.get();
       }
 
       checkBadRequest(
-        currentActiveSlaveCount >= requiredSlaveCount,
-        "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.",
+        currentActiveAgentCount >= requiredAgentCount,
+        "Not enough active agents to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the agent placement strategy instead.",
         request.getId(),
-        requiredSlaveCount,
-        currentActiveSlaveCount
+        requiredAgentCount,
+        currentActiveAgentCount
       );
     }
   }
@@ -1279,19 +1279,19 @@ public class SingularityValidator {
         newState == MachineState.DECOMMISSIONED &&
         !changeRequest.isKillTasksOnDecommissionTimeout()
       ),
-      "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state"
+      "Must specify that all tasks on agent get killed if transitioning to DECOMMISSIONED state"
     );
   }
 
   public void validateDecommissioningCount() {
     int decommissioning =
-      slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() +
-      slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
+      agentManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() +
+      agentManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
     checkBadRequest(
-      decommissioning < maxDecommissioningSlaves,
-      "%s slaves are already decommissioning state (%s allowed at once). Allow these slaves to finish before decommissioning another",
+      decommissioning < maxDecommissioningAgents,
+      "%s agents are already decommissioning state (%s allowed at once). Allow these agents to finish before decommissioning another",
       decommissioning,
-      maxDecommissioningSlaves
+      maxDecommissioningAgents
     );
   }
 
@@ -1311,8 +1311,8 @@ public class SingularityValidator {
     }
   }
 
-  public boolean isSpreadAllSlavesEnabled() {
-    return spreadAllSlavesEnabled;
+  public boolean isSpreadAllAgentsEnabled() {
+    return spreadAllAgentsEnabled;
   }
 
   public void checkUserId(String userId) {

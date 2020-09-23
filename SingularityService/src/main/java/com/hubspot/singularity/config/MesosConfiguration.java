@@ -37,9 +37,9 @@ public class MesosConfiguration {
   @NotNull
   private String defaultRackId = "DEFAULT";
 
-  private int slaveHttpPort = 5051;
+  private int agentHttpPort = 5051;
 
-  private Optional<Integer> slaveHttpsPort = Optional.empty();
+  private Optional<Integer> agentHttpsPort = Optional.empty();
 
   private int maxNumInstancesPerRequest = 25;
   private int maxNumCpusPerInstance = 50;
@@ -217,20 +217,40 @@ public class MesosConfiguration {
     this.defaultMemory = defaultMemory;
   }
 
+  public int getAgentHttpPort() {
+    return agentHttpPort;
+  }
+
+  public void setAgentHttpPort(int agentHttpPort) {
+    this.agentHttpPort = agentHttpPort;
+  }
+
+  public Optional<Integer> getAgentHttpsPort() {
+    return agentHttpsPort;
+  }
+
+  public void setAgentHttpsPort(Optional<Integer> agentHttpsPort) {
+    this.agentHttpsPort = agentHttpsPort;
+  }
+
+  @Deprecated
   public int getSlaveHttpPort() {
-    return slaveHttpPort;
+    return agentHttpPort;
   }
 
-  public void setSlaveHttpPort(int slaveHttpPort) {
-    this.slaveHttpPort = slaveHttpPort;
+  @Deprecated
+  public void setSlaveHttpPort(int agentHttpPort) {
+    this.agentHttpPort = agentHttpPort;
   }
 
+  @Deprecated
   public Optional<Integer> getSlaveHttpsPort() {
-    return slaveHttpsPort;
+    return agentHttpsPort;
   }
 
-  public void setSlaveHttpsPort(Optional<Integer> slaveHttpsPort) {
-    this.slaveHttpsPort = slaveHttpsPort;
+  @Deprecated
+  public void setSlaveHttpsPort(Optional<Integer> agentHttpsPort) {
+    this.agentHttpsPort = agentHttpsPort;
   }
 
   public Optional<String> getCredentialPrincipal() {

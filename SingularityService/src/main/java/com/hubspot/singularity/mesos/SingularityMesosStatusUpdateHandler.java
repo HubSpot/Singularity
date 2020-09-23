@@ -73,7 +73,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
-  private final SingularityAgentAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
   private final SingularityLeaderCache leaderCache;
@@ -96,7 +96,7 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityExceptionNotifier exceptionNotifier,
     SingularityHealthchecker healthchecker,
     SingularityNewTaskChecker newTaskChecker,
-    SingularityAgentAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager agentAndRackManager,
     SingularityMesosExecutorInfoSupport logSupport,
     SingularityScheduler scheduler,
     @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
@@ -118,7 +118,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.exceptionNotifier = exceptionNotifier;
     this.healthchecker = healthchecker;
     this.newTaskChecker = newTaskChecker;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
     this.logSupport = logSupport;
     this.scheduler = scheduler;
     this.leaderCache = leaderCache;
@@ -513,9 +513,9 @@ public class SingularityMesosStatusUpdateHandler {
     long timestamp
   ) {
     // Method synchronized to prevent race condition where two tasks complete at the same time but the leader cache holding the state
-    // doesn't get updated between each task completion. If this were to happen, then slaves would never transition from DECOMMISSIONING to
+    // doesn't get updated between each task completion. If this were to happen, then agents would never transition from DECOMMISSIONING to
     // DECOMMISSIONED because each task state check thinks the other task is still running.
-    slaveAndRackManager.checkStateAfterFinishedTask(
+    agentAndRackManager.checkStateAfterFinishedTask(
       taskIdObj,
       status.getAgentId().getValue(),
       leaderCache

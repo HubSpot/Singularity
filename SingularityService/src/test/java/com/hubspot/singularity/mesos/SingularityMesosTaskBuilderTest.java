@@ -92,8 +92,8 @@ public class SingularityMesosTaskBuilderTest {
         .setUser(user)
         .build();
 
-    final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(
-      SingularitySlaveAndRackHelper.class
+    final SingularityAgentAndRackHelper slaveAndRackHelper = mock(
+      SingularityAgentAndRackHelper.class
     );
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
 

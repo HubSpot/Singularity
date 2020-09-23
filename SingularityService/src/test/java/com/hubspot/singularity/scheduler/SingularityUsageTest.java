@@ -88,12 +88,12 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(
       0,
-      usageManager.getSlaveUsage(slaveId).get().getCpusUsed(),
+      usageManager.getAgentUsage(slaveId).get().getCpusUsed(),
       0
     );
     Assertions.assertEquals(
       100,
-      usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -116,8 +116,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String t1 = taskIds.get(0).getId();
     String t2 = taskIds.get(1).getId();
 
-    String slaveId = slaveManager.getObjectIds().get(0);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String slaveId = agentManager.getObjectIds().get(0);
+    String host = agentManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
     MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, 5, 1000);
@@ -128,11 +128,11 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     Assertions.assertEquals(2, usageManager.countTasksWithUsage());
-    Assertions.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
+    Assertions.assertEquals(1, usageManager.getAllCurrentAgentUsage().size());
 
     Assertions.assertEquals(
       1100,
-      usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -143,9 +143,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     Assertions.assertEquals(1, usageManager.countTasksWithUsage());
-    Assertions.assertEquals(1, usageManager.getAllCurrentSlaveUsage().size());
+    Assertions.assertEquals(1, usageManager.getAllCurrentAgentUsage().size());
 
-    slaveManager.changeState(
+    agentManager.changeState(
       slaveId,
       MachineState.DEAD,
       Optional.empty(),
@@ -155,7 +155,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     cleaner.runActionOnPoll();
 
     Assertions.assertEquals(1, usageManager.countTasksWithUsage());
-    Assertions.assertEquals(0, usageManager.getAllCurrentSlaveUsage().size());
+    Assertions.assertEquals(0, usageManager.getAllCurrentAgentUsage().size());
   }
 
   @Test
@@ -173,8 +173,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     SingularityTaskId t1 = taskIds.get(0);
     SingularityTaskId t2 = taskIds.get(1);
 
-    String slaveId = slaveManager.getObjectIds().get(0);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String slaveId = agentManager.getObjectIds().get(0);
+    String host = agentManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 2, 5, 100);
     MesosTaskMonitorObject t2u1 = getTaskMonitor(t2.getId(), 10, 5, 1024);
@@ -199,17 +199,17 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     // check usage now
     Assertions.assertEquals(
       3.5,
-      usageManager.getSlaveUsage(slaveId).get().getCpusUsed(),
+      usageManager.getAgentUsage(slaveId).get().getCpusUsed(),
       0
     );
     Assertions.assertEquals(
       875,
-      usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
       0
     );
     Assertions.assertEquals(
       2,
-      usageManager.getSlaveUsage(slaveId).get().getNumTasks(),
+      usageManager.getAgentUsage(slaveId).get().getNumTasks(),
       0
     );
 
@@ -249,7 +249,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(
       1149,
-      usageManager.getSlaveUsage(slaveId).get().getMemoryBytesUsed(),
+      usageManager.getAgentUsage(slaveId).get().getMemoryBytesUsed(),
       0
     );
 
@@ -267,7 +267,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
     SingularityTaskId t1 = taskId;
-    String host = slaveManager.getObjects().get(0).getHost();
+    String host = agentManager.getObjects().get(0).getHost();
 
     // used 8 cpu
     MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -336,7 +336,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String host = agentManager.getObjects().get(0).getHost();
 
     // 2 cpus used
     MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -404,7 +404,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String host = agentManager.getObjects().get(0).getHost();
 
     // 4 cpus used
     MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -471,7 +471,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
     SingularityTaskId t1 = taskIds.get(0);
     SingularityTaskId t2 = taskIds.get(1);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String host = agentManager.getObjects().get(0).getHost();
 
     // used 6 cpu
     MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -553,7 +553,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
     SingularityTaskId t1 = taskIds.get(0);
     SingularityTaskId t2 = taskIds.get(1);
-    String host = slaveManager.getObjects().get(0).getHost();
+    String host = agentManager.getObjects().get(0).getHost();
 
     // used 10 cpu
     MesosTaskMonitorObject t1u1 = getTaskMonitor(
@@ -684,7 +684,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itDelaysTaskShuffles() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(15);
 
       initRequest();
@@ -722,7 +722,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
@@ -850,16 +850,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType()
       );
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itCreatesTaskCleanupsWhenAMachineIsOverloadedOnMemory() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       initRequest();
       initFirstDeployWithResources(
@@ -896,7 +896,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
@@ -1019,17 +1019,17 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       // Second task is not cleaned up because it is from the same request as task 3
       Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itPrioritizesMemoryShuffleOverCpu() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShuffleTotal(1);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       initRequest();
       initFirstDeployWithResources(
@@ -1095,10 +1095,10 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         107374182
       );
 
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highCpuUsage, "host2")
       );
 
@@ -1275,14 +1275,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       // Second task is not cleaned up because it is a cpu shuffle
       Assertions.assertFalse(taskManager.getTaskCleanup(host2Task.getId()).isPresent());
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itCreatesTaskCleanupsWhenAMachineIsOverloadedOnCpu() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
 
       initRequest();
@@ -1320,7 +1320,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
@@ -1439,14 +1439,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       // Second task is not cleaned up because it is from the same request as task 1
       Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itLimitsTheNumberOfTaskCleanupsToCreate() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShuffleTotal(1);
 
@@ -1485,7 +1485,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
@@ -1590,7 +1590,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       // Second task doesn't get cleaned up dur to cluster wide limit
       Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
       configuration.setMaxTasksToShuffleTotal(6);
     }
   }
@@ -1598,9 +1598,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itDoesNotShuffleBlacklistedTasks() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
-      shuffleCfgManager.addToShuffleBlacklist(requestId);
+      shuffleCfgManager.addToShuffleBlocklist(requestId);
 
       initRequest();
       initFirstDeployWithResources(
@@ -1637,7 +1637,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highUsage, "host1")
       );
 
@@ -1753,19 +1753,19 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       // Second task is not cleaned up because it is from the same request as task 1
       Assertions.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
-      shuffleCfgManager.removeFromShuffleBlacklist(requestId);
+      configuration.setShuffleTasksForOverloadedAgents(false);
+      shuffleCfgManager.removeFromShuffleBlocklist(requestId);
     }
   }
 
   @Test
   public void itPrioritizesLowUtilizationTasksForMemoryShuffle() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShufflePerHost(2);
       configuration.setMaxTasksToShuffleTotal(5);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       String t1id = "test-request-1";
       String t2id = "test-request-2";
@@ -1813,7 +1813,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
@@ -1915,18 +1915,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         taskManager.getTaskCleanup(task3.getId()).get().getCleanupType()
       );
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itWillShuffleMultipleTasksIfNecessaryForMemoryShuffle() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShufflePerHost(2);
       configuration.setMaxTasksToShuffleTotal(5);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       String t1id = "test-request-1";
       String t2id = "test-request-2";
@@ -1975,7 +1975,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
@@ -2080,18 +2080,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         taskManager.getTaskCleanup(task3.getId()).get().getCleanupType()
       );
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itWillShuffleToDesiredMemoryThresholdIfPossibleForMemoryShuffle() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShufflePerHost(2);
       configuration.setMaxTasksToShuffleTotal(5);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       String t1id = "test-request-1";
       String t2id = "test-request-2";
@@ -2144,7 +2144,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
@@ -2258,18 +2258,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         taskManager.getTaskCleanup(task4.getId()).get().getCleanupType()
       );
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itWillConsiderCPUUtilizationForMemoryShuffle() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShufflePerHost(2);
       configuration.setMaxTasksToShuffleTotal(5);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       String t1id = "test-request-1";
       String t2id = "test-request-2";
@@ -2322,7 +2322,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
 
@@ -2434,18 +2434,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         taskManager.getTaskCleanup(task4.getId()).get().getCleanupType()
       );
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 
   @Test
   public void itWillHandleMultiHostMemoryShuffle() {
     try {
-      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setShuffleTasksForOverloadedAgents(true);
       configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShufflePerHost(2);
       configuration.setMaxTasksToShuffleTotal(5);
-      configuration.setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(0.90);
+      configuration.setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(0.90);
 
       String t1id = "test-request-1";
       String t2id = "test-request-2";
@@ -2517,13 +2517,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         0,
         107374182
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host1")
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host2")
       );
-      usageManager.saveCurrentSlaveUsage(
+      usageManager.saveCurrentAgentUsage(
         new SingularityAgentUsageWithId(highMemUsage, "host3")
       );
 
@@ -2783,7 +2783,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       Assertions.assertNotNull(taskIdMap.get("host4").get(t1id));
       Assertions.assertNotNull(taskIdMap.get("host4").get(t4id));
     } finally {
-      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setShuffleTasksForOverloadedAgents(false);
     }
   }
 

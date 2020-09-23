@@ -569,10 +569,6 @@ public class DeployManager extends CuratorAsyncManager {
     }
   }
 
-  public SingularityDeleteResult deleteRequestId(String requestId) {
-    return delete(getRequestDeployPath(requestId));
-  }
-
   public void activateLeaderCache() {
     final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
     leaderCache.cacheRequestDeployStates(fetchDeployStatesByRequestIds(requestIds));

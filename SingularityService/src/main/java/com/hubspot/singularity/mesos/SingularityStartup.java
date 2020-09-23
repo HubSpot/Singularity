@@ -56,7 +56,7 @@ class SingularityStartup {
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final DisasterManager disasterManager;
-  private final SingularityAgentAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
@@ -69,7 +69,7 @@ class SingularityStartup {
     MesosClient mesosClient,
     SingularityHealthchecker healthchecker,
     SingularityNewTaskChecker newTaskChecker,
-    SingularityAgentAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager agentAndRackManager,
     TaskManager taskManager,
     RequestManager requestManager,
     DeployManager deployManager,
@@ -81,7 +81,7 @@ class SingularityStartup {
   ) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
     this.deployManager = deployManager;
     this.disasterManager = disasterManager;
     this.requestManager = requestManager;
@@ -108,7 +108,7 @@ class SingularityStartup {
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-    slaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    agentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
 
     ExecutorService startupExecutor = Executors.newFixedThreadPool(
       configuration.getSchedulerStartupConcurrency(),

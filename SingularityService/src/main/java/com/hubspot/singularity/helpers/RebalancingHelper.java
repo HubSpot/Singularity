@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import java.util.ArrayList;
@@ -29,17 +29,17 @@ public class RebalancingHelper {
   private static final Logger LOG = LoggerFactory.getLogger(RebalancingHelper.class);
 
   private final TaskManager taskManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final SingularityAgentAndRackManager slaveAndRackManager;
 
   @Inject
   public RebalancingHelper(
     TaskManager taskManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     SingularityAgentAndRackManager slaveAndRackManager
   ) {
     this.taskManager = taskManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.slaveAndRackManager = slaveAndRackManager;
   }
 
@@ -93,7 +93,7 @@ public class RebalancingHelper {
     Map<String, Map<String, Set<SingularityTaskId>>> attributeTaskMap = new HashMap<>();
 
     for (SingularityTaskId taskId : remainingActiveTasks) {
-      SingularityAgent slave = slaveManager
+      SingularityAgent slave = agentManager
         .getObject(
           taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()
         )

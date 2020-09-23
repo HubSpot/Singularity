@@ -36,7 +36,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   private DisasterManager disasterManager;
 
   @Inject
-  private SlaveManager slaveManager;
+  private AgentManager agentManager;
 
   @Inject
   private UIConfiguration uiConfiguration;
@@ -55,7 +55,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
         deployHistoryHelper,
         priorityManager,
         disasterManager,
-        slaveManager,
+        agentManager,
         uiConfiguration
       );
   }

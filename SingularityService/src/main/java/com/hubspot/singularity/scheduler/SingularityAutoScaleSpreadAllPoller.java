@@ -8,8 +8,8 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import java.util.Optional;
@@ -24,7 +24,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     SingularityAutoScaleSpreadAllPoller.class
   );
 
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final RequestManager requestManager;
   private final AgentPlacement defaultAgentPlacement;
   private final RequestHelper requestHelper;
@@ -34,23 +34,23 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
   @Inject
   SingularityAutoScaleSpreadAllPoller(
     SingularityConfiguration configuration,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     RequestManager requestManager,
     RequestHelper requestHelper,
     SingularitySchedulerLock lock
   ) {
-    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS);
-    this.slaveManager = slaveManager;
+    super(configuration.getCheckAutoSpreadAllAgentsEverySeconds(), TimeUnit.SECONDS);
+    this.agentManager = agentManager;
     this.requestManager = requestManager;
     this.defaultAgentPlacement = configuration.getDefaultAgentPlacement();
     this.requestHelper = requestHelper;
-    this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
+    this.spreadAllSlavesEnabled = configuration.isSpreadAllAgentsEnabled();
     this.lock = lock;
   }
 
   @Override
   public void runActionOnPoll() {
-    int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+    int currentActiveSlaveCount = agentManager.getNumObjectsAtState(MachineState.ACTIVE);
 
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
       lock.runWithRequestLock(

@@ -21,7 +21,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.usage.UsageManager;
-import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
+import com.hubspot.singularity.mesos.SingularityAgentUsageWithCalculatedScores.MaxProbableUsage;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityUsagePoller;
@@ -342,13 +342,13 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       107374182
     );
 
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host1")
     );
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host2")
     );
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host3")
     );
 
@@ -456,13 +456,13 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       107374182
     );
 
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host1")
     );
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host2")
     );
-    usageManager.saveCurrentSlaveUsage(
+    usageManager.saveCurrentAgentUsage(
       new SingularityAgentUsageWithId(smallUsage, "host3")
     );
 
@@ -519,7 +519,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     );
   }
 
-  private SingularitySlaveUsageWithCalculatedScores getUsage(
+  private SingularityAgentUsageWithCalculatedScores getUsage(
     long memMbReserved,
     long memMbTotal,
     long memMbInUse,
@@ -532,7 +532,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   ) {
     long totalMemBytes = memMbTotal * SingularityAgentUsage.BYTES_PER_MEGABYTE;
     long memBytesInUse = memMbInUse * SingularityAgentUsage.BYTES_PER_MEGABYTE;
-    return new SingularitySlaveUsageWithCalculatedScores(
+    return new SingularityAgentUsageWithCalculatedScores(
       new SingularityAgentUsage(
         cpuInUse,
         cpusReserved,

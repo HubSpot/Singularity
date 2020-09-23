@@ -130,14 +130,14 @@ public class SingularityClient {
   private static final String RACKS_ACTIVATE_FORMAT = RACKS_FORMAT + "/rack/%s/activate";
   private static final String RACKS_DELETE_FORMAT = RACKS_FORMAT + "/rack/%s";
 
-  private static final String AGENTS_FORMAT = "%s/slaves";
-  private static final String AGENT_DETAIL_FORMAT = AGENTS_FORMAT + "/slave/%s/details";
+  private static final String AGENTS_FORMAT = "%s/agents";
+  private static final String AGENT_DETAIL_FORMAT = AGENTS_FORMAT + "/agent/%s/details";
   private static final String AGENTS_DECOMISSION_FORMAT =
-    AGENTS_FORMAT + "/slave/%s/decommission";
-  private static final String AGENTS_FREEZE_FORMAT = AGENTS_FORMAT + "/slave/%s/freeze";
+    AGENTS_FORMAT + "/agent/%s/decommission";
+  private static final String AGENTS_FREEZE_FORMAT = AGENTS_FORMAT + "/agent/%s/freeze";
   private static final String AGENTS_ACTIVATE_FORMAT =
-    AGENTS_FORMAT + "/slave/%s/activate";
-  private static final String AGENTS_DELETE_FORMAT = AGENTS_FORMAT + "/slave/%s";
+    AGENTS_FORMAT + "/agent/%s/activate";
+  private static final String AGENTS_DELETE_FORMAT = AGENTS_FORMAT + "/agent/%s";
 
   private static final String INACTIVE_AGENTS_FORMAT = "%s/inactive";
 
@@ -148,10 +148,10 @@ public class SingularityClient {
     TASKS_GET_ACTIVE_FORMAT + "/ids";
   private static final String TASKS_GET_ACTIVE_STATES_FORMAT =
     TASKS_GET_ACTIVE_FORMAT + "/states";
-  private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT =
+  private static final String TASKS_GET_ACTIVE_ON_AGENT_FORMAT =
     TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT =
-    TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
+    TASKS_GET_ACTIVE_ON_AGENT_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT =
     TASKS_GET_SCHEDULED_FORMAT + "/ids";
@@ -1382,7 +1382,7 @@ public class SingularityClient {
 
   public Collection<SingularityTask> getActiveTasksOnAgent(final String agentId) {
     final Function<String, String> requestUri = host ->
-      String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getApiBase(host), agentId);
+      String.format(TASKS_GET_ACTIVE_ON_AGENT_FORMAT, getApiBase(host), agentId);
 
     return getCollection(
       requestUri,

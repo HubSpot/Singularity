@@ -26,7 +26,7 @@ public class SingularityMesosModule extends AbstractModule {
     bind(SingularityMesosTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularityTaskSizeOptimizer.class).in(Scopes.SINGLETON);
     bind(SingularityAgentAndRackManager.class).in(Scopes.SINGLETON);
-    bind(SingularitySlaveAndRackHelper.class).in(Scopes.SINGLETON);
+    bind(SingularityAgentAndRackHelper.class).in(Scopes.SINGLETON);
     bind(SingularityStartup.class).in(Scopes.SINGLETON);
     bind(SingularitySchedulerLock.class).in(Scopes.SINGLETON);
     bind(SingularityMesosSchedulerClient.class).in(Scopes.SINGLETON);

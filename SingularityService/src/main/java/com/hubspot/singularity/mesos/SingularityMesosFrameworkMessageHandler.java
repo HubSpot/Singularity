@@ -33,7 +33,7 @@ public class SingularityMesosFrameworkMessageHandler {
 
   public void handleMessage(
     Protos.ExecutorID executorId,
-    Protos.AgentID slaveId,
+    Protos.AgentID agentId,
     byte[] data
   ) {
     SingularityTaskShellCommandUpdate shellUpdate = null;

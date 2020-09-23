@@ -219,7 +219,7 @@ public class DisasterManager extends CuratorAsyncManager {
       disable(
         action,
         Optional.of(message),
-        Optional.<SingularityUser>empty(),
+        Optional.empty(),
         automaticallyClearable,
         expiresAt
       );

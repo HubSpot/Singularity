@@ -34,11 +34,11 @@ public class DisasterDetectionConfiguration {
 
   private long triggerAfterMillisOverTaskLagThreshold = TimeUnit.SECONDS.toMillis(45);
 
-  private boolean checkLostSlaves = true;
+  private boolean checkLostAgents = true;
 
-  private double criticalLostSlavePortion = 0.2;
+  private double criticalLostAgentPortion = 0.2;
 
-  private long includeLostSlavesInLastMillis = TimeUnit.SECONDS.toMillis(30);
+  private long includeLostAgentsInLastMillis = TimeUnit.SECONDS.toMillis(30);
 
   private boolean checkLostTasks = true;
 
@@ -148,28 +148,58 @@ public class DisasterDetectionConfiguration {
     this.triggerAfterMillisOverTaskLagThreshold = triggerAfterMillisOverTaskLagThreshold;
   }
 
+  public boolean isCheckLostAgents() {
+    return checkLostAgents;
+  }
+
+  public void setCheckLostAgents(boolean checkLostAgents) {
+    this.checkLostAgents = checkLostAgents;
+  }
+
+  public double getCriticalLostAgentPortion() {
+    return criticalLostAgentPortion;
+  }
+
+  public void setCriticalLostAgentPortion(double criticalLostAgentPortion) {
+    this.criticalLostAgentPortion = criticalLostAgentPortion;
+  }
+
+  public long getIncludeLostAgentsInLastMillis() {
+    return includeLostAgentsInLastMillis;
+  }
+
+  public void setIncludeLostAgentsInLastMillis(long includeLostAgentsInLastMillis) {
+    this.includeLostAgentsInLastMillis = includeLostAgentsInLastMillis;
+  }
+
+  @Deprecated
   public boolean isCheckLostSlaves() {
-    return checkLostSlaves;
+    return checkLostAgents;
   }
 
-  public void setCheckLostSlaves(boolean checkLostSlaves) {
-    this.checkLostSlaves = checkLostSlaves;
+  @Deprecated
+  public void setCheckLostSlaves(boolean checkLostAgents) {
+    this.checkLostAgents = checkLostAgents;
   }
 
+  @Deprecated
   public double getCriticalLostSlavePortion() {
-    return criticalLostSlavePortion;
+    return criticalLostAgentPortion;
   }
 
-  public void setCriticalLostSlavePortion(double criticalLostSlavePortion) {
-    this.criticalLostSlavePortion = criticalLostSlavePortion;
+  @Deprecated
+  public void setCriticalLostSlavePortion(double criticalLostAgentPortion) {
+    this.criticalLostAgentPortion = criticalLostAgentPortion;
   }
 
+  @Deprecated
   public long getIncludeLostSlavesInLastMillis() {
-    return includeLostSlavesInLastMillis;
+    return includeLostAgentsInLastMillis;
   }
 
-  public void setIncludeLostSlavesInLastMillis(long includeLostSlavesInLastMillis) {
-    this.includeLostSlavesInLastMillis = includeLostSlavesInLastMillis;
+  @Deprecated
+  public void setIncludeLostSlavesInLastMillis(long includeLostAgentsInLastMillis) {
+    this.includeLostAgentsInLastMillis = includeLostAgentsInLastMillis;
   }
 
   public boolean isCheckLostTasks() {

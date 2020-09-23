@@ -55,7 +55,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkDeploysEverySeconds = 5;
 
-  private long checkAutoSpreadAllSlavesEverySeconds = 30;
+  private long checkAutoSpreadAllAgentsEverySeconds = 30;
 
   private long checkNewTasksEverySeconds = 5;
 
@@ -81,9 +81,9 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxConcurrentUsageCollections = 15;
 
-  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing resources for larger clusters
+  private boolean shuffleTasksForOverloadedAgents = false; // recommended 'true' when oversubscribing resources for larger clusters
 
-  private double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds = 0.82;
+  private double shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds = 0.82;
 
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
 
@@ -140,7 +140,7 @@ public class SingularityConfiguration extends Configuration {
 
   private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.empty();
 
-  private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
+  private long deleteDeadAgentsAfterHours = TimeUnit.DAYS.toHours(7);
 
   private int maxMachineHistoryEntries = 10;
 
@@ -263,7 +263,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxPendingImmediatePersists = 200;
 
-  private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+  private long reconcileAgentsEveryMinutes = TimeUnit.HOURS.toMinutes(1);
 
   private long cleanInactiveHostListEveryHours = 24;
 
@@ -345,7 +345,7 @@ public class SingularityConfiguration extends Configuration {
   private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   @NotNull
-  private Map<String, List<String>> reserveSlavesWithAttributes = Collections.emptyMap();
+  private Map<String, List<String>> reserveAgentsWithAttributes = Collections.emptyMap();
 
   @JsonProperty("graphite")
   @NotNull
@@ -384,9 +384,9 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxActiveOnDemandTasksPerRequest = 0;
 
-  private int maxDecommissioningSlaves = 2;
+  private int maxDecommissioningAgents = 2;
 
-  private boolean spreadAllSlavesEnabled = false;
+  private boolean spreadAllAgentsEnabled = false;
 
   private int maxRunNowTaskLaunchDelayDays = 30;
 
@@ -401,7 +401,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long preemptibleTaskMaxExpectedRuntimeMs = 900000; // 15 minutes
 
-  private long maxSlaveUsageMetricAgeMs = 30000;
+  private long maxAgentUsageMetricAgeMs = 30000;
 
   private boolean reCheckMetricsForLargeNewTaskCount = false;
 
@@ -409,13 +409,13 @@ public class SingularityConfiguration extends Configuration {
 
   private Optional<Integer> expectedRacksCount = Optional.empty();
 
-  private double preferredSlaveScaleFactor = 1.5;
+  private double preferredAgentScaleFactor = 1.5;
 
-  // high cpu slave, based on cpu to memory ratio
-  private double highCpuSlaveCutOff = 1.5; //TODO
+  // high cpu agent, based on cpu to memory ratio
+  private double highCpuAgentCutOff = 1.5; //TODO
 
-  // high memory slave, based on cpu to memory ratio
-  private double highMemorySlaveCutOff = 0.5; //TODO
+  // high memory agent, based on cpu to memory ratio
+  private double highMemoryAgentCutOff = 0.5; //TODO
 
   private long reconcileLaunchAfterMillis = TimeUnit.MINUTES.toMillis(3);
 
@@ -445,8 +445,8 @@ public class SingularityConfiguration extends Configuration {
     return checkDeploysEverySeconds;
   }
 
-  public long getCheckAutoSpreadAllSlavesEverySeconds() {
-    return checkAutoSpreadAllSlavesEverySeconds;
+  public long getCheckAutoSpreadAllAgentsEverySeconds() {
+    return checkAutoSpreadAllAgentsEverySeconds;
   }
 
   public long getCheckNewTasksEverySeconds() {
@@ -719,12 +719,22 @@ public class SingularityConfiguration extends Configuration {
     this.loadBalancerRemovalGracePeriodMillis = loadBalancerRemovalGracePeriodMillis;
   }
 
-  public long getDeleteDeadSlavesAfterHours() {
-    return deleteDeadSlavesAfterHours;
+  public long getDeleteDeadAgentsAfterHours() {
+    return deleteDeadAgentsAfterHours;
   }
 
-  public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
-    this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  public void setDeleteDeadAgentsAfterHours(long deleteDeadAgentsAfterHours) {
+    this.deleteDeadAgentsAfterHours = deleteDeadAgentsAfterHours;
+  }
+
+  @Deprecated
+  public long getDeleteDeadSlavesAfterHours() {
+    return deleteDeadAgentsAfterHours;
+  }
+
+  @Deprecated
+  public void setDeleteDeadSlavesAfterHours(long deleteDeadAgentsAfterHours) {
+    this.deleteDeadAgentsAfterHours = deleteDeadAgentsAfterHours;
   }
 
   public int getMaxMachineHistoryEntries() {
@@ -1333,12 +1343,22 @@ public class SingularityConfiguration extends Configuration {
     this.schedulerStartupConcurrency = schedulerStartupConcurrency;
   }
 
-  public long getReconcileSlavesEveryMinutes() {
-    return reconcileSlavesEveryMinutes;
+  public long getReconcileAgentsEveryMinutes() {
+    return reconcileAgentsEveryMinutes;
   }
 
-  public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
-    this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
+  public void setReconcileAgentsEveryMinutes(long reconcileAgentsEveryMinutes) {
+    this.reconcileAgentsEveryMinutes = reconcileAgentsEveryMinutes;
+  }
+
+  @Deprecated
+  public long getReconcileSlavesEveryMinutes() {
+    return reconcileAgentsEveryMinutes;
+  }
+
+  @Deprecated
+  public void setReconcileSlavesEveryMinutes(long reconcileAgentsEveryMinutes) {
+    this.reconcileAgentsEveryMinutes = reconcileAgentsEveryMinutes;
   }
 
   public long getCleanInactiveHostListEveryHours() {
@@ -1426,14 +1446,26 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
-  public Map<String, List<String>> getReserveSlavesWithAttributes() {
-    return reserveSlavesWithAttributes;
+  public Map<String, List<String>> getReserveAgentsWithAttributes() {
+    return reserveAgentsWithAttributes;
   }
 
-  public void setReserveSlavesWithAttributes(
-    Map<String, List<String>> reserveSlavesWithAttributes
+  public void setReserveAgentsWithAttributes(
+    Map<String, List<String>> reserveAgentsWithAttributes
   ) {
-    this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
+    this.reserveAgentsWithAttributes = reserveAgentsWithAttributes;
+  }
+
+  @Deprecated
+  public Map<String, List<String>> getReserveSlavesWithAttributes() {
+    return reserveAgentsWithAttributes;
+  }
+
+  @Deprecated
+  public void setReserveSlavesWithAttributes(
+    Map<String, List<String>> reserveAgentsWithAttributes
+  ) {
+    this.reserveAgentsWithAttributes = reserveAgentsWithAttributes;
   }
 
   public SingularityTaskMetadataConfiguration getTaskMetadataConfiguration() {
@@ -1618,25 +1650,50 @@ public class SingularityConfiguration extends Configuration {
     this.maxTasksToShufflePerHost = maxTasksToShufflePerHost;
   }
 
+  public boolean isShuffleTasksForOverloadedAgents() {
+    return shuffleTasksForOverloadedAgents;
+  }
+
+  public void setShuffleTasksForOverloadedAgents(
+    boolean shuffleTasksForOverloadedAgents
+  ) {
+    this.shuffleTasksForOverloadedAgents = shuffleTasksForOverloadedAgents;
+  }
+
+  public double getShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds() {
+    return shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds;
+  }
+
+  public void setShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds(
+    double shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds
+  ) {
+    this.shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds =
+      shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds;
+  }
+
+  @Deprecated
   public boolean isShuffleTasksForOverloadedSlaves() {
-    return shuffleTasksForOverloadedSlaves;
+    return shuffleTasksForOverloadedAgents;
   }
 
+  @Deprecated
   public void setShuffleTasksForOverloadedSlaves(
-    boolean shuffleTasksForOverloadedSlaves
+    boolean shuffleTasksForOverloadedAgents
   ) {
-    this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
+    this.shuffleTasksForOverloadedAgents = shuffleTasksForOverloadedAgents;
   }
 
+  @Deprecated
   public double getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds() {
-    return shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
+    return shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds;
   }
 
+  @Deprecated
   public void setShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds(
-    double shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds
+    double shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds
   ) {
-    this.shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds =
-      shuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds;
+    this.shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds =
+      shuffleTasksWhenAgentMemoryUtilizationPercentageExceeds;
   }
 
   public int getMaxTasksToShuffleTotal() {
@@ -1713,26 +1770,53 @@ public class SingularityConfiguration extends Configuration {
     this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
   }
 
-  public int getMaxDecommissioningSlaves() {
-    return maxDecommissioningSlaves;
+  public int getMaxDecommissioningAgents() {
+    return maxDecommissioningAgents;
   }
 
-  public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
-    this.maxDecommissioningSlaves = maxDecommissioningSlaves;
+  public void setMaxDecommissioningAgents(int maxDecommissioningAgents) {
+    this.maxDecommissioningAgents = maxDecommissioningAgents;
   }
 
-  public boolean isSpreadAllSlavesEnabled() {
-    return spreadAllSlavesEnabled;
+  public boolean isSpreadAllAgentsEnabled() {
+    return spreadAllAgentsEnabled;
   }
 
-  public void setSpreadAllSlavesEnabled(boolean spreadAllSlavesEnabled) {
-    this.spreadAllSlavesEnabled = spreadAllSlavesEnabled;
+  public void setSpreadAllAgentsEnabled(boolean spreadAllAgentsEnabled) {
+    this.spreadAllAgentsEnabled = spreadAllAgentsEnabled;
   }
 
-  public void setCheckAutoSpreadAllSlavesEverySeconds(
-    long checkAutoSpreadAllSlavesEverySeconds
+  public void setCheckAutoSpreadAllAgentsEverySeconds(
+    long checkAutoSpreadAllAgentsEverySeconds
   ) {
-    this.checkAutoSpreadAllSlavesEverySeconds = checkAutoSpreadAllSlavesEverySeconds;
+    this.checkAutoSpreadAllAgentsEverySeconds = checkAutoSpreadAllAgentsEverySeconds;
+  }
+
+  @Deprecated
+  public int getMaxDecommissioningSlaves() {
+    return maxDecommissioningAgents;
+  }
+
+  @Deprecated
+  public void setMaxDecommissioningSlaves(int maxDecommissioningAgents) {
+    this.maxDecommissioningAgents = maxDecommissioningAgents;
+  }
+
+  @Deprecated
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllAgentsEnabled;
+  }
+
+  @Deprecated
+  public void setSpreadAllSlavesEnabled(boolean spreadAllAgentsEnabled) {
+    this.spreadAllAgentsEnabled = spreadAllAgentsEnabled;
+  }
+
+  @Deprecated
+  public void setCheckAutoSpreadAllSlavesEverySeconds(
+    long checkAutoSpreadAllAgentsEverySeconds
+  ) {
+    this.checkAutoSpreadAllAgentsEverySeconds = checkAutoSpreadAllAgentsEverySeconds;
   }
 
   public int getMaxRunNowTaskLaunchDelayDays() {
@@ -1798,12 +1882,22 @@ public class SingularityConfiguration extends Configuration {
     this.preemptibleTaskMaxExpectedRuntimeMs = preemptibleTaskMaxExpectedRuntimeMs;
   }
 
-  public long getMaxSlaveUsageMetricAgeMs() {
-    return maxSlaveUsageMetricAgeMs;
+  public long getMaxAgentUsageMetricAgeMs() {
+    return maxAgentUsageMetricAgeMs;
   }
 
-  public void setMaxSlaveUsageMetricAgeMs(long maxSlaveUsageMetricAgeMs) {
-    this.maxSlaveUsageMetricAgeMs = maxSlaveUsageMetricAgeMs;
+  public void setMaxAgentUsageMetricAgeMs(long maxAgentUsageMetricAgeMs) {
+    this.maxAgentUsageMetricAgeMs = maxAgentUsageMetricAgeMs;
+  }
+
+  @Deprecated
+  public long getMaxSlaveUsageMetricAgeMs() {
+    return maxAgentUsageMetricAgeMs;
+  }
+
+  @Deprecated
+  public void setMaxSlaveUsageMetricAgeMs(long maxAgentUsageMetricAgeMs) {
+    this.maxAgentUsageMetricAgeMs = maxAgentUsageMetricAgeMs;
   }
 
   public boolean isReCheckMetricsForLargeNewTaskCount() {
@@ -1832,28 +1926,53 @@ public class SingularityConfiguration extends Configuration {
     this.sqlFallBackToBytesFields = sqlFallBackToBytesFields;
   }
 
-  public double getPreferredSlaveScaleFactor() {
-    return preferredSlaveScaleFactor;
+  public double getPreferredAgentScaleFactor() {
+    return preferredAgentScaleFactor;
   }
 
-  public void setPreferredSlaveScaleFactor(double preferredSlaveScaleFactor) {
-    this.preferredSlaveScaleFactor = preferredSlaveScaleFactor;
+  public void setPreferredAgentScaleFactor(double preferredAgentScaleFactor) {
+    this.preferredAgentScaleFactor = preferredAgentScaleFactor;
   }
 
+  public double getHighCpuAgentCutOff() {
+    return highCpuAgentCutOff;
+  }
+
+  public void setHighCpuAgentCutOff(double highCpuAgentCutOff) {
+    this.highCpuAgentCutOff = highCpuAgentCutOff;
+  }
+
+  public double getHighMemoryAgentCutOff() {
+    return highMemoryAgentCutOff;
+  }
+
+  public void setHighMemoryAgentCutOff(double highMemoryAgentCutOff) {
+    this.highMemoryAgentCutOff = highMemoryAgentCutOff;
+  }
+
+  @Deprecated
+  public void setPreferredSlaveScaleFactor(double preferredAgentScaleFactor) {
+    this.preferredAgentScaleFactor = preferredAgentScaleFactor;
+  }
+
+  @Deprecated
   public double getHighCpuSlaveCutOff() {
-    return highCpuSlaveCutOff;
+    return highCpuAgentCutOff;
   }
 
-  public void setHighCpuSlaveCutOff(double highCpuSlaveCutOff) {
-    this.highCpuSlaveCutOff = highCpuSlaveCutOff;
+  @Deprecated
+  public void setHighCpuSlaveutOff(double highCpuAgentCutOff) {
+    this.highCpuAgentCutOff = highCpuAgentCutOff;
   }
 
+  @Deprecated
   public double getHighMemorySlaveCutOff() {
-    return highMemorySlaveCutOff;
+    return highMemoryAgentCutOff;
   }
 
-  public void setHighMemorySlaveCutOff(double highMemorySlaveCutOff) {
-    this.highMemorySlaveCutOff = highMemorySlaveCutOff;
+  @Deprecated
+  public void setHighMemorySlaveCutOff(double highMemoryAgentCutOff) {
+    this.highMemoryAgentCutOff = highMemoryAgentCutOff;
   }
 
   public Optional<Integer> getExpectedRacksCount() {

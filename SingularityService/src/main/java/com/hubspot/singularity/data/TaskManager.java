@@ -548,13 +548,13 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsync("getLastActiveTaskStatusesFor", paths, taskStatusTranscoder);
   }
 
-  public List<SingularityTask> getTasksOnSlave(
+  public List<SingularityTask> getTasksOnAgent(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularityAgent slave
+    SingularityAgent agent
   ) {
     final List<SingularityTask> tasks = Lists.newArrayList();
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
-      slave.getHost()
+      agent.getHost()
     );
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -562,7 +562,7 @@ public class TaskManager extends CuratorAsyncManager {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
         if (
           maybeTask.isPresent() &&
-          slave.getId().equals(maybeTask.get().getAgentId().getValue())
+          agent.getId().equals(maybeTask.get().getAgentId().getValue())
         ) {
           tasks.add(maybeTask.get());
         }
@@ -572,12 +572,12 @@ public class TaskManager extends CuratorAsyncManager {
     return tasks;
   }
 
-  public List<SingularityTaskId> getTaskIdsOnSlave(
+  public List<SingularityTaskId> getTaskIdsOnAgent(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularityAgent slave
+    SingularityAgent agent
   ) {
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
-      slave.getHost()
+      agent.getHost()
     );
 
     return activeTaskIds

@@ -56,11 +56,11 @@ public class SandboxManager {
     }
   }
 
-  public Collection<MesosFileObject> browse(String slaveHostname, String fullPath)
+  public Collection<MesosFileObject> browse(String hostname, String fullPath)
     throws AgentNotFoundException {
     try {
       Response response = asyncHttpClient
-        .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
+        .prepareGet(String.format("http://%s:5051/files/browse", hostname))
         .setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis())
         .addQueryParam("path", fullPath)
         .execute()
@@ -72,7 +72,7 @@ public class SandboxManager {
 
       if (response.getStatusCode() != 200) {
         throw new RuntimeException(
-          String.format("Got HTTP %s from Mesos slave", response.getStatusCode())
+          String.format("Got HTTP %s from Mesos agent", response.getStatusCode())
         );
       }
 
@@ -98,7 +98,7 @@ public class SandboxManager {
 
   @SuppressWarnings("deprecation")
   public Optional<MesosFileChunkObject> read(
-    String slaveHostname,
+    String hostname,
     String fullPath,
     Optional<Long> offset,
     Optional<Long> length
@@ -106,7 +106,7 @@ public class SandboxManager {
     throws AgentNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient
-        .prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
+        .prepareGet(String.format("http://%s:5051/files/read", hostname))
         .addQueryParam("path", fullPath);
 
       builder.setRequestTimeout((int) configuration.getSandboxHttpTimeoutMillis());
@@ -127,7 +127,7 @@ public class SandboxManager {
 
       if (response.getStatusCode() != 200) {
         throw new RuntimeException(
-          String.format("Got HTTP %s from Mesos slave", response.getStatusCode())
+          String.format("Got HTTP %s from Mesos agent", response.getStatusCode())
         );
       }
 

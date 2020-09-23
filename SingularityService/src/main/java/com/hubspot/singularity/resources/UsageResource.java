@@ -48,12 +48,22 @@ public class UsageResource {
 
   @GET
   @Path("/slaves")
-  @Operation(summary = "Retrieve a list of slave resource usage models with slave ids")
-  public Collection<SingularityAgentUsageWithId> getSlavesWithUsage(
+  @Operation(summary = "Retrieve a list of agent resource usage models with agent ids")
+  @Deprecated
+  public Collection<SingularityAgentUsageWithId> getAgentsWithUsageDeprecated(
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return getAgentsWithUsage(user);
+  }
+
+  @GET
+  @Path("/agents")
+  @Operation(summary = "Retrieve a list of agent resource usage models with agent ids")
+  public Collection<SingularityAgentUsageWithId> getAgentsWithUsage(
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     authorizationHelper.checkAdminAuthorization(user);
-    return usageManager.getAllCurrentSlaveUsage().values();
+    return usageManager.getAllCurrentAgentUsage().values();
   }
 
   @GET

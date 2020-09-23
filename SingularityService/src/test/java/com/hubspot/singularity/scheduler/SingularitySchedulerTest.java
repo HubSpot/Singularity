@@ -812,7 +812,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(
       StateChangeResult.SUCCESS,
-      slaveManager.changeState(
+      agentManager.changeState(
         "slave1",
         MachineState.STARTING_DECOMMISSION,
         Optional.<String>empty(),
@@ -1057,7 +1057,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(1, taskManager.getNumActiveTasks());
 
-    slaveResource.decommissionSlave(
+    agentResource.decommissionAgent(
       singularityUser,
       taskManager.getActiveTasks().get(0).getAgentId().getValue(),
       null
@@ -2770,7 +2770,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    slaveManager.changeState(
+    agentManager.changeState(
       "slave1",
       MachineState.STARTING_DECOMMISSION,
       Optional.<String>empty(),

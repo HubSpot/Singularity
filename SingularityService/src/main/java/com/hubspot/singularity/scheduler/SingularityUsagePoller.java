@@ -22,12 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityUsagePoller.class);
-
   private final SingularityConfiguration configuration;
   private final UsageManager usageManager;
   private final SingularityUsageHelper usageHelper;
@@ -83,12 +79,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     usageHelper
       .getAgentsToTrackUsageFor()
       .forEach(
-        slave -> {
+        agent -> {
           usageFutures.add(
             CompletableFuture.runAsync(
               () -> {
-                usageHelper.collectSlaveUsage(
-                  slave,
+                usageHelper.collectAgentUsage(
+                  agent,
                   now,
                   utilizationPerRequestId,
                   previousUtilizations,
@@ -125,7 +121,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
     if (
-      configuration.isShuffleTasksForOverloadedSlaves() &&
+      configuration.isShuffleTasksForOverloadedAgents() &&
       !disasterManager.isDisabled(SingularityAction.TASK_SHUFFLE)
     ) {
       taskShuffler.shuffle(overLoadedHosts);

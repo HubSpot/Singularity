@@ -107,8 +107,8 @@ public class IndexView extends View {
 
     this.title = uiConfiguration.getTitle();
 
-    this.slaveHttpPort = configuration.getSlaveHttpPort();
-    this.slaveHttpsPort = configuration.getSlaveHttpsPort().orElse(null);
+    this.slaveHttpPort = configuration.getAgentHttpPort();
+    this.slaveHttpsPort = configuration.getAgentHttpsPort().orElse(null);
 
     this.defaultCpus = configuration.getDefaultCpus();
     this.defaultMemory = configuration.getDefaultMemory();
@@ -151,7 +151,7 @@ public class IndexView extends View {
       throw new RuntimeException(e);
     }
 
-    this.shortenSlaveUsageHostname = uiConfiguration.isShortenSlaveUsageHostname();
+    this.shortenSlaveUsageHostname = uiConfiguration.isShortenAgentUsageHostname();
 
     this.timestampFormat = uiConfiguration.getTimestampFormat();
 

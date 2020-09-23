@@ -3,7 +3,7 @@ package com.hubspot.singularity.mesos;
 import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularityAgentUsage;
 
-class SingularitySlaveUsageWithCalculatedScores {
+class SingularityAgentUsageWithCalculatedScores {
   private final SingularityAgentUsage slaveUsage;
   private final MachineLoadMetric systemLoadMetric;
   private final MaxProbableUsage maxProbableTaskUsage;
@@ -28,7 +28,7 @@ class SingularitySlaveUsageWithCalculatedScores {
 
   private final long timestamp;
 
-  SingularitySlaveUsageWithCalculatedScores(
+  SingularityAgentUsageWithCalculatedScores(
     SingularityAgentUsage slaveUsage,
     MachineLoadMetric systemLoadMetric,
     MaxProbableUsage maxProbableTaskUsage,
@@ -146,7 +146,7 @@ class SingularitySlaveUsageWithCalculatedScores {
     return missingUsageData;
   }
 
-  SingularityAgentUsage getSlaveUsage() {
+  SingularityAgentUsage getAgentUsage() {
     return slaveUsage;
   }
 
@@ -241,7 +241,7 @@ class SingularitySlaveUsageWithCalculatedScores {
   @Override
   public String toString() {
     return (
-      "SingularitySlaveUsageWithCalculatedScores{" +
+      "SingularityAgentUsageWithCalculatedScores{" +
       "slaveUsage=" +
       slaveUsage +
       ", missingUsageData=" +

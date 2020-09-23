@@ -49,11 +49,11 @@ import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SandboxManager.AgentNotFoundException;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.helpers.RequestHelper;
@@ -118,7 +118,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final MesosConfiguration configuration;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityAuthorizer authorizationHelper;
@@ -133,7 +133,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public TaskResource(
     TaskRequestManager taskRequestManager,
     TaskManager taskManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     MesosClient mesosClient,
     SingularityTaskMetadataConfiguration taskMetadataConfiguration,
     SingularityAuthorizer authorizationHelper,
@@ -151,7 +151,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.mesosClient = mesosClient;
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
@@ -403,36 +403,21 @@ public class TaskResource extends AbstractLeaderAwareResource {
       )
     }
   )
-  public List<SingularityTask> getTasksForSlave(
+  @Deprecated
+  public List<SingularityTask> getTasksForAgentDeprecated(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(description = "The mesos slave id to retrieve tasks for") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(description = "The mesos agent id to retrieve tasks for") @PathParam(
+      "agentId"
+    ) String agentId,
     @Parameter(
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularityAgent> maybeSlave = slaveManager.getObject(slaveId);
-
-    checkNotFound(
-      maybeSlave.isPresent(),
-      "Couldn't find a slave in any state with id %s",
-      slaveId
-    );
-
-    return authorizationHelper.filterByAuthorizedRequests(
-      user,
-      taskManager.getTasksOnSlave(
-        taskManager.getActiveTaskIds(useWebCache(useWebCache)),
-        maybeSlave.get()
-      ),
-      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
-      SingularityAuthorizationScope.READ
-    );
+    return getTasksForAgent(user, agentId, useWebCache);
   }
 
   @GET
-  @Path("/active/slave/{slaveId}/ids")
+  @Path("/active/agent/{agentId}")
   @Operation(
     summary = "Retrieve list of active tasks on a specific slave",
     responses = {
@@ -442,28 +427,91 @@ public class TaskResource extends AbstractLeaderAwareResource {
       )
     }
   )
-  public List<SingularityTaskId> getTaskIdsForSlave(
+  public List<SingularityTask> getTasksForAgent(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(description = "The mesos slave id to retrieve task ids for") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(description = "The mesos agent id to retrieve tasks for") @PathParam(
+      "agentId"
+    ) String agentId,
     @Parameter(
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularityAgent> maybeSlave = slaveManager.getObject(slaveId);
+    Optional<SingularityAgent> maybeSlave = agentManager.getObject(agentId);
 
     checkNotFound(
       maybeSlave.isPresent(),
       "Couldn't find a slave in any state with id %s",
-      slaveId
+      agentId
     );
 
     return authorizationHelper.filterByAuthorizedRequests(
       user,
-      taskManager.getTaskIdsOnSlave(
+      taskManager.getTasksOnAgent(
         taskManager.getActiveTaskIds(useWebCache(useWebCache)),
         maybeSlave.get()
+      ),
+      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
+      SingularityAuthorizationScope.READ
+    );
+  }
+
+  @GET
+  @Path("/active/slave/{agentId}/ids")
+  @Operation(
+    summary = "Retrieve list of active tasks on a specific slave",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "A slave with the specified id was not found"
+      )
+    }
+  )
+  @Deprecated
+  public List<SingularityTaskId> getTaskIdsForAgentDeprecated(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(description = "The mesos agent id to retrieve task ids for") @PathParam(
+      "agentId"
+    ) String agentId,
+    @Parameter(
+      description = "Use the cached version of this data to limit expensive api calls"
+    ) @QueryParam("useWebCache") Boolean useWebCache
+  ) {
+    return getTaskIdsForAgent(user, agentId, useWebCache);
+  }
+
+  @GET
+  @Path("/active/agent/{agentId}/ids")
+  @Operation(
+    summary = "Retrieve list of active tasks on a specific agent",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "A agent with the specified id was not found"
+      )
+    }
+  )
+  public List<SingularityTaskId> getTaskIdsForAgent(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(description = "The mesos agent id to retrieve task ids for") @PathParam(
+      "agentId"
+    ) String agentId,
+    @Parameter(
+      description = "Use the cached version of this data to limit expensive api calls"
+    ) @QueryParam("useWebCache") Boolean useWebCache
+  ) {
+    Optional<SingularityAgent> maybeAgent = agentManager.getObject(agentId);
+
+    checkNotFound(
+      maybeAgent.isPresent(),
+      "Couldn't find a slave in any state with id %s",
+      agentId
+    );
+
+    return authorizationHelper.filterByAuthorizedRequests(
+      user,
+      taskManager.getTaskIdsOnAgent(
+        taskManager.getActiveTaskIds(useWebCache(useWebCache)),
+        maybeAgent.get()
       ),
       SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
@@ -1126,10 +1174,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   private Response getFile(String slaveHostname, String fileFullPath, boolean download) {
-    String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
-    int httpPort = configuration.getSlaveHttpsPort().isPresent()
-      ? configuration.getSlaveHttpsPort().get()
-      : configuration.getSlaveHttpPort();
+    String httpPrefix = configuration.getAgentHttpsPort().isPresent() ? "https" : "http";
+    int httpPort = configuration.getAgentHttpsPort().isPresent()
+      ? configuration.getAgentHttpsPort().get()
+      : configuration.getAgentHttpPort();
 
     String url = String.format(
       "%s://%s:%s/files/download",

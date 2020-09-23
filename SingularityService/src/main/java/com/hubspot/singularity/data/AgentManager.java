@@ -18,19 +18,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
-  private static final Logger LOG = LoggerFactory.getLogger(SlaveManager.class);
+public class AgentManager extends AbstractMachineManager<SingularityAgent> {
+  private static final Logger LOG = LoggerFactory.getLogger(AgentManager.class);
 
-  private static final String SLAVE_ROOT = "/slaves";
+  private static final String AGENT_ROOT = "/slaves";
   private final SingularityLeaderCache leaderCache;
   private final UsageManager usageManager;
 
   @Inject
-  public SlaveManager(
+  public AgentManager(
     CuratorFramework curator,
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry,
-    Transcoder<SingularityAgent> slaveTranscoder,
+    Transcoder<SingularityAgent> agentTranscoder,
     Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
     Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
     SingularityLeaderCache leaderCache,
@@ -40,7 +40,7 @@ public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
       curator,
       configuration,
       metricRegistry,
-      slaveTranscoder,
+      agentTranscoder,
       stateHistoryTranscoder,
       expiringMachineStateTranscoder
     );
@@ -50,17 +50,17 @@ public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
 
   @Override
   protected String getRoot() {
-    return SLAVE_ROOT;
+    return AGENT_ROOT;
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheSlaves(getObjectsNoCache(getRoot()));
+    leaderCache.cacheAgents(getObjectsNoCache(getRoot()));
   }
 
   @Override
-  public Optional<SingularityAgent> getObjectFromLeaderCache(String slaveId) {
+  public Optional<SingularityAgent> getObjectFromLeaderCache(String agentId) {
     if (leaderCache.active()) {
-      return leaderCache.getSlave(slaveId);
+      return leaderCache.getAgent(agentId);
     }
 
     return Optional.empty(); // fallback to zk
@@ -69,7 +69,7 @@ public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
   @Override
   public List<SingularityAgent> getObjectsFromLeaderCache() {
     if (leaderCache.active()) {
-      return leaderCache.getSlaves();
+      return leaderCache.getAgents();
     }
     return null; // fallback to zk
   }
@@ -77,18 +77,18 @@ public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
   @Override
   public void saveObjectToLeaderCache(SingularityAgent singularityAgent) {
     if (leaderCache.active()) {
-      leaderCache.putSlave(singularityAgent);
+      leaderCache.putAgent(singularityAgent);
     } else {
-      LOG.info("Asked to save slaves to leader cache when not active");
+      LOG.info("Asked to save agents to leader cache when not active");
     }
   }
 
   @Override
-  public void deleteFromLeaderCache(String slaveId) {
+  public void deleteFromLeaderCache(String agentId) {
     if (leaderCache.active()) {
-      leaderCache.removeSlave(slaveId);
+      leaderCache.removeAgent(agentId);
     } else {
-      LOG.info("Asked to remove slave from leader cache when not active");
+      LOG.info("Asked to remove agent from leader cache when not active");
     }
   }
 
@@ -100,7 +100,7 @@ public class SlaveManager extends AbstractMachineManager<SingularityAgent> {
     Optional<String> user
   ) {
     if (newState == MachineState.DEAD) {
-      usageManager.deleteSlaveUsage(singularityAgent.getId());
+      usageManager.deleteAgentUsage(singularityAgent.getId());
     }
     return super.changeState(singularityAgent, newState, message, user);
   }
