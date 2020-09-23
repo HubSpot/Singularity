@@ -17,6 +17,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -27,7 +28,6 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -49,11 +49,11 @@ import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
+import com.hubspot.singularity.data.SandboxManager.AgentNotFoundException;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.helpers.RequestHelper;
@@ -118,7 +118,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final MesosConfiguration configuration;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityAuthorizer authorizationHelper;
@@ -133,7 +133,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public TaskResource(
     TaskRequestManager taskRequestManager,
     TaskManager taskManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     MesosClient mesosClient,
     SingularityTaskMetadataConfiguration taskMetadataConfiguration,
     SingularityAuthorizer authorizationHelper,
@@ -151,7 +151,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.mesosClient = mesosClient;
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
@@ -189,7 +189,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
         authorizationHelper.filterByAuthorizedRequests(
           user,
           taskManager.getPendingTasks(useWebCache(useWebCache)),
-          SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID,
+          SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID::apply,
           SingularityAuthorizationScope.READ
         )
       )
@@ -213,7 +213,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       .filterByAuthorizedRequests(
         user,
         taskManager.getPendingTaskIds(useWebCache(useWebCache)),
-        SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID,
+        SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID::apply,
         SingularityAuthorizationScope.READ
       )
       .stream()
@@ -403,36 +403,21 @@ public class TaskResource extends AbstractLeaderAwareResource {
       )
     }
   )
-  public List<SingularityTask> getTasksForSlave(
+  @Deprecated
+  public List<SingularityTask> getTasksForAgentDeprecated(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(description = "The mesos slave id to retrieve tasks for") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(description = "The mesos agent id to retrieve tasks for") @PathParam(
+      "agentId"
+    ) String agentId,
     @Parameter(
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
-
-    checkNotFound(
-      maybeSlave.isPresent(),
-      "Couldn't find a slave in any state with id %s",
-      slaveId
-    );
-
-    return authorizationHelper.filterByAuthorizedRequests(
-      user,
-      taskManager.getTasksOnSlave(
-        taskManager.getActiveTaskIds(useWebCache(useWebCache)),
-        maybeSlave.get()
-      ),
-      SingularityTransformHelpers.TASK_TO_REQUEST_ID,
-      SingularityAuthorizationScope.READ
-    );
+    return getTasksForAgent(user, agentId, useWebCache);
   }
 
   @GET
-  @Path("/active/slave/{slaveId}/ids")
+  @Path("/active/agent/{agentId}")
   @Operation(
     summary = "Retrieve list of active tasks on a specific slave",
     responses = {
@@ -442,30 +427,93 @@ public class TaskResource extends AbstractLeaderAwareResource {
       )
     }
   )
-  public List<SingularityTaskId> getTaskIdsForSlave(
+  public List<SingularityTask> getTasksForAgent(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(description = "The mesos slave id to retrieve task ids for") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(description = "The mesos agent id to retrieve tasks for") @PathParam(
+      "agentId"
+    ) String agentId,
     @Parameter(
       description = "Use the cached version of this data to limit expensive api calls"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
+    Optional<SingularityAgent> maybeSlave = agentManager.getObject(agentId);
 
     checkNotFound(
       maybeSlave.isPresent(),
       "Couldn't find a slave in any state with id %s",
-      slaveId
+      agentId
     );
 
     return authorizationHelper.filterByAuthorizedRequests(
       user,
-      taskManager.getTaskIdsOnSlave(
+      taskManager.getTasksOnAgent(
         taskManager.getActiveTaskIds(useWebCache(useWebCache)),
         maybeSlave.get()
       ),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
+      SingularityAuthorizationScope.READ
+    );
+  }
+
+  @GET
+  @Path("/active/slave/{agentId}/ids")
+  @Operation(
+    summary = "Retrieve list of active tasks on a specific slave",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "A slave with the specified id was not found"
+      )
+    }
+  )
+  @Deprecated
+  public List<SingularityTaskId> getTaskIdsForAgentDeprecated(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(description = "The mesos agent id to retrieve task ids for") @PathParam(
+      "agentId"
+    ) String agentId,
+    @Parameter(
+      description = "Use the cached version of this data to limit expensive api calls"
+    ) @QueryParam("useWebCache") Boolean useWebCache
+  ) {
+    return getTaskIdsForAgent(user, agentId, useWebCache);
+  }
+
+  @GET
+  @Path("/active/agent/{agentId}/ids")
+  @Operation(
+    summary = "Retrieve list of active tasks on a specific agent",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "A agent with the specified id was not found"
+      )
+    }
+  )
+  public List<SingularityTaskId> getTaskIdsForAgent(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(description = "The mesos agent id to retrieve task ids for") @PathParam(
+      "agentId"
+    ) String agentId,
+    @Parameter(
+      description = "Use the cached version of this data to limit expensive api calls"
+    ) @QueryParam("useWebCache") Boolean useWebCache
+  ) {
+    Optional<SingularityAgent> maybeAgent = agentManager.getObject(agentId);
+
+    checkNotFound(
+      maybeAgent.isPresent(),
+      "Couldn't find a slave in any state with id %s",
+      agentId
+    );
+
+    return authorizationHelper.filterByAuthorizedRequests(
+      user,
+      taskManager.getTaskIdsOnAgent(
+        taskManager.getActiveTaskIds(useWebCache(useWebCache)),
+        maybeAgent.get()
+      ),
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -483,7 +531,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTasks(useWebCache(useWebCache)),
-      SingularityTransformHelpers.TASK_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -501,7 +549,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTaskIds(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -519,7 +567,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     List<SingularityTaskId> activeTaskIds = authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getActiveTaskIds(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
     return taskManager.getTaskHistoryUpdates(activeTaskIds);
@@ -548,7 +596,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getCleanupTasks(useWebCache(useWebCache)),
-      SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -565,7 +613,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getKilledTaskIdRecords(),
-      SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID,
+      SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -580,7 +628,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       taskManager.getLBCleanupTasks(),
-      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID,
+      SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -925,7 +973,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     );
     validator.checkActionEnabled(SingularityAction.ADD_METADATA);
 
-    WebExceptions.checkBadRequest(
+    checkBadRequest(
       taskMetadataRequest.getTitle().length() <
       taskMetadataConfiguration.getMaxMetadataTitleLength(),
       "Task metadata title too long, must be less than %s bytes",
@@ -935,7 +983,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     int messageLength = taskMetadataRequest.getMessage().isPresent()
       ? taskMetadataRequest.getMessage().get().length()
       : 0;
-    WebExceptions.checkBadRequest(
+    checkBadRequest(
       !taskMetadataRequest.getMessage().isPresent() ||
       messageLength < taskMetadataConfiguration.getMaxMetadataMessageLength(),
       "Task metadata message too long, must be less than %s bytes",
@@ -943,7 +991,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     );
 
     if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
-      WebExceptions.checkBadRequest(
+      checkBadRequest(
         taskMetadataConfiguration
           .getAllowedMetadataTypes()
           .get()
@@ -954,7 +1002,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       );
     }
 
-    WebExceptions.checkNotFound(
+    checkNotFound(
       taskManager.taskExistsInZk(taskIdObj),
       "Task %s not found in ZooKeeper (can not save metadata to tasks which have been persisted",
       taskIdObj
@@ -1016,7 +1064,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
     if (!taskManager.isActiveTask(taskIdObj)) {
-      throw WebExceptions.badRequest(
+      throw badRequest(
         "%s is not an active task, can't run %s on it",
         taskId,
         shellCommand.getName()
@@ -1126,10 +1174,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   private Response getFile(String slaveHostname, String fileFullPath, boolean download) {
-    String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
-    int httpPort = configuration.getSlaveHttpsPort().isPresent()
-      ? configuration.getSlaveHttpsPort().get()
-      : configuration.getSlaveHttpPort();
+    String httpPrefix = configuration.getAgentHttpsPort().isPresent() ? "https" : "http";
+    int httpPort = configuration.getAgentHttpsPort().isPresent()
+      ? configuration.getAgentHttpsPort().get()
+      : configuration.getAgentHttpPort();
 
     String url = String.format(
       "%s://%s:%s/files/download",
@@ -1163,7 +1211,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       return responseBuilder.build();
     } catch (Exception e) {
       if (e.getCause().getClass() == ConnectException.class) {
-        throw new SlaveNotFoundException(e);
+        throw new AgentNotFoundException(e);
       } else {
         throw new RuntimeException(e);
       }

@@ -54,15 +54,15 @@ import {
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import {
-  FetchSlaves,
-  FreezeSlave,
-  DecommissionSlave,
-  RemoveSlave,
-  ReactivateSlave,
-  FetchExpiringSlaveStates,
-  RemoveExpiringSlaveState,
-  FetchSlaveUsages
-} from '../../actions/api/slaves';
+  FetchAgents,
+  FreezeAgent,
+  DecommissionAgent,
+  RemoveAgent,
+  ReactivateAgent,
+  FetchExpiringAgentStates,
+  RemoveExpiringAgentState,
+  FetchAgentUsages
+} from '../../actions/api/agents';
 
 import {
   FetchSingularityStatus
@@ -103,14 +103,14 @@ const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
 const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
-const slaves = buildApiActionReducer(FetchSlaves, []);
-const freezeSlave = buildApiActionReducer(FreezeSlave, []);
-const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
-const removeSlave = buildApiActionReducer(RemoveSlave, []);
-const reactivateSlave = buildApiActionReducer(ReactivateSlave, []);
-const expiringSlaveStates = buildApiActionReducer(FetchExpiringSlaveStates, []);
-const removeExpiringSlaveState = buildApiActionReducer(RemoveExpiringSlaveState, []);
-const slaveUsages = buildApiActionReducer(FetchSlaveUsages, []);
+const agents = buildApiActionReducer(FetchAgents, []);
+const freezeAgent = buildApiActionReducer(FreezeAgent, []);
+const decommissionAgent = buildApiActionReducer(DecommissionAgent, []);
+const removeAgent = buildApiActionReducer(RemoveAgent, []);
+const reactivateAgent = buildApiActionReducer(ReactivateAgent, []);
+const expiringAgentStates = buildApiActionReducer(FetchExpiringAgentStates, []);
+const removeExpiringAgentState = buildApiActionReducer(RemoveExpiringAgentState, []);
+const agentUsages = buildApiActionReducer(FetchAgentUsages, []);
 const racks = buildApiActionReducer(FetchRacks, []);
 const freezeRack = buildApiActionReducer(FreezeRack, []);
 const decommissionRack = buildApiActionReducer(DecommissionRack, []);
@@ -162,14 +162,14 @@ export default combineReducers({
   disabledActions,
   disastersData,
   priorityFreeze,
-  slaves,
-  freezeSlave,
-  decommissionSlave,
-  removeSlave,
-  reactivateSlave,
-  expiringSlaveStates,
-  removeExpiringSlaveState,
-  slaveUsages,
+  agents,
+  freezeAgent,
+  decommissionAgent,
+  removeAgent,
+  reactivateAgent,
+  expiringAgentStates,
+  removeExpiringAgentState,
+  agentUsages,
   racks,
   freezeRack,
   decommissionRack,

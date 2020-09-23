@@ -11,11 +11,11 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
 
 @Singleton
-public class InactiveSlaveManager extends CuratorManager {
+public class InactiveAgentManager extends CuratorManager {
   private static final String ROOT_PATH = "/inactiveSlaves";
 
   @Inject
-  public InactiveSlaveManager(
+  public InactiveAgentManager(
     CuratorFramework curator,
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry
@@ -23,15 +23,15 @@ public class InactiveSlaveManager extends CuratorManager {
     super(curator, configuration, metricRegistry);
   }
 
-  public Set<String> getInactiveSlaves() {
+  public Set<String> getInactiveAgents() {
     return new HashSet<>(getChildren(ROOT_PATH));
   }
 
-  public void deactivateSlave(String host) {
+  public void deactivateAgent(String host) {
     create(pathOf(host));
   }
 
-  public void activateSlave(String host) {
+  public void activateAgent(String host) {
     delete(pathOf(host));
   }
 
@@ -43,8 +43,8 @@ public class InactiveSlaveManager extends CuratorManager {
     return String.format("%s/%s", ROOT_PATH, host);
   }
 
-  public void cleanInactiveSlavesList(long thresholdTime) {
-    for (String host : getInactiveSlaves()) {
+  public void cleanInactiveAgentsList(long thresholdTime) {
+    for (String host : getInactiveAgents()) {
       Optional<Stat> stat = checkExists(pathOf(host));
       if (stat.isPresent() && stat.get().getMtime() < thresholdTime) {
         delete(pathOf(host));

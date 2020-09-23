@@ -4,8 +4,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.data.usage.UsageManager;
@@ -18,19 +18,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
-  private static final Logger LOG = LoggerFactory.getLogger(SlaveManager.class);
+public class AgentManager extends AbstractMachineManager<SingularityAgent> {
+  private static final Logger LOG = LoggerFactory.getLogger(AgentManager.class);
 
-  private static final String SLAVE_ROOT = "/slaves";
+  private static final String AGENT_ROOT = "/slaves";
   private final SingularityLeaderCache leaderCache;
   private final UsageManager usageManager;
 
   @Inject
-  public SlaveManager(
+  public AgentManager(
     CuratorFramework curator,
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry,
-    Transcoder<SingularitySlave> slaveTranscoder,
+    Transcoder<SingularityAgent> agentTranscoder,
     Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder,
     Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder,
     SingularityLeaderCache leaderCache,
@@ -40,7 +40,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
       curator,
       configuration,
       metricRegistry,
-      slaveTranscoder,
+      agentTranscoder,
       stateHistoryTranscoder,
       expiringMachineStateTranscoder
     );
@@ -50,58 +50,58 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   @Override
   protected String getRoot() {
-    return SLAVE_ROOT;
+    return AGENT_ROOT;
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheSlaves(getObjectsNoCache(getRoot()));
+    leaderCache.cacheAgents(getObjectsNoCache(getRoot()));
   }
 
   @Override
-  public Optional<SingularitySlave> getObjectFromLeaderCache(String slaveId) {
+  public Optional<SingularityAgent> getObjectFromLeaderCache(String agentId) {
     if (leaderCache.active()) {
-      return leaderCache.getSlave(slaveId);
+      return leaderCache.getAgent(agentId);
     }
 
     return Optional.empty(); // fallback to zk
   }
 
   @Override
-  public List<SingularitySlave> getObjectsFromLeaderCache() {
+  public List<SingularityAgent> getObjectsFromLeaderCache() {
     if (leaderCache.active()) {
-      return leaderCache.getSlaves();
+      return leaderCache.getAgents();
     }
     return null; // fallback to zk
   }
 
   @Override
-  public void saveObjectToLeaderCache(SingularitySlave singularitySlave) {
+  public void saveObjectToLeaderCache(SingularityAgent singularityAgent) {
     if (leaderCache.active()) {
-      leaderCache.putSlave(singularitySlave);
+      leaderCache.putAgent(singularityAgent);
     } else {
-      LOG.info("Asked to save slaves to leader cache when not active");
+      LOG.info("Asked to save agents to leader cache when not active");
     }
   }
 
   @Override
-  public void deleteFromLeaderCache(String slaveId) {
+  public void deleteFromLeaderCache(String agentId) {
     if (leaderCache.active()) {
-      leaderCache.removeSlave(slaveId);
+      leaderCache.removeAgent(agentId);
     } else {
-      LOG.info("Asked to remove slave from leader cache when not active");
+      LOG.info("Asked to remove agent from leader cache when not active");
     }
   }
 
   @Override
   public StateChangeResult changeState(
-    SingularitySlave singularitySlave,
+    SingularityAgent singularityAgent,
     MachineState newState,
     Optional<String> message,
     Optional<String> user
   ) {
     if (newState == MachineState.DEAD) {
-      usageManager.deleteSlaveUsage(singularitySlave.getId());
+      usageManager.deleteAgentUsage(singularityAgent.getId());
     }
-    return super.changeState(singularitySlave, newState, message, user);
+    return super.changeState(singularityAgent, newState, message, user);
   }
 }

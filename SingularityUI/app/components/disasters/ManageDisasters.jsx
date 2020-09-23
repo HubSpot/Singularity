@@ -11,7 +11,7 @@ import EditPriorityFreezeButton from './EditPriorityFreezeButton';
 import ForceFailoverButton from './ForceFailoverButton';
 import Utils from '../../utils';
 
-const DISASTER_TYPES = ['EXCESSIVE_TASK_LAG', 'LOST_SLAVES', 'LOST_TASKS', 'USER_INITIATED']
+const DISASTER_TYPES = ['EXCESSIVE_TASK_LAG', 'LOST_AGENTS', 'LOST_TASKS', 'USER_INITIATED']
 
 function ManageDisasters (props) {
   var actionButtonClass;

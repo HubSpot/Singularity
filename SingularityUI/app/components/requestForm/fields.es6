@@ -27,9 +27,9 @@ export const FIELDS_BY_REQUEST_TYPE = {
       }
     },
     {id: 'requestType', type: { typeName: 'enum', enumType: Utils.enums.SingularityRequestTypes}, required: true},
-    {id: 'slavePlacement', type: 'string'},
+    {id: 'agentPlacement', type: 'string'},
     {
-      id: 'requiredSlaveAttributes',
+      id: 'requiredAgentAttributes',
       type: {
         typeName: 'map',
         mapFrom: 'string',
@@ -37,7 +37,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
       }
     },
     {
-      id: 'allowedSlaveAttributes',
+      id: 'allowedAgentAttributes',
       type: {
         typeName: 'map',
         mapFrom: 'string',

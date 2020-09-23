@@ -16,7 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 public class UIConfiguration {
 
-  public static enum RootUrlMode {
+  public enum RootUrlMode {
     UI_REDIRECT,
     INDEX_CATCHALL,
     DISABLED;
@@ -63,7 +63,7 @@ public class UIConfiguration {
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
-  private boolean shortenSlaveUsageHostname = false;
+  private boolean shortenAgentUsageHostname = false;
 
   /**
    * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
@@ -130,12 +130,22 @@ public class UIConfiguration {
     this.hideNewRequestButton = hideNewRequestButton;
   }
 
-  public boolean isShortenSlaveUsageHostname() {
-    return shortenSlaveUsageHostname;
+  public boolean isShortenAgentUsageHostname() {
+    return shortenAgentUsageHostname;
   }
 
-  public void setShortenSlaveUsageHostname(boolean shortenSlaveUsageHostname) {
-    this.shortenSlaveUsageHostname = shortenSlaveUsageHostname;
+  public void setShortenAgentUsageHostname(boolean shortenAgentUsageHostname) {
+    this.shortenAgentUsageHostname = shortenAgentUsageHostname;
+  }
+
+  @Deprecated
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenAgentUsageHostname;
+  }
+
+  @Deprecated
+  public void setShortenSlaveUsageHostname(boolean shortenAgentUsageHostname) {
+    this.shortenAgentUsageHostname = shortenAgentUsageHostname;
   }
 
   public String getTitle() {

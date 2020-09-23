@@ -5,14 +5,14 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.ning.http.client.AsyncHttpClient;
 import io.dropwizard.auth.Auth;
@@ -38,18 +38,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
-@Path(ApiPaths.SLAVE_RESOURCE_PATH)
+@Path(ApiPaths.AGENT_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Schema(title = "Manages Singularity slaves")
-@Tags({ @Tag(name = "Slaves") })
-public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
+@Schema(title = "Manages Singularity agents")
+@Tags({ @Tag(name = "Agents") })
+public class AgentResource extends AbstractMachineResource<SingularityAgent> {
 
   @Inject
-  public SlaveResource(
+  public AgentResource(
     AsyncHttpClient httpClient,
     LeaderLatch leaderLatch,
     @Singularity ObjectMapper objectMapper,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     SingularityAuthorizer authorizationHelper,
     SingularityValidator validator
   ) {
@@ -57,7 +57,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       httpClient,
       leaderLatch,
       objectMapper,
-      slaveManager,
+      agentManager,
       authorizationHelper,
       validator
     );
@@ -65,18 +65,18 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @Override
   protected String getObjectTypeString() {
-    return "Slave";
+    return "Agent";
   }
 
   @GET
   @Path("/")
   @Operation(
-    summary = "Retrieve the list of all known slaves, optionally filtering by a particular state"
+    summary = "Retrieve the list of all known agents, optionally filtering by a particular state"
   )
-  public List<SingularitySlave> getSlaves(
+  public List<SingularityAgent> getAgents(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(
-      description = "Optionally specify a particular state to filter slaves by"
+      description = "Optionally specify a particular state to filter agents by"
     ) @QueryParam("state") Optional<MachineState> filterState
   ) {
     authorizationHelper.checkReadAuthorization(user);
@@ -84,66 +84,66 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @GET
-  @Path("/slave/{slaveId}")
-  @Operation(summary = "Retrieve the history of a given slave")
-  public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(
+  @Path("/agent/{agentId}")
+  @Operation(summary = "Retrieve the history of a given agent")
+  public List<SingularityMachineStateHistoryUpdate> getAgentHistory(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Slave ID") @PathParam(
-      "slaveId"
-    ) String slaveId
+    @Parameter(required = true, description = "Agent ID") @PathParam(
+      "agentId"
+    ) String agentId
   ) {
     authorizationHelper.checkReadAuthorization(user);
-    return manager.getHistory(slaveId);
+    return manager.getHistory(agentId);
   }
 
   @GET
-  @Path("/slave/{slaveId}/details")
-  @Operation(summary = "Get information about a particular slave")
-  public Optional<SingularitySlave> getSlave(
+  @Path("/agent/{agentId}/details")
+  @Operation(summary = "Get information about a particular agent")
+  public Optional<SingularityAgent> getAgent(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Slave ID") @PathParam(
-      "slaveId"
-    ) String slaveId
+    @Parameter(required = true, description = "Agent ID") @PathParam(
+      "agentId"
+    ) String agentId
   ) {
     authorizationHelper.checkReadAuthorization(user);
-    return manager.getObject(slaveId);
+    return manager.getObject(agentId);
   }
 
   @DELETE
-  @Path("/slave/{slaveId}")
+  @Path("/agent/{agentId}")
   @Operation(
-    summary = "Remove a known slave, erasing history. This operation will cancel decomissioning of the slave"
+    summary = "Remove a known agent, erasing history. This operation will cancel decomissioning of the agent"
   )
-  public Response removeSlave(
+  public Response removeAgent(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Active SlaveId") @PathParam(
-      "slaveId"
-    ) String slaveId
+    @Parameter(required = true, description = "Active AgentId") @PathParam(
+      "agentId"
+    ) String agentId
   ) {
     return maybeProxyToLeader(
       requestContext,
       Response.class,
       null,
       () -> {
-        super.remove(slaveId, user);
+        super.remove(agentId, user);
         return Response.ok().build();
       }
     );
   }
 
   @POST
-  @Path("/slave/{slaveId}/decommission")
-  @Operation(summary = "Begin decommissioning a specific active slave")
+  @Path("/agent/{agentId}/decommission")
+  @Operation(summary = "Begin decommissioning a specific active agent")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public Response decommissionSlave(
+  public Response decommissionAgent(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Active slaveId") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(required = true, description = "Active agentId") @PathParam(
+      "agentId"
+    ) String agentId,
     @RequestBody(
-      description = "Settings related to changing the state of a slave"
+      description = "Settings related to changing the state of a agent"
     ) SingularityMachineChangeRequest changeRequest
   ) {
     return maybeProxyToLeader(
@@ -151,22 +151,22 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       Response.class,
       changeRequest,
       () -> {
-        decommissionSlave(user, slaveId, changeRequest);
+        decommissionAgent(user, agentId, changeRequest);
         return Response.ok().build();
       }
     );
   }
 
-  public void decommissionSlave(
+  public void decommissionAgent(
     SingularityUser user,
-    String slaveId,
+    String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
     super.decommission(
-      slaveId,
+      agentId,
       maybeChangeRequest,
       user,
       SingularityAction.DECOMMISSION_SLAVE
@@ -174,17 +174,17 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @POST
-  @Path("/slave/{slaveId}/freeze")
-  @Operation(summary = "Freeze tasks on a specific slave")
+  @Path("/agent/{agentId}/freeze")
+  @Operation(summary = "Freeze tasks on a specific agent")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public Response freezeSlave(
+  public Response freezeAgent(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Slave ID") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(required = true, description = "Agent ID") @PathParam(
+      "agentId"
+    ) String agentId,
     @RequestBody(
-      description = "Settings related to changing the state of a slave"
+      description = "Settings related to changing the state of a agent"
     ) SingularityMachineChangeRequest changeRequest
   ) {
     return maybeProxyToLeader(
@@ -192,37 +192,37 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       Response.class,
       changeRequest,
       () -> {
-        freezeSlave(user, slaveId, changeRequest);
+        freezeAgent(user, agentId, changeRequest);
         return Response.ok().build();
       }
     );
   }
 
-  public void freezeSlave(
+  public void freezeAgent(
     SingularityUser user,
-    String slaveId,
+    String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.freeze(slaveId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
+    super.freeze(agentId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
   }
 
   @POST
-  @Path("/slave/{slaveId}/activate")
+  @Path("/agent/{agentId}/activate")
   @Operation(
-    summary = "Activate a decomissioning slave, canceling decomission without erasing history"
+    summary = "Activate a decomissioning agent, canceling decomission without erasing history"
   )
   @Consumes({ MediaType.APPLICATION_JSON })
-  public Response activateSlave(
+  public Response activateAgent(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Active slaveId") @PathParam(
-      "slaveId"
-    ) String slaveId,
+    @Parameter(required = true, description = "Active agentId") @PathParam(
+      "agentId"
+    ) String agentId,
     @RequestBody(
-      description = "Settings related to changing the state of a slave"
+      description = "Settings related to changing the state of a agent"
     ) SingularityMachineChangeRequest changeRequest
   ) {
     return maybeProxyToLeader(
@@ -230,39 +230,39 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       Response.class,
       changeRequest,
       () -> {
-        activateSlave(user, slaveId, changeRequest);
+        activateAgent(user, agentId, changeRequest);
         return Response.ok().build();
       }
     );
   }
 
-  public void activateSlave(
+  public void activateAgent(
     SingularityUser user,
-    String slaveId,
+    String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.activate(slaveId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
+    super.activate(agentId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
   }
 
   @DELETE
-  @Path("/slave/{slaveId}/expiring")
-  @Operation(summary = "Delete any expiring machine state changes for this slave")
+  @Path("/agent/{agentId}/expiring")
+  @Operation(summary = "Delete any expiring machine state changes for this agent")
   public Response deleteExpiringStateChange(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
-    @Parameter(required = true, description = "Active slaveId") @PathParam(
-      "slaveId"
-    ) String slaveId
+    @Parameter(required = true, description = "Active agentId") @PathParam(
+      "agentId"
+    ) String agentId
   ) {
     return maybeProxyToLeader(
       requestContext,
       Response.class,
       null,
       () -> {
-        super.cancelExpiring(slaveId, user);
+        super.cancelExpiring(agentId, user);
         return Response.ok().build();
       }
     );
@@ -270,7 +270,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @GET
   @Path("/expiring")
-  @Operation(summary = "Get all expiring state changes for all slaves")
+  @Operation(summary = "Get all expiring state changes for all agents")
   public List<SingularityExpiringMachineState> getExpiringStateChanges(
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
@@ -279,7 +279,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
 
   @DELETE
   @Path("/dead")
-  public Response clearAllDeadSlaves(
+  public Response clearAllDeadAgents(
     @Context HttpServletRequest requestContext,
     @Auth SingularityUser user
   ) {

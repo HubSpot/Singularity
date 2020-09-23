@@ -13,7 +13,7 @@ function MachinesPage (props) {
       <UITable
         emptyTableMessage={state.emptyMessage}
         data={state.hostsInState}
-        keyGetter={(slave) => slave.id}
+        keyGetter={(agent) => agent.id}
         rowChunkSize={20}
         paginated={state.paginated}
       >
@@ -38,7 +38,7 @@ function MachinesPage (props) {
 
 MachinesPage.propTypes = {
   error: React.PropTypes.string,
-  header: React.PropTypes.string.isRequired, // Eg. 'Slaves', 'Racks'
+  header: React.PropTypes.string.isRequired, // Eg. 'Agents', 'Racks'
   states: React.PropTypes.arrayOf(React.PropTypes.shape({
     stateName: React.PropTypes.string.isRequired, // Eg. 'Active', 'Frozen', etc
     hostsInState: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,

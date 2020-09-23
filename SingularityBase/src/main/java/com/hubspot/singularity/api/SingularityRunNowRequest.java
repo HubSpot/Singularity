@@ -2,9 +2,11 @@ package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityS3UploaderFile;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -23,10 +25,11 @@ public class SingularityRunNowRequest {
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
-  private final Map<String, String> requiredSlaveAttributeOverrides;
-  private final Map<String, String> allowedSlaveAttributeOverrides;
+  private final Map<String, String> requiredAgentAttributeOverrides;
+  private final Map<String, String> allowedAgentAttributeOverrides;
   private final Optional<Long> runAt;
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -51,6 +54,7 @@ public class SingularityRunNowRequest {
   }
 
   @Deprecated
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityRunNowRequest(
     Optional<String> message,
     Optional<Boolean> skipHealthchecks,
@@ -75,6 +79,39 @@ public class SingularityRunNowRequest {
     );
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  public SingularityRunNowRequest(
+    Optional<String> message,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> runId,
+    Optional<List<String>> commandLineArgs,
+    Optional<Resources> resources,
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    Optional<String> runAsUserOverride,
+    Map<String, String> envOverrides,
+    Map<String, String> requiredAgentAttributeOverrides,
+    Map<String, String> allowedAgentAttributeOverrides,
+    List<SingularityMesosArtifact> extraArtifacts,
+    Optional<Long> runAt
+  ) {
+    this(
+      message,
+      skipHealthchecks,
+      runId,
+      commandLineArgs,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      null,
+      null,
+      extraArtifacts,
+      runAt,
+      requiredAgentAttributeOverrides,
+      allowedAgentAttributeOverrides
+    );
+  }
+
   @JsonCreator
   public SingularityRunNowRequest(
     @JsonProperty("message") Optional<String> message,
@@ -94,7 +131,13 @@ public class SingularityRunNowRequest {
       "allowedSlaveAttributeOverrides"
     ) Map<String, String> allowedSlaveAttributeOverrides,
     @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-    @JsonProperty("runAt") Optional<Long> runAt
+    @JsonProperty("runAt") Optional<Long> runAt,
+    @JsonProperty(
+      "requiredAgentAttributeOverrides"
+    ) Map<String, String> requiredAgentAttributeOverrides,
+    @JsonProperty(
+      "allowedAgentAttributeOverrides"
+    ) Map<String, String> allowedAgentAttributeOverrides
   ) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
@@ -116,17 +159,16 @@ public class SingularityRunNowRequest {
       this.envOverrides = Collections.emptyMap();
     }
 
-    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
-      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
-    } else {
-      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
-    }
-
-    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
-      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
-    } else {
-      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
-    }
+    this.requiredAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        requiredAgentAttributeOverrides,
+        MoreObjects.firstNonNull(requiredSlaveAttributeOverrides, Collections.emptyMap())
+      );
+    this.allowedAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        allowedAgentAttributeOverrides,
+        MoreObjects.firstNonNull(allowedSlaveAttributeOverrides, Collections.emptyMap())
+      );
 
     if (Objects.nonNull(extraArtifacts)) {
       this.extraArtifacts = extraArtifacts;
@@ -196,13 +238,25 @@ public class SingularityRunNowRequest {
   }
 
   @Schema(description = "Override the required agent attributes for launched tasks")
-  public Map<String, String> getRequiredSlaveAttributeOverrides() {
-    return requiredSlaveAttributeOverrides;
+  public Map<String, String> getRequiredAgentAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
   }
 
   @Schema(description = "Override the allowed agent attributes for launched tasks")
+  public Map<String, String> getAllowedAgentAttributeOverrides() {
+    return allowedAgentAttributeOverrides;
+  }
+
+  @Deprecated
+  @Schema(description = "Override the required agent attributes for launched tasks")
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
+  }
+
+  @Deprecated
+  @Schema(description = "Override the allowed agent attributes for launched tasks")
   public Map<String, String> getAllowedSlaveAttributeOverrides() {
-    return allowedSlaveAttributeOverrides;
+    return allowedAgentAttributeOverrides;
   }
 
   @Schema(description = "Additional artifacts to download for this run")
@@ -235,10 +289,10 @@ public class SingularityRunNowRequest {
       runAsUserOverride +
       ", envOverrides=" +
       envOverrides +
-      ", requiredSlaveAttributeOverrides=" +
-      requiredSlaveAttributeOverrides +
-      ", allowedSlaveAttributeOverrides=" +
-      allowedSlaveAttributeOverrides +
+      ", requiredAgentAttributeOverrides=" +
+      requiredAgentAttributeOverrides +
+      ", allowedAgentAttributeOverrides=" +
+      allowedAgentAttributeOverrides +
       ", extraArtifacts=" +
       extraArtifacts +
       ", runAt=" +

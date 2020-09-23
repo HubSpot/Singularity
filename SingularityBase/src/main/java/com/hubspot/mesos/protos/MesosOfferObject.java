@@ -16,7 +16,10 @@ import java.util.Objects;
 @Schema(description = "The mesos protos representation of an offer")
 public class MesosOfferObject {
   private final MesosStringValue agentId;
+
+  @Deprecated
   private final MesosStringValue slaveId;
+
   private final MesosStringValue frameworkId;
   private final String hostname;
   private final MesosStringValue id;
@@ -55,6 +58,7 @@ public class MesosOfferObject {
     return agentId;
   }
 
+  @Deprecated
   public MesosStringValue getSlaveId() {
     return slaveId;
   }

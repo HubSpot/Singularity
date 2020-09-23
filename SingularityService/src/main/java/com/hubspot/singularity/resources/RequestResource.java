@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
@@ -38,7 +39,6 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -53,10 +53,10 @@ import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
@@ -65,7 +65,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
+import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -114,10 +114,10 @@ public class RequestResource extends AbstractRequestResource {
   private final TaskManager taskManager;
   private final RebalancingHelper rebalancingHelper;
   private final RequestHelper requestHelper;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
 
   @Inject
   public RequestResource(
@@ -130,12 +130,12 @@ public class RequestResource extends AbstractRequestResource {
     SingularityAuthorizer authorizationHelper,
     RequestHelper requestHelper,
     LeaderLatch leaderLatch,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     AsyncHttpClient httpClient,
     @Singularity ObjectMapper objectMapper,
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier,
-    SingularitySlaveAndRackManager slaveAndRackManager
+    SingularityAgentAndRackManager agentAndRackManager
   ) {
     super(
       requestManager,
@@ -151,10 +151,10 @@ public class RequestResource extends AbstractRequestResource {
     this.taskManager = taskManager;
     this.rebalancingHelper = rebalancingHelper;
     this.requestHelper = requestHelper;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
   }
 
   private void submitRequest(
@@ -202,18 +202,21 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     if (
-      request.getSlavePlacement().isPresent() &&
-      request.getSlavePlacement().get() == SlavePlacement.SPREAD_ALL_SLAVES
+      request.getAgentPlacement().isPresent() &&
+      (
+        request.getAgentPlacement().get() == AgentPlacement.SPREAD_ALL_SLAVES ||
+        request.getAgentPlacement().get() == AgentPlacement.SPREAD_ALL_AGENTS
+      )
     ) {
       checkBadRequest(
-        validator.isSpreadAllSlavesEnabled(),
-        "You must enabled spread to all slaves in order to use the SPREAD_ALL_SLAVES request type"
+        validator.isSpreadAllAgentsEnabled(),
+        "You must enabled spread to all agents in order to use the SPREAD_ALL_AGENTS request type"
       );
-      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(
+      int currentActiveAgentCount = agentManager.getNumObjectsAtState(
         MachineState.ACTIVE
       );
       request =
-        request.toBuilder().setInstances(Optional.of(currentActiveSlaveCount)).build();
+        request.toBuilder().setInstances(Optional.of(currentActiveAgentCount)).build();
     }
 
     if (
@@ -274,7 +277,7 @@ public class RequestResource extends AbstractRequestResource {
             }
           );
 
-        int activeRacksWithCapacityCount = slaveAndRackManager.getActiveRacksWithCapacityCount();
+        int activeRacksWithCapacityCount = agentAndRackManager.getActiveRacksWithCapacityCount();
         if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
           if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
             rebalancingHelper.rebalanceRacks(
@@ -284,7 +287,7 @@ public class RequestResource extends AbstractRequestResource {
             );
           }
         }
-        if (request.getSlaveAttributeMinimums().isPresent()) {
+        if (request.getAgentAttributeMinimums().isPresent()) {
           Set<SingularityTaskId> cleanedTasks = rebalancingHelper.rebalanceAttributeDistribution(
             request,
             user.getEmail(),
@@ -1496,7 +1499,7 @@ public class RequestResource extends AbstractRequestResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       requestManager.getPendingRequests(),
-      SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID,
+      SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }
@@ -1511,7 +1514,7 @@ public class RequestResource extends AbstractRequestResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       requestManager.getCleanupRequests(),
-      SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID,
+      SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }

@@ -10,7 +10,17 @@ public class SingularityTaskStatusHolder {
   private final SingularityTaskId taskId;
   private final long serverTimestamp;
   private final String serverId;
-  private final Optional<String> slaveId;
+  private final Optional<String> agentId;
+
+  public SingularityTaskStatusHolder(
+    SingularityTaskId taskId,
+    Optional<MesosTaskStatusObject> taskStatus,
+    long serverTimestamp,
+    String serverId,
+    Optional<String> agentId
+  ) {
+    this(taskId, taskStatus, serverTimestamp, serverId, Optional.empty(), agentId);
+  }
 
   @JsonCreator
   public SingularityTaskStatusHolder(
@@ -18,13 +28,14 @@ public class SingularityTaskStatusHolder {
     @JsonProperty("taskStatus") Optional<MesosTaskStatusObject> taskStatus,
     @JsonProperty("serverTimestamp") long serverTimestamp,
     @JsonProperty("serverId") String serverId,
-    @JsonProperty("slaveId") Optional<String> slaveId
+    @JsonProperty("slaveId") Optional<String> slaveId,
+    @JsonProperty("agentId") Optional<String> agentId
   ) {
     this.taskId = taskId;
     this.taskStatus = taskStatus;
     this.serverTimestamp = serverTimestamp;
     this.serverId = serverId;
-    this.slaveId = slaveId;
+    this.agentId = agentId.isPresent() ? agentId : slaveId;
   }
 
   public Optional<MesosTaskStatusObject> getTaskStatus() {
@@ -43,8 +54,13 @@ public class SingularityTaskStatusHolder {
     return serverId;
   }
 
+  public Optional<String> getAgentId() {
+    return agentId;
+  }
+
+  @Deprecated
   public Optional<String> getSlaveId() {
-    return slaveId;
+    return agentId;
   }
 
   @Override
@@ -60,8 +76,8 @@ public class SingularityTaskStatusHolder {
       ", serverId='" +
       serverId +
       '\'' +
-      ", slaveId=" +
-      slaveId +
+      ", agentId=" +
+      agentId +
       '}'
     );
   }

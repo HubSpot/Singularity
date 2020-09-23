@@ -7,8 +7,8 @@ public class IndexViewConfiguration {
   private final Integer defaultMemory;
   private final Integer defaultCpus;
   private final Integer defaultDisk;
-  private final Integer slaveHttpPort;
-  private final Optional<Integer> slaveHttpsPort;
+  private final Integer agentHttpPort;
+  private final Optional<Integer> agentHttpsPort;
   private final int bounceExpirationMinutes;
   private final long healthcheckIntervalSeconds;
   private final long healthcheckTimeoutSeconds;
@@ -24,8 +24,8 @@ public class IndexViewConfiguration {
     Integer defaultMemory,
     Integer defaultCpus,
     Integer defaultDisk,
-    Integer slaveHttpPort,
-    Optional<Integer> slaveHttpsPort,
+    Integer agentHttpPort,
+    Optional<Integer> agentHttpsPort,
     int bounceExpirationMinutes,
     long healthcheckIntervalSeconds,
     long healthcheckTimeoutSeconds,
@@ -40,8 +40,8 @@ public class IndexViewConfiguration {
     this.defaultMemory = defaultMemory;
     this.defaultCpus = defaultCpus;
     this.defaultDisk = defaultDisk;
-    this.slaveHttpPort = slaveHttpPort;
-    this.slaveHttpsPort = slaveHttpsPort;
+    this.agentHttpPort = agentHttpPort;
+    this.agentHttpsPort = agentHttpsPort;
     this.bounceExpirationMinutes = bounceExpirationMinutes;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
@@ -70,12 +70,22 @@ public class IndexViewConfiguration {
     return defaultCpus;
   }
 
-  public Integer getSlaveHttpPort() {
-    return slaveHttpPort;
+  public Integer getAgentHttpPort() {
+    return agentHttpPort;
   }
 
+  public Optional<Integer> getAgentHttpsPort() {
+    return agentHttpsPort;
+  }
+
+  @Deprecated
+  public Integer getSlaveHttpPort() {
+    return agentHttpPort;
+  }
+
+  @Deprecated
   public Optional<Integer> getSlaveHttpsPort() {
-    return slaveHttpsPort;
+    return agentHttpsPort;
   }
 
   public int getBounceExpirationMinutes() {

@@ -14,14 +14,14 @@ import org.apache.mesos.v1.Protos.Attribute;
 import org.apache.mesos.v1.Protos.Offer;
 
 @Singleton
-public class SingularitySlaveAndRackHelper {
+public class SingularityAgentAndRackHelper {
   private final String rackIdAttributeKey;
   private final String defaultRackId;
 
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SingularitySlaveAndRackHelper(SingularityConfiguration configuration) {
+  public SingularityAgentAndRackHelper(SingularityConfiguration configuration) {
     this.configuration = configuration;
 
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
@@ -102,11 +102,11 @@ public class SingularitySlaveAndRackHelper {
     return textAttributes;
   }
 
-  public Map<String, String> getReservedSlaveAttributes(Offer offer) {
+  public Map<String, String> getReservedAgentAttributes(Offer offer) {
     Map<String, String> reservedAttributes = new HashMap<>();
     Map<String, String> offerTextAttributes = getTextAttributes(offer);
     for (Map.Entry<String, List<String>> entry : configuration
-      .getReserveSlavesWithAttributes()
+      .getReserveAgentsWithAttributes()
       .entrySet()) {
       for (String attr : entry.getValue()) {
         if (
@@ -165,27 +165,27 @@ public class SingularitySlaveAndRackHelper {
   ) {
     double cpuMemoryRatioForRequest = getCpuMemoryRatioForRequest(requestUtilization);
 
-    if (cpuMemoryRatioForRequest > configuration.getHighCpuSlaveCutOff()) {
+    if (cpuMemoryRatioForRequest > configuration.getHighCpuAgentCutOff()) {
       return CpuMemoryPreference.HIGH_CPU;
-    } else if (cpuMemoryRatioForRequest < configuration.getHighMemorySlaveCutOff()) {
+    } else if (cpuMemoryRatioForRequest < configuration.getHighMemoryAgentCutOff()) {
       return CpuMemoryPreference.HIGH_MEMORY;
     }
     return CpuMemoryPreference.AVERAGE;
   }
 
-  public CpuMemoryPreference getCpuMemoryPreferenceForSlave(
+  public CpuMemoryPreference getCpuMemoryPreferenceForAgent(
     SingularityOfferHolder offerHolder
   ) {
-    double cpuMemoryRatioForSlave = getCpuMemoryRatioForSlave(offerHolder);
-    if (cpuMemoryRatioForSlave > configuration.getHighCpuSlaveCutOff()) {
+    double cpuMemoryRatioForAgent = getCpuMemoryRatioForAgent(offerHolder);
+    if (cpuMemoryRatioForAgent > configuration.getHighCpuAgentCutOff()) {
       return CpuMemoryPreference.HIGH_CPU;
-    } else if (cpuMemoryRatioForSlave < configuration.getHighMemorySlaveCutOff()) {
+    } else if (cpuMemoryRatioForAgent < configuration.getHighMemoryAgentCutOff()) {
       return CpuMemoryPreference.HIGH_MEMORY;
     }
     return CpuMemoryPreference.AVERAGE;
   }
 
-  private double getCpuMemoryRatioForSlave(SingularityOfferHolder offerHolder) {
+  private double getCpuMemoryRatioForAgent(SingularityOfferHolder offerHolder) {
     double memoryGB =
       MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()) / 1024;
     double cpus = MesosUtils.getNumCpus(

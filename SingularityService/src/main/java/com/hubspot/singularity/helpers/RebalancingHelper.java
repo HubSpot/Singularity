@@ -4,14 +4,14 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
+import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,17 +29,17 @@ public class RebalancingHelper {
   private static final Logger LOG = LoggerFactory.getLogger(RebalancingHelper.class);
 
   private final TaskManager taskManager;
-  private final SlaveManager slaveManager;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final AgentManager agentManager;
+  private final SingularityAgentAndRackManager slaveAndRackManager;
 
   @Inject
   public RebalancingHelper(
     TaskManager taskManager,
-    SlaveManager slaveManager,
-    SingularitySlaveAndRackManager slaveAndRackManager
+    AgentManager agentManager,
+    SingularityAgentAndRackManager slaveAndRackManager
   ) {
     this.taskManager = taskManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.slaveAndRackManager = slaveAndRackManager;
   }
 
@@ -93,7 +93,7 @@ public class RebalancingHelper {
     Map<String, Map<String, Set<SingularityTaskId>>> attributeTaskMap = new HashMap<>();
 
     for (SingularityTaskId taskId : remainingActiveTasks) {
-      SingularitySlave slave = slaveManager
+      SingularityAgent slave = agentManager
         .getObject(
           taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()
         )
@@ -110,7 +110,7 @@ public class RebalancingHelper {
     Set<SingularityTaskId> extraTasksToClean = new HashSet<>();
 
     for (Entry<String, Map<String, Integer>> keyEntry : request
-      .getSlaveAttributeMinimums()
+      .getAgentAttributeMinimums()
       .get()
       .entrySet()) {
       for (Entry<String, Integer> valueEntry : keyEntry.getValue().entrySet()) {

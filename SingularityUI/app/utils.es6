@@ -14,7 +14,7 @@ const Utils = {
 
   NON_LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'DEPLOY_FAILED', 'DEPLOY_CANCELED', 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'INCREMENTAL_DEPLOY_FAILED', 'INCREMENTAL_DEPLOY_CANCELLED', 'PRIORITY_KILL', 'PAUSE'],
 
-  DEFAULT_SLAVES_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true, 'expiring': true},
+  DEFAULT_AGENTS_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true, 'expiring': true},
 
   OPENABLE_EXTENSIONS: ['svg', 'txt', 'jpg', 'jpeg', 'gif', 'png', 'pdf', 'html'],
 
@@ -48,8 +48,8 @@ const Utils = {
     ));
   },
 
-  humanizeSlaveHostName(longHostName, override=false) {
-    return (config.shortenSlaveUsageHostname || override ? longHostName.split('.')[0] : longHostName);
+  humanizeAgentHostName(longHostName, override=false) {
+    return (config.shortenAgentUsageHostname || override ? longHostName.split('.')[0] : longHostName);
   },
 
   timestampFromNow(millis) {
@@ -228,28 +228,28 @@ const Utils = {
     };
   },
 
-  getMaxAvailableResource(slaveInfo, statName) {
-    if (!slaveInfo.hasOwnProperty('resources')) {
+  getMaxAvailableResource(agentInfo, statName) {
+    if (!agentInfo.hasOwnProperty('resources')) {
       return 0;
     }
     switch (statName) {
       case STAT_NAMES.cpusUsedStat:
         try {
-          return parseFloat(slaveInfo.attributes.real_cpus || slaveInfo.resources.cpus);
+          return parseFloat(agentInfo.attributes.real_cpus || agentInfo.resources.cpus);
         } catch (e) {
-          throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+          throw new Error(`Could not find resource (cpus) for agent ${agentInfo.host} (${agentInfo.id})`);
         }
       case STAT_NAMES.memoryBytesUsedStat:
         try {
-          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem) * Math.pow(1024, 2);
+          return parseFloat(agentInfo.attributes.real_memory_mb || agentInfo.resources.mem) * Math.pow(1024, 2);
         } catch (e) {
-          throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+          throw new Error(`Could not find resource (memory) for agent ${agentInfo.host} (${agentInfo.id})`);
         }
       case STAT_NAMES.diskBytesUsedStat:
         try {
-          return parseFloat(slaveInfo.attributes.real_disk_mb || slaveInfo.resources.disk) * Math.pow(1024, 2);
+          return parseFloat(agentInfo.attributes.real_disk_mb || agentInfo.resources.disk) * Math.pow(1024, 2);
         } catch (e) {
-          throw new Error(`Could not find resource (disk) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+          throw new Error(`Could not find resource (disk) for agent ${agentInfo.host} (${agentInfo.id})`);
         }
       default:
         throw new Error(`${statName} is an unsupported statistic'`);
@@ -516,8 +516,8 @@ const Utils = {
     return (cleanupType === 'REBALANCE_MEMORY_USAGE' || cleanupType === 'REBALANCE_CPU_USAGE');
   },
 
-  isActiveSlave(slaveInfo) {
-    return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
+  isActiveAgent(agentInfo) {
+    return !Utils.isIn(agentInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
   glyphiconForRequestState: (state) => {

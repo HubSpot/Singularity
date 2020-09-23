@@ -22,7 +22,7 @@ public class SingularityMailDisasterDataPoint {
     this.numLateTasks = dataPoint.getNumLateTasks();
     this.avgTaskLagMillis = dataPoint.getAvgTaskLagMillis();
     this.numLostTasks = dataPoint.getNumLostTasks();
-    this.numLostSlaves = dataPoint.getNumLostSlaves();
+    this.numLostSlaves = dataPoint.getNumLostAgents();
   }
 
   public String getTime() {

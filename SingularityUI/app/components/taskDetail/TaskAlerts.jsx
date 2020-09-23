@@ -56,7 +56,7 @@ const TaskAlerts = (props) => {
     }
   }
 
-  // Was this task killed by a decomissioning slave?
+  // Was this task killed by a decomissioning agent?
   if (!props.task.isStillRunning) {
     const decomMessage = _.find(props.task.taskUpdates, (update) => {
       return update.statusMessage && update.statusMessage.indexOf('DECOMISSIONING') !== -1 && update.taskState === 'TASK_CLEANING';
@@ -66,7 +66,7 @@ const TaskAlerts = (props) => {
     });
     if (decomMessage && killedMessage) {
       alerts.push(
-        <Alert key="decom" bsStyle="warning">This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
+        <Alert key="decom" bsStyle="warning">This task was replaced then killed by Singularity due to a agent decommissioning.</Alert>
       );
     }
   }

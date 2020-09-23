@@ -22,12 +22,12 @@ public class SingularityZkMigrationsModule implements Module {
     );
     dataMigrations.addBinding().to(LastTaskStatusMigration.class);
     dataMigrations.addBinding().to(SingularityPendingTaskIdMigration.class);
-    dataMigrations.addBinding().to(SlaveAndRackMigration.class);
+    dataMigrations.addBinding().to(AgentAndRackMigration.class);
     dataMigrations.addBinding().to(SingularityCmdLineArgsMigration.class);
     dataMigrations
       .addBinding()
       .to(TaskManagerRequiredParentsForTransactionsMigration.class);
-    dataMigrations.addBinding().to(SlaveAndRackMigration2.class);
+    dataMigrations.addBinding().to(AgentAndRackMigration2.class);
     dataMigrations.addBinding().to(ScheduleMigration.class);
     dataMigrations.addBinding().to(SingularityRequestTypeMigration.class);
     dataMigrations.addBinding().to(PendingRequestDataMigration.class);

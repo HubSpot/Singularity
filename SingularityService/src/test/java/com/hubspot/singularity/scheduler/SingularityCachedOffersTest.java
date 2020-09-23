@@ -3,10 +3,10 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.mesos.OfferCache;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +46,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(
       request
         .toBuilder()
-        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
         .setInstances(Optional.of(2))
         .build(),
       singularityUser
@@ -65,8 +65,8 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
   public void testLeftoverNewOffersAreCached() {
     configuration.setCacheOffers(true);
 
-    Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1");
-    Offer extraOffer = createOffer(4, 256, 0, "slave1", "host1");
+    Offer neededOffer = createOffer(1, 128, 1024, "agent1", "host1");
+    Offer extraOffer = createOffer(4, 256, 0, "agent1", "host1");
 
     initRequest();
     initFirstDeploy();
@@ -98,7 +98,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
       1,
       128,
       1024,
-      "slave1",
+      "agent1",
       "host1",
       Optional.empty(),
       Collections.emptyMap(),
@@ -108,7 +108,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
       4,
       256,
       1024,
-      "slave1",
+      "agent1",
       "host1",
       Optional.empty(),
       Collections.emptyMap(),
@@ -150,8 +150,8 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
     configuration.setOfferCacheSize(2);
 
     // Each are half of needed memory
-    Offer offer1 = createOffer(1, 64, 1024, "slave1", "host1");
-    Offer offer2 = createOffer(1, 64, 1024, "slave1", "host1");
+    Offer offer1 = createOffer(1, 64, 1024, "agent1", "host1");
+    Offer offer2 = createOffer(1, 64, 1024, "agent1", "host1");
     sms.resourceOffers(ImmutableList.of(offer1, offer2)).join();
 
     initRequest();

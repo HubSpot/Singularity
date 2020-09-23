@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @Schema(
-  title = "Represents a future update to the state of a rack or slave",
-  subTypes = { SingularityExpiringSlaveState.class }
+  title = "Represents a future update to the state of a rack or agent",
+  subTypes = { SingularityExpiringAgentState.class }
 )
 public class SingularityExpiringMachineState
   extends SingularityExpiringParent<SingularityMachineChangeRequest> {

@@ -2,24 +2,24 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import FormModal from '../common/modal/FormModal';
 import Utils from '../../utils';
-import { UpdateSlavesTableSettings } from '../../actions/ui/slaves';
+import { UpdateAgentsTableSettings } from '../../actions/ui/agents';
 
-class CustomizeSlavesTableModal extends Component {
+class CustomizeAgentsTableModal extends Component {
   static propTypes = {
     columns: PropTypes.object.isRequired,
     paginated: PropTypes.bool.isRequired,
     availableAttributes: PropTypes.arrayOf(PropTypes.string).isRequired,
     availableResources: PropTypes.arrayOf(PropTypes.string).isRequired,
-    updateSlaveTableSettings: PropTypes.func.isRequired
+    updateAgentTableSettings: PropTypes.func.isRequired
   };
 
   show() {
-    this.refs.customizeSlavesTableModal.show();
+    this.refs.customizeAgentsTableModal.show();
   }
 
   render() {
     const formElements = [];
-    for (var field in Utils.DEFAULT_SLAVES_COLUMNS) {
+    for (var field in Utils.DEFAULT_AGENTS_COLUMNS) {
       formElements.push(
         {
           name: field,
@@ -59,11 +59,11 @@ class CustomizeSlavesTableModal extends Component {
     );
     return (
       <FormModal
-        ref="customizeSlavesTableModal"
+        ref="customizeAgentsTableModal"
         name="Customize Columns"
         action="Update"
         buttonStyle="default"
-        onConfirm={(data) => this.props.updateSlaveTableSettings(data)}
+        onConfirm={(data) => this.props.updateAgentTableSettings(data)}
         keepCurrentFormState={true}
         formElements={formElements}
       />
@@ -72,7 +72,7 @@ class CustomizeSlavesTableModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  updateSlaveTableSettings: (data) => dispatch(UpdateSlavesTableSettings(data, data.paginated)),
+  updateAgentTableSettings: (data) => dispatch(UpdateAgentsTableSettings(data, data.paginated)),
 });
 
 export default connect(
@@ -80,4 +80,4 @@ export default connect(
   mapDispatchToProps,
   null,
   { withRef: true }
-)(CustomizeSlavesTableModal);
+)(CustomizeAgentsTableModal);

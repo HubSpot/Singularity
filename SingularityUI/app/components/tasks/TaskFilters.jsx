@@ -30,7 +30,7 @@ export default class TaskFilters extends React.Component {
       {
         filterVal: 'decommissioning',
         displayVal: 'Decommissioning',
-        tip: 'Being killed due to a decommissioning slave'
+        tip: 'Being killed due to a decommissioning agent'
       }
     ];
   }

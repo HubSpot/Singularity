@@ -3,20 +3,20 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { getClickComponent } from '../common/modal/ModalWrapper';
-import CustomizeSlavesTableModal from './CustomizeSlavesTableModal';
+import CustomizeAgentsTableModal from './CustomizeAgentsTableModal';
 
 const customizeTableTooltip = (
   <ToolTip id="customize-table">
-    Customize columns to show in the slaves table
+    Customize columns to show in the agents table
   </ToolTip>
 );
 
-const CustomizeSlavesTableButton = ({children, columns, paginated, availableAttributes, availableResources}) => {
+const CustomizeAgentsTableButton = ({children, columns, paginated, availableAttributes, availableResources}) => {
   const clickComponentData = {props: {children}};
   return (
     <span>
       {getClickComponent(clickComponentData)}
-      <CustomizeSlavesTableModal 
+      <CustomizeAgentsTableModal 
         ref={(modal) => {clickComponentData.refs = {modal};}}
         columns={columns}
         paginated={paginated}
@@ -27,7 +27,7 @@ const CustomizeSlavesTableButton = ({children, columns, paginated, availableAttr
   );
 };
 
-CustomizeSlavesTableButton.propTypes = {
+CustomizeAgentsTableButton.propTypes = {
   children: PropTypes.node,
   columns: PropTypes.object.isRequired,
   paginated: PropTypes.bool.isRequired,
@@ -35,7 +35,7 @@ CustomizeSlavesTableButton.propTypes = {
   availableResources: PropTypes.arrayOf(PropTypes.string).isRequired
 };
 
-CustomizeSlavesTableButton.defaultProps = {
+CustomizeAgentsTableButton.defaultProps = {
   children: (
     <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={customizeTableTooltip}>
       <a>
@@ -45,4 +45,4 @@ CustomizeSlavesTableButton.defaultProps = {
   )
 };
 
-export default CustomizeSlavesTableButton;
+export default CustomizeAgentsTableButton;

@@ -18,8 +18,8 @@ public class SingularityPendingTaskBuilder {
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
-  private Map<String, String> requiredSlaveAttributeOverrides;
-  private Map<String, String> allowedSlaveAttributeOverrides;
+  private Map<String, String> requiredAgentAttributeOverrides;
+  private Map<String, String> allowedAgentAttributeOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<String> actionId;
 
@@ -106,17 +106,33 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
+  @Deprecated
   public SingularityPendingTaskBuilder setRequiredSlaveAttributeOverrides(
-    Map<String, String> requiredSlaveAttributeOverrides
+    Map<String, String> requiredAgentAttributeOverrides
   ) {
-    this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    this.requiredAgentAttributeOverrides = requiredAgentAttributeOverrides;
     return this;
   }
 
+  @Deprecated
   public SingularityPendingTaskBuilder setAllowedSlaveAttributeOverrides(
-    Map<String, String> allowedSlaveAttributeOverrides
+    Map<String, String> allowedAgentAttributeOverrides
   ) {
-    this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    this.allowedAgentAttributeOverrides = allowedAgentAttributeOverrides;
+    return this;
+  }
+
+  public SingularityPendingTaskBuilder setRequiredAgentAttributeOverrides(
+    Map<String, String> requiredAgentAttributeOverrides
+  ) {
+    this.requiredAgentAttributeOverrides = requiredAgentAttributeOverrides;
+    return this;
+  }
+
+  public SingularityPendingTaskBuilder setAllowedAgentAttributeOverrides(
+    Map<String, String> allowedAgentAttributeOverrides
+  ) {
+    this.allowedAgentAttributeOverrides = allowedAgentAttributeOverrides;
     return this;
   }
 
@@ -144,8 +160,8 @@ public class SingularityPendingTaskBuilder {
       s3UploaderAdditionalFiles,
       runAsUserOverride,
       envOverrides,
-      requiredSlaveAttributeOverrides,
-      allowedSlaveAttributeOverrides,
+      requiredAgentAttributeOverrides,
+      allowedAgentAttributeOverrides,
       extraArtifacts,
       actionId
     );
@@ -175,10 +191,10 @@ public class SingularityPendingTaskBuilder {
       runAsUserOverride +
       ", envOverrides=" +
       envOverrides +
-      ", requiredSlaveAttributeOverrides=" +
-      requiredSlaveAttributeOverrides +
-      ", allowedSlaveAttributeOverrides=" +
-      allowedSlaveAttributeOverrides +
+      ", requiredAgentAttributeOverrides=" +
+      requiredAgentAttributeOverrides +
+      ", allowedAgentAttributeOverrides=" +
+      allowedAgentAttributeOverrides +
       ", extraArtifacts=" +
       extraArtifacts +
       ", actionId=" +

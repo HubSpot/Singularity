@@ -13,7 +13,7 @@ import org.apache.curator.utils.ZKPaths;
 
 public class NotificationsManager extends CuratorManager {
   private static final String NOTIFICATIONS_ROOT = "/notifications";
-  private static final String BLACKLIST_ROOT = NOTIFICATIONS_ROOT + "/blacklist";
+  private static final String BLOCKLIST_ROOT = NOTIFICATIONS_ROOT + "/blacklist";
 
   LoadingCache<String, List<String>> cache;
 
@@ -39,21 +39,21 @@ public class NotificationsManager extends CuratorManager {
         );
   }
 
-  public void addToBlacklist(String email) {
+  public void addToBlocklist(String email) {
     create(getEmailPath(email));
-    cache.invalidate(BLACKLIST_ROOT);
+    cache.invalidate(BLOCKLIST_ROOT);
   }
 
-  public void removeFromBlacklist(String email) {
+  public void removeFromBlocklist(String email) {
     delete(getEmailPath(email));
-    cache.invalidate(BLACKLIST_ROOT);
+    cache.invalidate(BLOCKLIST_ROOT);
   }
 
-  public List<String> getBlacklist() {
-    return cache.getUnchecked(BLACKLIST_ROOT);
+  public List<String> getBlocklist() {
+    return cache.getUnchecked(BLOCKLIST_ROOT);
   }
 
   private String getEmailPath(String email) {
-    return ZKPaths.makePath(BLACKLIST_ROOT, email);
+    return ZKPaths.makePath(BLOCKLIST_ROOT, email);
   }
 }

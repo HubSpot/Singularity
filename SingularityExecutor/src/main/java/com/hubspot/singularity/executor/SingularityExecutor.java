@@ -47,38 +47,38 @@ public class SingularityExecutor implements Executor {
     ExecutorDriver executorDriver,
     Protos.ExecutorInfo executorInfo,
     Protos.FrameworkInfo frameworkInfo,
-    Protos.SlaveInfo slaveInfo
+    Protos.SlaveInfo agentInfo
   ) {
     LOG.debug(
-      "Registered {} with Mesos slave {} for framework {}",
+      "Registered {} with Mesos agent {} for framework {}",
       executorInfo.getExecutorId().getValue(),
-      slaveInfo.getId().getValue(),
+      agentInfo.getId().getValue(),
       frameworkInfo.getId().getValue()
     );
     LOG.trace(
-      "Registered {} with Mesos slave {} for framework {}",
+      "Registered {} with Mesos agent {} for framework {}",
       MesosUtils.formatForLogging(executorInfo),
-      MesosUtils.formatForLogging(slaveInfo),
+      MesosUtils.formatForLogging(agentInfo),
       MesosUtils.formatForLogging(frameworkInfo)
     );
   }
 
   /**
-   * Invoked when the executor re-registers with a restarted slave.
+   * Invoked when the executor re-registers with a restarted agent.
    */
   @Override
-  public void reregistered(ExecutorDriver executorDriver, Protos.SlaveInfo slaveInfo) {
-    LOG.debug("Re-registered with Mesos slave {}", slaveInfo.getId().getValue());
-    LOG.info("Re-registered with Mesos slave {}", MesosUtils.formatForLogging(slaveInfo));
+  public void reregistered(ExecutorDriver executorDriver, Protos.SlaveInfo agentInfo) {
+    LOG.debug("Re-registered with Mesos agent {}", agentInfo.getId().getValue());
+    LOG.info("Re-registered with Mesos v {}", MesosUtils.formatForLogging(agentInfo));
   }
 
   /**
-   * Invoked when the executor becomes "disconnected" from the slave
-   * (e.g., the slave is being restarted due to an upgrade).
+   * Invoked when the executor becomes "disconnected" from the agent
+   * (e.g., the agent is being restarted due to an upgrade).
    */
   @Override
   public void disconnected(ExecutorDriver executorDriver) {
-    LOG.warn("Disconnected from Mesos slave"); // TODO do we need to handle anything here?
+    LOG.warn("Disconnected from Mesos agent"); // TODO do we need to handle anything here?
   }
 
   /**

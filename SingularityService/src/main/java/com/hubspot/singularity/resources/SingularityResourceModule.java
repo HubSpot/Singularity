@@ -27,7 +27,8 @@ public class SingularityResourceModule extends AbstractModule {
     bind(RequestResource.class);
     bind(S3LogResource.class);
     bind(SandboxResource.class);
-    bind(SlaveResource.class);
+    bind(AgentResourceDeprecated.class);
+    bind(AgentResource.class);
     bind(StateResource.class);
     bind(TaskResource.class);
     bind(TestResource.class);
@@ -39,7 +40,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(PriorityResource.class);
     bind(UsageResource.class);
     bind(RequestGroupResource.class);
-    bind(InactiveSlaveResource.class);
+    bind(InactiveAgentResource.class);
     bind(ShuffleConfigurationResource.class);
     bind(TaskTrackerResource.class);
     bind(NotificationsResource.class);

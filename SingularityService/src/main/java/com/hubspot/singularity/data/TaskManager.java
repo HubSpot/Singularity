@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -23,7 +24,6 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -548,13 +548,13 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsync("getLastActiveTaskStatusesFor", paths, taskStatusTranscoder);
   }
 
-  public List<SingularityTask> getTasksOnSlave(
+  public List<SingularityTask> getTasksOnAgent(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularitySlave slave
+    SingularityAgent agent
   ) {
     final List<SingularityTask> tasks = Lists.newArrayList();
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
-      slave.getHost()
+      agent.getHost()
     );
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
@@ -562,7 +562,7 @@ public class TaskManager extends CuratorAsyncManager {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
         if (
           maybeTask.isPresent() &&
-          slave.getId().equals(maybeTask.get().getAgentId().getValue())
+          agent.getId().equals(maybeTask.get().getAgentId().getValue())
         ) {
           tasks.add(maybeTask.get());
         }
@@ -572,12 +572,12 @@ public class TaskManager extends CuratorAsyncManager {
     return tasks;
   }
 
-  public List<SingularityTaskId> getTaskIdsOnSlave(
+  public List<SingularityTaskId> getTaskIdsOnAgent(
     Collection<SingularityTaskId> activeTaskIds,
-    SingularitySlave slave
+    SingularityAgent agent
   ) {
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(
-      slave.getHost()
+      agent.getHost()
     );
 
     return activeTaskIds

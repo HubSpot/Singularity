@@ -128,7 +128,7 @@ export const Host = (
     id="host"
     key="host"
     cellData={
-      (rowData) => (Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host))
+      (rowData) => (Utils.humanizeAgentHostName(rowData.host ? rowData.host : rowData.taskId.host))
     }
     cellRender={
       (cellData) => (
@@ -450,7 +450,7 @@ export const InstanceNumberWithHostname = (
     cellRender={
       (cellData, rowData) => (
         <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
-          {cellData} - {Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host)}
+          {cellData} - {Utils.humanizeAgentHostName(rowData.host ? rowData.host : rowData.taskId.host)}
         </Link>
       )
     }

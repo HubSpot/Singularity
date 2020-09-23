@@ -2,8 +2,10 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -49,11 +51,12 @@ public class SingularityPendingRequest {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
-  private final Map<String, String> requiredSlaveAttributeOverrides;
-  private final Map<String, String> allowedSlaveAttributeOverrides;
+  private final Map<String, String> requiredAgentAttributeOverrides;
+  private final Map<String, String> allowedAgentAttributeOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -85,6 +88,7 @@ public class SingularityPendingRequest {
     );
   }
 
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityPendingRequest(
     String requestId,
     String deployId,
@@ -115,7 +119,54 @@ public class SingularityPendingRequest {
       null,
       null,
       null,
-      Optional.<Long>empty()
+      Optional.<Long>empty(),
+      null,
+      null
+    );
+  }
+
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  public SingularityPendingRequest(
+    String requestId,
+    String deployId,
+    long timestamp,
+    Optional<String> user,
+    PendingType pendingType,
+    Optional<List<String>> cmdLineArgsList,
+    Optional<String> runId,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> message,
+    Optional<String> actionId,
+    Optional<Resources> resources,
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    Optional<String> runAsUserOverride,
+    Map<String, String> envOverrides,
+    Map<String, String> requiredAgentAttributeOverrides,
+    Map<String, String> allowedSlaveAttributeOverrides,
+    List<SingularityMesosArtifact> extraArtifacts,
+    Optional<Long> runAt
+  ) {
+    this(
+      requestId,
+      deployId,
+      timestamp,
+      user,
+      pendingType,
+      cmdLineArgsList,
+      runId,
+      skipHealthchecks,
+      message,
+      actionId,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      null,
+      null,
+      extraArtifacts,
+      runAt,
+      requiredAgentAttributeOverrides,
+      allowedSlaveAttributeOverrides
     );
   }
 
@@ -144,7 +195,13 @@ public class SingularityPendingRequest {
       "allowedSlaveAttributeOverrides"
     ) Map<String, String> allowedSlaveAttributeOverrides,
     @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-    @JsonProperty("runAt") Optional<Long> runAt
+    @JsonProperty("runAt") Optional<Long> runAt,
+    @JsonProperty(
+      "requiredAgentAttributeOverrides"
+    ) Map<String, String> requiredAgentAttributeOverrides,
+    @JsonProperty(
+      "allowedAgentAttributeOverrides"
+    ) Map<String, String> allowedAgentAttributeOverrides
   ) {
     this.requestId = requestId;
     this.deployId = deployId;
@@ -172,17 +229,16 @@ public class SingularityPendingRequest {
       this.envOverrides = Collections.emptyMap();
     }
 
-    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
-      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
-    } else {
-      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
-    }
-
-    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
-      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
-    } else {
-      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
-    }
+    this.requiredAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        requiredAgentAttributeOverrides,
+        MoreObjects.firstNonNull(requiredSlaveAttributeOverrides, Collections.emptyMap())
+      );
+    this.allowedAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        allowedAgentAttributeOverrides,
+        MoreObjects.firstNonNull(allowedSlaveAttributeOverrides, Collections.emptyMap())
+      );
 
     if (Objects.nonNull(extraArtifacts)) {
       this.extraArtifacts = extraArtifacts;
@@ -245,12 +301,22 @@ public class SingularityPendingRequest {
     return envOverrides;
   }
 
-  public Map<String, String> getRequiredSlaveAttributeOverrides() {
-    return requiredSlaveAttributeOverrides;
+  public Map<String, String> getRequiredAgentAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
   }
 
+  public Map<String, String> getAllowedAgentAttributeOverrides() {
+    return allowedAgentAttributeOverrides;
+  }
+
+  @Deprecated
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
+  }
+
+  @Deprecated
   public Map<String, String> getAllowedSlaveAttributeOverrides() {
-    return allowedSlaveAttributeOverrides;
+    return allowedAgentAttributeOverrides;
   }
 
   public Optional<String> getRunAsUserOverride() {
@@ -299,10 +365,10 @@ public class SingularityPendingRequest {
       runAsUserOverride +
       ", envOverrides=" +
       envOverrides +
-      ", requiredSlaveAttributeOverrides=" +
-      requiredSlaveAttributeOverrides +
-      ", allowedSlaveAttributeOverrides=" +
-      allowedSlaveAttributeOverrides +
+      ", requiredAgentAttributeOverrides=" +
+      requiredAgentAttributeOverrides +
+      ", allowedAgentAttributeOverrides=" +
+      allowedAgentAttributeOverrides +
       ", extraArtifacts=" +
       extraArtifacts +
       ", runAt=" +

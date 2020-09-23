@@ -8,20 +8,20 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import {
-  FetchSlaves,
-  FreezeSlave,
-  DecommissionSlave,
-  RemoveSlave,
-  ReactivateSlave,
-  FetchExpiringSlaveStates,
-  RemoveExpiringSlaveState,
-  ClearInactiveSlaves
-} from '../../actions/api/slaves';
+  FetchAgents,
+  FreezeAgent,
+  DecommissionAgent,
+  RemoveAgent,
+  ReactivateAgent,
+  FetchExpiringAgentStates,
+  RemoveExpiringAgentState,
+  ClearInactiveAgents
+} from '../../actions/api/agents';
 import { DeactivateHost, ReactivateHost, FetchInactiveHosts, ClearInactiveHosts } from '../../actions/api/inactive';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
-import { refresh, initialize } from '../../actions/ui/slaves'
-import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
+import { refresh, initialize } from '../../actions/ui/agents'
+import CustomizeAgentsTableButton from './CustomizeAgentsTableButton';
 
 const typeName = {
   'active': 'Activated By',
@@ -30,8 +30,8 @@ const typeName = {
   'decommissioned': 'Decommissioned By'
 };
 
-const Slaves = (props) => {
-  const actionElements = (slave, buttonType) => {
+const Agents = (props) => {
+  const actionElements = (agent, buttonType) => {
     const elements = [];
     elements.push({
       name: 'message',
@@ -45,7 +45,7 @@ const Slaves = (props) => {
         label: 'Expiration (optional)',
         help: (
           <div>
-            <p>If an expiration duration is specified, the slave will revert to the state specified below after time has elapsed.</p>
+            <p>If an expiration duration is specified, the agent will revert to the state specified below after time has elapsed.</p>
           </div>
         )
       });
@@ -53,7 +53,7 @@ const Slaves = (props) => {
         name: 'revertToState',
         type: FormModal.INPUT_TYPES.SELECT,
         dependsOn: 'durationMillis',
-        defaultValue: slave.currentState.state,
+        defaultValue: agent.currentState.state,
         label: 'Revert To',
         options: _.map(Utils.MACHINE_STATES_FOR_REVERT, (machineState) => ({
           label: machineState,
@@ -74,47 +74,47 @@ const Slaves = (props) => {
     return elements;
   };
 
-  const showUser = (slave) => Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
+  const showUser = (agent) => Utils.isIn(agent.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
 
-  const resources = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['resources'], [])))));
+  const resources = _.uniq(_.flatten(_.map(props.agents, (agent) => Object.keys(Utils.maybe(agent, ['resources'], [])))));
 
-  const customAttrs = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['attributes'], [])))));
+  const customAttrs = _.uniq(_.flatten(_.map(props.agents, (agent) => Object.keys(Utils.maybe(agent, ['attributes'], [])))));
 
-  const expiringSlaveState = (slave) => (
-    _.find(props.expiringSlaveStates, (expiring) => expiring.machineId == slave.id)
+  const expiringAgentState = (agent) => (
+    _.find(props.expiringAgentStates, (expiring) => expiring.machineId == agent.id)
   );
 
-  const getMaybeDeactivateHostButton = (slave) => (
-    ! Utils.isIn(slave.host, props.inactiveHosts) && (
+  const getMaybeDeactivateHostButton = (agent) => (
+    ! Utils.isIn(agent.host, props.inactiveHosts) && (
       <FormModalButton
         name="Mark Inactive"
         buttonChildren={<Glyphicon glyph="remove-circle" />}
         action="Mark Host Inactive"
-        onConfirm={() => props.deactivateHost(slave.host)}
-        tooltipText={`Flag host '${slave.host}' as inactive`}
+        onConfirm={() => props.deactivateHost(agent.host)}
+        tooltipText={`Flag host '${agent.host}' as inactive`}
         formElements={[]}
       >
-        <p>Are you sure you want to mark the host {slave.host} as inactive?</p>
+        <p>Are you sure you want to mark the host {agent.host} as inactive?</p>
         <p>
-          This will automatically decommission any slave that joins with this hostname.
+          This will automatically decommission any agent that joins with this hostname.
         </p>
       </FormModalButton>
     )
   );
 
-  const getMaybeReactivateHostButton = (slave) => (
-    Utils.isIn(slave.host, props.inactiveHosts) && (
+  const getMaybeReactivateHostButton = (agent) => (
+    Utils.isIn(agent.host, props.inactiveHosts) && (
       <FormModalButton
         name="Reactivate Host"
         buttonChildren={<Glyphicon glyph="ok-circle" />}
         action="Mark Host Active"
-        onConfirm={() => props.reactivateHost(slave.host)}
-        tooltipText={`Mark host '${slave.host}' as active`}
+        onConfirm={() => props.reactivateHost(agent.host)}
+        tooltipText={`Mark host '${agent.host}' as active`}
         formElements={[]}
       >
-        <p>Are you sure you want to reactivate host {slave.host}?</p>
+        <p>Are you sure you want to reactivate host {agent.host}?</p>
         <p>
-          New slaves from this host will no longer automatically be marked as
+          New agents from this host will no longer automatically be marked as
           decommissioned.
         </p>
       </FormModalButton>
@@ -134,91 +134,91 @@ const Slaves = (props) => {
       </FormModalButton>
     );
 
-  const clearInactiveSlavesButton = (
+  const clearInactiveAgentsButton = (
       <FormModalButton
         name="Clear Inactive Agents"
         buttonChildren={<Glyphicon glyph="remove-circle" />}
         action="Clear Inactive Agents"
-        onConfirm={() => props.clearInactiveSlaves()}
+        onConfirm={() => props.clearInactiveAgents()}
         tooltipText={`Clear inactive agents list`}
         formElements={[]}
       >
-        <p>Are you sure you want to clear all dead slaves?</p>
+        <p>Are you sure you want to clear all dead agents?</p>
       </FormModalButton>
     );
 
-  const getMaybeReactivateButton = (slave) => (
-    Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
+  const getMaybeReactivateButton = (agent) => (
+    Utils.isIn(agent.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
       <FormModalButton
         name="Reactivate Agent"
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Agent"
-        onConfirm={(data) => props.reactivateSlave(slave, data)}
-        tooltipText={`Reactivate ${slave.id}`}
-        formElements={actionElements(slave, 'REACTIVATE')}>
+        onConfirm={(data) => props.reactivateAgent(agent, data)}
+        tooltipText={`Reactivate ${agent.id}`}
+        formElements={actionElements(agent, 'REACTIVATE')}>
         <p>Are you sure you want to cancel decommission and reactivate this agent?</p>
-        <pre>{slave.id}</pre>
+        <pre>{agent.id}</pre>
         <p>Reactivating an agent will cancel the decommission without erasing the agents's history and move it back to the active state.</p>
       </FormModalButton>
   ));
 
-  const getMaybeFreezeButton = (slave) => (slave.currentState.state === 'ACTIVE' &&
+  const getMaybeFreezeButton = (agent) => (agent.currentState.state === 'ACTIVE' &&
     <FormModalButton
       name="Freeze Agent"
       buttonChildren={<Glyphicon glyph="stop" />}
       action="Freeze Agent"
-      onConfirm={(data) => props.freezeSlave(slave, data)}
-      tooltipText={`Freeze ${slave.id}`}
-      formElements={actionElements(slave, 'FREEZE')}>
+      onConfirm={(data) => props.freezeAgent(agent, data)}
+      tooltipText={`Freeze ${agent.id}`}
+      formElements={actionElements(agent, 'FREEZE')}>
       <p>Are you sure you want to freeze this agent?</p>
-      <pre>{slave.id}</pre>
+      <pre>{agent.id}</pre>
       <p>Freezing an agent will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
     </FormModalButton>
   );
 
-  const getMaybeDecommissionButton = (slave) => (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
+  const getMaybeDecommissionButton = (agent) => (Utils.isIn(agent.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
       name="Decommission Agent"
       buttonChildren={<Glyphicon glyph="trash" />}
       action="Decommission Agent"
-      onConfirm={(data) => props.decommissionSlave(slave, data)}
-      tooltipText={`Decommission ${slave.id}`}
-      formElements={actionElements(slave, 'DECOMMISSION')}>
+      onConfirm={(data) => props.decommissionAgent(agent, data)}
+      tooltipText={`Decommission ${agent.id}`}
+      formElements={actionElements(agent, 'DECOMMISSION')}>
       <p>Are you sure you want to decommission this agent?</p>
-      <pre>{slave.id}</pre>
+      <pre>{agent.id}</pre>
       <p>Decommissioning an agent causes all tasks currently running on it to be rescheduled and executed elsewhere,
-      as new tasks will no longer consider the agent with id <code>{slave.id}</code> a valid target for execution.
+      as new tasks will no longer consider the agent with id <code>{agent.id}</code> a valid target for execution.
       This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
     </FormModalButton>
   ));
 
-  const getMaybeRemoveButton = (slave) => (!Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
+  const getMaybeRemoveButton = (agent) => (!Utils.isIn(agent.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
       name="Remove Agent"
       buttonChildren={<Glyphicon glyph="remove" />}
       action="Remove Agent"
-      onConfirm={(data) => props.removeSlave(slave, data)}
-      tooltipText={`Remove ${slave.id}`}
-      formElements={actionElements(slave, 'REMOVE')}>
+      onConfirm={(data) => props.removeAgent(agent, data)}
+      tooltipText={`Remove ${agent.id}`}
+      formElements={actionElements(agent, 'REMOVE')}>
       <p>Are you sure you want to remove this agent?</p>
-      <pre>{slave.id}</pre>
-      {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+      <pre>{agent.id}</pre>
+      {Utils.isIn(agent.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <p>
         Removing a decommissioned agent will cause that agent to become active again if the mesos-agent process is still running.
       </p>}
     </FormModalButton>
   ));
 
-  const getMaybeRemoveExpiring = (slave) => ( expiringSlaveState(slave) && (
+  const getMaybeRemoveExpiring = (agent) => ( expiringAgentState(agent) && (
     <FormModalButton
       name="Cancel Expiring ACtion"
       buttonChildren={<Glyphicon glyph="remove-circle" />}
-      action={`Make ${slave.currentState.state} Permanent`}
-      onConfirm={(data) => props.removeExpiringState(slave.id)}
-      tooltipText={`Cancel revert to ${expiringSlaveState(slave).revertToState}`}
+      action={`Make ${agent.currentState.state} Permanent`}
+      onConfirm={(data) => props.removeExpiringState(agent.id)}
+      tooltipText={`Cancel revert to ${expiringAgentState(agent).revertToState}`}
       formElements={[]}>
       <p>Are you sure you want to remove the expiring action for this agent? This will make the curretn state permanent.</p>
-      <pre>{slave.id}</pre>
+      <pre>{agent.id}</pre>
     </FormModalButton>
   ));
 
@@ -228,10 +228,10 @@ const Slaves = (props) => {
       id="id"
       key="id"
       sortable={true}
-      sortData={(cellData, slave) => slave.id}
-      cellData={(slave) => (
-        <Link to={`tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
-          {slave.id}
+      sortData={(cellData, agent) => agent.id}
+      cellData={(agent) => (
+        <Link to={`tasks/active/all/${agent.host}`} title={`All tasks running on host ${agent.host}`}>
+          {agent.id}
         </Link>
       )}
     />
@@ -243,8 +243,8 @@ const Slaves = (props) => {
       id="state"
       key="state"
       sortable={true}
-      sortData={(cellData, slave) => slave.currentState.state}
-      cellData={(slave) => Utils.humanizeText(slave.currentState.state)}
+      sortData={(cellData, agent) => agent.currentState.state}
+      cellData={(agent) => Utils.humanizeText(agent.currentState.state)}
     />
   );
 
@@ -254,8 +254,8 @@ const Slaves = (props) => {
       id="timestamp"
       key="timestamp"
       sortable={true}
-      sortData={(cellData, slave) => slave.currentState.timestamp}
-      cellData={(slave) => Utils.absoluteTimestamp(slave.currentState.timestamp)}
+      sortData={(cellData, agent) => agent.currentState.timestamp}
+      cellData={(agent) => Utils.absoluteTimestamp(agent.currentState.timestamp)}
     />
   );
 
@@ -265,8 +265,8 @@ const Slaves = (props) => {
       id="rack"
       key="rack"
       sortable={true}
-      sortData={(cellData, slave) => slave.rackId}
-      cellData={(slave) => slave.rackId}
+      sortData={(cellData, agent) => agent.rackId}
+      cellData={(agent) => agent.rackId}
     />
   );
 
@@ -276,8 +276,8 @@ const Slaves = (props) => {
       id="host"
       key="host"
       sortable={true}
-      sortData={(cellData, slave) => slave.host}
-      cellData={(slave) => slave.host}
+      sortData={(cellData, agent) => agent.host}
+      cellData={(agent) => agent.host}
     />
   );
 
@@ -287,8 +287,8 @@ const Slaves = (props) => {
       id="uptime"
       key="uptime"
       sortable={true}
-      sortData={(cellData, slave) => slave.firstSeenAt}
-      cellData={(slave) => Utils.duration(Date.now() - slave.firstSeenAt)}
+      sortData={(cellData, agent) => agent.firstSeenAt}
+      cellData={(agent) => Utils.duration(Date.now() - agent.firstSeenAt)}
     />
   );
 
@@ -297,7 +297,7 @@ const Slaves = (props) => {
       label="Message"
       id="message"
       key="message"
-      cellData={(slave) => slave.currentState.message}
+      cellData={(agent) => agent.currentState.message}
     />
   );
 
@@ -306,8 +306,8 @@ const Slaves = (props) => {
       label="Expiring"
       id="expiring"
       key="expiring"
-      cellData={(slave) => {
-        const expiring = expiringSlaveState(slave);
+      cellData={(agent) => {
+        const expiring = expiringAgentState(agent);
         if (expiring) {
           return `Transitions to ${expiring.revertToState} in ${Utils.duration(Date.now() - (expiring.startMillis + expiring.expiringAPIRequestObject.durationMillis))}`
         }
@@ -343,15 +343,15 @@ const Slaves = (props) => {
           id="typename"
           key="typename"
           sortable={true}
-          sortData={(cellData, slave) => slave.currentState.user || ''}
-          cellData={(slave) => showUser(slave) && slave.currentState.user}
+          sortData={(cellData, agent) => agent.currentState.user || ''}
+          cellData={(agent) => showUser(agent) && agent.currentState.user}
         />
       );
     }
     if (props.columnSettings['message']) {
       columns.push(messageColumn());
     }
-    if (!_.isEmpty(props.expiringSlaveStates) && props.columnSettings['expiring']) {
+    if (!_.isEmpty(props.expiringAgentStates) && props.columnSettings['expiring']) {
       columns.push(expiringColumn());
     }
 
@@ -363,7 +363,7 @@ const Slaves = (props) => {
               id={resource}
               key={resource}
               sortable={true}
-              cellData={(slave) => Utils.maybe(slave, ['resources', resource], 0)}
+              cellData={(agent) => Utils.maybe(agent, ['resources', resource], 0)}
             />
           );
         }
@@ -378,7 +378,7 @@ const Slaves = (props) => {
               id={attr}
               key={attr}
               sortable={true}
-              cellData={(slave) => Utils.maybe(slave, ['attributes', attr], '')}
+              cellData={(agent) => Utils.maybe(agent, ['attributes', attr], '')}
             />
           );
         }
@@ -390,16 +390,16 @@ const Slaves = (props) => {
         id="actions-column"
         key="actions-column"
         className="actions-column"
-        cellData={(slave) => (
+        cellData={(agent) => (
           <span>
-            {getMaybeDeactivateHostButton(slave)}
-            {getMaybeReactivateHostButton(slave)}
-            {getMaybeRemoveExpiring(slave)}
-            {getMaybeReactivateButton(slave)}
-            {getMaybeFreezeButton(slave)}
-            {getMaybeDecommissionButton(slave)}
-            {getMaybeRemoveButton(slave)}
-            <JSONButton object={slave} showOverlay={true}>
+            {getMaybeDeactivateHostButton(agent)}
+            {getMaybeReactivateHostButton(agent)}
+            {getMaybeRemoveExpiring(agent)}
+            {getMaybeReactivateButton(agent)}
+            {getMaybeFreezeButton(agent)}
+            {getMaybeDecommissionButton(agent)}
+            {getMaybeRemoveButton(agent)}
+            <JSONButton object={agent} showOverlay={true}>
               {'{ }'}
             </JSONButton>
           </span>
@@ -410,15 +410,15 @@ const Slaves = (props) => {
     return columns;
   };
 
-  const activeSlaves = props.slaves.filter(({currentState}) => currentState.state === 'ACTIVE');
+  const activeAgents = props.agents.filter(({currentState}) => currentState.state === 'ACTIVE');
 
-  const frozenSlaves = props.slaves.filter(({currentState}) => currentState.state === 'FROZEN');
+  const frozenAgents = props.agents.filter(({currentState}) => currentState.state === 'FROZEN');
 
-  const decommissioningSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'STARTING_DECOMMISSION']));
+  const decommissioningAgents = props.agents.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'STARTING_DECOMMISSION']));
 
-  const decommissionedSlaves = props.slaves.filter(({currentState}) => currentState.state === 'DECOMMISSIONED');
+  const decommissionedAgents = props.agents.filter(({currentState}) => currentState.state === 'DECOMMISSIONED');
 
-  const inactiveSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+  const inactiveAgents = props.agents.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
 
   const inactiveHostsPanel = (inactiveHosts) => (
     inactiveHosts && inactiveHosts.length > 0 && (
@@ -447,44 +447,44 @@ const Slaves = (props) => {
     {
       stateName: 'Active',
       emptyMessage: 'No Active Agents',
-      hostsInState: activeSlaves,
+      hostsInState: activeAgents,
       columns: getColumns('active'),
       paginated: props.paginated
     },
     {
       stateName: 'Frozen',
       emptyMessage: 'No Frozen Agents',
-      hostsInState: frozenSlaves,
+      hostsInState: frozenAgents,
       columns: getColumns('decommissioning'),
       paginated: props.paginated
     },
     {
       stateName: 'Decommissioning',
       emptyMessage: 'No Decommissioning Agents',
-      hostsInState: decommissioningSlaves,
+      hostsInState: decommissioningAgents,
       columns: getColumns('decommissioning'),
       paginated: props.paginated
     },
     {
       stateName: 'Decommissioned',
       emptyMessage: 'No Decommissioned Agents',
-      hostsInState: decommissionedSlaves,
+      hostsInState: decommissionedAgents,
       columns: getColumns('decommissioned'),
       paginated: props.paginated
     },
     {
       stateName: 'Inactive',
       emptyMessage: 'No Inactive Agents',
-      hostsInState: inactiveSlaves,
+      hostsInState: inactiveAgents,
       columns: getColumns('inactive'),
       paginated: props.paginated,
-      clearAllButton: clearInactiveSlavesButton
+      clearAllButton: clearInactiveAgentsButton
     }
   ];
 
   return (
     <div>
-      <CustomizeSlavesTableButton
+      <CustomizeAgentsTableButton
         columns={props.columnSettings}
         paginated={props.paginated}
         availableAttributes={customAttrs}
@@ -496,7 +496,7 @@ const Slaves = (props) => {
           title="Customize">
           Customize
         </button>
-      </CustomizeSlavesTableButton>
+      </CustomizeAgentsTableButton>
       <MachinesPage
         header = "Agents"
         states = {states}
@@ -507,39 +507,39 @@ const Slaves = (props) => {
   );
 };
 
-Slaves.propTypes = {
-  freezeSlave: PropTypes.func.isRequired,
-  decommissionSlave: PropTypes.func.isRequired,
-  removeSlave: PropTypes.func.isRequired,
-  reactivateSlave: PropTypes.func.isRequired,
-  fetchExpiringSlaveStates: PropTypes.func.isRequired,
+Agents.propTypes = {
+  freezeAgent: PropTypes.func.isRequired,
+  decommissionAgent: PropTypes.func.isRequired,
+  removeAgent: PropTypes.func.isRequired,
+  reactivateAgent: PropTypes.func.isRequired,
+  fetchExpiringAgentStates: PropTypes.func.isRequired,
   removeExpiringState: PropTypes.func.isRequired,
   clear: PropTypes.func.isRequired,
   error: PropTypes.string,
-  expiringSlaveStates: PropTypes.array.isRequired,
-  slaves: PropTypes.arrayOf(PropTypes.shape({
+  expiringAgentStates: PropTypes.array.isRequired,
+  agents: PropTypes.arrayOf(PropTypes.shape({
     state: PropTypes.string
   })),
   inactiveHosts: PropTypes.arrayOf(PropTypes.string),
   columnSettings: PropTypes.object.isRequired,
   paginated: PropTypes.bool.isRequired,
   clearInactiveHosts: PropTypes.func.isRequired,
-  clearInactiveSlaves: PropTypes.func.isRequired
+  clearInactiveAgents: PropTypes.func.isRequired
 };
 
 function getErrorFromState(state) {
-  const { freezeSlave, decommissionSlave, removeSlave, reactivateSlave } = state.api;
-  if (freezeSlave.error) {
-    return `Error freezing agent: ${ state.api.freezeSlave.error.message }`;
+  const { freezeAgent, decommissionAgent, removeAgent, reactivateAgent } = state.api;
+  if (freezeAgent.error) {
+    return `Error freezing agent: ${ state.api.freezeAgent.error.message }`;
   }
-  if (decommissionSlave.error) {
-    return `Error decommissioning agent: ${ state.api.decommissionSlave.error.message }`;
+  if (decommissionAgent.error) {
+    return `Error decommissioning agent: ${ state.api.decommissionAgent.error.message }`;
   }
-  if (removeSlave.error) {
-    return `Error removing agent: ${ state.api.removeSlave.error.message }`;
+  if (removeAgent.error) {
+    return `Error removing agent: ${ state.api.removeAgent.error.message }`;
   }
-  if (reactivateSlave.error) {
-    return `Error reactivating agent: ${ state.api.reactivateSlave.error.message }`;
+  if (reactivateAgent.error) {
+    return `Error reactivating agent: ${ state.api.reactivateAgent.error.message }`;
   }
   return null;
 }
@@ -547,56 +547,56 @@ function getErrorFromState(state) {
 function mapStateToProps(state) {
   return {
     inactiveHosts: state.api.inactiveHosts.data,
-    slaves: state.api.slaves.data,
+    agents: state.api.agents.data,
     error: getErrorFromState(state),
-    columnSettings: state.ui.slaves.columns,
-    paginated: state.ui.slaves.paginated,
-    expiringSlaveStates: state.api.expiringSlaveStates.data
+    columnSettings: state.ui.agents.columns,
+    paginated: state.ui.agents.paginated,
+    expiringAgentStates: state.api.expiringAgentStates.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   function clear() {
     return Promise.all([
-      dispatch(FreezeSlave.clear()),
-      dispatch(DecommissionSlave.clear()),
-      dispatch(RemoveSlave.clear()),
-      dispatch(ReactivateSlave.clear())
+      dispatch(FreezeAgent.clear()),
+      dispatch(DecommissionAgent.clear()),
+      dispatch(RemoveAgent.clear()),
+      dispatch(ReactivateAgent.clear())
     ]);
   }
-  function fetchSlavesAndExpiring() {
+  function fetchAgentsAndExpiring() {
     return Promise.all([
-      dispatch(FetchSlaves.trigger()),
-      dispatch(FetchExpiringSlaveStates.trigger())
+      dispatch(FetchAgents.trigger()),
+      dispatch(FetchExpiringAgentStates.trigger())
     ]);
   }
   return {
-    fetchSlaves: () => dispatch(FetchSlaves.trigger()),
-    freezeSlave: (slave, message) => { clear().then(() => dispatch(FreezeSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
-    decommissionSlave: (slave, message) => { clear().then(() => dispatch(DecommissionSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
-    removeSlave: (slave, message) => { clear().then(() => dispatch(RemoveSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    fetchAgents: () => dispatch(FetchAgents.trigger()),
+    freezeAgent: (agent, message) => { clear().then(() => dispatch(FreezeAgent.trigger(agent.id, message)).then(() => fetchAgentsAndExpiring())); },
+    decommissionAgent: (agent, message) => { clear().then(() => dispatch(DecommissionAgent.trigger(agent.id, message)).then(() => fetchAgentsAndExpiring())); },
+    removeAgent: (agent, message) => { clear().then(() => dispatch(RemoveAgent.trigger(agent.id, message)).then(() => fetchAgentsAndExpiring())); },
     deactivateHost: (host) =>
       clear()
         .then(() => dispatch(DeactivateHost.trigger(host)))
         .then(() => Promise.all([
-          fetchSlavesAndExpiring(),
+          fetchAgentsAndExpiring(),
           dispatch(FetchInactiveHosts.trigger()),
         ])),
     reactivateHost: (host) =>
       clear()
         .then(() => dispatch(ReactivateHost.trigger(host)))
         .then(() => Promise.all([
-          fetchSlavesAndExpiring(),
+          fetchAgentsAndExpiring(),
           dispatch(FetchInactiveHosts.trigger()),
         ])),
     fetchInactiveHosts: () => dispatch(FetchInactiveHosts.trigger()),
-    clearInactiveHosts: () => dispatch(ClearInactiveHosts.trigger()).then(() => fetchSlavesAndExpiring()),
-    clearInactiveSlaves: () => dispatch(ClearInactiveSlaves.trigger()).then(() => dispatch(FetchInactiveHosts.trigger())),
-    reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
-    fetchExpiringSlaveStates: () => dispatch(FetchExpiringSlaveStates.trigger()),
-    removeExpiringState: (slaveId) => { clear().then(() => dispatch(RemoveExpiringSlaveState.trigger(slaveId)).then(() => fetchSlavesAndExpiring())); },
+    clearInactiveHosts: () => dispatch(ClearInactiveHosts.trigger()).then(() => fetchAgentsAndExpiring()),
+    clearInactiveAgents: () => dispatch(ClearInactiveAgents.trigger()).then(() => dispatch(FetchInactiveHosts.trigger())),
+    reactivateAgent: (agent, message) => { clear().then(() => dispatch(ReactivateAgent.trigger(agent.id, message)).then(() => fetchAgentsAndExpiring())); },
+    fetchExpiringAgentStates: () => dispatch(FetchExpiringAgentStates.trigger()),
+    removeExpiringState: (agentId) => { clear().then(() => dispatch(RemoveExpiringAgentState.trigger(agentId)).then(() => fetchAgentsAndExpiring())); },
     clear
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Agents, refresh, true, true, initialize));

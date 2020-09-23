@@ -7,6 +7,10 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
+/**
+ * @deprecated user {@link SingularityExpiringAgentState}
+ */
+@Deprecated
 @Schema(description = "Represents a future update to the state of an agent")
 public class SingularityExpiringSlaveState extends SingularityExpiringMachineState {
 

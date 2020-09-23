@@ -26,7 +26,7 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
-import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
+import com.hubspot.singularity.data.SandboxManager.AgentNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
@@ -120,7 +120,7 @@ public class SandboxResource extends AbstractHistoryResource {
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A slave or task with the specified id was not found"
+        description = "An agent or task with the specified id was not found"
       )
     }
   )
@@ -147,7 +147,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId, user);
 
-    final String slaveHostname = history.getTask().getHostname();
+    final String hostname = history.getTask().getHostname();
     final String pathToRoot = history.getDirectory().get();
     final String fullPath = new File(pathToRoot, currentDirectory).toString();
 
@@ -156,10 +156,7 @@ public class SandboxResource extends AbstractHistoryResource {
       : pathToRoot.length() + currentDirectory.length() + 2;
 
     try {
-      Collection<MesosFileObject> mesosFiles = sandboxManager.browse(
-        slaveHostname,
-        fullPath
-      );
+      Collection<MesosFileObject> mesosFiles = sandboxManager.browse(hostname, fullPath);
       List<SingularitySandboxFile> sandboxFiles = Lists.newArrayList(
         Iterables.transform(
           mesosFiles,
@@ -178,14 +175,9 @@ public class SandboxResource extends AbstractHistoryResource {
         )
       );
 
-      return new SingularitySandbox(
-        sandboxFiles,
-        pathToRoot,
-        currentDirectory,
-        slaveHostname
-      );
-    } catch (SlaveNotFoundException snfe) {
-      throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+      return new SingularitySandbox(sandboxFiles, pathToRoot, currentDirectory, hostname);
+    } catch (AgentNotFoundException snfe) {
+      throw notFound("Slave @ %s was not found, it is probably offline", hostname);
     }
   }
 
@@ -196,7 +188,7 @@ public class SandboxResource extends AbstractHistoryResource {
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A slave, task, or file with the specified id was not found"
+        description = "An agent, task, or file with the specified id was not found"
       )
     }
   )
@@ -230,12 +222,12 @@ public class SandboxResource extends AbstractHistoryResource {
 
     checkBadRequest(!Strings.isNullOrEmpty(path), "Must specify 'path'");
 
-    final String slaveHostname = history.getTask().getHostname();
+    final String hostname = history.getTask().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     try {
       final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(
-        slaveHostname,
+        hostname,
         fullPath,
         offset,
         length
@@ -269,8 +261,8 @@ public class SandboxResource extends AbstractHistoryResource {
       }
 
       return maybeChunk.get();
-    } catch (SlaveNotFoundException snfe) {
-      throw notFound("Slave @ %s was not found, it is probably offline", slaveHostname);
+    } catch (AgentNotFoundException snfe) {
+      throw notFound("Slave @ %s was not found, it is probably offline", hostname);
     }
   }
 }

@@ -5,10 +5,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.async.CompletableFutures;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +26,7 @@ public class SingularityLeaderCacheCoordinator {
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final RequestManager requestManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final RackManager rackManager;
   private final UsageManager usageManager;
   private final SingularityLeaderCache leaderCache;
@@ -36,7 +36,7 @@ public class SingularityLeaderCacheCoordinator {
     TaskManager taskManager,
     DeployManager deployManager,
     RequestManager requestManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     RackManager rackManager,
     UsageManager usageManager,
     SingularityLeaderCache leaderCache
@@ -44,7 +44,7 @@ public class SingularityLeaderCacheCoordinator {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.rackManager = rackManager;
     this.usageManager = usageManager;
     this.leaderCache = leaderCache;
@@ -72,7 +72,7 @@ public class SingularityLeaderCacheCoordinator {
             leaderCacheExecutor
           ),
           CompletableFuture.runAsync(
-            slaveManager::activateLeaderCache,
+            agentManager::activateLeaderCache,
             leaderCacheExecutor
           ),
           CompletableFuture.runAsync(

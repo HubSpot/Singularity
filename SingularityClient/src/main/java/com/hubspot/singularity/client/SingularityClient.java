@@ -24,6 +24,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityClusterUtilization;
@@ -47,7 +48,6 @@ import com.hubspot.singularity.SingularityRequestBatch;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistoryQuery;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
@@ -99,6 +99,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,16 +130,16 @@ public class SingularityClient {
   private static final String RACKS_ACTIVATE_FORMAT = RACKS_FORMAT + "/rack/%s/activate";
   private static final String RACKS_DELETE_FORMAT = RACKS_FORMAT + "/rack/%s";
 
-  private static final String SLAVES_FORMAT = "%s/slaves";
-  private static final String SLAVE_DETAIL_FORMAT = SLAVES_FORMAT + "/slave/%s/details";
-  private static final String SLAVES_DECOMISSION_FORMAT =
-    SLAVES_FORMAT + "/slave/%s/decommission";
-  private static final String SLAVES_FREEZE_FORMAT = SLAVES_FORMAT + "/slave/%s/freeze";
-  private static final String SLAVES_ACTIVATE_FORMAT =
-    SLAVES_FORMAT + "/slave/%s/activate";
-  private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s";
+  private static final String AGENTS_FORMAT = "%s/agents";
+  private static final String AGENT_DETAIL_FORMAT = AGENTS_FORMAT + "/agent/%s/details";
+  private static final String AGENTS_DECOMISSION_FORMAT =
+    AGENTS_FORMAT + "/agent/%s/decommission";
+  private static final String AGENTS_FREEZE_FORMAT = AGENTS_FORMAT + "/agent/%s/freeze";
+  private static final String AGENTS_ACTIVATE_FORMAT =
+    AGENTS_FORMAT + "/agent/%s/activate";
+  private static final String AGENTS_DELETE_FORMAT = AGENTS_FORMAT + "/agent/%s";
 
-  private static final String INACTIVE_SLAVES_FORMAT = "%s/inactive";
+  private static final String INACTIVE_AGENTS_FORMAT = "%s/inactive";
 
   private static final String TASKS_FORMAT = "%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
@@ -147,10 +148,10 @@ public class SingularityClient {
     TASKS_GET_ACTIVE_FORMAT + "/ids";
   private static final String TASKS_GET_ACTIVE_STATES_FORMAT =
     TASKS_GET_ACTIVE_FORMAT + "/states";
-  private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT =
+  private static final String TASKS_GET_ACTIVE_ON_AGENT_FORMAT =
     TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT =
-    TASKS_GET_ACTIVE_ON_SLAVE_FORMAT + "/ids";
+    TASKS_GET_ACTIVE_ON_AGENT_FORMAT + "/ids";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT =
     TASKS_GET_SCHEDULED_FORMAT + "/ids";
@@ -268,7 +269,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskId>> TASK_IDS_COLLECTION = new TypeReference<Collection<SingularityTaskId>>() {};
   private static final TypeReference<Collection<SingularityTaskIdHistory>> TASKID_HISTORY_COLLECTION = new TypeReference<Collection<SingularityTaskIdHistory>>() {};
   private static final TypeReference<Collection<SingularityRack>> RACKS_COLLECTION = new TypeReference<Collection<SingularityRack>>() {};
-  private static final TypeReference<Collection<SingularitySlave>> SLAVES_COLLECTION = new TypeReference<Collection<SingularitySlave>>() {};
+  private static final TypeReference<Collection<SingularityAgent>> AGENTS_COLLECTION = new TypeReference<Collection<SingularityAgent>>() {};
   private static final TypeReference<Collection<SingularityWebhook>> WEBHOOKS_COLLECTION = new TypeReference<Collection<SingularityWebhook>>() {};
   private static final TypeReference<Collection<SingularityDeployUpdate>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployUpdate>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
@@ -1374,24 +1375,34 @@ public class SingularityClient {
       .orElse(Collections.emptyMap());
   }
 
-  public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
+  @Deprecated
+  public Collection<SingularityTask> getActiveTasksOnSlave(final String agentId) {
+    return getActiveTasksOnAgent(agentId);
+  }
+
+  public Collection<SingularityTask> getActiveTasksOnAgent(final String agentId) {
     final Function<String, String> requestUri = host ->
-      String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getApiBase(host), slaveId);
+      String.format(TASKS_GET_ACTIVE_ON_AGENT_FORMAT, getApiBase(host), agentId);
 
     return getCollection(
       requestUri,
-      String.format("active tasks on slave %s", slaveId),
+      String.format("active tasks on agent %s", agentId),
       TASKS_COLLECTION
     );
   }
 
-  public Collection<SingularityTaskId> getActiveTaskIdsOnSlave(final String slaveId) {
+  @Deprecated
+  public Collection<SingularityTaskId> getActiveTaskIdsOnSlave(final String agentId) {
+    return getActiveTaskIdsOnAgent(agentId);
+  }
+
+  public Collection<SingularityTaskId> getActiveTaskIdsOnAgent(final String agentId) {
     final Function<String, String> requestUri = host ->
-      String.format(TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT, getApiBase(host), slaveId);
+      String.format(TASKS_GET_ACTIVE_IDS_ON_SLAVE_FORMAT, getApiBase(host), agentId);
 
     return getCollection(
       requestUri,
-      String.format("active tasks on slave %s", slaveId),
+      String.format("active tasks on agent %s", agentId),
       TASK_IDS_COLLECTION
     );
   }
@@ -1566,99 +1577,141 @@ public class SingularityClient {
   // SLAVES
   //
 
+  @Deprecated
+  public Collection<SingularitySlave> getSlaves(Optional<MachineState> agentState) {
+    return getAgents(agentState)
+      .stream()
+      .map(a -> (SingularitySlave) a)
+      .collect(Collectors.toList());
+  }
+
   /**
-   * Retrieve the list of all known slaves, optionally filtering by a particular slave state
+   * Retrieve the list of all known agents, optionally filtering by a particular agent state
    *
-   * @param slaveState
+   * @param agentState
    *    Optionally specify a particular state to filter slaves by
    * @return
-   *    A collection of {@link SingularitySlave}
+   *    A collection of {@link SingularityAgent}
    */
-  public Collection<SingularitySlave> getSlaves(Optional<MachineState> slaveState) {
+  public Collection<SingularityAgent> getAgents(Optional<MachineState> agentState) {
     final Function<String, String> requestUri = host ->
-      String.format(SLAVES_FORMAT, getApiBase(host));
+      String.format(AGENTS_FORMAT, getApiBase(host));
 
     Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
-    String type = "slaves";
+    String type = "agents";
 
-    if (slaveState.isPresent()) {
+    if (agentState.isPresent()) {
       maybeQueryParams =
-        Optional.of(ImmutableMap.of("state", slaveState.get().toString()));
+        Optional.of(ImmutableMap.of("state", agentState.get().toString()));
 
-      type = String.format("%s slaves", slaveState.get().toString());
+      type = String.format("%s agents", agentState.get().toString());
     }
 
-    return getCollectionWithParams(requestUri, type, maybeQueryParams, SLAVES_COLLECTION);
+    return getCollectionWithParams(requestUri, type, maybeQueryParams, AGENTS_COLLECTION);
   }
 
   /**
-   * Retrieve a single slave by ID
+   * Retrieve a single agent by ID
    *
-   * @param slaveId
-   *    The slave ID to search for
+   * @param agentId
+   *    The agent ID to search for
    * @return
-   *    A {@link SingularitySlave}
+   *    A {@link SingularityAgent}
    */
-  public Optional<SingularitySlave> getSlave(String slaveId) {
+  public Optional<SingularityAgent> getAgent(String agentId) {
     final Function<String, String> requestUri = host ->
-      String.format(SLAVE_DETAIL_FORMAT, getApiBase(host), slaveId);
+      String.format(AGENT_DETAIL_FORMAT, getApiBase(host), agentId);
 
-    return getSingle(requestUri, "slave", slaveId, SingularitySlave.class);
+    return getSingle(requestUri, "agent", agentId, SingularityAgent.class);
   }
 
   @Deprecated
-  public void decomissionSlave(String slaveId) {
-    decommissionSlave(slaveId, Optional.empty());
+  public Optional<SingularitySlave> getSlave(String agentId) {
+    return getAgent(agentId).map(a -> (SingularitySlave) a);
   }
 
+  @Deprecated
+  public void decomissionSlave(String agentId) {
+    decommissionAgent(agentId, Optional.empty());
+  }
+
+  @Deprecated
   public void decommissionSlave(
-    String slaveId,
+    String agentId,
+    Optional<SingularityMachineChangeRequest> machineChangeRequest
+  ) {
+    decommissionAgent(agentId, machineChangeRequest);
+  }
+
+  public void decommissionAgent(
+    String agentId,
     Optional<SingularityMachineChangeRequest> machineChangeRequest
   ) {
     final Function<String, String> requestUri = host ->
-      String.format(SLAVES_DECOMISSION_FORMAT, getApiBase(host), slaveId);
+      String.format(AGENTS_DECOMISSION_FORMAT, getApiBase(host), agentId);
 
     post(
       requestUri,
-      String.format("decommission slave %s", slaveId),
+      String.format("decommission agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
   }
 
+  @Deprecated
   public void freezeSlave(
-    String slaveId,
+    String agentId,
+    Optional<SingularityMachineChangeRequest> machineChangeRequest
+  ) {
+    freezeAgent(agentId, machineChangeRequest);
+  }
+
+  public void freezeAgent(
+    String agentId,
     Optional<SingularityMachineChangeRequest> machineChangeRequest
   ) {
     final Function<String, String> requestUri = host ->
-      String.format(SLAVES_FREEZE_FORMAT, getApiBase(host), slaveId);
+      String.format(AGENTS_FREEZE_FORMAT, getApiBase(host), agentId);
 
     post(
       requestUri,
-      String.format("freeze slave %s", slaveId),
+      String.format("freeze agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
   }
 
+  @Deprecated
   public void activateSlave(
-    String slaveId,
+    String agentId,
+    Optional<SingularityMachineChangeRequest> machineChangeRequest
+  ) {
+    activateAgent(agentId, machineChangeRequest);
+  }
+
+  public void activateAgent(
+    String agentId,
     Optional<SingularityMachineChangeRequest> machineChangeRequest
   ) {
     final Function<String, String> requestUri = host ->
-      String.format(SLAVES_ACTIVATE_FORMAT, getApiBase(host), slaveId);
+      String.format(AGENTS_ACTIVATE_FORMAT, getApiBase(host), agentId);
 
     post(
       requestUri,
-      String.format("activate slave %s", slaveId),
+      String.format("activate agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
   }
 
-  public void deleteSlave(String slaveId) {
-    final Function<String, String> requestUri = host ->
-      String.format(SLAVES_DELETE_FORMAT, getApiBase(host), slaveId);
+  @Deprecated
+  public void deleteSlave(String agentId) {
+    deleteAgent(agentId);
+  }
 
-    delete(requestUri, "deleting slave", slaveId);
+  public void deleteAgent(String agentId) {
+    final Function<String, String> requestUri = host ->
+      String.format(AGENTS_DELETE_FORMAT, getApiBase(host), agentId);
+
+    delete(requestUri, "deleting agent", agentId);
   }
 
   //
@@ -1747,29 +1800,44 @@ public class SingularityClient {
   }
 
   //
-  // Inactive/Bad Slaves
+  // Inactive/Bad Agents
   //
 
+  @Deprecated
   public Collection<String> getInactiveSlaves() {
+    return getInactiveAgents();
+  }
+
+  public Collection<String> getInactiveAgents() {
     final Function<String, String> requestUri = host ->
-      String.format(INACTIVE_SLAVES_FORMAT, getApiBase(host));
-    return getCollection(requestUri, "inactiveSlaves", STRING_COLLECTION);
+      String.format(INACTIVE_AGENTS_FORMAT, getApiBase(host));
+    return getCollection(requestUri, "inactiveAgents", STRING_COLLECTION);
   }
 
+  @Deprecated
   public void markSlaveAsInactive(String host) {
-    final Function<String, String> requestUri = singularityHost ->
-      String.format(INACTIVE_SLAVES_FORMAT, getApiBase(singularityHost));
-    Map<String, Object> params = Collections.singletonMap("host", host);
-    postWithParams(requestUri, "deactivateSlave", Optional.empty(), Optional.of(params));
+    markAgentAsInactive(host);
   }
 
-  public void clearInactiveSlave(String host) {
+  public void markAgentAsInactive(String host) {
     final Function<String, String> requestUri = singularityHost ->
-      String.format(INACTIVE_SLAVES_FORMAT, getApiBase(host));
+      String.format(INACTIVE_AGENTS_FORMAT, getApiBase(singularityHost));
+    Map<String, Object> params = Collections.singletonMap("host", host);
+    postWithParams(requestUri, "deactivateAgent", Optional.empty(), Optional.of(params));
+  }
+
+  @Deprecated
+  public void clearInactiveSlave(String host) {
+    clearInactiveAgent(host);
+  }
+
+  public void clearInactiveAgent(String host) {
+    final Function<String, String> requestUri = singularityHost ->
+      String.format(INACTIVE_AGENTS_FORMAT, getApiBase(host));
     Map<String, Object> params = Collections.singletonMap("host", host);
     deleteWithParams(
       requestUri,
-      "clearInactiveSlave",
+      "clearInactiveAgent",
       host,
       Optional.empty(),
       Optional.of(params),
