@@ -3343,12 +3343,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     deploy("on_demand_deploy");
     deployChecker.checkDeploys();
+    long now = System.currentTimeMillis();
 
     requestManager.addToPendingQueue(
       new SingularityPendingRequest(
         requestId,
         "on_demand_deploy",
-        System.currentTimeMillis(),
+        now,
         Optional.<String>empty(),
         PendingType.ONEOFF,
         Optional.<List<String>>empty(),
@@ -3362,7 +3363,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       new SingularityPendingRequest(
         requestId,
         "on_demand_deploy",
-        System.currentTimeMillis(),
+        now + 1,
         Optional.<String>empty(),
         PendingType.ONEOFF,
         Optional.<List<String>>empty(),
@@ -3375,10 +3376,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    Assertions.assertEquals(
-      2,
-      taskManager.getPendingTaskIds().size() + taskManager.getActiveTaskIds().size()
-    );
+    Assertions.assertEquals(2, taskManager.getPendingTaskIds().size());
   }
 
   @Test
