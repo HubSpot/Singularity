@@ -329,8 +329,8 @@ public class SingularityRequest {
     description = "Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST"
   )
   @Deprecated
-  public Optional<AgentPlacement> getSlavePlacement() {
-    return agentPlacement;
+  public Optional<SlavePlacement> getSlavePlacement() {
+    return agentPlacement.map(a -> SlavePlacement.valueOf(a.name()));
   }
 
   @Schema(

@@ -288,15 +288,15 @@ public class SingularityRequestBuilder {
   }
 
   @Deprecated
-  public Optional<AgentPlacement> getSlavePlacement() {
-    return agentPlacement;
+  public Optional<SlavePlacement> getSlavePlacement() {
+    return agentPlacement.map(a -> SlavePlacement.valueOf(a.name()));
   }
 
   @Deprecated
   public SingularityRequestBuilder setSlavePlacement(
-    Optional<AgentPlacement> agentPlacement
+    Optional<SlavePlacement> agentPlacement
   ) {
-    this.agentPlacement = agentPlacement;
+    this.agentPlacement = agentPlacement.map(s -> AgentPlacement.valueOf(s.name()));
     return this;
   }
 
