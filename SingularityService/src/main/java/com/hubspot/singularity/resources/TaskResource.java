@@ -393,7 +393,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/active/slave/{slaveId}")
+  @Path("/active/slave/{agentId}")
   @Operation(
     summary = "Retrieve list of active tasks on a specific slave",
     responses = {
