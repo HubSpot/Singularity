@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../../utils';
-import SlaveResourceHealth from './SlaveResourceHealth';
+import AgentResourceHealth from './AgentResourceHealth';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from '../Constants';
 
@@ -33,14 +33,14 @@ const getUtilizationForStat = (statName, data) => {
   }
 };
 
-const slaveQuickStats = (data) => {
+const agentQuickStats = (data) => {
   const shortenHostName = true;
   const largeBlackCircle = '⬤';
   return (
-    <Popover id="slave-usage-quick-stats-popover">
-      <div className="row" id="slave-usage-quick-stats">
-        <div className="col-xs-3" id="slave-name">
-          {Utils.humanizeSlaveHostName(data.slaveInfo.host, shortenHostName)}
+    <Popover id="agent-usage-quick-stats-popover">
+      <div className="row" id="agent-usage-quick-stats">
+        <div className="col-xs-3" id="agent-name">
+          {Utils.humanizeAgentHostName(data.agentInfo.host, shortenHostName)}
         </div>
         <div className="col-xs-3" id="memory-stats">
           <div id="pct-utilized">
@@ -73,11 +73,11 @@ const slaveQuickStats = (data) => {
 
 const ResourceHealthData = ({utilizationData, statName}) => {
   return (
-    <OverlayTrigger trigger={overlayTriggers} overlay={slaveQuickStats(utilizationData)} placement={overlayPlacement}>
+    <OverlayTrigger trigger={overlayTriggers} overlay={agentQuickStats(utilizationData)} placement={overlayPlacement}>
       <span>
-        <SlaveResourceHealth
-          slaveUsage={utilizationData.slaveUsage}
-          slaveInfo={utilizationData.slaveInfo}
+        <AgentResourceHealth
+          agentUsage={utilizationData.agentUsage}
+          agentInfo={utilizationData.agentInfo}
           resource={statName}
           totalResource={getTotalForStat(statName, utilizationData)}
           utilization={getUtilizationForStat(statName, utilizationData)}
@@ -89,8 +89,8 @@ const ResourceHealthData = ({utilizationData, statName}) => {
 
 ResourceHealthData.propTypes = {
   utilizationData : PropTypes.shape({
-    slaveUsage : PropTypes.object.isRequired,
-    slaveInfo : PropTypes.object.isRequired
+    agentUsage : PropTypes.object.isRequired,
+    agentInfo : PropTypes.object.isRequired
   }),
   statName : PropTypes.string
 };

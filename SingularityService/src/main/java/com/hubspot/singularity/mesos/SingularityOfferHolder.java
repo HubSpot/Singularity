@@ -33,25 +33,25 @@ public class SingularityOfferHolder {
   private Set<String> roles;
 
   private final String rackId;
-  private final String slaveId;
+  private final String agentId;
   private final String hostname;
   private final String sanitizedHost;
   private final String sanitizedRackId;
 
   private final Map<String, String> textAttributes;
-  private final Map<String, String> reservedSlaveAttributes;
+  private final Map<String, String> reservedAgentAttributes;
 
   public SingularityOfferHolder(
     List<Protos.Offer> offers,
     int taskSizeHint,
     String rackId,
-    String slaveId,
+    String agentId,
     String hostname,
     Map<String, String> textAttributes,
-    Map<String, String> reservedSlaveAttributes
+    Map<String, String> reservedAgentAttributes
   ) {
     this.rackId = rackId;
-    this.slaveId = slaveId;
+    this.agentId = agentId;
     this.hostname = hostname;
     this.offers = offers;
     this.roles = MesosUtils.getRoles(offers.get(0));
@@ -65,7 +65,7 @@ public class SingularityOfferHolder {
     this.sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(hostname);
     this.sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
     this.textAttributes = textAttributes;
-    this.reservedSlaveAttributes = reservedSlaveAttributes;
+    this.reservedAgentAttributes = reservedAgentAttributes;
   }
 
   Map<String, String> getTextAttributes() {
@@ -76,16 +76,16 @@ public class SingularityOfferHolder {
     return rackId;
   }
 
-  public String getSlaveId() {
-    return slaveId;
+  public String getAgentId() {
+    return agentId;
   }
 
-  public boolean hasReservedSlaveAttributes() {
-    return !reservedSlaveAttributes.isEmpty();
+  public boolean hasReservedAgentAttributes() {
+    return !reservedAgentAttributes.isEmpty();
   }
 
-  Map<String, String> getReservedSlaveAttributes() {
-    return reservedSlaveAttributes;
+  Map<String, String> getReservedAgentAttributes() {
+    return reservedAgentAttributes;
   }
 
   public String getHostname() {
@@ -258,10 +258,10 @@ public class SingularityOfferHolder {
       return (
         Objects.equals(this.roles, that.roles) &&
         Objects.equals(this.rackId, that.rackId) &&
-        Objects.equals(this.slaveId, that.slaveId) &&
+        Objects.equals(this.agentId, that.agentId) &&
         Objects.equals(this.hostname, that.hostname) &&
         Objects.equals(this.textAttributes, that.textAttributes) &&
-        Objects.equals(this.reservedSlaveAttributes, that.reservedSlaveAttributes)
+        Objects.equals(this.reservedAgentAttributes, that.reservedAgentAttributes)
       );
     }
     return false;
@@ -272,10 +272,10 @@ public class SingularityOfferHolder {
     return Objects.hash(
       roles,
       rackId,
-      slaveId,
+      agentId,
       hostname,
       textAttributes,
-      reservedSlaveAttributes
+      reservedAgentAttributes
     );
   }
 
@@ -294,8 +294,8 @@ public class SingularityOfferHolder {
       ", rackId='" +
       rackId +
       '\'' +
-      ", slaveId='" +
-      slaveId +
+      ", agentId='" +
+      agentId +
       '\'' +
       ", hostname='" +
       hostname +
@@ -308,8 +308,8 @@ public class SingularityOfferHolder {
       '\'' +
       ", textAttributes=" +
       textAttributes +
-      ", reservedSlaveAttributes=" +
-      reservedSlaveAttributes +
+      ", reservedAgentAttributes=" +
+      reservedAgentAttributes +
       '}'
     );
   }

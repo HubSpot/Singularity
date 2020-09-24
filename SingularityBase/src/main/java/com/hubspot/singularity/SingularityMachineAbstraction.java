@@ -7,7 +7,7 @@ import java.util.Optional;
 
 @Schema(
   title = "Describes a slave or rack",
-  subTypes = { SingularitySlave.class, SingularityRack.class }
+  subTypes = { SingularityAgent.class, SingularityRack.class }
 )
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
   private final String id;

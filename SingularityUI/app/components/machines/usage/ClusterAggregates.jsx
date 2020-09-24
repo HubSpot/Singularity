@@ -7,7 +7,7 @@ import Loader from "../../common/Loader";
 import LabeledColumn from "./LabeledColumn";
 import Aggregate from './Aggregate';
 
-const SlaveAggregates = ({utilization, totalRequests}) => {
+const AgentAggregates = ({utilization, totalRequests}) => {
   return (
     <div>
       <h3>CPU</h3>
@@ -141,9 +141,9 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
   );
 };
 
-SlaveAggregates.propTypes = {
+AgentAggregates.propTypes = {
   utilization: PropTypes.object.isRequired,
   totalRequests: PropTypes.number.isRequired
 };
 
-export default SlaveAggregates;
+export default AgentAggregates;

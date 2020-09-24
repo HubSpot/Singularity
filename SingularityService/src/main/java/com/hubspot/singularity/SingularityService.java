@@ -43,7 +43,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
     @Tag(name = "Task Tracking"),
     @Tag(name = "History"),
     @Tag(name = "State"),
-    @Tag(name = "Slaves"),
+    @Tag(name = "Agents"),
     @Tag(name = "Racks"),
     @Tag(name = "Task Priorities"),
     @Tag(name = "Disasters"),

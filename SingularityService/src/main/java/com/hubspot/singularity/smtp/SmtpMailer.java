@@ -201,7 +201,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       mailTemplateHelpers.getSingularityTaskLink(taskId.getId())
     );
 
-    // Grab the tails of log files from remote mesos slaves.
+    // Grab the tails of log files from remote mesos agents.
     templateProperties.put(
       "logTails",
       mailTemplateHelpers.getTaskLogs(taskId, task, directory)
@@ -215,7 +215,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     templateProperties.put("color", emailType.getColor());
 
     if (task.isPresent()) {
-      templateProperties.put("slaveHostname", task.get().getHostname());
+      templateProperties.put("agentHostname", task.get().getHostname());
       if (task.get().getTaskRequest().getPendingTask().getCmdLineArgsList().isPresent()) {
         templateProperties.put(
           "extraCmdLineArguments",
@@ -375,7 +375,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       templateProperties.build(),
       taskManager.getTaskHistoryUpdates(taskId),
       ExtendedTaskState.TASK_RUNNING,
-      Collections.<SingularityTaskMetadata>emptyList()
+      Collections.emptyList()
     );
   }
 
@@ -1099,7 +1099,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
-    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlacklist());
+    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlocklist());
     toList.removeAll(emailBlacklist);
     ccList.removeAll(emailBlacklist);
 

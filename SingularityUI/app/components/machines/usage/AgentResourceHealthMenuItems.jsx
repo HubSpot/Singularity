@@ -1,15 +1,15 @@
 import React, { PropTypes } from 'react';
 import StatItem from './StatItem';
 import Utils from '../../../utils';
-import { STAT_NAMES, SLAVE_HEALTH_MENU_ITEM_ORDER, HUNDREDTHS_PLACE } from '../Constants';
+import { STAT_NAMES, AGENT_HEALTH_MENU_ITEM_ORDER, HUNDREDTHS_PLACE } from '../Constants';
 
 const compareStats = (stat1, stat2) => {
-  return SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(stat1.name) - SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(stat2.name);
+  return AGENT_HEALTH_MENU_ITEM_ORDER.indexOf(stat1.name) - AGENT_HEALTH_MENU_ITEM_ORDER.indexOf(stat2.name);
 };
 
 const humanizeStatName = (name) => {
   switch (name) {
-    case STAT_NAMES.slaveIdStat:
+    case STAT_NAMES.agentIdStat:
       return 'HOST';
     case STAT_NAMES.cpusUsedStat:
       return 'CPU';
@@ -26,8 +26,8 @@ const humanizeStatName = (name) => {
 
 const humanizeStatValue = (name, value, maybeTotalResource) => {
   switch (name) {
-    case STAT_NAMES.slaveIdStat:
-      return Utils.humanizeSlaveHostName(value);
+    case STAT_NAMES.agentIdStat:
+      return Utils.humanizeAgentHostName(value);
     case STAT_NAMES.cpusUsedStat:
       return `${Utils.roundTo(value, HUNDREDTHS_PLACE)} / ${maybeTotalResource}`;
     case STAT_NAMES.memoryBytesUsedStat:
@@ -48,7 +48,7 @@ const humanizeStatPct = (name, value, maybeTotalResource) => {
 };
 
 const maybeLink = (name, value) => {
-  if (name === STAT_NAMES.slaveIdStat) {
+  if (name === STAT_NAMES.agentIdStat) {
     return {
       href: `tasks/active/all/${value}`,
       title: `All tasks running on host ${value}`
@@ -58,15 +58,15 @@ const maybeLink = (name, value) => {
   return null;
 };
 
-const SlaveResourceHealthMenuItems = ({stats}) => {
+const AgentResourceHealthMenuItems = ({stats}) => {
   stats = stats.filter((stat) => _.contains(_.values(STAT_NAMES), stat.name));
-  const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource}) => {
+  const renderAgentStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource}) => {
     return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} maybeLink={maybeLink(name, value)} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
   });
 
   return (
-    <div id="slave-stats">
-      {renderSlaveStats}
+    <div id="agent-stats">
+      {renderAgentStats}
       <li className="timestamp-stat">
         <div className="row">
           <div className="col-xs-12">
@@ -78,7 +78,7 @@ const SlaveResourceHealthMenuItems = ({stats}) => {
   );
 };
 
-SlaveResourceHealthMenuItems.propTypes = {
+AgentResourceHealthMenuItems.propTypes = {
   stats: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
@@ -95,4 +95,4 @@ SlaveResourceHealthMenuItems.propTypes = {
   )
 };
 
-export default SlaveResourceHealthMenuItems;
+export default AgentResourceHealthMenuItems;

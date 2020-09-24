@@ -1,13 +1,16 @@
 package com.hubspot.singularity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
-@Schema
+/**
+ * @deprecated use {@link AgentPlacement}
+ */
+@Deprecated
 public enum SlavePlacement {
   SEPARATE,
   OPTIMISTIC,
   GREEDY,
   SEPARATE_BY_DEPLOY,
   SEPARATE_BY_REQUEST,
-  SPREAD_ALL_SLAVES
+  @Deprecated
+  SPREAD_ALL_SLAVES,
+  SPREAD_ALL_AGENTS
 }

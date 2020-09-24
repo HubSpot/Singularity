@@ -17,8 +17,8 @@ public class SingularityRunNowRequestBuilder {
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
-  private Map<String, String> requiredSlaveAttributeOverrides;
-  private Map<String, String> allowedSlaveAttributeOverrides;
+  private Map<String, String> requiredAgentAttributeOverrides;
+  private Map<String, String> allowedAgentAttributeOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
@@ -30,8 +30,8 @@ public class SingularityRunNowRequestBuilder {
     this.resources = Optional.empty();
     this.runAsUserOverride = Optional.empty();
     this.envOverrides = Collections.emptyMap();
-    this.requiredSlaveAttributeOverrides = Collections.emptyMap();
-    this.allowedSlaveAttributeOverrides = Collections.emptyMap();
+    this.requiredAgentAttributeOverrides = Collections.emptyMap();
+    this.allowedAgentAttributeOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.empty();
   }
@@ -84,17 +84,33 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setRequiredSlaveAttributeOverrides(
-    Map<String, String> requiredSlaveAttributeOverrides
+  public SingularityRunNowRequestBuilder setRequiredAgentAttributeOverrides(
+    Map<String, String> requiredAgentAttributeOverrides
   ) {
-    this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    this.requiredAgentAttributeOverrides = requiredAgentAttributeOverrides;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setAllowedSlaveAttributeOverrides(
-    Map<String, String> allowedSlaveAttributeOverrides
+  @Deprecated
+  public SingularityRunNowRequestBuilder setRequiredSlaveAttributeOverrides(
+    Map<String, String> requiredAgentAttributeOverrides
   ) {
-    this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    this.requiredAgentAttributeOverrides = requiredAgentAttributeOverrides;
+    return this;
+  }
+
+  @Deprecated
+  public SingularityRunNowRequestBuilder setAllowedSlaveAttributeOverrides(
+    Map<String, String> allowedAgentAttributeOverrides
+  ) {
+    this.allowedAgentAttributeOverrides = allowedAgentAttributeOverrides;
+    return this;
+  }
+
+  public SingularityRunNowRequestBuilder setAllowedAgentAttributeOverrides(
+    Map<String, String> allowedAgentAttributeOverrides
+  ) {
+    this.allowedAgentAttributeOverrides = allowedAgentAttributeOverrides;
     return this;
   }
 
@@ -120,8 +136,8 @@ public class SingularityRunNowRequestBuilder {
       s3UploaderAdditionalFiles,
       runAsUserOverride,
       envOverrides,
-      requiredSlaveAttributeOverrides,
-      allowedSlaveAttributeOverrides,
+      requiredAgentAttributeOverrides,
+      allowedAgentAttributeOverrides,
       extraArtifacts,
       runAt
     );
@@ -147,10 +163,10 @@ public class SingularityRunNowRequestBuilder {
       runAsUserOverride +
       ", envOverrides=" +
       envOverrides +
-      ", requiredSlaveAttributeOverrides=" +
-      requiredSlaveAttributeOverrides +
-      ", allowedSlaveAttributeOverrides=" +
-      allowedSlaveAttributeOverrides +
+      ", requiredAgentAttributeOverrides=" +
+      requiredAgentAttributeOverrides +
+      ", allowedAgentAttributeOverrides=" +
+      allowedAgentAttributeOverrides +
       ", extraArtifacts=" +
       extraArtifacts +
       ", runAt=" +

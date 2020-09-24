@@ -5,14 +5,14 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.InactiveSlaveManager;
-import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.data.AgentManager;
+import com.hubspot.singularity.data.InactiveAgentManager;
 import com.hubspot.singularity.helpers.MesosUtils;
+import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -22,41 +22,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyPoller {
+public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyPoller {
   private static final Logger LOG = LoggerFactory.getLogger(
-    SingularitySlaveReconciliationPoller.class
+    SingularityAgentReconciliationPoller.class
   );
 
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final SingularityConfiguration configuration;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
   private final MesosClient mesosClient;
   private final SingularityMesosScheduler mesosScheduler;
-  private final InactiveSlaveManager inactiveSlaveManager;
+  private final InactiveAgentManager inactiveAgentManager;
 
   @Inject
-  SingularitySlaveReconciliationPoller(
+  SingularityAgentReconciliationPoller(
     SingularityConfiguration configuration,
-    SlaveManager slaveManager,
-    SingularitySlaveAndRackManager slaveAndRackManager,
+    AgentManager agentManager,
+    SingularityAgentAndRackManager agentAndRackManager,
     MesosClient mesosClient,
     SingularityMesosScheduler mesosScheduler,
-    InactiveSlaveManager inactiveSlaveManager
+    InactiveAgentManager inactiveAgentManager
   ) {
-    super(configuration.getReconcileSlavesEveryMinutes(), TimeUnit.MINUTES);
-    this.slaveManager = slaveManager;
+    super(configuration.getReconcileAgentsEveryMinutes(), TimeUnit.MINUTES);
+    this.agentManager = agentManager;
     this.configuration = configuration;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
     this.mesosClient = mesosClient;
     this.mesosScheduler = mesosScheduler;
-    this.inactiveSlaveManager = inactiveSlaveManager;
+    this.inactiveAgentManager = inactiveAgentManager;
   }
 
   @Override
   public void runActionOnPoll() {
     refereshSlavesAndRacks();
     checkDeadSlaves();
-    inactiveSlaveManager.cleanInactiveSlavesList(
+    inactiveAgentManager.cleanInactiveAgentsList(
       System.currentTimeMillis() -
       TimeUnit.HOURS.toMillis(configuration.getCleanInactiveHostListEveryHours())
     );
@@ -72,43 +72,43 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
         );
         MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-        slaveAndRackManager.loadSlavesAndRacksFromMaster(state, false);
+        agentAndRackManager.loadAgentsAndRacksFromMaster(state, false);
       }
     } catch (Exception e) {
-      LOG.error("Could not refresh slave data", e);
+      LOG.error("Could not refresh agent data", e);
     }
   }
 
   private void checkDeadSlaves() {
     final long start = System.currentTimeMillis();
 
-    final List<SingularitySlave> deadSlaves = slaveManager.getObjectsFiltered(
+    final List<SingularityAgent> deadSlaves = agentManager.getObjectsFiltered(
       MachineState.DEAD
     );
 
     if (deadSlaves.isEmpty()) {
-      LOG.trace("No dead slaves");
+      LOG.trace("No dead agents");
       return;
     }
 
     int deleted = 0;
     final long maxDuration = TimeUnit.HOURS.toMillis(
-      configuration.getDeleteDeadSlavesAfterHours()
+      configuration.getDeleteDeadAgentsAfterHours()
     );
 
-    for (SingularitySlave deadSlave : slaveManager.getObjectsFiltered(
+    for (SingularityAgent deadSlave : agentManager.getObjectsFiltered(
       MachineState.DEAD
     )) {
       final long duration =
         System.currentTimeMillis() - deadSlave.getCurrentState().getTimestamp();
 
       if (duration > maxDuration) {
-        SingularityDeleteResult result = slaveManager.deleteObject(deadSlave.getId());
+        SingularityDeleteResult result = agentManager.deleteObject(deadSlave.getId());
 
         deleted++;
 
         LOG.info(
-          "Removing dead slave {} ({}) after {} (max {})",
+          "Removing dead agent {} ({}) after {} (max {})",
           deadSlave.getId(),
           result,
           JavaUtils.durationFromMillis(duration),
@@ -118,7 +118,7 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
     }
 
     LOG.debug(
-      "Checked {} dead slaves, deleted {} in {}",
+      "Checked {} dead agents, deleted {} in {}",
       deadSlaves.size(),
       deleted,
       JavaUtils.duration(start)
@@ -126,8 +126,8 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
   }
 
   private void clearOldSlaveHistory() {
-    for (SingularitySlave singularitySlave : slaveManager.getObjects()) {
-      slaveManager.clearOldHistory(singularitySlave.getId());
+    for (SingularityAgent singularityAgent : agentManager.getObjects()) {
+      agentManager.clearOldHistory(singularityAgent.getId());
     }
   }
 }

@@ -68,6 +68,7 @@ public class MesosTaskObject {
     return agentId;
   }
 
+  @Deprecated
   public MesosStringValue getSlaveId() {
     return slaveId;
   }

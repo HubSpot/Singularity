@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @deprecated use {@link MesosAgentStateObject}
+ */
+@Deprecated
 public class MesosSlaveStateObject {
   private final String id;
   private final String pid;
@@ -14,7 +18,7 @@ public class MesosSlaveStateObject {
 
   private final MesosResourcesObject resources;
 
-  private final List<MesosSlaveFrameworkObject> frameworks;
+  private final List<MesosAgentFrameworkObject> frameworks;
 
   private final int finishedTasks;
   private final int lostTasks;
@@ -30,7 +34,7 @@ public class MesosSlaveStateObject {
     @JsonProperty("hostname") String hostname,
     @JsonProperty("start_time") long startTime,
     @JsonProperty("resources") MesosResourcesObject resources,
-    @JsonProperty("frameworks") List<MesosSlaveFrameworkObject> frameworks,
+    @JsonProperty("frameworks") List<MesosAgentFrameworkObject> frameworks,
     @JsonProperty("finished_tasks") int finishedTasks,
     @JsonProperty("lost_tasks") int lostTasks,
     @JsonProperty("started_tasks") int startedTasks,
@@ -65,7 +69,7 @@ public class MesosSlaveStateObject {
     return hostname;
   }
 
-  public List<MesosSlaveFrameworkObject> getFrameworks() {
+  public List<MesosAgentFrameworkObject> getFrameworks() {
     return frameworks;
   }
 

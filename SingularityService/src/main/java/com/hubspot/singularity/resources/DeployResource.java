@@ -105,7 +105,7 @@ public class DeployResource extends AbstractRequestResource {
     return authorizationHelper.filterByAuthorizedRequests(
       user,
       deployManager.getPendingDeploys(),
-      SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID,
+      SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID::apply,
       SingularityAuthorizationScope.READ
     );
   }

@@ -5,9 +5,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosAgentFrameworkObject;
+import com.hubspot.mesos.json.MesosAgentStateObject;
 import com.hubspot.mesos.json.MesosExecutorObject;
-import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
-import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -80,23 +80,23 @@ public class SingularityMesosExecutorInfoSupport {
   private void loadDirectoryAndContainer(SingularityTask task) {
     final long start = System.currentTimeMillis();
 
-    final String slaveUri = mesosClient.getSlaveUri(task.getHostname());
+    final String agentUri = mesosClient.getAgentUri(task.getHostname());
 
     LOG.info(
-      "Fetching slave data to find log directory and container id for task {} from uri {}",
+      "Fetching agent data to find log directory and container id for task {} from uri {}",
       task.getTaskId(),
-      slaveUri
+      agentUri
     );
 
-    MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
+    MesosAgentStateObject agentState = mesosClient.getAgentState(agentUri);
 
     Optional<String> directory = Optional.empty();
     Optional<String> containerId = Optional.empty();
 
-    for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
+    for (MesosAgentFrameworkObject agentFramework : agentState.getFrameworks()) {
       Optional<MesosExecutorObject> maybeExecutor = findExecutor(
         task.getTaskId(),
-        slaveFramework.getExecutors()
+        agentFramework.getExecutors()
       );
       if (maybeExecutor.isPresent()) {
         directory = Optional.of(maybeExecutor.get().getDirectory());
@@ -105,7 +105,7 @@ public class SingularityMesosExecutorInfoSupport {
       }
 
       maybeExecutor =
-        findExecutor(task.getTaskId(), slaveFramework.getCompletedExecutors());
+        findExecutor(task.getTaskId(), agentFramework.getCompletedExecutors());
       if (maybeExecutor.isPresent()) {
         directory = Optional.of(maybeExecutor.get().getDirectory());
         containerId = Optional.of(maybeExecutor.get().getContainer());

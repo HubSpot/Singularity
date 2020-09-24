@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class MesosMasterStateObject {
   private final String version;
@@ -24,7 +25,7 @@ public class MesosMasterStateObject {
   private final String leader;
   private final String logDir;
   private final Map<String, String> flags;
-  private final List<MesosMasterSlaveObject> slaves;
+  private final List<MesosMasterAgentObject> agents;
   private final List<MesosFrameworkObject> frameworks;
 
   @JsonCreator
@@ -46,7 +47,7 @@ public class MesosMasterStateObject {
     @JsonProperty("leader") String leader,
     @JsonProperty("log_dir") String logDir,
     @JsonProperty("flags") Map<String, String> flags,
-    @JsonProperty("slaves") List<MesosMasterSlaveObject> slaves,
+    @JsonProperty("slaves") List<MesosMasterAgentObject> agents,
     @JsonProperty("frameworks") List<MesosFrameworkObject> frameworks
   ) {
     this.version = version;
@@ -66,7 +67,7 @@ public class MesosMasterStateObject {
     this.leader = leader;
     this.logDir = logDir;
     this.flags = flags;
-    this.slaves = slaves;
+    this.agents = agents;
     this.frameworks = frameworks;
   }
 
@@ -138,8 +139,16 @@ public class MesosMasterStateObject {
     return flags;
   }
 
+  @Deprecated
   public List<MesosMasterSlaveObject> getSlaves() {
-    return slaves;
+    return agents
+      .stream()
+      .map(a -> (MesosMasterSlaveObject) a)
+      .collect(Collectors.toList());
+  }
+
+  public List<MesosMasterAgentObject> getAgents() {
+    return agents;
   }
 
   public List<MesosFrameworkObject> getFrameworks() {
@@ -173,7 +182,7 @@ public class MesosMasterStateObject {
       Objects.equals(leader, that.leader) &&
       Objects.equals(logDir, that.logDir) &&
       Objects.equals(flags, that.flags) &&
-      Objects.equals(slaves, that.slaves) &&
+      Objects.equals(agents, that.agents) &&
       Objects.equals(frameworks, that.frameworks)
     );
   }
@@ -198,7 +207,7 @@ public class MesosMasterStateObject {
       leader,
       logDir,
       flags,
-      slaves,
+      agents,
       frameworks
     );
   }
@@ -252,8 +261,8 @@ public class MesosMasterStateObject {
       '\'' +
       ", flags=" +
       flags +
-      ", slaves=" +
-      slaves +
+      ", agents=" +
+      agents +
       ", frameworks=" +
       frameworks +
       '}'

@@ -58,7 +58,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     authorizationHelper.checkReadAuthorization(user);
-    return shuffleCfgManager.getShuffleBlacklist();
+    return shuffleCfgManager.getShuffleBlocklist();
   }
 
   @GET
@@ -76,7 +76,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       user,
       SingularityAuthorizationScope.READ
     );
-    return shuffleCfgManager.isOnShuffleBlacklist(requestId);
+    return shuffleCfgManager.isOnShuffleBlocklist(requestId);
   }
 
   @POST
@@ -96,7 +96,7 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       user,
       SingularityAuthorizationScope.WRITE
     );
-    shuffleCfgManager.addToShuffleBlacklist(requestId);
+    shuffleCfgManager.addToShuffleBlocklist(requestId);
   }
 
   @DELETE
@@ -116,6 +116,6 @@ public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
       user,
       SingularityAuthorizationScope.WRITE
     );
-    shuffleCfgManager.removeFromShuffleBlacklist(requestId);
+    shuffleCfgManager.removeFromShuffleBlocklist(requestId);
   }
 }

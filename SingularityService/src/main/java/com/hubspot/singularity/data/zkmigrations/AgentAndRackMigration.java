@@ -6,12 +6,12 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 
 @Singleton
-public class SlaveAndRackMigration2 extends ZkDataMigration {
+public class AgentAndRackMigration extends ZkDataMigration {
   private final CuratorFramework curator;
 
   @Inject
-  public SlaveAndRackMigration2(CuratorFramework curator) {
-    super(6);
+  public AgentAndRackMigration(CuratorFramework curator) {
+    super(3);
     this.curator = curator;
   }
 

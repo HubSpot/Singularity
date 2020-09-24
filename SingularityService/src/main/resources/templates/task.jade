@@ -66,12 +66,12 @@ html
           if !taskStateFinished
             if !taskStateRunning
               if !taskRan
-                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired slave. For further assistance email #{ adminEmails }.
+                p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. Singularity was not able to launch this task on the desired agent. For further assistance email #{ adminEmails }.
               else
                 if taskStateFailed
-                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the slave.
+                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> Check Singularity for logs or ssh into the agent.
                 if taskStateLost
-                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The slave process hosting the task or the underlying slave hardware likely failed. You may want to check the slave or monitoring systems as it is possible, though unlikely, that the task may still be running.
+                  p(style="margin-bottom: 0") <b>Recommended course of action: </b> None. The agent process hosting the task or the underlying agent hardware likely failed. You may want to check the agent or monitoring systems as it is possible, though unlikely, that the task may still be running.
 
         //- History
         div(style="padding-bottom: 20px")
@@ -99,8 +99,8 @@ html
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ deployId }
             dt(style="font-weight: bold; margin: 0 0 9px") Task ID
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskId }
-            dt(style="font-weight: bold; margin: 0 0 9px") Hostname of slave task ran on
-            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slaveHostname }
+            dt(style="font-weight: bold; margin: 0 0 9px") Hostname of agent task ran on
+            dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ agentHostname }
             dt(style="font-weight: bold; margin: 0 0 9px") Directory
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskDirectory }
             if extraCmdLineArguments
@@ -127,7 +127,7 @@ html
                     code(style="font-family: Menlo, Monaco, Consolas, Courier, monospace; white-space: pre;")
                       #{ log.log }
                 else
-                  | #{ log.path } not available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
+                  | #{ log.path } not available. The task either did not start, output anything, or the agent hosting the log files was unavailable over http.
 
         //- Metadata
         if taskHasMetadata

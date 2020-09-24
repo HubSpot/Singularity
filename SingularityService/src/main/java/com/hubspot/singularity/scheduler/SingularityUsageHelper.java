@@ -5,16 +5,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosAgentMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgent;
+import com.hubspot.singularity.SingularityAgentUsage;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -22,9 +22,9 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.ShuffleConfigurationManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -49,7 +49,7 @@ public class SingularityUsageHelper {
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RequestManager requestManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final TaskManager taskManager;
   private final UsageManager usageManager;
   private final ShuffleConfigurationManager shuffleConfigurationManager;
@@ -60,7 +60,7 @@ public class SingularityUsageHelper {
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier,
     RequestManager requestManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     TaskManager taskManager,
     UsageManager usageManager,
     ShuffleConfigurationManager shuffleConfigurationManager
@@ -69,40 +69,40 @@ public class SingularityUsageHelper {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.requestManager = requestManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.taskManager = taskManager;
     this.usageManager = usageManager;
     this.shuffleConfigurationManager = shuffleConfigurationManager;
   }
 
-  public List<SingularitySlave> getSlavesToTrackUsageFor() {
-    List<SingularitySlave> slaves = slaveManager.getObjects();
-    List<SingularitySlave> slavesToTrack = new ArrayList<>(slaves.size());
+  public List<SingularityAgent> getAgentsToTrackUsageFor() {
+    List<SingularityAgent> agents = agentManager.getObjects();
+    List<SingularityAgent> agentsToTrack = new ArrayList<>(agents.size());
 
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent agent : agents) {
       if (
-        slave.getCurrentState().getState().isInactive() ||
-        slave.getCurrentState().getState() == MachineState.DECOMMISSIONED
+        agent.getCurrentState().getState().isInactive() ||
+        agent.getCurrentState().getState() == MachineState.DECOMMISSIONED
       ) {
         continue;
       }
 
-      slavesToTrack.add(slave);
+      agentsToTrack.add(agent);
     }
 
-    return slavesToTrack;
+    return agentsToTrack;
   }
 
-  public MesosSlaveMetricsSnapshotObject getMetricsSnapshot(String host) {
-    return mesosClient.getSlaveMetricsSnapshot(host, true);
+  public MesosAgentMetricsSnapshotObject getMetricsSnapshot(String host) {
+    return mesosClient.getAgentMetricsSnapshot(host, true);
   }
 
-  public void collectSlaveUsage(
-    SingularitySlave slave,
+  public void collectAgentUsage(
+    SingularityAgent agent,
     long now,
     Map<String, RequestUtilization> utilizationPerRequestId,
     Map<String, RequestUtilization> previousUtilizations,
-    Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+    Map<SingularityAgentUsage, List<TaskIdWithUsage>> overLoadedHosts,
     AtomicLong totalMemBytesUsed,
     AtomicLong totalMemBytesAvailable,
     AtomicDouble totalCpuUsed,
@@ -115,39 +115,39 @@ public class SingularityUsageHelper {
     Optional<Double> cpusTotal = Optional.empty();
     Optional<Long> diskMbTotal = Optional.empty();
 
-    long memoryMbReservedOnSlave = 0;
-    double cpuReservedOnSlave = 0;
-    long diskMbReservedOnSlave = 0;
+    long memoryMbReserved = 0;
+    double cpuReserved = 0;
+    long diskMbReserved = 0;
 
-    long memoryBytesUsedOnSlave = 0;
-    double cpusUsedOnSlave = 0;
-    long diskMbUsedOnSlave = 0;
+    long memoryBytesUsed = 0;
+    double cpusUsed = 0;
+    long diskMbUsed = 0;
 
     try {
-      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(
-        slave.getHost(),
+      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getAgentResourceUsage(
+        agent.getHost(),
         useShortTimeout
       );
-      MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(
-        slave.getHost()
+      MesosAgentMetricsSnapshotObject agentMetricsSnapshot = mesosClient.getAgentMetricsSnapshot(
+        agent.getHost()
       );
       double systemMemTotalBytes = 0;
       double systemMemFreeBytes = 0;
       double systemLoad1Min = 0;
       double systemLoad5Min = 0;
       double systemLoad15Min = 0;
-      double slaveDiskUsed = 0;
-      double slaveDiskTotal = 0;
+      double diskUsed = 0;
+      double diskTotal = 0;
       double systemCpusTotal = 0;
-      if (slaveMetricsSnapshot != null) {
-        systemMemTotalBytes = slaveMetricsSnapshot.getSystemMemTotalBytes();
-        systemMemFreeBytes = slaveMetricsSnapshot.getSystemMemFreeBytes();
-        systemLoad1Min = slaveMetricsSnapshot.getSystemLoad1Min();
-        systemLoad5Min = slaveMetricsSnapshot.getSystemLoad5Min();
-        systemLoad15Min = slaveMetricsSnapshot.getSystemLoad15Min();
-        slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
-        slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
-        systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
+      if (agentMetricsSnapshot != null) {
+        systemMemTotalBytes = agentMetricsSnapshot.getSystemMemTotalBytes();
+        systemMemFreeBytes = agentMetricsSnapshot.getSystemMemFreeBytes();
+        systemLoad1Min = agentMetricsSnapshot.getSystemLoad1Min();
+        systemLoad5Min = agentMetricsSnapshot.getSystemLoad5Min();
+        systemLoad15Min = agentMetricsSnapshot.getSystemLoad15Min();
+        diskUsed = agentMetricsSnapshot.getDiskUsed();
+        diskTotal = agentMetricsSnapshot.getDiskTotal();
+        systemCpusTotal = agentMetricsSnapshot.getSystemCpusTotal();
       }
 
       double systemLoad;
@@ -164,14 +164,14 @@ public class SingularityUsageHelper {
           break;
       }
 
-      boolean slaveOverloadedForCpu =
+      boolean overloadedForCpu =
         systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
-      boolean slaveExperiencingHighMemUsage =
+      boolean experiencingHighMemUsage =
         ((systemMemTotalBytes - systemMemFreeBytes) / systemMemTotalBytes) >
-        configuration.getShuffleTasksWhenSlaveMemoryUtilizationPercentageExceeds();
+        configuration.getShuffleTasksWhenAgentMemoryUtilizationPercentageExceeds();
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
       Set<String> shuffleBlacklist = new HashSet<>(
-        shuffleConfigurationManager.getShuffleBlacklist()
+        shuffleConfigurationManager.getShuffleBlocklist()
       );
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
@@ -213,9 +213,9 @@ public class SingularityUsageHelper {
             double cpuReservedForTask = taskResources.getCpus();
             double diskMbReservedForTask = taskResources.getDiskMb();
 
-            memoryMbReservedOnSlave += memoryMbReservedForTask;
-            cpuReservedOnSlave += cpuReservedForTask;
-            diskMbReservedOnSlave += diskMbReservedForTask;
+            memoryMbReserved += memoryMbReservedForTask;
+            cpuReserved += cpuReservedForTask;
+            diskMbReserved += diskMbReservedForTask;
 
             updateRequestUtilization(
               utilizationPerRequestId,
@@ -231,8 +231,8 @@ public class SingularityUsageHelper {
             );
           }
         }
-        memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
-        diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
+        memoryBytesUsed += latestUsage.getMemoryTotalBytes();
+        diskMbUsed += latestUsage.getDiskTotalBytes();
 
         SingularityTaskCurrentUsage currentUsage = null;
         if (pastTaskUsages.isEmpty()) {
@@ -255,7 +255,7 @@ public class SingularityUsageHelper {
                 latestUsage.getDiskTotalBytes()
               );
 
-            cpusUsedOnSlave += usedCpusSinceStart;
+            cpusUsed += usedCpusSinceStart;
           }
         } else {
           SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
@@ -275,7 +275,7 @@ public class SingularityUsageHelper {
               taskCpusUsed,
               latestUsage.getDiskTotalBytes()
             );
-          cpusUsedOnSlave += taskCpusUsed;
+          cpusUsed += taskCpusUsed;
         }
 
         if (currentUsage != null && currentUsage.getCpusUsed() > 0) {
@@ -304,28 +304,28 @@ public class SingularityUsageHelper {
       }
 
       if (
-        !slave.getResources().isPresent() ||
-        !slave.getResources().get().getMemoryMegaBytes().isPresent() ||
-        !slave.getResources().get().getNumCpus().isPresent()
+        !agent.getResources().isPresent() ||
+        !agent.getResources().get().getMemoryMegaBytes().isPresent() ||
+        !agent.getResources().get().getNumCpus().isPresent()
       ) {
-        LOG.debug("Could not find slave or resources for slave {}", slave.getId());
+        LOG.debug("Could not find agent or resources for agent {}", agent.getId());
       } else {
         memoryMbTotal =
-          Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
+          Optional.of(agent.getResources().get().getMemoryMegaBytes().get().longValue());
         cpusTotal =
-          Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
-        diskMbTotal = Optional.of(slave.getResources().get().getDiskSpace().get());
+          Optional.of(agent.getResources().get().getNumCpus().get().doubleValue());
+        diskMbTotal = Optional.of(agent.getResources().get().getDiskSpace().get());
       }
 
-      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(
-        cpusUsedOnSlave,
-        cpuReservedOnSlave,
+      SingularityAgentUsage agentUsage = new SingularityAgentUsage(
+        cpusUsed,
+        cpuReserved,
         cpusTotal,
-        memoryBytesUsedOnSlave,
-        memoryMbReservedOnSlave,
+        memoryBytesUsed,
+        memoryMbReserved,
         memoryMbTotal,
-        diskMbUsedOnSlave,
-        diskMbReservedOnSlave,
+        diskMbUsed,
+        diskMbReserved,
         diskMbTotal,
         allTaskUsage.size(),
         now,
@@ -335,35 +335,35 @@ public class SingularityUsageHelper {
         systemLoad1Min,
         systemLoad5Min,
         systemLoad15Min,
-        slaveDiskUsed,
-        slaveDiskTotal
+        diskUsed,
+        diskTotal
       );
 
-      if (slaveOverloadedForCpu || slaveExperiencingHighMemUsage) {
-        overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
+      if (overloadedForCpu || experiencingHighMemUsage) {
+        overLoadedHosts.put(agentUsage, possibleTasksToShuffle);
       }
 
       if (
-        slaveUsage.getMemoryBytesTotal().isPresent() &&
-        slaveUsage.getCpusTotal().isPresent()
+        agentUsage.getMemoryBytesTotal().isPresent() &&
+        agentUsage.getCpusTotal().isPresent()
       ) {
-        totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
-        totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
-        totalDiskBytesUsed.getAndAdd((long) slaveUsage.getDiskBytesUsed());
+        totalMemBytesUsed.getAndAdd((long) agentUsage.getMemoryBytesUsed());
+        totalCpuUsed.getAndAdd(agentUsage.getCpusUsed());
+        totalDiskBytesUsed.getAndAdd((long) agentUsage.getDiskBytesUsed());
 
-        totalMemBytesAvailable.getAndAdd(slaveUsage.getMemoryBytesTotal().get());
-        totalCpuAvailable.getAndAdd(slaveUsage.getCpusTotal().get());
-        totalDiskBytesAvailable.getAndAdd(slaveUsage.getDiskBytesTotal().get());
+        totalMemBytesAvailable.getAndAdd(agentUsage.getMemoryBytesTotal().get());
+        totalCpuAvailable.getAndAdd(agentUsage.getCpusTotal().get());
+        totalDiskBytesAvailable.getAndAdd(agentUsage.getDiskBytesTotal().get());
       }
 
-      LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
-      usageManager.saveCurrentSlaveUsage(
-        new SingularitySlaveUsageWithId(slaveUsage, slave.getId())
+      LOG.debug("Saving agent {} usage {}", agent.getHost(), agentUsage);
+      usageManager.saveCurrentAgentUsage(
+        new SingularityAgentUsageWithId(agentUsage, agent.getId())
       );
     } catch (Throwable t) {
       String message = String.format(
-        "Could not get slave usage for host %s",
-        slave.getHost()
+        "Could not get agent usage for host %s",
+        agent.getHost()
       );
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
@@ -605,12 +605,12 @@ public class SingularityUsageHelper {
     newRequestUtilization
       .addMemBytesReserved(
         (long) (
-          memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks
+          memoryMbReservedForTask * SingularityAgentUsage.BYTES_PER_MEGABYTE * numTasks
         )
       )
       .addCpuReserved(cpuReservedForTask * numTasks)
       .addDiskBytesReserved(
-        (long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks
+        (long) diskMbReservedForTask * SingularityAgentUsage.BYTES_PER_MEGABYTE * numTasks
       )
       .setCpuBurstRating(cpuBurstRating);
 

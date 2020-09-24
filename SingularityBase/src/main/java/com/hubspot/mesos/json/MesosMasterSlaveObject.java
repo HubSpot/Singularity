@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * @deprecated user {@link MesosMasterAgentObject}
+ */
+@Deprecated
 public class MesosMasterSlaveObject {
   private final String id;
   private final String pid;

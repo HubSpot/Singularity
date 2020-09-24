@@ -4,14 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityAgent;
+import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -41,11 +41,11 @@ public class SingularityLeaderCache {
   private Map<String, SingularityRequestDeployState> requestIdToDeployState;
   private Map<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
   private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
-  private Map<String, SingularitySlave> slaves;
+  private Map<String, SingularityAgent> agents;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
   private Map<String, RequestUtilization> requestUtilizations;
-  private Map<String, SingularitySlaveUsageWithId> slaveUsages;
+  private Map<String, SingularityAgentUsageWithId> agentUsages;
 
   private volatile boolean active;
 
@@ -81,8 +81,8 @@ public class SingularityLeaderCache {
     if (historyUpdates != null) {
       historyUpdates.clear();
     }
-    if (slaves != null) {
-      slaves.clear();
+    if (agents != null) {
+      agents.clear();
     }
     if (racks != null) {
       racks.clear();
@@ -93,8 +93,8 @@ public class SingularityLeaderCache {
     if (requestUtilizations != null) {
       requestUtilizations.clear();
     }
-    if (slaveUsages != null) {
-      slaveUsages.clear();
+    if (agentUsages != null) {
+      agentUsages.clear();
     }
   }
 
@@ -155,12 +155,12 @@ public class SingularityLeaderCache {
       );
   }
 
-  public void cacheSlaves(List<SingularitySlave> slaves) {
-    this.slaves =
+  public void cacheAgents(List<SingularityAgent> slaves) {
+    this.agents =
       slaves
         .stream()
         .collect(
-          Collectors.toConcurrentMap(SingularitySlave::getId, Function.identity())
+          Collectors.toConcurrentMap(SingularityAgent::getId, Function.identity())
         );
   }
 
@@ -181,8 +181,8 @@ public class SingularityLeaderCache {
     this.requestUtilizations = new ConcurrentHashMap<>(requestUtilizations);
   }
 
-  public void cacheSlaveUsages(Map<String, SingularitySlaveUsageWithId> slaveUsages) {
-    this.slaveUsages = new ConcurrentHashMap<>(slaveUsages);
+  public void cacheAgentUsages(Map<String, SingularityAgentUsageWithId> slaveUsages) {
+    this.agentUsages = new ConcurrentHashMap<>(slaveUsages);
   }
 
   public boolean active() {
@@ -511,28 +511,28 @@ public class SingularityLeaderCache {
     historyUpdates.remove(taskId);
   }
 
-  public List<SingularitySlave> getSlaves() {
-    return new ArrayList<>(slaves.values());
+  public List<SingularityAgent> getAgents() {
+    return new ArrayList<>(agents.values());
   }
 
-  public Optional<SingularitySlave> getSlave(String slaveId) {
-    return Optional.ofNullable(slaves.get(slaveId));
+  public Optional<SingularityAgent> getAgent(String agentId) {
+    return Optional.ofNullable(agents.get(agentId));
   }
 
-  public void putSlave(SingularitySlave slave) {
+  public void putAgent(SingularityAgent agent) {
     if (!active) {
-      LOG.warn("putSlave {}, but not active", slave);
+      LOG.warn("putSlave {}, but not active", agent);
     }
 
-    slaves.put(slave.getId(), slave);
+    agents.put(agent.getId(), agent);
   }
 
-  public void removeSlave(String slaveId) {
+  public void removeAgent(String agentId) {
     if (!active) {
-      LOG.warn("remove slave {}, but not active", slaveId);
+      LOG.warn("remove agent {}, but not active", agentId);
       return;
     }
-    slaves.remove(slaveId);
+    agents.remove(agentId);
   }
 
   public List<SingularityRack> getRacks() {
@@ -579,27 +579,27 @@ public class SingularityLeaderCache {
     return new HashMap<>(requestUtilizations);
   }
 
-  public void putSlaveUsage(SingularitySlaveUsageWithId slaveUsage) {
+  public void putAgentUsage(SingularityAgentUsageWithId agentUsage) {
     if (!active) {
-      LOG.warn("putSlaveUsage {}, but not active", slaveUsage);
+      LOG.warn("putSlaveUsage {}, but not active", agentUsage);
     }
 
-    slaveUsages.put(slaveUsage.getSlaveId(), slaveUsage);
+    agentUsages.put(agentUsage.getAgentId(), agentUsage);
   }
 
-  public void removeSlaveUsage(String slaveId) {
+  public void removeAgentUsage(String agentId) {
     if (!active) {
-      LOG.warn("removeSlaveUsage {}, but not active", slaveId);
+      LOG.warn("removeSlaveUsage {}, but not active", agentId);
       return;
     }
-    slaveUsages.remove(slaveId);
+    agentUsages.remove(agentId);
   }
 
-  public Map<String, SingularitySlaveUsageWithId> getSlaveUsages() {
-    return new HashMap<>(slaveUsages);
+  public Map<String, SingularityAgentUsageWithId> getAgentUsages() {
+    return new HashMap<>(agentUsages);
   }
 
-  public Optional<SingularitySlaveUsageWithId> getSlaveUsage(String slaveId) {
-    return Optional.ofNullable(slaveUsages.get(slaveId));
+  public Optional<SingularityAgentUsageWithId> getAgentUsage(String agentId) {
+    return Optional.ofNullable(agentUsages.get(agentId));
   }
 }

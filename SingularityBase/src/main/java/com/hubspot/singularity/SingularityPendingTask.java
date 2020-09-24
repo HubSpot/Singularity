@@ -2,9 +2,11 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
@@ -25,31 +27,56 @@ public class SingularityPendingTask {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
-  private final Map<String, String> requiredSlaveAttributeOverrides;
-  private final Map<String, String> allowedSlaveAttributeOverrides;
+  private final Map<String, String> requiredAgentAttributeOverrides;
+  private final Map<String, String> allowedAgentAttributeOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(
     final String requestId
   ) {
-    return new Predicate<SingularityPendingTask>() {
-
-      @Override
-      public boolean apply(@Nonnull SingularityPendingTask input) {
-        return input.getPendingTaskId().getRequestId().equals(requestId);
-      }
-    };
+    return input -> input.getPendingTaskId().getRequestId().equals(requestId);
   }
 
   public static Predicate<SingularityPendingTask> matchingDeploy(final String deployId) {
-    return new Predicate<SingularityPendingTask>() {
+    return input -> input.getPendingTaskId().getDeployId().equals(deployId);
+  }
 
-      @Override
-      public boolean apply(@Nonnull SingularityPendingTask input) {
-        return input.getPendingTaskId().getDeployId().equals(deployId);
-      }
-    };
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  public SingularityPendingTask(
+    SingularityPendingTaskId pendingTaskId,
+    Optional<List<String>> cmdLineArgsList,
+    Optional<String> user,
+    Optional<String> runId,
+    Optional<Boolean> skipHealthchecks,
+    Optional<String> message,
+    Optional<Resources> resources,
+    List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    Optional<String> runAsUserOverride,
+    Map<String, String> envOverrides,
+    Map<String, String> requiredAgentAttributeOverrides,
+    Map<String, String> allowedAgentAttributeOverrides,
+    List<SingularityMesosArtifact> extraArtifacts,
+    Optional<String> actionId
+  ) {
+    this(
+      pendingTaskId,
+      cmdLineArgsList,
+      user,
+      runId,
+      skipHealthchecks,
+      message,
+      resources,
+      s3UploaderAdditionalFiles,
+      runAsUserOverride,
+      envOverrides,
+      null,
+      null,
+      extraArtifacts,
+      actionId,
+      requiredAgentAttributeOverrides,
+      allowedAgentAttributeOverrides
+    );
   }
 
   @JsonCreator
@@ -73,7 +100,13 @@ public class SingularityPendingTask {
       "allowedSlaveAttributeOverrides"
     ) Map<String, String> allowedSlaveAttributeOverrides,
     @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-    @JsonProperty("actionId") Optional<String> actionId
+    @JsonProperty("actionId") Optional<String> actionId,
+    @JsonProperty(
+      "requiredAgentAttributeOverrides"
+    ) Map<String, String> requiredAgentAttributeOverrides,
+    @JsonProperty(
+      "allowedAgentAttributeOverrides"
+    ) Map<String, String> allowedAgentAttributeOverrides
   ) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
@@ -97,17 +130,16 @@ public class SingularityPendingTask {
       this.envOverrides = Collections.emptyMap();
     }
 
-    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
-      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
-    } else {
-      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
-    }
-
-    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
-      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
-    } else {
-      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
-    }
+    this.requiredAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        requiredAgentAttributeOverrides,
+        MoreObjects.firstNonNull(requiredSlaveAttributeOverrides, Collections.emptyMap())
+      );
+    this.allowedAgentAttributeOverrides =
+      MoreObjects.firstNonNull(
+        allowedAgentAttributeOverrides,
+        MoreObjects.firstNonNull(allowedSlaveAttributeOverrides, Collections.emptyMap())
+      );
 
     if (Objects.nonNull(extraArtifacts)) {
       this.extraArtifacts = extraArtifacts;
@@ -203,15 +235,31 @@ public class SingularityPendingTask {
   @Schema(
     description = "Required slave attribute overrides for this particular task. These will be applied on top of any requiredSlaveAttributes that are defined at the SingularityRequest level."
   )
-  public Map<String, String> getRequiredSlaveAttributeOverrides() {
-    return requiredSlaveAttributeOverrides;
+  public Map<String, String> getRequiredAgentAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
   }
 
   @Schema(
     description = "Allowed slave attribute overrides for this particular task. These will be applied on top of any allowedSlaveAttributes that are defined at the SingularityRequest level."
   )
+  public Map<String, String> getAllowedAgentAttributeOverrides() {
+    return allowedAgentAttributeOverrides;
+  }
+
+  @Schema(
+    description = "Required slave attribute overrides for this particular task. These will be applied on top of any requiredSlaveAttributes that are defined at the SingularityRequest level."
+  )
+  @Deprecated
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredAgentAttributeOverrides;
+  }
+
+  @Schema(
+    description = "Allowed slave attribute overrides for this particular task. These will be applied on top of any allowedSlaveAttributes that are defined at the SingularityRequest level."
+  )
+  @Deprecated
   public Map<String, String> getAllowedSlaveAttributeOverrides() {
-    return allowedSlaveAttributeOverrides;
+    return allowedAgentAttributeOverrides;
   }
 
   @Schema(
@@ -253,10 +301,10 @@ public class SingularityPendingTask {
       runAsUserOverride +
       ", envOverrides=" +
       envOverrides +
-      ", requiredSlaveAttributeOverrides=" +
-      requiredSlaveAttributeOverrides +
-      ", allowedSlaveAttributeOverrides=" +
-      allowedSlaveAttributeOverrides +
+      ", requiredAgentAttributeOverrides=" +
+      requiredAgentAttributeOverrides +
+      ", allowedAgentAttributeOverrides=" +
+      allowedAgentAttributeOverrides +
       ", extraArtifacts" +
       extraArtifacts +
       ", actionId=" +

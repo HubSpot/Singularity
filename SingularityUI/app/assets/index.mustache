@@ -37,15 +37,15 @@
             commonHostnameSuffixToOmit: "{{{ commonHostnameSuffixToOmit }}}",
             showTaskDiskResource: {{{showTaskDiskResource}}},
             taskS3LogOmitPrefix: "{{{ taskS3LogOmitPrefix }}}",
-            slaveHttpPort: {{{slaveHttpPort}}},
+            agentHttpPort: {{{agentHttpPort}}},
             warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
             timestampFormat: localStorage.getItem('timestampFormatOverride') || "{{{timestampFormat}}}",
             timestampWithSecondsFormat: localStorage.getItem('timestampWithSecondsFormatOverride') || "{{{timestampWithSecondsFormat}}}",
-            {{#slaveHttpsPort}}
-            slaveHttpsPort: {{{slaveHttpsPort}}},
-            {{/slaveHttpsPort}}
+            {{#agentHttpsPort}}
+            agentHttpsPort: {{{agentHttpsPort}}},
+            {{/agentHttpsPort}}
             shellCommands: {{{shellCommands}}},
-            shortenSlaveUsageHostname : {{{shortenSlaveUsageHostname}}},
+            shortenAgentUsageHostname : {{{shortenAgentUsageHostname}}},
             redirectOnUnauthorizedUrl: "{{{redirectOnUnauthorizedUrl}}}",
             globalRefreshInterval: 60000,
             sentryDsn: "{{{sentryDsn}}}",

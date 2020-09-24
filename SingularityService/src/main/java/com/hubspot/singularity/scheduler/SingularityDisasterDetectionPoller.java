@@ -4,17 +4,17 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.DisasterDetectionConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DisasterManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.smtp.SingularityMailer;
@@ -35,7 +35,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final SingularityConfiguration configuration;
   private final DisasterDetectionConfiguration disasterConfiguration;
   private final TaskManager taskManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final DisasterManager disasterManager;
   private final SingularityMailer mailer;
   private final Multiset<Reason> taskLostReasons;
@@ -45,14 +45,14 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   public SingularityDisasterDetectionPoller(
     SingularityConfiguration configuration,
     TaskManager taskManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     DisasterManager disasterManager,
     SingularityMailer mailer,
     @Named(
       SingularityMesosModule.TASK_LOST_REASONS_COUNTER
     ) Multiset<Reason> taskLostReasons,
     @Named(
-      SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER
+      SingularityMesosModule.ACTIVE_AGENTS_LOST_COUNTER
     ) AtomicInteger activeSlavesLost
   ) {
     super(
@@ -62,7 +62,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     this.configuration = configuration;
     this.disasterConfiguration = configuration.getDisasterDetection();
     this.taskManager = taskManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.disasterManager = disasterManager;
     this.mailer = mailer;
     this.taskLostReasons = taskLostReasons;
@@ -152,9 +152,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     long avgTaskLagMillis = totalTaskLagMillis / Math.max(numPastDueTasks, 1);
 
-    List<SingularitySlave> slaves = slaveManager.getObjects();
+    List<SingularityAgent> slaves = agentManager.getObjects();
     int numRunningSlaves = 0;
-    for (SingularitySlave slave : slaves) {
+    for (SingularityAgent slave : slaves) {
       if (
         slave.getCurrentState().getState() != MachineState.DEAD &&
         slave.getCurrentState().getState() != MachineState.MISSING_ON_STARTUP
@@ -195,9 +195,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
         activeDisasters.add(SingularityDisasterType.EXCESSIVE_TASK_LAG);
       }
       if (
-        disasterConfiguration.isCheckLostSlaves() && tooManyLostSlaves(now, dataPoints)
+        disasterConfiguration.isCheckLostAgents() && tooManyLostSlaves(now, dataPoints)
       ) {
-        activeDisasters.add(SingularityDisasterType.LOST_SLAVES);
+        activeDisasters.add(SingularityDisasterType.LOST_AGENTS);
       }
       if (disasterConfiguration.isCheckLostTasks() && tooManyLostTasks(now, dataPoints)) {
         activeDisasters.add(SingularityDisasterType.LOST_TASKS);
@@ -297,20 +297,20 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       if (
         now -
         dataPoint.getTimestamp() <
-        disasterConfiguration.getIncludeLostSlavesInLastMillis()
+        disasterConfiguration.getIncludeLostAgentsInLastMillis()
       ) {
-        totalLostSlaves += dataPoint.getNumLostSlaves();
+        totalLostSlaves += dataPoint.getNumLostAgents();
       }
     }
     double lostSlavesPortion =
       totalLostSlaves /
       (double) (
         Math.max(
-          dataPoints.get(0).getNumActiveSlaves() + dataPoints.get(0).getNumLostSlaves(),
+          dataPoints.get(0).getNumActiveAgents() + dataPoints.get(0).getNumLostAgents(),
           1
         )
       );
-    return lostSlavesPortion > disasterConfiguration.getCriticalLostSlavePortion();
+    return lostSlavesPortion > disasterConfiguration.getCriticalLostAgentPortion();
   }
 
   private boolean tooManyLostTasks(

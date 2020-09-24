@@ -23,7 +23,7 @@ public class ShuffleBlacklistMigration extends ZkDataMigration {
   @Override
   public void applyMigration() {
     for (String requestId : configuration.getDoNotShuffleRequests()) {
-      manager.addToShuffleBlacklist(requestId);
+      manager.addToShuffleBlocklist(requestId);
     }
   }
 }

@@ -204,9 +204,9 @@ public class SingularityTaskReconciliation {
           .setTaskId(TaskID.newBuilder().setValue(taskStatusHolder.getTaskId().getId()))
           .setState(TaskState.TASK_STARTING);
 
-        if (taskStatusHolder.getSlaveId().isPresent()) {
+        if (taskStatusHolder.getAgentId().isPresent()) {
           fakeTaskStatusBuilder.setAgentId(
-            AgentID.newBuilder().setValue(taskStatusHolder.getSlaveId().get())
+            AgentID.newBuilder().setValue(taskStatusHolder.getAgentId().get())
           );
         }
 

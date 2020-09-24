@@ -33,10 +33,10 @@ public class SingularityRequest {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
-  private final Optional<SlavePlacement> slavePlacement;
-  private final Optional<Map<String, String>> requiredSlaveAttributes;
-  private final Optional<Map<String, String>> allowedSlaveAttributes;
-  private final Optional<Map<String, Map<String, Integer>>> slaveAttributeMinimums;
+  private final Optional<AgentPlacement> agentPlacement;
+  private final Optional<Map<String, String>> requiredAgentAttributes;
+  private final Optional<Map<String, String>> allowedAgentAttributes;
+  private final Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums;
   private final Optional<Boolean> loadBalanced;
   private final Optional<String> group;
   private final Optional<String> requiredRole;
@@ -74,7 +74,7 @@ public class SingularityRequest {
     @JsonProperty("quartzSchedule") Optional<String> quartzSchedule,
     @JsonProperty("scheduleTimeZone") Optional<String> scheduleTimeZone,
     @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-    @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement,
+    @JsonProperty("slavePlacement") Optional<AgentPlacement> slavePlacement,
     @JsonProperty(
       "requiredSlaveAttributes"
     ) Optional<Map<String, String>> requiredSlaveAttributes,
@@ -110,7 +110,17 @@ public class SingularityRequest {
     @JsonProperty("maxTasksPerOffer") Optional<Integer> maxTasksPerOffer,
     @JsonProperty("allowBounceToSameHost") Optional<Boolean> allowBounceToSameHost,
     @JsonProperty("requiredRole") Optional<String> requiredRole,
-    @JsonProperty("dataCenter") Optional<String> dataCenter
+    @JsonProperty("dataCenter") Optional<String> dataCenter,
+    @JsonProperty(
+      "requiredAgentAttributes"
+    ) Optional<Map<String, String>> requiredAgentAttributes,
+    @JsonProperty(
+      "allowedAgentAttributes"
+    ) Optional<Map<String, String>> allowedAgentAttributes,
+    @JsonProperty(
+      "agentAttributeMinimums"
+    ) Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums,
+    @JsonProperty("agentPlacement") Optional<AgentPlacement> agentPlacement
   ) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
@@ -125,10 +135,19 @@ public class SingularityRequest {
     this.quartzSchedule = quartzSchedule;
     this.scheduleTimeZone = scheduleTimeZone;
     this.rackAffinity = rackAffinity;
-    this.slavePlacement = slavePlacement;
-    this.requiredSlaveAttributes = requiredSlaveAttributes;
-    this.allowedSlaveAttributes = allowedSlaveAttributes;
-    this.slaveAttributeMinimums = slaveAttributeMinimums;
+    this.agentPlacement = agentPlacement.isPresent() ? agentPlacement : slavePlacement;
+    this.requiredAgentAttributes =
+      requiredAgentAttributes.isPresent()
+        ? requiredAgentAttributes
+        : requiredSlaveAttributes;
+    this.allowedAgentAttributes =
+      allowedAgentAttributes.isPresent()
+        ? allowedAgentAttributes
+        : allowedSlaveAttributes;
+    this.agentAttributeMinimums =
+      agentAttributeMinimums.isPresent()
+        ? agentAttributeMinimums
+        : slaveAttributeMinimums;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule =
       waitAtLeastMillisAfterTaskFinishesForReschedule;
@@ -171,10 +190,10 @@ public class SingularityRequest {
       .setWaitAtLeastMillisAfterTaskFinishesForReschedule(
         waitAtLeastMillisAfterTaskFinishesForReschedule
       )
-      .setSlavePlacement(slavePlacement)
-      .setRequiredSlaveAttributes(requiredSlaveAttributes)
-      .setAllowedSlaveAttributes(allowedSlaveAttributes)
-      .setSlaveAttributeMinimums(slaveAttributeMinimums)
+      .setAgentPlacement(agentPlacement)
+      .setRequiredAgentAttributes(requiredAgentAttributes)
+      .setAllowedAgentAttributes(allowedAgentAttributes)
+      .setAgentAttributeMinimums(agentAttributeMinimums)
       .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
       .setRequiredRole(requiredRole)
       .setGroup(group)
@@ -301,8 +320,17 @@ public class SingularityRequest {
     nullable = true,
     description = "Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST"
   )
+  public Optional<AgentPlacement> getAgentPlacement() {
+    return agentPlacement;
+  }
+
+  @Schema(
+    nullable = true,
+    description = "Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST"
+  )
+  @Deprecated
   public Optional<SlavePlacement> getSlavePlacement() {
-    return slavePlacement;
+    return agentPlacement.map(a -> SlavePlacement.valueOf(a.name()));
   }
 
   @Schema(
@@ -317,24 +345,51 @@ public class SingularityRequest {
     nullable = true,
     description = "Only allow tasks for this request to run on slaves which have these attributes"
   )
-  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
-    return requiredSlaveAttributes;
+  public Optional<Map<String, String>> getRequiredAgentAttributes() {
+    return requiredAgentAttributes;
   }
 
   @Schema(
     nullable = true,
     description = "Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves"
   )
-  public Optional<Map<String, String>> getAllowedSlaveAttributes() {
-    return allowedSlaveAttributes;
+  public Optional<Map<String, String>> getAllowedAgentAttributes() {
+    return allowedAgentAttributes;
   }
 
   @Schema(
     nullable = true,
     description = "Require running on at least this percentage of slaves with these attributes"
   )
+  public Optional<Map<String, Map<String, Integer>>> getAgentAttributeMinimums() {
+    return agentAttributeMinimums;
+  }
+
+  @Schema(
+    nullable = true,
+    description = "Only allow tasks for this request to run on slaves which have these attributes"
+  )
+  @Deprecated
+  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
+    return requiredAgentAttributes;
+  }
+
+  @Schema(
+    nullable = true,
+    description = "Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves"
+  )
+  @Deprecated
+  public Optional<Map<String, String>> getAllowedSlaveAttributes() {
+    return allowedAgentAttributes;
+  }
+
+  @Schema(
+    nullable = true,
+    description = "Require running on at least this percentage of slaves with these attributes"
+  )
+  @Deprecated
   public Optional<Map<String, Map<String, Integer>>> getSlaveAttributeMinimums() {
-    return slaveAttributeMinimums;
+    return agentAttributeMinimums;
   }
 
   @Schema(
@@ -541,10 +596,10 @@ public class SingularityRequest {
       Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
       Objects.equals(rackSensitive, that.rackSensitive) &&
       Objects.equals(rackAffinity, that.rackAffinity) &&
-      Objects.equals(slavePlacement, that.slavePlacement) &&
-      Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
-      Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
-      Objects.equals(slaveAttributeMinimums, that.slaveAttributeMinimums) &&
+      Objects.equals(agentPlacement, that.agentPlacement) &&
+      Objects.equals(requiredAgentAttributes, that.requiredAgentAttributes) &&
+      Objects.equals(allowedAgentAttributes, that.allowedAgentAttributes) &&
+      Objects.equals(agentAttributeMinimums, that.agentAttributeMinimums) &&
       Objects.equals(loadBalanced, that.loadBalanced) &&
       Objects.equals(group, that.group) &&
       Objects.equals(requiredRole, that.requiredRole) &&
@@ -584,10 +639,10 @@ public class SingularityRequest {
       skipHealthchecks,
       rackSensitive,
       rackAffinity,
-      slavePlacement,
-      requiredSlaveAttributes,
-      allowedSlaveAttributes,
-      slaveAttributeMinimums,
+      agentPlacement,
+      requiredAgentAttributes,
+      allowedAgentAttributes,
+      agentAttributeMinimums,
       loadBalanced,
       group,
       requiredRole,
@@ -642,14 +697,14 @@ public class SingularityRequest {
       rackSensitive +
       ", rackAffinity=" +
       rackAffinity +
-      ", slavePlacement=" +
-      slavePlacement +
-      ", requiredSlaveAttributes=" +
-      requiredSlaveAttributes +
-      ", allowedSlaveAttributes=" +
-      allowedSlaveAttributes +
-      ", slaveAttributeMinimums=" +
-      slaveAttributeMinimums +
+      ", agentPlacement=" +
+      agentPlacement +
+      ", requiredAgentAttributes=" +
+      requiredAgentAttributes +
+      ", allowedAgentAttributes=" +
+      allowedAgentAttributes +
+      ", agentAttributeMinimums=" +
+      agentAttributeMinimums +
       ", loadBalanced=" +
       loadBalanced +
       ", group=" +

@@ -9,8 +9,8 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityClientCredentials;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -388,12 +388,12 @@ public class SingularityExecutorCleanup {
   }
 
   private boolean isDecommissioned() {
-    Collection<SingularitySlave> slaves = singularityClient.getSlaves(
+    Collection<SingularityAgent> agents = singularityClient.getAgents(
       Optional.of(MachineState.DECOMMISSIONED)
     );
     boolean decommissioned = false;
-    for (SingularitySlave slave : slaves) {
-      if (slave.getHost().equals(hostname)) {
+    for (SingularityAgent agent : agents) {
+      if (agent.getHost().equals(hostname)) {
         decommissioned = true;
       }
     }
@@ -401,12 +401,12 @@ public class SingularityExecutorCleanup {
   }
 
   private Set<String> getRunningTaskIds() {
-    final String slaveId = mesosClient
-      .getSlaveState(mesosClient.getSlaveUri(hostname))
+    final String agentId = mesosClient
+      .getAgentState(mesosClient.getAgentUri(hostname))
       .getId();
 
     return singularityClient
-      .getActiveTaskIdsOnSlave(slaveId)
+      .getActiveTaskIdsOnAgent(agentId)
       .stream()
       .map(SingularityTaskId::getId)
       .collect(Collectors.toSet());

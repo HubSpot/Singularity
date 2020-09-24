@@ -2,7 +2,9 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.primitives.Longs;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 
@@ -15,8 +17,33 @@ public class SingularityDisasterDataPoint
   private final int numLateTasks;
   private final long avgTaskLagMillis;
   private final int numLostTasks;
-  private final int numActiveSlaves;
-  private final int numLostSlaves;
+  private final int numActiveAgents;
+  private final int numLostAgents;
+
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  public SingularityDisasterDataPoint(
+    long timestamp,
+    int numActiveTasks,
+    int numPendingTasks,
+    int numLateTasks,
+    long avgTaskLagMillis,
+    int numLostTasks,
+    int numActiveAgents,
+    int numLostAgents
+  ) {
+    this(
+      timestamp,
+      numActiveTasks,
+      numPendingTasks,
+      numLateTasks,
+      avgTaskLagMillis,
+      numLostTasks,
+      numActiveAgents,
+      numLostAgents,
+      null,
+      null
+    );
+  }
 
   @JsonCreator
   public SingularityDisasterDataPoint(
@@ -26,8 +53,10 @@ public class SingularityDisasterDataPoint
     @JsonProperty("numLateTasks") int numLateTasks,
     @JsonProperty("avgTaskLagMillis") long avgTaskLagMillis,
     @JsonProperty("numLostTasks") int numLostTasks,
-    @JsonProperty("numActiveSlaves") int numActiveSlaves,
-    @JsonProperty("numLostSlaves") int numLostSlaves
+    @JsonProperty("numActiveAgents") Integer numActiveAgents,
+    @JsonProperty("numLostAgents") Integer numLostAgents,
+    @JsonProperty("numActiveSlaves") Integer numActiveSlaves,
+    @JsonProperty("numLostSlaves") Integer numLostSlaves
   ) {
     this.timestamp = timestamp;
     this.numActiveTasks = numActiveTasks;
@@ -35,8 +64,8 @@ public class SingularityDisasterDataPoint
     this.numLateTasks = numLateTasks;
     this.avgTaskLagMillis = avgTaskLagMillis;
     this.numLostTasks = numLostTasks;
-    this.numActiveSlaves = numActiveSlaves;
-    this.numLostSlaves = numLostSlaves;
+    this.numActiveAgents = MoreObjects.firstNonNull(numActiveAgents, numActiveSlaves);
+    this.numLostAgents = MoreObjects.firstNonNull(numLostAgents, numLostSlaves);
   }
 
   @Schema(description = "The time this data was collected")
@@ -70,13 +99,25 @@ public class SingularityDisasterDataPoint
   }
 
   @Schema(description = "A count of active agents")
-  public int getNumActiveSlaves() {
-    return numActiveSlaves;
+  public int getNumActiveAgents() {
+    return numActiveAgents;
   }
 
   @Schema(description = "A count of agents lost since the last data point was collected")
+  public int getNumLostAgents() {
+    return numLostAgents;
+  }
+
+  @Deprecated
+  @Schema(description = "A count of active agents")
+  public int getNumActiveSlaves() {
+    return numActiveAgents;
+  }
+
+  @Deprecated
+  @Schema(description = "A count of agents lost since the last data point was collected")
   public int getNumLostSlaves() {
-    return numLostSlaves;
+    return numLostAgents;
   }
 
   @Override
@@ -95,8 +136,8 @@ public class SingularityDisasterDataPoint
       numLateTasks == that.numLateTasks &&
       avgTaskLagMillis == that.avgTaskLagMillis &&
       numLostTasks == that.numLostTasks &&
-      numActiveSlaves == that.numActiveSlaves &&
-      numLostSlaves == that.numLostSlaves
+      numActiveAgents == that.numActiveAgents &&
+      numLostAgents == that.numLostAgents
     );
   }
 
@@ -109,8 +150,8 @@ public class SingularityDisasterDataPoint
       numLateTasks,
       avgTaskLagMillis,
       numLostTasks,
-      numActiveSlaves,
-      numLostSlaves
+      numActiveAgents,
+      numLostAgents
     );
   }
 
@@ -130,10 +171,10 @@ public class SingularityDisasterDataPoint
       avgTaskLagMillis +
       ", numLostTasks=" +
       numLostTasks +
-      ", numActiveSlaves=" +
-      numActiveSlaves +
-      ", numLostSlaves=" +
-      numLostSlaves +
+      ", numActiveAgents=" +
+      numActiveAgents +
+      ", numLostAgents=" +
+      numLostAgents +
       '}'
     );
   }

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.data.InactiveSlaveManager;
+import com.hubspot.singularity.data.InactiveAgentManager;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,31 +20,31 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path(ApiPaths.INACTIVE_SLAVES_RESOURCE_PATH)
+@Path(ApiPaths.INACTIVE_AGENTS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @Schema(title = "Manage Singularity machines that should be marked as inactive")
 @Tags({ @Tag(name = "Inactive Machines") })
-public class InactiveSlaveResource {
-  private final InactiveSlaveManager inactiveSlaveManager;
+public class InactiveAgentResource {
+  private final InactiveAgentManager inactiveAgentManager;
   private final SingularityAuthorizer authorizationHelper;
 
   @Inject
-  public InactiveSlaveResource(
-    InactiveSlaveManager inactiveSlaveManager,
+  public InactiveAgentResource(
+    InactiveAgentManager inactiveAgentManager,
     SingularityAuthorizer authorizationHelper
   ) {
-    this.inactiveSlaveManager = inactiveSlaveManager;
+    this.inactiveAgentManager = inactiveAgentManager;
     this.authorizationHelper = authorizationHelper;
   }
 
   @GET
-  @Operation(summary = "Retrieve a list of slaves marked as inactive")
+  @Operation(summary = "Retrieve a list of agents marked as inactive")
   public Set<String> getInactiveSlaves() {
-    return inactiveSlaveManager.getInactiveSlaves();
+    return inactiveAgentManager.getInactiveAgents();
   }
 
   @POST
-  @Operation(summary = "Mark a slave as inactive")
+  @Operation(summary = "Mark an agent as inactive")
   public void deactivateSlave(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(required = true, description = "The host to deactivate") @QueryParam(
@@ -52,7 +52,7 @@ public class InactiveSlaveResource {
     ) String host
   ) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.deactivateSlave(host);
+    inactiveAgentManager.deactivateAgent(host);
   }
 
   @DELETE
@@ -65,13 +65,13 @@ public class InactiveSlaveResource {
     ) @QueryParam("host") String host
   ) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.activateSlave(host);
+    inactiveAgentManager.activateAgent(host);
   }
 
   @DELETE
   @Path("/all")
   public void clearAllInactiveHosts(@Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
-    inactiveSlaveManager.getInactiveSlaves().forEach(inactiveSlaveManager::activateSlave);
+    inactiveAgentManager.getInactiveAgents().forEach(inactiveAgentManager::activateAgent);
   }
 }

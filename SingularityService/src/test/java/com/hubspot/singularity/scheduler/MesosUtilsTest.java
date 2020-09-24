@@ -287,7 +287,7 @@ public class MesosUtilsTest {
       .setId(OfferID.newBuilder().setValue("offerid").build())
       .setFrameworkId(FrameworkID.newBuilder().setValue("frameworkid").build())
       .setHostname("hostname")
-      .setAgentId(AgentID.newBuilder().setValue("slaveid").build());
+      .setAgentId(AgentID.newBuilder().setValue("agentid").build());
 
     offer.addResources(buildPortRanges(ranges));
 

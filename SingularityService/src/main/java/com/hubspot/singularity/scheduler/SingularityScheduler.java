@@ -14,6 +14,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -32,7 +33,6 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -45,10 +45,10 @@ import com.hubspot.singularity.TaskFailureType;
 import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
+import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -97,7 +97,7 @@ public class SingularityScheduler {
   private final RequestManager requestManager;
   private final TaskRequestManager taskRequestManager;
   private final DeployManager deployManager;
-  private final SlaveManager slaveManager;
+  private final AgentManager agentManager;
   private final RebalancingHelper rebalancingHelper;
   private final RackManager rackManager;
   private final SingularityMailer mailer;
@@ -116,7 +116,7 @@ public class SingularityScheduler {
     DeployManager deployManager,
     TaskManager taskManager,
     RequestManager requestManager,
-    SlaveManager slaveManager,
+    AgentManager agentManager,
     RebalancingHelper rebalancingHelper,
     RackManager rackManager,
     SingularityMailer mailer,
@@ -130,7 +130,7 @@ public class SingularityScheduler {
     this.deployManager = deployManager;
     this.taskManager = taskManager;
     this.requestManager = requestManager;
-    this.slaveManager = slaveManager;
+    this.agentManager = agentManager;
     this.rebalancingHelper = rebalancingHelper;
     this.rackManager = rackManager;
     this.mailer = mailer;
@@ -200,28 +200,28 @@ public class SingularityScheduler {
 
     final Collection<SingularityTaskId> activeTaskIds = leaderCache.getActiveTaskIds();
 
-    final Map<SingularitySlave, MachineState> slaves = getDefaultMap(
-      slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION)
+    final Map<SingularityAgent, MachineState> agents = getDefaultMap(
+      agentManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION)
     );
 
-    for (SingularitySlave slave : slaves.keySet()) {
+    for (SingularityAgent agent : agents.keySet()) {
       boolean foundTask = false;
 
-      for (SingularityTask activeTask : taskManager.getTasksOnSlave(
+      for (SingularityTask activeTask : taskManager.getTasksOnAgent(
         activeTaskIds,
-        slave
+        agent
       )) {
         cleanupTaskDueToDecomission(
           requestIdsToUserToReschedule,
           matchingTaskIds,
           activeTask,
-          slave
+          agent
         );
         foundTask = true;
       }
 
       if (!foundTask) {
-        slaves.put(slave, MachineState.DECOMMISSIONED);
+        agents.put(agent, MachineState.DECOMMISSIONED);
       }
     }
 
@@ -288,11 +288,11 @@ public class SingularityScheduler {
       }
     }
 
-    changeState(slaves, slaveManager);
+    changeState(agents, agentManager);
     changeState(racks, rackManager);
 
     if (
-      slaves.isEmpty() &&
+      agents.isEmpty() &&
       racks.isEmpty() &&
       requestIdsToUserToReschedule.isEmpty() &&
       matchingTaskIds.isEmpty()
@@ -300,8 +300,8 @@ public class SingularityScheduler {
       LOG.trace("Decomission check found nothing");
     } else {
       LOG.info(
-        "Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}",
-        slaves.size(),
+        "Found {} decomissioning agents, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}",
+        agents.size(),
         racks.size(),
         requestIdsToUserToReschedule.size(),
         matchingTaskIds.size(),
@@ -827,7 +827,7 @@ public class SingularityScheduler {
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         rebalanceRacks(request, state, pendingRequest, remainingActiveTasks);
       }
-      if (request.getSlaveAttributeMinimums().isPresent()) {
+      if (request.getAgentAttributeMinimums().isPresent()) {
         rebalanceAttributeDistribution(
           request,
           state,
@@ -1349,7 +1349,7 @@ public class SingularityScheduler {
                 TaskFailureType.MESOS_ERROR
               )
             );
-          } else if (isLostSlave(status.getReason())) {
+          } else if (isLostAgent(status.getReason())) {
             bldr.addTaskFailureEvent(
               new TaskFailureEvent(
                 taskId.getInstanceNo(),
@@ -1409,7 +1409,7 @@ public class SingularityScheduler {
     }
   }
 
-  private boolean isLostSlave(Reason reason) {
+  private boolean isLostAgent(Reason reason) {
     switch (reason) {
       case REASON_AGENT_REMOVED:
       case REASON_AGENT_RESTARTED:
@@ -1629,8 +1629,8 @@ public class SingularityScheduler {
           pendingRequest.getS3UploaderAdditionalFiles(),
           pendingRequest.getRunAsUserOverride(),
           pendingRequest.getEnvOverrides(),
-          pendingRequest.getRequiredSlaveAttributeOverrides(),
-          pendingRequest.getAllowedSlaveAttributeOverrides(),
+          pendingRequest.getRequiredAgentAttributeOverrides(),
+          pendingRequest.getAllowedAgentAttributeOverrides(),
           pendingRequest.getExtraArtifacts(),
           pendingRequest.getActionId()
         )

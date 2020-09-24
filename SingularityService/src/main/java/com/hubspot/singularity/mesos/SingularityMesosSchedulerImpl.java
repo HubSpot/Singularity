@@ -81,7 +81,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularityAbort abort;
   private final SingularityLeaderCacheCoordinator leaderCacheCoordinator;
   private final SingularityMesosFrameworkMessageHandler messageHandler;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityAgentAndRackManager agentAndRackManager;
   private final OfferCache offerCache;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
@@ -114,7 +114,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     SingularityLeaderCacheCoordinator leaderCacheCoordinator,
     SingularityAbort abort,
     SingularityMesosFrameworkMessageHandler messageHandler,
-    SingularitySlaveAndRackManager slaveAndRackManager,
+    SingularityAgentAndRackManager agentAndRackManager,
     OfferCache offerCache,
     SingularityMesosOfferScheduler offerScheduler,
     SingularityMesosStatusUpdateHandler statusUpdateHandler,
@@ -132,7 +132,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.startup = startup;
     this.abort = abort;
     this.messageHandler = messageHandler;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.agentAndRackManager = agentAndRackManager;
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
     this.statusUpdateHandler = statusUpdateHandler;
@@ -299,28 +299,28 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Override
   public void message(Message message) {
     ExecutorID executorID = message.getExecutorId();
-    AgentID slaveId = message.getAgentId();
+    AgentID agentId = message.getAgentId();
     byte[] data = message.getData().toByteArray();
     LOG.info(
-      "Framework message from executor {} on slave {} with {} bytes of data",
+      "Framework message from executor {} on agent {} with {} bytes of data",
       executorID,
-      slaveId,
+      agentId,
       data.length
     );
-    messageHandler.handleMessage(executorID, slaveId, data);
+    messageHandler.handleMessage(executorID, agentId, data);
   }
 
   @Override
   public void failure(Failure failure) {
     if (failure.hasExecutorId()) {
       LOG.warn(
-        "Lost an executor {} on slave {} with status {}",
+        "Lost an executor {} on agent {} with status {}",
         failure.getExecutorId(),
         failure.getAgentId(),
         failure.getStatus()
       );
     } else {
-      slaveLost(failure.getAgentId());
+      agentLost(failure.getAgentId());
     }
   }
 
@@ -645,9 +645,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     return Optional.ofNullable(masterInfo.get());
   }
 
-  public void slaveLost(Protos.AgentID slaveId) {
-    LOG.warn("Lost a slave {}", slaveId);
-    slaveAndRackManager.slaveLost(slaveId);
+  public void agentLost(Protos.AgentID agentId) {
+    LOG.warn("Lost a agent {}", agentId);
+    agentAndRackManager.agentLost(agentId);
   }
 
   public Optional<Long> getLastOfferTimestamp() {

@@ -43,10 +43,10 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/blacklist")
-  @Operation(summary = "Retrieve the list of blacklisted emails")
+  @Path("/blocklist")
+  @Operation(summary = "Retrieve the list of blocklisted emails")
   public List<String> getBlacklist(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return notificationsManager.getBlacklist();
+    return notificationsManager.getBlocklist();
   }
 
   @POST
@@ -65,7 +65,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       Void.class,
       email,
       () -> {
-        notificationsManager.addToBlacklist(getFormattedEmail(email));
+        notificationsManager.addToBlocklist(getFormattedEmail(email));
         return null;
       }
     );
@@ -87,7 +87,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       Void.class,
       email,
       () -> {
-        notificationsManager.removeFromBlacklist(getFormattedEmail(email));
+        notificationsManager.removeFromBlocklist(getFormattedEmail(email));
         return null;
       }
     );

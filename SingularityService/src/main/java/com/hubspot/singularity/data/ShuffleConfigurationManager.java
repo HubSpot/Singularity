@@ -15,7 +15,7 @@ public class ShuffleConfigurationManager extends CuratorAsyncManager {
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
   private static final String ZK_ROOT_PATH = "/shuffle";
-  private static final String BLACKLIST_PATH = ZK_ROOT_PATH + "/blacklist";
+  private static final String BLOCKLIST_PATH = ZK_ROOT_PATH + "/blacklist";
 
   @Inject
   public ShuffleConfigurationManager(
@@ -26,23 +26,23 @@ public class ShuffleConfigurationManager extends CuratorAsyncManager {
     super(curator, configuration, metricRegistry);
   }
 
-  private String getShuffleBlacklistPath(String requestId) {
-    return ZKPaths.makePath(BLACKLIST_PATH, requestId);
+  private String getShuffleBlocklistPath(String requestId) {
+    return ZKPaths.makePath(BLOCKLIST_PATH, requestId);
   }
 
-  public List<String> getShuffleBlacklist() {
-    return getChildren(BLACKLIST_PATH);
+  public List<String> getShuffleBlocklist() {
+    return getChildren(BLOCKLIST_PATH);
   }
 
-  public SingularityCreateResult addToShuffleBlacklist(String requestId) {
-    return create(getShuffleBlacklistPath(requestId));
+  public SingularityCreateResult addToShuffleBlocklist(String requestId) {
+    return create(getShuffleBlocklistPath(requestId));
   }
 
-  public SingularityDeleteResult removeFromShuffleBlacklist(String requestId) {
-    return delete(getShuffleBlacklistPath(requestId));
+  public SingularityDeleteResult removeFromShuffleBlocklist(String requestId) {
+    return delete(getShuffleBlocklistPath(requestId));
   }
 
-  public boolean isOnShuffleBlacklist(String requestId) {
-    return exists(getShuffleBlacklistPath(requestId));
+  public boolean isOnShuffleBlocklist(String requestId) {
+    return exists(getShuffleBlocklistPath(requestId));
   }
 }

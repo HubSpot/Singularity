@@ -155,7 +155,7 @@ public abstract class SingularityMesosScheduler {
 
   public abstract void setZkConnectionState(ConnectionState connectionState);
 
-  public abstract void slaveLost(AgentID slaveId);
+  public abstract void agentLost(AgentID agentId);
 
   public abstract boolean isRunning();
 

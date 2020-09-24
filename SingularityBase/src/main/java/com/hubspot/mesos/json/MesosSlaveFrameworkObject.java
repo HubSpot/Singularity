@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @deprecated use {@link MesosAgentFrameworkObject}
+ */
+@Deprecated
 public class MesosSlaveFrameworkObject {
   private final List<MesosExecutorObject> executors;
   private final List<MesosExecutorObject> completedExecutors;

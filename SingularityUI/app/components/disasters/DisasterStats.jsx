@@ -39,8 +39,8 @@ DisasterStats.propTypes = {
     numLateTasks: PropTypes.number.isRequired,
     avgTaskLagMillis: PropTypes.number.isRequired,
     numLostTasks: PropTypes.number.isRequired,
-    numActiveSlaves: PropTypes.number.isRequired,
-    numLostSlaves: PropTypes.number.isRequired
+    numActiveAgents: PropTypes.number.isRequired,
+    numLostAgents: PropTypes.number.isRequired
   }))
 };
 

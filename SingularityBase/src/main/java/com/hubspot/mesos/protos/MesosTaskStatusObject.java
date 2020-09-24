@@ -49,10 +49,12 @@ public class MesosTaskStatusObject {
     return agentId.isPresent();
   }
 
+  @Deprecated
   public MesosStringValue getSlaveId() {
     return slaveId.orElse(null);
   }
 
+  @Deprecated
   public boolean hasSlaveId() {
     return slaveId.isPresent();
   }
