@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
@@ -10,19 +11,30 @@ public class SingularitySandbox {
   private final List<SingularitySandboxFile> files;
   private final String fullPathToRoot;
   private final String currentDirectory;
-  private final String slaveHostname;
+  private final String agentHostname;
+
+  @SuppressFBWarnings(value = "NP_NULL_PARAM_DEREF_NONVIRTUAL")
+  public SingularitySandbox(
+    List<SingularitySandboxFile> files,
+    String fullPathToRoot,
+    String currentDirectory,
+    String agentHostname
+  ) {
+    this(files, fullPathToRoot, currentDirectory, null, agentHostname);
+  }
 
   @JsonCreator
   public SingularitySandbox(
     @JsonProperty("files") List<SingularitySandboxFile> files,
     @JsonProperty("fullPathToRoot") String fullPathToRoot,
     @JsonProperty("currentDirectory") String currentDirectory,
-    @JsonProperty("slaveHostname") String slaveHostname
+    @JsonProperty("slaveHostname") String slaveHostname,
+    @JsonProperty("agentHostname") String agentHostname
   ) {
     this.files = files;
     this.currentDirectory = currentDirectory;
     this.fullPathToRoot = fullPathToRoot;
-    this.slaveHostname = slaveHostname;
+    this.agentHostname = agentHostname != null ? agentHostname : slaveHostname;
   }
 
   @Schema(description = "Full path to the root of the Mesos task sandbox")
@@ -30,9 +42,15 @@ public class SingularitySandbox {
     return fullPathToRoot;
   }
 
-  @Schema(description = "Hostname of tasks's slave")
+  @Schema(description = "Hostname of tasks's agent")
+  public String getAgentHostname() {
+    return agentHostname;
+  }
+
+  @Schema(description = "Hostname of tasks's agent")
+  @Deprecated
   public String getSlaveHostname() {
-    return slaveHostname;
+    return agentHostname;
   }
 
   @Schema(description = "List of files inside sandbox")
@@ -57,8 +75,8 @@ public class SingularitySandbox {
       ", currentDirectory='" +
       currentDirectory +
       '\'' +
-      ", slaveHostname='" +
-      slaveHostname +
+      ", agentHostname='" +
+      agentHostname +
       '\'' +
       '}'
     );
