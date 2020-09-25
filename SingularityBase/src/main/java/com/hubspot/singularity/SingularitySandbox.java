@@ -42,12 +42,12 @@ public class SingularitySandbox {
     return fullPathToRoot;
   }
 
-  @Schema(description = "Hostname of tasks's slave")
+  @Schema(description = "Hostname of tasks's agent")
   public String getAgentHostname() {
     return agentHostname;
   }
 
-  @Schema(description = "Hostname of tasks's slave")
+  @Schema(description = "Hostname of tasks's agent")
   @Deprecated
   public String getSlaveHostname() {
     return agentHostname;
