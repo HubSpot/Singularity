@@ -395,11 +395,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/active/slave/{agentId}")
   @Operation(
-    summary = "Retrieve list of active tasks on a specific slave",
+    summary = "Retrieve list of active tasks on a specific agent",
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A slave with the specified id was not found"
+        description = "An agent with the specified id was not found"
       )
     }
   )
@@ -419,11 +419,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/active/agent/{agentId}")
   @Operation(
-    summary = "Retrieve list of active tasks on a specific slave",
+    summary = "Retrieve list of active tasks on a specific agent",
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A slave with the specified id was not found"
+        description = "An agent with the specified id was not found"
       )
     }
   )
@@ -440,7 +440,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     checkNotFound(
       maybeSlave.isPresent(),
-      "Couldn't find a slave in any state with id %s",
+      "Couldn't find a agent in any state with id %s",
       agentId
     );
 
@@ -458,11 +458,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/active/slave/{agentId}/ids")
   @Operation(
-    summary = "Retrieve list of active tasks on a specific slave",
+    summary = "Retrieve list of active tasks on a specific agent",
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A slave with the specified id was not found"
+        description = "An agent with the specified id was not found"
       )
     }
   )
@@ -503,7 +503,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     checkNotFound(
       maybeAgent.isPresent(),
-      "Couldn't find a slave in any state with id %s",
+      "Couldn't find a agent in any state with id %s",
       agentId
     );
 
@@ -684,7 +684,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     responses = {
       @ApiResponse(
         responseCode = "404",
-        description = "A task with this id, or slave and executor with matching statistics was not found"
+        description = "A task with this id, or agent and executor with matching statistics was not found"
       )
     }
   )
@@ -715,7 +715,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     }
 
     throw notFound(
-      "Couldn't find executor %s for %s on slave %s",
+      "Couldn't find executor %s for %s on agent %s",
       executorIdToMatch,
       taskId,
       task.getHostname()
@@ -1144,17 +1144,24 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/download/")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity")
+  @Operation(summary = "Proxy a file download from a Mesos Agent through Singularity")
   public Response downloadFileOverProxy(
-    @Parameter(required = true, description = "Mesos slave hostname") @QueryParam(
+    @Parameter(required = true, description = "Mesos agent hostname") @QueryParam(
       "slaveHostname"
     ) String slaveHostname,
+    @Parameter(required = true, description = "Mesos agent hostname") @QueryParam(
+      "agentHostname"
+    ) String agentHostname,
     @Parameter(
       required = true,
-      description = "Full file path to file on Mesos slave to be downloaded"
+      description = "Full file path to file on Mesos agent to be downloaded"
     ) @QueryParam("path") String fileFullPath
   ) {
-    return getFile(slaveHostname, fileFullPath, true);
+    return getFile(
+      agentHostname != null ? agentHostname : slaveHostname,
+      fileFullPath,
+      true
+    );
   }
 
   @GET
@@ -1162,18 +1169,25 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Produces("*/*")
   @Operation(summary = "Open a file from a Mesos Slave through Singularity")
   public Response openFileOverProxy(
-    @Parameter(required = true, description = "Mesos slave hostname") @QueryParam(
+    @Parameter(required = true, description = "Mesos agent hostname") @QueryParam(
       "slaveHostname"
     ) String slaveHostname,
+    @Parameter(required = true, description = "Mesos agent hostname") @QueryParam(
+      "agentHostname"
+    ) String agentHostname,
     @Parameter(
       required = true,
-      description = "Full file path to file on Mesos slave to be downloaded"
+      description = "Full file path to file on Mesos agent to be downloaded"
     ) @QueryParam("path") String fileFullPath
   ) {
-    return getFile(slaveHostname, fileFullPath, false);
+    return getFile(
+      agentHostname != null ? agentHostname : slaveHostname,
+      fileFullPath,
+      false
+    );
   }
 
-  private Response getFile(String slaveHostname, String fileFullPath, boolean download) {
+  private Response getFile(String agentHostname, String fileFullPath, boolean download) {
     String httpPrefix = configuration.getAgentHttpsPort().isPresent() ? "https" : "http";
     int httpPort = configuration.getAgentHttpsPort().isPresent()
       ? configuration.getAgentHttpsPort().get()
@@ -1182,7 +1196,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     String url = String.format(
       "%s://%s:%s/files/download",
       httpPrefix,
-      slaveHostname,
+      agentHostname,
       httpPort
     );
 
