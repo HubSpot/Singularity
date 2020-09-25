@@ -75,7 +75,7 @@ public class SingularitySandbox {
       ", currentDirectory='" +
       currentDirectory +
       '\'' +
-      ", slaveHostname='" +
+      ", agentHostname='" +
       agentHostname +
       '\'' +
       '}'
