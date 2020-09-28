@@ -336,6 +336,20 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(LB_CLEANUP_PATH_ROOT);
   }
 
+  public int getNumActiveTasks(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getNumActiveTasks(requestId);
+    }
+    return getNumChildren(getLastActiveTaskParent(requestId));
+  }
+
+  public int getNumScheduledTasks(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getNumPendingTasks(requestId);
+    }
+    return getNumChildren(getPendingForRequestPath(requestId));
+  }
+
   public int getNumActiveTasks() {
     if (leaderCache.active()) {
       return leaderCache.getNumActiveTasks();
@@ -468,6 +482,17 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return getChildrenAsIds(CLEANUP_PATH_ROOT, taskIdTranscoder);
+  }
+
+  public int getNumCleanupTaskIds(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getNumCleaningTasks(requestId);
+    }
+
+    return (int) getChildrenAsIds(CLEANUP_PATH_ROOT, taskIdTranscoder)
+      .stream()
+      .filter(t -> t.getRequestId().equals(requestId))
+      .count();
   }
 
   public List<SingularityTaskCleanup> getCleanupTasks(boolean useWebCache) {
