@@ -30,6 +30,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCounts;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
@@ -390,6 +391,33 @@ public class TaskResource extends AbstractLeaderAwareResource {
     );
 
     return requestHelper.getTaskIdsByStatusForRequest(requestId);
+  }
+
+  @GET
+  @Path("/counts/request/{requestId}")
+  @Operation(
+    summary = "Retrieve a list of task counts separated by status",
+    description = "Includes pending, active, and cleaning tasks",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "A request with the specified id was not found"
+      )
+    }
+  )
+  public SingularityTaskCounts getTaskCountsByStatusForRequest(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(description = "The request id to retrieve tasks for") @PathParam(
+      "requestId"
+    ) String requestId
+  ) {
+    authorizationHelper.checkForAuthorizationByRequestId(
+      requestId,
+      user,
+      SingularityAuthorizationScope.READ
+    );
+
+    return requestHelper.getTaskCountsForRequest(requestId);
   }
 
   @GET
