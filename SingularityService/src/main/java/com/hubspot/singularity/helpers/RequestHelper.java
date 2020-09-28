@@ -19,6 +19,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityTaskCounts;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
@@ -490,6 +491,15 @@ public class RequestHelper {
       requestId
     );
     return JavaUtils.getFirst(requestHistory);
+  }
+
+  public SingularityTaskCounts getTaskCountsForRequest(String requestId) {
+    return new SingularityTaskCounts(
+      requestId,
+      taskManager.getNumActiveTasks(requestId),
+      taskManager.getNumScheduledTasks(requestId),
+      taskManager.getNumCleanupTaskIds(requestId)
+    );
   }
 
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(

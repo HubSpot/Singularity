@@ -300,8 +300,23 @@ public class SingularityLeaderCache {
     return activeTaskIds.size();
   }
 
+  public int getNumActiveTasks(String requestId) {
+    return (int) activeTaskIds
+      .stream()
+      .filter(t -> t.getRequestId().equals(requestId))
+      .count();
+  }
+
   public int getNumPendingTasks() {
     return pendingTaskIdToPendingTask.size();
+  }
+
+  public int getNumPendingTasks(String requestId) {
+    return (int) pendingTaskIdToPendingTask
+      .keySet()
+      .stream()
+      .filter(t -> t.getRequestId().equals(requestId))
+      .count();
   }
 
   public boolean isActiveTask(SingularityTaskId taskId) {
@@ -349,6 +364,14 @@ public class SingularityLeaderCache {
 
   public List<SingularityTaskId> getCleanupTaskIds() {
     return new ArrayList<>(cleanupTasks.keySet());
+  }
+
+  public int getNumCleaningTasks(String requestId) {
+    return (int) cleanupTasks
+      .keySet()
+      .stream()
+      .filter(t -> t.getRequestId().equals(requestId))
+      .count();
   }
 
   public Optional<SingularityTaskCleanup> getTaskCleanup(SingularityTaskId taskId) {

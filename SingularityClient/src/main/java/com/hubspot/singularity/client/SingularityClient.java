@@ -57,6 +57,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCounts;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -156,6 +157,8 @@ public class SingularityClient {
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT =
     TASKS_GET_SCHEDULED_FORMAT + "/ids";
   private static final String TASKS_BY_STATE_FORMAT = TASKS_FORMAT + "/ids/request/%s";
+  private static final String TASK_COUNTS_BY_STATE_FORMAT =
+    TASKS_FORMAT + "/counts/request/%s";
 
   private static final String SHELL_COMMAND_FORMAT = TASKS_FORMAT + "/task/%s/command";
   private static final String SHELL_COMMAND_UPDATES_FORMAT =
@@ -1452,6 +1455,20 @@ public class SingularityClient {
       "task ids by state",
       requestId,
       SingularityTaskIdsByStatus.class
+    );
+  }
+
+  public Optional<SingularityTaskCounts> getTaskCountsByStatusForRequest(
+    String requestId
+  ) {
+    final Function<String, String> requestUri = host ->
+      String.format(TASK_COUNTS_BY_STATE_FORMAT, getApiBase(host), requestId);
+
+    return getSingle(
+      requestUri,
+      "task counts by state",
+      requestId,
+      SingularityTaskCounts.class
     );
   }
 
