@@ -139,7 +139,12 @@ public class SingularityGroupsScopesAuthorizerTest {
     authConfiguration.setAuthMode(UserAuthMode.GROUPS_SCOPES);
     authConfiguration.setJitaGroups(Collections.singleton("jita"));
     authConfiguration.setDefaultReadOnlyGroups(Collections.singleton("default-read"));
-    authorizer = new SingularityGroupsScopesAuthorizer(null, authConfiguration);
+    authorizer =
+      new SingularityGroupsScopesAuthorizer(
+        null,
+        authConfiguration,
+        singularityEventListener
+      );
   }
 
   @Test

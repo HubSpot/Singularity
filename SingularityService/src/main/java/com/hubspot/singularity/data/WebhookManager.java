@@ -6,6 +6,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -39,12 +40,15 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String SNS_REQUEST_RETRY = SNS_RETRY_ROOT + "/request";
   private static final String SNS_DEPLOY_RETRY = SNS_RETRY_ROOT + "/deploy";
   private static final String SNS_CRASH_LOOP_RETRY = SNS_RETRY_ROOT + "/crashloop";
+  private static final String SNS_JITA_ACCESS_EVENT_RETRY =
+    SNS_RETRY_ROOT + "/jitaaccess";
 
   private final Transcoder<SingularityWebhook> webhookTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
   private final Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder;
+  private final Transcoder<ElevatedAccessEvent> jitaAccessEventTranscoder;
 
   private final Cache<WebhookType, List<SingularityWebhook>> activeWebhooksCache;
   private final Cache<String, Integer> childNodeCountCache;
@@ -59,7 +63,8 @@ public class WebhookManager extends CuratorAsyncManager {
     Transcoder<SingularityRequestHistory> requestHistoryTranscoder,
     Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder,
     Transcoder<SingularityDeployUpdate> deployWebhookTranscoder,
-    Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder
+    Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder,
+    Transcoder<ElevatedAccessEvent> jitaAccessEventTranscoder
   ) {
     super(curator, configuration, metricRegistry);
     this.webhookTranscoder = webhookTranscoder;
@@ -67,6 +72,7 @@ public class WebhookManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.deployWebhookTranscoder = deployWebhookTranscoder;
     this.crashLoopUpdateTranscoder = crashLoopUpdateTranscoder;
+    this.jitaAccessEventTranscoder = jitaAccessEventTranscoder;
 
     this.activeWebhooksCache =
       CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
@@ -454,5 +460,32 @@ public class WebhookManager extends CuratorAsyncManager {
     int count = getNumChildren(path);
     childNodeCountCache.put(path, count);
     return count < maxChildNodes;
+  }
+
+  public void saveElevatedAccessEventForRetry(ElevatedAccessEvent elevatedAccessEvent) {
+    if (!isChildNodeCountSafe(SNS_JITA_ACCESS_EVENT_RETRY)) {
+      LOG.warn(
+        "Too many queued webhooks for path {}, dropping",
+        SNS_JITA_ACCESS_EVENT_RETRY
+      );
+      return;
+    }
+    String updatePath = ZKPaths.makePath(
+      SNS_JITA_ACCESS_EVENT_RETRY,
+      getElevatedAccessEventId(elevatedAccessEvent)
+    );
+    save(updatePath, elevatedAccessEvent, jitaAccessEventTranscoder);
+  }
+
+  private String getElevatedAccessEventId(ElevatedAccessEvent elevatedAccessEvent) {
+    return (
+      elevatedAccessEvent.getUser() +
+      "-" +
+      elevatedAccessEvent.getRequestId() +
+      "-" +
+      elevatedAccessEvent.getScope() +
+      "-" +
+      elevatedAccessEvent.getCreatedAt()
+    );
   }
 }

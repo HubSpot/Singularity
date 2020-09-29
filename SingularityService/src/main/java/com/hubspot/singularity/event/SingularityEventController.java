@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -134,6 +135,28 @@ public class SingularityEventController implements SingularityEventListener {
             @Override
             public Void call() {
               eventListener.crashLoopEvent(crashLoopUpdate);
+              return null;
+            }
+          }
+        )
+      );
+    }
+
+    processFutures(builder.build());
+  }
+
+  @Override
+  public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
+    ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
+
+    for (final SingularityEventSender eventListener : eventListeners) {
+      builder.add(
+        listenerExecutorService.submit(
+          new Callable<Void>() {
+
+            @Override
+            public Void call() {
+              eventListener.elevatedAccessEvent(elevatedAccessEvent);
               return null;
             }
           }

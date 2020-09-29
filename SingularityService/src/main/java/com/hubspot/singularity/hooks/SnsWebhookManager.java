@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
@@ -147,6 +148,24 @@ public class SnsWebhookManager {
           );
           try {
             webhookManager.saveCrashLoopUpdateForRetry(crashLoopUpdate);
+          } catch (Throwable t2) {
+            LOG.error("Could not save update to zk for retry, dropping", t2);
+          }
+          return null;
+        }
+      );
+  }
+
+  public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
+    publish(WebhookType.JITA_ACCESS, elevatedAccessEvent)
+      .exceptionally(
+        t -> {
+          LOG.warn(
+            "Could not publish event to sns, will retry later ({})",
+            t.getMessage()
+          );
+          try {
+            webhookManager.saveElevatedAccessEventForRetry(elevatedAccessEvent);
           } catch (Throwable t2) {
             LOG.error("Could not save update to zk for retry, dropping", t2);
           }

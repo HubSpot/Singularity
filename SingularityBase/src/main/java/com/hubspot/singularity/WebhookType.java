@@ -7,5 +7,6 @@ public enum WebhookType {
   TASK,
   REQUEST,
   DEPLOY,
-  CRASHLOOP
+  CRASHLOOP,
+  JITA_ACCESS
 }
