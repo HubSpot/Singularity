@@ -84,7 +84,7 @@ public class ElevatedAccessEvent implements Comparable<ElevatedAccessEvent> {
   @Override
   public String toString() {
     return (
-      "JitaAccessEvent{" +
+      "ElevatedAccessEvent{" +
       "user='" +
       user +
       '\'' +

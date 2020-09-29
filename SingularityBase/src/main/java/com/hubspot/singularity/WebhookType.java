@@ -8,5 +8,5 @@ public enum WebhookType {
   REQUEST,
   DEPLOY,
   CRASHLOOP,
-  JITA_ACCESS
+  ELEVATED_ACCESS
 }

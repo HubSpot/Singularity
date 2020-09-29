@@ -154,6 +154,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
             request.getId(),
             scope
           );
+          singularityEventListener.elevatedAccessEvent(
+            new ElevatedAccessEvent(
+              user.getId(),
+              request.getId(),
+              scope,
+              System.currentTimeMillis()
+            )
+          );
           return true;
         }
         return false;
@@ -197,6 +205,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
               request.getId(),
               scope
             );
+            singularityEventListener.elevatedAccessEvent(
+              new ElevatedAccessEvent(
+                user.getId(),
+                request.getId(),
+                scope,
+                System.currentTimeMillis()
+              )
+            );
             return true;
           }
           return false;
@@ -214,6 +230,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
             user.getId(),
             request.getId(),
             scope
+          );
+          singularityEventListener.elevatedAccessEvent(
+            new ElevatedAccessEvent(
+              user.getId(),
+              request.getId(),
+              scope,
+              System.currentTimeMillis()
+            )
           );
           return true;
         }
@@ -318,6 +342,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         user.getId(),
         requestId,
         scope
+      );
+      singularityEventListener.elevatedAccessEvent(
+        new ElevatedAccessEvent(
+          user.getId(),
+          requestId,
+          scope,
+          System.currentTimeMillis()
+        )
       );
     }
     checkForbidden(

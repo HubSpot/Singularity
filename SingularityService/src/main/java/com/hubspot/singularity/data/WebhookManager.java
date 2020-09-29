@@ -40,7 +40,7 @@ public class WebhookManager extends CuratorAsyncManager {
   private static final String SNS_REQUEST_RETRY = SNS_RETRY_ROOT + "/request";
   private static final String SNS_DEPLOY_RETRY = SNS_RETRY_ROOT + "/deploy";
   private static final String SNS_CRASH_LOOP_RETRY = SNS_RETRY_ROOT + "/crashloop";
-  private static final String SNS_JITA_ACCESS_EVENT_RETRY =
+  private static final String SNS_ELEVATED_ACCESS_EVENT_RETRY =
     SNS_RETRY_ROOT + "/jitaaccess";
 
   private final Transcoder<SingularityWebhook> webhookTranscoder;
@@ -48,7 +48,7 @@ public class WebhookManager extends CuratorAsyncManager {
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
   private final Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder;
-  private final Transcoder<ElevatedAccessEvent> jitaAccessEventTranscoder;
+  private final Transcoder<ElevatedAccessEvent> elevatedAccessEventTranscoder;
 
   private final Cache<WebhookType, List<SingularityWebhook>> activeWebhooksCache;
   private final Cache<String, Integer> childNodeCountCache;
@@ -64,7 +64,7 @@ public class WebhookManager extends CuratorAsyncManager {
     Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder,
     Transcoder<SingularityDeployUpdate> deployWebhookTranscoder,
     Transcoder<CrashLoopInfo> crashLoopUpdateTranscoder,
-    Transcoder<ElevatedAccessEvent> jitaAccessEventTranscoder
+    Transcoder<ElevatedAccessEvent> elevatedAccessEventTranscoder
   ) {
     super(curator, configuration, metricRegistry);
     this.webhookTranscoder = webhookTranscoder;
@@ -72,7 +72,7 @@ public class WebhookManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.deployWebhookTranscoder = deployWebhookTranscoder;
     this.crashLoopUpdateTranscoder = crashLoopUpdateTranscoder;
-    this.jitaAccessEventTranscoder = jitaAccessEventTranscoder;
+    this.elevatedAccessEventTranscoder = elevatedAccessEventTranscoder;
 
     this.activeWebhooksCache =
       CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
@@ -463,18 +463,48 @@ public class WebhookManager extends CuratorAsyncManager {
   }
 
   public void saveElevatedAccessEventForRetry(ElevatedAccessEvent elevatedAccessEvent) {
-    if (!isChildNodeCountSafe(SNS_JITA_ACCESS_EVENT_RETRY)) {
+    if (!isChildNodeCountSafe(SNS_ELEVATED_ACCESS_EVENT_RETRY)) {
       LOG.warn(
         "Too many queued webhooks for path {}, dropping",
-        SNS_JITA_ACCESS_EVENT_RETRY
+        SNS_ELEVATED_ACCESS_EVENT_RETRY
       );
       return;
     }
     String updatePath = ZKPaths.makePath(
-      SNS_JITA_ACCESS_EVENT_RETRY,
+      SNS_ELEVATED_ACCESS_EVENT_RETRY,
       getElevatedAccessEventId(elevatedAccessEvent)
     );
-    save(updatePath, elevatedAccessEvent, jitaAccessEventTranscoder);
+    save(updatePath, elevatedAccessEvent, elevatedAccessEventTranscoder);
+  }
+
+  public void saveElevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
+    for (SingularityWebhook webhook : getActiveWebhooksByType(
+      WebhookType.ELEVATED_ACCESS
+    )) {
+      String parentPath = getEnqueuePathForWebhook(
+        webhook.getId(),
+        WebhookType.ELEVATED_ACCESS
+      );
+      if (!isChildNodeCountSafe(parentPath)) {
+        LOG.warn("Too many queued webhooks for path {}, dropping", parentPath);
+        return;
+      }
+      final String enqueuePath = getEnqueuePathForElevatedAccessEvent(
+        webhook.getId(),
+        elevatedAccessEvent
+      );
+      save(enqueuePath, elevatedAccessEvent, elevatedAccessEventTranscoder);
+    }
+  }
+
+  private String getEnqueuePathForElevatedAccessEvent(
+    String webhookId,
+    ElevatedAccessEvent elevatedAccessEvent
+  ) {
+    return ZKPaths.makePath(
+      getEnqueuePathForWebhook(webhookId, WebhookType.ELEVATED_ACCESS),
+      getElevatedAccessEventId(elevatedAccessEvent)
+    );
   }
 
   private String getElevatedAccessEventId(ElevatedAccessEvent elevatedAccessEvent) {

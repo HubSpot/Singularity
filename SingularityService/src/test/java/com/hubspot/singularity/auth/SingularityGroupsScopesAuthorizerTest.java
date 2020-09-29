@@ -1,20 +1,29 @@
 package com.hubspot.singularity.auth;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
+import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.UserAuthMode;
+import com.hubspot.singularity.event.SingularityEventListener;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,7 +139,30 @@ public class SingularityGroupsScopesAuthorizerTest {
     .setReadWriteGroups(Optional.of(Collections.singleton("b")))
     .build();
 
+  private List<ElevatedAccessEvent> elevatedAccessEvents = new ArrayList<>();
   protected SingularityGroupsScopesAuthorizer authorizer;
+
+  private final SingularityEventListener singularityEventListener = new SingularityEventListener() {
+
+    @Override
+    public void requestHistoryEvent(
+      SingularityRequestHistory singularityRequestHistory
+    ) {}
+
+    @Override
+    public void taskHistoryUpdateEvent(SingularityTaskWebhook singularityTaskWebhook) {}
+
+    @Override
+    public void deployHistoryEvent(SingularityDeployUpdate singularityDeployUpdate) {}
+
+    @Override
+    public void crashLoopEvent(CrashLoopInfo crashLoopUpdate) {}
+
+    @Override
+    public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
+      elevatedAccessEvents.add(elevatedAccessEvent);
+    }
+  };
 
   @BeforeEach
   public void setup() {
@@ -169,6 +201,7 @@ public class SingularityGroupsScopesAuthorizerTest {
           SingularityAuthorizationScope.READ
         )
     );
+    assertEquals(1, elevatedAccessEvents.size());
     assertThrows(
       WebApplicationException.class,
       () ->
@@ -178,6 +211,7 @@ public class SingularityGroupsScopesAuthorizerTest {
           SingularityAuthorizationScope.WRITE
         )
     );
+    assertEquals(2, elevatedAccessEvents.size());
   }
 
   @Test

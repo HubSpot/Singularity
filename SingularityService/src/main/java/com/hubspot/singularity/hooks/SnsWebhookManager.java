@@ -157,7 +157,7 @@ public class SnsWebhookManager {
   }
 
   public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
-    publish(WebhookType.JITA_ACCESS, elevatedAccessEvent)
+    publish(WebhookType.ELEVATED_ACCESS, elevatedAccessEvent)
       .exceptionally(
         t -> {
           LOG.warn(
