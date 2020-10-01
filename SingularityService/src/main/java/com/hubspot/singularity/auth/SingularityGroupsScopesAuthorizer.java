@@ -338,6 +338,10 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     );
     request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
     request.getGroup().ifPresent(allowedWriteGroups::add);
+
+    // If one of the above is also set as a read-only group, assume the strictest
+    // possible meaning and disallow writing.
+    request.getReadOnlyGroups().ifPresent(allowedWriteGroups::removeAll);
     if (allowedWriteGroups.isEmpty()) {
       LOG.warn("No read/write-enabled groups set for {}", request.getId());
     }
