@@ -518,4 +518,23 @@ public class WebhookManager extends CuratorAsyncManager {
       elevatedAccessEvent.getCreatedAt()
     );
   }
+
+  public List<ElevatedAccessEvent> getElevatedAccessEventForHook(String webhookId) {
+    return getAsyncChildren(
+      getEnqueuePathForWebhook(webhookId, WebhookType.ELEVATED_ACCESS),
+      elevatedAccessEventTranscoder
+    );
+  }
+
+  public SingularityDeleteResult deleteElevatedAccessEvent(
+    SingularityWebhook webhook,
+    ElevatedAccessEvent accessEvent
+  ) {
+    final String path = getEnqueuePathForElevatedAccessEvent(
+      webhook.getId(),
+      accessEvent
+    );
+
+    return delete(path);
+  }
 }
