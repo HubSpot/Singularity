@@ -13,6 +13,7 @@ import com.hubspot.singularity.config.ScopesConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +99,8 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       case READ:
       case WRITE:
       case DEPLOY:
-        Set<String> allowedReadGroups = getGroups(request, scope);
-        checkForbiddenForGroups(user, allowedReadGroups, request.getId(), scope);
+        Set<String> allowedGroups = getGroups(request, scope);
+        checkForbiddenForGroups(user, allowedGroups, request.getId(), scope);
         checkScope(user, scope);
         break;
       case ADMIN:
@@ -261,12 +262,30 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       authConfiguration.getGlobalReadOnlyGroups()
     );
     allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
-    if (!request.getReadOnlyGroups().isPresent()) {
-      allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
+
+    if (request.getGroupPermissionOverrides().isPresent()) {
+      request
+        .getGroupPermissionOverrides()
+        .get()
+        .entrySet()
+        .stream()
+        .filter(
+          e ->
+            e.getValue().contains(SingularityAuthorizationScope.READ) ||
+            e.getValue().contains(SingularityAuthorizationScope.WRITE)
+        )
+        .map(Entry::getKey)
+        .forEach(allowedReadGroups::add);
+    } else {
+      if (!request.getReadOnlyGroups().isPresent()) {
+        allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
+      }
+      request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
+      request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
     }
-    request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
-    request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
+
     request.getGroup().ifPresent(allowedReadGroups::add);
+
     if (allowedReadGroups.isEmpty()) {
       LOG.warn("No read-enabled groups set for {}", request.getId());
     }
@@ -277,7 +296,19 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     Set<String> allowedWriteGroups = new HashSet<>(
       authConfiguration.getGlobalReadWriteGroups()
     );
-    request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
+
+    if (request.getGroupPermissionOverrides().isPresent()) {
+      request
+        .getGroupPermissionOverrides()
+        .get()
+        .entrySet()
+        .stream()
+        .filter(e -> e.getValue().contains(SingularityAuthorizationScope.WRITE))
+        .map(Entry::getKey)
+        .forEach(allowedWriteGroups::add);
+    } else {
+      request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
+    }
     request.getGroup().ifPresent(allowedWriteGroups::add);
 
     // If one of the above is also set as a read-only group, assume the strictest

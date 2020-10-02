@@ -42,7 +42,7 @@ public class SingularityRequest {
   private final Optional<String> requiredRole;
   private final Optional<Set<String>> readWriteGroups;
   private final Optional<Set<String>> readOnlyGroups;
-  private final Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides;
+  private final Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides;
   private final Optional<Boolean> bounceAfterScale;
   private final Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
   private final Optional<Boolean> hideEvenNumberAcrossRacksHint;
@@ -96,7 +96,7 @@ public class SingularityRequest {
     @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups,
     @JsonProperty(
       "groupPermissionOverrides"
-    ) Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides,
+    ) Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides,
     @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
     @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
     @JsonProperty(
@@ -509,7 +509,7 @@ public class SingularityRequest {
   }
 
   @Schema(nullable = true, description = "Permissions for specific groups")
-  public Optional<Map<String, List<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
+  public Optional<Map<String, Set<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
     return groupPermissionOverrides;
   }
 

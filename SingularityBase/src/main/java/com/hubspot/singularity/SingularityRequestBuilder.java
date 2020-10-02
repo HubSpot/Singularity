@@ -42,7 +42,7 @@ public class SingularityRequestBuilder {
   private Optional<String> group;
   private Optional<Set<String>> readWriteGroups;
   private Optional<Set<String>> readOnlyGroups;
-  private Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides;
+  private Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides;
   private Optional<Boolean> bounceAfterScale;
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
   private Optional<Boolean> hideEvenNumberAcrossRacksHint;
@@ -355,12 +355,12 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Optional<Map<String, List<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
+  public Optional<Map<String, Set<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
     return groupPermissionOverrides;
   }
 
   public SingularityRequestBuilder setGroupPermissionOverrides(
-    Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides
+    Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides
   ) {
     this.groupPermissionOverrides = groupPermissionOverrides;
     return this;
