@@ -575,7 +575,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.EXEC
+      SingularityAuthorizationScope.WRITE
     );
     validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
@@ -798,7 +798,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.EXEC
+      SingularityAuthorizationScope.WRITE
     );
 
     checkConflict(
@@ -945,7 +945,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.EXEC
+      SingularityAuthorizationScope.WRITE
     );
 
     checkConflict(
@@ -1080,7 +1080,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.EXEC
+      SingularityAuthorizationScope.WRITE
     );
 
     checkConflict(
@@ -1674,7 +1674,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       oldRequest,
       user,
-      SingularityAuthorizationScope.EXEC
+      SingularityAuthorizationScope.WRITE
     );
     validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
 
