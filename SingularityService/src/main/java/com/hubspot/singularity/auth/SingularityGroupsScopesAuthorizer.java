@@ -263,9 +263,9 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     );
     allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
 
-    if (request.getGroupPermissionOverrides().isPresent()) {
+    if (request.getGroupScopeOverrides().isPresent()) {
       request
-        .getGroupPermissionOverrides()
+        .getGroupScopeOverrides()
         .get()
         .entrySet()
         .stream()
@@ -297,9 +297,9 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       authConfiguration.getGlobalReadWriteGroups()
     );
 
-    if (request.getGroupPermissionOverrides().isPresent()) {
+    if (request.getGroupScopeOverrides().isPresent()) {
       request
-        .getGroupPermissionOverrides()
+        .getGroupScopeOverrides()
         .get()
         .entrySet()
         .stream()

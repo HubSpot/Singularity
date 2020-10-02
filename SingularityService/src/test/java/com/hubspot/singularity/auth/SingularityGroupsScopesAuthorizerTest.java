@@ -318,7 +318,7 @@ public class SingularityGroupsScopesAuthorizerTest {
   public void itChecksDeployScopeIfConfigured() {
     SingularityRequest request = GROUP_A_REQUEST
       .toBuilder()
-      .setGroupPermissionOverrides(
+      .setGroupScopeOverrides(
         Optional.of(
           Collections.singletonMap(
             "a",
@@ -392,7 +392,7 @@ public class SingularityGroupsScopesAuthorizerTest {
 
     SingularityRequest request = GROUP_A_REQUEST
       .toBuilder()
-      .setGroupPermissionOverrides(Optional.of(groupPermissions))
+      .setGroupScopeOverrides(Optional.of(groupPermissions))
       .build();
 
     assertAuthorized(request, GROUP_A_READ_ONLY, SingularityAuthorizationScope.READ);

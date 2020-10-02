@@ -42,7 +42,7 @@ public class SingularityRequest {
   private final Optional<String> requiredRole;
   private final Optional<Set<String>> readWriteGroups;
   private final Optional<Set<String>> readOnlyGroups;
-  private final Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides;
+  private final Optional<Map<String, Set<SingularityAuthorizationScope>>> groupScopeOverrides;
   private final Optional<Boolean> bounceAfterScale;
   private final Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
   private final Optional<Boolean> hideEvenNumberAcrossRacksHint;
@@ -95,8 +95,8 @@ public class SingularityRequest {
     @JsonProperty("readWriteGroups") Optional<Set<String>> readWriteGroups,
     @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups,
     @JsonProperty(
-      "groupPermissionOverrides"
-    ) Optional<Map<String, Set<SingularityAuthorizationScope>>> groupPermissionOverrides,
+      "groupScopeOverrides"
+    ) Optional<Map<String, Set<SingularityAuthorizationScope>>> groupScopeOverrides,
     @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
     @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
     @JsonProperty(
@@ -159,7 +159,7 @@ public class SingularityRequest {
     this.requiredRole = requiredRole;
     this.readWriteGroups = readWriteGroups;
     this.readOnlyGroups = readOnlyGroups;
-    this.groupPermissionOverrides = groupPermissionOverrides;
+    this.groupScopeOverrides = groupScopeOverrides;
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
@@ -204,7 +204,7 @@ public class SingularityRequest {
       .setGroup(group)
       .setReadWriteGroups(readWriteGroups)
       .setReadOnlyGroups(readOnlyGroups)
-      .setGroupPermissionOverrides(groupPermissionOverrides)
+      .setGroupScopeOverrides(groupScopeOverrides)
       .setBounceAfterScale(bounceAfterScale)
       .setEmailConfigurationOverrides(emailConfigurationOverrides)
       .setSkipHealthchecks(skipHealthchecks)
@@ -509,8 +509,8 @@ public class SingularityRequest {
   }
 
   @Schema(nullable = true, description = "Permissions for specific groups")
-  public Optional<Map<String, Set<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
-    return groupPermissionOverrides;
+  public Optional<Map<String, Set<SingularityAuthorizationScope>>> getGroupScopeOverrides() {
+    return groupScopeOverrides;
   }
 
   @Schema(
@@ -616,7 +616,7 @@ public class SingularityRequest {
       Objects.equals(requiredRole, that.requiredRole) &&
       Objects.equals(readWriteGroups, that.readWriteGroups) &&
       Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
-      Objects.equals(groupPermissionOverrides, that.groupPermissionOverrides) &&
+      Objects.equals(groupScopeOverrides, that.groupScopeOverrides) &&
       Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
       Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
       Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
@@ -660,7 +660,7 @@ public class SingularityRequest {
       requiredRole,
       readWriteGroups,
       readOnlyGroups,
-      groupPermissionOverrides,
+      groupScopeOverrides,
       bounceAfterScale,
       emailConfigurationOverrides,
       hideEvenNumberAcrossRacksHint,
@@ -728,8 +728,8 @@ public class SingularityRequest {
       readWriteGroups +
       ", readOnlyGroups=" +
       readOnlyGroups +
-      ", groupPermissionOverrides=" +
-      groupPermissionOverrides +
+      ", groupScopeOverrides=" +
+      groupScopeOverrides +
       ", bounceAfterScale=" +
       bounceAfterScale +
       ", emailConfigurationOverrides=" +
