@@ -404,6 +404,11 @@ public class SingularityGroupsScopesAuthorizerTest {
       SingularityAuthorizationScope.EXEC
     );
     assertNotAuthorized(
+      GROUP_A_REQUEST,
+      GROUP_A_READ_WRITE,
+      SingularityAuthorizationScope.EXEC
+    );
+    assertNotAuthorized(
       GROUP_A_REQUEST
         .toBuilder()
         .setGroupScopeOverrides(
