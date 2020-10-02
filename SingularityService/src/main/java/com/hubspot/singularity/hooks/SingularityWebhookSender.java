@@ -336,7 +336,10 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   }
 
   private String applyPlaceholders(String uri, ElevatedAccessEvent elevatedAccessEvent) {
-    return uri.replaceAll("\\$REQUEST_ID", elevatedAccessEvent.getRequestId());
+    return uri
+      .replaceAll("\\$REQUEST_ID", elevatedAccessEvent.getRequestId())
+      .replaceAll("\\$USER_ID", elevatedAccessEvent.getUser())
+      .replaceAll("\\$SCOPE", elevatedAccessEvent.getScope().name());
   }
 
   private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {
