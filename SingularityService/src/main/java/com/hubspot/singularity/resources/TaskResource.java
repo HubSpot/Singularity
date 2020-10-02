@@ -327,7 +327,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       authorizationHelper.checkForAuthorizationByRequestId(
         request.getId(),
         user,
-        SingularityAuthorizationScope.WRITE
+        SingularityAuthorizationScope.EXEC
       );
       checkBadRequest(
         request.getRequestType() == RequestType.ON_DEMAND,
@@ -836,7 +836,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   ) {
     final SingularityTask task = checkActiveTask(
       taskId,
-      SingularityAuthorizationScope.WRITE,
+      SingularityAuthorizationScope.EXEC,
       user
     );
 
@@ -1087,7 +1087,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     authorizationHelper.checkForAuthorizationByTaskId(
       taskId,
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.EXEC
     );
     validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
