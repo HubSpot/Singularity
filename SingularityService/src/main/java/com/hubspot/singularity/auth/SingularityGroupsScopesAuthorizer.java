@@ -99,6 +99,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       case READ:
       case WRITE:
       case DEPLOY:
+      case EXEC:
         Set<String> allowedGroups = getGroups(request, scope);
         checkForbiddenForGroups(user, allowedGroups, request.getId(), scope);
         checkScope(user, scope);
@@ -125,6 +126,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       case READ:
       case WRITE:
       case DEPLOY:
+      case EXEC:
         if (!hasScope(user, scope)) {
           return false;
         }
@@ -196,6 +198,8 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         return scopesConfiguration.getDeploy().isEmpty()
           ? scopesConfiguration.getWrite()
           : scopesConfiguration.getDeploy();
+      case EXEC:
+        return scopesConfiguration.getExec();
       case ADMIN:
       default:
         return scopesConfiguration.getAdmin();
@@ -251,6 +255,8 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       case WRITE:
       case DEPLOY:
         return getWriteGroups(request);
+      case EXEC:
+        return getExecGroups(request);
       case ADMIN:
       default:
         return Collections.emptySet();
@@ -318,5 +324,38 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       LOG.warn("No read/write-enabled groups set for {}", request.getId());
     }
     return allowedWriteGroups;
+  }
+
+  private Set<String> getExecGroups(SingularityRequest request) {
+    Set<String> allowedExecGroups = new HashSet<>();
+    if (
+      request.getGroup().isPresent() &&
+      request.getGroupScopeOverrides().isPresent() &&
+      !request.getGroupScopeOverrides().get().containsKey(request.getGroup().get())
+    ) {
+      allowedExecGroups.add(request.getGroup().get());
+    } else if (
+      request.getGroup().isPresent() && !request.getGroupScopeOverrides().isPresent()
+    ) {
+      allowedExecGroups.add(request.getGroup().get());
+    }
+    if (request.getGroupScopeOverrides().isPresent()) {
+      request
+        .getGroupScopeOverrides()
+        .get()
+        .entrySet()
+        .stream()
+        .filter(e -> e.getValue().contains(SingularityAuthorizationScope.EXEC))
+        .map(Entry::getKey)
+        .forEach(allowedExecGroups::add);
+    }
+
+    // If one of the above is also set as a read-only group, assume the strictest
+    // possible meaning and disallow writing.
+    request.getReadOnlyGroups().ifPresent(allowedExecGroups::removeAll);
+    if (allowedExecGroups.isEmpty()) {
+      LOG.warn("No read/write-enabled groups set for {}", request.getId());
+    }
+    return allowedExecGroups;
   }
 }

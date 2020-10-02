@@ -4,5 +4,6 @@ public enum SingularityAuthorizationScope {
   READ,
   WRITE,
   ADMIN,
-  DEPLOY
+  DEPLOY,
+  EXEC // run, bounce, kill, pause, scale
 }

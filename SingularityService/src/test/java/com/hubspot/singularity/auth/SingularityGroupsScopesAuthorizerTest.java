@@ -49,10 +49,22 @@ public class SingularityGroupsScopesAuthorizerTest {
     ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE")
   );
 
+  private static final SingularityUser GROUP_A_READ_WRITE_EXEC = createSingularityUser(
+    "a",
+    Collections.singleton("a"),
+    ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE", "SINGULARITY_EXEC")
+  );
+
   private static final SingularityUser GROUP_B_READ_WRITE = createSingularityUser(
     "b",
     Collections.singleton("b"),
     ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE")
+  );
+
+  private static final SingularityUser GROUP_B_READ_WRITE_EXEC = createSingularityUser(
+    "b",
+    Collections.singleton("b"),
+    ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE", "SINGULARITY_EXEC")
   );
 
   private static final SingularityUser GROUP_B_READ_ONLY = createSingularityUser(
@@ -83,6 +95,12 @@ public class SingularityGroupsScopesAuthorizerTest {
     "a",
     "jita",
     "SINGULARITY_READONLY"
+  );
+
+  private static final SingularityUser JITA_USER_EXEC = createSingularityUser(
+    "a",
+    ImmutableSet.of("jita"),
+    ImmutableSet.of("SINGULARITY_EXEC")
   );
 
   private static final SingularityRequest GROUP_A_REQUEST = new SingularityRequestBuilder(
@@ -162,6 +180,14 @@ public class SingularityGroupsScopesAuthorizerTest {
           SingularityAuthorizationScope.READ
         )
     );
+    assertDoesNotThrow(
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          JITA_USER_EXEC,
+          SingularityAuthorizationScope.EXEC
+        )
+    );
     assertThrows(
       WebApplicationException.class,
       () ->
@@ -169,6 +195,15 @@ public class SingularityGroupsScopesAuthorizerTest {
           GROUP_A_REQUEST,
           JITA_USER_READ,
           SingularityAuthorizationScope.WRITE
+        )
+    );
+    assertThrows(
+      WebApplicationException.class,
+      () ->
+        authorizer.checkForAuthorization(
+          GROUP_A_REQUEST,
+          JITA_USER_READ,
+          SingularityAuthorizationScope.EXEC
         )
     );
   }
@@ -358,6 +393,60 @@ public class SingularityGroupsScopesAuthorizerTest {
       request,
       groupAWithDeployScope,
       SingularityAuthorizationScope.DEPLOY
+    );
+  }
+
+  @Test
+  public void itChecksExecScope() {
+    assertAuthorized(
+      GROUP_A_REQUEST,
+      GROUP_A_READ_WRITE_EXEC,
+      SingularityAuthorizationScope.EXEC
+    );
+    assertNotAuthorized(
+      GROUP_A_REQUEST
+        .toBuilder()
+        .setGroupScopeOverrides(
+          Optional.of(
+            Collections.singletonMap(
+              "a",
+              ImmutableSet.of(SingularityAuthorizationScope.WRITE)
+            )
+          )
+        )
+        .build(),
+      GROUP_A_READ_WRITE_EXEC,
+      SingularityAuthorizationScope.EXEC
+    );
+    assertNotAuthorized(
+      GROUP_A_REQUEST
+        .toBuilder()
+        .setReadOnlyGroups(Optional.of(ImmutableSet.of("a")))
+        .build(),
+      GROUP_A_READ_WRITE_EXEC,
+      SingularityAuthorizationScope.EXEC
+    );
+
+    assertNotAuthorized(
+      GROUP_A_REQUEST,
+      GROUP_B_READ_WRITE_EXEC,
+      SingularityAuthorizationScope.EXEC
+    );
+
+    assertAuthorized(
+      GROUP_A_REQUEST
+        .toBuilder()
+        .setGroupScopeOverrides(
+          Optional.of(
+            Collections.singletonMap(
+              "b",
+              ImmutableSet.of(SingularityAuthorizationScope.EXEC)
+            )
+          )
+        )
+        .build(),
+      GROUP_B_READ_WRITE_EXEC,
+      SingularityAuthorizationScope.EXEC
     );
   }
 
