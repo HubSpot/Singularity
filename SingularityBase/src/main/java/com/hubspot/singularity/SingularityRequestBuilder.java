@@ -42,6 +42,7 @@ public class SingularityRequestBuilder {
   private Optional<String> group;
   private Optional<Set<String>> readWriteGroups;
   private Optional<Set<String>> readOnlyGroups;
+  private Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides;
   private Optional<Boolean> bounceAfterScale;
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
   private Optional<Boolean> hideEvenNumberAcrossRacksHint;
@@ -78,6 +79,7 @@ public class SingularityRequestBuilder {
     this.group = Optional.empty();
     this.readWriteGroups = Optional.empty();
     this.readOnlyGroups = Optional.empty();
+    this.groupPermissionOverrides = Optional.empty();
     this.bounceAfterScale = Optional.empty();
     this.emailConfigurationOverrides = Optional.empty();
     this.skipHealthchecks = Optional.empty();
@@ -116,6 +118,7 @@ public class SingularityRequestBuilder {
       group,
       readWriteGroups,
       readOnlyGroups,
+      groupPermissionOverrides,
       bounceAfterScale,
       skipHealthchecks,
       emailConfigurationOverrides,
@@ -352,6 +355,17 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Map<String, List<SingularityAuthorizationScope>>> getGroupPermissionOverrides() {
+    return groupPermissionOverrides;
+  }
+
+  public SingularityRequestBuilder setGroupPermissionOverrides(
+    Optional<Map<String, List<SingularityAuthorizationScope>>> groupPermissionOverrides
+  ) {
+    this.groupPermissionOverrides = groupPermissionOverrides;
+    return this;
+  }
+
   public SingularityRequestBuilder setRequiredAgentAttributes(
     Optional<Map<String, String>> requiredAgentAttributes
   ) {
@@ -551,6 +565,7 @@ public class SingularityRequestBuilder {
       Objects.equals(group, that.group) &&
       Objects.equals(readWriteGroups, that.readWriteGroups) &&
       Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+      Objects.equals(groupPermissionOverrides, that.groupPermissionOverrides) &&
       Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
       Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
       Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
@@ -594,6 +609,7 @@ public class SingularityRequestBuilder {
       group,
       readWriteGroups,
       readOnlyGroups,
+      groupPermissionOverrides,
       bounceAfterScale,
       emailConfigurationOverrides,
       hideEvenNumberAcrossRacksHint,
@@ -661,6 +677,8 @@ public class SingularityRequestBuilder {
       readWriteGroups +
       ", readOnlyGroups=" +
       readOnlyGroups +
+      ", groupPermissionOverrides=" +
+      groupPermissionOverrides +
       ", bounceAfterScale=" +
       bounceAfterScale +
       ", emailConfigurationOverrides=" +
