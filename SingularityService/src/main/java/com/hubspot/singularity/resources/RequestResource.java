@@ -39,6 +39,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -575,7 +576,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
     );
     validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
@@ -798,7 +800,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.RUN_REQUEST
     );
 
     checkConflict(
@@ -945,7 +948,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.PAUSE_REQUEST
     );
 
     checkConflict(
@@ -1080,7 +1084,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.PAUSE_REQUEST
     );
 
     checkConflict(
@@ -1674,7 +1679,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       oldRequest,
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.SCALE_REQUEST
     );
     validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
 

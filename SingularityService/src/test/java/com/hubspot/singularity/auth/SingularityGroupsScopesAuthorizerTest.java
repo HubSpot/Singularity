@@ -11,6 +11,7 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.UserAuthMode;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
@@ -205,6 +206,100 @@ public class SingularityGroupsScopesAuthorizerTest {
   }
 
   @Test
+  public void itChecksActionPermissionsForOwningGroup() {
+    SingularityRequest request = GROUP_A_REQUEST
+      .toBuilder()
+      .setActionPermissions(
+        Optional.of(
+          Collections.singletonMap(
+            "a",
+            ImmutableSet.of(
+              SingularityUserFacingAction.BOUNCE_REQUEST,
+              SingularityUserFacingAction.SCALE_REQUEST
+            )
+          )
+        )
+      )
+      .build();
+
+    assertAuthorized(request, GROUP_A_READ_WRITE, SingularityAuthorizationScope.WRITE);
+
+    assertAuthorized(
+      request,
+      GROUP_A_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+    assertAuthorized(
+      request,
+      GROUP_A_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.SCALE_REQUEST
+    );
+
+    // BOUNCE_TASK not explicitly allowed
+    assertNotAuthorized(
+      request,
+      GROUP_A_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_TASK
+    );
+
+    // Write scope missing
+    assertNotAuthorized(
+      request,
+      GROUP_A_READ_ONLY,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+
+    // Different group
+    assertNotAuthorized(
+      request,
+      GROUP_B_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+  }
+
+  @Test
+  public void itBlocksOwningGroupFromActionsWhenNonOwningGroupPermissionsSpecified() {
+    SingularityRequest request = GROUP_A_REQUEST
+      .toBuilder()
+      .setActionPermissions(
+        Optional.of(
+          Collections.singletonMap(
+            "b",
+            Collections.singleton(SingularityUserFacingAction.BOUNCE_REQUEST)
+          )
+        )
+      )
+      .build();
+
+    assertAuthorized(request, GROUP_A_READ_WRITE, SingularityAuthorizationScope.WRITE);
+    assertNotAuthorized(
+      request,
+      GROUP_A_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+
+    assertAuthorized(
+      request.toBuilder().setReadWriteGroups(Optional.of(ImmutableSet.of("b"))).build(),
+      GROUP_B_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+    assertNotAuthorized(
+      request,
+      GROUP_B_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE_REQUEST
+    );
+    assertNotAuthorized(request, GROUP_B_READ_WRITE, SingularityAuthorizationScope.WRITE);
+  }
+
+  @Test
   public void itAllowsAccessWhenInGroupAndDeniesOtherwise() {
     // user and request in group a
     assertAuthorized(
@@ -350,6 +445,18 @@ public class SingularityGroupsScopesAuthorizerTest {
     assertTrue(authorizer.isAuthorizedForRequest(request, user, scope));
   }
 
+  private void assertAuthorized(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    assertDoesNotThrow(
+      () -> authorizer.checkForAuthorization(request, user, scope, action)
+    );
+    assertTrue(authorizer.isAuthorizedForRequest(request, user, scope, action));
+  }
+
   private void assertNotAuthorized(
     SingularityRequest request,
     SingularityUser user,
@@ -360,5 +467,18 @@ public class SingularityGroupsScopesAuthorizerTest {
       () -> authorizer.checkForAuthorization(request, user, scope)
     );
     assertFalse(authorizer.isAuthorizedForRequest(request, user, scope));
+  }
+
+  private void assertNotAuthorized(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    assertThrows(
+      WebApplicationException.class,
+      () -> authorizer.checkForAuthorization(request, user, scope, action)
+    );
+    assertFalse(authorizer.isAuthorizedForRequest(request, user, scope, action));
   }
 }

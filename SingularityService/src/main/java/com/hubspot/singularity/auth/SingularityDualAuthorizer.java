@@ -11,10 +11,12 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.WebApplicationException;
@@ -151,7 +153,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
   public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     boolean grantedByScopes = checkGrantedByScopes(
       () -> groupsScopesAuthorizer.checkForAuthorization(request, user, scope)
@@ -183,7 +186,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
   public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     boolean result = groupsAuthorizer.isAuthorizedForRequest(
       request,

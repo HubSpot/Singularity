@@ -8,12 +8,14 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.ScopesConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,15 +88,23 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
-  public void checkForAuthorization(
+  protected void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     if (!authEnabled || isAdmin(user)) {
       return;
     }
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
+
+    if (action.isPresent() && request.getActionPermissions().isPresent()) {
+      checkForbidden(
+        isActionAllowed(request, user, action.get()),
+        String.format("%s not allowed", action.get())
+      );
+    }
     switch (scope) {
       case READ:
       case WRITE:
@@ -109,16 +119,22 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
   }
 
   @Override
-  public boolean isAuthorizedForRequest(
+  protected boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     if (!authEnabled || isAdmin(user)) {
       return true;
     }
     if (!user.isAuthenticated()) {
       return false;
+    }
+    if (action.isPresent() && request.getActionPermissions().isPresent()) {
+      if (!isActionAllowed(request, user, action.get())) {
+        return false;
+      }
     }
     switch (scope) {
       case READ:
@@ -138,6 +154,25 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       default:
         return hasAdminAuthorization(user);
     }
+  }
+
+  private boolean isActionAllowed(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityUserFacingAction action
+  ) {
+    for (String group : user.getGroups()) {
+      if (
+        request
+          .getActionPermissions()
+          .get()
+          .getOrDefault(group, Collections.emptySet())
+          .contains(action)
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void warnJita(
@@ -256,9 +291,9 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     );
     allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
 
-    if (request.getGroupScopeOverrides().isPresent()) {
+    if (request.getActionPermissions().isPresent()) {
       request
-        .getGroupScopeOverrides()
+        .getActionPermissions()
         .get()
         .entrySet()
         .stream()
@@ -290,18 +325,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
       authConfiguration.getGlobalReadWriteGroups()
     );
 
-    if (request.getGroupScopeOverrides().isPresent()) {
-      request
-        .getGroupScopeOverrides()
-        .get()
-        .entrySet()
-        .stream()
-        .filter(e -> e.getValue().contains(SingularityAuthorizationScope.WRITE))
-        .map(Entry::getKey)
-        .forEach(allowedWriteGroups::add);
-    } else {
-      request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
-    }
+    request.getReadWriteGroups().ifPresent(allowedWriteGroups::addAll);
     request.getGroup().ifPresent(allowedWriteGroups::add);
 
     // If one of the above is also set as a read-only group, assume the strictest
