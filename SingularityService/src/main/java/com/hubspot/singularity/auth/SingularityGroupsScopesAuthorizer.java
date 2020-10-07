@@ -14,7 +14,6 @@ import com.hubspot.singularity.config.ScopesConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -291,26 +290,11 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     );
     allowedReadGroups.addAll(authConfiguration.getGlobalReadWriteGroups());
 
-    if (request.getActionPermissions().isPresent()) {
-      request
-        .getActionPermissions()
-        .get()
-        .entrySet()
-        .stream()
-        .filter(
-          e ->
-            e.getValue().contains(SingularityAuthorizationScope.READ) ||
-            e.getValue().contains(SingularityAuthorizationScope.WRITE)
-        )
-        .map(Entry::getKey)
-        .forEach(allowedReadGroups::add);
-    } else {
-      if (!request.getReadOnlyGroups().isPresent()) {
-        allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
-      }
-      request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
-      request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
+    if (!request.getReadOnlyGroups().isPresent()) {
+      allowedReadGroups.addAll(authConfiguration.getDefaultReadOnlyGroups());
     }
+    request.getReadOnlyGroups().ifPresent(allowedReadGroups::addAll);
+    request.getReadWriteGroups().ifPresent(allowedReadGroups::addAll);
 
     request.getGroup().ifPresent(allowedReadGroups::add);
 

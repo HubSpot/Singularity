@@ -2,7 +2,7 @@ package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class SingularityUpdateGroupsRequest {
   private final Optional<String> group;
   private final Set<String> readWriteGroups;
   private final Set<String> readOnlyGroups;
-  private final Optional<Map<String, Set<SingularityAuthorizationScope>>> groupScopeOverrides;
+  private final Optional<Map<String, Set<SingularityUserFacingAction>>> actionPermissions;
   private final Optional<String> message;
 
   @JsonCreator
@@ -24,8 +24,8 @@ public class SingularityUpdateGroupsRequest {
     @JsonProperty("readWriteGroups") Set<String> readWriteGroups,
     @JsonProperty("readOnlyGroups") Set<String> readOnlyGroups,
     @JsonProperty(
-      "groupScopeOverrides"
-    ) Optional<Map<String, Set<SingularityAuthorizationScope>>> groupScopeOverrides,
+      "actionPermissions"
+    ) Optional<Map<String, Set<SingularityUserFacingAction>>> actionPermissions,
     @JsonProperty("message") Optional<String> message
   ) {
     this.group = group;
@@ -33,7 +33,7 @@ public class SingularityUpdateGroupsRequest {
       readWriteGroups != null ? readWriteGroups : Collections.emptySet();
     this.readOnlyGroups =
       readOnlyGroups != null ? readOnlyGroups : Collections.emptySet();
-    this.groupScopeOverrides = groupScopeOverrides;
+    this.actionPermissions = actionPermissions;
     this.message = message;
   }
 
@@ -53,8 +53,8 @@ public class SingularityUpdateGroupsRequest {
   }
 
   @Schema(description = "Overidden scopes for specific groups")
-  public Optional<Map<String, Set<SingularityAuthorizationScope>>> getGroupScopeOverrides() {
-    return groupScopeOverrides;
+  public Optional<Map<String, Set<SingularityUserFacingAction>>> getActionPermissions() {
+    return actionPermissions;
   }
 
   @Schema(
@@ -76,7 +76,7 @@ public class SingularityUpdateGroupsRequest {
         Objects.equals(this.group, that.group) &&
         Objects.equals(this.readWriteGroups, that.readWriteGroups) &&
         Objects.equals(this.readOnlyGroups, that.readOnlyGroups) &&
-        Objects.equals(this.groupScopeOverrides, that.groupScopeOverrides) &&
+        Objects.equals(this.actionPermissions, that.actionPermissions) &&
         Objects.equals(this.message, that.message)
       );
     }
@@ -89,7 +89,7 @@ public class SingularityUpdateGroupsRequest {
       group,
       readWriteGroups,
       readOnlyGroups,
-      groupScopeOverrides,
+      actionPermissions,
       message
     );
   }
@@ -105,7 +105,7 @@ public class SingularityUpdateGroupsRequest {
       ", readOnlyGroups=" +
       readOnlyGroups +
       ", groupScopeOverrides=" +
-      groupScopeOverrides +
+      actionPermissions +
       ", message=" +
       message +
       '}'

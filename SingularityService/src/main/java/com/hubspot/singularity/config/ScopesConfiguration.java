@@ -14,9 +14,6 @@ public class ScopesConfiguration {
   @NotEmpty
   private Set<String> read = Collections.singleton("SINGULARITY_READONLY");
 
-  @NotEmpty
-  private Set<String> exec = Collections.singleton("SINGULARITY_EXEC");
-
   // only enforced if not empty, otherwise will check for write
   private Set<String> deploy = Collections.emptySet();
 
@@ -50,13 +47,5 @@ public class ScopesConfiguration {
 
   public void setDeploy(Set<String> deploy) {
     this.deploy = deploy;
-  }
-
-  public Set<String> getExec() {
-    return exec;
-  }
-
-  public void setExec(Set<String> exec) {
-    this.exec = exec;
   }
 }

@@ -212,8 +212,8 @@ public class SingularityGroupsScopesAuthorizerTest {
           Collections.singletonMap(
             "a",
             ImmutableSet.of(
-              SingularityUserFacingAction.BOUNCE_REQUEST,
-              SingularityUserFacingAction.SCALE_REQUEST
+              SingularityUserFacingAction.BOUNCE,
+              SingularityUserFacingAction.SCALE
             )
           )
         )
@@ -226,21 +226,21 @@ public class SingularityGroupsScopesAuthorizerTest {
       request,
       GROUP_A_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
     assertAuthorized(
       request,
       GROUP_A_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.SCALE_REQUEST
+      SingularityUserFacingAction.SCALE
     );
 
-    // BOUNCE_TASK not explicitly allowed
+    // KILL_TASK not explicitly allowed
     assertNotAuthorized(
       request,
       GROUP_A_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_TASK
+      SingularityUserFacingAction.KILL_TASK
     );
 
     // Write scope missing
@@ -248,7 +248,7 @@ public class SingularityGroupsScopesAuthorizerTest {
       request,
       GROUP_A_READ_ONLY,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
 
     // Different group
@@ -256,7 +256,7 @@ public class SingularityGroupsScopesAuthorizerTest {
       request,
       GROUP_B_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
   }
 
@@ -268,7 +268,7 @@ public class SingularityGroupsScopesAuthorizerTest {
         Optional.of(
           Collections.singletonMap(
             "b",
-            Collections.singleton(SingularityUserFacingAction.BOUNCE_REQUEST)
+            Collections.singleton(SingularityUserFacingAction.BOUNCE)
           )
         )
       )
@@ -279,20 +279,20 @@ public class SingularityGroupsScopesAuthorizerTest {
       request,
       GROUP_A_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
 
     assertAuthorized(
       request.toBuilder().setReadWriteGroups(Optional.of(ImmutableSet.of("b"))).build(),
       GROUP_B_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
     assertNotAuthorized(
       request,
       GROUP_B_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.BOUNCE_REQUEST
+      SingularityUserFacingAction.BOUNCE
     );
     assertNotAuthorized(request, GROUP_B_READ_WRITE, SingularityAuthorizationScope.WRITE);
   }
