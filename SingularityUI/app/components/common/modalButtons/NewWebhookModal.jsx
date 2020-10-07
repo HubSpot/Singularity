@@ -5,7 +5,7 @@ import { FetchWebhooks, NewWebhook } from '../../../actions/api/webhooks';
 
 import FormModal from '../modal/FormModal';
 
-const WEBHOOK_TYPES = ['REQUEST', 'DEPLOY', 'TASK'];
+const WEBHOOK_TYPES = ['REQUEST', 'DEPLOY', 'TASK', 'ELEVATED ACCESS'];
 
 import Utils from '../../../utils';
 

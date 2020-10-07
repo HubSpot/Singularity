@@ -4,12 +4,14 @@ import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.ScopesConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.event.SingularityEventListener;
 import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -23,15 +25,18 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
 
   private final AuthConfiguration authConfiguration;
   private final ScopesConfiguration scopesConfiguration;
+  private final SingularityEventListener singularityEventListener;
 
   @Inject
   public SingularityGroupsScopesAuthorizer(
     RequestManager requestManager,
-    AuthConfiguration authConfiguration
+    AuthConfiguration authConfiguration,
+    SingularityEventListener singularityEventListener
   ) {
     super(requestManager, authConfiguration.isEnabled());
     this.authConfiguration = authConfiguration;
     this.scopesConfiguration = authConfiguration.getScopes();
+    this.singularityEventListener = singularityEventListener;
   }
 
   @Override
@@ -149,6 +154,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
             request.getId(),
             scope
           );
+          singularityEventListener.elevatedAccessEvent(
+            new ElevatedAccessEvent(
+              user.getId(),
+              request.getId(),
+              scope,
+              System.currentTimeMillis()
+            )
+          );
           return true;
         }
         return false;
@@ -167,6 +180,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
               request.getId(),
               scope
             );
+            singularityEventListener.elevatedAccessEvent(
+              new ElevatedAccessEvent(
+                user.getId(),
+                request.getId(),
+                scope,
+                System.currentTimeMillis()
+              )
+            );
             return true;
           }
           return false;
@@ -183,6 +204,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
               user.getId(),
               request.getId(),
               scope
+            );
+            singularityEventListener.elevatedAccessEvent(
+              new ElevatedAccessEvent(
+                user.getId(),
+                request.getId(),
+                scope,
+                System.currentTimeMillis()
+              )
             );
             return true;
           }
@@ -201,6 +230,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
             user.getId(),
             request.getId(),
             scope
+          );
+          singularityEventListener.elevatedAccessEvent(
+            new ElevatedAccessEvent(
+              user.getId(),
+              request.getId(),
+              scope,
+              System.currentTimeMillis()
+            )
           );
           return true;
         }
@@ -305,6 +342,14 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
         user.getId(),
         requestId,
         scope
+      );
+      singularityEventListener.elevatedAccessEvent(
+        new ElevatedAccessEvent(
+          user.getId(),
+          requestId,
+          scope,
+          System.currentTimeMillis()
+        )
       );
     }
     checkForbidden(
