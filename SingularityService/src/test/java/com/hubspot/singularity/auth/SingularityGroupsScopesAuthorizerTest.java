@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.WebApplicationException;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -128,7 +127,6 @@ public class SingularityGroupsScopesAuthorizerTest {
     authorizer = new SingularityGroupsScopesAuthorizer(null, authConfiguration);
   }
 
-  @NotNull
   private AuthConfiguration getAuthConfiguration() {
     AuthConfiguration authConfiguration = new AuthConfiguration();
     authConfiguration.setEnabled(true);
