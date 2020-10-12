@@ -1598,7 +1598,7 @@ public class SingularityClient {
   public Collection<SingularitySlave> getSlaves(Optional<MachineState> agentState) {
     return getAgents(agentState)
       .stream()
-      .map(a -> (SingularitySlave) a)
+      .map(SingularitySlave::new)
       .collect(Collectors.toList());
   }
 
@@ -1645,7 +1645,7 @@ public class SingularityClient {
 
   @Deprecated
   public Optional<SingularitySlave> getSlave(String agentId) {
-    return getAgent(agentId).map(a -> (SingularitySlave) a);
+    return getAgent(agentId).map(SingularitySlave::new);
   }
 
   @Deprecated
