@@ -6,15 +6,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.singularity.SingularityAgent;
+import com.hubspot.singularity.SingularitySlave;
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -67,6 +73,29 @@ public class SingularityClientTest {
       .isThrownBy(
         () -> singularityClient.pauseSingularityRequest("requestId", Optional.empty())
       );
+  }
+
+  @Test
+  public void itGetsSingularitySlaves() {
+    SingularityAgent agent = new SingularityAgent(
+      "agentId",
+      "host",
+      "rackId",
+      new HashMap<>(),
+      Optional.empty()
+    );
+    when(httpClient.execute(any())).thenReturn(response);
+    when(response.getStatusCode()).thenReturn(200);
+    when(response.isError()).thenReturn(false);
+    when(
+        response.getAs(
+          ArgumentMatchers.<TypeReference<Collection<SingularityAgent>>>any()
+        )
+      )
+      .thenReturn(ImmutableList.of(agent));
+
+    Collection<SingularitySlave> agents = singularityClient.getSlaves(Optional.empty());
+    assertThat(agents).isNotEmpty().hasSize(1);
   }
 
   private SingularityClient buildClient() {

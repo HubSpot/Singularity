@@ -58,4 +58,17 @@ public class SingularitySlave extends SingularityAgent {
       agentId
     );
   }
+
+  public SingularitySlave(SingularityAgent agent) {
+    this(
+      null,
+      agent.getFirstSeenAt(),
+      agent.getCurrentState(),
+      agent.getHost(),
+      agent.getRackId(),
+      agent.getAttributes(),
+      agent.getResources(),
+      agent.getId()
+    );
+  }
 }

@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -219,5 +220,21 @@ public class WebhookResource {
   ) {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getQueuedTaskUpdatesForHook(JavaUtils.urlEncode(webhookId));
+  }
+
+  @GET
+  @Path("/elevated-access")
+  @Operation(
+    summary = "Retrieve a list of queued elevated access updates for a specific webhook."
+  )
+  public List<ElevatedAccessEvent> getQueuedElevatedAccessEventUpdates(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(
+      required = true,
+      description = "Id of the webhook to get task updates for"
+    ) @QueryParam("webhookId") String webhookId
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return webhookManager.getElevatedAccessEventForHook(JavaUtils.urlEncode(webhookId));
   }
 }
