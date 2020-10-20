@@ -14,6 +14,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.List;
 import java.util.Map;
@@ -42,16 +43,52 @@ public abstract class SingularityAuthorizer {
 
   public abstract void checkReadAuthorization(SingularityUser user);
 
-  public abstract void checkForAuthorization(
+  public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
     SingularityAuthorizationScope scope
+  ) {
+    checkForAuthorization(request, user, scope, Optional.empty());
+  }
+
+  public void checkForAuthorization(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    checkForAuthorization(request, user, scope, Optional.of(action));
+  }
+
+  protected abstract void checkForAuthorization(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   );
 
-  public abstract boolean isAuthorizedForRequest(
+  public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
     SingularityAuthorizationScope scope
+  ) {
+    return isAuthorizedForRequest(request, user, scope, Optional.empty());
+  }
+
+  public boolean isAuthorizedForRequest(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    return isAuthorizedForRequest(request, user, scope, Optional.of(action));
+  }
+
+  protected abstract boolean isAuthorizedForRequest(
+    SingularityRequest request,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   );
 
   public abstract void checkForAuthorizedChanges(
@@ -65,6 +102,24 @@ public abstract class SingularityAuthorizer {
     SingularityUser user,
     SingularityAuthorizationScope scope
   ) {
+    checkForAuthorizationByTaskId(taskId, user, scope, Optional.empty());
+  }
+
+  public void checkForAuthorizationByTaskId(
+    String taskId,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    checkForAuthorizationByTaskId(taskId, user, scope, Optional.of(action));
+  }
+
+  private void checkForAuthorizationByTaskId(
+    String taskId,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
+  ) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");
       try {
@@ -76,7 +131,12 @@ public abstract class SingularityAuthorizer {
 
         maybeRequest.ifPresent(
           singularityRequestWithState ->
-            checkForAuthorization(singularityRequestWithState.getRequest(), user, scope)
+            checkForAuthorization(
+              singularityRequestWithState.getRequest(),
+              user,
+              scope,
+              action
+            )
         );
       } catch (InvalidSingularityTaskIdException e) {
         badRequest(e.getMessage());
@@ -89,6 +149,24 @@ public abstract class SingularityAuthorizer {
     SingularityUser user,
     SingularityAuthorizationScope scope
   ) {
+    checkForAuthorizationByRequestId(requestId, user, scope, Optional.empty());
+  }
+
+  public void checkForAuthorizationByRequestId(
+    String requestId,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    SingularityUserFacingAction action
+  ) {
+    checkForAuthorizationByRequestId(requestId, user, scope, Optional.of(action));
+  }
+
+  public void checkForAuthorizationByRequestId(
+    String requestId,
+    SingularityUser user,
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
+  ) {
     if (authEnabled) {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
         requestId
@@ -96,7 +174,12 @@ public abstract class SingularityAuthorizer {
 
       maybeRequest.ifPresent(
         singularityRequestWithState ->
-          checkForAuthorization(singularityRequestWithState.getRequest(), user, scope)
+          checkForAuthorization(
+            singularityRequestWithState.getRequest(),
+            user,
+            scope,
+            action
+          )
       );
     }
   }

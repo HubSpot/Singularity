@@ -42,6 +42,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
@@ -327,7 +328,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
       authorizationHelper.checkForAuthorizationByRequestId(
         request.getId(),
         user,
-        SingularityAuthorizationScope.WRITE
+        SingularityAuthorizationScope.WRITE,
+        SingularityUserFacingAction.DELETE_SCHEDULED_TASK
       );
       checkBadRequest(
         request.getRequestType() == RequestType.ON_DEMAND,
@@ -687,6 +689,34 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return task.get();
   }
 
+  private SingularityTask checkActiveTask(
+    String taskId,
+    SingularityAuthorizationScope scope,
+    SingularityUser user,
+    SingularityUserFacingAction action
+  ) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
+    checkNotFound(
+      task.isPresent() && taskManager.isActiveTask(taskIdObj),
+      "No active task with id %s",
+      taskId
+    );
+
+    if (task.isPresent()) {
+      authorizationHelper.checkForAuthorizationByRequestId(
+        task.get().getTaskId().getRequestId(),
+        user,
+        scope,
+        action
+      );
+    }
+
+    return task.get();
+  }
+
   @GET
   @Path("/task/{taskId}")
   @Operation(
@@ -837,7 +867,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
     final SingularityTask task = checkActiveTask(
       taskId,
       SingularityAuthorizationScope.WRITE,
-      user
+      user,
+      SingularityUserFacingAction.KILL_TASK
     );
 
     Optional<String> message = Optional.empty();
@@ -1087,7 +1118,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
     authorizationHelper.checkForAuthorizationByTaskId(
       taskId,
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.RUN_SHELL_COMMAND
     );
     validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 

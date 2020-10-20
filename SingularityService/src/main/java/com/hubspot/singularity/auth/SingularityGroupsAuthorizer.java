@@ -12,6 +12,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
@@ -112,7 +113,8 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
   public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     if (!authEnabled) {
       return true; // no auth == no rules!
@@ -164,7 +166,8 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
   public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
-    SingularityAuthorizationScope scope
+    SingularityAuthorizationScope scope,
+    Optional<SingularityUserFacingAction> action
   ) {
     if (!authEnabled) {
       return;
@@ -235,10 +238,7 @@ public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
           Iterables.concat(readOnlyGroups, readWriteGroups, jitaGroups)
         )
       );
-    } else if (
-      scope == SingularityAuthorizationScope.WRITE ||
-      scope == SingularityAuthorizationScope.DEPLOY
-    ) {
+    } else if (scope == SingularityAuthorizationScope.WRITE) {
       checkForbidden(
         userIsReadWriteUser || userIsJITA,
         "%s must be a member of one or more groups to %s %s: %s",
