@@ -82,6 +82,12 @@ public class SingularityGroupsScopesAuthorizerTest {
     "SINGULARITY_READONLY"
   );
 
+  private static final SingularityUser JITA_USER_READ_WRITE = createSingularityUser(
+    "a",
+    Collections.singleton("jita"),
+    ImmutableSet.of("SINGULARITY_READONLY", "SINGULARITY_WRITE")
+  );
+
   private static final SingularityRequest GROUP_A_REQUEST = new SingularityRequestBuilder(
     "a",
     RequestType.WORKER
@@ -112,12 +118,6 @@ public class SingularityGroupsScopesAuthorizerTest {
     .setGroup(Optional.of("a"))
     .setReadWriteGroups(Optional.of(Collections.singleton("b")))
     .build();
-
-  private static final SingularityRequestBuilder GROUP_A_REQUEST_PERMISSIONS_BUILDER = new SingularityRequestBuilder(
-    "a",
-    RequestType.WORKER
-  )
-  .setGroup(Optional.of("a"));
 
   protected SingularityGroupsScopesAuthorizer authorizer;
 
@@ -204,6 +204,22 @@ public class SingularityGroupsScopesAuthorizerTest {
   }
 
   @Test
+  public void itChecksActionPermissionsForJitaUsers() {
+    assertNotAuthorized(
+      GROUP_A_REQUEST,
+      JITA_USER_READ,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE
+    );
+    assertAuthorized(
+      GROUP_A_REQUEST,
+      JITA_USER_READ_WRITE,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE
+    );
+  }
+
+  @Test
   public void itChecksActionPermissionsForOwningGroup() {
     SingularityRequest request = GROUP_A_REQUEST
       .toBuilder()
@@ -257,6 +273,20 @@ public class SingularityGroupsScopesAuthorizerTest {
       GROUP_B_READ_WRITE,
       SingularityAuthorizationScope.WRITE,
       SingularityUserFacingAction.BOUNCE
+    );
+
+    // Check admin
+    assertAuthorized(
+      request,
+      ADMIN_USER,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE
+    );
+    assertAuthorized(
+      request,
+      ADMIN_USER,
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.PAUSE
     );
   }
 
