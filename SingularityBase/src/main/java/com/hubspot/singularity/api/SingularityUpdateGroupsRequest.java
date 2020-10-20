@@ -2,8 +2,10 @@ package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +15,7 @@ public class SingularityUpdateGroupsRequest {
   private final Optional<String> group;
   private final Set<String> readWriteGroups;
   private final Set<String> readOnlyGroups;
+  private final Optional<Map<String, Set<SingularityUserFacingAction>>> actionPermissions;
   private final Optional<String> message;
 
   @JsonCreator
@@ -20,6 +23,9 @@ public class SingularityUpdateGroupsRequest {
     @JsonProperty("group") Optional<String> group,
     @JsonProperty("readWriteGroups") Set<String> readWriteGroups,
     @JsonProperty("readOnlyGroups") Set<String> readOnlyGroups,
+    @JsonProperty(
+      "actionPermissions"
+    ) Optional<Map<String, Set<SingularityUserFacingAction>>> actionPermissions,
     @JsonProperty("message") Optional<String> message
   ) {
     this.group = group;
@@ -27,6 +33,7 @@ public class SingularityUpdateGroupsRequest {
       readWriteGroups != null ? readWriteGroups : Collections.emptySet();
     this.readOnlyGroups =
       readOnlyGroups != null ? readOnlyGroups : Collections.emptySet();
+    this.actionPermissions = actionPermissions;
     this.message = message;
   }
 
@@ -43,6 +50,11 @@ public class SingularityUpdateGroupsRequest {
   @Schema(description = "Groups allowed read only access to a request")
   public Set<String> getReadOnlyGroups() {
     return readOnlyGroups;
+  }
+
+  @Schema(description = "Overidden scopes for specific groups")
+  public Optional<Map<String, Set<SingularityUserFacingAction>>> getActionPermissions() {
+    return actionPermissions;
   }
 
   @Schema(
@@ -64,6 +76,7 @@ public class SingularityUpdateGroupsRequest {
         Objects.equals(this.group, that.group) &&
         Objects.equals(this.readWriteGroups, that.readWriteGroups) &&
         Objects.equals(this.readOnlyGroups, that.readOnlyGroups) &&
+        Objects.equals(this.actionPermissions, that.actionPermissions) &&
         Objects.equals(this.message, that.message)
       );
     }
@@ -72,7 +85,13 @@ public class SingularityUpdateGroupsRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(group, readWriteGroups, readOnlyGroups, message);
+    return Objects.hash(
+      group,
+      readWriteGroups,
+      readOnlyGroups,
+      actionPermissions,
+      message
+    );
   }
 
   @Override
@@ -85,6 +104,8 @@ public class SingularityUpdateGroupsRequest {
       readWriteGroups +
       ", readOnlyGroups=" +
       readOnlyGroups +
+      ", groupScopeOverrides=" +
+      actionPermissions +
       ", message=" +
       message +
       '}'
