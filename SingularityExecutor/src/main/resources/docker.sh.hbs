@@ -82,6 +82,16 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 # load env vars
 touch docker.env
+
+INHERIT_ENV_VARS=({{envContext.env["INHERIT_ENV_VARS"]}})
+for name in "${INHERIT_ENV_VARS[@]}"; do
+   value=$(printenv "$name")
+   if [ ! -z "$value" ]; then
+    quoted_value=$(printf %q "$value")
+    echo "${name}=${quoted_value}" >> docker.env
+  fi
+done
+
 {{#each envContext.env}}
 {{#ifHasNewLinesOrBackticks value}}
 {{{name}}}={{{shellQuote value}}}
