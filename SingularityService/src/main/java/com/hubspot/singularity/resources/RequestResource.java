@@ -39,6 +39,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SingularityUserFacingAction;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -448,6 +449,7 @@ public class RequestResource extends AbstractRequestResource {
       .setGroup(updateGroupsRequest.getGroup())
       .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
       .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+      .setActionPermissions(updateGroupsRequest.getActionPermissions())
       .build();
 
     submitRequest(
@@ -496,6 +498,7 @@ public class RequestResource extends AbstractRequestResource {
           .setGroup(updateGroupsRequest.getGroup())
           .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
           .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+          .setActionPermissions(updateGroupsRequest.getActionPermissions())
           .build(),
         user,
         SingularityAuthorizationScope.WRITE
@@ -515,6 +518,7 @@ public class RequestResource extends AbstractRequestResource {
       .setGroup(updateGroupsRequest.getGroup())
       .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
       .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+      .setActionPermissions(updateGroupsRequest.getActionPermissions())
       .build();
     authorizationHelper.checkForAuthorizedChanges(
       newRequest,
@@ -575,7 +579,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.BOUNCE
     );
     validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
@@ -798,7 +803,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.EXEC
     );
 
     checkConflict(
@@ -945,7 +951,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.PAUSE
     );
 
     checkConflict(
@@ -1080,7 +1087,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       requestWithState.getRequest(),
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.PAUSE
     );
 
     checkConflict(
@@ -1674,7 +1682,8 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(
       oldRequest,
       user,
-      SingularityAuthorizationScope.WRITE
+      SingularityAuthorizationScope.WRITE,
+      SingularityUserFacingAction.SCALE
     );
     validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
 

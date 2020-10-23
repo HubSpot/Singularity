@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
@@ -77,6 +78,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     int requestUpdates = 0;
     int deployUpdates = 0;
     int crashLoopUpdates = 0;
+    int elevatedAccess = 0;
 
     List<CompletableFuture<Response>> webhookFutures = new ArrayList<>();
 
@@ -94,6 +96,10 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
             break;
           case CRASHLOOP:
             crashLoopUpdates += checkCrashLoopUpdates(webhook, webhookFutures);
+            break;
+          case ELEVATED_ACCESS:
+            elevatedAccess += checkElevatedAccess(webhook, webhookFutures);
+            break;
           default:
             break;
         }
@@ -110,10 +116,11 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
       );
 
     LOG.info(
-      "Sent {} task, {} request, {} crashloop, and {} deploy updates in {}",
+      "Sent {} task, {} request, {} crashloop, {} elevatedAccess and {} deploy updates in {}",
       taskUpdates,
       requestUpdates,
       crashLoopUpdates,
+      elevatedAccess,
       deployUpdates,
       JavaUtils.duration(start)
     );
@@ -239,6 +246,38 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     return crashLoopUpdates.size();
   }
 
+  private int checkElevatedAccess(
+    SingularityWebhook webhook,
+    List<CompletableFuture<Response>> webhookFutures
+  ) {
+    final List<ElevatedAccessEvent> elevatedAccessEvents = webhookManager.getElevatedAccessEventForHook(
+      webhook.getId()
+    );
+
+    int accessEventsCount = 0;
+
+    for (ElevatedAccessEvent accessEvent : elevatedAccessEvents) {
+      String concreteUri = applyPlaceholders(webhook.getUri(), accessEvent);
+      webhookFutures.add(
+        webhookSemaphore.call(
+          () ->
+            executeWebhookAsync(
+              concreteUri,
+              accessEvent,
+              new SingularityElevatedAccessEventAsyncHandler(
+                webhookManager,
+                webhook,
+                accessEvent,
+                shouldDeleteUpdateOnFailure(accessEventsCount, accessEvent.getCreatedAt())
+              )
+            )
+        )
+      );
+    }
+
+    return elevatedAccessEvents.size();
+  }
+
   private int checkTaskUpdates(
     SingularityWebhook webhook,
     List<CompletableFuture<Response>> webhookFutures
@@ -294,6 +333,13 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     return uri
       .replaceAll("\\$REQUEST_ID", crashLoopUpdate.getRequestId())
       .replaceAll("\\$DEPLOY_ID", crashLoopUpdate.getDeployId());
+  }
+
+  private String applyPlaceholders(String uri, ElevatedAccessEvent elevatedAccessEvent) {
+    return uri
+      .replaceAll("\\$REQUEST_ID", elevatedAccessEvent.getRequestId())
+      .replaceAll("\\$USER_ID", elevatedAccessEvent.getUser())
+      .replaceAll("\\$SCOPE", elevatedAccessEvent.getScope().name());
   }
 
   private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {

@@ -10,13 +10,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,13 +61,9 @@ public class SingularityEventController implements SingularityEventListener {
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
         listenerExecutorService.submit(
-          new Callable<Void>() {
-
-            @Override
-            public Void call() {
-              eventListener.requestHistoryEvent(singularityRequestHistory);
-              return null;
-            }
+          () -> {
+            eventListener.requestHistoryEvent(singularityRequestHistory);
+            return null;
           }
         )
       );
@@ -85,13 +81,9 @@ public class SingularityEventController implements SingularityEventListener {
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
         listenerExecutorService.submit(
-          new Callable<Void>() {
-
-            @Override
-            public Void call() {
-              eventListener.taskWebhookEvent(singularityTaskWebhook);
-              return null;
-            }
+          () -> {
+            eventListener.taskWebhookEvent(singularityTaskWebhook);
+            return null;
           }
         )
       );
@@ -107,13 +99,9 @@ public class SingularityEventController implements SingularityEventListener {
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
         listenerExecutorService.submit(
-          new Callable<Void>() {
-
-            @Override
-            public Void call() {
-              eventListener.deployHistoryEvent(singularityDeployUpdate);
-              return null;
-            }
+          () -> {
+            eventListener.deployHistoryEvent(singularityDeployUpdate);
+            return null;
           }
         )
       );
@@ -129,13 +117,27 @@ public class SingularityEventController implements SingularityEventListener {
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
         listenerExecutorService.submit(
-          new Callable<Void>() {
+          () -> {
+            eventListener.crashLoopEvent(crashLoopUpdate);
+            return null;
+          }
+        )
+      );
+    }
 
-            @Override
-            public Void call() {
-              eventListener.crashLoopEvent(crashLoopUpdate);
-              return null;
-            }
+    processFutures(builder.build());
+  }
+
+  @Override
+  public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
+    ImmutableSet.Builder<ListenableFuture<Void>> builder = ImmutableSet.builder();
+
+    for (final SingularityEventSender eventListener : eventListeners) {
+      builder.add(
+        listenerExecutorService.submit(
+          () -> {
+            eventListener.elevatedAccessEvent(elevatedAccessEvent);
+            return null;
           }
         )
       );

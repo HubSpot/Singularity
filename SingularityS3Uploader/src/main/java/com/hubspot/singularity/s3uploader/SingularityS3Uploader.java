@@ -28,6 +28,7 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHea
 import java.io.File;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,17 +111,17 @@ public class SingularityS3Uploader extends SingularityUploader {
           hostname
         );
 
-        long fileSizeBytes = Files.size(file);
-        LOG.info(
-          "{} Uploading {} to {}/{} (size {})",
-          logIdentifier,
-          file,
-          bucketName,
-          key,
-          fileSizeBytes
-        );
-
         try {
+          long fileSizeBytes = Files.size(file);
+          LOG.info(
+            "{} Uploading {} to {}/{} (size {})",
+            logIdentifier,
+            file,
+            bucketName,
+            key,
+            fileSizeBytes
+          );
+
           ObjectMetadata objectMetadata = new ObjectMetadata();
 
           UploaderFileAttributes fileAttributes = getFileAttributes(file);
@@ -212,6 +213,14 @@ public class SingularityS3Uploader extends SingularityUploader {
             s3Client.putObject(putObjectRequest);
           }
         } catch (AmazonS3Exception se) {
+          if (se.getMessage().contains("does not exist in our records")) {
+            LOG.warn(
+              "Upload cannot succeed with S3 key that does not exit in AWS, marking {} as complete",
+              uploadMetadata
+            );
+            return true;
+          }
+
           LOG.warn(
             "{} Couldn't upload {} due to {} - {}",
             logIdentifier,
@@ -221,6 +230,12 @@ public class SingularityS3Uploader extends SingularityUploader {
             se
           );
           throw se;
+        } catch (NoSuchFileException nsfe) {
+          LOG.warn(
+            "File {} no longer exists, marking upload as complete",
+            nsfe.getFile()
+          );
+          return true;
         } catch (Exception e) {
           LOG.warn("Exception uploading {}", file, e);
           throw e;

@@ -5,6 +5,7 @@ import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoder
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.hubspot.singularity.CrashLoopInfo;
+import com.hubspot.singularity.ElevatedAccessEvent;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityAgentUsageWithId;
@@ -107,6 +108,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityClusterUtilization.class);
     bindTranscoder(binder).asJson(RequestUtilization.class);
     bindTranscoder(binder).asJson(CrashLoopInfo.class);
+    bindTranscoder(binder).asJson(ElevatedAccessEvent.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);
