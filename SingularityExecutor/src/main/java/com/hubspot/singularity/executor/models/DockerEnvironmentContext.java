@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor.models;
 
-import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,14 +20,6 @@ public class DockerEnvironmentContext extends EnvironmentContext {
     List<Variable> variables = new ArrayList<>();
     Set<String> keys = new HashSet<>();
 
-    variables.add(
-      Variable
-        .newBuilder()
-        .setName("INHERIT_ENV_VARS")
-        .setValue(Joiner.on(" ").join(inheritVariables))
-        .build()
-    );
-
     taskInfo
       .getExecutor()
       .getCommand()
@@ -43,5 +34,9 @@ public class DockerEnvironmentContext extends EnvironmentContext {
         }
       );
     return variables;
+  }
+
+  public List<String> getInheritedVariables() {
+    return inheritVariables;
   }
 }
