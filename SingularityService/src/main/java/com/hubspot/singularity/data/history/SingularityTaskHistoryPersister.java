@@ -12,11 +12,8 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -61,11 +58,25 @@ public class SingularityTaskHistoryPersister
       LOG.info("Checking inactive task ids for task history persistence");
 
       final long start = System.currentTimeMillis();
-      Map<String, List<SingularityTaskId>> inactiveTaskIdsByRequest = getInactiveTaskIdsByRequest();
-      for (Map.Entry<String, List<SingularityTaskId>> entry : inactiveTaskIdsByRequest.entrySet()) {
+      for (String requestId : taskManager.getRequestIdsInTaskHistory()) {
+        LOG.info("Checking request {}", requestId);
+        List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(requestId);
+        taskIds.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
+        taskIds.removeAll(taskManager.getLBCleanupTasks());
+        List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+        taskIds =
+          taskIds
+            .stream()
+            .filter(
+              taskId ->
+                !isPartOfPendingDeploy(pendingDeploys, taskId) &&
+                !couldReturnWithRecoveredAgent(taskId)
+            )
+            .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
+            .collect(Collectors.toList());
         int forRequest = 0;
         int transferred = 0;
-        for (SingularityTaskId taskId : entry.getValue()) {
+        for (SingularityTaskId taskId : taskIds) {
           if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
             LOG.debug("Transferred task {}", taskId);
             transferred++;
@@ -76,29 +87,13 @@ public class SingularityTaskHistoryPersister
         LOG.info(
           "Transferred {} out of {} inactive task ids in {}",
           transferred,
-          entry.getValue().size(),
+          taskIds.size(),
           JavaUtils.duration(start)
         );
       }
     } finally {
       persisterLock.unlock();
     }
-  }
-
-  private Map<String, List<SingularityTaskId>> getInactiveTaskIdsByRequest() {
-    final Set<SingularityTaskId> taskIds = new HashSet<>(taskManager.getAllTaskIds());
-    taskIds.removeAll(taskManager.getActiveTaskIds());
-    taskIds.removeAll(taskManager.getLBCleanupTasks());
-    List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
-    return taskIds
-      .stream()
-      .filter(
-        taskId ->
-          !isPartOfPendingDeploy(pendingDeploys, taskId) &&
-          !couldReturnWithRecoveredAgent(taskId)
-      )
-      .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
-      .collect(Collectors.groupingBy(SingularityTaskId::getRequestId));
   }
 
   private boolean isPartOfPendingDeploy(
