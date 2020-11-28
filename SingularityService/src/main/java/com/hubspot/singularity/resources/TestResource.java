@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -327,6 +328,6 @@ public class TestResource {
       configuration.isAllowTestResourceCalls(),
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
-    taskHistoryPersister.runActionOnPoll();
+    CompletableFuture.runAsync(taskHistoryPersister::runActionOnPoll);
   }
 }
