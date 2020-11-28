@@ -652,7 +652,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
-    return getTaskHistoryUpdates(getAllTaskIds());
+    return getTaskHistoryUpdates(getActiveTaskIds());
   }
 
   public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
