@@ -59,37 +59,41 @@ public class SingularityTaskHistoryPersister
 
       final long start = System.currentTimeMillis();
       for (String requestId : taskManager.getRequestIdsInTaskHistory()) {
-        LOG.info("Checking request {}", requestId);
-        List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(requestId);
-        taskIds.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
-        taskIds.removeAll(taskManager.getLBCleanupTasks());
-        List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
-        taskIds =
-          taskIds
-            .stream()
-            .filter(
-              taskId ->
-                !isPartOfPendingDeploy(pendingDeploys, taskId) &&
-                !couldReturnWithRecoveredAgent(taskId)
-            )
-            .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
-            .collect(Collectors.toList());
-        int forRequest = 0;
-        int transferred = 0;
-        for (SingularityTaskId taskId : taskIds) {
-          if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
-            LOG.debug("Transferred task {}", taskId);
-            transferred++;
-          }
+        try {
+          LOG.info("Checking request {}", requestId);
+          List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(requestId);
+          taskIds.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
+          taskIds.removeAll(taskManager.getLBCleanupTasks());
+          List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+          taskIds =
+            taskIds
+              .stream()
+              .filter(
+                taskId ->
+                  !isPartOfPendingDeploy(pendingDeploys, taskId) &&
+                  !couldReturnWithRecoveredAgent(taskId)
+              )
+              .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
+              .collect(Collectors.toList());
+          int forRequest = 0;
+          int transferred = 0;
+          for (SingularityTaskId taskId : taskIds) {
+            if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
+              LOG.debug("Transferred task {}", taskId);
+              transferred++;
+            }
 
-          forRequest++;
+            forRequest++;
+          }
+          LOG.info(
+            "Transferred {} out of {} inactive task ids in {}",
+            transferred,
+            taskIds.size(),
+            JavaUtils.duration(start)
+          );
+        } catch (Exception e) {
+          LOG.error("Could not persist", e);
         }
-        LOG.info(
-          "Transferred {} out of {} inactive task ids in {}",
-          transferred,
-          taskIds.size(),
-          JavaUtils.duration(start)
-        );
       }
     } finally {
       persisterLock.unlock();
