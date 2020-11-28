@@ -10,6 +10,7 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,7 @@ public class TestResource {
   private final SingularityTaskReconciliation taskReconciliation;
   private final SingularityHistoryPurger historyPurger;
   private final HistoryManager historyManager;
+  private final SingularityTaskHistoryPersister taskHistoryPersister;
 
   @Inject
   public TestResource(
@@ -48,7 +50,8 @@ public class TestResource {
     final SingularityMesosScheduler scheduler,
     SingularityTaskReconciliation taskReconciliation,
     SingularityHistoryPurger historyPurger,
-    HistoryManager historyManager
+    HistoryManager historyManager,
+    SingularityTaskHistoryPersister taskHistoryPersister
   ) {
     this.configuration = configuration;
     this.managed = managed;
@@ -57,6 +60,7 @@ public class TestResource {
     this.taskReconciliation = taskReconciliation;
     this.historyPurger = historyPurger;
     this.historyManager = historyManager;
+    this.taskHistoryPersister = taskHistoryPersister;
   }
 
   @POST
@@ -305,5 +309,24 @@ public class TestResource {
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
     scheduler.reconnectMesos();
+  }
+
+  @POST
+  @Path("/persist-task-history")
+  @Operation(
+    summary = "Trigger a task history persister run",
+    responses = {
+      @ApiResponse(
+        responseCode = "403",
+        description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
+      )
+    }
+  )
+  public void persistTaskHistory() {
+    checkForbidden(
+      configuration.isAllowTestResourceCalls(),
+      "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
+    );
+    taskHistoryPersister.runActionOnPoll();
   }
 }
