@@ -9,7 +9,10 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.SingularityDeployHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
+import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,6 +43,9 @@ public class TestResource {
   private final SingularityTaskReconciliation taskReconciliation;
   private final SingularityHistoryPurger historyPurger;
   private final HistoryManager historyManager;
+  private final SingularityTaskHistoryPersister taskHistoryPersister;
+  private final SingularityDeployHistoryPersister deployHistoryPersister;
+  private final SingularityRequestHistoryPersister requestHistoryPersister;
 
   @Inject
   public TestResource(
@@ -48,7 +55,10 @@ public class TestResource {
     final SingularityMesosScheduler scheduler,
     SingularityTaskReconciliation taskReconciliation,
     SingularityHistoryPurger historyPurger,
-    HistoryManager historyManager
+    HistoryManager historyManager,
+    SingularityTaskHistoryPersister taskHistoryPersister,
+    SingularityDeployHistoryPersister deployHistoryPersister,
+    SingularityRequestHistoryPersister requestHistoryPersister
   ) {
     this.configuration = configuration;
     this.managed = managed;
@@ -57,6 +67,9 @@ public class TestResource {
     this.taskReconciliation = taskReconciliation;
     this.historyPurger = historyPurger;
     this.historyManager = historyManager;
+    this.taskHistoryPersister = taskHistoryPersister;
+    this.deployHistoryPersister = deployHistoryPersister;
+    this.requestHistoryPersister = requestHistoryPersister;
   }
 
   @POST
@@ -305,5 +318,62 @@ public class TestResource {
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
     scheduler.reconnectMesos();
+  }
+
+  @POST
+  @Path("/persist-task-history")
+  @Operation(
+    summary = "Trigger a task history persister run",
+    responses = {
+      @ApiResponse(
+        responseCode = "403",
+        description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
+      )
+    }
+  )
+  public void persistTaskHistory() {
+    checkForbidden(
+      configuration.isAllowTestResourceCalls(),
+      "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
+    );
+    CompletableFuture.runAsync(taskHistoryPersister::runActionOnPoll);
+  }
+
+  @POST
+  @Path("/persist-deploy-history")
+  @Operation(
+    summary = "Trigger a deploy history persister run",
+    responses = {
+      @ApiResponse(
+        responseCode = "403",
+        description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
+      )
+    }
+  )
+  public void persistDeployHistory() {
+    checkForbidden(
+      configuration.isAllowTestResourceCalls(),
+      "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
+    );
+    CompletableFuture.runAsync(deployHistoryPersister::runActionOnPoll);
+  }
+
+  @POST
+  @Path("/persist-request-history")
+  @Operation(
+    summary = "Trigger a request history persister run",
+    responses = {
+      @ApiResponse(
+        responseCode = "403",
+        description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
+      )
+    }
+  )
+  public void persistRequestHistory() {
+    checkForbidden(
+      configuration.isAllowTestResourceCalls(),
+      "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
+    );
+    CompletableFuture.runAsync(requestHistoryPersister::runActionOnPoll);
   }
 }

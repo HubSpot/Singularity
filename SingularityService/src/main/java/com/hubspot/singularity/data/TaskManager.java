@@ -445,6 +445,10 @@ public class TaskManager extends CuratorAsyncManager {
     return save(pendingPath, task, pendingTaskTranscoder);
   }
 
+  public List<String> getRequestIdsInTaskHistory() {
+    return getChildren(HISTORY_PATH_ROOT);
+  }
+
   public List<SingularityTaskId> getAllTaskIds() {
     final List<String> requestIds = getChildren(HISTORY_PATH_ROOT);
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
@@ -652,7 +656,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
-    return getTaskHistoryUpdates(getAllTaskIds());
+    return getTaskHistoryUpdates(getActiveTaskIds());
   }
 
   public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
