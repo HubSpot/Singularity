@@ -5,7 +5,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -47,6 +46,7 @@ import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -473,6 +473,10 @@ public class TaskManager extends CuratorAsyncManager {
       return webCache.getActiveTaskIds();
     }
 
+    return getActiveTaskIdsUncached();
+  }
+
+  private List<SingularityTaskId> getActiveTaskIdsUncached() {
     return getAsyncNestedChildIdsAsList(
       LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
       LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
@@ -619,7 +623,12 @@ public class TaskManager extends CuratorAsyncManager {
     SingularityTaskId taskId
   ) {
     if (leaderCache.active()) {
-      return leaderCache.getTaskHistoryUpdates(taskId);
+      List<SingularityTaskHistoryUpdate> fromCache = leaderCache.getTaskHistoryUpdates(
+        taskId
+      );
+      if (!fromCache.isEmpty()) {
+        return fromCache;
+      }
     }
     List<SingularityTaskHistoryUpdate> updates = getAsyncChildren(
       getUpdatesPath(taskId),
@@ -640,23 +649,44 @@ public class TaskManager extends CuratorAsyncManager {
     Collection<SingularityTaskId> taskIds
   ) {
     if (leaderCache.active()) {
-      return leaderCache.getTaskHistoryUpdates(taskIds);
-    }
-    Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
-    for (SingularityTaskId taskId : taskIds) {
-      pathsMap.put(getHistoryPath(taskId), taskId);
-    }
+      Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> updates = new HashMap<>(
+        leaderCache.getTaskHistoryUpdates(taskIds)
+      );
+      Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
+      for (SingularityTaskId taskId : taskIds) {
+        if (!updates.containsKey(taskId)) {
+          pathsMap.put(getHistoryPath(taskId), taskId);
+        }
+      }
 
-    return getAsyncNestedChildDataAsMap(
-      "getTaskHistoryUpdates",
-      pathsMap,
-      UPDATES_PATH,
-      taskHistoryUpdateTranscoder
-    );
+      if (!pathsMap.isEmpty()) {
+        updates.putAll(
+          getAsyncNestedChildDataAsMap(
+            "getTaskHistoryUpdates",
+            pathsMap,
+            UPDATES_PATH,
+            taskHistoryUpdateTranscoder
+          )
+        );
+      }
+      return updates;
+    } else {
+      Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
+      for (SingularityTaskId taskId : taskIds) {
+        pathsMap.put(getHistoryPath(taskId), taskId);
+      }
+
+      return getAsyncNestedChildDataAsMap(
+        "getTaskHistoryUpdates",
+        pathsMap,
+        UPDATES_PATH,
+        taskHistoryUpdateTranscoder
+      );
+    }
   }
 
-  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
-    return getTaskHistoryUpdates(getActiveTaskIds());
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllActiveTaskHistoryUpdates() {
+    return getTaskHistoryUpdates(getActiveTaskIdsUncached());
   }
 
   public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
@@ -738,11 +768,12 @@ public class TaskManager extends CuratorAsyncManager {
     boolean overwriteExisting
   ) {
     Optional<SingularityTask> task = getTask(taskHistoryUpdate.getTaskId());
-    if (task.isPresent()) {
-      singularityEventListener.taskHistoryUpdateEvent(
-        new SingularityTaskWebhook(task.get(), taskHistoryUpdate)
-      );
-    }
+    task.ifPresent(
+      singularityTask ->
+        singularityEventListener.taskHistoryUpdateEvent(
+          new SingularityTaskWebhook(singularityTask, taskHistoryUpdate)
+        )
+    );
 
     if (overwriteExisting) {
       Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(
@@ -786,11 +817,12 @@ public class TaskManager extends CuratorAsyncManager {
   ) {
     if (previousStateUpdate.isPresent()) {
       Optional<SingularityTask> task = getTask(previousStateUpdate.get().getTaskId());
-      if (task.isPresent()) {
-        singularityEventListener.taskHistoryUpdateEvent(
-          new SingularityTaskWebhook(task.get(), previousStateUpdate.get())
-        );
-      }
+      task.ifPresent(
+        singularityTask ->
+          singularityEventListener.taskHistoryUpdateEvent(
+            new SingularityTaskWebhook(singularityTask, previousStateUpdate.get())
+          )
+      );
     }
     if (leaderCache.active()) {
       leaderCache.deleteTaskHistoryUpdate(taskId, state);
@@ -981,16 +1013,10 @@ public class TaskManager extends CuratorAsyncManager {
     TaskFilter taskFilter
   ) {
     List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId, taskFilter);
-    final Iterable<SingularityTaskId> deployTaskIds = Iterables.filter(
-      requestTaskIds,
-      new Predicate<SingularityTaskId>() {
-
-        @Override
-        public boolean apply(SingularityTaskId input) {
-          return input.getDeployId().equals(deployId);
-        }
-      }
-    );
+    final Iterable<SingularityTaskId> deployTaskIds = requestTaskIds
+      .stream()
+      .filter(input -> input.getDeployId().equals(deployId))
+      .collect(Collectors.toList());
     return ImmutableList.copyOf(deployTaskIds);
   }
 
@@ -1103,9 +1129,7 @@ public class TaskManager extends CuratorAsyncManager {
       lbRequestType
     );
 
-    if (lbHistory.isPresent()) {
-      loadBalancerUpdates.add(lbHistory.get());
-    }
+    lbHistory.ifPresent(loadBalancerUpdates::add);
   }
 
   public boolean hasNotifiedOverdue(SingularityTaskId taskId) {
@@ -1113,7 +1137,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveNotifiedOverdue(SingularityTaskId taskId) {
-    save(getNotifiedOverduePath(taskId), Optional.<byte[]>empty());
+    save(getNotifiedOverduePath(taskId), Optional.empty());
   }
 
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(
@@ -1166,7 +1190,7 @@ public class TaskManager extends CuratorAsyncManager {
     leaderCache.cacheActiveTaskIds(getActiveTaskIds(false));
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
     leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
-    leaderCache.cacheTaskHistoryUpdates(getAllTaskHistoryUpdates());
+    leaderCache.cacheTaskHistoryUpdates(getAllActiveTaskHistoryUpdates());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
