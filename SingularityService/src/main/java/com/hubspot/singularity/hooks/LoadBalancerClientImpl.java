@@ -305,9 +305,19 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
           )
         );
       } else if (!JavaUtils.isHttpSuccess(response.getStatusCode())) {
+        String body = response.getResponseBody();
+        LOG.info(
+          "LB {} request {} failed with code {}: {}",
+          request.getMethod(),
+          loadBalancerRequestId,
+          response.getStatusCode(),
+          body
+        );
         return new LoadBalancerUpdateHolder(
           onFailure,
-          Optional.of(String.format("Response status code %s", response.getStatusCode()))
+          Optional.of(
+            String.format("Response status code %s: %s", response.getStatusCode(), body)
+          )
         );
       }
 
