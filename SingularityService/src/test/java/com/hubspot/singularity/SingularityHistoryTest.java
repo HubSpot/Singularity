@@ -206,13 +206,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(
+      configuration,
       historyPurgingConfiguration,
       historyManager,
       taskManager,
       deployManager,
       requestManager,
-      metadataManager,
-      lock
+      metadataManager
     );
 
     purger.runActionOnPoll();
@@ -240,13 +240,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(
+      configuration,
       historyPurgingConfiguration,
       historyManager,
       taskManager,
       deployManager,
       requestManager,
-      metadataManager,
-      lock
+      metadataManager
     );
 
     purger.runActionOnPoll();
