@@ -30,10 +30,12 @@ import org.jdbi.v3.jackson2.Jackson2Plugin;
 
 public class SingularityDbModule extends AbstractModule {
   private final Optional<DataSourceFactory> configuration;
+  private final boolean sqlReadOnly;
 
   public SingularityDbModule(SingularityConfiguration configuration) {
     checkNotNull(configuration, "configuration is null");
     this.configuration = configuration.getDatabaseConfiguration();
+    this.sqlReadOnly = configuration.isSqlReadOnlyMode();
   }
 
   @Override
@@ -43,7 +45,11 @@ public class SingularityDbModule extends AbstractModule {
       bind(Jdbi.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
-      bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
+      if (sqlReadOnly) {
+        bind(TaskUsageManager.class).to(ZkTaskUsageManager.class).in(Scopes.SINGLETON);
+      } else {
+        bind(TaskUsageManager.class).to(JDBITaskUsageManager.class).in(Scopes.SINGLETON);
+      }
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
       bind(TaskUsageManager.class).to(ZkTaskUsageManager.class).in(Scopes.SINGLETON);

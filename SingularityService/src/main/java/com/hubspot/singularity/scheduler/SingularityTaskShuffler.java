@@ -97,12 +97,12 @@ public class SingularityTaskShuffler {
     }
   }
 
-  static class OverusedSlave {
+  static class OverusedAgent {
     SingularityAgentUsage usage;
     List<TaskIdWithUsage> tasks;
     OverusedResource resource;
 
-    OverusedSlave(
+    OverusedAgent(
       SingularityAgentUsage usage,
       List<TaskIdWithUsage> tasks,
       OverusedResource resource
@@ -120,12 +120,12 @@ public class SingularityTaskShuffler {
       return;
     }
 
-    List<OverusedSlave> slavesToShuffle = overloadedHosts
+    List<OverusedAgent> slavesToShuffle = overloadedHosts
       .entrySet()
       .stream()
       .map(
         entry ->
-          new OverusedSlave(
+          new OverusedAgent(
             entry.getKey(),
             entry.getValue(),
             getMostOverusedResource(entry.getKey())
@@ -143,7 +143,7 @@ public class SingularityTaskShuffler {
     long shufflingTasksOnCluster = shufflingTasks.size();
     LOG.debug("{} tasks currently shuffling on cluster", shufflingTasksOnCluster);
 
-    for (OverusedSlave slave : slavesToShuffle) {
+    for (OverusedAgent slave : slavesToShuffle) {
       if (shufflingTasksOnCluster >= configuration.getMaxTasksToShuffleTotal()) {
         LOG.debug(
           "Not shuffling any more tasks (totalShuffleCleanups: {})",
@@ -229,7 +229,7 @@ public class SingularityTaskShuffler {
     LOG.debug("Completed task shuffle for {} slaves", overloadedHosts.size());
   }
 
-  private List<TaskIdWithUsage> getPrioritizedShuffleCandidates(OverusedSlave slave) {
+  private List<TaskIdWithUsage> getPrioritizedShuffleCandidates(OverusedAgent slave) {
     // SingularityUsageHelper ensures that requests flagged as always ineligible for shuffling have been filtered out.
     List<TaskIdWithUsage> out = slave.tasks;
 
@@ -268,7 +268,7 @@ public class SingularityTaskShuffler {
   }
 
   private boolean isOverutilized(
-    OverusedSlave slave,
+    OverusedAgent slave,
     double cpuUsage,
     double memUsageBytes
   ) {
@@ -323,7 +323,7 @@ public class SingularityTaskShuffler {
   }
 
   private String getShuffleMessage(
-    OverusedSlave slave,
+    OverusedAgent slave,
     TaskIdWithUsage task,
     double cpuUsage,
     double memUsageBytes
@@ -396,7 +396,7 @@ public class SingularityTaskShuffler {
     return out;
   }
 
-  private Optional<String> getHostId(OverusedSlave slave) {
+  private Optional<String> getHostId(OverusedAgent slave) {
     if (slave.tasks.size() <= 0) {
       return Optional.empty();
     }
