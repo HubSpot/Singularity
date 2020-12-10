@@ -40,6 +40,9 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   @Override
   protected boolean isEnabled() {
+    if (configuration.isSqlReadOnlyMode()) {
+      return false;
+    }
     return (
       persistsHistoryInsteadOfPurging() ||
       getMaxAgeInMillisOfItem() > 0 ||

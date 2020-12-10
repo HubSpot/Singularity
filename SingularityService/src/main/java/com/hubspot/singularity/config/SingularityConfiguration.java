@@ -428,6 +428,9 @@ public class SingularityConfiguration extends Configuration {
   // If not empty, disallow docker images in deploys unless they are in this list
   private Set<String> validDockerRegistries = Collections.emptySet();
 
+  // Stops persisters + purgers from running when the DB is enabled. Forces binding of zk-based usage manager
+  private boolean sqlReadOnlyMode = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2013,5 +2016,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setValidDockerRegistries(Set<String> validDockerRegistries) {
     this.validDockerRegistries = validDockerRegistries;
+  }
+
+  public boolean isSqlReadOnlyMode() {
+    return sqlReadOnlyMode;
+  }
+
+  public void setSqlReadOnlyMode(boolean sqlReadOnlyMode) {
+    this.sqlReadOnlyMode = sqlReadOnlyMode;
   }
 }

@@ -2,14 +2,13 @@ package com.hubspot.singularity.data.history;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import java.util.Date;
 import java.util.List;
@@ -25,37 +24,37 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
     SingularityHistoryPurger.class
   );
 
+  private final boolean sqlReadOnly;
   private final HistoryPurgingConfiguration historyPurgingConfiguration;
   private final HistoryManager historyManager;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final RequestManager requestManager;
   private final MetadataManager metadataManager;
-  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityHistoryPurger(
+    SingularityConfiguration configuration,
     HistoryPurgingConfiguration historyPurgingConfiguration,
     HistoryManager historyManager,
     TaskManager taskManager,
     DeployManager deployManager,
     RequestManager requestManager,
-    MetadataManager metadataManager,
-    SingularitySchedulerLock lock
+    MetadataManager metadataManager
   ) {
     super(historyPurgingConfiguration.getCheckTaskHistoryEveryHours(), TimeUnit.HOURS);
+    this.sqlReadOnly = configuration.isSqlReadOnlyMode();
     this.historyPurgingConfiguration = historyPurgingConfiguration;
     this.historyManager = historyManager;
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.metadataManager = metadataManager;
-    this.lock = lock;
   }
 
   @Override
   protected boolean isEnabled() {
-    return historyPurgingConfiguration.isEnabledAndValid();
+    return !sqlReadOnly && historyPurgingConfiguration.isEnabledAndValid();
   }
 
   @Override
@@ -142,14 +141,14 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       unpurgedCount =
         historyManager.getTaskIdHistoryCount(
           Optional.of(requestId),
-          Optional.<String>empty(),
-          Optional.<String>empty(),
-          Optional.<String>empty(),
-          Optional.<ExtendedTaskState>empty(),
-          Optional.<Long>empty(),
-          Optional.<Long>empty(),
-          Optional.<Long>empty(),
-          Optional.<Long>empty()
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
         );
     } else {
       unpurgedCount =
