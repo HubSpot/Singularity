@@ -18,11 +18,9 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -102,8 +100,8 @@ public class SingularityCrashLoops {
     return !shouldBeInCooldown(deployStatistics, recentFailureTimestamp);
   }
 
-  Set<CrashLoopInfo> getActiveCrashLoops(SingularityDeployStatistics deployStatistics) {
-    Set<CrashLoopInfo> active = new HashSet<>();
+  List<CrashLoopInfo> getActiveCrashLoops(SingularityDeployStatistics deployStatistics) {
+    List<CrashLoopInfo> active = new ArrayList<>();
 
     if (deployStatistics.getTaskFailureEvents().isEmpty()) {
       return active;

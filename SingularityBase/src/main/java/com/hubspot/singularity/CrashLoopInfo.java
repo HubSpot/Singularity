@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 
@@ -55,21 +56,29 @@ public class CrashLoopInfo {
       return false;
     }
 
-    CrashLoopInfo that = (CrashLoopInfo) o;
+    CrashLoopInfo info = (CrashLoopInfo) o;
 
-    if (requestId != null ? !requestId.equals(that.requestId) : that.requestId != null) {
+    if (start != info.start) {
       return false;
     }
-    if (deployId != null ? !deployId.equals(that.deployId) : that.deployId != null) {
+    if (requestId != null ? !requestId.equals(info.requestId) : info.requestId != null) {
       return false;
     }
-    return type == that.type;
+    if (deployId != null ? !deployId.equals(info.deployId) : info.deployId != null) {
+      return false;
+    }
+    if (end != null ? !end.equals(info.end) : info.end != null) {
+      return false;
+    }
+    return type == info.type;
   }
 
   @Override
   public int hashCode() {
     int result = requestId != null ? requestId.hashCode() : 0;
     result = 31 * result + (deployId != null ? deployId.hashCode() : 0);
+    result = 31 * result + (int) (start ^ (start >>> 32));
+    result = 31 * result + (end != null ? end.hashCode() : 0);
     result = 31 * result + (type != null ? type.hashCode() : 0);
     return result;
   }
@@ -91,6 +100,16 @@ public class CrashLoopInfo {
       ", type=" +
       type +
       '}'
+    );
+  }
+
+  @JsonIgnore
+  public boolean matches(CrashLoopInfo other) {
+    return (
+      requestId.equals(other.requestId) &&
+      deployId.equals(other.deployId) &&
+      type == other.type &&
+      end.isPresent() == other.end.isPresent()
     );
   }
 }
