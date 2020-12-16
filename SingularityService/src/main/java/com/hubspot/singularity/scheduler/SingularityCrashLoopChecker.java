@@ -18,7 +18,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -141,14 +140,14 @@ public class SingularityCrashLoopChecker {
         continue;
       }
 
-      Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(
+      List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(
         maybeDeployStatistics.get()
       );
 
       if (!active.isEmpty()) {
         active.forEach(
           l -> {
-            if (!previouslyActive.contains(l)) {
+            if (previouslyActive.stream().noneMatch(l::matches)) {
               LOG.info("New crash loop for {}: {}", request.getRequest().getId(), l);
               requestManager.saveCrashLoop(l);
             }
@@ -159,7 +158,7 @@ public class SingularityCrashLoopChecker {
       if (!previouslyActive.isEmpty()) {
         previouslyActive.forEach(
           l -> {
-            if (!active.contains(l)) {
+            if (active.stream().noneMatch(l::matches)) {
               LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
               requestManager.saveCrashLoop(
                 new CrashLoopInfo(
