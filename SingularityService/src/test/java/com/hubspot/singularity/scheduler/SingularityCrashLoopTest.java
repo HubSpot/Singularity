@@ -50,6 +50,20 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void itSavesSubsequentLoopsOfSameType() {
+    requestManager.saveCrashLoop(
+      new CrashLoopInfo(
+        requestId,
+        firstDeployId,
+        System.currentTimeMillis() - 60000,
+        Optional.of(System.currentTimeMillis() - 30000),
+        CrashLoopType.FAST_FAILURE_LOOP
+      )
+    );
+    itDetectsFastFailureLoopsForNonLongRunning();
+  }
+
+  @Test
   public void itDetectsSlowConsistentFailureLoops() {
     initRequestWithType(RequestType.WORKER, false);
     initFirstDeploy();
