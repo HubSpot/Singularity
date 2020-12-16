@@ -11,8 +11,8 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.TaskFailureType;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
@@ -41,7 +41,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(1, active.size());
     Assertions.assertEquals(
       CrashLoopType.FAST_FAILURE_LOOP,
@@ -119,7 +119,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(1, active.size());
     Assertions.assertEquals(
       CrashLoopType.SLOW_FAILURES,
@@ -142,7 +142,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(0, active.size());
   }
 
@@ -171,7 +171,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(1, active.size());
     Assertions.assertEquals(
       CrashLoopType.STARTUP_FAILURE_LOOP,
@@ -192,7 +192,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertTrue(active.size() > 1);
     Assertions.assertTrue(
       active.stream().map(CrashLoopInfo::getType).anyMatch(l -> l == CrashLoopType.OOM)
@@ -224,7 +224,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
 
     Assertions.assertTrue(active.isEmpty());
   }
@@ -255,7 +255,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(1, active.size());
     Assertions.assertEquals(
       CrashLoopType.SINGLE_INSTANCE_FAILURE_LOOP,
@@ -299,7 +299,7 @@ public class SingularityCrashLoopTest extends SingularitySchedulerTestBase {
     SingularityDeployStatistics deployStatistics = deployManager
       .getDeployStatistics(requestId, firstDeployId)
       .get();
-    Set<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
+    List<CrashLoopInfo> active = crashLoops.getActiveCrashLoops(deployStatistics);
     Assertions.assertEquals(1, active.size());
     Assertions.assertEquals(
       CrashLoopType.MULTI_INSTANCE_FAILURE,
