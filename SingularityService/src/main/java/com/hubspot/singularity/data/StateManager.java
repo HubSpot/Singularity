@@ -298,6 +298,8 @@ public class StateManager extends CuratorManager {
 
     final Optional<Double> minimumPriorityLevel = getMinimumPriorityLevel();
 
+    final boolean isSchedulerClientRunning = taskManager.isSchedulerClientRunning();
+
     return new SingularityState(
       activeTasks,
       launchingTasks,
@@ -338,7 +340,8 @@ public class StateManager extends CuratorManager {
       authDatastoreHealthy,
       minimumPriorityLevel,
       (long) statusUpdateDeltas.getSnapshot().getMean(),
-      lastHeartbeatTime.get()
+      lastHeartbeatTime.get(),
+      isSchedulerClientRunning
     );
   }
 

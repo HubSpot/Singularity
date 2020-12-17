@@ -59,7 +59,6 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -129,7 +128,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final DisasterManager disasterManager;
   private final RequestHelper requestHelper;
   private final MimetypesFileTypeMap fileTypeMap;
-  private final SingularityMesosSchedulerClient mesosSchedulerClient;
 
   @Inject
   public TaskResource(
@@ -146,8 +144,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     LeaderLatch leaderLatch,
     @Singularity ObjectMapper objectMapper,
     RequestHelper requestHelper,
-    MesosConfiguration configuration,
-    SingularityMesosSchedulerClient mesosSchedulerClient
+    MesosConfiguration configuration
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
@@ -163,7 +160,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.httpClient = httpClient;
     this.configuration = configuration;
     this.fileTypeMap = new MimetypesFileTypeMap();
-    this.mesosSchedulerClient = mesosSchedulerClient;
   }
 
   @GET
@@ -1307,33 +1303,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
       requestContext,
       Response.class,
       null,
-      () -> performForceReconcile(taskId)
+      () -> taskManager.performForceReconcile(taskId)
     );
-  }
-
-  private Response performForceReconcile(String taskId) {
-    Optional<SingularityTask> maybeTask = taskManager.getTask(
-      SingularityTaskId.valueOf(taskId)
-    );
-    if (maybeTask.isPresent()) {
-      mesosSchedulerClient.reconcile(
-        Collections.singletonList(
-          Task
-            .newBuilder()
-            .setTaskId(TaskID.newBuilder().setValue(taskId).build())
-            .setAgentId(
-              AgentID
-                .newBuilder()
-                .setValue(maybeTask.get().getAgentId().getValue())
-                .build()
-            )
-            .build()
-        )
-      );
-      return Response.ok().build();
-    } else {
-      return Response.status(404).build();
-    }
   }
 
   private static class NingOutputToJaxRsStreamingOutputWrapper

@@ -16,7 +16,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.resources.ui.UiResource;
-import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;

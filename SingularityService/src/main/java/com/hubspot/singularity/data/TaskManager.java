@@ -42,6 +42,7 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,9 +52,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.v1.scheduler.Protos;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
@@ -120,6 +123,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
+  private final SingularityMesosSchedulerClient mesosSchedulerClient;
 
   @Inject
   public TaskManager(
@@ -143,7 +147,8 @@ public class TaskManager extends CuratorAsyncManager {
     ZkCache<SingularityTask> taskCache,
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
-    @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId
+    @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
+    SingularityMesosSchedulerClient mesosSchedulerClient
   ) {
     super(curator, configuration, metricRegistry);
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -165,6 +170,8 @@ public class TaskManager extends CuratorAsyncManager {
     this.webCache = webCache;
     this.leaderCache = leaderCache;
     this.serverId = serverId;
+
+    this.mesosSchedulerClient = mesosSchedulerClient;
   }
 
   // since we can't use creatingParentsIfNeeded in transactions
@@ -1632,12 +1639,41 @@ public class TaskManager extends CuratorAsyncManager {
     }
   }
 
+  public Response performForceReconcile(String taskId) {
+    Optional<SingularityTask> maybeTask = getTask(SingularityTaskId.valueOf(taskId));
+    if (maybeTask.isPresent()) {
+      mesosSchedulerClient.reconcile(
+        Collections.singletonList(
+          Protos
+            .Call.Reconcile.Task.newBuilder()
+            .setTaskId(
+              org.apache.mesos.v1.Protos.TaskID.newBuilder().setValue(taskId).build()
+            )
+            .setAgentId(
+              org
+                .apache.mesos.v1.Protos.AgentID.newBuilder()
+                .setValue(maybeTask.get().getAgentId().getValue())
+                .build()
+            )
+            .build()
+        )
+      );
+      return Response.ok().build();
+    } else {
+      return Response.status(404).build();
+    }
+  }
+
   public long getTaskStatusBytes() {
     return countBytes(getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT));
   }
 
   public long getTaskHistoryIdBytes() {
     return countBytes(getChildren(HISTORY_PATH_ROOT));
+  }
+
+  public boolean isSchedulerClientRunning() {
+    return mesosSchedulerClient.isRunning();
   }
 
   private long countBytes(List<String> list) {
