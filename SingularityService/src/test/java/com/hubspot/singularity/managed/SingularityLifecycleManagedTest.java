@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
@@ -26,7 +27,8 @@ public class SingularityLifecycleManagedTest extends SingularityLifecycleManaged
     SingularityMesosExecutorInfoSupport executorInfoSupport,
     SingularityGraphiteReporter graphiteReporter,
     ExecutorIdGenerator executorIdGenerator,
-    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers
+    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
+    SingularityConfiguration configuration
   ) {
     super(
       cachedThreadPoolFactory,
@@ -38,7 +40,8 @@ public class SingularityLifecycleManagedTest extends SingularityLifecycleManaged
       executorInfoSupport,
       graphiteReporter,
       executorIdGenerator,
-      leaderOnlyPollers
+      leaderOnlyPollers,
+      configuration
     );
   }
 
