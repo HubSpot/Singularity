@@ -449,6 +449,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildren(HISTORY_PATH_ROOT);
   }
 
+  public int getTaskCountForRequest(String requestId) {
+    return countChildren(getRequestPath(requestId));
+  }
+
   public List<SingularityTaskId> getAllTaskIds() {
     final List<String> requestIds = getChildren(HISTORY_PATH_ROOT);
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());

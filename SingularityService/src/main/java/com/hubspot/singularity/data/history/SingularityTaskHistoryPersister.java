@@ -12,6 +12,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +59,11 @@ public class SingularityTaskHistoryPersister
       LOG.info("Checking inactive task ids for task history persistence");
 
       final long start = System.currentTimeMillis();
-      for (String requestId : taskManager.getRequestIdsInTaskHistory()) {
+      List<String> requestIds = taskManager.getRequestIdsInTaskHistory();
+      requestIds.sort(
+        Comparator.comparingLong(taskManager::getTaskCountForRequest).reversed()
+      );
+      for (String requestId : requestIds) {
         try {
           LOG.info("Checking request {}", requestId);
           List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(requestId);

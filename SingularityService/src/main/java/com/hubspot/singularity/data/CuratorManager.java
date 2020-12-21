@@ -155,6 +155,10 @@ public abstract class CuratorManager {
     return checkExists(path).isPresent();
   }
 
+  protected int countChildren(String path) {
+    return checkExists(path).map(Stat::getNumChildren).orElse(0);
+  }
+
   protected List<String> getChildren(String root) {
     LOG.trace("Preparing to call getChildren() on {}", root);
     final long start = System.currentTimeMillis();
