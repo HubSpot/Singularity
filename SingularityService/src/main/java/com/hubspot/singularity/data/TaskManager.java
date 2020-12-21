@@ -450,7 +450,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public int getTaskCountForRequest(String requestId) {
-    return countChildren(getRequestPath(requestId));
+    return getNumChildren(getRequestPath(requestId));
   }
 
   public List<SingularityTaskId> getAllTaskIds() {
@@ -999,13 +999,18 @@ public class TaskManager extends CuratorAsyncManager {
     String requestId,
     TaskFilter taskFilter
   ) {
+    if (taskFilter == TaskFilter.ACTIVE) {
+      if (leaderCache.active()) {
+        return leaderCache.getActiveTaskIdsForRequest(requestId);
+      } else {
+        return getActiveTaskIds()
+          .stream()
+          .filter(t -> t.getRequestId().equals(requestId))
+          .collect(Collectors.toList());
+      }
+    }
     final List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId);
     final List<SingularityTaskId> activeTaskIds = filterActiveTaskIds(requestTaskIds);
-
-    if (taskFilter == TaskFilter.ACTIVE) {
-      return activeTaskIds;
-    }
-
     Iterables.removeAll(requestTaskIds, activeTaskIds);
 
     return requestTaskIds;
