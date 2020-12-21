@@ -1256,6 +1256,39 @@ public class SingularityClient {
   }
 
   /**
+   * Check if a certain request exists
+   * @return the hash code of the current SingularityRequest object, empty otherwise
+   * returns -1 if the ETag header is missing on the response but the request is present
+   */
+  public Optional<Integer> headRequest(String requestId) {
+    final Function<String, String> requestUri = host ->
+      String.format(REQUEST_GET_FORMAT, getApiBase(host), requestId);
+    HttpResponse response = executeRequest(
+      requestUri,
+      Method.HEAD,
+      Optional.empty(),
+      Collections.emptyMap()
+    );
+    if (response.isError()) {
+      throw new SingularityClientException(
+        String.format("Could not head request: %s", response.getAsString())
+      );
+    }
+    if (response.getStatusCode() == 404) {
+      return Optional.empty();
+    }
+    return Optional.of(
+      response
+        .getHeaders()
+        .get("ETag")
+        .stream()
+        .findFirst()
+        .map(Integer::parseInt)
+        .orElse(-1)
+    );
+  }
+
+  /**
    * Get all requests that their state is ACTIVE
    *
    * @return
