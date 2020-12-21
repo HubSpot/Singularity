@@ -81,6 +81,8 @@ public class SingularityLifecycleManaged implements Managed {
       startCurator();
       if (!readOnly) {
         leaderLatch.start();
+      } else {
+        LOG.info("Registered as read only, will not attempt to become the leader");
       }
       leaderController.start(); // start the state poller
       graphiteReporter.start();
