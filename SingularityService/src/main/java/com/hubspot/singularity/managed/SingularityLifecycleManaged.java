@@ -8,6 +8,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
@@ -41,6 +42,7 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityGraphiteReporter graphiteReporter;
   private final ExecutorIdGenerator executorIdGenerator;
   private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
+  private final boolean readOnly;
 
   private final CuratorFramework curatorFramework;
   private final AtomicBoolean started = new AtomicBoolean(false);
@@ -57,7 +59,8 @@ public class SingularityLifecycleManaged implements Managed {
     SingularityMesosExecutorInfoSupport executorInfoSupport,
     SingularityGraphiteReporter graphiteReporter,
     ExecutorIdGenerator executorIdGenerator,
-    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers
+    Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
+    SingularityConfiguration configuration
   ) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
@@ -69,13 +72,16 @@ public class SingularityLifecycleManaged implements Managed {
     this.graphiteReporter = graphiteReporter;
     this.executorIdGenerator = executorIdGenerator;
     this.leaderOnlyPollers = leaderOnlyPollers;
+    this.readOnly = configuration.isReadOnlyInstance();
   }
 
   @Override
   public void start() throws Exception {
     if (!started.getAndSet(true)) {
       startCurator();
-      leaderLatch.start();
+      if (!readOnly) {
+        leaderLatch.start();
+      }
       leaderController.start(); // start the state poller
       graphiteReporter.start();
       executorIdGenerator.start();
@@ -107,7 +113,7 @@ public class SingularityLifecycleManaged implements Managed {
 
   // to override in unit testing
   protected boolean startLeaderPollers() {
-    return true;
+    return !readOnly;
   }
 
   private void stopDirectoryFetcher() {
@@ -163,8 +169,10 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopLeaderLatch() {
     try {
-      LOG.info("Stopping leader latch");
-      leaderLatch.close();
+      if (!readOnly) {
+        LOG.info("Stopping leader latch");
+        leaderLatch.close();
+      }
     } catch (Throwable t) {
       LOG.warn("Could not stop leader latch ({})}", t.getMessage());
     }

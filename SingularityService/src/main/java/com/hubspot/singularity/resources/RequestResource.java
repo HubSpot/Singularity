@@ -91,6 +91,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -2074,5 +2075,28 @@ public class RequestResource extends AbstractRequestResource {
       SingularityAuthorizationScope.READ
     );
     return requestManager.getCrashLoopsForRequest(requestId);
+  }
+
+  @HEAD
+  @Path("/request/{requestId}")
+  @Operation(
+    summary = "Check if a request of specific ID exists and get the hash code of the SingularityRequest object"
+  )
+  public Response headRequest(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(required = true, description = "The Request ID to check") @PathParam(
+      "requestId"
+    ) String requestId,
+    @Parameter(
+      description = "Fetched a cached version of this data to limit expensive operations"
+    ) @QueryParam("useWebCache") Boolean useWebCache
+  ) {
+    Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(
+      requestId,
+      useWebCache
+    );
+    return requestWithState
+      .map(r -> Response.ok().header("ETag", r.getRequest().hashCode()).build())
+      .orElseGet(() -> Response.status(404).build());
   }
 }
