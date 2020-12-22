@@ -217,7 +217,7 @@ public class SingularityCrashLoops {
      * Startup failure loop
      * b) multiple instances failing healthchecks too many times in X minutes
      */
-    if (!hasStartupFailure) {
+    if (hasStartupFailure) {
       long startupFailThreshold =
         now -
         TimeUnit.MINUTES.toMillis(configuration.getEvaluateStartupLoopOverMinutes());
