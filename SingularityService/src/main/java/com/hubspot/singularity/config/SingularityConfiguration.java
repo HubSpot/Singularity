@@ -431,6 +431,9 @@ public class SingularityConfiguration extends Configuration {
   // Stops persisters + purgers from running when the DB is enabled. Forces binding of zk-based usage manager
   private boolean sqlReadOnlyMode = false;
 
+  // Instructs this instance to not contend for leadership. It will only serve api calls
+  private boolean readOnlyInstance = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2024,5 +2027,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSqlReadOnlyMode(boolean sqlReadOnlyMode) {
     this.sqlReadOnlyMode = sqlReadOnlyMode;
+  }
+
+  public boolean isReadOnlyInstance() {
+    return readOnlyInstance;
+  }
+
+  public void setReadOnlyInstance(boolean readOnlyInstance) {
+    this.readOnlyInstance = readOnlyInstance;
   }
 }

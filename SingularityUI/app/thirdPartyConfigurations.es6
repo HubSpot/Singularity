@@ -31,7 +31,7 @@ export const loadThirdParty = () => {
 
   // Messenger options
   window.Messenger.options = {
-    extraClasses: 'messenger-fixed messenger-on-top',
+    extraClasses: 'messenger-fixed messenger-on-bottom  messenger-on-right',
     theme: 'air',
     hideOnNavigate: true,
     maxMessages: 1,
