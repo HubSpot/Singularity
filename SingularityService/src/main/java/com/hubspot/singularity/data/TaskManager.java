@@ -999,18 +999,14 @@ public class TaskManager extends CuratorAsyncManager {
     String requestId,
     TaskFilter taskFilter
   ) {
+    final List<SingularityTaskId> activeTaskIds = getChildrenAsIds(
+      getLastActiveTaskParent(requestId),
+      taskIdTranscoder
+    );
     if (taskFilter == TaskFilter.ACTIVE) {
-      if (leaderCache.active()) {
-        return leaderCache.getActiveTaskIdsForRequest(requestId);
-      } else {
-        return getActiveTaskIds()
-          .stream()
-          .filter(t -> t.getRequestId().equals(requestId))
-          .collect(Collectors.toList());
-      }
+      return activeTaskIds;
     }
     final List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId);
-    final List<SingularityTaskId> activeTaskIds = filterActiveTaskIds(requestTaskIds);
     Iterables.removeAll(requestTaskIds, activeTaskIds);
 
     return requestTaskIds;
