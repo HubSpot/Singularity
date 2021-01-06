@@ -119,6 +119,9 @@ public class SingularitySmtpSender implements Managed {
     if (smtpConfiguration.isSsl()) {
       properties.setProperty("mail.smtp.ssl.enable", "true");
     }
+    if (smtpConfiguration.isStartTLS()) {
+      properties.setProperty("mail.smtp.starttls.enable", "true");
+    }
 
     if (useAuth) {
       properties.setProperty("mail.smtp.auth", "true");
