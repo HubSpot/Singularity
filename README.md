@@ -1,6 +1,6 @@
 ![Singularity](Docs/images/singularity.png)
 
-**Latest Release Version:** [1.3.0](https://github.com/HubSpot/Singularity/releases/tag/Singularity-1.3.0)
+**Latest Release Version:** [1.4.0](https://github.com/HubSpot/Singularity/releases/tag/Singularity-1.3.0)
 
 **Mesos Version:** [1.9.0](http://mesos.apache.org/documentation/latest/upgrades/)
 
