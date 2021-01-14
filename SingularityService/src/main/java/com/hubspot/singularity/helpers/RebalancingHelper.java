@@ -55,7 +55,7 @@ public class RebalancingHelper {
     Multiset<String> countPerRack = HashMultiset.create();
     for (SingularityTaskId taskId : remainingActiveTasks) {
       countPerRack.add(taskId.getRackId());
-      LOG.info(
+      LOG.debug(
         "{} - {} - {} - {}",
         countPerRack,
         perRack,
@@ -68,7 +68,7 @@ public class RebalancingHelper {
         taskId.getInstanceNo() > 1
       ) {
         extraCleanedTasks.add(taskId);
-        LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
+        LOG.debug("Cleaning up task {} to evenly distribute tasks among racks", taskId);
         taskManager.createTaskCleanup(
           new SingularityTaskCleanup(
             user,

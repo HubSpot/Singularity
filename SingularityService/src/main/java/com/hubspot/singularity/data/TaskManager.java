@@ -784,11 +784,11 @@ public class TaskManager extends CuratorAsyncManager {
         taskHistoryUpdate.getTaskId(),
         taskHistoryUpdate.getTaskState()
       );
-      LOG.info("Found existing history {}", maybeExisting);
+      LOG.debug("Found existing history {}", maybeExisting);
       SingularityTaskHistoryUpdate updateWithPrevious;
       if (maybeExisting.isPresent()) {
         updateWithPrevious = taskHistoryUpdate.withPrevious(maybeExisting.get());
-        LOG.info("Will save new update {}", updateWithPrevious);
+        LOG.debug("Will save new update {}", updateWithPrevious);
       } else {
         updateWithPrevious = taskHistoryUpdate;
       }
