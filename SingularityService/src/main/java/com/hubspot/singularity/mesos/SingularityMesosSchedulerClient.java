@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.Filters;
@@ -63,6 +64,7 @@ public class SingularityMesosSchedulerClient {
   private final SingularityConfiguration configuration;
   private final MesosConfiguration mesosConfiguration;
   private final String singularityUriBase;
+  private final AtomicLong failedMesosCalls;
 
   private SerializedSubject<Optional<SinkOperation<Call>>, Optional<SinkOperation<Call>>> publisher;
   private FrameworkID frameworkId;
@@ -74,11 +76,13 @@ public class SingularityMesosSchedulerClient {
     SingularityConfiguration configuration,
     @Named(
       SingularityServiceUIModule.SINGULARITY_URI_BASE
-    ) final String singularityUriBase
+    ) final String singularityUriBase,
+    @Named(SingularityMesosModule.FAILED_MESOS_CALLS) AtomicLong failedMesosCalls
   ) {
     this.configuration = configuration;
     this.mesosConfiguration = configuration.getMesosConfiguration();
     this.singularityUriBase = singularityUriBase;
+    this.failedMesosCalls = failedMesosCalls;
   }
 
   /**
@@ -349,7 +353,21 @@ public class SingularityMesosSchedulerClient {
         "No publisher found, please call subscribe before sending anything."
       );
     }
-    publisher.onNext(Optional.of(SinkOperations.create(call)));
+    publisher.onNext(
+      Optional.of(
+        SinkOperations.create(
+          call,
+          () -> LOG.debug("Finished {} call to mesos", call.getType()),
+          t -> {
+            LOG.error(
+              "Exception calling mesos ({} so far)",
+              failedMesosCalls.incrementAndGet(),
+              t
+            );
+          }
+        )
+      )
+    );
   }
 
   private void sendCall(Call.Builder b, Type t) {
