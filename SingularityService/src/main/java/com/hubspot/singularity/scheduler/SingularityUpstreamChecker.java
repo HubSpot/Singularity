@@ -181,7 +181,7 @@ public class SingularityUpstreamChecker {
       singularityRequestId
     );
     try {
-      LOG.info(
+      LOG.trace(
         "Sending request to get load balancer upstreams for service {} with loadBalancerServiceId {}.",
         singularityRequestId,
         loadBalancerServiceId
@@ -189,7 +189,7 @@ public class SingularityUpstreamChecker {
       final SingularityCheckingUpstreamsUpdate checkUpstreamsState = lbClient.getLoadBalancerServiceStateForRequest(
         loadBalancerServiceId
       );
-      LOG.debug(
+      LOG.trace(
         "Succeeded getting load balancer upstreams for singularity request {} with loadBalancerServiceId {}. State is {}.",
         singularityRequestId,
         loadBalancerServiceId,
@@ -357,7 +357,7 @@ public class SingularityUpstreamChecker {
       .retryIfResult(IS_WAITING_STATE)
       .build();
     try {
-      LOG.info(
+      LOG.debug(
         "Checking load balancer request to sync upstreams for service {} using a retryer until the request state is no longer waiting.",
         singularityRequestId
       );

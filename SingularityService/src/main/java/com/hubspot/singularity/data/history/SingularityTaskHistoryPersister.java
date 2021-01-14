@@ -65,7 +65,7 @@ public class SingularityTaskHistoryPersister
       );
       for (String requestId : requestIds) {
         try {
-          LOG.info("Checking request {}", requestId);
+          LOG.debug("Checking request {}", requestId);
           List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(requestId);
           taskIds.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
           taskIds.removeAll(taskManager.getLBCleanupTasks());
@@ -90,7 +90,7 @@ public class SingularityTaskHistoryPersister
 
             forRequest++;
           }
-          LOG.info(
+          LOG.debug(
             "Transferred {} out of {} inactive task ids in {}",
             transferred,
             taskIds.size(),
