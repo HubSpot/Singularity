@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
@@ -41,9 +42,12 @@ public class SingularityTaskHistoryPersister
     TaskManager taskManager,
     DeployManager deployManager,
     HistoryManager historyManager,
-    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+    @Named(
+      SingularityHistoryModule.LAST_TASK_PERSISTER_SUCCESS
+    ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock);
+    super(configuration, persisterLock, lastPersisterSuccess);
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
@@ -184,6 +188,10 @@ public class SingularityTaskHistoryPersister
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
+        LOG.trace(
+          "Task Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
       } catch (Throwable t) {
         LOG.warn("Failed to persist task into History for task {}", object, t);
         return false;

@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
@@ -40,9 +41,12 @@ public class SingularityRequestHistoryPersister
     RequestManager requestManager,
     HistoryManager historyManager,
     SingularitySchedulerLock lock,
-    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+    @Named(
+      SingularityHistoryModule.LAST_REQUEST_PERSISTER_SUCCESS
+    ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock);
+    super(configuration, persisterLock, lastPersisterSuccess);
     this.requestManager = requestManager;
     this.historyManager = historyManager;
     this.lock = lock;
@@ -191,6 +195,10 @@ public class SingularityRequestHistoryPersister
     for (SingularityRequestHistory requestHistory : object.history) {
       try {
         historyManager.saveRequestHistoryUpdate(requestHistory);
+        LOG.trace(
+          "Request Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
       } catch (Throwable t) {
         LOG.warn("Failed to persist {} into History", requestHistory, t);
         return false;
