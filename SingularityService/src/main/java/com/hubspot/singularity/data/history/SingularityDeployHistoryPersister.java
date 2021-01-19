@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -40,9 +41,12 @@ public class SingularityDeployHistoryPersister
     DeployManager deployManager,
     HistoryManager historyManager,
     SingularitySchedulerLock schedulerLock,
-    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+    @Named(
+      SingularityHistoryModule.LAST_DEPLOY_PERSISTER_SUCCESS
+    ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock);
+    super(configuration, persisterLock, lastPersisterSuccess);
     this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -189,6 +193,10 @@ public class SingularityDeployHistoryPersister
   protected boolean moveToHistory(SingularityDeployHistory deployHistory) {
     try {
       historyManager.saveDeployHistory(deployHistory);
+      LOG.trace(
+        "Deploy Persister: successful move to history ({} so far)",
+        lastPersisterSuccess.incrementAndGet()
+      );
     } catch (Throwable t) {
       LOG.warn(
         "Failed to persist deploy {}",
