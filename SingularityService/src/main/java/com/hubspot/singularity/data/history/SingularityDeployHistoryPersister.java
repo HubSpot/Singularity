@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
@@ -56,6 +57,7 @@ public class SingularityDeployHistoryPersister
   public void runActionOnPoll() {
     LOG.info("Attempting to grab persister lock");
     persisterLock.lock();
+    AtomicBoolean persisterSuccess = new AtomicBoolean(true);
     try {
       LOG.info("Acquired persister lock");
       LOG.info("Checking inactive deploys for deploy history persistence");
@@ -127,6 +129,8 @@ public class SingularityDeployHistoryPersister
               );
               if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
                 numTransferred.increment();
+              } else {
+                persisterSuccess.getAndSet(false);
               }
             }
           },
@@ -142,12 +146,11 @@ public class SingularityDeployHistoryPersister
         JavaUtils.duration(start)
       );
     } finally {
-      if (persisterSuccess) {
+      if (persisterSuccess.get()) {
         LOG.trace(
           "Deploy Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );
-        persisterSuccess = false;
       }
       persisterLock.unlock();
     }
@@ -200,14 +203,12 @@ public class SingularityDeployHistoryPersister
   protected boolean moveToHistory(SingularityDeployHistory deployHistory) {
     try {
       historyManager.saveDeployHistory(deployHistory);
-      persisterSuccess = true;
     } catch (Throwable t) {
       LOG.warn(
         "Failed to persist deploy {}",
         SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()),
         t
       );
-      persisterSuccess = false;
       return false;
     }
 

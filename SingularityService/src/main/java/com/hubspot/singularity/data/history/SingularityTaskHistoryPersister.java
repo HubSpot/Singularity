@@ -59,6 +59,7 @@ public class SingularityTaskHistoryPersister
   public void runActionOnPoll() {
     LOG.info("Attempting to grab persister lock");
     persisterLock.lock();
+    boolean persisterSuccess = true;
     try {
       LOG.info("Checking inactive task ids for task history persistence");
 
@@ -90,6 +91,8 @@ public class SingularityTaskHistoryPersister
             if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
               LOG.debug("Transferred task {}", taskId);
               transferred++;
+            } else {
+              persisterSuccess = false;
             }
 
             forRequest++;
@@ -110,7 +113,6 @@ public class SingularityTaskHistoryPersister
           "Task Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );
-        persisterSuccess = false;
       }
 
       persisterLock.unlock();
@@ -196,10 +198,8 @@ public class SingularityTaskHistoryPersister
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
-        persisterSuccess = true;
       } catch (Throwable t) {
         LOG.warn("Failed to persist task into History for task {}", object, t);
-        persisterSuccess = false;
         return false;
       }
     } else {
