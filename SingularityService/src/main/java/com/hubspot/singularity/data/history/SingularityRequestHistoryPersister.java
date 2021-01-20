@@ -174,6 +174,14 @@ public class SingularityRequestHistoryPersister
         JavaUtils.duration(start)
       );
     } finally {
+      if (persisterSuccess) {
+        LOG.trace(
+          "Request Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
+        persisterSuccess = false;
+      }
+
       persisterLock.unlock();
     }
   }
@@ -195,12 +203,10 @@ public class SingularityRequestHistoryPersister
     for (SingularityRequestHistory requestHistory : object.history) {
       try {
         historyManager.saveRequestHistoryUpdate(requestHistory);
-        LOG.trace(
-          "Request Persister: successful move to history ({} so far)",
-          lastPersisterSuccess.incrementAndGet()
-        );
+        persisterSuccess = true;
       } catch (Throwable t) {
         LOG.warn("Failed to persist {} into History", requestHistory, t);
+        persisterSuccess = false;
         return false;
       }
 

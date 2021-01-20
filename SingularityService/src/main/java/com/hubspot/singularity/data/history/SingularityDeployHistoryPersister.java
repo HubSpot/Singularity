@@ -142,6 +142,13 @@ public class SingularityDeployHistoryPersister
         JavaUtils.duration(start)
       );
     } finally {
+      if (persisterSuccess) {
+        LOG.trace(
+          "Deploy Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
+        persisterSuccess = false;
+      }
       persisterLock.unlock();
     }
   }
@@ -193,16 +200,14 @@ public class SingularityDeployHistoryPersister
   protected boolean moveToHistory(SingularityDeployHistory deployHistory) {
     try {
       historyManager.saveDeployHistory(deployHistory);
-      LOG.trace(
-        "Deploy Persister: successful move to history ({} so far)",
-        lastPersisterSuccess.incrementAndGet()
-      );
+      persisterSuccess = true;
     } catch (Throwable t) {
       LOG.warn(
         "Failed to persist deploy {}",
         SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()),
         t
       );
+      persisterSuccess = false;
       return false;
     }
 
