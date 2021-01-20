@@ -105,6 +105,14 @@ public class SingularityTaskHistoryPersister
         }
       }
     } finally {
+      if (persisterSuccess) {
+        LOG.trace(
+          "Task Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
+        persisterSuccess = false;
+      }
+
       persisterLock.unlock();
     }
   }
@@ -188,12 +196,10 @@ public class SingularityTaskHistoryPersister
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
-        LOG.trace(
-          "Task Persister: successful move to history ({} so far)",
-          lastPersisterSuccess.incrementAndGet()
-        );
+        persisterSuccess = true;
       } catch (Throwable t) {
         LOG.warn("Failed to persist task into History for task {}", object, t);
+        persisterSuccess = false;
         return false;
       }
     } else {

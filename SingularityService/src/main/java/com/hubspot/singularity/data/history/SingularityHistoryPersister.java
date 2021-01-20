@@ -22,6 +22,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
   protected final ReentrantLock persisterLock;
 
   protected final AtomicLong lastPersisterSuccess;
+  protected boolean persisterSuccess;
 
   public SingularityHistoryPersister(
     SingularityConfiguration configuration,
@@ -32,6 +33,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
     this.configuration = configuration;
     this.persisterLock = persisterLock;
     this.lastPersisterSuccess = lastPersisterSuccess;
+    persisterSuccess = false;
   }
 
   @Override
