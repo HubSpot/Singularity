@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
@@ -41,9 +42,12 @@ public class SingularityTaskHistoryPersister
     TaskManager taskManager,
     DeployManager deployManager,
     HistoryManager historyManager,
-    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+    @Named(
+      SingularityHistoryModule.LAST_TASK_PERSISTER_SUCCESS
+    ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock);
+    super(configuration, persisterLock, lastPersisterSuccess);
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
@@ -55,6 +59,7 @@ public class SingularityTaskHistoryPersister
   public void runActionOnPoll() {
     LOG.info("Attempting to grab persister lock");
     persisterLock.lock();
+    boolean persisterSuccess = true;
     try {
       LOG.info("Checking inactive task ids for task history persistence");
 
@@ -86,6 +91,8 @@ public class SingularityTaskHistoryPersister
             if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
               LOG.debug("Transferred task {}", taskId);
               transferred++;
+            } else {
+              persisterSuccess = false;
             }
 
             forRequest++;
@@ -101,6 +108,13 @@ public class SingularityTaskHistoryPersister
         }
       }
     } finally {
+      if (persisterSuccess) {
+        LOG.trace(
+          "Task Persister: successful move to history ({} so far)",
+          lastPersisterSuccess.incrementAndGet()
+        );
+      }
+
       persisterLock.unlock();
     }
   }

@@ -9,12 +9,20 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityJsonStringMapper;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 
 public class SingularityHistoryModule extends AbstractModule {
   public static final String PERSISTER_LOCK = "history.persister.lock";
+
+  public static final String LAST_TASK_PERSISTER_SUCCESS =
+    "last-task-history-persister-success";
+  public static final String LAST_REQUEST_PERSISTER_SUCCESS =
+    "last-request-history-persister-success";
+  public static final String LAST_DEPLOY_PERSISTER_SUCCESS =
+    "last-deploy-history-persister-success";
 
   public SingularityHistoryModule() {}
 
@@ -82,5 +90,26 @@ public class SingularityHistoryModule extends AbstractModule {
   @Named(PERSISTER_LOCK)
   public ReentrantLock providePersisterLock() {
     return new ReentrantLock();
+  }
+
+  @Provides
+  @Singleton
+  @Named(LAST_TASK_PERSISTER_SUCCESS)
+  public AtomicLong lastTaskPersisterSuccess() {
+    return new AtomicLong();
+  }
+
+  @Provides
+  @Singleton
+  @Named(LAST_REQUEST_PERSISTER_SUCCESS)
+  public AtomicLong lastRequestPersisterSuccess() {
+    return new AtomicLong();
+  }
+
+  @Provides
+  @Singleton
+  @Named(LAST_DEPLOY_PERSISTER_SUCCESS)
+  public AtomicLong lastDeployPersisterSuccess() {
+    return new AtomicLong();
   }
 }
