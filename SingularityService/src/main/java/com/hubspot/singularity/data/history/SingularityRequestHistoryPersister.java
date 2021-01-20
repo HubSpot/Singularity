@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -134,6 +135,7 @@ public class SingularityRequestHistoryPersister
   public void runActionOnPoll() {
     LOG.info("Attempting to grab persister lock");
     persisterLock.lock();
+    AtomicBoolean persisterSuccess = new AtomicBoolean(true);
     try {
       LOG.info("Checking request history for persistence");
 
@@ -160,6 +162,8 @@ public class SingularityRequestHistoryPersister
           () -> {
             if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
               numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
+            } else {
+              persisterSuccess.getAndSet(false);
             }
           },
           requestHistoryParent.requestId,
@@ -174,12 +178,11 @@ public class SingularityRequestHistoryPersister
         JavaUtils.duration(start)
       );
     } finally {
-      if (persisterSuccess) {
+      if (persisterSuccess.get()) {
         LOG.trace(
           "Request Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );
-        persisterSuccess = false;
       }
 
       persisterLock.unlock();
@@ -203,10 +206,8 @@ public class SingularityRequestHistoryPersister
     for (SingularityRequestHistory requestHistory : object.history) {
       try {
         historyManager.saveRequestHistoryUpdate(requestHistory);
-        persisterSuccess = true;
       } catch (Throwable t) {
         LOG.warn("Failed to persist {} into History", requestHistory, t);
-        persisterSuccess = false;
         return false;
       }
 
