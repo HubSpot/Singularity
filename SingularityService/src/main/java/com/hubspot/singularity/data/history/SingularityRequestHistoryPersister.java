@@ -179,9 +179,10 @@ public class SingularityRequestHistoryPersister
       );
     } finally {
       if (persisterSuccess.get()) {
+        lastPersisterSuccess.set(System.currentTimeMillis());
         LOG.info(
-          "Request Persister: successful move to history ({} so far)",
-          lastPersisterSuccess.incrementAndGet()
+          "Finished run on request history persist at {}",
+          lastPersisterSuccess.get()
         );
       }
 
