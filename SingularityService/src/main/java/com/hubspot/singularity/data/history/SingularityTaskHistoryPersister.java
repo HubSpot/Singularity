@@ -109,9 +109,10 @@ public class SingularityTaskHistoryPersister
       }
     } finally {
       if (persisterSuccess) {
+        lastPersisterSuccess.set(System.currentTimeMillis());
         LOG.info(
-          "Task Persister: successful move to history ({} so far)",
-          lastPersisterSuccess.incrementAndGet()
+          "Finished run on task history persist at {}",
+          lastPersisterSuccess.get()
         );
       }
 
