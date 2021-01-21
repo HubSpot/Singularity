@@ -32,7 +32,6 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.hubspot.singularity.smtp.SingularityMailer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -334,7 +333,7 @@ public class SingularityNewTaskChecker {
     );
   }
 
-  private void enqueueCheckWithDelay(
+  public void enqueueCheckWithDelay(
     final SingularityTask task,
     long delaySeconds,
     SingularityHealthchecker healthchecker

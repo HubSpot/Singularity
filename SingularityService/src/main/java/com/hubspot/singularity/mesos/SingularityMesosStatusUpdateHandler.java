@@ -14,6 +14,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
@@ -346,14 +347,57 @@ public class SingularityMesosStatusUpdateHandler {
           taskIdObj
         );
         return StatusUpdateResult.KILL_TASK;
-      } else if (
-        maybeTaskHistory.isPresent() &&
-        status.getReason() == Reason.REASON_AGENT_REREGISTERED
-      ) {
+      } else if (status.getReason() == Reason.REASON_AGENT_REREGISTERED) {
         boolean lbRemovalStarted = taskManager
           .getLoadBalancerState(taskIdObj, LoadBalancerRequestType.REMOVE)
           .isPresent();
         if (lbRemovalStarted) {
+          LOG.info(
+            "LB removal for recovered task {} was already started. Attempting to clear and start as new task",
+            taskId
+          );
+          if (
+            taskManager.reactivateTask(
+              taskIdObj,
+              taskState,
+              newTaskStatusHolder,
+              Optional.ofNullable(status.getMessage()),
+              status.hasReason()
+                ? Optional.of(status.getReason().name())
+                : Optional.empty()
+            )
+          ) {
+            Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
+            Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
+              taskIdObj.getRequestId()
+            );
+            if (
+              maybeTask.isPresent() &&
+              maybeRequest.isPresent() &&
+              maybeRequest.get().getState().isRunnable()
+            ) {
+              LOG.info(
+                "Task {} can be recovered. Clearing LB state and enqueuing check as new task",
+                taskId
+              );
+              taskManager.clearLoadBalancerHistory(taskIdObj);
+              newTaskChecker.enqueueCheckWithDelay(maybeTask.get(), 0, healthchecker);
+              requestManager.addToPendingQueue(
+                new SingularityPendingRequest(
+                  taskIdObj.getRequestId(),
+                  taskIdObj.getDeployId(),
+                  now,
+                  Optional.empty(),
+                  PendingType.TASK_RECOVERED,
+                  Optional.empty(),
+                  Optional.of(
+                    String.format("Agent %s recovered", status.getAgentId().getValue())
+                  )
+                )
+              );
+              return StatusUpdateResult.DONE;
+            }
+          }
           taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
               Optional.empty(),
@@ -367,32 +411,43 @@ public class SingularityMesosStatusUpdateHandler {
               Optional.empty()
             )
           );
+          requestManager.addToPendingQueue(
+            new SingularityPendingRequest(
+              taskIdObj.getRequestId(),
+              taskIdObj.getDeployId(),
+              now,
+              Optional.empty(),
+              PendingType.TASK_RECOVERED,
+              Optional.empty(),
+              Optional.of(
+                String.format("Agent %s recovered", status.getAgentId().getValue())
+              )
+            )
+          );
           return StatusUpdateResult.DONE;
         }
       }
+
+      // Check non-service tasks with no lb component
       boolean reactivated = taskManager.reactivateTask(
         taskIdObj,
         taskState,
         newTaskStatusHolder,
         Optional.ofNullable(status.getMessage()),
-        status.hasReason()
-          ? Optional.of(status.getReason().name())
-          : Optional.<String>empty()
+        status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
+      );
+      requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+          taskIdObj.getRequestId(),
+          taskIdObj.getDeployId(),
+          now,
+          Optional.empty(),
+          PendingType.TASK_RECOVERED,
+          Optional.empty(),
+          Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue()))
+        )
       );
       if (reactivated) {
-        requestManager.addToPendingQueue(
-          new SingularityPendingRequest(
-            taskIdObj.getRequestId(),
-            taskIdObj.getDeployId(),
-            now,
-            Optional.empty(),
-            PendingType.TASK_RECOVERED,
-            Optional.empty(),
-            Optional.of(
-              String.format("Agent %s recovered", status.getAgentId().getValue())
-            )
-          )
-        );
         return StatusUpdateResult.DONE;
       } else {
         return StatusUpdateResult.KILL_TASK;

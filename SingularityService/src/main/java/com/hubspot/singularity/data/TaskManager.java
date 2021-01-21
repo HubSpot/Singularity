@@ -1137,6 +1137,13 @@ public class TaskManager extends CuratorAsyncManager {
     lbHistory.ifPresent(loadBalancerUpdates::add);
   }
 
+  public void clearLoadBalancerHistory(SingularityTaskId taskId) {
+    delete(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.REMOVE));
+    delete(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.ADD));
+    delete(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.DEPLOY));
+    delete(getLoadBalancerStatePath(taskId, LoadBalancerRequestType.DELETE));
+  }
+
   public boolean hasNotifiedOverdue(SingularityTaskId taskId) {
     return checkExists(getNotifiedOverduePath(taskId)).isPresent();
   }
