@@ -181,7 +181,7 @@ public class SingularityRequestHistoryPersister
       if (persisterSuccess.get()) {
         lastPersisterSuccess.set(System.currentTimeMillis());
         LOG.info(
-          "Finished run on request history persist at {}",
+          "Finished run on request history persister at {}",
           lastPersisterSuccess.get()
         );
       }

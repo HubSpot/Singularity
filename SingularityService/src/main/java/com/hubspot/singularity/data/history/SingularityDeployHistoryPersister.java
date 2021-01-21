@@ -149,7 +149,7 @@ public class SingularityDeployHistoryPersister
       if (persisterSuccess.get()) {
         lastPersisterSuccess.set(System.currentTimeMillis());
         LOG.info(
-          "Finished run on deploy history persist at {}",
+          "Finished run on deploy history persister at {}",
           lastPersisterSuccess.get()
         );
       }
