@@ -109,7 +109,7 @@ public class SingularityTaskHistoryPersister
       }
     } finally {
       if (persisterSuccess) {
-        LOG.trace(
+        LOG.info(
           "Task Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );

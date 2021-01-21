@@ -179,7 +179,7 @@ public class SingularityRequestHistoryPersister
       );
     } finally {
       if (persisterSuccess.get()) {
-        LOG.trace(
+        LOG.info(
           "Request Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );
