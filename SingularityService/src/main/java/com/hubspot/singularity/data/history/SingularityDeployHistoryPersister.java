@@ -147,7 +147,7 @@ public class SingularityDeployHistoryPersister
       );
     } finally {
       if (persisterSuccess.get()) {
-        LOG.trace(
+        LOG.info(
           "Deploy Persister: successful move to history ({} so far)",
           lastPersisterSuccess.incrementAndGet()
         );
