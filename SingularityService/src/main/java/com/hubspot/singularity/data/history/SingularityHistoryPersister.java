@@ -7,6 +7,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +21,17 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
   protected final SingularityConfiguration configuration;
   protected final ReentrantLock persisterLock;
 
+  protected final AtomicLong lastPersisterSuccess;
+
   public SingularityHistoryPersister(
     SingularityConfiguration configuration,
-    ReentrantLock persisterLock
+    ReentrantLock persisterLock,
+    AtomicLong lastPersisterSuccess
   ) {
     super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS);
     this.configuration = configuration;
     this.persisterLock = persisterLock;
+    this.lastPersisterSuccess = lastPersisterSuccess;
   }
 
   @Override
