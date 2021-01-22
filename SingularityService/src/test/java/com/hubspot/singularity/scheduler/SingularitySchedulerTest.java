@@ -81,6 +81,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -4337,7 +4338,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testRecoveredTaskIsCleanedIfLoadBalancerRemoveIsStarted() {
+  public void testRecoveredTaskIsRecoveredIfLoadBalancerRemoveIsStarted() {
     // set up the agent first
     sms
       .resourceOffers(
@@ -4345,8 +4346,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       )
       .join();
 
-    initRequest();
-    initFirstDeploy();
+    initLoadBalancedRequest();
+    initLoadBalancedDeploy();
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     Assertions.assertEquals(1, taskManager.getNumActiveTasks());
@@ -4393,9 +4394,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.statusUpdate(recovered).join();
 
-    Assertions.assertEquals(0, taskManager.getNumActiveTasks());
-    Assertions.assertEquals(1, taskManager.getNumCleanupTasks());
+    newTaskChecker
+      .getTaskCheckFutures()
+      .forEach(
+        f -> {
+          try {
+            f.get(5, TimeUnit.SECONDS);
+          } catch (TimeoutException te) {
+            // Didn't see that....
+          } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      );
+
+    Assertions.assertEquals(1, taskManager.getNumActiveTasks());
+    Assertions.assertEquals(0, taskManager.getNumCleanupTasks());
     Assertions.assertEquals(1, requestManager.getSizeOfPendingQueue());
+    Assertions.assertTrue(
+      taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD).isPresent()
+    );
   }
 
   @Test
