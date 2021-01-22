@@ -111,7 +111,7 @@ public class SingularityTaskHistoryPersister
       if (persisterSuccess) {
         lastPersisterSuccess.set(System.currentTimeMillis());
         LOG.info(
-          "Finished run on task history persist at {}",
+          "Finished run on task history persister at {}",
           lastPersisterSuccess.get()
         );
       }
