@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -40,9 +42,12 @@ public class SingularityDeployHistoryPersister
     DeployManager deployManager,
     HistoryManager historyManager,
     SingularitySchedulerLock schedulerLock,
-    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock
+    @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
+    @Named(
+      SingularityHistoryModule.LAST_DEPLOY_PERSISTER_SUCCESS
+    ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock);
+    super(configuration, persisterLock, lastPersisterSuccess);
     this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -52,6 +57,7 @@ public class SingularityDeployHistoryPersister
   public void runActionOnPoll() {
     LOG.info("Attempting to grab persister lock");
     persisterLock.lock();
+    AtomicBoolean persisterSuccess = new AtomicBoolean(true);
     try {
       LOG.info("Acquired persister lock");
       LOG.info("Checking inactive deploys for deploy history persistence");
@@ -123,6 +129,8 @@ public class SingularityDeployHistoryPersister
               );
               if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
                 numTransferred.increment();
+              } else {
+                persisterSuccess.getAndSet(false);
               }
             }
           },
@@ -138,6 +146,13 @@ public class SingularityDeployHistoryPersister
         JavaUtils.duration(start)
       );
     } finally {
+      if (persisterSuccess.get()) {
+        lastPersisterSuccess.set(System.currentTimeMillis());
+        LOG.info(
+          "Finished run on deploy history persist at {}",
+          lastPersisterSuccess.get()
+        );
+      }
       persisterLock.unlock();
     }
   }
