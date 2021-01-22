@@ -381,6 +381,10 @@ public class SingularityMesosStatusUpdateHandler {
           }
           if (
             canRecoverLbState &&
+            deployManager
+              .getActiveDeployId(taskIdObj.getRequestId())
+              .map(d -> d.equals(taskIdObj.getDeployId()))
+              .orElse(false) &&
             taskManager.reactivateTask(
               taskIdObj,
               taskState,
@@ -455,13 +459,18 @@ public class SingularityMesosStatusUpdateHandler {
       }
 
       // Check tasks with no lb component or not yet removed from LB
-      boolean reactivated = taskManager.reactivateTask(
-        taskIdObj,
-        taskState,
-        newTaskStatusHolder,
-        Optional.ofNullable(status.getMessage()),
-        status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
-      );
+      boolean reactivated =
+        deployManager
+          .getActiveDeployId(taskIdObj.getRequestId())
+          .map(d -> d.equals(taskIdObj.getDeployId()))
+          .orElse(false) &&
+        taskManager.reactivateTask(
+          taskIdObj,
+          taskState,
+          newTaskStatusHolder,
+          Optional.ofNullable(status.getMessage()),
+          status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
+        );
       requestManager.addToPendingQueue(
         new SingularityPendingRequest(
           taskIdObj.getRequestId(),
