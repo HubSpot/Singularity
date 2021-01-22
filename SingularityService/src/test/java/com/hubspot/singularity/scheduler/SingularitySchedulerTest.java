@@ -81,6 +81,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -4398,8 +4399,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       .forEach(
         f -> {
           try {
-            f.get();
-          } catch (InterruptedException | ExecutionException e) {
+            f.get(5, TimeUnit.SECONDS);
+          } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
           }
         }
