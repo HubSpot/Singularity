@@ -4400,7 +4400,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         f -> {
           try {
             f.get(5, TimeUnit.SECONDS);
-          } catch (InterruptedException | ExecutionException | TimeoutException e) {
+          } catch (TimeoutException te) {
+            // Didn't see that....
+          } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
           }
         }
