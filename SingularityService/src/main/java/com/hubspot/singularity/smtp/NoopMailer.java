@@ -56,7 +56,7 @@ public class NoopMailer implements SingularityMailer {
   public void sendRequestPausedMail(
     SingularityRequest request,
     Optional<SingularityPauseRequest> pauseRequest,
-    Optional<String> user
+    String user
   ) {
     logNotSendingEmail("request paused");
   }
@@ -64,7 +64,7 @@ public class NoopMailer implements SingularityMailer {
   @Override
   public void sendRequestUnpausedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   ) {
     logNotSendingEmail("request unpaused");
@@ -75,7 +75,7 @@ public class NoopMailer implements SingularityMailer {
     SingularityRequest request,
     Optional<SingularityScaleRequest> newScaleRequest,
     Optional<Integer> formerInstances,
-    Optional<String> user
+    String user
   ) {
     logNotSendingEmail("request scaled");
   }
@@ -83,7 +83,7 @@ public class NoopMailer implements SingularityMailer {
   @Override
   public void sendRequestRemovedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   ) {
     logNotSendingEmail("request removed");

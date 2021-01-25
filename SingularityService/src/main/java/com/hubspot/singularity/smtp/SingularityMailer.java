@@ -31,22 +31,22 @@ public interface SingularityMailer {
   void sendRequestPausedMail(
     SingularityRequest request,
     Optional<SingularityPauseRequest> pauseRequest,
-    Optional<String> user
+    String user
   );
   void sendRequestUnpausedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   );
   void sendRequestScaledMail(
     SingularityRequest request,
     Optional<SingularityScaleRequest> newScaleRequest,
     Optional<Integer> formerInstances,
-    Optional<String> user
+    String user
   );
   void sendRequestRemovedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   );
   void sendRequestInCooldownMail(final SingularityRequest request);

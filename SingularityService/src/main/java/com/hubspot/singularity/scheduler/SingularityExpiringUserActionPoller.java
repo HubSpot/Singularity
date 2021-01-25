@@ -22,7 +22,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AgentManager;
 import com.hubspot.singularity.data.DeployManager;
@@ -349,7 +348,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       requestHelper.unpause(
         requestWithState.getRequest(),
-        expiringObject.getUser(),
+        expiringObject.getUser().orElse("unknown"),
         Optional.of(message),
         Optional.empty()
       );
@@ -410,16 +409,16 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           requestWithState.getState(),
           Optional.of(RequestHistoryType.SCALE_REVERTED),
           expiringObject.getUser(),
-          Optional.<Boolean>empty(),
+          Optional.empty(),
           Optional.of(message),
           maybeBounceRequest
         );
 
         mailer.sendRequestScaledMail(
           newRequest,
-          Optional.<SingularityScaleRequest>empty(),
+          Optional.empty(),
           oldRequest.getInstances(),
-          expiringObject.getUser()
+          expiringObject.getUser().orElse("unknown")
         );
       } catch (WebApplicationException wae) {
         LOG.error(
