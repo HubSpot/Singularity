@@ -55,8 +55,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   private <T> List<T> getAsyncChildrenThrows(
     final String parent,
     final Transcoder<T> transcoder
-  )
-    throws Exception {
+  ) throws Exception {
     try {
       List<String> children = getChildren(parent);
       final List<String> paths = Lists.newArrayListWithCapacity(children.size());
@@ -80,8 +79,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final Collection<String> paths,
     final Transcoder<T> transcoder,
     final Optional<ZkCache<T>> cache
-  )
-    throws Exception {
+  ) throws Exception {
     final Map<String, T> objects = new HashMap<>(paths.size());
 
     if (cache.isPresent()) {
@@ -156,8 +154,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String pathNameforLogs,
     final Collection<String> parents,
     final IdTranscoder<T> idTranscoder
-  )
-    throws Exception {
+  ) throws Exception {
     if (parents.isEmpty()) {
       return Collections.emptyList();
     }
@@ -226,8 +223,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String pathNameforLogs,
     final Collection<String> paths,
     final IdTranscoder<T> idTranscoder
-  )
-    throws Exception {
+  ) throws Exception {
     if (paths.isEmpty()) {
       return Collections.emptyList();
     }
@@ -281,8 +277,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   private <T extends SingularityId> List<T> notExistsThrows(
     final String pathNameforLogs,
     final Map<String, T> pathsMap
-  )
-    throws Exception {
+  ) throws Exception {
     if (pathsMap.isEmpty()) {
       return Collections.emptyList();
     }
@@ -390,8 +385,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String pathNameForLogs,
     final List<String> parentPaths,
     final Transcoder<T> transcoder
-  )
-    throws Exception {
+  ) throws Exception {
     final List<String> allPaths = new ArrayList<>();
     for (String parent : parentPaths) {
       for (String child : getChildren(parent)) {
@@ -451,8 +445,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final Map<String, T> parentPathsMap,
     final String subpath,
     final Transcoder<Q> transcoder
-  )
-    throws Exception {
+  ) throws Exception {
     final Map<String, T> allPathsMap = Maps.newHashMap();
     for (Map.Entry<String, T> entry : parentPathsMap.entrySet()) {
       for (String child : getChildren(ZKPaths.makePath(entry.getKey(), subpath))) {
@@ -523,8 +516,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String pathNameForLogs,
     final String parentPath,
     final IdTranscoder<T> transcoder
-  )
-    throws Exception {
+  ) throws Exception {
     final List<String> allPaths = new ArrayList<>();
     for (String child : getChildren(parentPath)) {
       allPaths.add(ZKPaths.makePath(parentPath, child));
@@ -585,8 +577,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String pathNameForLogs,
     final AtomicInteger bytes,
     final CuratorQueryMethod method
-  )
-    throws Exception {
+  ) throws Exception {
     final long start = System.currentTimeMillis();
 
     try {
@@ -607,6 +598,10 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       checkLatch(latch, pathNameForLogs);
     } finally {
+      if (curator instanceof LoggingCuratorFramework) {
+        ((LoggingCuratorFramework) curator).clear();
+      }
+
       log(
         method.operationType,
         Optional.of(paths.size()),
