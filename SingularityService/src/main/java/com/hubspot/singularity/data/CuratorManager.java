@@ -69,7 +69,7 @@ public abstract class CuratorManager {
     CHECK_EXISTS,
     GET_CHILDREN,
     DELETE,
-    WRITE,
+    WRITE
   }
 
   private static class Metrics {

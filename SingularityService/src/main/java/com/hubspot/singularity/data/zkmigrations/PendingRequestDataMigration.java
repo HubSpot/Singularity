@@ -62,7 +62,7 @@ public class PendingRequestDataMigration extends ZkDataMigration {
             pendingRequest.getRequestId(),
             pendingRequest.getDeployId()
           )
-            .getId();
+          .getId();
           LOG.warn(
             "Rewriting path {} to {}",
             childPath,

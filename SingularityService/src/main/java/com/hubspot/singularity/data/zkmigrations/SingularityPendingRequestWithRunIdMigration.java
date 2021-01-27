@@ -71,7 +71,7 @@ public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration
             pendingRequest.getRequestId(),
             pendingRequest.getDeployId()
           )
-            .getId();
+          .getId();
           String rewrittenBasename = String.format(
             "%s%s%s",
             deployKey,
