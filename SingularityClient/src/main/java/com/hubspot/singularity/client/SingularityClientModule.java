@@ -14,6 +14,7 @@ import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
+import com.hubspot.singularity.data.LoggingCuratorFramework;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Optional;
