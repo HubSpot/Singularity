@@ -54,7 +54,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
     @Override
     public void run() {
-      clear();
+      logAndClear();
     }
   }
 
@@ -102,17 +102,17 @@ public class LoggingCuratorFramework implements CuratorFramework {
     counters.put(caller, counter);
   }
 
-  public void clear() {
-    for (String caller : counters.keySet()) {
-      AtomicLong callCount = counters.get(caller);
+  public void logAndClear() {
+    for (Map.Entry<String, AtomicLong> entry : counters.entrySet()) {
+      AtomicLong callCount = entry.getValue();
       LOG.info(
         "{} called ZK {} times in {} milliseconds",
-        caller,
+        entry.getKey(),
         callCount.get(),
         interval
       );
 
-      counters.remove(caller);
+      counters.remove(entry.getKey());
     }
   }
 
