@@ -115,9 +115,9 @@ public class LoggingCuratorFramework implements CuratorFramework {
         callCount.get(),
         INTERVAL
       );
-    }
 
-    COUNTERS.clear();
+      COUNTERS.remove(caller);
+    }
   }
 
   @Override
