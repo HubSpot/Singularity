@@ -169,7 +169,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
       agentId,
       maybeChangeRequest,
       user,
-      SingularityAction.DECOMMISSION_SLAVE
+      SingularityAction.DECOMMISSION_AGENT
     );
   }
 
@@ -206,7 +206,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.freeze(agentId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
+    super.freeze(agentId, maybeChangeRequest, user, SingularityAction.FREEZE_AGENT);
   }
 
   @POST
@@ -244,7 +244,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.activate(agentId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
+    super.activate(agentId, maybeChangeRequest, user, SingularityAction.ACTIVATE_AGENT);
   }
 
   @DELETE

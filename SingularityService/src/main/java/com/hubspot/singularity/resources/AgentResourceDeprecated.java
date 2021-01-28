@@ -173,7 +173,7 @@ public class AgentResourceDeprecated extends AbstractMachineResource<Singularity
       slaveId,
       maybeChangeRequest,
       user,
-      SingularityAction.DECOMMISSION_SLAVE
+      SingularityAction.DECOMMISSION_AGENT
     );
   }
 
@@ -210,7 +210,7 @@ public class AgentResourceDeprecated extends AbstractMachineResource<Singularity
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.freeze(slaveId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
+    super.freeze(slaveId, maybeChangeRequest, user, SingularityAction.FREEZE_AGENT);
   }
 
   @POST
@@ -248,7 +248,7 @@ public class AgentResourceDeprecated extends AbstractMachineResource<Singularity
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    super.activate(slaveId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
+    super.activate(slaveId, maybeChangeRequest, user, SingularityAction.ACTIVATE_AGENT);
   }
 
   @DELETE
