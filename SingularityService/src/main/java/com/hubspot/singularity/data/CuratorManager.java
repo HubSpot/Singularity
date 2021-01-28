@@ -127,11 +127,6 @@ public abstract class CuratorManager {
   protected int getNumChildren(String path) {
     try {
       Stat s = curator.checkExists().forPath(path);
-
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
-      }
-
       if (s != null) {
         return s.getNumChildren();
       }
@@ -145,11 +140,6 @@ public abstract class CuratorManager {
   protected Optional<Stat> checkExists(String path) {
     try {
       Stat stat = curator.checkExists().forPath(path);
-
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
-      }
-
       return Optional.ofNullable(stat);
     } catch (NoNodeException nne) {
       return Optional.empty();
@@ -173,10 +163,6 @@ public abstract class CuratorManager {
     try {
       final List<String> children = curator.getChildren().forPath(root);
       numChildren = children.size();
-
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
-      }
 
       return children;
     } catch (NoNodeException nne) {
@@ -372,28 +358,18 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw new RuntimeException(t);
     } finally {
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
-      }
-
       log(OperationType.GET, Optional.empty(), Optional.<Integer>of(bytes), start, path);
     }
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    Optional<T> data = getData(
+    return getData(
       path,
       Optional.<Stat>empty(),
       transcoder,
       Optional.<ZkCache<T>>empty(),
       Optional.<Boolean>empty()
     );
-
-    if (curator instanceof LoggingCuratorFramework) {
-      ((LoggingCuratorFramework) curator).clear();
-    }
-
-    return data;
   }
 
   protected <T> Optional<T> getData(
@@ -402,19 +378,13 @@ public abstract class CuratorManager {
     ZkCache<T> zkCache,
     boolean shouldCheckExists
   ) {
-    Optional<T> data = getData(
+    return getData(
       path,
       Optional.<Stat>empty(),
       transcoder,
       Optional.of(zkCache),
       Optional.of(shouldCheckExists)
     );
-
-    if (curator instanceof LoggingCuratorFramework) {
-      ((LoggingCuratorFramework) curator).clear();
-    }
-
-    return data;
   }
 
   protected Optional<String> getStringData(String path) {

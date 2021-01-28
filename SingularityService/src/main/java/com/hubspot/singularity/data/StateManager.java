@@ -526,10 +526,6 @@ public class StateManager extends CuratorManager {
       }
     }
 
-    if (curator instanceof LoggingCuratorFramework) {
-      ((LoggingCuratorFramework) curator).clear();
-    }
-
     return states;
   }
 

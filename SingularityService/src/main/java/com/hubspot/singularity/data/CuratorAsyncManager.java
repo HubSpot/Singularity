@@ -607,10 +607,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       checkLatch(latch, pathNameForLogs);
     } finally {
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
-      }
-
       log(
         method.operationType,
         Optional.of(paths.size()),

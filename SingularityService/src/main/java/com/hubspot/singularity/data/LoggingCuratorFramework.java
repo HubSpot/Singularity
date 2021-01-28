@@ -3,6 +3,8 @@ package com.hubspot.singularity.data;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,7 +41,26 @@ import org.slf4j.LoggerFactory;
 
 public class LoggingCuratorFramework implements CuratorFramework {
   private final CuratorFramework curator;
-  private final Map<String, AtomicLong> counters;
+
+  private static final Map<String, AtomicLong> COUNTERS;
+  private static final Timer TIMER;
+  private static final Long INTERVAL = 30L;
+
+  static {
+    COUNTERS = new HashMap<>();
+    TIMER = new Timer();
+    TIMER.schedule(
+      new TimerTask() {
+
+        @Override
+        public void run() {
+          LoggingCuratorFramework.clear();
+        }
+      },
+      INTERVAL,
+      INTERVAL
+    );
+  }
 
   private static final Logger LOG = LoggerFactory.getLogger(
     LoggingCuratorFramework.class
@@ -48,50 +69,55 @@ public class LoggingCuratorFramework implements CuratorFramework {
   @Inject
   public LoggingCuratorFramework(CuratorFramework curator) {
     this.curator = curator;
-    this.counters = new HashMap<>();
   }
 
-  private String getCaller() {
+  private static String getCaller() {
     StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+    long threadId = Thread.currentThread().getId();
 
+    int levelInStack = 1;
     if (
       stackTraceElements[1].getClassName()
         .equals("com.hubspot.singularity.data.CuratorManager") ||
       stackTraceElements[1].getClassName()
         .equals("com.hubspot.singularity.data.CuratorAsyncManager")
     ) {
-      return (
-        stackTraceElements[2].getClassName() +
-        "\'s " +
-        stackTraceElements[2].getMethodName()
-      );
-    } else {
-      return (
-        stackTraceElements[1].getClassName() +
-        "\'s " +
-        stackTraceElements[1].getMethodName()
-      );
+      levelInStack = 2;
     }
+
+    String longClassName = stackTraceElements[levelInStack].getClassName();
+    String className = longClassName.substring(longClassName.lastIndexOf("."));
+
+    return (
+      threadId +
+      ": " +
+      className +
+      "\'s " +
+      stackTraceElements[levelInStack].getMethodName()
+    );
   }
 
   private void setCounter() {
     String caller = getCaller();
-    AtomicLong counter = this.counters.containsKey(caller)
-      ? this.counters.get(caller)
+    AtomicLong counter = COUNTERS.containsKey(caller)
+      ? COUNTERS.get(caller)
       : new AtomicLong(0);
     counter.getAndIncrement();
-    this.counters.put(caller, counter);
+    COUNTERS.put(caller, counter);
   }
 
-  public void clear() {
-    String caller = getCaller();
-    AtomicLong counter = this.counters.containsKey(caller)
-      ? this.counters.get(caller)
-      : new AtomicLong(0);
+  public static void clear() {
+    for (String caller : COUNTERS.keySet()) {
+      AtomicLong callCount = COUNTERS.get(caller);
+      LOG.info(
+        "{} called ZK {} times in {} milliseconds",
+        caller,
+        callCount.get(),
+        INTERVAL
+      );
+    }
 
-    LOG.info("{} called ZK {} times", caller, counter.get());
-
-    this.counters.remove(caller);
+    COUNTERS.clear();
   }
 
   @Override

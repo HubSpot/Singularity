@@ -5,7 +5,6 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.data.LoggingCuratorFramework;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import java.util.List;
@@ -92,10 +91,6 @@ public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration
         } else {
           LOG.warn("Not rewriting znode {}, already correct", originalBasename);
         }
-      }
-
-      if (curator instanceof LoggingCuratorFramework) {
-        ((LoggingCuratorFramework) curator).clear();
       }
     } catch (Exception exn) {
       LOG.error("Connect to Zookeeper failed while running migration", exn);

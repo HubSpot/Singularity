@@ -11,7 +11,6 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.data.LoggingCuratorFramework;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.transcoders.JsonTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -84,10 +83,6 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         LOG.error("Failed to read {}", requestId, t);
         throw new RuntimeException(t);
       }
-    }
-
-    if (curator instanceof LoggingCuratorFramework) {
-      ((LoggingCuratorFramework) curator).clear();
     }
 
     LOG.info("Applied {} in {}", num, JavaUtils.duration(start));
