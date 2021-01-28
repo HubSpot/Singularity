@@ -1011,7 +1011,7 @@ public class RequestResource extends AbstractRequestResource {
     mailer.sendRequestPausedMail(
       requestWithState.getRequest(),
       pauseRequest,
-      user.getEmail()
+      user.getEmail().orElse(user.getId())
     );
 
     requestManager.pause(requestWithState.getRequest(), now, user.getEmail(), message);
@@ -1111,7 +1111,7 @@ public class RequestResource extends AbstractRequestResource {
 
     final long now = requestHelper.unpause(
       requestWithState.getRequest(),
-      user.getEmail(),
+      user.getEmail().orElse(user.getId()),
       message,
       skipHealthchecks
     );
@@ -1636,7 +1636,7 @@ public class RequestResource extends AbstractRequestResource {
       message
     );
 
-    mailer.sendRequestRemovedMail(request, user.getEmail(), message);
+    mailer.sendRequestRemovedMail(request, user.getEmail().orElse(user.getId()), message);
 
     return request;
   }
@@ -1793,7 +1793,7 @@ public class RequestResource extends AbstractRequestResource {
         newRequest,
         Optional.of(scaleRequest),
         oldRequest.getInstances(),
-        user.getEmail()
+        user.getEmail().orElse(user.getId())
       );
     }
 

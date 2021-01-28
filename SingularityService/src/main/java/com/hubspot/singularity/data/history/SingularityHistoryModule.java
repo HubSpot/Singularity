@@ -96,20 +96,20 @@ public class SingularityHistoryModule extends AbstractModule {
   @Singleton
   @Named(LAST_TASK_PERSISTER_SUCCESS)
   public AtomicLong lastTaskPersisterSuccess() {
-    return new AtomicLong();
+    return new AtomicLong(System.currentTimeMillis());
   }
 
   @Provides
   @Singleton
   @Named(LAST_REQUEST_PERSISTER_SUCCESS)
   public AtomicLong lastRequestPersisterSuccess() {
-    return new AtomicLong();
+    return new AtomicLong(System.currentTimeMillis());
   }
 
   @Provides
   @Singleton
   @Named(LAST_DEPLOY_PERSISTER_SUCCESS)
   public AtomicLong lastDeployPersisterSuccess() {
-    return new AtomicLong();
+    return new AtomicLong(System.currentTimeMillis());
   }
 }

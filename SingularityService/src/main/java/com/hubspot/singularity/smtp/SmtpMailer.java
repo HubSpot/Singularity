@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -386,13 +385,12 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final SingularityRequest request,
     final ExtendedTaskState taskState
   ) {
-    if (shouldQueueMail(task, taskId, request, taskState)) {
+    if (shouldQueueMail(taskId, request, taskState)) {
       taskManager.saveTaskFinishedInMailQueue(taskId);
     }
   }
 
   private boolean shouldQueueMail(
-    final Optional<SingularityTask> task,
     final SingularityTaskId taskId,
     final SingularityRequest request,
     final ExtendedTaskState taskState
@@ -480,9 +478,12 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
-    final Optional<String> user = task.isPresent()
-      ? task.get().getTaskRequest().getPendingTask().getUser()
-      : Optional.<String>empty();
+    final String user = task
+      .map(
+        singularityTask ->
+          singularityTask.getTaskRequest().getPendingTask().getUser().orElse("unknown")
+      )
+      .orElse("unknown");
 
     queueMail(emailDestination, request, emailType, user, subject, body);
   }
@@ -570,7 +571,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private void sendRequestMail(
     final SingularityRequest request,
     final RequestMailType type,
-    final Optional<String> user,
+    final String user,
     final Optional<String> message,
     final Optional<Map<String, Object>> additionalProperties
   ) {
@@ -597,7 +598,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private void prepareRequestMail(
     SingularityRequest request,
     RequestMailType type,
-    Optional<String> user,
+    String user,
     Optional<String> message,
     Optional<Map<String, Object>> additionalProperties
   ) {
@@ -624,11 +625,11 @@ public class SmtpMailer implements SingularityMailer, Managed {
     templateProperties.put("requestUnpaused", type == RequestMailType.UNPAUSED);
     templateProperties.put("requestScaled", type == RequestMailType.SCALED);
     templateProperties.put("action", type.name().toLowerCase());
-    templateProperties.put("hasUser", user.isPresent());
+    templateProperties.put("hasUser", user != null);
     templateProperties.put("hasMessage", message.isPresent());
 
-    if (user.isPresent()) {
-      templateProperties.put("user", user.get());
+    if (user != null) {
+      templateProperties.put("user", user);
     }
 
     if (message.isPresent()) {
@@ -670,7 +671,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   public void sendRequestPausedMail(
     SingularityRequest request,
     Optional<SingularityPauseRequest> pauseRequest,
-    Optional<String> user
+    String user
   ) {
     Map<String, Object> additionalProperties = new HashMap<>();
 
@@ -702,7 +703,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   @Override
   public void sendRequestUnpausedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   ) {
     sendRequestMail(
@@ -719,7 +720,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     SingularityRequest request,
     Optional<SingularityScaleRequest> newScaleRequest,
     Optional<Integer> formerInstances,
-    Optional<String> user
+    String user
   ) {
     Map<String, Object> additionalProperties = new HashMap<>();
 
@@ -745,7 +746,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   @Override
   public void sendRequestRemovedMail(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message
   ) {
     sendRequestMail(
@@ -815,7 +816,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       emailDestination,
       request,
       SingularityEmailType.REQUEST_IN_COOLDOWN,
-      Optional.<String>empty(),
+      null,
       subject,
       body
     );
@@ -1039,7 +1040,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final Collection<SingularityEmailDestination> destination,
     final SingularityRequest request,
     final SingularityEmailType emailType,
-    final Optional<String> actionTaker,
+    final String actionTaker,
     String subject,
     String body
   ) {
@@ -1086,16 +1087,11 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
-    if (actionTaker.isPresent() && !Strings.isNullOrEmpty(actionTaker.get())) {
+    if (!Strings.isNullOrEmpty(actionTaker)) {
       if (destination.contains(SingularityEmailDestination.ACTION_TAKER)) {
-        toList.add(actionTaker.get());
+        toList.add(actionTaker);
       } else {
-        final Iterator<String> i = toList.iterator();
-        while (i.hasNext()) {
-          if (actionTaker.get().equalsIgnoreCase(i.next())) {
-            i.remove();
-          }
-        }
+        toList.removeIf(actionTaker::equalsIgnoreCase);
       }
     }
 
