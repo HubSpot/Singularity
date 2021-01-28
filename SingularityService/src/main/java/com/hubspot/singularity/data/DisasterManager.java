@@ -68,20 +68,21 @@ public class DisasterManager extends CuratorAsyncManager {
       new SingularityDisabledAction(
         action,
         String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE),
-        Optional.<String>empty(),
+        Optional.empty(),
         false,
-        Optional.<Long>empty()
+        Optional.empty()
       )
     );
   }
 
   public SingularityCreateResult disable(
-    SingularityAction action,
+    SingularityAction input,
     Optional<String> maybeMessage,
     Optional<SingularityUser> user,
     boolean systemGenerated,
     Optional<Long> expiresAt
   ) {
+    SingularityAction action = mapAction(input);
     if (!action.isCanDisable()) {
       throw new IllegalArgumentException(
         String.format("Action %s cannot be disabled", action)
@@ -90,7 +91,7 @@ public class DisasterManager extends CuratorAsyncManager {
     SingularityDisabledAction disabledAction = new SingularityDisabledAction(
       action,
       String.format(MESSAGE_FORMAT, action, maybeMessage.orElse(DEFAULT_MESSAGE)),
-      user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>empty(),
+      user.map(SingularityUser::getId),
       systemGenerated,
       expiresAt
     );
@@ -99,7 +100,22 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult enable(SingularityAction action) {
-    return delete(getActionPath(action));
+    return delete(getActionPath(mapAction(action)));
+  }
+
+  private SingularityAction mapAction(SingularityAction action) {
+    switch (action) {
+      case FREEZE_SLAVE:
+        return SingularityAction.FREEZE_AGENT;
+      case ACTIVATE_SLAVE:
+        return SingularityAction.ACTIVATE_AGENT;
+      case DECOMMISSION_SLAVE:
+        return SingularityAction.DECOMMISSION_AGENT;
+      case VIEW_SLAVES:
+        return SingularityAction.VIEW_AGENTS;
+      default:
+        return action;
+    }
   }
 
   public List<SingularityDisabledAction> getDisabledActions() {

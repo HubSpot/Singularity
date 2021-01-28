@@ -64,7 +64,7 @@ public class SingularityDeployIT {
         }
       }
 
-      Thread.sleep(2000); // ghetto, i know.
+      Thread.sleep(2000);
     }
 
     assertEquals(Optional.of(DeployState.SUCCEEDED), deployState);
