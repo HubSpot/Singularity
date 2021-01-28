@@ -42,36 +42,32 @@ import org.slf4j.LoggerFactory;
 public class LoggingCuratorFramework implements CuratorFramework {
   private final CuratorFramework curator;
 
-  private static final Map<String, AtomicLong> COUNTERS;
-  private static final Timer TIMER;
-  private static final Long INTERVAL = 30L;
+  private final Map<String, AtomicLong> counters;
 
-  static {
-    COUNTERS = new HashMap<>();
-    TIMER = new Timer();
-    TIMER.schedule(
-      new TimerTask() {
-
-        @Override
-        public void run() {
-          LoggingCuratorFramework.clear();
-        }
-      },
-      INTERVAL,
-      INTERVAL
-    );
-  }
+  private final Long interval = 60000L * 3; // 3 minutes
 
   private static final Logger LOG = LoggerFactory.getLogger(
     LoggingCuratorFramework.class
   );
 
+  private class ClearCounter extends TimerTask {
+
+    @Override
+    public void run() {
+      clear();
+    }
+  }
+
   @Inject
   public LoggingCuratorFramework(CuratorFramework curator) {
     this.curator = curator;
+    counters = new HashMap<>();
+    Timer timer = new Timer();
+
+    timer.schedule(new ClearCounter(), interval, interval);
   }
 
-  private static String getCaller() {
+  private String getCaller() {
     StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
     long threadId = Thread.currentThread().getId();
 
@@ -99,24 +95,24 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   private void setCounter() {
     String caller = getCaller();
-    AtomicLong counter = COUNTERS.containsKey(caller)
-      ? COUNTERS.get(caller)
+    AtomicLong counter = counters.containsKey(caller)
+      ? counters.get(caller)
       : new AtomicLong(0);
     counter.getAndIncrement();
-    COUNTERS.put(caller, counter);
+    counters.put(caller, counter);
   }
 
-  public static void clear() {
-    for (String caller : COUNTERS.keySet()) {
-      AtomicLong callCount = COUNTERS.get(caller);
+  public void clear() {
+    for (String caller : counters.keySet()) {
+      AtomicLong callCount = counters.get(caller);
       LOG.info(
         "{} called ZK {} times in {} milliseconds",
         caller,
         callCount.get(),
-        INTERVAL
+        interval
       );
 
-      COUNTERS.remove(caller);
+      counters.remove(caller);
     }
   }
 

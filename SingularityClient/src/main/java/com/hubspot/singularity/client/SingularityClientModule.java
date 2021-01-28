@@ -14,7 +14,6 @@ import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
-import com.hubspot.singularity.data.LoggingCuratorFramework;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +27,6 @@ public class SingularityClientModule extends AbstractModule {
 
   // bind this instead to provide a curator framework to discover singularity
   public static final String CURATOR_NAME = "singularity.curator";
-  public static final String LOGGING_CURATOR_NAME = "singularity.logging.curator";
 
   // bind this to provide the path for singularity eg: singularity/v2/api
   public static final String CONTEXT_PATH = "singularity.context.path";
@@ -43,11 +41,9 @@ public class SingularityClientModule extends AbstractModule {
 
   private final List<String> hosts;
   private final Optional<HttpConfig> httpConfig;
-  private final boolean useLoggingCuratorFramework; // is there a non-HttpConfig file that I could put this value in?
 
   public SingularityClientModule(HttpConfig httpConfig) {
     this(null, httpConfig);
-    useLoggingCuratorFramework = false;
   }
 
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
@@ -98,13 +94,7 @@ public class SingularityClientModule extends AbstractModule {
   }
 
   public static LinkedBindingBuilder<CuratorFramework> bindCurator(Binder binder) {
-    if (this.useLoggingCuratorFramework) {
-      binder
-        .bind(LoggingCuratorFramework.class)
-        .annotatedWith(Names.named(LOGGING_CURATOR_NAME));
-    } else {
-      return binder.bind(CuratorFramework.class).annotatedWith(Names.named(CURATOR_NAME));
-    }
+    return binder.bind(CuratorFramework.class).annotatedWith(Names.named(CURATOR_NAME));
   }
 
   public static LinkedBindingBuilder<SingularityClientCredentials> bindCredentials(
