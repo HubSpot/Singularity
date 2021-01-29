@@ -1,13 +1,12 @@
 package com.hubspot.singularity.data;
 
 import com.google.inject.Inject;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.curator.CuratorZookeeperClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.WatcherRemoveCuratorFramework;
@@ -42,7 +41,7 @@ import org.slf4j.LoggerFactory;
 public class LoggingCuratorFramework implements CuratorFramework {
   private final CuratorFramework curator;
 
-  private final Map<String, AtomicLong> counters;
+  private final ConcurrentMap<String, Integer> counters;
 
   private final Long interval = 60000L * 3; // 3 minutes
 
@@ -61,7 +60,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
   @Inject
   public LoggingCuratorFramework(CuratorFramework curator) {
     this.curator = curator;
-    counters = new HashMap<>();
+    counters = new ConcurrentHashMap<>();
     Timer timer = new Timer();
 
     timer.schedule(new ClearCounter(), interval, interval);
@@ -71,18 +70,23 @@ public class LoggingCuratorFramework implements CuratorFramework {
     StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
     long threadId = Thread.currentThread().getId();
 
-    int levelInStack = 1;
-    if (
-      stackTraceElements[1].getClassName()
-        .equals("com.hubspot.singularity.data.CuratorManager") ||
-      stackTraceElements[1].getClassName()
-        .equals("com.hubspot.singularity.data.CuratorAsyncManager")
-    ) {
-      levelInStack = 2;
-    }
+    int levelInStack = 0;
+    String className = "";
+    for (int i = 0; i < stackTraceElements.length; i++) {
+      String longClassName = stackTraceElements[levelInStack].getClassName();
+      className = longClassName.substring(longClassName.lastIndexOf("."));
 
-    String longClassName = stackTraceElements[levelInStack].getClassName();
-    String className = longClassName.substring(longClassName.lastIndexOf("."));
+      if (
+        !stackTraceElements[i].getClassName().equals("LoggingCuratorFramework") &&
+        (
+          !stackTraceElements[i].getClassName().equals("CuratorManager") ||
+          !stackTraceElements[i].getClassName().equals("CuratorAsyncManager")
+        )
+      ) {
+        levelInStack = i;
+        break;
+      }
+    }
 
     return (
       threadId +
@@ -95,25 +99,18 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   private void setCounter() {
     String caller = getCaller();
-    AtomicLong counter = counters.containsKey(caller)
-      ? counters.get(caller)
-      : new AtomicLong(0);
-    counter.getAndIncrement();
-    counters.put(caller, counter);
+    int counter = counters.getOrDefault(caller, 0);
+    counters.put(caller, ++counter);
   }
 
   public void logAndClear() {
-    for (Map.Entry<String, AtomicLong> entry : counters.entrySet()) {
-      AtomicLong callCount = entry.getValue();
-      LOG.info(
-        "{} called ZK {} times in {} milliseconds",
-        entry.getKey(),
-        callCount.get(),
-        interval
-      );
+    counters.forEach(
+      (caller, count) -> {
+        LOG.info("{} called ZK {} times in {} milliseconds", caller, count, interval);
 
-      counters.remove(entry.getKey());
-    }
+        counters.remove(caller);
+      }
+    );
   }
 
   @Override
