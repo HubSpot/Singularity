@@ -77,12 +77,10 @@ public class LoggingCuratorFramework implements CuratorFramework {
       className = longClassName.substring(longClassName.lastIndexOf(".") + 1);
 
       if (
-        !stackTraceElements[i].getClassName().equals("Thread") &&
-        !stackTraceElements[i].getClassName().equals("LoggingCuratorFramework") &&
-        (
-          !stackTraceElements[i].getClassName().equals("CuratorManager") ||
-          !stackTraceElements[i].getClassName().equals("CuratorAsyncManager")
-        )
+        !className.equals("Thread") &&
+        !className.equals("LoggingCuratorFramework") &&
+        !className.equals("CuratorManager") &&
+        !className.equals("CuratorAsyncManager")
       ) {
         levelInStack = i;
         break;
