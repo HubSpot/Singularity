@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
@@ -68,6 +69,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   private String getCaller() {
     StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+    LOG.info("stackTraceElements: {}", Arrays.toString(stackTraceElements));
     long threadId = Thread.currentThread().getId();
 
     int levelInStack = 0;
@@ -77,9 +79,9 @@ public class LoggingCuratorFramework implements CuratorFramework {
       className = longClassName.substring(longClassName.lastIndexOf(".") + 1);
 
       if (
-        !className.equals("Thread") &&
-        !className.equals("LoggingCuratorFramework") &&
-        !className.equals("CuratorManager") &&
+        !className.equals("Thread") ||
+        !className.equals("LoggingCuratorFramework") ||
+        !className.equals("CuratorManager") ||
         !className.equals("CuratorAsyncManager")
       ) {
         levelInStack = i;
