@@ -25,10 +25,18 @@ public enum SingularityAction {
   DISABLE_ACTION(false),
   ENABLE_ACTION(false),
   VIEW_DISASTERS(false),
+  @Deprecated
   FREEZE_SLAVE(true),
+  FREEZE_AGENT(true),
+  @Deprecated
   ACTIVATE_SLAVE(true),
+  ACTIVATE_AGENT(true),
+  @Deprecated
   DECOMMISSION_SLAVE(true),
+  DECOMMISSION_AGENT(true),
+  @Deprecated
   VIEW_SLAVES(false),
+  VIEW_AGENTS(false),
   FREEZE_RACK(true),
   ACTIVATE_RACK(true),
   DECOMMISSION_RACK(true),
