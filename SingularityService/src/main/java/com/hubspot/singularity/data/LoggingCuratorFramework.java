@@ -69,7 +69,6 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   private String getCaller() {
     StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-    LOG.info("stackTraceElements: {}", Arrays.toString(stackTraceElements));
     long threadId = Thread.currentThread().getId();
 
     int levelInStack = 0;
