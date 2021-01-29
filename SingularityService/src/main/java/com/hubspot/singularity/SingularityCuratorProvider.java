@@ -44,6 +44,7 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
       .build();
 
     if (configuration.useLoggingCuratorFramework()) {
+      LOG.info("Using the LoggingCuratorFramework");
       tempCuratorFramework = new LoggingCuratorFramework(tempCuratorFramework);
     }
 
