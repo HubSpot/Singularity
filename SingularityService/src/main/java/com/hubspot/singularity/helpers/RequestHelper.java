@@ -25,7 +25,6 @@ import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -77,7 +76,7 @@ public class RequestHelper {
 
   public long unpause(
     SingularityRequest request,
-    Optional<String> user,
+    String user,
     Optional<String> message,
     Optional<Boolean> skipHealthchecks
   ) {
@@ -87,7 +86,7 @@ public class RequestHelper {
 
     final long now = System.currentTimeMillis();
 
-    requestManager.unpause(request, now, user, message);
+    requestManager.unpause(request, now, Optional.of(user), message);
 
     if (maybeDeployId.isPresent() && !request.isOneOff()) {
       requestManager.addToPendingQueue(
@@ -95,7 +94,7 @@ public class RequestHelper {
           request.getId(),
           maybeDeployId.get(),
           now,
-          user,
+          Optional.of(user),
           PendingType.UNPAUSED,
           skipHealthchecks,
           message
