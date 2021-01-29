@@ -74,7 +74,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
     int levelInStack = 0;
     String className = "";
     for (int i = 0; i < stackTraceElements.length; i++) {
-      String longClassName = stackTraceElements[levelInStack].getClassName();
+      String longClassName = stackTraceElements[i].getClassName();
       className = longClassName.substring(longClassName.lastIndexOf(".") + 1);
 
       if (
