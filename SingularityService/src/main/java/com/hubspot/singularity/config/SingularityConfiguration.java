@@ -434,7 +434,7 @@ public class SingularityConfiguration extends Configuration {
   // Instructs this instance to not contend for leadership. It will only serve api calls
   private boolean readOnlyInstance = false;
 
-  private boolean useLoggingCuratorFramework = true;
+  private boolean useLoggingCuratorFramework = false;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
