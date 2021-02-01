@@ -2038,6 +2038,6 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public boolean useLoggingCuratorFramework() {
-    return false;
+    return true;
   }
 }
