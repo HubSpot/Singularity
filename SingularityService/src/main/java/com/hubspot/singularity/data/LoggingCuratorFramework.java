@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data;
 
 import com.google.inject.Inject;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.curator.CuratorZookeeperClient;
 import org.apache.curator.framework.CuratorFramework;
@@ -43,13 +43,15 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   private final ConcurrentMap<String, Integer> counters;
 
-  private final Long interval = 60000L * 3; // 3 minutes
+  private final Long interval = 3L;
 
   private static final Logger LOG = LoggerFactory.getLogger(
     LoggingCuratorFramework.class
   );
 
-  private class ClearCounter extends TimerTask {
+  private final ScheduledExecutorService executorService;
+
+  private class ClearCounter implements Runnable {
 
     @Override
     public void run() {
@@ -58,12 +60,20 @@ public class LoggingCuratorFramework implements CuratorFramework {
   }
 
   @Inject
-  public LoggingCuratorFramework(CuratorFramework curator) {
+  public LoggingCuratorFramework(
+    CuratorFramework curator,
+    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
+  ) {
     this.curator = curator;
     counters = new ConcurrentHashMap<>();
-    Timer timer = new Timer();
 
-    timer.schedule(new ClearCounter(), interval, interval);
+    this.executorService = executorServiceFactory.get("logging-curator-framework");
+    this.executorService.scheduleAtFixedRate(
+        new ClearCounter(),
+        interval,
+        interval,
+        TimeUnit.MINUTES
+      );
   }
 
   private String getCaller() {
@@ -98,16 +108,15 @@ public class LoggingCuratorFramework implements CuratorFramework {
     );
   }
 
-  private void setCounter() {
+  private void incCounter() {
     String caller = getCaller();
-    int counter = counters.getOrDefault(caller, 0);
-    counters.put(caller, ++counter);
+    counters.compute(caller, (k, v) -> v == null ? 1 : v + 1);
   }
 
   public void logAndClear() {
     counters.forEach(
       (caller, count) -> {
-        LOG.info("{} called ZK {} times in {} milliseconds", caller, count, interval);
+        LOG.info("{} called ZK {} times in {} minutes", caller, count, interval);
 
         counters.remove(caller);
       }
@@ -126,7 +135,6 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   @Override
   public CuratorFrameworkState getState() {
-    setCounter();
     return curator.getState();
   }
 
@@ -142,19 +150,18 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   @Override
   public DeleteBuilder delete() {
-    setCounter();
     return curator.delete();
   }
 
   @Override
   public ExistsBuilder checkExists() {
-    setCounter();
+    incCounter();
     return curator.checkExists();
   }
 
   @Override
   public GetDataBuilder getData() {
-    setCounter();
+    incCounter();
     return curator.getData();
   }
 
@@ -165,7 +172,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   @Override
   public GetChildrenBuilder getChildren() {
-    setCounter();
+    incCounter();
     return curator.getChildren();
   }
 
