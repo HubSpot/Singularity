@@ -55,7 +55,11 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
     @Override
     public void run() {
-      logAndClear();
+      try {
+        logAndClear();
+      } catch (Exception e) {
+        LOG.error("Failed to log and clear ZooKeeper calls", e);
+      }
     }
   }
 
@@ -118,7 +122,7 @@ public class LoggingCuratorFramework implements CuratorFramework {
       (caller, count) -> {
         LOG.info("{} called ZK {} times in {} minutes", caller, count, interval);
 
-        counters.remove(caller);
+        counters.put(caller, 0);
       }
     );
   }
