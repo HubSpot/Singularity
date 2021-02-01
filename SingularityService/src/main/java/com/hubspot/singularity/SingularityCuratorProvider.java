@@ -22,7 +22,10 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
   private final CuratorFramework curatorFramework;
 
   @Inject
-  public SingularityCuratorProvider(final SingularityConfiguration configuration) {
+  public SingularityCuratorProvider(
+    final SingularityConfiguration configuration,
+    final SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
+  ) {
     checkNotNull(configuration, "configuration is null");
 
     ZooKeeperConfiguration zookeeperConfig = configuration.getZooKeeperConfiguration();
@@ -44,8 +47,8 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
       .build();
 
     if (configuration.useLoggingCuratorFramework()) {
-      LOG.info("Using the LoggingCuratorFramework");
-      tempCuratorFramework = new LoggingCuratorFramework(tempCuratorFramework);
+      tempCuratorFramework =
+        new LoggingCuratorFramework(tempCuratorFramework, executorServiceFactory);
     }
 
     this.curatorFramework = tempCuratorFramework;
