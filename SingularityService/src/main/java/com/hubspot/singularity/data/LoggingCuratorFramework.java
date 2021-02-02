@@ -39,29 +39,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LoggingCuratorFramework implements CuratorFramework {
-  private final CuratorFramework curator;
-
-  private final ConcurrentMap<String, Integer> counters;
-
-  private final Long interval = 3L;
-
+  private static final Long FLUSH_INTERVAL = 3L;
   private static final Logger LOG = LoggerFactory.getLogger(
     LoggingCuratorFramework.class
   );
 
+  private final CuratorFramework curator;
+
+  private final ConcurrentMap<String, Integer> counters;
+
   private final ScheduledExecutorService executorService;
-
-  private class ClearCounter implements Runnable {
-
-    @Override
-    public void run() {
-      try {
-        logAndClear();
-      } catch (Exception e) {
-        LOG.error("Failed to log and clear ZooKeeper calls", e);
-      }
-    }
-  }
 
   @Inject
   public LoggingCuratorFramework(
@@ -73,9 +60,9 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
     this.executorService = executorServiceFactory.get("logging-curator-framework");
     this.executorService.scheduleAtFixedRate(
-        new ClearCounter(),
-        interval,
-        interval,
+        this::logAndClear,
+        FLUSH_INTERVAL,
+        FLUSH_INTERVAL,
         TimeUnit.MINUTES
       );
   }
@@ -118,13 +105,17 @@ public class LoggingCuratorFramework implements CuratorFramework {
   }
 
   public void logAndClear() {
-    counters.forEach(
-      (caller, count) -> {
-        LOG.info("{} called ZK {} times in {} minutes", caller, count, interval);
+    try {
+      counters.forEach(
+        (caller, count) -> {
+          LOG.info("{} called ZK {} times in {} minutes", caller, count, FLUSH_INTERVAL);
 
-        counters.put(caller, 0);
-      }
-    );
+          counters.put(caller, 0);
+        }
+      );
+    } catch (Exception e) {
+      LOG.error("Failed to log and clear ZooKeeper call counts", e);
+    }
   }
 
   @Override
