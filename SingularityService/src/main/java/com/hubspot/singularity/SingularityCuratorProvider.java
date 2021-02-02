@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.data.LoggingCuratorFramework;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import org.apache.curator.framework.CuratorFramework;
@@ -21,27 +22,36 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
   private final CuratorFramework curatorFramework;
 
   @Inject
-  public SingularityCuratorProvider(final SingularityConfiguration configuration) {
+  public SingularityCuratorProvider(
+    final SingularityConfiguration configuration,
+    final SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
+  ) {
     checkNotNull(configuration, "configuration is null");
 
     ZooKeeperConfiguration zookeeperConfig = configuration.getZooKeeperConfiguration();
 
-    this.curatorFramework =
-      CuratorFrameworkFactory
-        .builder()
-        .defaultData(null)
-        .connectionStateErrorPolicy(new SessionConnectionStateErrorPolicy())
-        .sessionTimeoutMs(zookeeperConfig.getSessionTimeoutMillis())
-        .connectionTimeoutMs(zookeeperConfig.getConnectTimeoutMillis())
-        .connectString(zookeeperConfig.getQuorum())
-        .retryPolicy(
-          new ExponentialBackoffRetry(
-            zookeeperConfig.getRetryBaseSleepTimeMilliseconds(),
-            zookeeperConfig.getRetryMaxTries()
-          )
+    CuratorFramework tempCuratorFramework = CuratorFrameworkFactory
+      .builder()
+      .defaultData(null)
+      .connectionStateErrorPolicy(new SessionConnectionStateErrorPolicy())
+      .sessionTimeoutMs(zookeeperConfig.getSessionTimeoutMillis())
+      .connectionTimeoutMs(zookeeperConfig.getConnectTimeoutMillis())
+      .connectString(zookeeperConfig.getQuorum())
+      .retryPolicy(
+        new ExponentialBackoffRetry(
+          zookeeperConfig.getRetryBaseSleepTimeMilliseconds(),
+          zookeeperConfig.getRetryMaxTries()
         )
-        .namespace(zookeeperConfig.getZkNamespace())
-        .build();
+      )
+      .namespace(zookeeperConfig.getZkNamespace())
+      .build();
+
+    if (configuration.useLoggingCuratorFramework()) {
+      tempCuratorFramework =
+        new LoggingCuratorFramework(tempCuratorFramework, executorServiceFactory);
+    }
+
+    this.curatorFramework = tempCuratorFramework;
   }
 
   @Override
