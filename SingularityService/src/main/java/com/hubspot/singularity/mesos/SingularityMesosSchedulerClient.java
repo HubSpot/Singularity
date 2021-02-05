@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -75,6 +76,7 @@ public class SingularityMesosSchedulerClient {
   private FrameworkID frameworkId;
   private AwaitableSubscription openStream;
   private Thread subscriberThread;
+  private SingularityMesosScheduler scheduler;
 
   @Inject
   public SingularityMesosSchedulerClient(
@@ -227,6 +229,7 @@ public class SingularityMesosSchedulerClient {
       .build();
 
     MesosClientBuilder<Call, Event> subscribe = clientBuilder.subscribe(subscribeCall);
+    this.scheduler = scheduler;
 
     subscribe.processStream(
       unicastEvents -> {
@@ -366,30 +369,29 @@ public class SingularityMesosSchedulerClient {
         SinkOperations.create(
           call,
           () -> LOG.debug("Finished {} call to mesos", call.getType()),
-          t -> {
-            LOG.error(
-              "Exception calling mesos ({} so far)",
-              failedMesosCalls.incrementAndGet(),
-              t
-            );
-            if (
-              t instanceof Mesos4xxException &&
-              t
-                .getMessage()
-                .equals(
-                  "Error while trying to send request. Status: 403 Message: \'Framework is not subscribed\'"
-                )
-            ) {
-              executorService.execute(
-                () -> {
-                  throw new PrematureChannelClosureException();
-                }
-              );
-            }
-          }
+          this::checkAndReconnect
         )
       )
     );
+  }
+
+  public CompletableFuture<Void> checkAndReconnect(Throwable t) {
+    LOG.error(
+      "Exception calling mesos ({} so far)",
+      failedMesosCalls.incrementAndGet(),
+      t
+    );
+
+    String message = t.getMessage();
+
+    if (t instanceof Mesos4xxException && message.contains("403")) {
+      return CompletableFuture.runAsync(
+        () -> scheduler.onUncaughtException(new PrematureChannelClosureException()),
+        executorService
+      );
+    }
+
+    return CompletableFuture.completedFuture(null);
   }
 
   private void sendCall(Call.Builder b, Type t) {
