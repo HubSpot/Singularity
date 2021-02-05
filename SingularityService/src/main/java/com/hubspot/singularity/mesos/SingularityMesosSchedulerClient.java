@@ -196,7 +196,8 @@ public class SingularityMesosSchedulerClient {
     URI mesosMasterURI,
     FrameworkInfo frameworkInfo,
     SingularityMesosScheduler scheduler
-  ) throws URISyntaxException {
+  )
+    throws URISyntaxException {
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder
       .schedulerUsingProtos()
       .mesosUri(mesosMasterURI)
