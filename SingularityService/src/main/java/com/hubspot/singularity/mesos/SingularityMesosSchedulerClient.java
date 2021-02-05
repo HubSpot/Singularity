@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
-import com.hubspot.mesos.rx.java.Mesos4xxException;
 import com.hubspot.mesos.rx.java.MesosClient;
 import com.hubspot.mesos.rx.java.MesosClientBuilder;
 import com.hubspot.mesos.rx.java.SinkOperation;
@@ -375,24 +374,28 @@ public class SingularityMesosSchedulerClient {
     );
   }
 
-  public void checkAndReconnect(Throwable t) {
+  public CompletableFuture<Void> checkAndReconnect(Throwable t) {
     LOG.error(
       "Exception calling mesos ({} so far)",
       failedMesosCalls.incrementAndGet(),
       t
     );
 
+    String message = t.getMessage();
+
     if (
-      t
-        .getMessage()
-        .equals(
-          "Error while trying to send request. Status: 403 Message: \'Framework is not subscribed\'"
-        )
+      message != null &&
+      message.equals(
+        "Error while trying to send request. Status: 403 Message: \'Framework is not subscribed\'"
+      )
     ) {
-      executorService.submit(
-        () -> scheduler.onUncaughtException(new PrematureChannelClosureException())
+      return CompletableFuture.runAsync(
+        () -> scheduler.onUncaughtException(new PrematureChannelClosureException()),
+        executorService
       );
     }
+
+    return CompletableFuture.completedFuture(null);
   }
 
   private void sendCall(Call.Builder b, Type t) {
