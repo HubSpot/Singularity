@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.hubspot.mesos.rx.java.MesosException;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import java.lang.reflect.Field;
@@ -16,7 +17,6 @@ import org.mockito.invocation.InvocationOnMock;
 public class SingularityMesosSchedulerClientTest {
   private SingularityMesosSchedulerClient client;
   private ExecutorService executorService;
-  private Exception exception;
   private SingularityMesosScheduler scheduler;
 
   @BeforeEach
@@ -38,7 +38,6 @@ public class SingularityMesosSchedulerClientTest {
       );
 
     scheduler = Mockito.mock(SingularityMesosScheduler.class);
-    exception = Mockito.mock(Exception.class);
 
     try {
       Field schedulerField =
@@ -52,6 +51,8 @@ public class SingularityMesosSchedulerClientTest {
 
   @Test
   public void itCheckAndReconnectThrowsException() {
+    MesosException exception = Mockito.mock(MesosException.class);
+
     doAnswer(
         (InvocationOnMock invocation) -> {
           ((Runnable) invocation.getArguments()[0]).run();
@@ -73,6 +74,8 @@ public class SingularityMesosSchedulerClientTest {
 
   @Test
   public void itCheckAndReconnectDoesNotThrowsException() {
+    RuntimeException exception = Mockito.mock(RuntimeException.class);
+
     Mockito.when(exception.getMessage()).thenReturn(null);
     client.checkAndReconnect(exception).join();
 

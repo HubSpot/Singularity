@@ -7,6 +7,7 @@ import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
 import com.hubspot.mesos.rx.java.MesosClient;
 import com.hubspot.mesos.rx.java.MesosClientBuilder;
+import com.hubspot.mesos.rx.java.MesosException;
 import com.hubspot.mesos.rx.java.SinkOperation;
 import com.hubspot.mesos.rx.java.SinkOperations;
 import com.hubspot.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
@@ -195,8 +196,7 @@ public class SingularityMesosSchedulerClient {
     URI mesosMasterURI,
     FrameworkInfo frameworkInfo,
     SingularityMesosScheduler scheduler
-  )
-    throws URISyntaxException {
+  ) throws URISyntaxException {
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder
       .schedulerUsingProtos()
       .mesosUri(mesosMasterURI)
@@ -383,12 +383,7 @@ public class SingularityMesosSchedulerClient {
 
     String message = t.getMessage();
 
-    if (
-      message != null &&
-      message.equals(
-        "Error while trying to send request. Status: 403 Message: \'Framework is not subscribed\'"
-      )
-    ) {
+    if (t instanceof MesosException && message.contains("403")) {
       return CompletableFuture.runAsync(
         () -> scheduler.onUncaughtException(new PrematureChannelClosureException()),
         executorService
