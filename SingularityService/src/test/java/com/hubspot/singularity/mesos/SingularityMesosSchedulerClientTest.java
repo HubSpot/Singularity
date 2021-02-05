@@ -3,10 +3,12 @@ package com.hubspot.singularity.mesos;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.hubspot.mesos.rx.java.MesosException;
+import com.hubspot.mesos.rx.java.Mesos4xxException;
+import com.hubspot.mesos.rx.java.MesosClientErrorContext;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +53,10 @@ public class SingularityMesosSchedulerClientTest {
 
   @Test
   public void itCheckAndReconnectThrowsException() {
-    MesosException exception = Mockito.mock(MesosException.class);
+    Mesos4xxException exception = new Mesos4xxException(
+      new Object(),
+      new MesosClientErrorContext(403, "Framework not subscribed", new ArrayList<>())
+    );
 
     doAnswer(
         (InvocationOnMock invocation) -> {
@@ -61,12 +66,6 @@ public class SingularityMesosSchedulerClientTest {
       )
       .when(executorService)
       .execute(any(Runnable.class));
-
-    Mockito
-      .when(exception.getMessage())
-      .thenReturn(
-        "Error while trying to send request. Status: 403 Message: \'Framework is not subscribed\'"
-      );
     client.checkAndReconnect(exception).join();
 
     verify(scheduler, times(1)).onUncaughtException(any());
@@ -74,7 +73,7 @@ public class SingularityMesosSchedulerClientTest {
 
   @Test
   public void itCheckAndReconnectDoesNotThrowsException() {
-    RuntimeException exception = Mockito.mock(RuntimeException.class);
+    RuntimeException exception = new RuntimeException();
 
     Mockito.when(exception.getMessage()).thenReturn(null);
     client.checkAndReconnect(exception).join();

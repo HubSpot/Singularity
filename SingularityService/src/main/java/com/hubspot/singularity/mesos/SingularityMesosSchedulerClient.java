@@ -5,9 +5,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
+import com.hubspot.mesos.rx.java.Mesos4xxException;
 import com.hubspot.mesos.rx.java.MesosClient;
 import com.hubspot.mesos.rx.java.MesosClientBuilder;
-import com.hubspot.mesos.rx.java.MesosException;
 import com.hubspot.mesos.rx.java.SinkOperation;
 import com.hubspot.mesos.rx.java.SinkOperations;
 import com.hubspot.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
@@ -383,7 +383,7 @@ public class SingularityMesosSchedulerClient {
 
     String message = t.getMessage();
 
-    if (t instanceof MesosException && message.contains("403")) {
+    if (t instanceof Mesos4xxException && message.contains("403")) {
       return CompletableFuture.runAsync(
         () -> scheduler.onUncaughtException(new PrematureChannelClosureException()),
         executorService
