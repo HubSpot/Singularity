@@ -5,22 +5,27 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
+import com.hubspot.mesos.rx.java.Mesos4xxException;
 import com.hubspot.mesos.rx.java.MesosClient;
 import com.hubspot.mesos.rx.java.MesosClientBuilder;
 import com.hubspot.mesos.rx.java.SinkOperation;
 import com.hubspot.mesos.rx.java.SinkOperations;
 import com.hubspot.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
 import com.hubspot.mesos.rx.java.util.UserAgentEntries;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.resources.ui.UiResource;
+import io.netty.handler.codec.PrematureChannelClosureException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ExecutorID;
@@ -65,11 +70,13 @@ public class SingularityMesosSchedulerClient {
   private final MesosConfiguration mesosConfiguration;
   private final String singularityUriBase;
   private final AtomicLong failedMesosCalls;
+  private final ExecutorService executorService;
 
   private SerializedSubject<Optional<SinkOperation<Call>>, Optional<SinkOperation<Call>>> publisher;
   private FrameworkID frameworkId;
   private AwaitableSubscription openStream;
   private Thread subscriberThread;
+  private SingularityMesosScheduler scheduler;
 
   @Inject
   public SingularityMesosSchedulerClient(
@@ -77,12 +84,15 @@ public class SingularityMesosSchedulerClient {
     @Named(
       SingularityServiceUIModule.SINGULARITY_URI_BASE
     ) final String singularityUriBase,
-    @Named(SingularityMesosModule.FAILED_MESOS_CALLS) AtomicLong failedMesosCalls
+    @Named(SingularityMesosModule.FAILED_MESOS_CALLS) AtomicLong failedMesosCalls,
+    SingularityManagedThreadPoolFactory executorServiceFactory
   ) {
     this.configuration = configuration;
     this.mesosConfiguration = configuration.getMesosConfiguration();
     this.singularityUriBase = singularityUriBase;
     this.failedMesosCalls = failedMesosCalls;
+    this.executorService =
+      executorServiceFactory.get("singularity-mesos-scheduler-client", 1);
   }
 
   /**
@@ -219,6 +229,7 @@ public class SingularityMesosSchedulerClient {
       .build();
 
     MesosClientBuilder<Call, Event> subscribe = clientBuilder.subscribe(subscribeCall);
+    this.scheduler = scheduler;
 
     subscribe.processStream(
       unicastEvents -> {
@@ -358,16 +369,29 @@ public class SingularityMesosSchedulerClient {
         SinkOperations.create(
           call,
           () -> LOG.debug("Finished {} call to mesos", call.getType()),
-          t -> {
-            LOG.error(
-              "Exception calling mesos ({} so far)",
-              failedMesosCalls.incrementAndGet(),
-              t
-            );
-          }
+          this::checkAndReconnect
         )
       )
     );
+  }
+
+  public CompletableFuture<Void> checkAndReconnect(Throwable t) {
+    LOG.error(
+      "Exception calling mesos ({} so far)",
+      failedMesosCalls.incrementAndGet(),
+      t
+    );
+
+    String message = t.getMessage();
+
+    if (t instanceof Mesos4xxException && message.contains("403")) {
+      return CompletableFuture.runAsync(
+        () -> scheduler.onUncaughtException(new PrematureChannelClosureException()),
+        executorService
+      );
+    }
+
+    return CompletableFuture.completedFuture(null);
   }
 
   private void sendCall(Call.Builder b, Type t) {
