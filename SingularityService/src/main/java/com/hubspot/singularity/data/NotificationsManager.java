@@ -42,7 +42,7 @@ public class NotificationsManager extends CuratorManager {
 
   public void unsubscribe(String email) {
     if (configuration.isOptInEmailMode()) {
-      addToAllowlist(email);
+      removeFromAllowlist(email);
     } else {
       addToBlocklist(email);
     }
@@ -50,7 +50,7 @@ public class NotificationsManager extends CuratorManager {
 
   public void subscribe(String email) {
     if (configuration.isOptInEmailMode()) {
-      removeFromAllowlist(email);
+      addToAllowlist(email);
     } else {
       removeFromBlocklist(email);
     }
