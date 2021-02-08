@@ -437,6 +437,9 @@ public class SingularityConfiguration extends Configuration {
   // Audits the usage of ZooKeeper
   private boolean useLoggingCuratorFramework = false;
 
+  // Defines whether to use a blocklist or allowlist for Singularity emails
+  private boolean optInEmailMode = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2046,5 +2049,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setUseLoggingCuratorFramework(boolean useLoggingCuratorFramework) {
     this.useLoggingCuratorFramework = useLoggingCuratorFramework;
+  }
+
+  public boolean isOptInEmailMode() {
+    return optInEmailMode;
+  }
+
+  public void setOptInEmailMode(boolean optInEmailMode) {
+    this.optInEmailMode = optInEmailMode;
   }
 }

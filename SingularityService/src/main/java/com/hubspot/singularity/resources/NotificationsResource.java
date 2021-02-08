@@ -49,6 +49,13 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
     return notificationsManager.getBlocklist();
   }
 
+  @GET
+  @Path("/allowlist")
+  @Operation(summary = "Retrieve the list of emails subscribed to Singularity")
+  public List<String> getAllowlist(@Parameter(hidden = true) @Auth SingularityUser user) {
+    return notificationsManager.getAllowlist();
+  }
+
   @POST
   @Path("/unsubscribe")
   @Operation(summary = "Unsubscribe from Singularity emails.")
@@ -65,7 +72,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       Void.class,
       email,
       () -> {
-        notificationsManager.addToBlocklist(getFormattedEmail(email));
+        notificationsManager.unsubscribe(getFormattedEmail(email));
         return null;
       }
     );
@@ -73,12 +80,12 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
 
   @POST
   @Path("/subscribe")
-  @Operation(summary = "Delete an unsubscription for an email address")
+  @Operation(summary = "Subscribe to Singularity emails")
   public void subscribe(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @RequestBody(
       required = true,
-      description = "The email address to re-subscribe"
+      description = "The email address to subscribe"
     ) String email,
     @Context HttpServletRequest requestContext
   ) {
@@ -87,7 +94,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
       Void.class,
       email,
       () -> {
-        notificationsManager.removeFromBlocklist(getFormattedEmail(email));
+        notificationsManager.subscribe(getFormattedEmail(email));
         return null;
       }
     );

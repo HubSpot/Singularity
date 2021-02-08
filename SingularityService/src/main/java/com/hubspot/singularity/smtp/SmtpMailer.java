@@ -1095,9 +1095,15 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
-    Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlocklist());
-    toList.removeAll(emailBlacklist);
-    ccList.removeAll(emailBlacklist);
+    if (configuration.isOptInEmailMode()) {
+      Set<String> emailAllowlist = Sets.newHashSet(notificationsManager.getAllowlist());
+      toList.retainAll(emailAllowlist);
+      ccList.retainAll(emailAllowlist);
+    } else {
+      Set<String> emailBlocklist = Sets.newHashSet(notificationsManager.getBlocklist());
+      toList.removeAll(emailBlocklist);
+      ccList.removeAll(emailBlocklist);
+    }
 
     smtpSender.queueMail(
       Lists.newArrayList(toList),
