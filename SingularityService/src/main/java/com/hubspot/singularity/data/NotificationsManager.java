@@ -41,19 +41,13 @@ public class NotificationsManager extends CuratorManager {
   }
 
   public void unsubscribe(String email) {
-    if (configuration.isOptInEmailMode()) {
-      removeFromAllowlist(email);
-    } else {
-      addToBlocklist(email);
-    }
+    removeFromAllowlist(email);
+    addToBlocklist(email);
   }
 
   public void subscribe(String email) {
-    if (configuration.isOptInEmailMode()) {
-      addToAllowlist(email);
-    } else {
-      removeFromBlocklist(email);
-    }
+    addToAllowlist(email);
+    removeFromBlocklist(email);
   }
 
   public void addToBlocklist(String email) {
