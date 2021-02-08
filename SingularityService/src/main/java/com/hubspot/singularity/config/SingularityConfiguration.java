@@ -438,7 +438,7 @@ public class SingularityConfiguration extends Configuration {
   private boolean useLoggingCuratorFramework = false;
 
   // Defines whether to use a blocklist or allowlist for Singularity emails
-  private boolean optInEmailMode = false;
+  private boolean optInEmailMode = true;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
