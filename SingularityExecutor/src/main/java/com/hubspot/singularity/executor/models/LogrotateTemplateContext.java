@@ -93,7 +93,7 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate (non-hourly). If these do not exist logrotate will continue without error.
+   * Extra files for logrotate to rotate (less frequent than hourly). If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFiles() {
@@ -109,7 +109,7 @@ public class LogrotateTemplateContext {
 
   /**
    * Extra files for logrotate to rotate hourly or .
-   * Since we don't want to rely on native `hourly` support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
+   * Since we don't want to rely on native `hourly` (or more frequent) support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
    * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
