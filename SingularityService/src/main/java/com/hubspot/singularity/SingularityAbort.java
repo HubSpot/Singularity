@@ -10,6 +10,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.managed.SingularityLifecycleManaged;
+import com.hubspot.singularity.managed.SingularityPreJettyLifecycle;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import java.io.PrintWriter;
@@ -72,7 +73,11 @@ public class SingularityAbort {
         SingularityLifecycleManaged lifecycle = injector.getInstance(
           SingularityLifecycleManaged.class
         );
+        SingularityPreJettyLifecycle preJettyLifecycle = injector.getInstance(
+          SingularityPreJettyLifecycle.class
+        );
         try {
+          preJettyLifecycle.stop();
           lifecycle.stop();
         } catch (Throwable t) {
           LOG.error("While shutting down", t);

@@ -28,7 +28,8 @@ public class SingularityLifecycleManagedTest extends SingularityLifecycleManaged
     SingularityGraphiteReporter graphiteReporter,
     ExecutorIdGenerator executorIdGenerator,
     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
-    SingularityConfiguration configuration
+    SingularityConfiguration configuration,
+    SingularityPreJettyLifecycle preJettyLifecycle
   ) {
     super(
       cachedThreadPoolFactory,
@@ -41,7 +42,8 @@ public class SingularityLifecycleManagedTest extends SingularityLifecycleManaged
       graphiteReporter,
       executorIdGenerator,
       leaderOnlyPollers,
-      configuration
+      configuration,
+      preJettyLifecycle
     );
   }
 

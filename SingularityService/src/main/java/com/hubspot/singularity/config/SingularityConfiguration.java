@@ -308,7 +308,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int coreThreadpoolSize = 8;
 
-  private long threadpoolShutdownDelayInSeconds = 10;
+  private long threadpoolShutdownDelayInSeconds = 20;
 
   @Valid
   @JsonProperty("customExecutor")
