@@ -3,6 +3,8 @@ package com.hubspot.singularity.executor;
 import java.util.Optional;
 
 public enum SingularityExecutorLogrotateFrequency {
+  EVERY_MINUTE("daily", Optional.of("* * * * *")),
+  EVERY_FIVE_MINUTES("daily", Optional.of("*/5 * * * *")),
   HOURLY("daily", Optional.of("0 * * * *")), // we have to use the "daily" frequency because not all versions of logrotate support "hourly"
   DAILY("daily", Optional.empty()),
   WEEKLY("weekly", Optional.empty()),
