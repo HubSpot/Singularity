@@ -1097,8 +1097,19 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     if (configuration.isOptInEmailMode()) {
       Set<String> emailAllowlist = Sets.newHashSet(notificationsManager.getAllowlist());
+      LOG.info(
+        "BEFORE RETAIN\nAllowlist: {}\ntoList: {}\nccList: {}",
+        emailAllowlist.toString(),
+        toList.toString(),
+        ccList.toString()
+      );
       toList.retainAll(emailAllowlist);
       ccList.retainAll(emailAllowlist);
+      LOG.info(
+        "AFTER RETAIN\ntoList: {}\nccList: {}",
+        toList.toString(),
+        ccList.toString()
+      );
     } else {
       Set<String> emailBlocklist = Sets.newHashSet(notificationsManager.getBlocklist());
       toList.removeAll(emailBlocklist);
