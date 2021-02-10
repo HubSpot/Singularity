@@ -168,7 +168,7 @@ public class SingularityExecutorConfigurationTest {
       .when(context)
       .getLogrotateFrequency();
     doReturn(testExtraFiles).when(context).getExtrasFiles();
-    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourlyOrMoreFrequent();
     doReturn(testExtraFilesSizeBased).when(context).getExtrasFilesSizeBased();
     doReturn(false).when(context).isGlobalLogrotateHourly();
 

@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
  * Check `man logrotate` for more information.
  */
 public class LogrotateTemplateContext {
-  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF = p ->
-    p
-      .getLogrotateFrequencyOverride()
-      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue());
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF = p ->
+    SingularityExecutorLogrotateFrequency.HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.contains(
+      p.getLogrotateFrequencyOverride()
+    );
 
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
     p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
@@ -100,7 +100,7 @@ public class LogrotateTemplateContext {
     return getAllExtraFiles()
       .stream()
       .filter(
-        BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF
+        BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF
           .negate()
           .and(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF.negate())
       )
@@ -108,15 +108,15 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate hourly.
+   * Extra files for logrotate to rotate hourly or .
    * Since we don't want to rely on native `hourly` support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
    * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
-  public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
+  public List<LogrotateAdditionalFile> getExtrasFilesHourlyOrMoreFrequent() {
     return getAllExtraFiles()
       .stream()
-      .filter(BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF)
+      .filter(BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF)
       .collect(Collectors.toList());
   }
 

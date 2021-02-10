@@ -1,6 +1,9 @@
 package com.hubspot.singularity.executor;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum SingularityExecutorLogrotateFrequency {
   EVERY_MINUTE("daily", Optional.of("* * * * *")),
@@ -12,6 +15,12 @@ public enum SingularityExecutorLogrotateFrequency {
 
   private final String logrotateValue;
   private final Optional<String> cronSchedule;
+
+  public static final Set<String> HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES = ImmutableSet
+    .of(EVERY_MINUTE, EVERY_FIVE_MINUTES, HOURLY)
+    .stream()
+    .map(f -> f.logrotateValue)
+    .collect(Collectors.toSet());
 
   SingularityExecutorLogrotateFrequency(
     String logrotateValue,
