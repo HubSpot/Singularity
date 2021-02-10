@@ -42,11 +42,13 @@ public class SingularityLifecycleManaged implements Managed {
   private final SingularityGraphiteReporter graphiteReporter;
   private final ExecutorIdGenerator executorIdGenerator;
   private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
+  private final SingularityPreJettyLifecycle preJettyLifecycle;
   private final boolean readOnly;
 
   private final CuratorFramework curatorFramework;
   private final AtomicBoolean started = new AtomicBoolean(false);
   private final AtomicBoolean stopped = new AtomicBoolean(false);
+  private final AtomicBoolean preJettyStopped = new AtomicBoolean(false);
 
   @Inject
   public SingularityLifecycleManaged(
@@ -60,7 +62,8 @@ public class SingularityLifecycleManaged implements Managed {
     SingularityGraphiteReporter graphiteReporter,
     ExecutorIdGenerator executorIdGenerator,
     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
-    SingularityConfiguration configuration
+    SingularityConfiguration configuration,
+    SingularityPreJettyLifecycle preJettyLifecycle
   ) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
@@ -73,6 +76,7 @@ public class SingularityLifecycleManaged implements Managed {
     this.executorIdGenerator = executorIdGenerator;
     this.leaderOnlyPollers = leaderOnlyPollers;
     this.readOnly = configuration.isReadOnlyInstance();
+    this.preJettyLifecycle = preJettyLifecycle;
   }
 
   @Override
@@ -90,14 +94,15 @@ public class SingularityLifecycleManaged implements Managed {
       if (startLeaderPollers()) {
         leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
       }
+      preJettyLifecycle.registerShutdownHook(this::preJettyStop);
     } else {
       LOG.info("Already started, will not call again");
     }
   }
 
-  @Override
-  public void stop() throws Exception {
-    if (!stopped.getAndSet(true)) {
+  // This will run before the application stops listening on its designated port
+  private void preJettyStop() {
+    if (!preJettyStopped.getAndSet(true)) {
       if (startLeaderPollers()) {
         stopNewPolls(); // Marks a boolean that will short circuit new runs of any leader only pollers
       }
@@ -106,6 +111,14 @@ public class SingularityLifecycleManaged implements Managed {
       stopHttpClients(); // Stops any additional async callbacks in healthcheck/new task check
       stopExecutors(); // Shuts down the executors for pollers and async semaphores
       stopLeaderLatch(); // let go of leadership
+    } else {
+      LOG.info("Already stopped pre-jetty operations");
+    }
+  }
+
+  @Override
+  public void stop() throws Exception {
+    if (!stopped.getAndSet(true)) {
       stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
@@ -174,6 +187,12 @@ public class SingularityLifecycleManaged implements Managed {
       if (!readOnly) {
         LOG.info("Stopping leader latch");
         leaderLatch.close();
+      }
+      // Wait until leader change has actually propagated
+      long start = System.currentTimeMillis();
+      while (leaderLatch.hasLeadership() && System.currentTimeMillis() - start < 15000) {
+        LOG.warn("Instance still has leadership, waiting and checking again");
+        Thread.sleep(1000);
       }
     } catch (Throwable t) {
       LOG.warn("Could not stop leader latch ({})}", t.getMessage());
