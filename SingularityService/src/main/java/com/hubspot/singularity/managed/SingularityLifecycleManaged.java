@@ -184,13 +184,17 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopLeaderLatch() {
     try {
+      String thisId = leaderLatch.getId();
       if (!readOnly) {
         LOG.info("Stopping leader latch");
         leaderLatch.close();
       }
       // Wait until leader change has actually propagated
       long start = System.currentTimeMillis();
-      while (leaderLatch.hasLeadership() && System.currentTimeMillis() - start < 15000) {
+      while (
+        thisId.equals(leaderLatch.getLeader().getId()) &&
+        System.currentTimeMillis() - start < 15000
+      ) {
         LOG.warn("Instance still has leadership, waiting and checking again");
         Thread.sleep(1000);
       }
