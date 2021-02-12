@@ -265,6 +265,11 @@ public class SingularityClient {
   private static final String PRIORITY_FORMAT = "%s/priority";
   private static final String PRIORITY_FREEZE_FORMAT = PRIORITY_FORMAT + "/freeze";
 
+  private static final String NOTIFICATION_FORMAT = "%s/notifications";
+  private static final String ALLOWLIST_FORMAT = NOTIFICATION_FORMAT + "/allowlist";
+  private static final String SUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/subscribe";
+  private static final String UNSUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/unsubscribe";
+
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
@@ -2790,5 +2795,28 @@ public class SingularityClient {
       String.format("%s-%s", requestId, runId),
       SingularityTaskState.class
     );
+  }
+
+  //
+  // Notification Settings
+  //
+
+  public Collection<String> getNotificationAllowlist() {
+    final Function<String, String> requestUri = host ->
+      String.format(ALLOWLIST_FORMAT, getApiBase(host));
+
+    return getCollection(requestUri, "subscribe allowlist", STRING_COLLECTION);
+  }
+
+  public void subscribeToNotifications(String email) {
+    final Function<String, String> requestUri = host ->
+      String.format(SUBSCRIBE_FORMAT, getApiBase(host));
+    this.post(requestUri, "subscribe email", Optional.of(email), Optional.empty());
+  }
+
+  public void unsubscribeFromNotification(String email) {
+    final Function<String, String> requestUri = host ->
+      String.format(UNSUBSCRIBE_FORMAT, getApiBase(host));
+    this.post(requestUri, "unsubscribe email", Optional.of(email), Optional.empty());
   }
 }

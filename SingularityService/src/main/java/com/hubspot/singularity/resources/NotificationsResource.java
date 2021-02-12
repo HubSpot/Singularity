@@ -67,15 +67,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
     ) String email,
     @Context HttpServletRequest requestContext
   ) {
-    maybeProxyToLeader(
-      requestContext,
-      Void.class,
-      email,
-      () -> {
-        notificationsManager.unsubscribe(getFormattedEmail(email));
-        return null;
-      }
-    );
+    notificationsManager.unsubscribe(getFormattedEmail(email));
   }
 
   @POST
@@ -89,15 +81,7 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
     ) String email,
     @Context HttpServletRequest requestContext
   ) {
-    maybeProxyToLeader(
-      requestContext,
-      Void.class,
-      email,
-      () -> {
-        notificationsManager.subscribe(getFormattedEmail(email));
-        return null;
-      }
-    );
+    notificationsManager.subscribe(getFormattedEmail(email));
   }
 
   private String getFormattedEmail(String email) {
