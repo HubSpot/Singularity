@@ -1,5 +1,10 @@
 package com.hubspot.singularity.executor.config;
 
+import static com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency.DAILY;
+import static com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency.EVERY_FIVE_MINUTES;
+import static com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency.EVERY_MINUTE;
+import static com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency.HOURLY;
+import static com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency.MONTHLY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -14,6 +19,7 @@ import com.hubspot.singularity.runner.base.config.SingularityRunnerConfiguration
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Validator;
@@ -80,7 +86,7 @@ public class SingularityExecutorConfigurationTest {
   public void itKeepsSizeAndTimeBasedLogrotateThresholdsSeparate() throws Exception {
     Handlebars handlebars = new Handlebars();
     Template hourlyTemplate = handlebars.compile(
-      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+      SingularityExecutorModule.LOGROTATE_HOURLY_OR_MORE_FREQUENT_TEMPLATE
     );
     Template sizeBasedTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
@@ -122,7 +128,7 @@ public class SingularityExecutorConfigurationTest {
       SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
     );
     Template hourlyTemplate = handlebars.compile(
-      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+      SingularityExecutorModule.LOGROTATE_HOURLY_OR_MORE_FREQUENT_TEMPLATE
     );
     Template nonHourlyTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_TEMPLATE
@@ -200,5 +206,33 @@ public class SingularityExecutorConfigurationTest {
     assertThat(sizeBasedOutput.contains("weekly")).isFalse();
     assertThat(sizeBasedOutput.contains("monthly")).isFalse();
     assertThat(sizeBasedOutput.contains("size 10M")).isTrue();
+  }
+
+  @Test
+  public void itSortsOptionalLogrotateFrequenciesByGranularity() {
+    List<Optional<SingularityExecutorLogrotateFrequency>> fixture = Arrays.asList(
+      Optional.empty(),
+      Optional.of(HOURLY),
+      Optional.of(EVERY_MINUTE),
+      Optional.empty(),
+      Optional.of(DAILY),
+      Optional.of(MONTHLY),
+      Optional.of(EVERY_FIVE_MINUTES),
+      Optional.empty()
+    );
+
+    fixture.sort(SingularityExecutorLogrotateFrequency.getComparator());
+
+    assertThat(fixture)
+      .containsExactly(
+        Optional.of(EVERY_MINUTE),
+        Optional.of(EVERY_FIVE_MINUTES),
+        Optional.of(HOURLY),
+        Optional.of(DAILY),
+        Optional.of(MONTHLY),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()
+      );
   }
 }
