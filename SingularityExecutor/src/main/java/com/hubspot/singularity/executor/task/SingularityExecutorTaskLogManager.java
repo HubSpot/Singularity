@@ -27,11 +27,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
@@ -227,20 +229,13 @@ public class SingularityExecutorTaskLogManager {
       new LogrotateTemplateContext(configuration, taskDefinition)
     );
 
-    // If we need to fake an hourly (or more frequent) logrotate using cron,
-    // and we have multiple options for what the cron schedule should be,
-    // collect all the options and use the most frequent cron schedule.
-    List<Optional<SingularityExecutorLogrotateFrequency>> cronFakedLogrotateFrequencyOptions = new ArrayList<>();
-
     // Get the frequency and cron schedule for an additional file with an HOURLY (or more frequent) schedule, if there is any
-    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getMostFrequentAdditionalFileLogrotateFrequency();
+    Map<SingularityExecutorLogrotateFrequency, List<SingularityExecutorLogrotateAdditionalFile>> additionalFilesByFrequency = getAdditionalFilesByFrequency();
 
     // if any additional file or the global setting has an hourly (or more frequent) rotation,
     // or if any additional file has a size-based rotation threshold,
     // write a separate rotate config and force rotate using a cron schedule
-    boolean needsCronFakedForceLogrotate =
-      additionalFileFrequency.isPresent() &&
-      additionalFileFrequency.get().getCronSchedule().isPresent();
+    boolean needsCronFakedForceLogrotate = !additionalFilesByFrequency.isEmpty();
 
     boolean globalLogrotateRequiresCronWithForceLogrotate = logrotateFrequency
       .getCronSchedule()
@@ -248,32 +243,12 @@ public class SingularityExecutorTaskLogManager {
 
     boolean needsHourlyCronWithNonForcedLogrotate = requiresSizeBasedRotation();
 
-    if (needsCronFakedForceLogrotate) {
-      cronFakedLogrotateFrequencyOptions.add(additionalFileFrequency);
-    }
-
-    if (globalLogrotateRequiresCronWithForceLogrotate) {
-      cronFakedLogrotateFrequencyOptions.add(Optional.of(logrotateFrequency));
-    }
-
-    if (needsHourlyCronWithNonForcedLogrotate) {
-      // Evaluate size-based cron-faked logrotate configs every five minutes
-      cronFakedLogrotateFrequencyOptions.add(
-        Optional.of(SingularityExecutorLogrotateFrequency.EVERY_FIVE_MINUTES)
-      );
-    }
-
-    Optional<SingularityExecutorLogrotateFrequency> cronFakedLogrotateFrequency = Optional.empty();
-
-    if (!cronFakedLogrotateFrequencyOptions.isEmpty()) {
-      cronFakedLogrotateFrequencyOptions.sort(
-        SingularityExecutorLogrotateFrequency.getComparator()
-      );
-
-      cronFakedLogrotateFrequency = cronFakedLogrotateFrequencyOptions.get(0);
-    }
-
-    if (cronFakedLogrotateFrequency.isPresent()) {
+    if (
+      needsCronFakedForceLogrotate ||
+      globalLogrotateRequiresCronWithForceLogrotate ||
+      needsHourlyCronWithNonForcedLogrotate
+    ) {
+      // Put all cron-faked logrotate configs in the hourly logrotate directory
       File hourlyLogrotateDir = new File(configuration.getLogrotateHourlyConfDirectory());
       if (!hourlyLogrotateDir.exists()) {
         if (!hourlyLogrotateDir.mkdir()) {
@@ -286,13 +261,25 @@ public class SingularityExecutorTaskLogManager {
     }
 
     if (needsCronFakedForceLogrotate) {
-      log.info(
-        "Writing hourly logrotate configuration file to {}",
-        getLogrotateHourlyConfPath()
-      );
-      templateManager.writeHourlyLogrotateFile(
-        getLogrotateHourlyConfPath(),
-        new LogrotateTemplateContext(configuration, taskDefinition)
+      additionalFilesByFrequency.forEach(
+        (frequency, files) -> {
+          log.info(
+            "Writing {}-ly logrotate configuration file to {}",
+            frequency.toString(),
+            getLogrotateHourlyConfPath(frequency)
+          );
+
+          LogrotateTemplateContext templateContext = new LogrotateTemplateContext(
+            configuration,
+            taskDefinition
+          );
+          templateContext.setExtrasFilesFrequencyFilter(frequency);
+
+          templateManager.writeHourlyLogrotateFile(
+            getLogrotateHourlyConfPath(frequency),
+            templateContext
+          );
+        }
       );
     }
 
@@ -307,21 +294,35 @@ public class SingularityExecutorTaskLogManager {
       );
     }
 
-    if (cronFakedLogrotateFrequency.isPresent()) {
+    if (
+      needsCronFakedForceLogrotate ||
+      globalLogrotateRequiresCronWithForceLogrotate ||
+      needsHourlyCronWithNonForcedLogrotate
+    ) {
+      // By running logrotate via cron, we cover all time-based logrotate frequencies (HOURLY or more frequent) which require a `logrotate -f`,
+      // as well as all size-based configs which do not require a `-f`
+      Map<SingularityExecutorLogrotateFrequency, String> cronFakedLogrotateConfigs = additionalFilesByFrequency
+        .keySet()
+        .stream()
+        .collect(
+          Collectors.toMap(
+            Function.identity(),
+            frequency -> getLogrotateHourlyConfPath(frequency).toString()
+          )
+        );
       log.info(
-        "Writing logrotate cron entry with schedule '{}' to {}",
-        cronFakedLogrotateFrequency.get().getCronSchedule(),
-        getLogrotateCronPath()
+        "Writing logrotate cron config(s) to {}: {}",
+        getLogrotateCronPath(),
+        cronFakedLogrotateConfigs
       );
       templateManager.writeCronEntryForLogrotate(
         getLogrotateCronPath(),
         new LogrotateCronTemplateContext(
           configuration,
           taskDefinition,
-          // By running logrotate hourly via cron, we cover all time-based logrotate frequencies (HOURLY or more frequent) which require a `logrotate -f`,
+          // By running logrotate via cron, we cover all time-based logrotate frequencies (HOURLY or more frequent) which require a `logrotate -f`,
           // as well as all size-based configs which do not require a `-f`
-          cronFakedLogrotateFrequency.get(),
-          getLogrotateHourlyConfPath().toString(),
+          cronFakedLogrotateConfigs,
           getLogrotateSizeBasedConfPath().toString()
         )
       );
@@ -332,8 +333,8 @@ public class SingularityExecutorTaskLogManager {
    *
    * @return Frequency (and contained cron schedule) of the additional file that we need to rotate *most* frequently
    */
-  private Optional<SingularityExecutorLogrotateFrequency> getMostFrequentAdditionalFileLogrotateFrequency() {
-    List<Optional<SingularityExecutorLogrotateFrequency>> hourlyOrMoreFrequentLogrotateFrequencies = configuration
+  private Map<SingularityExecutorLogrotateFrequency, List<SingularityExecutorLogrotateAdditionalFile>> getAdditionalFilesByFrequency() {
+    return configuration
       .getLogrotateAdditionalFiles()
       .stream()
       .filter(
@@ -344,15 +345,12 @@ public class SingularityExecutorTaskLogManager {
           ) &&
           file.getLogrotateFrequencyOverride().get().getCronSchedule().isPresent()
       )
-      .map(SingularityExecutorLogrotateAdditionalFile::getLogrotateFrequencyOverride)
-      .sorted(SingularityExecutorLogrotateFrequency.getComparator())
-      .collect(Collectors.toList());
-
-    if (hourlyOrMoreFrequentLogrotateFrequencies.isEmpty()) {
-      return Optional.empty();
-    }
-
-    return hourlyOrMoreFrequentLogrotateFrequencies.get(0);
+      .collect(
+        Collectors.groupingBy(
+          file -> file.getLogrotateFrequencyOverride().get(),
+          Collectors.toList()
+        )
+      );
   }
 
   private boolean requiresSizeBasedRotation() {
@@ -459,24 +457,28 @@ public class SingularityExecutorTaskLogManager {
       return false;
     }
 
-    Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getMostFrequentAdditionalFileLogrotateFrequency();
-    try {
-      if (
-        (
-          additionalFileFreq.isPresent() &&
-          additionalFileFreq.get().getCronSchedule().isPresent()
-        ) ||
-        logrotateFrequency.getCronSchedule().isPresent()
-      ) {
-        boolean hourlyConfDeleted =
-          !Files.exists(getLogrotateHourlyConfPath()) ||
-          Files.deleteIfExists(getLogrotateHourlyConfPath());
-        log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), hourlyConfDeleted);
-        deleted = deleted && hourlyConfDeleted;
+    Map<SingularityExecutorLogrotateFrequency, List<SingularityExecutorLogrotateAdditionalFile>> additionalFilesByFrequency = getAdditionalFilesByFrequency();
+    for (Map.Entry<SingularityExecutorLogrotateFrequency, List<SingularityExecutorLogrotateAdditionalFile>> filesWithFrequency : additionalFilesByFrequency.entrySet()) {
+      SingularityExecutorLogrotateFrequency frequency = filesWithFrequency.getKey();
+      try {
+        if (
+          frequency.getCronSchedule().isPresent() ||
+          logrotateFrequency.getCronSchedule().isPresent()
+        ) {
+          boolean logrotateConfDeleted =
+            !Files.exists(getLogrotateHourlyConfPath(frequency)) ||
+            Files.deleteIfExists(getLogrotateHourlyConfPath(frequency));
+          log.debug(
+            "Deleted {} : {}",
+            getLogrotateHourlyConfPath(frequency),
+            logrotateConfDeleted
+          );
+          deleted = deleted && logrotateConfDeleted;
+        }
+      } catch (Throwable t) {
+        log.debug("Couldn't delete {}", getLogrotateHourlyConfPath(frequency), t);
+        return false;
       }
-    } catch (Throwable t) {
-      log.debug("Couldn't delete {}", getLogrotateHourlyConfPath(), t);
-      return false;
     }
 
     try {
@@ -498,10 +500,7 @@ public class SingularityExecutorTaskLogManager {
 
     try {
       if (
-        (
-          additionalFileFreq.isPresent() &&
-          additionalFileFreq.get().getCronSchedule().isPresent()
-        ) ||
+        !additionalFilesByFrequency.isEmpty() ||
         logrotateFrequency.getCronSchedule().isPresent()
       ) {
         boolean cronDeleted =
@@ -621,10 +620,12 @@ public class SingularityExecutorTaskLogManager {
       .resolve(taskDefinition.getTaskId());
   }
 
-  public Path getLogrotateHourlyConfPath() {
+  public Path getLogrotateHourlyConfPath(
+    SingularityExecutorLogrotateFrequency frequency
+  ) {
     return Paths
       .get(configuration.getLogrotateHourlyConfDirectory())
-      .resolve(taskDefinition.getTaskId());
+      .resolve(String.format("%s.%s", taskDefinition.getTaskId(), frequency.toString()));
   }
 
   public Path getLogrotateSizeBasedConfPath() {

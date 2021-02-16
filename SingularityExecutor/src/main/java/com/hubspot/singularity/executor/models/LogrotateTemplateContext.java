@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Handlebars context for generating logrotate.conf files.
@@ -29,6 +30,8 @@ public class LogrotateTemplateContext {
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
+
+  private Optional<SingularityExecutorLogrotateFrequency> extrasFilesFrequencyFilter = Optional.empty();
 
   public LogrotateTemplateContext(
     SingularityExecutorConfiguration configuration,
@@ -116,10 +119,25 @@ public class LogrotateTemplateContext {
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourlyOrMoreFrequent() {
-    return getAllExtraFiles()
+    Stream<LogrotateAdditionalFile> hourlyOrMoreFrequentLogrotateAdditionalFiles = getAllExtraFiles()
       .stream()
-      .filter(BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF)
-      .collect(Collectors.toList());
+      .filter(BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF);
+
+    return extrasFilesFrequencyFilter
+      .map(
+        singularityExecutorLogrotateFrequency ->
+          hourlyOrMoreFrequentLogrotateAdditionalFiles
+            .filter(
+              file ->
+                file
+                  .getLogrotateFrequencyOverride()
+                  .equals(singularityExecutorLogrotateFrequency.getLogrotateValue())
+            )
+            .collect(Collectors.toList())
+      )
+      .orElseGet(
+        () -> hourlyOrMoreFrequentLogrotateAdditionalFiles.collect(Collectors.toList())
+      );
   }
 
   /**
@@ -213,6 +231,12 @@ public class LogrotateTemplateContext {
 
   public boolean isUseFileAttributes() {
     return configuration.isUseFileAttributes();
+  }
+
+  public void setExtrasFilesFrequencyFilter(
+    SingularityExecutorLogrotateFrequency frequencyFilter
+  ) {
+    this.extrasFilesFrequencyFilter = Optional.of(frequencyFilter);
   }
 
   @Override
