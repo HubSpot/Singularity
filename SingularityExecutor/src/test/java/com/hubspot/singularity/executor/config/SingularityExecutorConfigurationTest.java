@@ -224,6 +224,12 @@ public class SingularityExecutorConfigurationTest {
           ),
           new LogrotateForceConfig(
             "logrotate",
+            "/etc/logrotate.d/hourly/task.EVERY_MINUTE",
+            "* * * * *",
+            "> /dev/null 2>&1"
+          ),
+          new LogrotateForceConfig(
+            "logrotate",
             "/etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES",
             "*/5 * * * *",
             "> /dev/null 2>&1"
