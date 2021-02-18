@@ -14,6 +14,7 @@ import org.apache.curator.utils.ZKPaths;
 public class NotificationsManager extends CuratorManager {
   private static final String NOTIFICATIONS_ROOT = "/notifications";
   private static final String BLOCKLIST_ROOT = NOTIFICATIONS_ROOT + "/blacklist";
+  private static final String ALLOWLIST_ROOT = NOTIFICATIONS_ROOT + "/allowlist";
 
   LoadingCache<String, List<String>> cache;
 
@@ -39,13 +40,23 @@ public class NotificationsManager extends CuratorManager {
         );
   }
 
+  public void unsubscribe(String email) {
+    removeFromAllowlist(email);
+    addToBlocklist(email);
+  }
+
+  public void subscribe(String email) {
+    addToAllowlist(email);
+    removeFromBlocklist(email);
+  }
+
   public void addToBlocklist(String email) {
-    create(getEmailPath(email));
+    create(getBlockListEmailPath(email));
     cache.invalidate(BLOCKLIST_ROOT);
   }
 
   public void removeFromBlocklist(String email) {
-    delete(getEmailPath(email));
+    delete(getBlockListEmailPath(email));
     cache.invalidate(BLOCKLIST_ROOT);
   }
 
@@ -53,7 +64,25 @@ public class NotificationsManager extends CuratorManager {
     return cache.getUnchecked(BLOCKLIST_ROOT);
   }
 
-  private String getEmailPath(String email) {
+  private String getBlockListEmailPath(String email) {
     return ZKPaths.makePath(BLOCKLIST_ROOT, email);
+  }
+
+  public void addToAllowlist(String email) {
+    create(getAllowlistEmailPath(email));
+    cache.invalidate(ALLOWLIST_ROOT);
+  }
+
+  public void removeFromAllowlist(String email) {
+    delete(getAllowlistEmailPath(email));
+    cache.invalidate(ALLOWLIST_ROOT);
+  }
+
+  public List<String> getAllowlist() {
+    return cache.getUnchecked(ALLOWLIST_ROOT);
+  }
+
+  public String getAllowlistEmailPath(String email) {
+    return ZKPaths.makePath(ALLOWLIST_ROOT, email);
   }
 }
