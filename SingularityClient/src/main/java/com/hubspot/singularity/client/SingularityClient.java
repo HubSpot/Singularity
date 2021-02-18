@@ -2811,12 +2811,26 @@ public class SingularityClient {
   public void subscribeToNotifications(String email) {
     final Function<String, String> requestUri = host ->
       String.format(SUBSCRIBE_FORMAT, getApiBase(host));
+    List<String> hosts = new ArrayList<>(hostsProvider.get());
+    LOG.info(
+      "Adding email: {} to allowlist. Hosts {}, check this url {}",
+      email,
+      hosts,
+      requestUri.apply(hosts.get(0))
+    );
     this.post(requestUri, "subscribe email", Optional.of(email), Optional.empty());
   }
 
   public void unsubscribeFromNotification(String email) {
     final Function<String, String> requestUri = host ->
       String.format(UNSUBSCRIBE_FORMAT, getApiBase(host));
+    List<String> hosts = new ArrayList<>(hostsProvider.get());
+    LOG.info(
+      "Deleting email: {} from allowlist. Hosts {}, check this url {}",
+      email,
+      hosts,
+      requestUri.apply(hosts.get(0))
+    );
     this.post(requestUri, "unsubscribe email", Optional.of(email), Optional.empty());
   }
 }
