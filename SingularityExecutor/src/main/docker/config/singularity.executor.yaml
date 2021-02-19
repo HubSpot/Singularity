@@ -1,4 +1,4 @@
 globalTaskDefinitionDirectory: /usr/share/mesos
 defaultRunAsUser: root
 s3UploaderKeyPattern: '%requestId/%Y/%m/%taskId_%index-%s%fileext'
-s3UploaderBucket: singularity-task-logs
+s3UploaderBucket: this-is-an-example-bucket
