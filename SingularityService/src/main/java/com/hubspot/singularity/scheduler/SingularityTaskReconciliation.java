@@ -44,6 +44,7 @@ public class SingularityTaskReconciliation {
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityTaskReconciliation.class
   );
+  private static final double NEARLY_FULL = 0.9;
 
   private final TaskManager taskManager;
   private final String serverId;
@@ -94,6 +95,17 @@ public class SingularityTaskReconciliation {
   }
 
   public ReconciliationState startReconciliation() {
+    if (
+      (float) taskManager.getNumScheduledTasks() /
+      configuration.getOfferCacheSize() >=
+      NEARLY_FULL
+    ) {
+      LOG.info("Queue is nearly full, not starting reconciliation");
+      return isRunningReconciliation.get()
+        ? ReconciliationState.ALREADY_RUNNING
+        : ReconciliationState.NO_DRIVER;
+    }
+
     final long taskReconciliationStartedAt = System.currentTimeMillis();
 
     if (!isRunningReconciliation.compareAndSet(false, true)) {
