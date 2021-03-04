@@ -12,13 +12,18 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityManagedThreadPoolFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityManagedThreadPoolFactory.class
+  );
+
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ExecutorService> executorPools = new ArrayList<>();
 
@@ -88,7 +93,8 @@ public class SingularityManagedThreadPoolFactory {
           final long start = System.currentTimeMillis();
 
           if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-            return;
+            LOG.warn("Executor service tasks did not exit in time");
+            continue;
           }
 
           timeoutLeftInMillis -= (System.currentTimeMillis() - start);

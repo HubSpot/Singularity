@@ -12,9 +12,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityManagedScheduledExecutorServiceFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityManagedScheduledExecutorServiceFactory.class
+  );
+
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ScheduledExecutorService> executorPools = new ArrayList<>();
 
@@ -68,7 +74,9 @@ public class SingularityManagedScheduledExecutorServiceFactory {
         final long start = System.currentTimeMillis();
 
         if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-          return;
+          LOG.warn("Scheduled executor service task did not exit cleanly");
+          service.shutdownNow();
+          continue;
         }
 
         timeoutLeftInMillis -= (System.currentTimeMillis() - start);

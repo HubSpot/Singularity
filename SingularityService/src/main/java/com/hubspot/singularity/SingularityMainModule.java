@@ -46,6 +46,7 @@ import com.hubspot.singularity.hooks.SnsWebhookManager;
 import com.hubspot.singularity.hooks.SnsWebhookRetryer;
 import com.hubspot.singularity.hooks.WebhookQueueType;
 import com.hubspot.singularity.managed.SingularityLifecycleManaged;
+import com.hubspot.singularity.managed.SingularityPreJettyLifecycle;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
@@ -209,6 +210,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityLifecycleManaged.class).asEagerSingleton();
+    binder.bind(SingularityPreJettyLifecycle.class).asEagerSingleton();
 
     if (configuration.isCacheOffers()) {
       binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
