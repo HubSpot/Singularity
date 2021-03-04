@@ -647,4 +647,11 @@ public class SingularityMesosStatusUpdateHandler {
       statusUpdatesExecutor.getExecutorService()
     );
   }
+
+  public double getQueueFullness() {
+    return (
+      (double) statusUpdatesExecutor.getQueue().size() /
+      statusUpdatesExecutor.getQueueLimit()
+    );
+  }
 }
