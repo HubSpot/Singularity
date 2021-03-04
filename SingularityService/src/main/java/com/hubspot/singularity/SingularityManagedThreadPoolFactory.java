@@ -93,7 +93,7 @@ public class SingularityManagedThreadPoolFactory {
           final long start = System.currentTimeMillis();
 
           if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-            LOG.warn("Eeecutor service tasks did not exit in time");
+            LOG.warn("Executor service tasks did not exit in time");
             continue;
           }
 
