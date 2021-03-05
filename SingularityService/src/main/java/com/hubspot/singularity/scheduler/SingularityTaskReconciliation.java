@@ -98,6 +98,7 @@ public class SingularityTaskReconciliation {
   }
 
   public ReconciliationState startReconciliation() {
+    LOG.info("Queue fullness: " + statusUpdateHandler.getQueueFullness());
     if (
       statusUpdateHandler.getQueueFullness() >= configuration.getStatusQueueNearlyFull()
     ) {
