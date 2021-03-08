@@ -288,7 +288,7 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private SMTPConfiguration smtpConfiguration;
 
-  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(1);
 
   @JsonProperty("ui")
   @Valid
