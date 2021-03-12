@@ -110,7 +110,7 @@ public class SingularityManagedThreadPoolFactory {
     }
   }
 
-  public final class ThreadPoolQueue extends LinkedBlockingQueue<Runnable> {
+  public static final class ThreadPoolQueue extends LinkedBlockingQueue<Runnable> {
 
     public ThreadPoolQueue(int capacity) {
       super(capacity);
