@@ -139,7 +139,8 @@ public class SingularityMesosStatusUpdateHandler {
       threadPoolFactory.get(
         "status-updates",
         configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(),
-        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()
+        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize(),
+        true
       );
   }
 

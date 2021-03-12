@@ -56,9 +56,16 @@ public class SingularityManagedThreadPoolFactory {
     return service;
   }
 
-  public synchronized ExecutorAndQueue get(String name, int maxSize, int queueSize) {
+  public synchronized ExecutorAndQueue get(
+    String name,
+    int maxSize,
+    int queueSize,
+    boolean blockWhenFull
+  ) {
     checkState(!stopped.get(), "already stopped");
-    LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
+    LinkedBlockingQueue<Runnable> queue = blockWhenFull
+      ? new ThreadPoolQueue(queueSize)
+      : new LinkedBlockingQueue<>(queueSize);
     ExecutorService service = new ThreadPoolExecutor(
       maxSize,
       maxSize,
@@ -93,13 +100,30 @@ public class SingularityManagedThreadPoolFactory {
           final long start = System.currentTimeMillis();
 
           if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-            LOG.warn("Eeecutor service tasks did not exit in time");
+            LOG.warn("Executor service tasks did not exit in time");
             continue;
           }
 
           timeoutLeftInMillis -= (System.currentTimeMillis() - start);
         }
       }
+    }
+  }
+
+  public static final class ThreadPoolQueue extends LinkedBlockingQueue<Runnable> {
+
+    public ThreadPoolQueue(int capacity) {
+      super(capacity);
+    }
+
+    @Override
+    public boolean offer(Runnable e) {
+      try {
+        put(e);
+      } catch (InterruptedException e1) {
+        return false;
+      }
+      return true;
     }
   }
 }
