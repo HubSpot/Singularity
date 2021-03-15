@@ -49,6 +49,13 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
     return notificationsManager.getBlocklist();
   }
 
+  @GET
+  @Path("/allowlist")
+  @Operation(summary = "Retrieve the list of emails subscribed to Singularity")
+  public List<String> getAllowlist(@Parameter(hidden = true) @Auth SingularityUser user) {
+    return notificationsManager.getAllowlist();
+  }
+
   @POST
   @Path("/unsubscribe")
   @Operation(summary = "Unsubscribe from Singularity emails.")
@@ -60,37 +67,21 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
     ) String email,
     @Context HttpServletRequest requestContext
   ) {
-    maybeProxyToLeader(
-      requestContext,
-      Void.class,
-      email,
-      () -> {
-        notificationsManager.addToBlocklist(getFormattedEmail(email));
-        return null;
-      }
-    );
+    notificationsManager.unsubscribe(getFormattedEmail(email));
   }
 
   @POST
   @Path("/subscribe")
-  @Operation(summary = "Delete an unsubscription for an email address")
+  @Operation(summary = "Subscribe to Singularity emails")
   public void subscribe(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @RequestBody(
       required = true,
-      description = "The email address to re-subscribe"
+      description = "The email address to subscribe"
     ) String email,
     @Context HttpServletRequest requestContext
   ) {
-    maybeProxyToLeader(
-      requestContext,
-      Void.class,
-      email,
-      () -> {
-        notificationsManager.removeFromBlocklist(getFormattedEmail(email));
-        return null;
-      }
-    );
+    notificationsManager.subscribe(getFormattedEmail(email));
   }
 
   private String getFormattedEmail(String email) {

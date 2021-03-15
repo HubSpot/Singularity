@@ -308,7 +308,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int coreThreadpoolSize = 8;
 
-  private long threadpoolShutdownDelayInSeconds = 10;
+  private long threadpoolShutdownDelayInSeconds = 20;
 
   @Valid
   @JsonProperty("customExecutor")
@@ -436,6 +436,12 @@ public class SingularityConfiguration extends Configuration {
 
   // Audits the usage of ZooKeeper
   private boolean useLoggingCuratorFramework = false;
+
+  // Defines whether to use a blocklist or allowlist for Singularity emails
+  private boolean optInEmailMode = false;
+
+  // For blocking queue reconciliation if the queue is too full
+  private double statusQueueNearlyFull = 0.8;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -2046,5 +2052,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setUseLoggingCuratorFramework(boolean useLoggingCuratorFramework) {
     this.useLoggingCuratorFramework = useLoggingCuratorFramework;
+  }
+
+  public boolean isOptInEmailMode() {
+    return optInEmailMode;
+  }
+
+  public void setOptInEmailMode(boolean optInEmailMode) {
+    this.optInEmailMode = optInEmailMode;
+  }
+
+  public double getStatusQueueNearlyFull() {
+    return statusQueueNearlyFull;
+  }
+
+  public void setStatusQueueNearlyFull(double statusQueueNearlyFull) {
+    this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 }

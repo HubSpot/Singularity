@@ -12,13 +12,18 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityManagedThreadPoolFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityManagedThreadPoolFactory.class
+  );
+
   private final AtomicBoolean stopped = new AtomicBoolean();
   private final List<ExecutorService> executorPools = new ArrayList<>();
 
@@ -51,9 +56,16 @@ public class SingularityManagedThreadPoolFactory {
     return service;
   }
 
-  public synchronized ExecutorAndQueue get(String name, int maxSize, int queueSize) {
+  public synchronized ExecutorAndQueue get(
+    String name,
+    int maxSize,
+    int queueSize,
+    boolean blockWhenFull
+  ) {
     checkState(!stopped.get(), "already stopped");
-    LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>(queueSize);
+    LinkedBlockingQueue<Runnable> queue = blockWhenFull
+      ? new ThreadPoolQueue(queueSize)
+      : new LinkedBlockingQueue<>(queueSize);
     ExecutorService service = new ThreadPoolExecutor(
       maxSize,
       maxSize,
@@ -88,12 +100,30 @@ public class SingularityManagedThreadPoolFactory {
           final long start = System.currentTimeMillis();
 
           if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-            return;
+            LOG.warn("Executor service tasks did not exit in time");
+            continue;
           }
 
           timeoutLeftInMillis -= (System.currentTimeMillis() - start);
         }
       }
+    }
+  }
+
+  public static final class ThreadPoolQueue extends LinkedBlockingQueue<Runnable> {
+
+    public ThreadPoolQueue(int capacity) {
+      super(capacity);
+    }
+
+    @Override
+    public boolean offer(Runnable e) {
+      try {
+        put(e);
+      } catch (InterruptedException e1) {
+        return false;
+      }
+      return true;
     }
   }
 }

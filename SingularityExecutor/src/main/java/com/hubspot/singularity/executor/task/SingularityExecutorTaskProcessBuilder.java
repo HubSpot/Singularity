@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -266,6 +267,16 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     );
 
     if (isDocker) {
+      int dockerStopTimeoutSeconds = executorData
+          .getSigKillProcessesAfterMillis()
+          .isPresent()
+        ? Math.toIntExact(
+          TimeUnit.MILLISECONDS.toSeconds(
+            executorData.getSigKillProcessesAfterMillis().get()
+          )
+        )
+        : configuration.getDockerStopTimeout();
+
       task
         .getLog()
         .info("Writing a runner script to execute {} in docker container", cmd);
@@ -278,7 +289,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
           ),
           runnerContext,
           configuration.getDockerPrefix(),
-          configuration.getDockerStopTimeout(),
+          dockerStopTimeoutSeconds,
           taskInfo.getContainer().getDocker().getPrivileged()
         )
       );

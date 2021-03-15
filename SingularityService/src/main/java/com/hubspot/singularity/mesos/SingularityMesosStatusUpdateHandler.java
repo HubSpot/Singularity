@@ -139,7 +139,8 @@ public class SingularityMesosStatusUpdateHandler {
       threadPoolFactory.get(
         "status-updates",
         configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit(),
-        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize()
+        configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize(),
+        true
       );
   }
 
@@ -645,6 +646,20 @@ public class SingularityMesosStatusUpdateHandler {
         );
       },
       statusUpdatesExecutor.getExecutorService()
+    );
+  }
+
+  public double getQueueFullness() {
+    LOG.info(
+      "Queue size: {}, queue limit: {}, queue fullness: {}",
+      statusUpdatesExecutor.getQueue().size(),
+      statusUpdatesExecutor.getQueueLimit(),
+      (double) statusUpdatesExecutor.getQueue().size() /
+      statusUpdatesExecutor.getQueueLimit()
+    );
+    return (
+      (double) statusUpdatesExecutor.getQueue().size() /
+      statusUpdatesExecutor.getQueueLimit()
     );
   }
 }

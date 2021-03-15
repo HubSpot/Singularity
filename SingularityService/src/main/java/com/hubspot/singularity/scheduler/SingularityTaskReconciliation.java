@@ -21,6 +21,7 @@ import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
+import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,6 +56,7 @@ public class SingularityTaskReconciliation {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityMesosSchedulerClient schedulerClient;
   private final StateManager stateManager;
+  private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
 
   @Inject
   public SingularityTaskReconciliation(
@@ -66,7 +68,8 @@ public class SingularityTaskReconciliation {
     @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
     SingularityAbort abort,
     MesosProtosUtils mesosProtosUtils,
-    SingularityMesosSchedulerClient schedulerClient
+    SingularityMesosSchedulerClient schedulerClient,
+    SingularityMesosStatusUpdateHandler statusUpdateHandler
   ) {
     this.taskManager = taskManager;
     this.stateManager = stateManager;
@@ -77,6 +80,7 @@ public class SingularityTaskReconciliation {
     this.abort = abort;
     this.mesosProtosUtils = mesosProtosUtils;
     this.schedulerClient = schedulerClient;
+    this.statusUpdateHandler = statusUpdateHandler;
 
     this.isRunningReconciliation = new AtomicBoolean(false);
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
@@ -94,6 +98,15 @@ public class SingularityTaskReconciliation {
   }
 
   public ReconciliationState startReconciliation() {
+    if (
+      statusUpdateHandler.getQueueFullness() >= configuration.getStatusQueueNearlyFull()
+    ) {
+      LOG.info("Queue is nearly full, not starting reconciliation");
+      return isRunningReconciliation.get()
+        ? ReconciliationState.ALREADY_RUNNING
+        : ReconciliationState.NO_DRIVER;
+    }
+
     final long taskReconciliationStartedAt = System.currentTimeMillis();
 
     if (!isRunningReconciliation.compareAndSet(false, true)) {
