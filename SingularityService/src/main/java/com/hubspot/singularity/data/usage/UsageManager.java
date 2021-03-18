@@ -60,8 +60,8 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheRequestUtilizations(getRequestUtilizations(false));
-    leaderCache.cacheAgentUsages(getAllCurrentAgentUsage());
+    leaderCache.cacheRequestUtilizations(fetchRequestUtilizations());
+    leaderCache.cacheAgentUsages(fetchAllCurrentAgentUsage());
   }
 
   public SingularityCreateResult saveClusterUtilization(
@@ -91,16 +91,17 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
     if (useWebCache && webCache.useCachedRequestUtilizations()) {
       return webCache.getRequestUtilizations();
     }
-    Map<String, RequestUtilization> requestUtilizations = getAsyncChildren(
-        REQUESTS_PATH,
-        requestUtilizationTranscoder
-      )
-      .stream()
-      .collect(Collectors.toMap(RequestUtilization::getRequestId, Function.identity()));
+    Map<String, RequestUtilization> requestUtilizations = fetchRequestUtilizations();
     if (useWebCache) {
       webCache.cacheRequestUtilizations(requestUtilizations);
     }
     return requestUtilizations;
+  }
+
+  private Map<String, RequestUtilization> fetchRequestUtilizations() {
+    return getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder)
+      .stream()
+      .collect(Collectors.toMap(RequestUtilization::getRequestId, Function.identity()));
   }
 
   public Optional<RequestUtilization> getRequestUtilization(
@@ -166,6 +167,10 @@ public class UsageManager extends CuratorAsyncManager implements TaskUsageManage
     if (leaderCache.active()) {
       return leaderCache.getAgentUsages();
     }
+    return fetchAllCurrentAgentUsage();
+  }
+
+  private Map<String, SingularityAgentUsageWithId> fetchAllCurrentAgentUsage() {
     return getAsyncChildren(AGENTS_PATH, agentUsageTranscoder)
       .stream()
       .collect(

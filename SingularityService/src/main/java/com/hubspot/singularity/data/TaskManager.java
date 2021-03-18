@@ -677,18 +677,24 @@ public class TaskManager extends CuratorAsyncManager {
       }
       return updates;
     } else {
-      Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
-      for (SingularityTaskId taskId : taskIds) {
-        pathsMap.put(getHistoryPath(taskId), taskId);
-      }
-
-      return getAsyncNestedChildDataAsMap(
-        "getTaskHistoryUpdates",
-        pathsMap,
-        UPDATES_PATH,
-        taskHistoryUpdateTranscoder
-      );
+      return fetchTaskHistoryUpdates(taskIds);
     }
+  }
+
+  private Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> fetchTaskHistoryUpdates(
+    Collection<SingularityTaskId> taskIds
+  ) {
+    Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
+    for (SingularityTaskId taskId : taskIds) {
+      pathsMap.put(getHistoryPath(taskId), taskId);
+    }
+
+    return getAsyncNestedChildDataAsMap(
+      "getTaskHistoryUpdates",
+      pathsMap,
+      UPDATES_PATH,
+      taskHistoryUpdateTranscoder
+    );
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllActiveTaskHistoryUpdates() {
@@ -1200,11 +1206,13 @@ public class TaskManager extends CuratorAsyncManager {
 
   public void activateLeaderCache() {
     leaderCache.cachePendingTasks(fetchPendingTasks());
-    leaderCache.cachePendingTasksToDelete(getPendingTasksMarkedForDeletion());
-    leaderCache.cacheActiveTaskIds(getActiveTaskIds(false));
+    leaderCache.cachePendingTasksToDelete(fetchPendingTasksMarkedForDeletion());
+    leaderCache.cacheActiveTaskIds(getActiveTaskIdsUncached());
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
     leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
-    leaderCache.cacheTaskHistoryUpdates(getAllActiveTaskHistoryUpdates());
+    leaderCache.cacheTaskHistoryUpdates(
+      fetchTaskHistoryUpdates(getActiveTaskIdsUncached())
+    );
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
@@ -1624,6 +1632,10 @@ public class TaskManager extends CuratorAsyncManager {
       return leaderCache.getPendingTaskIdsToDelete();
     }
 
+    return fetchPendingTasksMarkedForDeletion();
+  }
+
+  private List<SingularityPendingTaskId> fetchPendingTasksMarkedForDeletion() {
     return getChildrenAsIds(PENDING_TASKS_TO_DELETE_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
