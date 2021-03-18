@@ -493,21 +493,37 @@ public class SingularityExecutorTaskLogManager {
   }
 
   public boolean manualLogrotate() {
-    if (!Files.exists(getLogrotateConfPath())) {
-      log.info("{} did not exist, skipping manual logrotation", getLogrotateConfPath());
+    boolean regularConfExists = Files.exists(getLogrotateConfPath());
+    boolean hourlyConfExists = Files.exists(getLogrotateHourlyConfPath());
+    boolean sizeConfExists = Files.exists(getLogrotateSizeBasedConfPath());
+    if (!sizeConfExists && !hourlyConfExists && !regularConfExists) {
+      log.info(
+        "{}/{}/{} did not exist, skipping manual logrotation",
+        getLogrotateConfPath(),
+        getLogrotateHourlyConfPath(),
+        getLogrotateSizeBasedConfPath()
+      );
       return true;
     }
 
-    final List<String> command = ImmutableList.of(
-      configuration.getLogrotateCommand(),
-      "-f",
-      "-s",
-      taskDefinition.getLogrotateStateFilePath().toString(),
-      getLogrotateConfPath().toString()
-    );
+    final ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.add(configuration.getLogrotateCommand());
+    command.add("-f");
+    command.add("-s");
+    command.add(taskDefinition.getLogrotateStateFilePath().toString());
+
+    if (regularConfExists) {
+      command.add(getLogrotateConfPath().toString());
+    }
+    if (hourlyConfExists) {
+      command.add(getLogrotateHourlyConfPath().toString());
+    }
+    if (sizeConfExists) {
+      command.add(getLogrotateSizeBasedConfPath().toString());
+    }
 
     try {
-      new SimpleProcessManager(log).runCommand(command);
+      new SimpleProcessManager(log).runCommand(command.build());
       return true;
     } catch (Throwable t) {
       log.warn(
