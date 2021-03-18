@@ -56,6 +56,7 @@ public class SingularityLeaderCacheCoordinator {
       6,
       new ThreadFactoryBuilder().setNameFormat("leader-cache-%d").build()
     );
+    leaderCache.startBootstrap();
     CompletableFutures
       .allOf(
         ImmutableList.of(

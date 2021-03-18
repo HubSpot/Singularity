@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,15 +48,43 @@ public class SingularityLeaderCache {
   private Map<String, RequestUtilization> requestUtilizations;
   private Map<String, SingularityAgentUsageWithId> agentUsages;
 
+  private final Object syncObject = new Object();
+
   private volatile boolean active;
+  private volatile boolean bootstrapping;
 
   @Inject
   public SingularityLeaderCache() {
     this.active = false;
+    this.bootstrapping = false;
   }
 
-  public void activate() {
+  public synchronized void startBootstrap() {
+    bootstrapping = true;
+  }
+
+  public synchronized void activate() {
     active = true;
+    bootstrapping = false;
+    synchronized (syncObject) {
+      syncObject.notify();
+    }
+  }
+
+  public boolean active() {
+    if (bootstrapping) {
+      try {
+        synchronized (syncObject) {
+          while (bootstrapping) {
+            syncObject.wait();
+          }
+          return active;
+        }
+      } catch (InterruptedException ie) {
+        throw new RuntimeException(ie);
+      }
+    }
+    return active;
   }
 
   // Only for unit testing
@@ -109,9 +138,8 @@ public class SingularityLeaderCache {
   }
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
-    this.activeTaskIds =
-      Collections.synchronizedSet(new HashSet<SingularityTaskId>(activeTaskIds.size()));
-    activeTaskIds.forEach(this.activeTaskIds::add);
+    this.activeTaskIds = Collections.synchronizedSet(new HashSet<>(activeTaskIds.size()));
+    this.activeTaskIds.addAll(activeTaskIds);
   }
 
   public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
@@ -140,19 +168,17 @@ public class SingularityLeaderCache {
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates
   ) {
     this.historyUpdates = new ConcurrentHashMap<>(historyUpdates.size());
-    historyUpdates
-      .entrySet()
-      .stream()
-      .forEach(
-        e ->
-          this.historyUpdates.put(
-              e.getKey(),
-              e
-                .getValue()
-                .stream()
-                .collect(Collectors.toMap(u -> u.getTaskState(), u -> u))
-            )
-      );
+    historyUpdates.forEach(
+      (key, value) ->
+        this.historyUpdates.put(
+            key,
+            value
+              .stream()
+              .collect(
+                Collectors.toMap(SingularityTaskHistoryUpdate::getTaskState, u -> u)
+              )
+          )
+    );
   }
 
   public void cacheAgents(List<SingularityAgent> slaves) {
@@ -183,10 +209,6 @@ public class SingularityLeaderCache {
 
   public void cacheAgentUsages(Map<String, SingularityAgentUsageWithId> slaveUsages) {
     this.agentUsages = new ConcurrentHashMap<>(slaveUsages);
-  }
-
-  public boolean active() {
-    return active;
   }
 
   public List<SingularityPendingTask> getPendingTasks() {
@@ -222,9 +244,7 @@ public class SingularityLeaderCache {
       LOG.warn("deletePendingTask {}, but not active", pendingTaskId);
       return;
     }
-    if (pendingTaskIdsToDelete.contains(pendingTaskId)) {
-      pendingTaskIdsToDelete.remove(pendingTaskId);
-    }
+    pendingTaskIdsToDelete.remove(pendingTaskId);
     pendingTaskIdToPendingTask.remove(pendingTaskId);
   }
 
@@ -423,7 +443,7 @@ public class SingularityLeaderCache {
       .entrySet()
       .stream()
       .filter(e -> requestIds.contains(e.getKey()))
-      .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   public void deleteRequestDeployState(String requestId) {

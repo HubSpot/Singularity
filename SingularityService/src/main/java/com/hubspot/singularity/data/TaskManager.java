@@ -440,7 +440,9 @@ public class TaskManager extends CuratorAsyncManager {
   public SingularityCreateResult savePendingTask(SingularityPendingTask task) {
     final String pendingPath = getPendingPath(task.getPendingTaskId());
 
-    leaderCache.savePendingTask(task);
+    if (leaderCache.active()) {
+      leaderCache.savePendingTask(task);
+    }
 
     return save(pendingPath, task, pendingTaskTranscoder);
   }
@@ -1384,6 +1386,7 @@ public class TaskManager extends CuratorAsyncManager {
         .and()
         .commit();
 
+      // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
@@ -1451,7 +1454,9 @@ public class TaskManager extends CuratorAsyncManager {
 
   @Timed
   public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
-    leaderCache.deleteActiveTaskId(taskId);
+    if (leaderCache.active()) {
+      leaderCache.deleteActiveTaskId(taskId);
+    }
     return delete(getLastActiveTaskStatusPath(taskId));
   }
 
@@ -1547,7 +1552,9 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityCreateResult saveTaskCleanup(SingularityTaskCleanup cleanup) {
     saveTaskHistoryUpdate(cleanup);
-    leaderCache.saveTaskCleanup(cleanup);
+    if (leaderCache.active()) {
+      leaderCache.saveTaskCleanup(cleanup);
+    }
     return save(
       getCleanupPath(cleanup.getTaskId().getId()),
       cleanup,
@@ -1581,7 +1588,9 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {
-    leaderCache.createTaskCleanupIfNotExists(cleanup);
+    if (leaderCache.active()) {
+      leaderCache.createTaskCleanupIfNotExists(cleanup);
+    }
     final SingularityCreateResult result = create(
       getCleanupPath(cleanup.getTaskId().getId()),
       cleanup,
@@ -1596,13 +1605,17 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
-    leaderCache.deletePendingTask(pendingTaskId);
+    if (leaderCache.active()) {
+      leaderCache.deletePendingTask(pendingTaskId);
+    }
     delete(getPendingPath(pendingTaskId));
     delete(getPendingTasksToDeletePath(pendingTaskId));
   }
 
   public void markPendingTaskForDeletion(SingularityPendingTaskId pendingTaskId) {
-    leaderCache.markPendingTaskForDeletion(pendingTaskId);
+    if (leaderCache.active()) {
+      leaderCache.markPendingTaskForDeletion(pendingTaskId);
+    }
     create(getPendingTasksToDeletePath(pendingTaskId));
   }
 
@@ -1615,7 +1628,9 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void deleteCleanupTask(String taskId) {
-    leaderCache.deleteTaskCleanup(SingularityTaskId.valueOf(taskId));
+    if (leaderCache.active()) {
+      leaderCache.deleteTaskCleanup(SingularityTaskId.valueOf(taskId));
+    }
     delete(getCleanupPath(taskId));
   }
 
