@@ -47,7 +47,7 @@ public abstract class SingularityLeaderOnlyPoller {
     SingularityAbort abort,
     SingularityMesosScheduler mesosScheduler
   ) {
-    this.executorService = executorServiceFactory.get(getClass().getSimpleName());
+    this.executorService = executorServiceFactory.get(getClass().getSimpleName(), true);
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
     this.abort = checkNotNull(abort, "abort is null");
