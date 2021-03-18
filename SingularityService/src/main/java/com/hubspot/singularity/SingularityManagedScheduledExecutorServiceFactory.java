@@ -6,8 +6,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +22,8 @@ public class SingularityManagedScheduledExecutorServiceFactory {
   );
 
   private final AtomicBoolean stopped = new AtomicBoolean();
-  private final List<ScheduledExecutorService> executorPools = new ArrayList<>();
+  private final Map<String, ScheduledExecutorService> executorPools = new HashMap<>();
+  private final Map<String, ScheduledExecutorService> leaderPollerPools = new HashMap<>();
 
   private final long timeoutInMillis;
 
@@ -57,29 +58,60 @@ public class SingularityManagedScheduledExecutorServiceFactory {
       new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build()
     );
     if (isLeaderOnlyPoller) {
-      executorPools.add(0, service);
+      leaderPollerPools.put(name, service);
     } else {
-      executorPools.add(service);
+      executorPools.put(name, service);
     }
     return service;
   }
 
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      executorPools.forEach(ScheduledExecutorService::shutdown);
-
       long timeoutLeftInMillis = timeoutInMillis;
-
-      for (ScheduledExecutorService service : executorPools) {
+      for (Map.Entry<String, ScheduledExecutorService> entry : leaderPollerPools.entrySet()) {
         final long start = System.currentTimeMillis();
-
-        if (!service.awaitTermination(timeoutLeftInMillis, TimeUnit.MILLISECONDS)) {
-          LOG.warn("Scheduled executor service task did not exit cleanly");
-          service.shutdownNow();
-          continue;
-        }
-
+        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
         timeoutLeftInMillis -= (System.currentTimeMillis() - start);
+      }
+      for (Map.Entry<String, ScheduledExecutorService> entry : executorPools.entrySet()) {
+        final long start = System.currentTimeMillis();
+        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
+        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
+      }
+    }
+  }
+
+  public void closeExecutor(
+    ScheduledExecutorService scheduledExecutorService,
+    long timeoutInMillis,
+    String name
+  ) {
+    // This is basically stolen from the ExecutorService javadoc with some slight modifications
+    if (!scheduledExecutorService.isTerminated()) {
+      scheduledExecutorService.shutdown();
+      try {
+        if (
+          !scheduledExecutorService.awaitTermination(
+            timeoutInMillis,
+            TimeUnit.MILLISECONDS
+          )
+        ) {
+          scheduledExecutorService.shutdownNow();
+          if (
+            !scheduledExecutorService.awaitTermination(
+              timeoutInMillis,
+              TimeUnit.MILLISECONDS
+            )
+          ) {
+            LOG.error(
+              "{}: Tasks in executor failed to terminate in time, continuing with shutdown regardless.",
+              name
+            );
+          }
+        }
+      } catch (InterruptedException ie) {
+        scheduledExecutorService.shutdownNow();
+        Thread.currentThread().interrupt();
       }
     }
   }
