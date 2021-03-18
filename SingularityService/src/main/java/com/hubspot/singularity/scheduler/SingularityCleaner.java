@@ -527,14 +527,13 @@ public class SingularityCleaner {
               CompletableFuture.runAsync(
                 () ->
                   lock.runWithRequestLock(
-                    () -> {
+                    () ->
                       processRequestCleanup(
                         start,
                         numTasksKilled,
                         numScheduledTasksRemoved,
                         requestCleanup
-                      );
-                    },
+                      ),
                     requestCleanup.getRequestId(),
                     String.format(
                       "%s#%s",
