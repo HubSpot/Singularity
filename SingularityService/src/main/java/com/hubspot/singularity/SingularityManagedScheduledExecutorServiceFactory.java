@@ -74,22 +74,12 @@ public class SingularityManagedScheduledExecutorServiceFactory {
         closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
         timeoutLeftInMillis -= (System.currentTimeMillis() - start);
       }
-      for (Map.Entry<String, ScheduledExecutorService> entry : executorPools.entrySet()) {
-        final long start = System.currentTimeMillis();
-        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
-        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
-      }
     }
   }
 
   public void stopOtherPollers() throws Exception {
     if (!stopped.getAndSet(true)) {
       long timeoutLeftInMillis = timeoutInMillis;
-      for (Map.Entry<String, ScheduledExecutorService> entry : leaderPollerPools.entrySet()) {
-        final long start = System.currentTimeMillis();
-        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
-        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
-      }
       for (Map.Entry<String, ScheduledExecutorService> entry : executorPools.entrySet()) {
         final long start = System.currentTimeMillis();
         closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());

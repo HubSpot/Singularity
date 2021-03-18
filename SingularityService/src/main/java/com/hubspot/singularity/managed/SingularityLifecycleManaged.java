@@ -119,7 +119,7 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
-      scheduledExecutorServiceFactory.stopLeaderPollers();
+      stopOtherExecutors();
       stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
