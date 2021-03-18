@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,6 +58,8 @@ public class SingularityTaskReconciliation {
   private final SingularityMesosSchedulerClient schedulerClient;
   private final StateManager stateManager;
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
+
+  private Future<?> nextCheckFuture = null;
 
   @Inject
   public SingularityTaskReconciliation(
@@ -95,6 +98,12 @@ public class SingularityTaskReconciliation {
   @VisibleForTesting
   boolean isReconciliationRunning() {
     return isRunningReconciliation.get();
+  }
+
+  public void cancelReconciliation() {
+    if (nextCheckFuture != null) {
+      nextCheckFuture.cancel(true);
+    }
   }
 
   public ReconciliationState startReconciliation() {
@@ -156,11 +165,9 @@ public class SingularityTaskReconciliation {
       )
     );
 
-    executorService.schedule(
-      new Runnable() {
-
-        @Override
-        public void run() {
+    nextCheckFuture =
+      executorService.schedule(
+        () -> {
           try {
             checkReconciliation(
               reconciliationStart,
@@ -179,11 +186,10 @@ public class SingularityTaskReconciliation {
             );
             abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
           }
-        }
-      },
-      configuration.getCheckReconcileWhenRunningEveryMillis(),
-      TimeUnit.MILLISECONDS
-    );
+        },
+        configuration.getCheckReconcileWhenRunningEveryMillis(),
+        TimeUnit.MILLISECONDS
+      );
   }
 
   private void checkReconciliation(
