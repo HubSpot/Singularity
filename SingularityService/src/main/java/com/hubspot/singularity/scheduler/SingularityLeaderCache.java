@@ -67,7 +67,7 @@ public class SingularityLeaderCache {
     active = true;
     bootstrapping = false;
     synchronized (syncObject) {
-      syncObject.notify();
+      syncObject.notifyAll();
     }
   }
 
