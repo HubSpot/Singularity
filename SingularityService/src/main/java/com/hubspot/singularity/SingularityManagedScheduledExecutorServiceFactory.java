@@ -22,6 +22,7 @@ public class SingularityManagedScheduledExecutorServiceFactory {
   );
 
   private final AtomicBoolean stopped = new AtomicBoolean();
+  private final AtomicBoolean leaderStopped = new AtomicBoolean();
   private final Map<String, ScheduledExecutorService> executorPools = new HashMap<>();
   private final Map<String, ScheduledExecutorService> leaderPollerPools = new HashMap<>();
 
@@ -65,7 +66,23 @@ public class SingularityManagedScheduledExecutorServiceFactory {
     return service;
   }
 
-  public void stop() throws Exception {
+  public void stopLeaderPollers() throws Exception {
+    if (!leaderStopped.getAndSet(true)) {
+      long timeoutLeftInMillis = timeoutInMillis;
+      for (Map.Entry<String, ScheduledExecutorService> entry : leaderPollerPools.entrySet()) {
+        final long start = System.currentTimeMillis();
+        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
+        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
+      }
+      for (Map.Entry<String, ScheduledExecutorService> entry : executorPools.entrySet()) {
+        final long start = System.currentTimeMillis();
+        closeExecutor(entry.getValue(), timeoutLeftInMillis, entry.getKey());
+        timeoutLeftInMillis -= (System.currentTimeMillis() - start);
+      }
+    }
+  }
+
+  public void stopOtherPollers() throws Exception {
     if (!stopped.getAndSet(true)) {
       long timeoutLeftInMillis = timeoutInMillis;
       for (Map.Entry<String, ScheduledExecutorService> entry : leaderPollerPools.entrySet()) {
