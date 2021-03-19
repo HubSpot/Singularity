@@ -44,6 +44,16 @@ public class CanaryDeploySettings {
    */
   private final int allowedTasksFailuresPerGroup;
 
+  public CanaryDeploySettings() {
+    this(
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty()
+    );
+  }
+
   @JsonCreator
   public CanaryDeploySettings(
     @JsonProperty("atomicSwap") Optional<Boolean> atomicSwap,
