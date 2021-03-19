@@ -11,22 +11,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Handlebars context for generating logrotate.conf files.
  * Check `man logrotate` for more information.
  */
 public class LogrotateTemplateContext {
-  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF = p ->
-    p
-      .getLogrotateFrequencyOverride()
-      .equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue());
+  private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF = p ->
+    SingularityExecutorLogrotateFrequency
+      .HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.stream()
+      .map(SingularityExecutorLogrotateFrequency::getLogrotateValue)
+      .collect(Collectors.toSet())
+      .contains(p.getLogrotateFrequencyOverride());
 
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
     p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
 
   private final SingularityExecutorTaskDefinition taskDefinition;
   private final SingularityExecutorConfiguration configuration;
+
+  private Optional<SingularityExecutorLogrotateFrequency> extrasFilesFrequencyFilter = Optional.empty();
 
   public LogrotateTemplateContext(
     SingularityExecutorConfiguration configuration,
@@ -93,14 +98,14 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate (non-hourly). If these do not exist logrotate will continue without error.
+   * Extra files for logrotate to rotate (less frequent than hourly). If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFiles() {
     return getAllExtraFiles()
       .stream()
       .filter(
-        BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF
+        BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF
           .negate()
           .and(BELONGS_IN_SIZE_BASED_LOGROTATE_CONF.negate())
       )
@@ -108,16 +113,31 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate hourly.
-   * Since we don't want to rely on native `hourly` support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
+   * Extra files for logrotate to rotate hourly or .
+   * Since we don't want to rely on native `hourly` (or more frequent) support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
    * If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
-  public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
-    return getAllExtraFiles()
+  public List<LogrotateAdditionalFile> getExtrasFilesHourlyOrMoreFrequent() {
+    Stream<LogrotateAdditionalFile> hourlyOrMoreFrequentLogrotateAdditionalFiles = getAllExtraFiles()
       .stream()
-      .filter(BELONGS_IN_HOURLY_CRON_FORCED_LOGROTATE_CONF)
-      .collect(Collectors.toList());
+      .filter(BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF);
+
+    return extrasFilesFrequencyFilter
+      .map(
+        singularityExecutorLogrotateFrequency ->
+          hourlyOrMoreFrequentLogrotateAdditionalFiles
+            .filter(
+              file ->
+                file
+                  .getLogrotateFrequencyOverride()
+                  .equals(singularityExecutorLogrotateFrequency.getLogrotateValue())
+            )
+            .collect(Collectors.toList())
+      )
+      .orElseGet(
+        () -> hourlyOrMoreFrequentLogrotateAdditionalFiles.collect(Collectors.toList())
+      );
   }
 
   /**
@@ -211,6 +231,12 @@ public class LogrotateTemplateContext {
 
   public boolean isUseFileAttributes() {
     return configuration.isUseFileAttributes();
+  }
+
+  public void setExtrasFilesFrequencyFilter(
+    SingularityExecutorLogrotateFrequency frequencyFilter
+  ) {
+    this.extrasFilesFrequencyFilter = Optional.of(frequencyFilter);
   }
 
   @Override

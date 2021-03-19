@@ -6,8 +6,11 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
+import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.LogrotateAdditionalFile;
+import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
+import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext.LogrotateForceConfig;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerConfigurationProvider;
@@ -80,7 +83,7 @@ public class SingularityExecutorConfigurationTest {
   public void itKeepsSizeAndTimeBasedLogrotateThresholdsSeparate() throws Exception {
     Handlebars handlebars = new Handlebars();
     Template hourlyTemplate = handlebars.compile(
-      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+      SingularityExecutorModule.LOGROTATE_HOURLY_OR_MORE_FREQUENT_TEMPLATE
     );
     Template sizeBasedTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
@@ -122,7 +125,7 @@ public class SingularityExecutorConfigurationTest {
       SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE
     );
     Template hourlyTemplate = handlebars.compile(
-      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+      SingularityExecutorModule.LOGROTATE_HOURLY_OR_MORE_FREQUENT_TEMPLATE
     );
     Template nonHourlyTemplate = handlebars.compile(
       SingularityExecutorModule.LOGROTATE_TEMPLATE
@@ -168,7 +171,7 @@ public class SingularityExecutorConfigurationTest {
       .when(context)
       .getLogrotateFrequency();
     doReturn(testExtraFiles).when(context).getExtrasFiles();
-    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+    doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourlyOrMoreFrequent();
     doReturn(testExtraFilesSizeBased).when(context).getExtrasFilesSizeBased();
     doReturn(false).when(context).isGlobalLogrotateHourly();
 
@@ -200,5 +203,61 @@ public class SingularityExecutorConfigurationTest {
     assertThat(sizeBasedOutput.contains("weekly")).isFalse();
     assertThat(sizeBasedOutput.contains("monthly")).isFalse();
     assertThat(sizeBasedOutput.contains("size 10M")).isTrue();
+  }
+
+  @Test
+  public void itProperlyGeneratesCronConfigsForLogrotate() throws Exception {
+    Handlebars handlebars = new Handlebars();
+    Template cronConfigTemplate = handlebars.compile(
+      SingularityExecutorModule.LOGROTATE_CRON_TEMPLATE
+    );
+
+    LogrotateCronTemplateContext context = mock(LogrotateCronTemplateContext.class);
+
+    doReturn(
+        ImmutableList.of(
+          new LogrotateForceConfig(
+            "logrotate",
+            "/etc/logrotate.d/hourly/task.HOURLY",
+            "0 * * * *",
+            "> /dev/null 2>&1"
+          ),
+          new LogrotateForceConfig(
+            "logrotate",
+            "/etc/logrotate.d/hourly/task.EVERY_MINUTE",
+            "* * * * *",
+            "> /dev/null 2>&1"
+          ),
+          new LogrotateForceConfig(
+            "logrotate",
+            "/etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES",
+            "*/5 * * * *",
+            "> /dev/null 2>&1"
+          )
+        )
+      )
+      .when(context)
+      .getLogrotateForceConfigs();
+
+    doReturn("/statefile").when(context).getLogrotateStateFile();
+    doReturn("/etc/logrotate.d/hourly/task.sizebased")
+      .when(context)
+      .getLogrotateSizeBasedConfig();
+
+    String renderedConfig = cronConfigTemplate.apply(context);
+    assertThat(renderedConfig)
+      .contains(
+        "0 * * * * root logrotate -f -s /statefile /etc/logrotate.d/hourly/task.HOURLY > /dev/null 2>&1"
+      );
+    assertThat(renderedConfig)
+      .contains(
+        "* * * * * root logrotate -f -s /statefile /etc/logrotate.d/hourly/task.EVERY_MINUTE > /dev/null 2>&1"
+      );
+    assertThat(renderedConfig)
+      .contains(
+        "*/5 * * * * root logrotate -f -s /statefile /etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES > /dev/null 2>&1"
+      );
+    assertThat(renderedConfig)
+      .contains("*/5 * * * * root  -s /statefile /etc/logrotate.d/hourly/task.sizebased");
   }
 }
