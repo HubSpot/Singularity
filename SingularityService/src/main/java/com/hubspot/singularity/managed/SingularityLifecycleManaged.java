@@ -119,6 +119,7 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
+      stopOtherExecutors();
       stopCurator(); // disconnect from zk
       stopGraphiteReporter();
     } else {
@@ -156,9 +157,19 @@ public class SingularityLifecycleManaged implements Managed {
 
   private void stopExecutors() {
     try {
-      LOG.info("Stopping pollers and executors");
+      LOG.info("Stopping leader pollers and executors");
       cachedThreadPoolFactory.stop();
-      scheduledExecutorServiceFactory.stop();
+      scheduledExecutorServiceFactory.stopLeaderPollers();
+    } catch (Throwable t) {
+      LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
+    }
+  }
+
+  // Post jetty stop, these can be hit on request paths still
+  private void stopOtherExecutors() {
+    try {
+      LOG.info("Stopping pollers and executors");
+      scheduledExecutorServiceFactory.stopOtherPollers();
     } catch (Throwable t) {
       LOG.warn("Could not stop scheduled executors ({})}", t.getMessage());
     }

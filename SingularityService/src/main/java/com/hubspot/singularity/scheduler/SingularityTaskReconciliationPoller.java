@@ -42,4 +42,10 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
       taskReconciliation.startReconciliation();
     }
   }
+
+  @Override
+  public void stop() {
+    taskReconciliation.cancelReconciliation();
+    super.stop();
+  }
 }
