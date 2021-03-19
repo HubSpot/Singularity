@@ -2,9 +2,9 @@ package com.hubspot.singularity;
 
 public enum DeployAcceptanceMode {
   /**
-   * Wait for an api call to advance the deploy forward to the next instance group
+   * Wait for all bound/configured checks to run against the request before proceeding
    */
-  API,
+  CHECKS,
   /**
    * Wait a fixed amount of time between instance groups
    */
