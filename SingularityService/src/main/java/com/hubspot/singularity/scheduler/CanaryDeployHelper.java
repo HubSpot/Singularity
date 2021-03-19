@@ -54,8 +54,7 @@ public class CanaryDeployHelper {
       .orElseGet(
         () ->
           Math.min(
-            deployProgress.getTargetActiveInstances() +
-            deployProgress.getDeployInstanceCountPerStep(),
+            deployProgress.getTargetActiveInstances() + 1, // TODO ?????
             request.getInstancesSafe()
           )
       );

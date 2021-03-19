@@ -83,7 +83,7 @@ public class SingularityDeployCheckHelper {
 
   public static boolean shouldCancelLoadBalancer(SingularityPendingDeploy pendingDeploy) {
     return (
-      pendingDeploy.getLastLoadBalancerUpdate().isPresent() &&
+      pendingDeploy.getDeployProgress().getPendingLbUpdate().isPresent() &&
       !pendingDeploy.getCurrentDeployState().isDeployFinished()
     );
   }
@@ -126,9 +126,9 @@ public class SingularityDeployCheckHelper {
     SingularityRequest request,
     SingularityDeployResult deployResult
   ) {
+    // TODO canary settings
     if (
-      pendingDeploy.getDeployProgress().isPresent() &&
-      pendingDeploy.getDeployProgress().get().getDeployInstanceCountPerStep() !=
+      1 != // TODO - if not at full scale yet/canary in progress
       request.getInstancesSafe()
     ) {
       // For incremental deploys, return a special cleanup type
@@ -146,10 +146,7 @@ public class SingularityDeployCheckHelper {
     SingularityPendingDeploy pendingDeploy,
     SingularityDeploy deploy
   ) {
-    if (
-      pendingDeploy.getDeployProgress().isPresent() &&
-      pendingDeploy.getDeployProgress().get().isStepComplete()
-    ) {
+    if (pendingDeploy.getDeployProgress().isStepComplete()) {
       return false;
     }
 
@@ -181,11 +178,7 @@ public class SingularityDeployCheckHelper {
   }
 
   private long getStartTime(SingularityPendingDeploy pendingDeploy) {
-    if (pendingDeploy.getDeployProgress().isPresent()) {
-      return pendingDeploy.getDeployProgress().get().getTimestamp();
-    } else {
-      return pendingDeploy.getDeployMarker().getTimestamp();
-    }
+    return pendingDeploy.getDeployProgress().getTimestamp();
   }
 
   public long getAllowedMillis(SingularityDeploy deploy) {
@@ -239,43 +232,8 @@ public class SingularityDeployCheckHelper {
     }
   }
 
-  public static boolean shouldCheckLbState(final SingularityPendingDeploy pendingDeploy) {
-    return (
-      pendingDeploy.getLastLoadBalancerUpdate().isPresent() &&
-      getLoadBalancerRequestId(pendingDeploy)
-        .getId()
-        .equals(
-          pendingDeploy
-            .getLastLoadBalancerUpdate()
-            .get()
-            .getLoadBalancerRequestId()
-            .getId()
-        ) &&
-      (
-        pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() !=
-        BaragonRequestState.UNKNOWN
-      )
-    );
-  }
-
-  public static boolean isWaitingForCurrentLbRequest(
-    SingularityPendingDeploy pendingDeploy
-  ) {
-    return (
-      pendingDeploy.getLastLoadBalancerUpdate().isPresent() &&
-      SingularityDeployCheckHelper
-        .getLoadBalancerRequestId(pendingDeploy)
-        .getId()
-        .equals(
-          pendingDeploy
-            .getLastLoadBalancerUpdate()
-            .get()
-            .getLoadBalancerRequestId()
-            .getId()
-        ) &&
-      pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() ==
-      BaragonRequestState.WAITING
-    );
+  public static boolean isWaitingForLbRequest(SingularityPendingDeploy pendingDeploy) {
+    return pendingDeploy.getDeployProgress().getPendingLbUpdate().isPresent();
   }
 
   public static LoadBalancerRequestId getLoadBalancerRequestId(
@@ -286,10 +244,10 @@ public class SingularityDeployCheckHelper {
         "%s-%s-%s",
         pendingDeploy.getDeployMarker().getRequestId(),
         pendingDeploy.getDeployMarker().getDeployId(),
-        pendingDeploy.getDeployProgress().get().getTargetActiveInstances()
+        pendingDeploy.getDeployProgress().getTargetActiveInstances()
       ),
       LoadBalancerRequestType.DEPLOY,
-      Optional.<Integer>empty()
+      Optional.empty()
     );
   }
 
@@ -393,7 +351,6 @@ public class SingularityDeployCheckHelper {
   }
 
   public SingularityDeployResult getDeployResultWithFailures(
-    SingularityRequest request,
     SingularityDeploy deploy,
     SingularityPendingDeploy pendingDeploy,
     DeployState state,
@@ -401,7 +358,6 @@ public class SingularityDeployCheckHelper {
     Collection<SingularityTaskId> matchingTasks
   ) {
     List<SingularityDeployFailure> deployFailures = getDeployFailures(
-      request,
       deploy,
       pendingDeploy,
       state,
@@ -411,7 +367,6 @@ public class SingularityDeployCheckHelper {
       return new SingularityDeployResult(
         state,
         deployFailures.get(0).getMessage(),
-        pendingDeploy.getLastLoadBalancerUpdate(),
         Collections.emptyList(),
         System.currentTimeMillis()
       );
@@ -419,7 +374,6 @@ public class SingularityDeployCheckHelper {
       return new SingularityDeployResult(
         state,
         Optional.of(message),
-        pendingDeploy.getLastLoadBalancerUpdate(),
         deployFailures,
         System.currentTimeMillis()
       );
@@ -427,7 +381,6 @@ public class SingularityDeployCheckHelper {
   }
 
   public List<SingularityDeployFailure> getDeployFailures(
-    SingularityRequest request,
     SingularityDeploy deploy,
     SingularityPendingDeploy pendingDeploy,
     DeployState state,
@@ -438,9 +391,7 @@ public class SingularityDeployCheckHelper {
     );
 
     if (state == DeployState.OVERDUE) {
-      int targetInstances = pendingDeploy.getDeployProgress().isPresent()
-        ? pendingDeploy.getDeployProgress().get().getTargetActiveInstances()
-        : request.getInstancesSafe();
+      int targetInstances = pendingDeploy.getDeployProgress().getTargetActiveInstances();
       if (failures.isEmpty() && matchingTasks.size() < targetInstances) {
         failures.add(
           new SingularityDeployFailure(
@@ -469,11 +420,9 @@ public class SingularityDeployCheckHelper {
     Set<SingularityTaskId> newInactiveDeployTasks = new HashSet<>(
       inactiveDeployMatchingTasks
     );
-    if (pendingDeploy.getDeployProgress().isPresent()) {
-      newInactiveDeployTasks.removeAll(
-        pendingDeploy.getDeployProgress().get().getFailedDeployTasks()
-      );
-    }
+    newInactiveDeployTasks.removeAll(
+      pendingDeploy.getDeployProgress().getFailedDeployTasks()
+    );
 
     return newInactiveDeployTasks
       .stream()

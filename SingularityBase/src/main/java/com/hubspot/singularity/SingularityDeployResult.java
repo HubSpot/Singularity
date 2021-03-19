@@ -10,7 +10,6 @@ import java.util.Optional;
 @Schema(description = "The result of a deploy for a particular request")
 public class SingularityDeployResult {
   private final DeployState deployState;
-  private final Optional<SingularityLoadBalancerUpdate> lbUpdate;
   private final Optional<String> message;
   private final List<SingularityDeployFailure> deployFailures;
   private final long timestamp;
@@ -18,9 +17,8 @@ public class SingularityDeployResult {
   public SingularityDeployResult(DeployState deployState) {
     this(
       deployState,
-      Optional.<String>empty(),
-      Optional.<SingularityLoadBalancerUpdate>empty(),
-      Collections.<SingularityDeployFailure>emptyList(),
+      Optional.empty(),
+      Collections.emptyList(),
       System.currentTimeMillis()
     );
   }
@@ -29,22 +27,7 @@ public class SingularityDeployResult {
     this(
       deployState,
       Optional.of(message),
-      Optional.<SingularityLoadBalancerUpdate>empty(),
-      Collections.<SingularityDeployFailure>emptyList(),
-      System.currentTimeMillis()
-    );
-  }
-
-  public SingularityDeployResult(
-    DeployState deployState,
-    Optional<String> message,
-    Optional<SingularityLoadBalancerUpdate> lbUpdate
-  ) {
-    this(
-      deployState,
-      message,
-      lbUpdate,
-      Collections.<SingularityDeployFailure>emptyList(),
+      Collections.emptyList(),
       System.currentTimeMillis()
     );
   }
@@ -65,7 +48,6 @@ public class SingularityDeployResult {
             : ""
         )
       ),
-      Optional.of(lbUpdate),
       deployFailures,
       System.currentTimeMillis()
     );
@@ -75,26 +57,16 @@ public class SingularityDeployResult {
   public SingularityDeployResult(
     @JsonProperty("deployState") DeployState deployState,
     @JsonProperty("message") Optional<String> message,
-    @JsonProperty("lbUpdate") Optional<SingularityLoadBalancerUpdate> lbUpdate,
     @JsonProperty("deployFailures") List<SingularityDeployFailure> deployFailures,
     @JsonProperty("timestamp") long timestamp
   ) {
     this.deployState = deployState;
-    this.lbUpdate = lbUpdate;
     this.message = message;
     this.deployFailures =
       deployFailures != null
         ? deployFailures
         : Collections.<SingularityDeployFailure>emptyList();
     this.timestamp = timestamp;
-  }
-
-  @Schema(
-    description = "The result of the load balancer update, if one occured, for a load balanced request",
-    nullable = true
-  )
-  public Optional<SingularityLoadBalancerUpdate> getLbUpdate() {
-    return lbUpdate;
   }
 
   @Schema(
@@ -126,8 +98,6 @@ public class SingularityDeployResult {
       "SingularityDeployResult{" +
       "deployState=" +
       deployState +
-      ", lbUpdate=" +
-      lbUpdate +
       ", message=" +
       message +
       ", deployFailures=" +

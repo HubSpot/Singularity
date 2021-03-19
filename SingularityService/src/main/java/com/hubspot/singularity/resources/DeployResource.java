@@ -16,7 +16,6 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -213,31 +212,30 @@ public class DeployResource extends AbstractRequestResource {
       deployRequest.getMessage()
     );
 
-    Optional<SingularityDeployProgress> deployProgress = Optional.empty();
+    SingularityDeployProgress deployProgress;
     if (request.isLongRunning()) {
-      deployProgress =
-        Optional.of(
-          new SingularityDeployProgress(
-            Math.min(
-              deploy.getDeployInstanceCountPerStep().orElse(request.getInstancesSafe()),
-              request.getInstancesSafe()
-            ),
-            0,
-            deploy.getDeployInstanceCountPerStep().orElse(request.getInstancesSafe()),
-            deploy
-              .getDeployStepWaitTimeMs()
-              .orElse(configuration.getDefaultDeployStepWaitTimeMs()),
-            false,
-            deploy.getAutoAdvanceDeploySteps().orElse(true),
-            Collections.emptySet(),
-            System.currentTimeMillis()
-          )
+      int firstTargetInstances = deploy.getCanaryDeploySettings().isAtomicSwap()
+        ? request.getInstancesSafe()
+        : Math.min(
+          deploy.getCanaryDeploySettings().getInstanceGroupSize(),
+          request.getInstancesSafe()
         );
+      deployProgress =
+        new SingularityDeployProgress(
+          firstTargetInstances,
+          0,
+          false,
+          Collections.emptySet(),
+          System.currentTimeMillis(),
+          Collections.emptyMap(),
+          Optional.empty()
+        );
+    } else {
+      deployProgress = SingularityDeployProgress.forNonLongRunning();
     }
 
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(
       deployMarker,
-      Optional.<SingularityLoadBalancerUpdate>empty(),
       DeployState.WAITING,
       deployProgress,
       updatedValidatedRequest

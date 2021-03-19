@@ -780,14 +780,10 @@ public class SingularityScheduler {
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
-      if (
-        maybePendingDeploy.isPresent() &&
-        maybePendingDeploy.get().getDeployProgress().isPresent()
-      ) {
-        Collections.sort(matchingTaskIds, SingularityTaskId.INSTANCE_NO_COMPARATOR); // For deploy steps we replace lowest instances first, so clean those
+      if (maybePendingDeploy.isPresent()) {
+        matchingTaskIds.sort(SingularityTaskId.INSTANCE_NO_COMPARATOR); // For deploy steps we replace lowest instances first, so clean those
       } else {
-        Collections.sort(
-          matchingTaskIds,
+        matchingTaskIds.sort(
           Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)
         ); // clean the highest numbers
       }
@@ -1094,11 +1090,9 @@ public class SingularityScheduler {
       deployId
     );
 
-    if (maybeDeployStatistics.isPresent()) {
-      return maybeDeployStatistics.get();
-    }
-
-    return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
+    return maybeDeployStatistics.orElseGet(
+      () -> new SingularityDeployStatisticsBuilder(requestId, deployId).build()
+    );
   }
 
   public void handleCompletedTask(
@@ -1538,16 +1532,14 @@ public class SingularityScheduler {
   ) {
     if (
       !maybePendingDeploy.isPresent() ||
-      (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) ||
-      !maybePendingDeploy.get().getDeployProgress().isPresent()
+      (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED)
     ) {
       return request.getInstancesSafe();
     }
 
     SingularityDeployProgress deployProgress = maybePendingDeploy
       .get()
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     if (
       maybePendingDeploy
         .get()
@@ -1563,12 +1555,12 @@ public class SingularityScheduler {
           0
         );
       } else {
+        // TODO - canary settings, get size for next step
         return (
           request.getInstancesSafe() -
           (
             Math.max(
-              deployProgress.getTargetActiveInstances() -
-              deployProgress.getDeployInstanceCountPerStep(),
+              deployProgress.getTargetActiveInstances() - 0, // todo - used to be instances per step
               0
             )
           )
