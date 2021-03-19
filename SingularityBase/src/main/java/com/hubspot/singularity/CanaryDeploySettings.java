@@ -44,10 +44,16 @@ public class CanaryDeploySettings {
    */
   private final int allowedTasksFailuresPerGroup;
 
+  /**
+   * Run this many cycles of canary instance groups before launching all remaining instances
+   */
+  private final int canaryCycleCount;
+
   // TODO - max canary cycles - e.g. before skipping to all remaining instances
 
   public CanaryDeploySettings() {
     this(
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -64,13 +70,15 @@ public class CanaryDeploySettings {
     @JsonProperty("waitMillisBetweenGroups") Optional<Long> waitMillisBetweenGroups,
     @JsonProperty(
       "allowedTasksFailuresPerGroup"
-    ) Optional<Integer> allowedTasksFailuresPerGroup
+    ) Optional<Integer> allowedTasksFailuresPerGroup,
+    @JsonProperty("canaryCycleCount") Optional<Integer> canaryCycleCount
   ) {
     this.atomicSwap = atomicSwap.orElse(true);
     this.instanceGroupSize = instanceGroupSize.orElse(1);
     this.acceptanceMode = acceptanceMode.orElse(DeployAcceptanceMode.NONE);
     this.waitMillisBetweenGroups = waitMillisBetweenGroups.orElse(0L);
     this.allowedTasksFailuresPerGroup = allowedTasksFailuresPerGroup.orElse(0);
+    this.canaryCycleCount = canaryCycleCount.orElse(1);
   }
 
   public static CanaryDeploySettingsBuilder newbuilder() {
@@ -84,7 +92,8 @@ public class CanaryDeploySettings {
       .setInstanceGroupSize(instanceGroupSize)
       .setAcceptanceMode(acceptanceMode)
       .setWaitMillisBetweenGroups(waitMillisBetweenGroups)
-      .setAllowedTasksFailuresPerGroup(allowedTasksFailuresPerGroup);
+      .setAllowedTasksFailuresPerGroup(allowedTasksFailuresPerGroup)
+      .setCanaryCycleCount(canaryCycleCount);
   }
 
   @Schema(
@@ -125,5 +134,13 @@ public class CanaryDeploySettings {
   )
   public int getAllowedTasksFailuresPerGroup() {
     return allowedTasksFailuresPerGroup;
+  }
+
+  @Schema(
+    description = "Run this many canary instance groups of size `instanceGroupSize` before launching all remaining instances",
+    defaultValue = "1"
+  )
+  public int getCanaryCycleCount() {
+    return canaryCycleCount;
   }
 }

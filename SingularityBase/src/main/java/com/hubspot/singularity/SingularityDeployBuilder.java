@@ -132,7 +132,7 @@ public class SingularityDeployBuilder {
   private Optional<Boolean> shell;
   private Optional<String> user;
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
-  private CanaryDeploySettings canaryDeploySettings;
+  private Optional<CanaryDeploySettings> canaryDeploySettings;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -184,7 +184,7 @@ public class SingularityDeployBuilder {
     this.shell = Optional.empty();
     this.user = Optional.empty();
     this.s3UploaderAdditionalFiles = Collections.emptyList();
-    this.canaryDeploySettings = new CanaryDeploySettings();
+    this.canaryDeploySettings = Optional.empty();
   }
 
   public SingularityDeploy build() {
@@ -781,14 +781,14 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public CanaryDeploySettings getCanaryDeploySettings() {
+  public Optional<CanaryDeploySettings> getCanaryDeploySettings() {
     return canaryDeploySettings;
   }
 
   public SingularityDeployBuilder setCanaryDeploySettings(
     CanaryDeploySettings canaryDeploySettings
   ) {
-    this.canaryDeploySettings = canaryDeploySettings;
+    this.canaryDeploySettings = Optional.ofNullable(canaryDeploySettings);
     return this;
   }
 

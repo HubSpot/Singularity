@@ -12,7 +12,6 @@ public class SingularityDeployProgress {
   private final int deployInstanceCountPerStep;
   private final long deployStepWaitTimeMs;
   private final boolean stepComplete;
-  private final boolean autoAdvanceDeploySteps;
   private final Set<SingularityTaskId> failedDeployTasks;
   private final long timestamp;
 
@@ -23,7 +22,6 @@ public class SingularityDeployProgress {
     @JsonProperty("deployInstanceCountPerStep") int deployInstanceCountPerStep,
     @JsonProperty("deployStepWaitTimeMs") long deployStepWaitTimeMs,
     @JsonProperty("stepComplete") boolean stepComplete,
-    @JsonProperty("autoAdvanceDeploySteps") boolean autoAdvanceDeploySteps,
     @JsonProperty("failedDeployTasks") Set<SingularityTaskId> failedDeployTasks,
     @JsonProperty("timestamp") long timestamp
   ) {
@@ -32,7 +30,6 @@ public class SingularityDeployProgress {
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.stepComplete = stepComplete;
-    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.failedDeployTasks = failedDeployTasks;
     this.timestamp = timestamp;
   }
@@ -59,13 +56,6 @@ public class SingularityDeployProgress {
     return stepComplete;
   }
 
-  @Schema(
-    description = "If `true` automatically move to the next deploy step when reaching the target active instances for the current step"
-  )
-  public boolean isAutoAdvanceDeploySteps() {
-    return autoAdvanceDeploySteps;
-  }
-
   @Schema(description = "The time to wait between deploy steps in milliseconds")
   public long getDeployStepWaitTimeMs() {
     return deployStepWaitTimeMs;
@@ -88,7 +78,6 @@ public class SingularityDeployProgress {
       deployInstanceCountPerStep,
       deployStepWaitTimeMs,
       false,
-      autoAdvanceDeploySteps,
       failedDeployTasks,
       System.currentTimeMillis()
     );
@@ -101,7 +90,6 @@ public class SingularityDeployProgress {
       deployInstanceCountPerStep,
       deployStepWaitTimeMs,
       false,
-      autoAdvanceDeploySteps,
       failedDeployTasks,
       System.currentTimeMillis()
     );
@@ -114,7 +102,6 @@ public class SingularityDeployProgress {
       deployInstanceCountPerStep,
       deployStepWaitTimeMs,
       true,
-      autoAdvanceDeploySteps,
       failedDeployTasks,
       System.currentTimeMillis()
     );
@@ -127,7 +114,6 @@ public class SingularityDeployProgress {
       deployInstanceCountPerStep,
       deployStepWaitTimeMs,
       false,
-      autoAdvanceDeploySteps,
       failedTasks,
       System.currentTimeMillis()
     );
@@ -147,8 +133,6 @@ public class SingularityDeployProgress {
       deployStepWaitTimeMs +
       ", stepComplete=" +
       stepComplete +
-      ", autoAdvanceDeploySteps=" +
-      autoAdvanceDeploySteps +
       ", failedDeployTasks=" +
       failedDeployTasks +
       ", timestamp=" +

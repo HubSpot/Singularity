@@ -8,6 +8,7 @@ public class CanaryDeploySettingsBuilder {
   private Optional<Integer> instanceGroupSize = Optional.empty();
   private Optional<Long> waitMillisBetweenGroups = Optional.empty();
   private Optional<Integer> allowedTasksFailuresPerGroup = Optional.empty();
+  private Optional<Integer> canaryCycleCount = Optional.empty();
 
   public CanaryDeploySettingsBuilder() {}
 
@@ -42,13 +43,19 @@ public class CanaryDeploySettingsBuilder {
     return this;
   }
 
+  public CanaryDeploySettingsBuilder setCanaryCycleCount(int canaryCycleCount) {
+    this.canaryCycleCount = Optional.of(canaryCycleCount);
+    return this;
+  }
+
   public CanaryDeploySettings build() {
     return new CanaryDeploySettings(
       atomicSwap,
       instanceGroupSize,
       acceptanceMode,
       waitMillisBetweenGroups,
-      allowedTasksFailuresPerGroup
+      allowedTasksFailuresPerGroup,
+      canaryCycleCount
     );
   }
 }

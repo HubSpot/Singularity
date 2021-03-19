@@ -1,13 +1,10 @@
 package com.hubspot.singularity.scheduler;
 
-import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
-import com.hubspot.singularity.data.TaskManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +16,7 @@ public class CanaryDeployHelper {
     SingularityDeployProgress deployProgress,
     Collection<SingularityTaskId> otherActiveTasks,
     SingularityRequest request
+    // TODO
   ) {
     int numTasksToShutDown = Math.max(
       otherActiveTasks.size() -
@@ -36,12 +34,8 @@ public class CanaryDeployHelper {
   }
 
   public static boolean canMoveToNextStep(SingularityDeployProgress deployProgress) {
-    return (
-      deployProgress.isAutoAdvanceDeploySteps() &&
-      deployProgress.getTimestamp() +
-      deployProgress.getDeployStepWaitTimeMs() <
-      System.currentTimeMillis()
-    );
+    // TODO - checks based on mode + hooks
+    return true;
   }
 
   public static int getNewTargetInstances(
@@ -68,37 +62,12 @@ public class CanaryDeployHelper {
   }
 
   public static boolean canRetryTasks(
-    Optional<SingularityDeploy> deploy,
-    Collection<SingularityTaskId> inactiveDeployMatchingTasks,
-    TaskManager taskManager
+    SingularityDeploy deploy,
+    Collection<SingularityTaskId> inactiveDeployMatchingTasksForInstanceGroup
   ) {
-    int maxRetries = getMaxRetries(deploy);
-    long matchingInactiveTasks = inactiveDeployMatchingTasks
-      .stream()
-      .filter(
-        t -> {
-          // TODO - only tasks for most recent group somehow?
-          // All TASK_LOSTs that are not resource limit related should be able to be retried
-          for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(
-            t
-          )) {
-            if (
-              historyUpdate.getTaskState() == ExtendedTaskState.TASK_LOST &&
-              !historyUpdate.getStatusReason().orElse("").startsWith("REASON_CONTAINER")
-            ) {
-              return false;
-            }
-          }
-          return true;
-        }
-      )
-      .count();
-    return maxRetries > 0 && matchingInactiveTasks <= maxRetries;
-  }
-
-  public static int getMaxRetries(Optional<SingularityDeploy> deploy) {
-    return deploy
-      .map(d -> d.getCanaryDeploySettings().getAllowedTasksFailuresPerGroup())
-      .orElse(0);
+    int maxFailures = deploy.getCanaryDeploySettings().getAllowedTasksFailuresPerGroup();
+    return (
+      maxFailures > 0 && inactiveDeployMatchingTasksForInstanceGroup.size() <= maxFailures
+    );
   }
 }

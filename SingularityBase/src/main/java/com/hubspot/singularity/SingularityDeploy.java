@@ -216,7 +216,9 @@ public class SingularityDeploy {
     @JsonProperty(
       "s3UploaderAdditionalFiles"
     ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
-    @JsonProperty("canaryDeploySettings") CanaryDeploySettings canaryDeploySettings
+    @JsonProperty(
+      "canaryDeploySettings"
+    ) Optional<CanaryDeploySettings> canaryDeploySettings
   ) {
     this.requestId = requestId;
     this.command = command;
@@ -304,11 +306,30 @@ public class SingularityDeploy {
     this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
     this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
 
-    // TODO - construct canary settings from old fields
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
-    this.canaryDeploySettings = canaryDeploySettings;
+    if (!canaryDeploySettings.isPresent()) {
+      if (
+        deployInstanceCountPerStep.isPresent() ||
+        deployStepWaitTimeMs.isPresent() ||
+        autoAdvanceDeploySteps.isPresent()
+      ) {
+        CanaryDeploySettingsBuilder builder = CanaryDeploySettings.newbuilder();
+        deployInstanceCountPerStep.ifPresent(builder::setInstanceGroupSize);
+        deployStepWaitTimeMs.ifPresent(
+          w -> {
+            builder.setAcceptanceMode(DeployAcceptanceMode.TIMED);
+            builder.setWaitMillisBetweenGroups(w);
+          }
+        );
+        this.canaryDeploySettings = builder.build();
+      } else {
+        this.canaryDeploySettings = new CanaryDeploySettings();
+      }
+    } else {
+      this.canaryDeploySettings = canaryDeploySettings.get();
+    }
     this.maxTaskRetries = maxTaskRetries;
 
     this.shell = shell;
@@ -745,7 +766,7 @@ public class SingularityDeploy {
   }
 
   @Schema(
-    description = "A set of instructions for how to roll out groups of instances for a new deploy"
+    description = "A set of instructions for how to roll out groups of instances for a new deploy. Takes precedence over the deprecated deployStep... settings"
   )
   public CanaryDeploySettings getCanaryDeploySettings() {
     return canaryDeploySettings;

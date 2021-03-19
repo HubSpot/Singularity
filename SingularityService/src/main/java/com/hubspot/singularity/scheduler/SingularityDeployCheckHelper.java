@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
@@ -23,11 +24,13 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.TaskManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,31 +141,11 @@ public class SingularityDeployCheckHelper {
     return deployResult.getDeployState().getCleanupType();
   }
 
+  // TODO - handles canary?
   public boolean isDeployOverdue(
     SingularityPendingDeploy pendingDeploy,
-    Optional<SingularityDeploy> deploy
+    SingularityDeploy deploy
   ) {
-    if (!deploy.isPresent()) {
-      if (
-        System.currentTimeMillis() -
-        pendingDeploy.getDeployMarker().getTimestamp() >
-        TimeUnit.SECONDS.toMillis(configuration.getDeployHealthyBySeconds())
-      ) {
-        LOG.warn(
-          "Can't determine if deploy {} is overdue because it was missing, but pending time is > {}s, marking as overdue",
-          pendingDeploy,
-          configuration.getDeployHealthyBySeconds()
-        );
-        return true;
-      } else {
-        LOG.warn(
-          "Can't determine if deploy {} is overdue because it was missing",
-          pendingDeploy
-        );
-        return false;
-      }
-    }
-
     if (
       pendingDeploy.getDeployProgress().isPresent() &&
       pendingDeploy.getDeployProgress().get().isStepComplete()
@@ -173,7 +157,7 @@ public class SingularityDeployCheckHelper {
 
     final long deployDuration = System.currentTimeMillis() - startTime;
 
-    final long allowedTime = getAllowedMillis(deploy.get());
+    final long allowedTime = getAllowedMillis(deploy);
 
     if (deployDuration > allowedTime) {
       LOG.warn(
@@ -271,6 +255,26 @@ public class SingularityDeployCheckHelper {
         pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() !=
         BaragonRequestState.UNKNOWN
       )
+    );
+  }
+
+  public static boolean isWaitingForCurrentLbRequest(
+    SingularityPendingDeploy pendingDeploy
+  ) {
+    return (
+      pendingDeploy.getLastLoadBalancerUpdate().isPresent() &&
+      SingularityDeployCheckHelper
+        .getLoadBalancerRequestId(pendingDeploy)
+        .getId()
+        .equals(
+          pendingDeploy
+            .getLastLoadBalancerUpdate()
+            .get()
+            .getLoadBalancerRequestId()
+            .getId()
+        ) &&
+      pendingDeploy.getLastLoadBalancerUpdate().get().getLoadBalancerState() ==
+      BaragonRequestState.WAITING
     );
   }
 
@@ -390,7 +394,7 @@ public class SingularityDeployCheckHelper {
 
   public SingularityDeployResult getDeployResultWithFailures(
     SingularityRequest request,
-    Optional<SingularityDeploy> deploy,
+    SingularityDeploy deploy,
     SingularityPendingDeploy pendingDeploy,
     DeployState state,
     String message,
@@ -424,13 +428,14 @@ public class SingularityDeployCheckHelper {
 
   public List<SingularityDeployFailure> getDeployFailures(
     SingularityRequest request,
-    Optional<SingularityDeploy> deploy,
+    SingularityDeploy deploy,
     SingularityPendingDeploy pendingDeploy,
     DeployState state,
     Collection<SingularityTaskId> matchingTasks
   ) {
-    List<SingularityDeployFailure> failures = new ArrayList<>();
-    failures.addAll(deployHealthHelper.getTaskFailures(deploy, matchingTasks));
+    List<SingularityDeployFailure> failures = new ArrayList<>(
+      deployHealthHelper.getTaskFailures(deploy, matchingTasks)
+    );
 
     if (state == DeployState.OVERDUE) {
       int targetInstances = pendingDeploy.getDeployProgress().isPresent()
@@ -458,7 +463,8 @@ public class SingularityDeployCheckHelper {
 
   public static Set<SingularityTaskId> getNewInactiveDeployTasks(
     SingularityPendingDeploy pendingDeploy,
-    Collection<SingularityTaskId> inactiveDeployMatchingTasks
+    Collection<SingularityTaskId> inactiveDeployMatchingTasks,
+    TaskManager taskManager
   ) {
     Set<SingularityTaskId> newInactiveDeployTasks = new HashSet<>(
       inactiveDeployMatchingTasks
@@ -469,6 +475,25 @@ public class SingularityDeployCheckHelper {
       );
     }
 
-    return newInactiveDeployTasks;
+    return newInactiveDeployTasks
+      .stream()
+      .filter(
+        t -> {
+          // All TASK_LOSTs that are not resource limit related should be able to be retried
+          for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(
+            t
+          )) {
+            String historyUpdateReason = historyUpdate.getStatusReason().orElse("");
+            if (
+              historyUpdate.getTaskState() == ExtendedTaskState.TASK_LOST &&
+              !historyUpdateReason.startsWith("REASON_CONTAINER_LIM")
+            ) {
+              return false;
+            }
+          }
+          return true;
+        }
+      )
+      .collect(Collectors.toSet());
   }
 }
