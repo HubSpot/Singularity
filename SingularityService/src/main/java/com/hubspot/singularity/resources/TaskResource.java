@@ -1395,6 +1395,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
           requestBuilder.execute(this).get();
         } catch (ExecutionException | InterruptedException e) {
           LOG.error("Failed or interrupted while proxying a download from Mesos", e);
+        } finally {
+          if (wrappedOutputStream != null) {
+            wrappedOutputStream.close();
+          }
         }
       }
     }
