@@ -345,8 +345,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepOne = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
@@ -358,8 +357,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepTwo = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
     Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
@@ -563,8 +561,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepOne = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
@@ -574,8 +571,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     // Deploy should not have moved to next step even though instances are launched
-    deployProgressStepOne =
-      deployManager.getPendingDeploys().get(0).getDeployProgress().get();
+    deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
@@ -590,8 +586,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepTwo = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
     Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
@@ -696,8 +691,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepOne = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(2, deployProgressStepOne.getTargetActiveInstances());
 
@@ -710,8 +704,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepTwo = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
     Assertions.assertEquals(4, deployProgressStepTwo.getTargetActiveInstances());
 
@@ -1025,9 +1018,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     );
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    SingularityDeployProgress deployProgressStepOne = pendingDeploy
-      .getDeployProgress()
-      .get();
+    SingularityDeployProgress deployProgressStepOne = pendingDeploy.getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
@@ -1037,10 +1028,10 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assertions.assertFalse(pendingDeploy.getDeployProgress().get().isStepComplete());
+    Assertions.assertFalse(pendingDeploy.getDeployProgress().isStepComplete());
     Assertions.assertEquals(
       2,
-      pendingDeploy.getDeployProgress().get().getTargetActiveInstances()
+      pendingDeploy.getDeployProgress().getTargetActiveInstances()
     );
 
     scheduler.drainPendingQueue();
@@ -1141,8 +1132,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgressStepOne = deployManager
       .getPendingDeploys()
       .get(0)
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertTrue(deployProgressStepOne.isStepComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
@@ -1509,8 +1499,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityDeployProgress deployProgress = deployManager
       .getPendingDeploy(requestId)
       .get()
-      .getDeployProgress()
-      .get();
+      .getDeployProgress();
     Assertions.assertEquals(1, deployProgress.getTargetActiveInstances());
     Assertions.assertEquals(1, deployProgress.getCurrentActiveInstances());
 
@@ -1528,8 +1517,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     }
 
     deployChecker.checkDeploys();
-    deployProgress =
-      deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
+    deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress();
     Assertions.assertEquals(2, deployProgress.getTargetActiveInstances());
     Assertions.assertEquals(2, deployProgress.getCurrentActiveInstances());
 
@@ -1547,8 +1535,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     }
 
     deployChecker.checkDeploys();
-    deployProgress =
-      deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
+    deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress();
     Assertions.assertEquals(3, deployProgress.getTargetActiveInstances());
     Assertions.assertEquals(3, deployProgress.getCurrentActiveInstances());
   }

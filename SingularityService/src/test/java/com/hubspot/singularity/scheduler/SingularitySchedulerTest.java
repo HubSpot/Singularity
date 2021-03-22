@@ -4059,7 +4059,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     );
     List<SingularityTaskId> healthyTaskIds = deployHealthHelper.getHealthyTasks(
       updatedRequest,
-      Optional.of(firstDeploy),
+      firstDeploy,
       activeTaskIds,
       false
     );
@@ -4069,7 +4069,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       DeployHealth.WAITING,
       deployHealthHelper.getDeployHealth(
         updatedRequest,
-        Optional.of(firstDeploy),
+        firstDeploy,
         activeTaskIds,
         false
       )
@@ -4090,7 +4090,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       DeployHealth.HEALTHY,
       deployHealthHelper.getDeployHealth(
         updatedRequest,
-        Optional.of(firstDeploy),
+        firstDeploy,
         activeTaskIds,
         false
       )

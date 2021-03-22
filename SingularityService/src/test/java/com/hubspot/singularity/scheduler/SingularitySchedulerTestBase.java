@@ -1022,20 +1022,18 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(
       1,
       0,
-      1,
-      10,
       false,
-      true,
-      Collections.<SingularityTaskId>emptySet(),
-      timestamp
+      Collections.emptySet(),
+      timestamp,
+      Collections.emptyMap(),
+      Optional.empty()
     );
     deployManager.savePendingDeploy(
       new SingularityPendingDeploy(
         deployMarker,
-        Optional.<SingularityLoadBalancerUpdate>empty(),
         DeployState.WAITING,
-        Optional.of(startingDeployProgress),
-        Optional.<SingularityRequest>empty()
+        startingDeployProgress,
+        Optional.empty()
       )
     );
   }

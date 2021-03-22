@@ -875,12 +875,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(
       0,
       deployHealthHelper
-        .getHealthyTasks(
-          request,
-          Optional.of(firstDeploy),
-          taskManager.getActiveTaskIds(),
-          false
-        )
+        .getHealthyTasks(request, firstDeploy, taskManager.getActiveTaskIds(), false)
         .size()
     );
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
@@ -900,24 +895,14 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(
       1,
       deployHealthHelper
-        .getHealthyTasks(
-          request,
-          Optional.of(firstDeploy),
-          taskManager.getActiveTaskIds(),
-          false
-        )
+        .getHealthyTasks(request, firstDeploy, taskManager.getActiveTaskIds(), false)
         .size()
     );
     expiringUserActionPoller.runActionOnPoll();
     Assertions.assertEquals(
       1,
       deployHealthHelper
-        .getHealthyTasks(
-          request,
-          Optional.of(firstDeploy),
-          taskManager.getActiveTaskIds(),
-          false
-        )
+        .getHealthyTasks(request, firstDeploy, taskManager.getActiveTaskIds(), false)
         .size()
     );
   }
