@@ -16,7 +16,9 @@ import java.util.Set;
 public class SingularityDeployProgress {
   private final int targetActiveInstances;
   private final int currentActiveInstances;
-  private final boolean stepComplete;
+  private final boolean stepLaunchComplete;
+  private final Map<String, Boolean> stepAcceptanceResults;
+  private final Set<String> acceptanceResultMessageHistory;
   private final Set<SingularityTaskId> failedDeployTasks;
   private final long timestamp;
   private final Map<String, DeployProgressLbUpdateHolder> lbUpdates;
@@ -30,7 +32,9 @@ public class SingularityDeployProgress {
       Collections.emptySet(),
       System.currentTimeMillis(),
       Collections.emptyMap(),
-      Optional.empty()
+      Optional.empty(),
+      Collections.emptyMap(),
+      Collections.emptySet()
     );
   }
 
@@ -38,21 +42,31 @@ public class SingularityDeployProgress {
   public SingularityDeployProgress(
     @JsonProperty("targetActiveInstances") int targetActiveInstances,
     @JsonProperty("currentActiveInstances") int currentActiveInstances,
-    @JsonProperty("stepComplete") boolean stepComplete,
+    @JsonProperty("stepLaunchComplete") boolean stepLaunchComplete,
     @JsonProperty("failedDeployTasks") Set<SingularityTaskId> failedDeployTasks,
     @JsonProperty("timestamp") long timestamp,
     @JsonProperty("lbUpdates") Map<String, DeployProgressLbUpdateHolder> lbUpdates,
     @JsonProperty(
       "pendingLbUpdate"
-    ) Optional<SingularityLoadBalancerUpdate> pendingLbUpdate
+    ) Optional<SingularityLoadBalancerUpdate> pendingLbUpdate,
+    @JsonProperty("stepAcceptanceResults") Map<String, Boolean> stepAcceptanceResults,
+    @JsonProperty(
+      "acceptanceResultMessageHistory"
+    ) Set<String> acceptanceResultMessageHistory
   ) {
     this.targetActiveInstances = targetActiveInstances;
     this.currentActiveInstances = currentActiveInstances;
-    this.stepComplete = stepComplete;
+    this.stepLaunchComplete = stepLaunchComplete;
     this.failedDeployTasks = failedDeployTasks;
     this.timestamp = timestamp;
     this.lbUpdates = lbUpdates == null ? new HashMap<>() : lbUpdates;
     this.pendingLbUpdate = pendingLbUpdate;
+    this.stepAcceptanceResults =
+      stepAcceptanceResults == null ? new HashMap<>() : stepAcceptanceResults;
+    this.acceptanceResultMessageHistory =
+      acceptanceResultMessageHistory == null
+        ? new HashSet<>()
+        : acceptanceResultMessageHistory;
   }
 
   @Schema(description = "The desired number of instances for the current deploy step")
@@ -65,9 +79,21 @@ public class SingularityDeployProgress {
     return currentActiveInstances;
   }
 
-  @Schema(description = "`true` if the current deploy step has completed")
-  public boolean isStepComplete() {
-    return stepComplete;
+  @Schema(
+    description = "`true` if the current deploy step has completed launch instances (and adding to load balancer)"
+  )
+  public boolean isStepLaunchComplete() {
+    return stepLaunchComplete;
+  }
+
+  @Schema(description = "Results from configured post-deploy step checks")
+  public Map<String, Boolean> getStepAcceptanceResults() {
+    return stepAcceptanceResults;
+  }
+
+  @Schema(description = "Messages from all previously run deploy checks")
+  public Set<String> getAcceptanceResultMessageHistory() {
+    return acceptanceResultMessageHistory;
   }
 
   @Schema(description = "Tasks for this deploy that have failed so far")
@@ -98,7 +124,9 @@ public class SingularityDeployProgress {
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdates,
-      pendingLbUpdate
+      pendingLbUpdate,
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
@@ -110,11 +138,13 @@ public class SingularityDeployProgress {
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdates,
-      pendingLbUpdate
+      pendingLbUpdate,
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
-  public SingularityDeployProgress withCompletedStep() {
+  public SingularityDeployProgress withCompletedStepLaunch() {
     return new SingularityDeployProgress(
       targetActiveInstances,
       currentActiveInstances,
@@ -122,7 +152,9 @@ public class SingularityDeployProgress {
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdates,
-      pendingLbUpdate
+      pendingLbUpdate,
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
@@ -134,7 +166,9 @@ public class SingularityDeployProgress {
       failedTasks,
       System.currentTimeMillis(),
       lbUpdates,
-      pendingLbUpdate
+      pendingLbUpdate,
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
@@ -169,7 +203,9 @@ public class SingularityDeployProgress {
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdateMap,
-      Optional.of(loadBalancerUpdate)
+      Optional.of(loadBalancerUpdate),
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
@@ -193,7 +229,9 @@ public class SingularityDeployProgress {
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdateMap,
-      Optional.empty()
+      Optional.empty(),
+      stepAcceptanceResults,
+      acceptanceResultMessageHistory
     );
   }
 
@@ -203,7 +241,9 @@ public class SingularityDeployProgress {
       .toStringHelper(this)
       .add("targetActiveInstances", targetActiveInstances)
       .add("currentActiveInstances", currentActiveInstances)
-      .add("stepComplete", stepComplete)
+      .add("stepLaunchComplete", stepLaunchComplete)
+      .add("stepAcceptanceResults", stepAcceptanceResults)
+      .add("acceptanceResultMessageHistory", acceptanceResultMessageHistory)
       .add("failedDeployTasks", failedDeployTasks)
       .add("timestamp", timestamp)
       .add("lbUpdates", lbUpdates)

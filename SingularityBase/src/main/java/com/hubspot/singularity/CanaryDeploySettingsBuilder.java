@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import java.util.Optional;
 
 public class CanaryDeploySettingsBuilder {
-  private Optional<Boolean> atomicSwap = Optional.empty();
+  private Optional<Boolean> enableCanaryDeploy = Optional.empty();
   private Optional<DeployAcceptanceMode> acceptanceMode = Optional.empty();
   private Optional<Integer> instanceGroupSize = Optional.empty();
   private Optional<Long> waitMillisBetweenGroups = Optional.empty();
@@ -12,8 +12,8 @@ public class CanaryDeploySettingsBuilder {
 
   public CanaryDeploySettingsBuilder() {}
 
-  public CanaryDeploySettingsBuilder setAtomicSwap(boolean atomicSwap) {
-    this.atomicSwap = Optional.of(atomicSwap);
+  public CanaryDeploySettingsBuilder setEnableCanaryDeploy(boolean enableCanaryDeploy) {
+    this.enableCanaryDeploy = Optional.of(enableCanaryDeploy);
     return this;
   }
 
@@ -50,7 +50,7 @@ public class CanaryDeploySettingsBuilder {
 
   public CanaryDeploySettings build() {
     return new CanaryDeploySettings(
-      atomicSwap,
+      enableCanaryDeploy,
       instanceGroupSize,
       acceptanceMode,
       waitMillisBetweenGroups,

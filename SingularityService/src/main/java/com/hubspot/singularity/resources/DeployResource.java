@@ -214,12 +214,12 @@ public class DeployResource extends AbstractRequestResource {
 
     SingularityDeployProgress deployProgress;
     if (request.isLongRunning()) {
-      int firstTargetInstances = deploy.getCanaryDeploySettings().isAtomicSwap()
-        ? request.getInstancesSafe()
-        : Math.min(
+      int firstTargetInstances = deploy.getCanaryDeploySettings().isEnableCanaryDeploy()
+        ? Math.min(
           deploy.getCanaryDeploySettings().getInstanceGroupSize(),
           request.getInstancesSafe()
-        );
+        )
+        : request.getInstancesSafe();
       deployProgress =
         new SingularityDeployProgress(
           firstTargetInstances,

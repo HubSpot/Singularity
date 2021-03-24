@@ -3,7 +3,6 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -124,29 +123,29 @@ public class SingularityDeployCheckHelper {
   public static TaskCleanupType getCleanupType(
     SingularityPendingDeploy pendingDeploy,
     SingularityRequest request,
-    SingularityDeployResult deployResult
+    DeployState deployState
   ) {
-    // TODO canary settings
     if (
-      1 != // TODO - if not at full scale yet/canary in progress
+      pendingDeploy.getDeployProgress().getTargetActiveInstances() !=
       request.getInstancesSafe()
     ) {
       // For incremental deploys, return a special cleanup type
-      if (deployResult.getDeployState() == DeployState.FAILED) {
+      if (deployState == DeployState.FAILED) {
         return TaskCleanupType.INCREMENTAL_DEPLOY_FAILED;
-      } else if (deployResult.getDeployState() == DeployState.CANCELED) {
+      } else if (deployState == DeployState.CANCELED) {
         return TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED;
+      } else if (deployState == DeployState.SUCCEEDED) {
+        return TaskCleanupType.DEPLOY_STEP_FINISHED;
       }
     }
-    return deployResult.getDeployState().getCleanupType();
+    return deployState.getCleanupType();
   }
 
-  // TODO - handles canary?
   public boolean isDeployOverdue(
     SingularityPendingDeploy pendingDeploy,
     SingularityDeploy deploy
   ) {
-    if (pendingDeploy.getDeployProgress().isStepComplete()) {
+    if (pendingDeploy.getDeployProgress().isStepLaunchComplete()) {
       return false;
     }
 
@@ -236,15 +235,16 @@ public class SingularityDeployCheckHelper {
     return pendingDeploy.getDeployProgress().getPendingLbUpdate().isPresent();
   }
 
-  public static LoadBalancerRequestId getLoadBalancerRequestId(
+  public static LoadBalancerRequestId getNewLoadBalancerRequestId(
     SingularityPendingDeploy pendingDeploy
   ) {
     return new LoadBalancerRequestId(
       String.format(
-        "%s-%s-%s",
+        "%s-%s-%s-%d",
         pendingDeploy.getDeployMarker().getRequestId(),
         pendingDeploy.getDeployMarker().getDeployId(),
-        pendingDeploy.getDeployProgress().getTargetActiveInstances()
+        pendingDeploy.getDeployProgress().getTargetActiveInstances(),
+        System.currentTimeMillis()
       ),
       LoadBalancerRequestType.DEPLOY,
       Optional.empty()

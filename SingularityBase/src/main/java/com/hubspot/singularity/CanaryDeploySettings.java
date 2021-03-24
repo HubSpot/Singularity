@@ -10,17 +10,17 @@ import java.util.Optional;
 )
 public class CanaryDeploySettings {
   /**
-   * For Load Balanced deploys, if true:
+   * For Load Balanced deploys, if false:
    * - Once all instances are healthy, a single LB update adding all new instances + removing all old instances will execute
    * - No rolling/incremental options are available
    * For Non Load Balanced Deploys, if true:
    * - All old deploy tasks will be marked as cleaning as soon as all new deploy tasks are healthy
    * - No rolling/incremental options are available
    *
-   * If false, new deploy tasks will be spun up according to the settings below. It is possible for
+   * If true, new deploy tasks will be spun up according to the settings below. It is possible for
    * new and old deploy tasks to be active/in the load balancer at once
    */
-  private final boolean atomicSwap;
+  private final boolean enableCanaryDeploy;
 
   /**
    * Use to determine how to decide that a deploy, or canary group is successful.
@@ -64,7 +64,7 @@ public class CanaryDeploySettings {
 
   @JsonCreator
   public CanaryDeploySettings(
-    @JsonProperty("atomicSwap") Optional<Boolean> atomicSwap,
+    @JsonProperty("enableCanaryDeploy") Optional<Boolean> enableCanaryDeploy,
     @JsonProperty("instanceGroupSize") Optional<Integer> instanceGroupSize,
     @JsonProperty("acceptanceMode") Optional<DeployAcceptanceMode> acceptanceMode,
     @JsonProperty("waitMillisBetweenGroups") Optional<Long> waitMillisBetweenGroups,
@@ -73,7 +73,7 @@ public class CanaryDeploySettings {
     ) Optional<Integer> allowedTasksFailuresPerGroup,
     @JsonProperty("canaryCycleCount") Optional<Integer> canaryCycleCount
   ) {
-    this.atomicSwap = atomicSwap.orElse(true);
+    this.enableCanaryDeploy = enableCanaryDeploy.orElse(false);
     this.instanceGroupSize = instanceGroupSize.orElse(1);
     this.acceptanceMode = acceptanceMode.orElse(DeployAcceptanceMode.NONE);
     this.waitMillisBetweenGroups = waitMillisBetweenGroups.orElse(0L);
@@ -88,7 +88,7 @@ public class CanaryDeploySettings {
   public CanaryDeploySettingsBuilder toBuilder() {
     CanaryDeploySettingsBuilder builder = new CanaryDeploySettingsBuilder();
     return builder
-      .setAtomicSwap(atomicSwap)
+      .setEnableCanaryDeploy(enableCanaryDeploy)
       .setInstanceGroupSize(instanceGroupSize)
       .setAcceptanceMode(acceptanceMode)
       .setWaitMillisBetweenGroups(waitMillisBetweenGroups)
@@ -100,8 +100,8 @@ public class CanaryDeploySettings {
     description = "Determines if instances are launched and accepted in a rolling fashion or all at once",
     defaultValue = "false"
   )
-  public boolean isAtomicSwap() {
-    return atomicSwap;
+  public boolean isEnableCanaryDeploy() {
+    return enableCanaryDeploy;
   }
 
   @Schema(
