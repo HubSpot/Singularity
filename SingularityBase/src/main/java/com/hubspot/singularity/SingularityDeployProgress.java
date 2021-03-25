@@ -23,6 +23,7 @@ public class SingularityDeployProgress {
   private final long timestamp;
   private final Map<String, DeployProgressLbUpdateHolder> lbUpdates;
   private final Optional<SingularityLoadBalancerUpdate> pendingLbUpdate;
+  private final boolean canary;
 
   public static SingularityDeployProgress forNonLongRunning() {
     return new SingularityDeployProgress(
@@ -34,17 +35,22 @@ public class SingularityDeployProgress {
       Collections.emptyMap(),
       Optional.empty(),
       Collections.emptyMap(),
-      Collections.emptySet()
+      Collections.emptySet(),
+      false
     );
-  }
-
-  public static SingularityDeployProgress forNewDeploy(int firstTargetInstances) {
-    return forNewDeploy(firstTargetInstances, System.currentTimeMillis());
   }
 
   public static SingularityDeployProgress forNewDeploy(
     int firstTargetInstances,
-    long timestamp
+    boolean canary
+  ) {
+    return forNewDeploy(firstTargetInstances, System.currentTimeMillis(), canary);
+  }
+
+  public static SingularityDeployProgress forNewDeploy(
+    int firstTargetInstances,
+    long timestamp,
+    boolean canary
   ) {
     return new SingularityDeployProgress(
       firstTargetInstances,
@@ -55,7 +61,8 @@ public class SingularityDeployProgress {
       Collections.emptyMap(),
       Optional.empty(),
       Collections.emptyMap(),
-      Collections.emptySet()
+      Collections.emptySet(),
+      canary
     );
   }
 
@@ -73,7 +80,8 @@ public class SingularityDeployProgress {
     @JsonProperty("stepAcceptanceResults") Map<String, Boolean> stepAcceptanceResults,
     @JsonProperty(
       "acceptanceResultMessageHistory"
-    ) Set<String> acceptanceResultMessageHistory
+    ) Set<String> acceptanceResultMessageHistory,
+    @JsonProperty("canary") boolean canary
   ) {
     this.targetActiveInstances = targetActiveInstances;
     this.currentActiveInstances = currentActiveInstances;
@@ -88,6 +96,7 @@ public class SingularityDeployProgress {
       acceptanceResultMessageHistory == null
         ? new HashSet<>()
         : acceptanceResultMessageHistory;
+    this.canary = canary;
   }
 
   @Schema(description = "The desired number of instances for the current deploy step")
@@ -137,6 +146,11 @@ public class SingularityDeployProgress {
     return pendingLbUpdate;
   }
 
+  @Schema(description = "True if this is a canary deploy")
+  public boolean isCanary() {
+    return canary;
+  }
+
   public SingularityDeployProgress withNewTargetInstances(int instances) {
     return new SingularityDeployProgress(
       instances,
@@ -147,7 +161,8 @@ public class SingularityDeployProgress {
       lbUpdates,
       pendingLbUpdate,
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -161,7 +176,8 @@ public class SingularityDeployProgress {
       lbUpdates,
       pendingLbUpdate,
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -175,7 +191,8 @@ public class SingularityDeployProgress {
       lbUpdates,
       pendingLbUpdate,
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -189,7 +206,8 @@ public class SingularityDeployProgress {
       lbUpdates,
       pendingLbUpdate,
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -210,7 +228,7 @@ public class SingularityDeployProgress {
   ) {
     Map<String, DeployProgressLbUpdateHolder> lbUpdateMap = new HashMap<>(lbUpdates);
     lbUpdateMap.put(
-      loadBalancerUpdate.getLoadBalancerRequestId().getId(),
+      loadBalancerUpdate.getLoadBalancerRequestId().toString(),
       new DeployProgressLbUpdateHolder(
         loadBalancerUpdate,
         new HashSet<>(added),
@@ -226,7 +244,8 @@ public class SingularityDeployProgress {
       lbUpdateMap,
       Optional.of(loadBalancerUpdate),
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -236,7 +255,7 @@ public class SingularityDeployProgress {
   ) {
     Map<String, DeployProgressLbUpdateHolder> lbUpdateMap = new HashMap<>(lbUpdates);
     lbUpdateMap.put(
-      loadBalancerUpdate.getLoadBalancerRequestId().getId(),
+      loadBalancerUpdate.getLoadBalancerRequestId().toString(),
       new DeployProgressLbUpdateHolder(
         loadBalancerUpdate,
         lbUpdateHolder.getAdded(),
@@ -252,7 +271,8 @@ public class SingularityDeployProgress {
       lbUpdateMap,
       Optional.empty(),
       stepAcceptanceResults,
-      acceptanceResultMessageHistory
+      acceptanceResultMessageHistory,
+      canary
     );
   }
 
@@ -269,6 +289,7 @@ public class SingularityDeployProgress {
       .add("timestamp", timestamp)
       .add("lbUpdates", lbUpdates)
       .add("pendingLbUpdate", pendingLbUpdate)
+      .add("canary", canary)
       .toString();
   }
 }

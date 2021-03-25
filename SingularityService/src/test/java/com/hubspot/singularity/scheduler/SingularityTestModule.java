@@ -110,7 +110,7 @@ public class SingularityTestModule implements Module {
     Logger hsLogger = context.getLogger("com.hubspot");
     hsLogger.setLevel(
       Level.toLevel(
-        System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")
+        System.getProperty("singularity.test.log.level.for.com.hubspot", "DEBUG")
       )
     );
 

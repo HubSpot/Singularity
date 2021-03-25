@@ -219,7 +219,11 @@ public class DeployResource extends AbstractRequestResource {
           request.getInstancesSafe()
         )
         : request.getInstancesSafe();
-      deployProgress = SingularityDeployProgress.forNewDeploy(firstTargetInstances);
+      deployProgress =
+        SingularityDeployProgress.forNewDeploy(
+          firstTargetInstances,
+          deploy.getCanaryDeploySettings().isEnableCanaryDeploy()
+        );
     } else {
       deployProgress = SingularityDeployProgress.forNonLongRunning();
     }

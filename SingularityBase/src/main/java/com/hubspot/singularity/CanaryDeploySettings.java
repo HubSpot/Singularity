@@ -2,7 +2,9 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 import java.util.Optional;
 
 @Schema(
@@ -142,5 +144,49 @@ public class CanaryDeploySettings {
   )
   public int getCanaryCycleCount() {
     return canaryCycleCount;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    CanaryDeploySettings that = (CanaryDeploySettings) o;
+    return (
+      enableCanaryDeploy == that.enableCanaryDeploy &&
+      instanceGroupSize == that.instanceGroupSize &&
+      waitMillisBetweenGroups == that.waitMillisBetweenGroups &&
+      allowedTasksFailuresPerGroup == that.allowedTasksFailuresPerGroup &&
+      canaryCycleCount == that.canaryCycleCount &&
+      acceptanceMode == that.acceptanceMode
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      enableCanaryDeploy,
+      acceptanceMode,
+      instanceGroupSize,
+      waitMillisBetweenGroups,
+      allowedTasksFailuresPerGroup,
+      canaryCycleCount
+    );
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects
+      .toStringHelper(this)
+      .add("enableCanaryDeploy", enableCanaryDeploy)
+      .add("acceptanceMode", acceptanceMode)
+      .add("instanceGroupSize", instanceGroupSize)
+      .add("waitMillisBetweenGroups", waitMillisBetweenGroups)
+      .add("allowedTasksFailuresPerGroup", allowedTasksFailuresPerGroup)
+      .add("canaryCycleCount", canaryCycleCount)
+      .toString();
   }
 }

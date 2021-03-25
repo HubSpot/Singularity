@@ -504,6 +504,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     );
 
     deployChecker.checkDeploys();
+    deployChecker.checkDeploys();
 
     Assertions.assertEquals(
       DeployState.SUCCEEDED,
@@ -721,6 +722,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
         Optional.<Boolean>empty()
       )
     );
+    deployChecker.checkDeploys();
     deployChecker.checkDeploys();
     Assertions.assertEquals(
       DeployState.SUCCEEDED,

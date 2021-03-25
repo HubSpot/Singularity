@@ -1408,6 +1408,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
     deployChecker.checkDeploys();
+    deployChecker.checkDeploys();
 
     // First task from old deploy should still have no LB updates, but should have a cleanup
     Assertions.assertFalse(
@@ -3938,6 +3939,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     initSecondDeploy();
     startTask(secondDeploy);
+    deployChecker.checkDeploys();
     deployChecker.checkDeploys();
 
     Assertions.assertEquals(

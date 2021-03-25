@@ -1538,7 +1538,14 @@ public class SingularityScheduler {
       .getDeployId()
       .equals(pendingRequest.getDeployId());
     if (!pendingRequestIsForPendingDeploy) {
-      return request.getInstancesSafe();
+      if (maybePendingDeploy.get().getDeployProgress().isCanary()) {
+        return (
+          request.getInstancesSafe() -
+          maybePendingDeploy.get().getDeployProgress().getCurrentActiveInstances()
+        );
+      } else {
+        return request.getInstancesSafe();
+      }
     }
     if (
       maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED ||

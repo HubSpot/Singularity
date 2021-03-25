@@ -243,20 +243,12 @@ public class SingularityDeploy {
     this.mesosLabels =
       mesosLabels.isPresent()
         ? mesosLabels
-        : (
-          labels.isPresent()
-            ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get()))
-            : Optional.empty()
-        );
+        : (labels.map(SingularityMesosTaskLabel::labelsFromMap));
     this.taskLabels = taskLabels;
     this.mesosTaskLabels =
       mesosTaskLabels.isPresent()
         ? mesosTaskLabels
-        : (
-          taskLabels.isPresent()
-            ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get()))
-            : Optional.empty()
-        );
+        : (taskLabels.map(SingularityDeploy::parseMesosTaskLabelsFromMap));
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -273,20 +265,16 @@ public class SingularityDeploy {
           new HealthcheckOptions(
             healthcheckUri.get(),
             healthcheckPortIndex,
-            Optional.<Long>empty(),
+            Optional.empty(),
             healthcheckProtocol,
-            Optional.<HealthcheckMethod>empty(),
-            Optional.<Integer>empty(),
-            Optional.<Integer>empty(),
-            Optional.<Integer>empty(),
-            healthcheckIntervalSeconds.isPresent()
-              ? Optional.of(healthcheckIntervalSeconds.get().intValue())
-              : Optional.<Integer>empty(),
-            healthcheckTimeoutSeconds.isPresent()
-              ? Optional.of(healthcheckTimeoutSeconds.get().intValue())
-              : Optional.<Integer>empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            healthcheckIntervalSeconds.map(Long::intValue),
+            healthcheckTimeoutSeconds.map(Long::intValue),
             healthcheckMaxRetries,
-            Optional.<List<Integer>>empty(),
+            Optional.empty(),
             Optional.empty()
           )
         );
@@ -310,12 +298,9 @@ public class SingularityDeploy {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     if (!canaryDeploySettings.isPresent()) {
-      if (
-        deployInstanceCountPerStep.isPresent() ||
-        deployStepWaitTimeMs.isPresent() ||
-        autoAdvanceDeploySteps.isPresent()
-      ) {
+      if (deployInstanceCountPerStep.isPresent() || maxTaskRetries.isPresent()) {
         CanaryDeploySettingsBuilder builder = CanaryDeploySettings.newbuilder();
+        builder.setEnableCanaryDeploy(deployInstanceCountPerStep.isPresent());
         deployInstanceCountPerStep.ifPresent(builder::setInstanceGroupSize);
         deployStepWaitTimeMs.ifPresent(
           w -> {
@@ -323,6 +308,7 @@ public class SingularityDeploy {
             builder.setWaitMillisBetweenGroups(w);
           }
         );
+        maxTaskRetries.ifPresent(builder::setAllowedTasksFailuresPerGroup);
         this.canaryDeploySettings = builder.build();
       } else {
         this.canaryDeploySettings = new CanaryDeploySettings();

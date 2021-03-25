@@ -125,10 +125,7 @@ public class SingularityDeployCheckHelper {
     SingularityRequest request,
     DeployState deployState
   ) {
-    if (
-      pendingDeploy.getDeployProgress().getTargetActiveInstances() !=
-      request.getInstancesSafe()
-    ) {
+    if (pendingDeploy.getDeployProgress().isCanary()) {
       // For incremental deploys, return a special cleanup type
       if (deployState == DeployState.FAILED) {
         return TaskCleanupType.INCREMENTAL_DEPLOY_FAILED;

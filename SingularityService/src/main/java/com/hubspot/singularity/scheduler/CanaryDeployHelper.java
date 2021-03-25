@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import com.hubspot.singularity.CanaryDeploySettings;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityRequest;
@@ -35,7 +36,8 @@ public class CanaryDeployHelper {
   public static int getNewTargetInstances(
     SingularityDeployProgress deployProgress,
     SingularityRequest request,
-    Optional<SingularityUpdatePendingDeployRequest> updateRequest
+    Optional<SingularityUpdatePendingDeployRequest> updateRequest,
+    CanaryDeploySettings canaryDeploySettings
   ) {
     return updateRequest
       .map(
@@ -48,7 +50,8 @@ public class CanaryDeployHelper {
       .orElseGet(
         () ->
           Math.min(
-            deployProgress.getTargetActiveInstances() + 1, // TODO ?????
+            deployProgress.getTargetActiveInstances() +
+            canaryDeploySettings.getInstanceGroupSize(),
             request.getInstancesSafe()
           )
       );

@@ -877,7 +877,15 @@ public class SingularityDeployChecker {
             pendingDeploy.getDeployMarker().getMessage()
           )
         );
-        return new SingularityDeployResult(DeployState.WAITING);
+        return checkDeployProgress(
+          request,
+          pendingDeploy,
+          updatePendingDeployRequest,
+          deploy,
+          deployActiveTasks,
+          otherActiveTasks,
+          inactiveDeployMatchingTasks
+        );
       } else {
         // Can't retry, clean up the deploy
         if (
@@ -1109,7 +1117,7 @@ public class SingularityDeployChecker {
       inactiveDeployMatchingTasks,
       otherActiveTasks
     );
-    if (!deploy.getCanaryDeploySettings().isEnableCanaryDeploy()) {
+    if (deploy.getCanaryDeploySettings().isEnableCanaryDeploy()) {
       switch (acceptanceHookState) {
         case WAITING:
           return new SingularityDeployResult(DeployState.WAITING);
@@ -1125,13 +1133,15 @@ public class SingularityDeployChecker {
               request.getInstancesSafe()
             );
             SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress();
+            // TODO - take canaryCycleCount into account here
             SingularityDeployProgress newProgress = pendingDeploy
               .getDeployProgress()
               .withNewTargetInstances(
                 CanaryDeployHelper.getNewTargetInstances(
                   deployProgress,
                   request,
-                  updatePendingDeployRequest
+                  updatePendingDeployRequest,
+                  deploy.getCanaryDeploySettings()
                 )
               )
               // Keep the list of previous failed task ids so they can be excluded from next groups check
