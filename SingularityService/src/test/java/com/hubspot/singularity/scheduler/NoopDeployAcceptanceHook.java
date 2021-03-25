@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.DeployAcceptanceResult;
 import com.hubspot.singularity.DeployAcceptanceState;
@@ -16,6 +17,9 @@ public class NoopDeployAcceptanceHook implements DeployAcceptanceHook {
     DeployAcceptanceState.SUCCEEDED,
     "no-op"
   );
+
+  @Inject
+  public NoopDeployAcceptanceHook() {}
 
   @Override
   public String getName() {
