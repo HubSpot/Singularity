@@ -21,6 +21,7 @@ import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
@@ -47,6 +48,7 @@ import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
+import com.hubspot.singularity.hooks.DeployAcceptanceHook;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.managed.SingularityLifecycleManagedTest;
@@ -237,23 +239,22 @@ public class SingularityTestModule implements Module {
       Modules
         .override(new SingularityMesosModule())
         .with(
-          new Module() {
+          binder -> {
+            SingularityMesosExecutorInfoSupport logSupport = mock(
+              SingularityMesosExecutorInfoSupport.class
+            );
+            binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            @Override
-            public void configure(Binder binder) {
-              SingularityMesosExecutorInfoSupport logSupport = mock(
-                SingularityMesosExecutorInfoSupport.class
-              );
-              binder
-                .bind(SingularityMesosExecutorInfoSupport.class)
-                .toInstance(logSupport);
-
-              SingularityMesosSchedulerClient mockClient = mock(
-                SingularityMesosSchedulerClient.class
-              );
-              when(mockClient.isRunning()).thenReturn(true);
-              binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
-            }
+            SingularityMesosSchedulerClient mockClient = mock(
+              SingularityMesosSchedulerClient.class
+            );
+            when(mockClient.isRunning()).thenReturn(true);
+            binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
+            Multibinder
+              .newSetBinder(binder, DeployAcceptanceHook.class)
+              .addBinding()
+              .to(NoopDeployAcceptanceHook.class)
+              .in(Scopes.SINGLETON);
           }
         )
     );

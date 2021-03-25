@@ -39,6 +39,7 @@ public class CanaryDeployHelper {
     Optional<SingularityUpdatePendingDeployRequest> updateRequest,
     CanaryDeploySettings canaryDeploySettings
   ) {
+    // TODO - Use canary cycle count here
     return updateRequest
       .map(
         singularityUpdatePendingDeployRequest ->

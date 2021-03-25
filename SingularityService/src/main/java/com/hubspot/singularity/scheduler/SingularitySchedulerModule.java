@@ -48,5 +48,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(RebalancingHelper.class).in(Scopes.SINGLETON);
     bind(SingularityUpstreamPoller.class).in(Scopes.SINGLETON);
     bind(SingularityUpstreamChecker.class).in(Scopes.SINGLETON);
+    bind(SingularityDeployAcceptanceManager.class).in(Scopes.SINGLETON);
   }
 }

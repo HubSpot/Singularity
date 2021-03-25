@@ -17,7 +17,7 @@ public class SingularityDeployProgress {
   private final int targetActiveInstances;
   private final int currentActiveInstances;
   private final boolean stepLaunchComplete;
-  private final Map<String, Boolean> stepAcceptanceResults;
+  private final Map<String, DeployAcceptanceState> stepAcceptanceResults;
   private final Set<String> acceptanceResultMessageHistory;
   private final Set<SingularityTaskId> failedDeployTasks;
   private final long timestamp;
@@ -77,7 +77,9 @@ public class SingularityDeployProgress {
     @JsonProperty(
       "pendingLbUpdate"
     ) Optional<SingularityLoadBalancerUpdate> pendingLbUpdate,
-    @JsonProperty("stepAcceptanceResults") Map<String, Boolean> stepAcceptanceResults,
+    @JsonProperty(
+      "stepAcceptanceResults"
+    ) Map<String, DeployAcceptanceState> stepAcceptanceResults,
     @JsonProperty(
       "acceptanceResultMessageHistory"
     ) Set<String> acceptanceResultMessageHistory,
@@ -117,7 +119,7 @@ public class SingularityDeployProgress {
   }
 
   @Schema(description = "Results from configured post-deploy step checks")
-  public Map<String, Boolean> getStepAcceptanceResults() {
+  public Map<String, DeployAcceptanceState> getStepAcceptanceResults() {
     return stepAcceptanceResults;
   }
 
@@ -151,7 +153,10 @@ public class SingularityDeployProgress {
     return canary;
   }
 
-  public SingularityDeployProgress withNewTargetInstances(int instances) {
+  public SingularityDeployProgress withNewTargetInstances(
+    int instances,
+    boolean resetAcceptanceResults
+  ) {
     return new SingularityDeployProgress(
       instances,
       currentActiveInstances,
@@ -160,7 +165,7 @@ public class SingularityDeployProgress {
       System.currentTimeMillis(),
       lbUpdates,
       pendingLbUpdate,
-      stepAcceptanceResults,
+      resetAcceptanceResults ? new HashMap<>() : stepAcceptanceResults,
       acceptanceResultMessageHistory,
       canary
     );
@@ -272,6 +277,35 @@ public class SingularityDeployProgress {
       Optional.empty(),
       stepAcceptanceResults,
       acceptanceResultMessageHistory,
+      canary
+    );
+  }
+
+  public SingularityDeployProgress withAcceptanceProgress(
+    Map<String, DeployAcceptanceResult> results
+  ) {
+    Map<String, DeployAcceptanceState> updatedResults = new HashMap<>(
+      stepAcceptanceResults
+    );
+    Set<String> resultHistory = new HashSet<>(acceptanceResultMessageHistory);
+    results.forEach(
+      (name, result) -> {
+        resultHistory.add(
+          String.format("(%s - %s) %s", name, result.getState(), result.getMessage())
+        );
+        updatedResults.put(name, result.getState());
+      }
+    );
+    return new SingularityDeployProgress(
+      targetActiveInstances,
+      currentActiveInstances,
+      false,
+      failedDeployTasks,
+      System.currentTimeMillis(),
+      lbUpdates,
+      pendingLbUpdate,
+      updatedResults,
+      resultHistory,
       canary
     );
   }
