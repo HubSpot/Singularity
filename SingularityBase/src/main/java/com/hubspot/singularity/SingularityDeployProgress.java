@@ -38,6 +38,27 @@ public class SingularityDeployProgress {
     );
   }
 
+  public static SingularityDeployProgress forNewDeploy(int firstTargetInstances) {
+    return forNewDeploy(firstTargetInstances, System.currentTimeMillis());
+  }
+
+  public static SingularityDeployProgress forNewDeploy(
+    int firstTargetInstances,
+    long timestamp
+  ) {
+    return new SingularityDeployProgress(
+      firstTargetInstances,
+      0,
+      false,
+      Collections.emptySet(),
+      timestamp,
+      Collections.emptyMap(),
+      Optional.empty(),
+      Collections.emptyMap(),
+      Collections.emptySet()
+    );
+  }
+
   @JsonCreator
   public SingularityDeployProgress(
     @JsonProperty("targetActiveInstances") int targetActiveInstances,

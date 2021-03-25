@@ -346,7 +346,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
@@ -358,7 +358,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertFalse(deployProgressStepTwo.isStepLaunchComplete());
     Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
@@ -562,7 +562,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
@@ -572,7 +572,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     // Deploy should not have moved to next step even though instances are launched
     deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     // Add the 'ok' to move to the next step
@@ -587,7 +587,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertFalse(deployProgressStepTwo.isStepLaunchComplete());
     Assertions.assertEquals(2, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
@@ -692,7 +692,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(2, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
@@ -705,7 +705,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertFalse(deployProgressStepTwo.isStepComplete());
+    Assertions.assertFalse(deployProgressStepTwo.isStepLaunchComplete());
     Assertions.assertEquals(4, deployProgressStepTwo.getTargetActiveInstances());
 
     scheduler.drainPendingQueue();
@@ -1019,7 +1019,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     SingularityDeployProgress deployProgressStepOne = pendingDeploy.getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();
@@ -1028,7 +1028,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
-    Assertions.assertFalse(pendingDeploy.getDeployProgress().isStepComplete());
+    Assertions.assertFalse(pendingDeploy.getDeployProgress().isStepLaunchComplete());
     Assertions.assertEquals(
       2,
       pendingDeploy.getDeployProgress().getTargetActiveInstances()
@@ -1133,7 +1133,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .getPendingDeploys()
       .get(0)
       .getDeployProgress();
-    Assertions.assertTrue(deployProgressStepOne.isStepComplete());
+    Assertions.assertTrue(deployProgressStepOne.isStepLaunchComplete());
     Assertions.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     cleaner.drainCleanupQueue();

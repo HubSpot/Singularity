@@ -1019,14 +1019,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
-    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(
+    SingularityDeployProgress startingDeployProgress = SingularityDeployProgress.forNewDeploy(
       1,
-      0,
-      false,
-      Collections.emptySet(),
-      timestamp,
-      Collections.emptyMap(),
-      Optional.empty()
+      timestamp
     );
     deployManager.savePendingDeploy(
       new SingularityPendingDeploy(

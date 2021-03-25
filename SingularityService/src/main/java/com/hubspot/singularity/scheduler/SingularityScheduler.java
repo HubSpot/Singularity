@@ -18,7 +18,6 @@ import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -1530,43 +1529,26 @@ public class SingularityScheduler {
     SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy
   ) {
-    if (
-      !maybePendingDeploy.isPresent() ||
-      (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED)
-    ) {
+    if (!maybePendingDeploy.isPresent()) {
       return request.getInstancesSafe();
     }
-
-    SingularityDeployProgress deployProgress = maybePendingDeploy
+    boolean pendingRequestIsForPendingDeploy = maybePendingDeploy
       .get()
-      .getDeployProgress();
-    if (
-      maybePendingDeploy
-        .get()
-        .getDeployMarker()
-        .getDeployId()
-        .equals(pendingRequest.getDeployId())
-    ) {
-      return deployProgress.getTargetActiveInstances();
-    } else {
-      if (deployProgress.isStepComplete()) {
-        return Math.max(
-          request.getInstancesSafe() - deployProgress.getTargetActiveInstances(),
-          0
-        );
-      } else {
-        // TODO - canary settings, get size for next step
-        return (
-          request.getInstancesSafe() -
-          (
-            Math.max(
-              deployProgress.getTargetActiveInstances() - 0, // todo - used to be instances per step
-              0
-            )
-          )
-        );
-      }
+      .getDeployMarker()
+      .getDeployId()
+      .equals(pendingRequest.getDeployId());
+    if (!pendingRequestIsForPendingDeploy) {
+      return request.getInstancesSafe();
     }
+    if (
+      maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED ||
+      maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELING
+    ) {
+      return 0;
+    }
+
+    // Pending request is for the in progress deploy, calculate instances from deploy progress
+    return maybePendingDeploy.get().getDeployProgress().getTargetActiveInstances();
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(

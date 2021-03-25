@@ -16,7 +16,6 @@ public class CanaryDeployHelper {
     SingularityDeployProgress deployProgress,
     Collection<SingularityTaskId> otherActiveTasks,
     SingularityRequest request
-    // TODO
   ) {
     int numTasksToShutDown = Math.max(
       otherActiveTasks.size() -
@@ -31,11 +30,6 @@ public class CanaryDeployHelper {
         0,
         Math.min(numTasksToShutDown, sortedOtherTasks.size())
       );
-  }
-
-  public static boolean canMoveToNextStep(SingularityDeployProgress deployProgress) {
-    // TODO - checks based on mode + hooks
-    return true;
   }
 
   public static int getNewTargetInstances(

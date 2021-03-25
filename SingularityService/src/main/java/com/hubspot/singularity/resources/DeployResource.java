@@ -44,7 +44,6 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
@@ -220,16 +219,7 @@ public class DeployResource extends AbstractRequestResource {
           request.getInstancesSafe()
         )
         : request.getInstancesSafe();
-      deployProgress =
-        new SingularityDeployProgress(
-          firstTargetInstances,
-          0,
-          false,
-          Collections.emptySet(),
-          System.currentTimeMillis(),
-          Collections.emptyMap(),
-          Optional.empty()
-        );
+      deployProgress = SingularityDeployProgress.forNewDeploy(firstTargetInstances);
     } else {
       deployProgress = SingularityDeployProgress.forNonLongRunning();
     }

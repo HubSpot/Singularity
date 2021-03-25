@@ -273,7 +273,7 @@ public class StateManager extends CuratorManager {
 
     for (SingularityPendingDeploy pendingDeploy : deployManager.getPendingDeploys()) {
       activeDeploys.add(pendingDeploy.getDeployMarker());
-      if (!pendingDeploy.getDeployProgress().isStepComplete()) {
+      if (!pendingDeploy.getDeployProgress().isStepLaunchComplete()) {
         long deployStepDelta = now - pendingDeploy.getDeployProgress().getTimestamp();
         if (deployStepDelta > oldestDeployStep) {
           oldestDeployStep = deployStepDelta;

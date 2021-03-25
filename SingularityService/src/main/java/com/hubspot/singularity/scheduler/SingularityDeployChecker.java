@@ -1115,7 +1115,7 @@ public class SingularityDeployChecker {
           return new SingularityDeployResult(DeployState.WAITING);
         case SUCCEEDED:
           if (deployActiveTasks.size() >= request.getInstancesSafe()) {
-            createTaskCleanups(otherActiveTasks, "New deploy succeeded");
+            cleanupTasks(pendingDeploy, request, DeployState.SUCCEEDED, otherActiveTasks);
             return new SingularityDeployResult(DeployState.SUCCEEDED);
           } else {
             LOG.info(
@@ -1136,12 +1136,15 @@ public class SingularityDeployChecker {
               )
               // Keep the list of previous failed task ids so they can be excluded from next groups check
               .withFailedTasks(new HashSet<>(inactiveDeployMatchingTasks));
-            // TODO - properly calc tasks to shut down
             cleanupTasks(
               pendingDeploy,
               request,
               DeployState.SUCCEEDED,
-              CanaryDeployHelper.tasksToShutDown()
+              CanaryDeployHelper.tasksToShutDown(
+                deployProgress,
+                otherActiveTasks,
+                request
+              )
             );
             requestManager.addToPendingQueue(
               new SingularityPendingRequest(
@@ -1166,27 +1169,11 @@ public class SingularityDeployChecker {
         case WAITING:
           return new SingularityDeployResult(DeployState.WAITING);
         case SUCCEEDED:
-          createTaskCleanups(otherActiveTasks, "New deploy succeeded");
+          cleanupTasks(pendingDeploy, request, DeployState.SUCCEEDED, otherActiveTasks);
           return new SingularityDeployResult(DeployState.SUCCEEDED);
         default:
           return new SingularityDeployResult(acceptanceHookState);
       }
-    }
-  }
-
-  private void createTaskCleanups(Collection<SingularityTaskId> taskIds, String message) {
-    for (SingularityTaskId taskId : taskIds) {
-      taskManager.createTaskCleanup(
-        new SingularityTaskCleanup(
-          Optional.empty(),
-          TaskCleanupType.DEPLOY_STEP_FINISHED,
-          System.currentTimeMillis(),
-          taskId,
-          Optional.of(message),
-          Optional.empty(),
-          Optional.empty()
-        )
-      );
     }
   }
 
