@@ -1120,7 +1120,15 @@ public class SingularityDeployChecker {
           pendingDeploy.getDeployProgress().getTimestamp() +
           deploy.getCanaryDeploySettings().getWaitMillisBetweenGroups()
         ) {
-          return new SingularityDeployResult(DeployState.SUCCEEDED);
+          return checkCanaryMaybeFinished(
+            request,
+            deploy,
+            pendingDeploy,
+            deployActiveTasks,
+            updatePendingDeployRequest,
+            inactiveDeployMatchingTasks,
+            otherActiveTasks
+          );
         } else {
           return new SingularityDeployResult(DeployState.WAITING);
         }
@@ -1158,48 +1166,16 @@ public class SingularityDeployChecker {
                 String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
               );
             } else {
-              LOG.info(
-                "Deploy {} has completed step to {} instances (out of {})",
-                pendingDeploy.getDeployMarker(),
-                pendingDeploy.getDeployProgress().getTargetActiveInstances(),
-                request.getInstancesSafe()
-              );
-              SingularityDeployProgress newStepProgress = updatedProgress
-                .withNewTargetInstances(
-                  CanaryDeployHelper.getNewTargetInstances(
-                    updatedProgress,
-                    request,
-                    updatePendingDeployRequest,
-                    deploy.getCanaryDeploySettings()
-                  ),
-                  deployActiveTasks.size(),
-                  true
-                )
-                // Keep the list of previous failed task ids so they can be excluded from next groups check
-                .withFailedTasks(new HashSet<>(inactiveDeployMatchingTasks));
-              cleanupTasks(
-                pendingDeploy,
+              return advanceDeployStep(
+                updatedProgress,
                 request,
-                DeployState.SUCCEEDED,
-                CanaryDeployHelper.tasksToShutDown(
-                  updatedProgress,
-                  otherActiveTasks,
-                  request
-                )
+                deploy,
+                pendingDeploy,
+                deployActiveTasks,
+                updatePendingDeployRequest,
+                inactiveDeployMatchingTasks,
+                otherActiveTasks
               );
-              requestManager.addToPendingQueue(
-                new SingularityPendingRequest(
-                  request.getId(),
-                  pendingDeploy.getDeployMarker().getDeployId(),
-                  System.currentTimeMillis(),
-                  pendingDeploy.getDeployMarker().getUser(),
-                  PendingType.NEXT_DEPLOY_STEP,
-                  deploy.getSkipHealthchecksOnDeploy(),
-                  pendingDeploy.getDeployMarker().getMessage()
-                )
-              );
-              updatePendingDeploy(pendingDeploy, DeployState.WAITING, newStepProgress);
-              return new SingularityDeployResult(DeployState.WAITING);
             }
           } else if (acceptanceHookDeployState == DeployState.FAILED) {
             updatePendingDeploy(
@@ -1248,8 +1224,101 @@ public class SingularityDeployChecker {
         }
       case NONE:
       default:
-        return new SingularityDeployResult(DeployState.SUCCEEDED);
+        return checkCanaryMaybeFinished(
+          request,
+          deploy,
+          pendingDeploy,
+          deployActiveTasks,
+          updatePendingDeployRequest,
+          inactiveDeployMatchingTasks,
+          otherActiveTasks
+        );
     }
+  }
+
+  private SingularityDeployResult checkCanaryMaybeFinished(
+    SingularityRequest request,
+    SingularityDeploy deploy,
+    SingularityPendingDeploy pendingDeploy,
+    Collection<SingularityTaskId> deployActiveTasks,
+    Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest,
+    Collection<SingularityTaskId> inactiveDeployMatchingTasks,
+    Collection<SingularityTaskId> otherActiveTasks
+  ) {
+    if (deploy.getCanaryDeploySettings().isEnableCanaryDeploy()) {
+      if (deployActiveTasks.size() >= request.getInstancesSafe()) {
+        cleanupTasks(pendingDeploy, request, DeployState.SUCCEEDED, otherActiveTasks);
+        updatePendingDeploy(
+          pendingDeploy,
+          DeployState.SUCCEEDED,
+          pendingDeploy.getDeployProgress()
+        );
+        return new SingularityDeployResult(DeployState.SUCCEEDED);
+      } else {
+        return advanceDeployStep(
+          pendingDeploy.getDeployProgress(),
+          request,
+          deploy,
+          pendingDeploy,
+          deployActiveTasks,
+          updatePendingDeployRequest,
+          inactiveDeployMatchingTasks,
+          otherActiveTasks
+        );
+      }
+    } else {
+      return new SingularityDeployResult(DeployState.SUCCEEDED);
+    }
+  }
+
+  private SingularityDeployResult advanceDeployStep(
+    SingularityDeployProgress deployProgressCurrent,
+    SingularityRequest request,
+    SingularityDeploy deploy,
+    SingularityPendingDeploy pendingDeploy,
+    Collection<SingularityTaskId> deployActiveTasks,
+    Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest,
+    Collection<SingularityTaskId> inactiveDeployMatchingTasks,
+    Collection<SingularityTaskId> otherActiveTasks
+  ) {
+    LOG.info(
+      "Deploy {} has completed step to {} instances (out of {})",
+      pendingDeploy.getDeployMarker(),
+      pendingDeploy.getDeployProgress().getTargetActiveInstances(),
+      request.getInstancesSafe()
+    );
+    SingularityDeployProgress newStepProgress = deployProgressCurrent
+      .withNewTargetInstances(
+        CanaryDeployHelper.getNewTargetInstances(
+          deployProgressCurrent,
+          request,
+          updatePendingDeployRequest,
+          deploy.getCanaryDeploySettings()
+        ),
+        deployActiveTasks.size(),
+        true
+      )
+      // Keep the list of previous failed task ids so they can be excluded from next groups check
+      .withFailedTasks(new HashSet<>(inactiveDeployMatchingTasks));
+    cleanupTasks(
+      pendingDeploy,
+      request,
+      DeployState.SUCCEEDED,
+      CanaryDeployHelper.tasksToShutDown(deployProgressCurrent, otherActiveTasks, request)
+    );
+    requestManager.addToPendingQueue(
+      new SingularityPendingRequest(
+        request.getId(),
+        pendingDeploy.getDeployMarker().getDeployId(),
+        System.currentTimeMillis(),
+        pendingDeploy.getDeployMarker().getUser(),
+        PendingType.NEXT_DEPLOY_STEP,
+        deploy.getSkipHealthchecksOnDeploy(),
+        pendingDeploy.getDeployMarker().getMessage()
+      )
+    );
+    updatePendingDeploy(pendingDeploy, DeployState.WAITING, newStepProgress);
+    return new SingularityDeployResult(DeployState.WAITING);
   }
 
   private SingularityDeployResult enqueueAndProcessLbRequest(
