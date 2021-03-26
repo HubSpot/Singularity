@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,7 +20,7 @@ public class SingularityDeployProgress {
   private final int currentActiveInstances;
   private final boolean stepLaunchComplete;
   private final Map<String, DeployAcceptanceState> stepAcceptanceResults;
-  private final Set<String> acceptanceResultMessageHistory;
+  private final List<String> acceptanceResultMessageHistory;
   private final Set<SingularityTaskId> failedDeployTasks;
   private final long timestamp;
   private final Map<String, DeployProgressLbUpdateHolder> lbUpdates;
@@ -35,7 +37,7 @@ public class SingularityDeployProgress {
       Collections.emptyMap(),
       Optional.empty(),
       Collections.emptyMap(),
-      Collections.emptySet(),
+      Collections.emptyList(),
       false
     );
   }
@@ -61,7 +63,7 @@ public class SingularityDeployProgress {
       Collections.emptyMap(),
       Optional.empty(),
       Collections.emptyMap(),
-      Collections.emptySet(),
+      Collections.emptyList(),
       canary
     );
   }
@@ -82,7 +84,7 @@ public class SingularityDeployProgress {
     ) Map<String, DeployAcceptanceState> stepAcceptanceResults,
     @JsonProperty(
       "acceptanceResultMessageHistory"
-    ) Set<String> acceptanceResultMessageHistory,
+    ) List<String> acceptanceResultMessageHistory,
     @JsonProperty("canary") boolean canary
   ) {
     this.targetActiveInstances = targetActiveInstances;
@@ -96,7 +98,7 @@ public class SingularityDeployProgress {
       stepAcceptanceResults == null ? new HashMap<>() : stepAcceptanceResults;
     this.acceptanceResultMessageHistory =
       acceptanceResultMessageHistory == null
-        ? new HashSet<>()
+        ? new ArrayList<>()
         : acceptanceResultMessageHistory;
     this.canary = canary;
   }
@@ -124,7 +126,7 @@ public class SingularityDeployProgress {
   }
 
   @Schema(description = "Messages from all previously run deploy checks")
-  public Set<String> getAcceptanceResultMessageHistory() {
+  public List<String> getAcceptanceResultMessageHistory() {
     return acceptanceResultMessageHistory;
   }
 
@@ -155,11 +157,12 @@ public class SingularityDeployProgress {
 
   public SingularityDeployProgress withNewTargetInstances(
     int instances,
+    int currentActive,
     boolean resetAcceptanceResults
   ) {
     return new SingularityDeployProgress(
       instances,
-      currentActiveInstances,
+      currentActive,
       false,
       failedDeployTasks,
       System.currentTimeMillis(),
@@ -287,7 +290,7 @@ public class SingularityDeployProgress {
     Map<String, DeployAcceptanceState> updatedResults = new HashMap<>(
       stepAcceptanceResults
     );
-    Set<String> resultHistory = new HashSet<>(acceptanceResultMessageHistory);
+    List<String> resultHistory = new ArrayList<>(acceptanceResultMessageHistory);
     results.forEach(
       (name, result) -> {
         resultHistory.add(
@@ -299,7 +302,7 @@ public class SingularityDeployProgress {
     return new SingularityDeployProgress(
       targetActiveInstances,
       currentActiveInstances,
-      false,
+      stepLaunchComplete,
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdates,

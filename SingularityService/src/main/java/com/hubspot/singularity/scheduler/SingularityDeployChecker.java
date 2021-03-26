@@ -1169,6 +1169,7 @@ public class SingularityDeployChecker {
                     updatePendingDeployRequest,
                     deploy.getCanaryDeploySettings()
                   ),
+                  deployActiveTasks.size(),
                   true
                 )
                 // Keep the list of previous failed task ids so they can be excluded from next groups check
@@ -1197,6 +1198,16 @@ public class SingularityDeployChecker {
               updatePendingDeploy(pendingDeploy, DeployState.WAITING, newStepProgress);
               return new SingularityDeployResult(DeployState.WAITING);
             }
+          } else if (acceptanceHookDeployState == DeployState.FAILED) {
+            updatePendingDeploy(
+              pendingDeploy,
+              acceptanceHookDeployState,
+              updatedProgress
+            );
+            return new SingularityDeployResult(
+              acceptanceHookDeployState,
+              String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+            );
           }
           updatePendingDeploy(pendingDeploy, acceptanceHookDeployState, updatedProgress);
           return new SingularityDeployResult(acceptanceHookDeployState);
@@ -1404,6 +1415,7 @@ public class SingularityDeployChecker {
             updatePendingDeployRequest.get().getTargetActiveInstances(),
             request.getInstancesSafe()
           ),
+          pendingDeploy.getDeployProgress().getCurrentActiveInstances(),
           true
         );
       updatePendingDeploy(pendingDeploy, DeployState.WAITING, newProgress);
