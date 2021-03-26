@@ -39,7 +39,6 @@ public class CanaryDeployHelper {
     Optional<SingularityUpdatePendingDeployRequest> updateRequest,
     CanaryDeploySettings canaryDeploySettings
   ) {
-    // TODO - Use canary cycle count here
     return updateRequest
       .map(
         singularityUpdatePendingDeployRequest ->
@@ -49,12 +48,21 @@ public class CanaryDeployHelper {
           )
       )
       .orElseGet(
-        () ->
-          Math.min(
-            deployProgress.getTargetActiveInstances() +
-            canaryDeploySettings.getInstanceGroupSize(),
-            request.getInstancesSafe()
-          )
+        () -> {
+          int cycleCount =
+            deployProgress.getTargetActiveInstances() /
+            canaryDeploySettings.getAllowedTasksFailuresPerGroup();
+          if (cycleCount >= canaryDeploySettings.getCanaryCycleCount()) {
+            // We have run enough canary cycles, launch everything remaining
+            return request.getInstancesSafe();
+          } else {
+            return Math.min(
+              deployProgress.getTargetActiveInstances() +
+              canaryDeploySettings.getInstanceGroupSize(),
+              request.getInstancesSafe()
+            );
+          }
+        }
       );
   }
 
