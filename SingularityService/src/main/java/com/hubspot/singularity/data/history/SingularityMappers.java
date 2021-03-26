@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
@@ -227,17 +223,16 @@ public class SingularityMappers {
       );
       SingularityDeployResult deployState = new SingularityDeployResult(
         DeployState.valueOf(r.getString("deployState")),
-        Optional.<String>empty(),
-        Optional.<SingularityLoadBalancerUpdate>empty(),
-        Collections.<SingularityDeployFailure>emptyList(),
+        Optional.empty(),
+        Collections.emptyList(),
         r.getTimestamp("deployStateAt").getTime()
       );
 
       return new SingularityDeployHistory(
         Optional.of(deployState),
         marker,
-        Optional.<SingularityDeploy>empty(),
-        Optional.<SingularityDeployStatistics>empty()
+        Optional.empty(),
+        Optional.empty()
       );
     }
   }

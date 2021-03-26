@@ -1019,23 +1019,17 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
-    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(
+    SingularityDeployProgress startingDeployProgress = SingularityDeployProgress.forNewDeploy(
       1,
-      0,
-      1,
-      10,
-      false,
-      true,
-      Collections.<SingularityTaskId>emptySet(),
-      timestamp
+      timestamp,
+      false
     );
     deployManager.savePendingDeploy(
       new SingularityPendingDeploy(
         deployMarker,
-        Optional.<SingularityLoadBalancerUpdate>empty(),
         DeployState.WAITING,
-        Optional.of(startingDeployProgress),
-        Optional.<SingularityRequest>empty()
+        startingDeployProgress,
+        Optional.empty()
       )
     );
   }
@@ -1117,13 +1111,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void deploy(String deployId) {
-    deploy(
-      deployId,
-      Optional.<Boolean>empty(),
-      Optional.<Integer>empty(),
-      Optional.<Boolean>empty(),
-      false
-    );
+    deploy(deployId, Optional.empty(), Optional.empty(), Optional.empty(), false);
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {

@@ -18,7 +18,6 @@ import com.hubspot.singularity.SingularityAgent;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -780,14 +779,10 @@ public class SingularityScheduler {
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
-      if (
-        maybePendingDeploy.isPresent() &&
-        maybePendingDeploy.get().getDeployProgress().isPresent()
-      ) {
-        Collections.sort(matchingTaskIds, SingularityTaskId.INSTANCE_NO_COMPARATOR); // For deploy steps we replace lowest instances first, so clean those
+      if (maybePendingDeploy.isPresent()) {
+        matchingTaskIds.sort(SingularityTaskId.INSTANCE_NO_COMPARATOR); // For deploy steps we replace lowest instances first, so clean those
       } else {
-        Collections.sort(
-          matchingTaskIds,
+        matchingTaskIds.sort(
           Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)
         ); // clean the highest numbers
       }
@@ -1094,11 +1089,9 @@ public class SingularityScheduler {
       deployId
     );
 
-    if (maybeDeployStatistics.isPresent()) {
-      return maybeDeployStatistics.get();
-    }
-
-    return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
+    return maybeDeployStatistics.orElseGet(
+      () -> new SingularityDeployStatisticsBuilder(requestId, deployId).build()
+    );
   }
 
   public void handleCompletedTask(
@@ -1536,45 +1529,33 @@ public class SingularityScheduler {
     SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy
   ) {
-    if (
-      !maybePendingDeploy.isPresent() ||
-      (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) ||
-      !maybePendingDeploy.get().getDeployProgress().isPresent()
-    ) {
+    if (!maybePendingDeploy.isPresent()) {
       return request.getInstancesSafe();
     }
-
-    SingularityDeployProgress deployProgress = maybePendingDeploy
+    boolean pendingRequestIsForPendingDeploy = maybePendingDeploy
       .get()
-      .getDeployProgress()
-      .get();
-    if (
-      maybePendingDeploy
-        .get()
-        .getDeployMarker()
-        .getDeployId()
-        .equals(pendingRequest.getDeployId())
-    ) {
-      return deployProgress.getTargetActiveInstances();
-    } else {
-      if (deployProgress.isStepComplete()) {
-        return Math.max(
-          request.getInstancesSafe() - deployProgress.getTargetActiveInstances(),
-          0
-        );
-      } else {
+      .getDeployMarker()
+      .getDeployId()
+      .equals(pendingRequest.getDeployId());
+    if (!pendingRequestIsForPendingDeploy) {
+      if (maybePendingDeploy.get().getDeployProgress().isCanary()) {
         return (
           request.getInstancesSafe() -
-          (
-            Math.max(
-              deployProgress.getTargetActiveInstances() -
-              deployProgress.getDeployInstanceCountPerStep(),
-              0
-            )
-          )
+          maybePendingDeploy.get().getDeployProgress().getCurrentActiveInstances()
         );
+      } else {
+        return request.getInstancesSafe();
       }
     }
+    if (
+      maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED ||
+      maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELING
+    ) {
+      return 0;
+    }
+
+    // Pending request is for the in progress deploy, calculate instances from deploy progress
+    return maybePendingDeploy.get().getDeployProgress().getTargetActiveInstances();
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(

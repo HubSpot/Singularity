@@ -317,12 +317,14 @@ public class SingularityCleaner {
       activeDeployId
     );
 
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(
-      requestWithState.get().getRequest(),
-      deploy,
-      matchingTasks,
-      false
-    );
+    final DeployHealth deployHealth = deploy.isPresent()
+      ? deployHealthHelper.getDeployHealth(
+        requestWithState.get().getRequest(),
+        deploy.get(),
+        matchingTasks,
+        false
+      )
+      : DeployHealth.UNHEALTHY;
 
     switch (deployHealth) {
       case HEALTHY:
@@ -443,12 +445,9 @@ public class SingularityCleaner {
       deployId
     );
 
-    List<SingularityTaskId> healthyTasks = deployHealthHelper.getHealthyTasks(
-      request,
-      deploy,
-      matchingTasks,
-      false
-    );
+    List<SingularityTaskId> healthyTasks = deploy.isPresent()
+      ? deployHealthHelper.getHealthyTasks(request, deploy.get(), matchingTasks, false)
+      : matchingTasks;
 
     int numHealthyTasks = 0;
 

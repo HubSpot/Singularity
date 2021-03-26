@@ -39,13 +39,9 @@ import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 public class StateManager extends CuratorManager {
-  private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
-
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "/STATE";
   private static final String TASK_RECONCILIATION_STATISTICS_PATH =
@@ -277,12 +273,8 @@ public class StateManager extends CuratorManager {
 
     for (SingularityPendingDeploy pendingDeploy : deployManager.getPendingDeploys()) {
       activeDeploys.add(pendingDeploy.getDeployMarker());
-      if (
-        pendingDeploy.getDeployProgress().isPresent() &&
-        !pendingDeploy.getDeployProgress().get().isStepComplete()
-      ) {
-        long deployStepDelta =
-          now - pendingDeploy.getDeployProgress().get().getTimestamp();
+      if (!pendingDeploy.getDeployProgress().isStepLaunchComplete()) {
+        long deployStepDelta = now - pendingDeploy.getDeployProgress().getTimestamp();
         if (deployStepDelta > oldestDeployStep) {
           oldestDeployStep = deployStepDelta;
         }

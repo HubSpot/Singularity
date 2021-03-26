@@ -546,13 +546,15 @@ public class RequestHelper {
         requestId,
         entry.getKey()
       );
-      List<SingularityTaskId> healthyTasksIdsForDeploy = deployHealthHelper.getHealthyTasks(
-        requestWithState.getRequest(),
-        deploy,
-        entry.getValue(),
-        pendingDeploy.isPresent() &&
-        pendingDeploy.get().getDeployMarker().getDeployId().equals(entry.getKey())
-      );
+      List<SingularityTaskId> healthyTasksIdsForDeploy = deploy.isPresent()
+        ? deployHealthHelper.getHealthyTasks(
+          requestWithState.getRequest(),
+          deploy.get(),
+          entry.getValue(),
+          pendingDeploy.isPresent() &&
+          pendingDeploy.get().getDeployMarker().getDeployId().equals(entry.getKey())
+        )
+        : entry.getValue();
       for (SingularityTaskId taskId : entry.getValue()) {
         if (taskManager.isKilledTask(taskId)) {
           killedTaskIds.add(taskId);

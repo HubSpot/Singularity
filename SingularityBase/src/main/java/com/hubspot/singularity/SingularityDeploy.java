@@ -6,6 +6,7 @@ import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -109,13 +111,35 @@ public class SingularityDeploy {
   private final Optional<String> loadBalancerTemplate;
   private final Optional<String> loadBalancerServiceIdOverride;
   private final Optional<String> loadBalancerUpstreamGroup;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private final Optional<Integer> deployInstanceCountPerStep;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private final Optional<Integer> deployStepWaitTimeMs;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private final Optional<Boolean> autoAdvanceDeploySteps;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private final Optional<Integer> maxTaskRetries;
+
   private final Optional<Boolean> shell;
   private final Optional<String> user;
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
+  private final CanaryDeploySettings canaryDeploySettings;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -191,7 +215,10 @@ public class SingularityDeploy {
     @JsonProperty("user") Optional<String> user,
     @JsonProperty(
       "s3UploaderAdditionalFiles"
-    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles
+    ) List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+    @JsonProperty(
+      "canaryDeploySettings"
+    ) Optional<CanaryDeploySettings> canaryDeploySettings
   ) {
     this.requestId = requestId;
     this.command = command;
@@ -216,20 +243,12 @@ public class SingularityDeploy {
     this.mesosLabels =
       mesosLabels.isPresent()
         ? mesosLabels
-        : (
-          labels.isPresent()
-            ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get()))
-            : Optional.empty()
-        );
+        : (labels.map(SingularityMesosTaskLabel::labelsFromMap));
     this.taskLabels = taskLabels;
     this.mesosTaskLabels =
       mesosTaskLabels.isPresent()
         ? mesosTaskLabels
-        : (
-          taskLabels.isPresent()
-            ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get()))
-            : Optional.empty()
-        );
+        : (taskLabels.map(SingularityDeploy::parseMesosTaskLabelsFromMap));
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -246,20 +265,16 @@ public class SingularityDeploy {
           new HealthcheckOptions(
             healthcheckUri.get(),
             healthcheckPortIndex,
-            Optional.<Long>empty(),
+            Optional.empty(),
             healthcheckProtocol,
-            Optional.<HealthcheckMethod>empty(),
-            Optional.<Integer>empty(),
-            Optional.<Integer>empty(),
-            Optional.<Integer>empty(),
-            healthcheckIntervalSeconds.isPresent()
-              ? Optional.of(healthcheckIntervalSeconds.get().intValue())
-              : Optional.<Integer>empty(),
-            healthcheckTimeoutSeconds.isPresent()
-              ? Optional.of(healthcheckTimeoutSeconds.get().intValue())
-              : Optional.<Integer>empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            healthcheckIntervalSeconds.map(Long::intValue),
+            healthcheckTimeoutSeconds.map(Long::intValue),
             healthcheckMaxRetries,
-            Optional.<List<Integer>>empty(),
+            Optional.empty(),
             Optional.empty()
           )
         );
@@ -282,7 +297,27 @@ public class SingularityDeploy {
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
+    if (!canaryDeploySettings.isPresent()) {
+      if (deployInstanceCountPerStep.isPresent() || maxTaskRetries.isPresent()) {
+        CanaryDeploySettingsBuilder builder = CanaryDeploySettings.newbuilder();
+        builder.setEnableCanaryDeploy(deployInstanceCountPerStep.isPresent());
+        deployInstanceCountPerStep.ifPresent(builder::setInstanceGroupSize);
+        deployStepWaitTimeMs.ifPresent(
+          w -> {
+            builder.setAcceptanceMode(DeployAcceptanceMode.TIMED);
+            builder.setWaitMillisBetweenGroups(w);
+          }
+        );
+        maxTaskRetries.ifPresent(builder::setAllowedTasksFailuresPerGroup);
+        this.canaryDeploySettings = builder.build();
+      } else {
+        this.canaryDeploySettings = new CanaryDeploySettings();
+      }
+    } else {
+      this.canaryDeploySettings = canaryDeploySettings.get();
+    }
     this.maxTaskRetries = maxTaskRetries;
+
     this.shell = shell;
     this.user = user;
     this.s3UploaderAdditionalFiles =
@@ -351,7 +386,8 @@ public class SingularityDeploy {
       .setMaxTaskRetries(maxTaskRetries)
       .setShell(shell)
       .setUser(user)
-      .setS3UploaderAdditionalFiles(s3UploaderAdditionalFiles);
+      .setS3UploaderAdditionalFiles(s3UploaderAdditionalFiles)
+      .setCanaryDeploySettings(canaryDeploySettings);
   }
 
   @Schema(
@@ -656,16 +692,28 @@ public class SingularityDeploy {
     return healthcheck;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   @Schema(nullable = true, description = "deploy this many instances at a time")
   public Optional<Integer> getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   @Schema(nullable = true, description = "wait this long between deploy steps")
   public Optional<Integer> getDeployStepWaitTimeMs() {
     return deployStepWaitTimeMs;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   @Schema(
     nullable = true,
     description = "automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds"
@@ -674,6 +722,10 @@ public class SingularityDeploy {
     return autoAdvanceDeploySteps;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   @Schema(
     nullable = true,
     description = "allowed at most this many failed tasks to be retried before failing the deploy"
@@ -699,6 +751,13 @@ public class SingularityDeploy {
     return s3UploaderAdditionalFiles;
   }
 
+  @Schema(
+    description = "A set of instructions for how to roll out groups of instances for a new deploy. Takes precedence over the deprecated deployStep... settings"
+  )
+  public CanaryDeploySettings getCanaryDeploySettings() {
+    return canaryDeploySettings;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -707,525 +766,177 @@ public class SingularityDeploy {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityDeploy that = (SingularityDeploy) o;
-
-    if (requestId != null ? !requestId.equals(that.requestId) : that.requestId != null) {
-      return false;
-    }
-    if (id != null ? !id.equals(that.id) : that.id != null) {
-      return false;
-    }
-    if (version != null ? !version.equals(that.version) : that.version != null) {
-      return false;
-    }
-    if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) {
-      return false;
-    }
-    if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) {
-      return false;
-    }
-    if (
-      containerInfo != null
-        ? !containerInfo.equals(that.containerInfo)
-        : that.containerInfo != null
-    ) {
-      return false;
-    }
-    if (
-      customExecutorCmd != null
-        ? !customExecutorCmd.equals(that.customExecutorCmd)
-        : that.customExecutorCmd != null
-    ) {
-      return false;
-    }
-    if (
-      customExecutorId != null
-        ? !customExecutorId.equals(that.customExecutorId)
-        : that.customExecutorId != null
-    ) {
-      return false;
-    }
-    if (
-      customExecutorSource != null
-        ? !customExecutorSource.equals(that.customExecutorSource)
-        : that.customExecutorSource != null
-    ) {
-      return false;
-    }
-    if (
-      customExecutorResources != null
-        ? !customExecutorResources.equals(that.customExecutorResources)
-        : that.customExecutorResources != null
-    ) {
-      return false;
-    }
-    if (resources != null ? !resources.equals(that.resources) : that.resources != null) {
-      return false;
-    }
-    if (command != null ? !command.equals(that.command) : that.command != null) {
-      return false;
-    }
-    if (arguments != null ? !arguments.equals(that.arguments) : that.arguments != null) {
-      return false;
-    }
-    if (env != null ? !env.equals(that.env) : that.env != null) {
-      return false;
-    }
-    if (uris != null ? !uris.equals(that.uris) : that.uris != null) {
-      return false;
-    }
-    if (
-      executorData != null
-        ? !executorData.equals(that.executorData)
-        : that.executorData != null
-    ) {
-      return false;
-    }
-    if (labels != null ? !labels.equals(that.labels) : that.labels != null) {
-      return false;
-    }
-    if (
-      mesosLabels != null
-        ? !mesosLabels.equals(that.mesosLabels)
-        : that.mesosLabels != null
-    ) {
-      return false;
-    }
-    if (
-      taskLabels != null ? !taskLabels.equals(that.taskLabels) : that.taskLabels != null
-    ) {
-      return false;
-    }
-    if (
-      mesosTaskLabels != null
-        ? !mesosTaskLabels.equals(that.mesosTaskLabels)
-        : that.mesosTaskLabels != null
-    ) {
-      return false;
-    }
-    if (taskEnv != null ? !taskEnv.equals(that.taskEnv) : that.taskEnv != null) {
-      return false;
-    }
-    if (
-      runImmediatelyRequest != null
-        ? !runImmediatelyRequest.equals(that.runImmediatelyRequest)
-        : that.runImmediatelyRequest != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckUri != null
-        ? !healthcheckUri.equals(that.healthcheckUri)
-        : that.healthcheckUri != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckIntervalSeconds != null
-        ? !healthcheckIntervalSeconds.equals(that.healthcheckIntervalSeconds)
-        : that.healthcheckIntervalSeconds != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckTimeoutSeconds != null
-        ? !healthcheckTimeoutSeconds.equals(that.healthcheckTimeoutSeconds)
-        : that.healthcheckTimeoutSeconds != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckPortIndex != null
-        ? !healthcheckPortIndex.equals(that.healthcheckPortIndex)
-        : that.healthcheckPortIndex != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckProtocol != null
-        ? !healthcheckProtocol.equals(that.healthcheckProtocol)
-        : that.healthcheckProtocol != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckMaxRetries != null
-        ? !healthcheckMaxRetries.equals(that.healthcheckMaxRetries)
-        : that.healthcheckMaxRetries != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheckMaxTotalTimeoutSeconds != null
-        ? !healthcheckMaxTotalTimeoutSeconds.equals(
-          that.healthcheckMaxTotalTimeoutSeconds
-        )
-        : that.healthcheckMaxTotalTimeoutSeconds != null
-    ) {
-      return false;
-    }
-    if (
-      healthcheck != null
-        ? !healthcheck.equals(that.healthcheck)
-        : that.healthcheck != null
-    ) {
-      return false;
-    }
-    if (
-      skipHealthchecksOnDeploy != null
-        ? !skipHealthchecksOnDeploy.equals(that.skipHealthchecksOnDeploy)
-        : that.skipHealthchecksOnDeploy != null
-    ) {
-      return false;
-    }
-    if (
-      deployHealthTimeoutSeconds != null
-        ? !deployHealthTimeoutSeconds.equals(that.deployHealthTimeoutSeconds)
-        : that.deployHealthTimeoutSeconds != null
-    ) {
-      return false;
-    }
-    if (
-      considerHealthyAfterRunningForSeconds != null
-        ? !considerHealthyAfterRunningForSeconds.equals(
-          that.considerHealthyAfterRunningForSeconds
-        )
-        : that.considerHealthyAfterRunningForSeconds != null
-    ) {
-      return false;
-    }
-    if (
-      serviceBasePath != null
-        ? !serviceBasePath.equals(that.serviceBasePath)
-        : that.serviceBasePath != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerGroups != null
-        ? !loadBalancerGroups.equals(that.loadBalancerGroups)
-        : that.loadBalancerGroups != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerPortIndex != null
-        ? !loadBalancerPortIndex.equals(that.loadBalancerPortIndex)
-        : that.loadBalancerPortIndex != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerOptions != null
-        ? !loadBalancerOptions.equals(that.loadBalancerOptions)
-        : that.loadBalancerOptions != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerDomains != null
-        ? !loadBalancerDomains.equals(that.loadBalancerDomains)
-        : that.loadBalancerDomains != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerAdditionalRoutes != null
-        ? !loadBalancerAdditionalRoutes.equals(that.loadBalancerAdditionalRoutes)
-        : that.loadBalancerAdditionalRoutes != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerTemplate != null
-        ? !loadBalancerTemplate.equals(that.loadBalancerTemplate)
-        : that.loadBalancerTemplate != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerServiceIdOverride != null
-        ? !loadBalancerServiceIdOverride.equals(that.loadBalancerServiceIdOverride)
-        : that.loadBalancerServiceIdOverride != null
-    ) {
-      return false;
-    }
-    if (
-      loadBalancerUpstreamGroup != null
-        ? !loadBalancerUpstreamGroup.equals(that.loadBalancerUpstreamGroup)
-        : that.loadBalancerUpstreamGroup != null
-    ) {
-      return false;
-    }
-    if (
-      deployInstanceCountPerStep != null
-        ? !deployInstanceCountPerStep.equals(that.deployInstanceCountPerStep)
-        : that.deployInstanceCountPerStep != null
-    ) {
-      return false;
-    }
-    if (
-      deployStepWaitTimeMs != null
-        ? !deployStepWaitTimeMs.equals(that.deployStepWaitTimeMs)
-        : that.deployStepWaitTimeMs != null
-    ) {
-      return false;
-    }
-    if (
-      autoAdvanceDeploySteps != null
-        ? !autoAdvanceDeploySteps.equals(that.autoAdvanceDeploySteps)
-        : that.autoAdvanceDeploySteps != null
-    ) {
-      return false;
-    }
-    if (
-      maxTaskRetries != null
-        ? !maxTaskRetries.equals(that.maxTaskRetries)
-        : that.maxTaskRetries != null
-    ) {
-      return false;
-    }
-    if (shell != null ? !shell.equals(that.shell) : that.shell != null) {
-      return false;
-    }
-    if (user != null ? !user.equals(that.user) : that.user != null) {
-      return false;
-    }
-    return s3UploaderAdditionalFiles != null
-      ? s3UploaderAdditionalFiles.equals(that.s3UploaderAdditionalFiles)
-      : that.s3UploaderAdditionalFiles == null;
+    return (
+      Objects.equals(requestId, that.requestId) &&
+      Objects.equals(id, that.id) &&
+      Objects.equals(version, that.version) &&
+      Objects.equals(timestamp, that.timestamp) &&
+      Objects.equals(metadata, that.metadata) &&
+      Objects.equals(containerInfo, that.containerInfo) &&
+      Objects.equals(customExecutorCmd, that.customExecutorCmd) &&
+      Objects.equals(customExecutorId, that.customExecutorId) &&
+      Objects.equals(customExecutorSource, that.customExecutorSource) &&
+      Objects.equals(customExecutorResources, that.customExecutorResources) &&
+      Objects.equals(resources, that.resources) &&
+      Objects.equals(command, that.command) &&
+      Objects.equals(arguments, that.arguments) &&
+      Objects.equals(env, that.env) &&
+      Objects.equals(uris, that.uris) &&
+      Objects.equals(executorData, that.executorData) &&
+      Objects.equals(labels, that.labels) &&
+      Objects.equals(mesosLabels, that.mesosLabels) &&
+      Objects.equals(taskLabels, that.taskLabels) &&
+      Objects.equals(mesosTaskLabels, that.mesosTaskLabels) &&
+      Objects.equals(taskEnv, that.taskEnv) &&
+      Objects.equals(runImmediatelyRequest, that.runImmediatelyRequest) &&
+      Objects.equals(healthcheckUri, that.healthcheckUri) &&
+      Objects.equals(healthcheckIntervalSeconds, that.healthcheckIntervalSeconds) &&
+      Objects.equals(healthcheckTimeoutSeconds, that.healthcheckTimeoutSeconds) &&
+      Objects.equals(healthcheckPortIndex, that.healthcheckPortIndex) &&
+      Objects.equals(healthcheckProtocol, that.healthcheckProtocol) &&
+      Objects.equals(healthcheckMaxRetries, that.healthcheckMaxRetries) &&
+      Objects.equals(
+        healthcheckMaxTotalTimeoutSeconds,
+        that.healthcheckMaxTotalTimeoutSeconds
+      ) &&
+      Objects.equals(healthcheck, that.healthcheck) &&
+      Objects.equals(skipHealthchecksOnDeploy, that.skipHealthchecksOnDeploy) &&
+      Objects.equals(deployHealthTimeoutSeconds, that.deployHealthTimeoutSeconds) &&
+      Objects.equals(
+        considerHealthyAfterRunningForSeconds,
+        that.considerHealthyAfterRunningForSeconds
+      ) &&
+      Objects.equals(serviceBasePath, that.serviceBasePath) &&
+      Objects.equals(loadBalancerGroups, that.loadBalancerGroups) &&
+      Objects.equals(loadBalancerPortIndex, that.loadBalancerPortIndex) &&
+      Objects.equals(loadBalancerOptions, that.loadBalancerOptions) &&
+      Objects.equals(loadBalancerDomains, that.loadBalancerDomains) &&
+      Objects.equals(loadBalancerAdditionalRoutes, that.loadBalancerAdditionalRoutes) &&
+      Objects.equals(loadBalancerTemplate, that.loadBalancerTemplate) &&
+      Objects.equals(loadBalancerServiceIdOverride, that.loadBalancerServiceIdOverride) &&
+      Objects.equals(loadBalancerUpstreamGroup, that.loadBalancerUpstreamGroup) &&
+      Objects.equals(deployInstanceCountPerStep, that.deployInstanceCountPerStep) &&
+      Objects.equals(deployStepWaitTimeMs, that.deployStepWaitTimeMs) &&
+      Objects.equals(autoAdvanceDeploySteps, that.autoAdvanceDeploySteps) &&
+      Objects.equals(maxTaskRetries, that.maxTaskRetries) &&
+      Objects.equals(shell, that.shell) &&
+      Objects.equals(user, that.user) &&
+      Objects.equals(s3UploaderAdditionalFiles, that.s3UploaderAdditionalFiles) &&
+      Objects.equals(canaryDeploySettings, that.canaryDeploySettings)
+    );
   }
 
   @Override
   public int hashCode() {
-    int result = requestId != null ? requestId.hashCode() : 0;
-    result = 31 * result + (id != null ? id.hashCode() : 0);
-    result = 31 * result + (version != null ? version.hashCode() : 0);
-    result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
-    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-    result = 31 * result + (containerInfo != null ? containerInfo.hashCode() : 0);
-    result = 31 * result + (customExecutorCmd != null ? customExecutorCmd.hashCode() : 0);
-    result = 31 * result + (customExecutorId != null ? customExecutorId.hashCode() : 0);
-    result =
-      31 * result + (customExecutorSource != null ? customExecutorSource.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (customExecutorResources != null ? customExecutorResources.hashCode() : 0);
-    result = 31 * result + (resources != null ? resources.hashCode() : 0);
-    result = 31 * result + (command != null ? command.hashCode() : 0);
-    result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
-    result = 31 * result + (env != null ? env.hashCode() : 0);
-    result = 31 * result + (uris != null ? uris.hashCode() : 0);
-    result = 31 * result + (executorData != null ? executorData.hashCode() : 0);
-    result = 31 * result + (labels != null ? labels.hashCode() : 0);
-    result = 31 * result + (mesosLabels != null ? mesosLabels.hashCode() : 0);
-    result = 31 * result + (taskLabels != null ? taskLabels.hashCode() : 0);
-    result = 31 * result + (mesosTaskLabels != null ? mesosTaskLabels.hashCode() : 0);
-    result = 31 * result + (taskEnv != null ? taskEnv.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (runImmediatelyRequest != null ? runImmediatelyRequest.hashCode() : 0);
-    result = 31 * result + (healthcheckUri != null ? healthcheckUri.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (healthcheckIntervalSeconds != null ? healthcheckIntervalSeconds.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (healthcheckTimeoutSeconds != null ? healthcheckTimeoutSeconds.hashCode() : 0);
-    result =
-      31 * result + (healthcheckPortIndex != null ? healthcheckPortIndex.hashCode() : 0);
-    result =
-      31 * result + (healthcheckProtocol != null ? healthcheckProtocol.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (healthcheckMaxRetries != null ? healthcheckMaxRetries.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (
-        healthcheckMaxTotalTimeoutSeconds != null
-          ? healthcheckMaxTotalTimeoutSeconds.hashCode()
-          : 0
-      );
-    result = 31 * result + (healthcheck != null ? healthcheck.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (skipHealthchecksOnDeploy != null ? skipHealthchecksOnDeploy.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (deployHealthTimeoutSeconds != null ? deployHealthTimeoutSeconds.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (
-        considerHealthyAfterRunningForSeconds != null
-          ? considerHealthyAfterRunningForSeconds.hashCode()
-          : 0
-      );
-    result = 31 * result + (serviceBasePath != null ? serviceBasePath.hashCode() : 0);
-    result =
-      31 * result + (loadBalancerGroups != null ? loadBalancerGroups.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (loadBalancerPortIndex != null ? loadBalancerPortIndex.hashCode() : 0);
-    result =
-      31 * result + (loadBalancerOptions != null ? loadBalancerOptions.hashCode() : 0);
-    result =
-      31 * result + (loadBalancerDomains != null ? loadBalancerDomains.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (
-        loadBalancerAdditionalRoutes != null ? loadBalancerAdditionalRoutes.hashCode() : 0
-      );
-    result =
-      31 * result + (loadBalancerTemplate != null ? loadBalancerTemplate.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (
-        loadBalancerServiceIdOverride != null
-          ? loadBalancerServiceIdOverride.hashCode()
-          : 0
-      );
-    result =
-      31 *
-      result +
-      (loadBalancerUpstreamGroup != null ? loadBalancerUpstreamGroup.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (deployInstanceCountPerStep != null ? deployInstanceCountPerStep.hashCode() : 0);
-    result =
-      31 * result + (deployStepWaitTimeMs != null ? deployStepWaitTimeMs.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (autoAdvanceDeploySteps != null ? autoAdvanceDeploySteps.hashCode() : 0);
-    result = 31 * result + (maxTaskRetries != null ? maxTaskRetries.hashCode() : 0);
-    result = 31 * result + (shell != null ? shell.hashCode() : 0);
-    result = 31 * result + (user != null ? user.hashCode() : 0);
-    result =
-      31 *
-      result +
-      (s3UploaderAdditionalFiles != null ? s3UploaderAdditionalFiles.hashCode() : 0);
-    return result;
+    return Objects.hash(
+      requestId,
+      id,
+      version,
+      timestamp,
+      metadata,
+      containerInfo,
+      customExecutorCmd,
+      customExecutorId,
+      customExecutorSource,
+      customExecutorResources,
+      resources,
+      command,
+      arguments,
+      env,
+      uris,
+      executorData,
+      labels,
+      mesosLabels,
+      taskLabels,
+      mesosTaskLabels,
+      taskEnv,
+      runImmediatelyRequest,
+      healthcheckUri,
+      healthcheckIntervalSeconds,
+      healthcheckTimeoutSeconds,
+      healthcheckPortIndex,
+      healthcheckProtocol,
+      healthcheckMaxRetries,
+      healthcheckMaxTotalTimeoutSeconds,
+      healthcheck,
+      skipHealthchecksOnDeploy,
+      deployHealthTimeoutSeconds,
+      considerHealthyAfterRunningForSeconds,
+      serviceBasePath,
+      loadBalancerGroups,
+      loadBalancerPortIndex,
+      loadBalancerOptions,
+      loadBalancerDomains,
+      loadBalancerAdditionalRoutes,
+      loadBalancerTemplate,
+      loadBalancerServiceIdOverride,
+      loadBalancerUpstreamGroup,
+      deployInstanceCountPerStep,
+      deployStepWaitTimeMs,
+      autoAdvanceDeploySteps,
+      maxTaskRetries,
+      shell,
+      user,
+      s3UploaderAdditionalFiles,
+      canaryDeploySettings
+    );
   }
 
   @Override
   public String toString() {
-    return (
-      "SingularityDeploy{" +
-      "requestId='" +
-      requestId +
-      '\'' +
-      ", id='" +
-      id +
-      '\'' +
-      ", version=" +
-      version +
-      ", timestamp=" +
-      timestamp +
-      ", metadata=" +
-      metadata +
-      ", containerInfo=" +
-      containerInfo +
-      ", customExecutorCmd=" +
-      customExecutorCmd +
-      ", customExecutorId=" +
-      customExecutorId +
-      ", customExecutorSource=" +
-      customExecutorSource +
-      ", customExecutorResources=" +
-      customExecutorResources +
-      ", resources=" +
-      resources +
-      ", command=" +
-      command +
-      ", arguments=" +
-      arguments +
-      ", env=" +
-      env +
-      ", uris=" +
-      uris +
-      ", executorData=" +
-      executorData +
-      ", labels=" +
-      labels +
-      ", mesosLabels=" +
-      mesosLabels +
-      ", taskLabels=" +
-      taskLabels +
-      ", mesosTaskLabels=" +
-      mesosTaskLabels +
-      ", taskEnv=" +
-      taskEnv +
-      ", runImmediatelyRequest=" +
-      runImmediatelyRequest +
-      ", healthcheckUri=" +
-      healthcheckUri +
-      ", healthcheckIntervalSeconds=" +
-      healthcheckIntervalSeconds +
-      ", healthcheckTimeoutSeconds=" +
-      healthcheckTimeoutSeconds +
-      ", healthcheckPortIndex=" +
-      healthcheckPortIndex +
-      ", healthcheckProtocol=" +
-      healthcheckProtocol +
-      ", healthcheckMaxRetries=" +
-      healthcheckMaxRetries +
-      ", healthcheckMaxTotalTimeoutSeconds=" +
-      healthcheckMaxTotalTimeoutSeconds +
-      ", healthcheck=" +
-      healthcheck +
-      ", skipHealthchecksOnDeploy=" +
-      skipHealthchecksOnDeploy +
-      ", deployHealthTimeoutSeconds=" +
-      deployHealthTimeoutSeconds +
-      ", considerHealthyAfterRunningForSeconds=" +
-      considerHealthyAfterRunningForSeconds +
-      ", serviceBasePath=" +
-      serviceBasePath +
-      ", loadBalancerGroups=" +
-      loadBalancerGroups +
-      ", loadBalancerPortIndex=" +
-      loadBalancerPortIndex +
-      ", loadBalancerOptions=" +
-      loadBalancerOptions +
-      ", loadBalancerDomains=" +
-      loadBalancerDomains +
-      ", loadBalancerAdditionalRoutes=" +
-      loadBalancerAdditionalRoutes +
-      ", loadBalancerTemplate=" +
-      loadBalancerTemplate +
-      ", loadBalancerServiceIdOverride=" +
-      loadBalancerServiceIdOverride +
-      ", loadBalancerUpstreamGroup=" +
-      loadBalancerUpstreamGroup +
-      ", deployInstanceCountPerStep=" +
-      deployInstanceCountPerStep +
-      ", deployStepWaitTimeMs=" +
-      deployStepWaitTimeMs +
-      ", autoAdvanceDeploySteps=" +
-      autoAdvanceDeploySteps +
-      ", maxTaskRetries=" +
-      maxTaskRetries +
-      ", shell=" +
-      shell +
-      ", user=" +
-      user +
-      ", s3UploaderAdditionalFiles=" +
-      s3UploaderAdditionalFiles +
-      '}'
-    );
+    return MoreObjects
+      .toStringHelper(this)
+      .add("requestId", requestId)
+      .add("id", id)
+      .add("version", version)
+      .add("timestamp", timestamp)
+      .add("metadata", metadata)
+      .add("containerInfo", containerInfo)
+      .add("customExecutorCmd", customExecutorCmd)
+      .add("customExecutorId", customExecutorId)
+      .add("customExecutorSource", customExecutorSource)
+      .add("customExecutorResources", customExecutorResources)
+      .add("resources", resources)
+      .add("command", command)
+      .add("arguments", arguments)
+      .add("env", env)
+      .add("uris", uris)
+      .add("executorData", executorData)
+      .add("labels", labels)
+      .add("mesosLabels", mesosLabels)
+      .add("taskLabels", taskLabels)
+      .add("mesosTaskLabels", mesosTaskLabels)
+      .add("taskEnv", taskEnv)
+      .add("runImmediatelyRequest", runImmediatelyRequest)
+      .add("healthcheckUri", healthcheckUri)
+      .add("healthcheckIntervalSeconds", healthcheckIntervalSeconds)
+      .add("healthcheckTimeoutSeconds", healthcheckTimeoutSeconds)
+      .add("healthcheckPortIndex", healthcheckPortIndex)
+      .add("healthcheckProtocol", healthcheckProtocol)
+      .add("healthcheckMaxRetries", healthcheckMaxRetries)
+      .add("healthcheckMaxTotalTimeoutSeconds", healthcheckMaxTotalTimeoutSeconds)
+      .add("healthcheck", healthcheck)
+      .add("skipHealthchecksOnDeploy", skipHealthchecksOnDeploy)
+      .add("deployHealthTimeoutSeconds", deployHealthTimeoutSeconds)
+      .add("considerHealthyAfterRunningForSeconds", considerHealthyAfterRunningForSeconds)
+      .add("serviceBasePath", serviceBasePath)
+      .add("loadBalancerGroups", loadBalancerGroups)
+      .add("loadBalancerPortIndex", loadBalancerPortIndex)
+      .add("loadBalancerOptions", loadBalancerOptions)
+      .add("loadBalancerDomains", loadBalancerDomains)
+      .add("loadBalancerAdditionalRoutes", loadBalancerAdditionalRoutes)
+      .add("loadBalancerTemplate", loadBalancerTemplate)
+      .add("loadBalancerServiceIdOverride", loadBalancerServiceIdOverride)
+      .add("loadBalancerUpstreamGroup", loadBalancerUpstreamGroup)
+      .add("deployInstanceCountPerStep", deployInstanceCountPerStep)
+      .add("deployStepWaitTimeMs", deployStepWaitTimeMs)
+      .add("autoAdvanceDeploySteps", autoAdvanceDeploySteps)
+      .add("maxTaskRetries", maxTaskRetries)
+      .add("shell", shell)
+      .add("user", user)
+      .add("s3UploaderAdditionalFiles", s3UploaderAdditionalFiles)
+      .add("canaryDeploySettings", canaryDeploySettings)
+      .toString();
   }
 }

@@ -63,22 +63,19 @@ public class SingularityDeployHealthHelper {
 
   private boolean shouldCheckHealthchecks(
     final SingularityRequest request,
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> activeTasks,
     final boolean isDeployPending
   ) {
     if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
       return false;
     }
-    if (!deploy.isPresent()) {
+
+    if (!deploy.getHealthcheck().isPresent()) {
       return false;
     }
 
-    if (!deploy.get().getHealthcheck().isPresent()) {
-      return false;
-    }
-
-    if (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().orElse(false)) {
+    if (isDeployPending && deploy.getSkipHealthchecksOnDeploy().orElse(false)) {
       return false;
     }
 
@@ -99,12 +96,12 @@ public class SingularityDeployHealthHelper {
 
   public DeployHealth getDeployHealth(
     final SingularityRequest request,
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> activeTasks,
     final boolean isDeployPending
   ) {
     if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
-      return getHealthcheckDeployState(deploy.get(), activeTasks, isDeployPending);
+      return getHealthcheckDeployState(deploy, activeTasks, isDeployPending);
     } else {
       return getNoHealthcheckDeployHealth(deploy, activeTasks);
     }
@@ -112,19 +109,19 @@ public class SingularityDeployHealthHelper {
 
   public List<SingularityTaskId> getHealthyTasks(
     final SingularityRequest request,
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> activeTasks,
     final boolean isDeployPending
   ) {
     if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
-      return getHealthcheckedHealthyTasks(deploy.get(), activeTasks, isDeployPending);
+      return getHealthcheckedHealthyTasks(deploy, activeTasks, isDeployPending);
     } else {
       return getNoHealthcheckHealthyTasks(deploy, activeTasks);
     }
   }
 
   private DeployHealth getNoHealthcheckDeployHealth(
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> matchingActiveTasks
   ) {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(
@@ -160,7 +157,7 @@ public class SingularityDeployHealthHelper {
   }
 
   private List<SingularityTaskId> getNoHealthcheckHealthyTasks(
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> matchingActiveTasks
   ) {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(
@@ -187,15 +184,13 @@ public class SingularityDeployHealthHelper {
   }
 
   private boolean isRunningTaskHealthy(
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     Collection<SingularityTaskHistoryUpdate> updates,
     SingularityTaskId taskId
   ) {
-    long runningThreshold = configuration.getConsiderTaskHealthyAfterRunningForSeconds();
-    if (deploy.isPresent()) {
-      runningThreshold =
-        deploy.get().getConsiderHealthyAfterRunningForSeconds().orElse(runningThreshold);
-    }
+    long runningThreshold = deploy
+      .getConsiderHealthyAfterRunningForSeconds()
+      .orElse(configuration.getConsiderTaskHealthyAfterRunningForSeconds());
 
     if (runningThreshold < 1) {
       return true;
@@ -485,7 +480,7 @@ public class SingularityDeployHealthHelper {
   }
 
   public List<SingularityDeployFailure> getTaskFailures(
-    final Optional<SingularityDeploy> deploy,
+    final SingularityDeploy deploy,
     final Collection<SingularityTaskId> activeTasks
   ) {
     List<SingularityDeployFailure> failures = new ArrayList<>();
@@ -498,14 +493,12 @@ public class SingularityDeployHealthHelper {
 
     for (SingularityTaskId taskId : activeTasks) {
       Optional<SingularityDeployFailure> maybeFailure = getTaskFailure(
-        deploy.get(),
+        deploy,
         taskUpdates,
         healthcheckResults,
         taskId
       );
-      if (maybeFailure.isPresent()) {
-        failures.add(maybeFailure.get());
-      }
+      maybeFailure.ifPresent(failures::add);
     }
     return failures;
   }
