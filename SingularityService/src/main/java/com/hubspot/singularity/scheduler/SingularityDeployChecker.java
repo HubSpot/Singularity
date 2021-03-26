@@ -1153,7 +1153,10 @@ public class SingularityDeployChecker {
                 acceptanceHookDeployState,
                 updatedProgress
               );
-              return new SingularityDeployResult(acceptanceHookDeployState);
+              return new SingularityDeployResult(
+                acceptanceHookDeployState,
+                String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+              );
             } else {
               LOG.info(
                 "Deploy {} has completed step to {} instances (out of {})",
