@@ -51,7 +51,7 @@ public class CanaryDeployHelper {
         () -> {
           int cycleCount =
             deployProgress.getTargetActiveInstances() /
-            canaryDeploySettings.getAllowedTasksFailuresPerGroup();
+            canaryDeploySettings.getInstanceGroupSize();
           if (cycleCount >= canaryDeploySettings.getCanaryCycleCount()) {
             // We have run enough canary cycles, launch everything remaining
             return request.getInstancesSafe();

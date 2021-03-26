@@ -80,7 +80,7 @@ public class CanaryDeploySettings {
     this.acceptanceMode = acceptanceMode.orElse(DeployAcceptanceMode.NONE);
     this.waitMillisBetweenGroups = waitMillisBetweenGroups.orElse(0L);
     this.allowedTasksFailuresPerGroup = allowedTasksFailuresPerGroup.orElse(0);
-    this.canaryCycleCount = canaryCycleCount.orElse(1);
+    this.canaryCycleCount = canaryCycleCount.orElse(3);
   }
 
   public static CanaryDeploySettingsBuilder newbuilder() {
