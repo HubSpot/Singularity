@@ -1,52 +1,25 @@
 package com.hubspot.singularity.scheduler;
 
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.CanaryDeploySettings;
 import com.hubspot.singularity.DeployAcceptanceMode;
 import com.hubspot.singularity.DeployAcceptanceResult;
 import com.hubspot.singularity.DeployAcceptanceState;
 import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskBuilder;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
-import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.hooks.DeployAcceptanceHook;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
-@TestMethodOrder(OrderAnnotation.class)
 public class SingularityDeployAcceptanceTest extends SingularitySchedulerTestBase {
   @Inject
   Set<DeployAcceptanceHook> acceptanceHooks;
