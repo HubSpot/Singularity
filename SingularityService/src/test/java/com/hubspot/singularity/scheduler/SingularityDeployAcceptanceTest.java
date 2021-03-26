@@ -17,6 +17,7 @@ import com.hubspot.singularity.hooks.DeployAcceptanceHook;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,17 @@ public class SingularityDeployAcceptanceTest extends SingularitySchedulerTestBas
 
   public SingularityDeployAcceptanceTest() {
     super(false);
+  }
+
+  @AfterEach
+  public void afterEach() {
+    NoopDeployAcceptanceHook hook = (NoopDeployAcceptanceHook) acceptanceHooks
+      .iterator()
+      .next();
+    hook.setNextResult(
+      new DeployAcceptanceResult(DeployAcceptanceState.SUCCEEDED, "succeeded")
+    );
+    super.clearData();
   }
 
   @Test
