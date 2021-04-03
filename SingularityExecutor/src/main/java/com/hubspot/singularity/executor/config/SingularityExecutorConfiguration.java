@@ -136,6 +136,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
+  @NotNull
+  @JsonProperty
+  private List<SingularityExecutorCompressAdditionalFile> compressAdditionalFiles = Collections.emptyList();
+
   @Min(1)
   @JsonProperty
   private int tailLogLinesToSave = 2500;
@@ -291,6 +295,16 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles
   ) {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
+  }
+
+  public List<SingularityExecutorCompressAdditionalFile> getCompressAdditionalFiles() {
+    return compressAdditionalFiles;
+  }
+
+  public void setCompressAdditionalFiles(
+    List<SingularityExecutorCompressAdditionalFile> compressAdditionalFiles
+  ) {
+    this.compressAdditionalFiles = compressAdditionalFiles;
   }
 
   public String getExecutorJavaLog() {

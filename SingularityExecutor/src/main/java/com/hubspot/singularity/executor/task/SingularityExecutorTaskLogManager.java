@@ -2,27 +2,33 @@ package com.hubspot.singularity.executor.task;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.TemplateManager;
+import com.hubspot.singularity.executor.config.SingularityExecutorCompressAdditionalFile;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
+import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +41,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 
 public class SingularityExecutorTaskLogManager {
@@ -46,8 +53,10 @@ public class SingularityExecutorTaskLogManager {
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityExecutorLogrotateFrequency logrotateFrequency;
   private final ScheduledExecutorService logCheckExecutor;
+  private final ScheduledExecutorService compressCheckExecutor;
 
   private Future<?> logCheckFuture = null;
+  private Future<?> compressCheckFuture = null;
 
   public SingularityExecutorTaskLogManager(
     SingularityExecutorTaskDefinition taskDefinition,
@@ -77,6 +86,13 @@ public class SingularityExecutorTaskLogManager {
     } else {
       logCheckExecutor = null;
     }
+
+    this.compressCheckExecutor =
+      Executors.newSingleThreadScheduledExecutor(
+        new ThreadFactoryBuilder()
+          .setNameFormat("compress-sandbox-file-checker-%d")
+          .build()
+      );
   }
 
   public void setup() {
@@ -85,6 +101,7 @@ public class SingularityExecutorTaskLogManager {
     writeTailMetadata(false);
     writeS3MetadataFileForRotatedFiles(false);
     startLogChecker();
+    startCompressChecker();
   }
 
   private void startLogChecker() {
@@ -107,6 +124,23 @@ public class SingularityExecutorTaskLogManager {
     }
   }
 
+  private void startCompressChecker() {
+    try {
+      if (compressCheckExecutor != null) {
+        log.info("Starting sandbox file compress checker");
+        compressCheckFuture =
+          compressCheckExecutor.scheduleAtFixedRate(
+            this::checkForAdditionalFilesToCompress,
+            1,
+            1,
+            TimeUnit.MINUTES
+          );
+      }
+    } catch (Throwable t) {
+      log.warn("Could not start service log checker", t);
+    }
+  }
+
   private void stopLogChecker() {
     try {
       if (logCheckFuture != null) {
@@ -117,6 +151,19 @@ public class SingularityExecutorTaskLogManager {
       }
     } catch (Throwable t) {
       log.warn("Coud not properly shut down log checker", t);
+    }
+  }
+
+  private void stopCompressChecker() {
+    try {
+      if (compressCheckFuture != null) {
+        compressCheckFuture.cancel(true);
+      }
+      if (compressCheckExecutor != null) {
+        compressCheckExecutor.shutdown();
+      }
+    } catch (Throwable t) {
+      log.warn("Coud not properly shut down compress checker", t);
     }
   }
 
@@ -138,6 +185,77 @@ public class SingularityExecutorTaskLogManager {
     } catch (Throwable t) {
       log.warn("Could not run file size check on service log", t);
     }
+  }
+
+  private void checkForAdditionalFilesToCompress() {
+    final Map<Path, CompressionType> toCompress = configuration
+      .getCompressAdditionalFiles()
+      .stream()
+      .flatMap(this::checkForAdditionalFileToCompress)
+      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    log.debug("Found files to compress: {}", toCompress);
+
+    toCompress.forEach(
+      (file, compressionType) -> {
+        try {
+          log.debug("Compressing {} as {}...", file, compressionType);
+          long start = System.currentTimeMillis();
+          new SimpleProcessManager(log)
+          .runCommand(
+              ImmutableList.of(
+                compressionType.getCommand(),
+                file.toAbsolutePath().toString()
+              )
+            );
+          log.debug(
+            "Finished compressing {} as {} in {}ms",
+            file,
+            compressionType,
+            System.currentTimeMillis() - start
+          );
+        } catch (Exception e) {
+          log.error("Unable to compress {}", file, e);
+        }
+      }
+    );
+  }
+
+  @SuppressFBWarnings(
+    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+    justification = "https://github.com/spotbugs/spotbugs/issues/259"
+  )
+  private Stream<Map.Entry<Path, CompressionType>> checkForAdditionalFileToCompress(
+    SingularityExecutorCompressAdditionalFile file
+  ) {
+    final List<Map.Entry<Path, CompressionType>> toCompress = Lists.newArrayList();
+
+    try (
+      Stream<Path> paths = Files.walk(
+        taskDefinition.getTaskDirectoryPath().resolve(file.getDirectory().orElse("./"))
+      )
+    ) {
+      final PathMatcher pathMatcher = taskDefinition
+        .getTaskDirectoryPath()
+        .getFileSystem()
+        .getPathMatcher("glob:" + file.getFilenameGlob());
+
+      paths.forEach(
+        path -> {
+          if (Files.isDirectory(path)) {
+            return;
+          }
+
+          if (pathMatcher.matches(path)) {
+            toCompress.add(new SimpleEntry<>(path, file.getCompressionType()));
+          }
+        }
+      );
+    } catch (IOException e) {
+      log.error("Unable to check for additional file to compress ({})", file, e);
+    }
+
+    return toCompress.stream();
   }
 
   @SuppressFBWarnings
@@ -362,6 +480,7 @@ public class SingularityExecutorTaskLogManager {
   @SuppressFBWarnings
   public boolean teardown() {
     stopLogChecker();
+    stopCompressChecker();
     boolean writeTailMetadataSuccess = writeTailMetadata(true);
 
     ensureServiceOutExists();
@@ -386,6 +505,8 @@ public class SingularityExecutorTaskLogManager {
           false
         );
     }
+
+    checkForAdditionalFilesToCompress();
 
     if (manualLogrotate()) {
       boolean removeLogRotateFileSuccess = removeLogrotateFile();
