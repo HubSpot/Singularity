@@ -246,6 +246,16 @@ public class SingularityExecutorTaskLogManager {
             return;
           }
 
+          if (
+            Stream
+              .of(CompressionType.values())
+              .map(CompressionType::getExtention)
+              .anyMatch(path::endsWith)
+          ) {
+            // already compressed
+            return;
+          }
+
           if (pathMatcher.matches(path)) {
             toCompress.add(new SimpleEntry<>(path, file.getCompressionType()));
           }
