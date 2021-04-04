@@ -256,7 +256,7 @@ public class SingularityExecutorTaskLogManager {
             return;
           }
 
-          if (pathMatcher.matches(path)) {
+          if (pathMatcher.matches(path.getFileName())) {
             toCompress.add(new SimpleEntry<>(path, file.getCompressionType()));
           }
         }
