@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -89,9 +90,7 @@ public class SingularityExecutorTaskLogManager {
 
     this.compressCheckExecutor =
       Executors.newSingleThreadScheduledExecutor(
-        new ThreadFactoryBuilder()
-          .setNameFormat("compress-sandbox-file-checker-%d")
-          .build()
+        new ThreadFactoryBuilder().setNameFormat("compress-checker-%d").build()
       );
   }
 
@@ -188,37 +187,42 @@ public class SingularityExecutorTaskLogManager {
   }
 
   private void checkForAdditionalFilesToCompress() {
-    final Map<Path, CompressionType> toCompress = configuration
-      .getCompressAdditionalFiles()
-      .stream()
-      .flatMap(this::checkForAdditionalFileToCompress)
-      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    try {
+      final Map<Path, CompressionType> toCompress = configuration
+        .getCompressAdditionalFiles()
+        .stream()
+        .flatMap(this::checkForAdditionalFileToCompress)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-    log.debug("Found files to compress: {}", toCompress);
+      log.debug("Found files to compress: {}", toCompress);
 
-    toCompress.forEach(
-      (file, compressionType) -> {
-        try {
-          log.debug("Compressing {} as {}...", file, compressionType);
-          long start = System.currentTimeMillis();
-          new SimpleProcessManager(log)
-          .runCommand(
-              ImmutableList.of(
-                compressionType.getCommand(),
-                file.toAbsolutePath().toString()
-              )
+      toCompress.forEach(
+        (file, compressionType) -> {
+          try {
+            log.debug("Compressing {} as {}...", file, compressionType);
+            long start = System.currentTimeMillis();
+            new SimpleProcessManager(log)
+            .runCommand(
+                ImmutableList.of(
+                  compressionType.getCommand(),
+                  file.toAbsolutePath().toString()
+                )
+              );
+            log.debug(
+              "Finished compressing {} as {} in {}ms",
+              file,
+              compressionType,
+              System.currentTimeMillis() - start
             );
-          log.debug(
-            "Finished compressing {} as {} in {}ms",
-            file,
-            compressionType,
-            System.currentTimeMillis() - start
-          );
-        } catch (Exception e) {
-          log.error("Unable to compress {}", file, e);
+          } catch (Exception e) {
+            log.error("Unable to compress {}", file, e);
+          }
         }
-      }
-    );
+      );
+    } catch (Throwable t) {
+      log.error("Caught exception while checking additional files to compress", t);
+      // if we bubble up past here, the ScheduledExecutor won't launch any more runs
+    }
   }
 
   @SuppressFBWarnings(
@@ -242,7 +246,7 @@ public class SingularityExecutorTaskLogManager {
 
       paths.forEach(
         path -> {
-          if (Files.isDirectory(path)) {
+          if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
             return;
           }
 
