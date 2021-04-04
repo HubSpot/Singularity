@@ -250,7 +250,7 @@ public class SingularityExecutorTaskLogManager {
             Stream
               .of(CompressionType.values())
               .map(CompressionType::getExtention)
-              .anyMatch(path::endsWith)
+              .anyMatch(ext -> path.toString().endsWith(ext))
           ) {
             // already compressed
             return;
