@@ -169,10 +169,22 @@ public class SingularityExecutorTaskLogManager {
         continue;
       }
 
-      String fileGlob = additionalFile.getFilename() != null &&
-        additionalFile.getFilename().contains("*")
-        ? additionalFile.getFilename()
-        : String.format("%s*.[gb]z*", additionalFile.getFilename());
+      String fileGlob;
+
+      if (additionalFile.isCompressBeforeUpload()) {
+        // We have to compress it before the upload, so just look for the filename prefix
+        fileGlob = String.format("%s*", additionalFile.getFilename());
+      } else if (
+        additionalFile.getFilename() != null && additionalFile.getFilename().contains("*")
+      ) {
+        // There's already a wildcard in the filename, so pass the glob through as-is
+        fileGlob = additionalFile.getFilename();
+      } else {
+        // We're not compressing it ourselves in SingularityS3Uploader, and there's no wildcard,
+        // so look for a compressed file with this filename prefix
+        fileGlob = String.format("%s*.[gb]z*", additionalFile.getFilename());
+      }
+
       result =
         result &&
         writeS3MetadataFile(
