@@ -17,11 +17,13 @@ public class SingularityS3UploaderFile {
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
   private final boolean checkSubdirectories;
+  private final boolean compressBeforeUpload;
 
   @JsonCreator
   public static SingularityS3UploaderFile fromString(String value) {
     return new SingularityS3UploaderFile(
       value,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -43,7 +45,8 @@ public class SingularityS3UploaderFile {
     @JsonProperty(
       "applyS3StorageClassAfterBytes"
     ) Optional<Long> applyS3StorageClassAfterBytes,
-    @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories
+    @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
+    @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload
   ) {
     this.filename = filename;
     this.s3UploaderBucket = s3UploaderBucket;
@@ -53,6 +56,7 @@ public class SingularityS3UploaderFile {
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
+    this.compressBeforeUpload = compressBeforeUpload.orElse(false);
   }
 
   @Schema(description = "The name of the file")
@@ -119,6 +123,11 @@ public class SingularityS3UploaderFile {
   )
   public boolean isCheckSubdirectories() {
     return checkSubdirectories;
+  }
+
+  @Schema(title = "Compress to GZIP before uploading", defaultValue = "false")
+  public boolean isCompressBeforeUpload() {
+    return compressBeforeUpload;
   }
 
   @Override

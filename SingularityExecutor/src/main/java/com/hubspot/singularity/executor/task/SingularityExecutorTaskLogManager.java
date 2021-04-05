@@ -190,7 +190,8 @@ public class SingularityExecutorTaskLogManager {
           additionalFile.getApplyS3StorageClassAfterBytes().isPresent()
             ? additionalFile.getApplyS3StorageClassAfterBytes()
             : taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
-          additionalFile.isCheckSubdirectories()
+          additionalFile.isCheckSubdirectories(),
+          additionalFile.isCompressBeforeUpload()
         );
       index++;
       handledLogs.add(additionalFile.getFilename());
@@ -212,6 +213,7 @@ public class SingularityExecutorTaskLogManager {
           finished,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          false,
           false
         );
     }
@@ -383,6 +385,7 @@ public class SingularityExecutorTaskLogManager {
           true,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          false,
           false
         );
     }
@@ -643,7 +646,8 @@ public class SingularityExecutorTaskLogManager {
     boolean finished,
     Optional<String> s3StorageClass,
     Optional<Long> applyS3StorageClassAfterBytes,
-    boolean checkSubdirectories
+    boolean checkSubdirectories,
+    boolean compressBeforeUpload
   ) {
     final String s3UploaderBucket = s3Bucket.orElse(
       taskDefinition.getExecutorData().getDefaultS3Bucket()
@@ -674,6 +678,7 @@ public class SingularityExecutorTaskLogManager {
       applyS3StorageClassAfterBytes,
       Optional.of(finished),
       Optional.of(checkSubdirectories),
+      Optional.of(compressBeforeUpload),
       Optional.empty(),
       Collections.emptyMap(),
       Optional.empty(),
