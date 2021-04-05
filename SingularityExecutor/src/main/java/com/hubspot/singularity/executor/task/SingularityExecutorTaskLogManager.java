@@ -173,6 +173,7 @@ public class SingularityExecutorTaskLogManager {
 
       if (additionalFile.isCompressBeforeUpload()) {
         // We have to compress it before the upload, so just look for the filename prefix
+        // If it's already compressed, we'll skip compression in SingularityS3Uploader and upload it as-is.
         fileGlob = String.format("%s*", additionalFile.getFilename());
       } else if (
         additionalFile.getFilename() != null && additionalFile.getFilename().contains("*")
