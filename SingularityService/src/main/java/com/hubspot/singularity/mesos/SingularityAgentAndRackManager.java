@@ -190,10 +190,9 @@ public class SingularityAgentAndRackManager {
     Collection<SingularityTaskId> cleaningTasks = leaderCache.getCleanupTaskIds();
 
     for (SingularityTaskId taskId : activeTaskIdsForRequest) {
-      // TODO consider using executorIds
-
       if (
         !cleaningTasks.contains(taskId) &&
+        !taskManager.isKilledTask(taskId) &&
         taskRequest.getDeploy().getId().equals(taskId.getDeployId())
       ) {
         countPerRack.add(taskId.getSanitizedRackId());
