@@ -52,6 +52,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
@@ -1421,6 +1422,130 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .isPresent()
     );
     Assertions.assertTrue(taskManager.getCleanupTaskIds().contains(taskOne.getTaskId()));
+  }
+
+  @Test
+  public void testTaskLaunchesInRackSensitiveWithKillingTask() {
+    try {
+      configuration.setExpectedRacksCount(Optional.of(3));
+      // Set up hosts + racks
+      sms
+        .resourceOffers(
+          Arrays.asList(
+            createOffer(1, 1, 1, "agent1", "host1", Optional.of("rack1")),
+            createOffer(1, 1, 1, "agent2", "host2", Optional.of("rack2")),
+            createOffer(1, 1, 1, "agent3", "host3", Optional.of("rack3"))
+          )
+        )
+        .join();
+      initRequest();
+      initFirstDeploy();
+      requestResource.postRequest(
+        request
+          .toBuilder()
+          .setInstances(Optional.of(3))
+          .setRackSensitive(Optional.of(true))
+          .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
+          .build(),
+        SingularityUser.DEFAULT_USER
+      );
+      schedulerPoller.runActionOnPoll();
+      Assertions.assertEquals(3, taskManager.getPendingTaskIds().size());
+      sms
+        .resourceOffers(
+          Arrays.asList(
+            createOffer(2, 2000, 2000, "agent1", "host1", Optional.of("rack1")),
+            createOffer(2, 2000, 2000, "agent2", "host2", Optional.of("rack2")),
+            createOffer(2, 2000, 2000, "agent3", "host3", Optional.of("rack3"))
+          )
+        )
+        .join();
+      Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
+      SingularityTaskId taskTwo = taskManager
+        .getActiveTaskIds()
+        .stream()
+        .filter(t -> t.getInstanceNo() == 2)
+        .findFirst()
+        .get();
+      SingularityTaskId taskThree = taskManager
+        .getActiveTaskIds()
+        .stream()
+        .filter(t -> t.getInstanceNo() == 3)
+        .findFirst()
+        .get();
+      requestResource.postRequest(
+        request
+          .toBuilder()
+          .setInstances(Optional.of(2))
+          .setRackSensitive(Optional.of(true))
+          .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
+          .build(),
+        SingularityUser.DEFAULT_USER
+      );
+      taskManager.createTaskCleanup(
+        new SingularityTaskCleanup(
+          Optional.empty(),
+          TaskCleanupType.USER_REQUESTED,
+          System.currentTimeMillis(),
+          taskTwo,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+      );
+      taskManager.createTaskCleanup(
+        new SingularityTaskCleanup(
+          Optional.empty(),
+          TaskCleanupType.USER_REQUESTED,
+          System.currentTimeMillis(),
+          taskThree,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+      );
+      cleaner.drainCleanupQueue();
+      schedulerPoller.runActionOnPoll();
+      //Mimic tasks that have been killed (and their cleanup removed) but are slow to shut down
+      taskManager.deleteCleanupTask(taskTwo.toString());
+      taskManager.deleteCleanupTask(taskThree.toString());
+      taskManager.saveKilledRecord(
+        new SingularityKilledTaskIdRecord(
+          taskTwo,
+          System.currentTimeMillis(),
+          System.currentTimeMillis(),
+          Optional.empty(),
+          Optional.empty(),
+          1
+        )
+      );
+      taskManager.saveKilledRecord(
+        new SingularityKilledTaskIdRecord(
+          taskTwo,
+          System.currentTimeMillis(),
+          System.currentTimeMillis(),
+          Optional.empty(),
+          Optional.empty(),
+          1
+        )
+      );
+      Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
+      Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
+      sms
+        .resourceOffers(
+          Arrays.asList(
+            createOffer(2, 2000, 2000, "agent4", "host4", Optional.of("rack1")),
+            createOffer(2, 2000, 2000, "agent5", "host5", Optional.of("rack2")),
+            createOffer(2, 2000, 2000, "agent6", "host6", Optional.of("rack3"))
+          )
+        )
+        .join();
+      Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
+    } finally {
+      configuration.setExpectedRacksCount(Optional.empty());
+    }
   }
 
   @Test
