@@ -551,7 +551,11 @@ public class SingularityExecutorTaskLogManager {
       command.add(getLogrotateConfPath().toString());
     }
     if (hourlyConfExists) {
-      command.add(getLogrotateHourlyConfPath().toString());
+      getCronFakedLogrotateAdditionalFileFrequencies()
+        .stream()
+        .map(f -> getLogrotateHourlyConfPath(f).toString())
+        .collect(Collectors.toSet())
+        .forEach(command::add);
     }
     if (sizeConfExists) {
       command.add(getLogrotateSizeBasedConfPath().toString());
