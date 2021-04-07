@@ -528,14 +528,20 @@ public class SingularityExecutorTaskLogManager {
   }
 
   public boolean manualLogrotate() {
+    Set<Path> frequencyBasedPaths = getCronFakedLogrotateAdditionalFileFrequencies()
+      .stream()
+      .map(this::getLogrotateHourlyConfPath)
+      .collect(Collectors.toSet());
     boolean regularConfExists = Files.exists(getLogrotateConfPath());
-    boolean hourlyConfExists = Files.exists(getLogrotateHourlyConfPath());
+    boolean hourlyConfExists = frequencyBasedPaths
+      .stream()
+      .anyMatch(p -> Files.exists(p));
     boolean sizeConfExists = Files.exists(getLogrotateSizeBasedConfPath());
     if (!sizeConfExists && !hourlyConfExists && !regularConfExists) {
       log.info(
         "{}/{}/{} did not exist, skipping manual logrotation",
         getLogrotateConfPath(),
-        getLogrotateHourlyConfPath(),
+        frequencyBasedPaths,
         getLogrotateSizeBasedConfPath()
       );
       return true;
@@ -551,11 +557,7 @@ public class SingularityExecutorTaskLogManager {
       command.add(getLogrotateConfPath().toString());
     }
     if (hourlyConfExists) {
-      getCronFakedLogrotateAdditionalFileFrequencies()
-        .stream()
-        .map(f -> getLogrotateHourlyConfPath(f).toString())
-        .collect(Collectors.toSet())
-        .forEach(command::add);
+      frequencyBasedPaths.forEach(p -> command.add(p.toString()));
     }
     if (sizeConfExists) {
       command.add(getLogrotateSizeBasedConfPath().toString());
