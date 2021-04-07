@@ -9,6 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
@@ -255,7 +257,38 @@ public abstract class SingularityUploader {
 
     found.incrementAndGet();
 
-    toUpload.add(path);
+    if (uploadMetadata.isCompressBeforeUpload() && !path.toString().endsWith(".gz")) {
+      try {
+        LOG.trace("{} Compressing {}...", logIdentifier, path);
+        long start = -1;
+        if (LOG.isTraceEnabled()) {
+          start = System.currentTimeMillis();
+        }
+
+        new SimpleProcessManager(LOG)
+        .runCommand(ImmutableList.of(CompressionType.GZIP.getCommand(), path.toString()));
+
+        if (LOG.isTraceEnabled()) {
+          LOG.trace(
+            "{} Compressed {} in {}ms",
+            logIdentifier,
+            path,
+            System.currentTimeMillis() - start
+          );
+        }
+
+        toUpload.add(Paths.get(path.toAbsolutePath().toString() + ".gz"));
+      } catch (InterruptedException | ProcessFailedException e) {
+        LOG.warn(
+          "{} Skipping {} because we were unable to compress it",
+          logIdentifier,
+          path,
+          e
+        );
+      }
+    } else {
+      toUpload.add(path);
+    }
 
     return found;
   }
