@@ -216,23 +216,14 @@ public class SingularityExecutorConfigurationTest {
 
     doReturn(
         ImmutableList.of(
+          new LogrotateForceConfig("/etc/logrotate.d/hourly/task.HOURLY", "0 * * * *"),
           new LogrotateForceConfig(
-            "logrotate",
-            "/etc/logrotate.d/hourly/task.HOURLY",
-            "0 * * * *",
-            "> /dev/null 2>&1"
-          ),
-          new LogrotateForceConfig(
-            "logrotate",
             "/etc/logrotate.d/hourly/task.EVERY_MINUTE",
-            "* * * * *",
-            "> /dev/null 2>&1"
+            "* * * * *"
           ),
           new LogrotateForceConfig(
-            "logrotate",
             "/etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES",
-            "*/5 * * * *",
-            "> /dev/null 2>&1"
+            "*/5 * * * *"
           )
         )
       )
@@ -243,6 +234,8 @@ public class SingularityExecutorConfigurationTest {
     doReturn("/etc/logrotate.d/hourly/task.sizebased")
       .when(context)
       .getLogrotateSizeBasedConfig();
+    doReturn("logrotate").when(context).getLogrotateCommand();
+    doReturn("> /dev/null 2>&1").when(context).getOutputRedirect();
 
     String renderedConfig = cronConfigTemplate.apply(context);
     assertThat(renderedConfig)
@@ -258,6 +251,8 @@ public class SingularityExecutorConfigurationTest {
         "*/5 * * * * root logrotate -f -s /statefile /etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES > /dev/null 2>&1"
       );
     assertThat(renderedConfig)
-      .contains("*/5 * * * * root  -s /statefile /etc/logrotate.d/hourly/task.sizebased");
+      .contains(
+        "*/5 * * * * root logrotate -s /statefile /etc/logrotate.d/hourly/task.sizebased > /dev/null 2>&1"
+      );
   }
 }
