@@ -35,10 +35,8 @@ public class LogrotateCronTemplateContext {
           String frequencySpecificLogrotateConfPath = frequencyWithLogrotateConfPath.getValue();
 
           return new LogrotateForceConfig(
-            configuration.getLogrotateCommand(),
             frequencySpecificLogrotateConfPath,
-            frequency.getCronSchedule().get(),
-            configuration.isIgnoreLogrotateOutput() ? "> /dev/null 2>&1" : ""
+            frequency.getCronSchedule().get()
           );
         }
       )
@@ -46,25 +44,12 @@ public class LogrotateCronTemplateContext {
   }
 
   public static class LogrotateForceConfig {
-    private final String logrotateCommand;
     private final String logrotateForceConfigPath;
     private final String cronSchedule;
-    private final String outputRedirect;
 
-    public LogrotateForceConfig(
-      String logrotateCommand,
-      String logrotateForceConfigPath,
-      String cronSchedule,
-      String outputRedirect
-    ) {
-      this.logrotateCommand = logrotateCommand;
+    public LogrotateForceConfig(String logrotateForceConfigPath, String cronSchedule) {
       this.logrotateForceConfigPath = logrotateForceConfigPath;
       this.cronSchedule = cronSchedule;
-      this.outputRedirect = outputRedirect;
-    }
-
-    public String getLogrotateCommand() {
-      return logrotateCommand;
     }
 
     public String getLogrotateForceConfigPath() {
@@ -74,10 +59,6 @@ public class LogrotateCronTemplateContext {
     public String getCronSchedule() {
       return cronSchedule;
     }
-
-    public String getOutputRedirect() {
-      return outputRedirect;
-    }
   }
 
   public String getLogrotateStateFile() {
@@ -86,5 +67,13 @@ public class LogrotateCronTemplateContext {
 
   public String getLogrotateSizeBasedConfig() {
     return logrotateSizeBasedConfig;
+  }
+
+  public String getOutputRedirect() {
+    return configuration.isIgnoreLogrotateOutput() ? "> /dev/null 2>&1" : "";
+  }
+
+  public String getLogrotateCommand() {
+    return configuration.getLogrotateCommand();
   }
 }
