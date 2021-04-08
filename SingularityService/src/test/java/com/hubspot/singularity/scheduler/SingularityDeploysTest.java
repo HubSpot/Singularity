@@ -157,7 +157,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       deployChecker.checkDeploys();
       Assertions.assertEquals(
         deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(),
-        DeployState.OVERDUE
+        DeployState.FAILED_INTERNAL_STATE
       );
     } finally {
       configuration.setDeployHealthyBySeconds(120);
