@@ -70,8 +70,8 @@ notifempty
 {{/if}}
 {{/if}}
 
-{{#if extrasFilesHourly}}
-{{#each extrasFilesHourly}}{{{filename}}} {
+{{#if extrasFilesHourlyOrMoreFrequent}}
+{{#each extrasFilesHourlyOrMoreFrequent}}{{{filename}}} {
   {{#if logrotateSizeOverride }}
     size {{{logrotateSizeOverride}}}
   {{else}}

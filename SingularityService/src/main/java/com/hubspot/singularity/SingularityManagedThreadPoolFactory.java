@@ -48,8 +48,12 @@ public class SingularityManagedThreadPoolFactory {
 
   public synchronized ExecutorService get(String name, int maxSize) {
     checkState(!stopped.get(), "already stopped");
-    ExecutorService service = Executors.newFixedThreadPool(
+    ExecutorService service = new ThreadPoolExecutor(
+      1,
       maxSize,
+      60L,
+      TimeUnit.SECONDS,
+      new LinkedBlockingQueue<>(),
       new ThreadFactoryBuilder().setNameFormat(name + "-%d").build()
     );
     executorPools.add(service);

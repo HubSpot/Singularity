@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,7 +77,7 @@ public abstract class SingularityUploader {
           fileSystem.getPathMatcher("glob:" + uploadMetadata.getOnFinishGlob().get())
         );
     } else {
-      finishedPathMatcher = Optional.<PathMatcher>empty();
+      finishedPathMatcher = Optional.empty();
     }
 
     this.hostname = hostname;
@@ -371,40 +372,22 @@ public abstract class SingularityUploader {
 
     SingularityS3Uploader that = (SingularityS3Uploader) o;
 
-    if (
-      uploadMetadata != null
-        ? !uploadMetadata.equals(that.uploadMetadata)
-        : that.uploadMetadata != null
-    ) {
+    if (!Objects.equals(uploadMetadata, that.uploadMetadata)) {
       return false;
     }
-    if (
-      fileDirectory != null
-        ? !fileDirectory.equals(that.fileDirectory)
-        : that.fileDirectory != null
-    ) {
+    if (!Objects.equals(fileDirectory, that.fileDirectory)) {
       return false;
     }
-    if (
-      bucketName != null ? !bucketName.equals(that.bucketName) : that.bucketName != null
-    ) {
+    if (!Objects.equals(bucketName, that.bucketName)) {
       return false;
     }
-    if (
-      metadataPath != null
-        ? !metadataPath.equals(that.metadataPath)
-        : that.metadataPath != null
-    ) {
+    if (!Objects.equals(metadataPath, that.metadataPath)) {
       return false;
     }
-    if (
-      logIdentifier != null
-        ? !logIdentifier.equals(that.logIdentifier)
-        : that.logIdentifier != null
-    ) {
+    if (!Objects.equals(logIdentifier, that.logIdentifier)) {
       return false;
     }
-    return hostname != null ? hostname.equals(that.hostname) : that.hostname == null;
+    return Objects.equals(hostname, that.hostname);
   }
 
   @Override
