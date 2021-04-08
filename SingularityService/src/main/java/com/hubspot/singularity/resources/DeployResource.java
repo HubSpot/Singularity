@@ -254,24 +254,29 @@ public class DeployResource extends AbstractRequestResource {
       );
     }
 
-    AtomicBoolean deployAlreadyInProgress = new AtomicBoolean(false);
-    SingularityRequest updatedRequest = request;
-    SingularityDeploy validatedDeploy = deploy;
-    // This can cause a conflict if run outside the lock, causing the pending deploy to be checked before deploy data is saved
-    schedulerLock.runWithRequestLock(
-      () -> {
-        deployAlreadyInProgress.set(
-          deployManager.createPendingDeploy(pendingDeployObj) ==
-          SingularityCreateResult.EXISTED
-        );
-        if (deployAlreadyInProgress.get()) {
-          return;
-        }
-        deployManager.saveDeploy(updatedRequest, deployMarker, validatedDeploy);
-      },
-      requestId,
-      "submitNewDeploy"
+    AtomicBoolean deployAlreadyInProgress = new AtomicBoolean(
+      deployManager.pendingDeployInProgress(requestId)
     );
+    // Short circuit outside lock so we don't wait too long
+    if (!deployAlreadyInProgress.get()) {
+      SingularityRequest updatedRequest = request;
+      SingularityDeploy validatedDeploy = deploy;
+      // This can cause a conflict if run outside the lock, causing the pending deploy to be checked before deploy data is saved
+      schedulerLock.runWithRequestLock(
+        () -> {
+          deployAlreadyInProgress.set(
+            deployManager.createPendingDeploy(pendingDeployObj) ==
+            SingularityCreateResult.EXISTED
+          );
+          if (deployAlreadyInProgress.get()) {
+            return;
+          }
+          deployManager.saveDeploy(updatedRequest, deployMarker, validatedDeploy);
+        },
+        requestId,
+        "submitNewDeploy"
+      );
+    }
 
     if (deployAlreadyInProgress.get() && deployToUnpause) {
       requestManager.pause(request, now, deployUser, Optional.empty());
