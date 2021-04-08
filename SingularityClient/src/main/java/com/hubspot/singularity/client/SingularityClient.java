@@ -139,6 +139,8 @@ public class SingularityClient {
   private static final String AGENTS_ACTIVATE_FORMAT =
     AGENTS_FORMAT + "/agent/%s/activate";
   private static final String AGENTS_DELETE_FORMAT = AGENTS_FORMAT + "/agent/%s";
+  private static final String MAX_DECOMMISSIONING_COUNT =
+    AGENTS_FORMAT + "/max-decommissioning-count";
 
   private static final String INACTIVE_AGENTS_FORMAT = "%s/inactive";
 
@@ -1711,6 +1713,13 @@ public class SingularityClient {
       String.format("decommission agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
+  }
+
+  public Optional<Integer> getMaxDecommissioningCount() {
+    final Function<String, String> requestUri = host ->
+      String.format(MAX_DECOMMISSIONING_COUNT, getApiBase(host));
+
+    return getSingle(requestUri, "max decommissioning count", "", Integer.class);
   }
 
   @Deprecated

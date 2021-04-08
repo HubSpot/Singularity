@@ -188,4 +188,8 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
       );
     }
   }
+
+  protected int getMaxDecommissioningAgents() {
+    return validator.getMaxDecommissioningAgents();
+  }
 }
