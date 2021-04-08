@@ -1295,10 +1295,6 @@ public class SingularityValidator {
     );
   }
 
-  public int getMaxDecommissioningAgents() {
-    return maxDecommissioningAgents;
-  }
-
   public void checkActionEnabled(SingularityAction action) {
     checkConflict(
       !disasterManager.isDisabled(action),

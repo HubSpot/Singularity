@@ -173,13 +173,6 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     );
   }
 
-  @GET
-  @Path("/agent/max-decommissioning-count")
-  @Operation(summary = "Retrieve the max decommissioning agent count from configuration")
-  public int getMaxDecommissioningAgent() {
-    return super.getMaxDecommissioningAgents();
-  }
-
   @POST
   @Path("/agent/{agentId}/freeze")
   @Operation(summary = "Freeze tasks on a specific agent")

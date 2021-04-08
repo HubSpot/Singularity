@@ -139,8 +139,6 @@ public class SingularityClient {
   private static final String AGENTS_ACTIVATE_FORMAT =
     AGENTS_FORMAT + "/agent/%s/activate";
   private static final String AGENTS_DELETE_FORMAT = AGENTS_FORMAT + "/agent/%s";
-  private static final String MAX_DECOMMISSIONING_COUNT =
-    AGENTS_FORMAT + "/max-decommissioning-count";
 
   private static final String INACTIVE_AGENTS_FORMAT = "%s/inactive";
 
@@ -271,6 +269,10 @@ public class SingularityClient {
   private static final String ALLOWLIST_FORMAT = NOTIFICATION_FORMAT + "/allowlist";
   private static final String SUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/subscribe";
   private static final String UNSUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/unsubscribe";
+
+  private static final String CONFIGURATION_FORMAT = "%s/configuration";
+  private static final String MAX_DECOMMISSIONING_COUNT =
+    CONFIGURATION_FORMAT + "/max-decommissioning-count";
 
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
@@ -1715,13 +1717,6 @@ public class SingularityClient {
     );
   }
 
-  public Optional<Integer> getMaxDecommissioningCount() {
-    final Function<String, String> requestUri = host ->
-      String.format(MAX_DECOMMISSIONING_COUNT, getApiBase(host));
-
-    return getSingle(requestUri, "max decommissioning count", "", Integer.class);
-  }
-
   @Deprecated
   public void freezeSlave(
     String agentId,
@@ -2827,5 +2822,16 @@ public class SingularityClient {
     final Function<String, String> requestUri = host ->
       String.format(UNSUBSCRIBE_FORMAT, getApiBase(host));
     this.post(requestUri, "unsubscribe email", Optional.of(email), Optional.empty());
+  }
+
+  //
+  // Configuration settings
+  //
+
+  public Optional<Integer> getMaxDecommissioningCount() {
+    final Function<String, String> requestUri = host ->
+      String.format(MAX_DECOMMISSIONING_COUNT, getApiBase(host));
+
+    return getSingle(requestUri, "max decommissioning count", "", Integer.class);
   }
 }
