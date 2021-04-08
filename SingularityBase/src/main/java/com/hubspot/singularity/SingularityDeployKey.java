@@ -1,11 +1,10 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.hubspot.mesos.JavaUtils;
 import java.util.Collection;
 import java.util.Map;
-import javax.annotation.Nonnull;
+import java.util.function.Function;
 
 public class SingularityDeployKey extends SingularityId {
   private final String requestId;
@@ -35,49 +34,14 @@ public class SingularityDeployKey extends SingularityId {
     return new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
   }
 
-  public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(
-    Collection<SingularityDeploy> deploys
-  ) {
-    return Maps.uniqueIndex(
-      deploys,
-      new Function<SingularityDeploy, SingularityDeployKey>() {
-
-        @Override
-        public SingularityDeployKey apply(@Nonnull SingularityDeploy input) {
-          return SingularityDeployKey.fromDeploy(input);
-        }
-      }
-    );
-  }
-
   public static Map<SingularityPendingTask, SingularityDeployKey> fromPendingTasks(
     Collection<SingularityPendingTask> pendingTasks
   ) {
-    return Maps.toMap(
-      pendingTasks,
-      new Function<SingularityPendingTask, SingularityDeployKey>() {
-
-        @Override
-        public SingularityDeployKey apply(@Nonnull SingularityPendingTask input) {
-          return SingularityDeployKey.fromPendingTask(input);
-        }
-      }
-    );
+    return Maps.toMap(pendingTasks, SingularityDeployKey::fromPendingTask);
   }
 
-  public static Map<SingularityPendingDeploy, SingularityDeployKey> fromPendingDeploys(
-    Collection<SingularityPendingDeploy> pendingDeploys
-  ) {
-    return Maps.toMap(pendingDeploys, FROM_PENDING_TO_DEPLOY_KEY);
-  }
-
-  public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
-
-    @Override
-    public SingularityDeployKey apply(@Nonnull SingularityPendingDeploy input) {
-      return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
-    }
-  };
+  public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = input ->
+    SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
 
   public SingularityDeployKey(String requestId, String deployId) {
     super(String.format("%s-%s", requestId, deployId));

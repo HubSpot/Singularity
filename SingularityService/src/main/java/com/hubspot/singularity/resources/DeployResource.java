@@ -35,6 +35,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RequestHelper;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.ning.http.client.AsyncHttpClient;
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -65,6 +67,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 public class DeployResource extends AbstractRequestResource {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
+  private final SingularitySchedulerLock schedulerLock;
 
   @Inject
   public DeployResource(
@@ -77,7 +80,8 @@ public class DeployResource extends AbstractRequestResource {
     LeaderLatch leaderLatch,
     AsyncHttpClient httpClient,
     @Singularity ObjectMapper objectMapper,
-    RequestHelper requestHelper
+    RequestHelper requestHelper,
+    SingularitySchedulerLock schedulerLock
   ) {
     super(
       requestManager,
@@ -91,6 +95,7 @@ public class DeployResource extends AbstractRequestResource {
     );
     this.configuration = configuration;
     this.taskManager = taskManager;
+    this.schedulerLock = schedulerLock;
   }
 
   @GET
@@ -249,15 +254,36 @@ public class DeployResource extends AbstractRequestResource {
       );
     }
 
-    boolean deployAlreadyInProgress =
-      deployManager.createPendingDeploy(pendingDeployObj) ==
-      SingularityCreateResult.EXISTED;
-    if (deployAlreadyInProgress && deployToUnpause) {
+    AtomicBoolean deployAlreadyInProgress = new AtomicBoolean(
+      deployManager.pendingDeployInProgress(requestId)
+    );
+    // Short circuit outside lock so we don't wait too long
+    if (!deployAlreadyInProgress.get()) {
+      SingularityRequest updatedRequest = request;
+      SingularityDeploy validatedDeploy = deploy;
+      // This can cause a conflict if run outside the lock, causing the pending deploy to be checked before deploy data is saved
+      schedulerLock.runWithRequestLock(
+        () -> {
+          deployAlreadyInProgress.set(
+            deployManager.createPendingDeploy(pendingDeployObj) ==
+            SingularityCreateResult.EXISTED
+          );
+          if (deployAlreadyInProgress.get()) {
+            return;
+          }
+          deployManager.saveDeploy(updatedRequest, deployMarker, validatedDeploy);
+        },
+        requestId,
+        "submitNewDeploy"
+      );
+    }
+
+    if (deployAlreadyInProgress.get() && deployToUnpause) {
       requestManager.pause(request, now, deployUser, Optional.empty());
     }
 
     checkConflict(
-      !deployAlreadyInProgress,
+      !deployAlreadyInProgress.get(),
       "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)",
       requestId,
       deployManager.getPendingDeploy(requestId).orElse(null)

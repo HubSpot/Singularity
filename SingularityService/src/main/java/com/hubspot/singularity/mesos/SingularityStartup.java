@@ -283,7 +283,7 @@ class SingularityStartup {
 
     final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(
       deployManager.getPendingDeploys(),
-      SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY
+      SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY::apply
     );
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(
       requestManager.getRequests(),

@@ -115,13 +115,6 @@ public class SingularityDeployChecker {
       return 0;
     }
 
-    final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey = SingularityDeployKey.fromPendingDeploys(
-      pendingDeploys
-    );
-    final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = deployManager.getDeploysForKeys(
-      pendingDeployToKey.values()
-    );
-
     CompletableFutures
       .allOf(
         pendingDeploys
@@ -131,14 +124,7 @@ public class SingularityDeployChecker {
               CompletableFuture.runAsync(
                 () ->
                   lock.runWithRequestLock(
-                    () ->
-                      checkDeploy(
-                        pendingDeploy,
-                        cancelDeploys,
-                        pendingDeployToKey,
-                        deployKeyToDeploy,
-                        updateRequests
-                      ),
+                    () -> checkDeploy(pendingDeploy, cancelDeploys, updateRequests),
                     pendingDeploy.getDeployMarker().getRequestId(),
                     getClass().getSimpleName()
                   ),
@@ -158,13 +144,14 @@ public class SingularityDeployChecker {
   private void checkDeploy(
     final SingularityPendingDeploy pendingDeploy,
     final List<SingularityDeployMarker> cancelDeploys,
-    final Map<SingularityPendingDeploy, SingularityDeployKey> pendingDeployToKey,
-    final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy,
     List<SingularityUpdatePendingDeployRequest> updateRequests
   ) {
-    final SingularityDeployKey deployKey = pendingDeployToKey.get(pendingDeploy);
-    final Optional<SingularityDeploy> deploy = Optional.ofNullable(
-      deployKeyToDeploy.get(deployKey)
+    final SingularityDeployKey deployKey = SingularityDeployKey.fromDeployMarker(
+      pendingDeploy.getDeployMarker()
+    );
+    final Optional<SingularityDeploy> deploy = deployManager.getDeploy(
+      deployKey.getRequestId(),
+      deployKey.getDeployId()
     );
 
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(
@@ -835,6 +822,7 @@ public class SingularityDeployChecker {
 
     // Check for abandoned pending deploy
     if (!maybeDeploy.isPresent()) {
+      LOG.warn("No deploy data found for {}", pendingDeploy.getDeployMarker());
       Optional<SingularityDeployResult> result = deployManager.getDeployResult(
         request.getId(),
         pendingDeploy.getDeployMarker().getDeployId()
@@ -848,7 +836,7 @@ public class SingularityDeployChecker {
       } else {
         return new SingularityDeployResult(
           DeployState.FAILED_INTERNAL_STATE,
-          "Deploy dta not present"
+          "Deploy data not present"
         );
       }
     }
