@@ -5,21 +5,27 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class S3ClientProvider {
+public class S3ClientProvider implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(S3ClientProvider.class);
 
+  private final Timer timer;
   private final Map<String, AmazonS3> clientByKey;
   private final Map<String, AtomicInteger> clientHolds;
 
   @Inject
   public S3ClientProvider() {
+    this.timer = new Timer();
     this.clientByKey = new HashMap<>();
     this.clientHolds = new HashMap<>();
   }
@@ -39,9 +45,30 @@ public class S3ClientProvider {
     } else {
       int remaining = holds.decrementAndGet();
       if (remaining == 0) {
-        clientHolds.remove(key);
-        clientByKey.remove(key);
+        // Wait a bit to clean up in case anything else is about to use this client
+        timer.schedule(
+          new TimerTask() {
+
+            @Override
+            public void run() {
+              try {
+                tryRemoveClient(key);
+              } catch (Exception e) {
+                LOG.error("Could not clean up s3 client", e);
+              }
+            }
+          },
+          15000
+        );
       }
+    }
+  }
+
+  public synchronized void tryRemoveClient(String key) {
+    AtomicInteger holds = clientHolds.get(key);
+    if (holds.get() == 0) {
+      clientHolds.remove(key);
+      clientByKey.remove(key);
     }
   }
 
@@ -52,5 +79,10 @@ public class S3ClientProvider {
       credentials.getAWSAccessKeyId(),
       credentials.getAWSSecretKey()
     );
+  }
+
+  @Override
+  public void close() throws IOException {
+    timer.cancel();
   }
 }
