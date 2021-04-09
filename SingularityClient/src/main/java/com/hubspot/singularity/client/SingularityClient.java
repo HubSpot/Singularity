@@ -273,7 +273,7 @@ public class SingularityClient {
 
   private static final String CONFIGURATION_FORMAT = "%s/configuration";
   private static final String SINGULARITY_LIMITS_FORMAT =
-    CONFIGURATION_FORMAT + "/singularity-limits-format";
+    CONFIGURATION_FORMAT + "/singularity-limits";
 
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};

@@ -20,7 +20,7 @@ public class SingularityConfigurationResource {
   }
 
   @GET
-  @Path("/singularity-limits-format")
+  @Path("/singularity-limits")
   @Operation(summary = "Retrieve configuration data for Singularity")
   public SingularityLimits getSingularityLimits() {
     return new SingularityLimits(config.getMaxDecommissioningAgents());
