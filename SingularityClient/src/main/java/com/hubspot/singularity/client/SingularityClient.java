@@ -37,6 +37,7 @@ import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityLimits;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequestParent;
@@ -269,6 +270,10 @@ public class SingularityClient {
   private static final String ALLOWLIST_FORMAT = NOTIFICATION_FORMAT + "/allowlist";
   private static final String SUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/subscribe";
   private static final String UNSUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/unsubscribe";
+
+  private static final String CONFIGURATION_FORMAT = "%s/configuration";
+  private static final String SINGULARITY_LIMITS_FORMAT =
+    CONFIGURATION_FORMAT + "/singularity-limits";
 
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
@@ -2818,5 +2823,16 @@ public class SingularityClient {
     final Function<String, String> requestUri = host ->
       String.format(UNSUBSCRIBE_FORMAT, getApiBase(host));
     this.post(requestUri, "unsubscribe email", Optional.of(email), Optional.empty());
+  }
+
+  //
+  // Configuration settings
+  //
+
+  public Optional<SingularityLimits> getSingularityLimits() {
+    final Function<String, String> requestUri = host ->
+      String.format(SINGULARITY_LIMITS_FORMAT, getApiBase(host));
+
+    return getSingle(requestUri, "singularity limits", "", SingularityLimits.class);
   }
 }

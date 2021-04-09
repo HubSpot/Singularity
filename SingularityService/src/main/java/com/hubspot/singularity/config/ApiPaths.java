@@ -28,4 +28,6 @@ public class ApiPaths {
   public static final String OPEN_API_RESOURCE_PATH = API_BASE_PATH + "/openapi.json";
   public static final String NOTIFICATIONS_RESOURCE_PATH =
     API_BASE_PATH + "/notifications";
+  public static final String CONFIGURATION_RESOURCE_PATH =
+    API_BASE_PATH + "/configuration";
 }

@@ -44,6 +44,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(ShuffleConfigurationResource.class);
     bind(TaskTrackerResource.class);
     bind(NotificationsResource.class);
+    bind(SingularityConfigurationResource.class);
 
     bind(RebalancingHelper.class).in(Scopes.SINGLETON);
 
