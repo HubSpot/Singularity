@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityLimits;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,9 +20,9 @@ public class SingularityConfigurationResource {
   }
 
   @GET
-  @Path("/agent/max-decommissioning-count")
-  @Operation(summary = "Retrieve the max decommissioning agent count from configuration")
-  public int getMaxDecommissioningAgent() {
-    return config.getMaxDecommissioningAgents();
+  @Path("/singularity-limits-format")
+  @Operation(summary = "Retrieve configuration data for Singularity")
+  public SingularityLimits getSingularityLimits() {
+    return new SingularityLimits(config.getMaxDecommissioningAgents());
   }
 }

@@ -37,6 +37,7 @@ import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityLimits;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequestParent;
@@ -271,8 +272,8 @@ public class SingularityClient {
   private static final String UNSUBSCRIBE_FORMAT = NOTIFICATION_FORMAT + "/unsubscribe";
 
   private static final String CONFIGURATION_FORMAT = "%s/configuration";
-  private static final String MAX_DECOMMISSIONING_COUNT =
-    CONFIGURATION_FORMAT + "/max-decommissioning-count";
+  private static final String SINGULARITY_LIMITS_FORMAT =
+    CONFIGURATION_FORMAT + "/singularity-limits-format";
 
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
@@ -2828,10 +2829,10 @@ public class SingularityClient {
   // Configuration settings
   //
 
-  public Optional<Integer> getMaxDecommissioningCount() {
+  public Optional<SingularityLimits> getSingularityLimits() {
     final Function<String, String> requestUri = host ->
-      String.format(MAX_DECOMMISSIONING_COUNT, getApiBase(host));
+      String.format(SINGULARITY_LIMITS_FORMAT, getApiBase(host));
 
-    return getSingle(requestUri, "max decommissioning count", "", Integer.class);
+    return getSingle(requestUri, "singularity limits", "", SingularityLimits.class);
   }
 }
