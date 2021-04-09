@@ -1,5 +1,5 @@
 {{#each logrotateForceConfigs}}
-{{{ cronSchedule }}} root {{{ logrotateCommand }}} -f -s {{{ logrotateStateFile }}} {{{ logrotateForceConfigPath }}} {{{ outputRedirect }}}
+{{{ cronSchedule }}} root {{{ ../logrotateCommand }}} -f -s {{{ ../logrotateStateFile }}} {{{ logrotateForceConfigPath }}} {{{ ../outputRedirect }}}
 {{/each}}
 
 {{#if logrotateSizeBasedConfig}}
