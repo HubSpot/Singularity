@@ -151,6 +151,8 @@ public class SingularityS3UploaderFile {
       applyS3StorageClassAfterBytes +
       ", checkSubdirectories=" +
       checkSubdirectories +
+      ", compressBeforeUpload=" +
+      compressBeforeUpload +
       '}'
     );
   }

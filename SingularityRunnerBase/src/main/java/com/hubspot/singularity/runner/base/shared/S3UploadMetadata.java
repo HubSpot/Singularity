@@ -275,6 +275,8 @@ public class S3UploadMetadata {
       uploadImmediately +
       ", checkSubdirectories=" +
       checkSubdirectories +
+      ", compressBeforeUpload=" +
+      compressBeforeUpload +
       ", uploaderType=" +
       uploaderType +
       ", gcsStorageClass=" +
