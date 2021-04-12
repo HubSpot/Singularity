@@ -169,10 +169,23 @@ public class SingularityExecutorTaskLogManager {
         continue;
       }
 
-      String fileGlob = additionalFile.getFilename() != null &&
-        additionalFile.getFilename().contains("*")
-        ? additionalFile.getFilename()
-        : String.format("%s*.[gb]z*", additionalFile.getFilename());
+      String fileGlob;
+
+      if (additionalFile.isCompressBeforeUpload()) {
+        // We have to compress it before the upload, so just look for the filename prefix
+        // If it's already compressed, we'll skip compression in SingularityS3Uploader and upload it as-is.
+        fileGlob = String.format("%s*", additionalFile.getFilename());
+      } else if (
+        additionalFile.getFilename() != null && additionalFile.getFilename().contains("*")
+      ) {
+        // There's already a wildcard in the filename, so pass the glob through as-is
+        fileGlob = additionalFile.getFilename();
+      } else {
+        // We're not compressing it ourselves in SingularityS3Uploader, and there's no wildcard,
+        // so look for a compressed file with this filename prefix
+        fileGlob = String.format("%s*.[gb]z*", additionalFile.getFilename());
+      }
+
       result =
         result &&
         writeS3MetadataFile(
@@ -190,7 +203,8 @@ public class SingularityExecutorTaskLogManager {
           additionalFile.getApplyS3StorageClassAfterBytes().isPresent()
             ? additionalFile.getApplyS3StorageClassAfterBytes()
             : taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
-          additionalFile.isCheckSubdirectories()
+          additionalFile.isCheckSubdirectories(),
+          additionalFile.isCompressBeforeUpload()
         );
       index++;
       handledLogs.add(additionalFile.getFilename());
@@ -212,6 +226,7 @@ public class SingularityExecutorTaskLogManager {
           finished,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          false,
           false
         );
     }
@@ -383,6 +398,7 @@ public class SingularityExecutorTaskLogManager {
           true,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          false,
           false
         );
     }
@@ -512,21 +528,43 @@ public class SingularityExecutorTaskLogManager {
   }
 
   public boolean manualLogrotate() {
-    if (!Files.exists(getLogrotateConfPath())) {
-      log.info("{} did not exist, skipping manual logrotation", getLogrotateConfPath());
+    Set<Path> frequencyBasedPaths = getCronFakedLogrotateAdditionalFileFrequencies()
+      .stream()
+      .map(this::getLogrotateHourlyConfPath)
+      .collect(Collectors.toSet());
+    boolean regularConfExists = Files.exists(getLogrotateConfPath());
+    boolean hourlyConfExists = frequencyBasedPaths
+      .stream()
+      .anyMatch(p -> Files.exists(p));
+    boolean sizeConfExists = Files.exists(getLogrotateSizeBasedConfPath());
+    if (!sizeConfExists && !hourlyConfExists && !regularConfExists) {
+      log.info(
+        "{}/{}/{} did not exist, skipping manual logrotation",
+        getLogrotateConfPath(),
+        frequencyBasedPaths,
+        getLogrotateSizeBasedConfPath()
+      );
       return true;
     }
 
-    final List<String> command = ImmutableList.of(
-      configuration.getLogrotateCommand(),
-      "-f",
-      "-s",
-      taskDefinition.getLogrotateStateFilePath().toString(),
-      getLogrotateConfPath().toString()
-    );
+    final ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.add(configuration.getLogrotateCommand());
+    command.add("-f");
+    command.add("-s");
+    command.add(taskDefinition.getLogrotateStateFilePath().toString());
+
+    if (regularConfExists) {
+      command.add(getLogrotateConfPath().toString());
+    }
+    if (hourlyConfExists) {
+      frequencyBasedPaths.forEach(p -> command.add(p.toString()));
+    }
+    if (sizeConfExists) {
+      command.add(getLogrotateSizeBasedConfPath().toString());
+    }
 
     try {
-      new SimpleProcessManager(log).runCommand(command);
+      new SimpleProcessManager(log).runCommand(command.build());
       return true;
     } catch (Throwable t) {
       log.warn(
@@ -643,7 +681,8 @@ public class SingularityExecutorTaskLogManager {
     boolean finished,
     Optional<String> s3StorageClass,
     Optional<Long> applyS3StorageClassAfterBytes,
-    boolean checkSubdirectories
+    boolean checkSubdirectories,
+    boolean compressBeforeUpload
   ) {
     final String s3UploaderBucket = s3Bucket.orElse(
       taskDefinition.getExecutorData().getDefaultS3Bucket()
@@ -674,6 +713,7 @@ public class SingularityExecutorTaskLogManager {
       applyS3StorageClassAfterBytes,
       Optional.of(finished),
       Optional.of(checkSubdirectories),
+      Optional.of(compressBeforeUpload),
       Optional.empty(),
       Collections.emptyMap(),
       Optional.empty(),

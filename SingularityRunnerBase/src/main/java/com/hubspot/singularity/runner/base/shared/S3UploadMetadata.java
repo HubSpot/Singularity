@@ -54,6 +54,7 @@ public class S3UploadMetadata {
   private final Optional<Long> applyStorageClassIfOverBytes;
   private final Optional<Boolean> uploadImmediately;
   private final boolean checkSubdirectories;
+  private final boolean compressBeforeUpload;
   private final SingularityUploaderType uploaderType;
   private final Map<String, Object> gcsCredentials;
   private final Optional<String> gcsStorageClass;
@@ -80,6 +81,7 @@ public class S3UploadMetadata {
     ) Optional<Long> applyStorageClassIfOverBytes,
     @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
     @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
+    @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload,
     @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
     @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
     @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
@@ -105,6 +107,7 @@ public class S3UploadMetadata {
     this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
     this.uploadImmediately = uploadImmediately;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
+    this.compressBeforeUpload = compressBeforeUpload.orElse(false);
     this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
     this.gcsCredentials =
       gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
@@ -209,6 +212,10 @@ public class S3UploadMetadata {
 
   public boolean isCheckSubdirectories() {
     return checkSubdirectories;
+  }
+
+  public boolean isCompressBeforeUpload() {
+    return compressBeforeUpload;
   }
 
   public SingularityUploaderType getUploaderType() {
