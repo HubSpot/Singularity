@@ -1,5 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -32,7 +33,14 @@ public class S3ClientProvider implements Closeable {
 
   public synchronized AmazonS3 getClient(BasicAWSCredentials credentials) {
     String key = credsToKey(credentials);
-    AmazonS3 s3 = clientByKey.computeIfAbsent(key, k -> new AmazonS3Client(credentials));
+    AmazonS3 s3 = clientByKey.computeIfAbsent(
+      key,
+      k ->
+        AmazonS3Client
+          .builder()
+          .withCredentials(new AWSStaticCredentialsProvider(credentials))
+          .build()
+    );
     clientHolds.computeIfAbsent(key, k -> new AtomicInteger(0)).incrementAndGet();
     return s3;
   }

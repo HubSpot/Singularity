@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Histogram;
@@ -355,12 +356,17 @@ public class SingularityMainModule implements Module {
         new SingularityS3Service(
           entry.getKey(),
           entry.getValue().getS3Bucket(),
-          new AmazonS3Client(
-            new BasicAWSCredentials(
-              entry.getValue().getS3AccessKey(),
-              entry.getValue().getS3SecretKey()
+          AmazonS3Client
+            .builder()
+            .withCredentials(
+              new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(
+                  entry.getValue().getS3AccessKey(),
+                  entry.getValue().getS3SecretKey()
+                )
+              )
             )
-          )
+            .build()
         )
       );
     }
@@ -372,24 +378,34 @@ public class SingularityMainModule implements Module {
         new SingularityS3Service(
           entry.getKey(),
           entry.getValue().getS3Bucket(),
-          new AmazonS3Client(
-            new BasicAWSCredentials(
-              entry.getValue().getS3AccessKey(),
-              entry.getValue().getS3SecretKey()
+          AmazonS3Client
+            .builder()
+            .withCredentials(
+              new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(
+                  entry.getValue().getS3AccessKey(),
+                  entry.getValue().getS3SecretKey()
+                )
+              )
             )
-          )
+            .build()
         )
       );
     }
     SingularityS3Service defaultService = new SingularityS3Service(
       SingularityS3FormatHelper.DEFAULT_GROUP_NAME,
       config.get().getS3Bucket(),
-      new AmazonS3Client(
-        new BasicAWSCredentials(
-          config.get().getS3AccessKey(),
-          config.get().getS3SecretKey()
+      AmazonS3Client
+        .builder()
+        .withCredentials(
+          new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(
+              config.get().getS3AccessKey(),
+              config.get().getS3SecretKey()
+            )
+          )
         )
-      )
+        .build()
     );
 
     return new SingularityS3Services(s3ServiceBuilder.build(), defaultService);
