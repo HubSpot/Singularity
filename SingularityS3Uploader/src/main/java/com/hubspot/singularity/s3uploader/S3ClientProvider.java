@@ -66,7 +66,7 @@ public class S3ClientProvider implements Closeable {
 
   public synchronized void tryRemoveClient(String key) {
     AtomicInteger holds = clientHolds.get(key);
-    if (holds.get() == 0) {
+    if (holds != null && holds.get() == 0) {
       clientHolds.remove(key);
       clientByKey.remove(key);
     }
