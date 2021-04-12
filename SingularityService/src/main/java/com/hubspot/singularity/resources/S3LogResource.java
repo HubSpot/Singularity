@@ -591,115 +591,127 @@ public class S3LogResource extends AbstractHistoryResource {
 
               @Override
               public List<S3ObjectSummaryHolder> call() throws Exception {
-                ListObjectsV2Request request = new ListObjectsV2Request()
-                  .withBucketName(s3Bucket)
-                  .withPrefix(s3Prefix);
-                if (paginated) {
-                  Optional<ContinuationToken> token = Optional.empty();
-                  if (
-                    search.getContinuationTokens().containsKey(key) &&
-                    !Strings.isNullOrEmpty(
-                      search.getContinuationTokens().get(key).getValue()
-                    )
-                  ) {
-                    request.setContinuationToken(
-                      search.getContinuationTokens().get(key).getValue()
-                    );
-                    token = Optional.of(search.getContinuationTokens().get(key));
-                  }
-                  int targetResultCount = search
-                    .getMaxPerPage()
-                    .orElse(DEFAULT_TARGET_MAX_RESULTS);
-                  request.setMaxKeys(targetResultCount);
-                  if (resultCount.get() < targetResultCount) {
-                    ListObjectsV2Result result = s3Client.listObjectsV2(request);
-                    if (result.getObjectSummaries().isEmpty()) {
-                      continuationTokens.putIfAbsent(
-                        key,
-                        new ContinuationToken(result.getNextContinuationToken(), true)
+                try {
+                  ListObjectsV2Request request = new ListObjectsV2Request()
+                    .withBucketName(s3Bucket)
+                    .withPrefix(s3Prefix);
+                  if (paginated) {
+                    Optional<ContinuationToken> token = Optional.empty();
+                    if (
+                      search.getContinuationTokens().containsKey(key) &&
+                      !Strings.isNullOrEmpty(
+                        search.getContinuationTokens().get(key).getValue()
+                      )
+                    ) {
+                      request.setContinuationToken(
+                        search.getContinuationTokens().get(key).getValue()
                       );
-                      return Collections.emptyList();
-                    } else {
-                      boolean addToList = incrementIfLessThan(
-                        resultCount,
-                        result.getObjectSummaries().size(),
-                        targetResultCount
-                      );
-                      if (addToList) {
+                      token = Optional.of(search.getContinuationTokens().get(key));
+                    }
+                    int targetResultCount = search
+                      .getMaxPerPage()
+                      .orElse(DEFAULT_TARGET_MAX_RESULTS);
+                    request.setMaxKeys(targetResultCount);
+                    if (resultCount.get() < targetResultCount) {
+                      ListObjectsV2Result result = s3Client.listObjectsV2(request);
+                      if (result.getObjectSummaries().isEmpty()) {
                         continuationTokens.putIfAbsent(
                           key,
-                          new ContinuationToken(
-                            result.getNextContinuationToken(),
-                            !result.isTruncated()
-                          )
-                        );
-                        List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
-                        for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                          if (
-                            search.getFileNamePrefixWhitelist().isEmpty() ||
-                            search
-                              .getFileNamePrefixWhitelist()
-                              .stream()
-                              .anyMatch(
-                                whitelistedPrefix ->
-                                  objectSummary.getKey().startsWith(whitelistedPrefix)
-                              )
-                          ) {
-                            objectSummaryHolders.add(
-                              new S3ObjectSummaryHolder(group, objectSummary)
-                            );
-                          }
-                        }
-                        return objectSummaryHolders;
-                      } else {
-                        continuationTokens.putIfAbsent(
-                          key,
-                          token.orElse(new ContinuationToken(null, false))
+                          new ContinuationToken(result.getNextContinuationToken(), true)
                         );
                         return Collections.emptyList();
+                      } else {
+                        boolean addToList = incrementIfLessThan(
+                          resultCount,
+                          result.getObjectSummaries().size(),
+                          targetResultCount
+                        );
+                        if (addToList) {
+                          continuationTokens.putIfAbsent(
+                            key,
+                            new ContinuationToken(
+                              result.getNextContinuationToken(),
+                              !result.isTruncated()
+                            )
+                          );
+                          List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
+                          for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                            if (
+                              search.getFileNamePrefixWhitelist().isEmpty() ||
+                              search
+                                .getFileNamePrefixWhitelist()
+                                .stream()
+                                .anyMatch(
+                                  whitelistedPrefix ->
+                                    objectSummary.getKey().startsWith(whitelistedPrefix)
+                                )
+                            ) {
+                              objectSummaryHolders.add(
+                                new S3ObjectSummaryHolder(group, objectSummary)
+                              );
+                            }
+                          }
+                          return objectSummaryHolders;
+                        } else {
+                          continuationTokens.putIfAbsent(
+                            key,
+                            token.orElse(new ContinuationToken(null, false))
+                          );
+                          return Collections.emptyList();
+                        }
                       }
+                    } else {
+                      continuationTokens.putIfAbsent(
+                        key,
+                        token.orElse(new ContinuationToken(null, false))
+                      );
+                      return Collections.emptyList();
                     }
                   } else {
-                    continuationTokens.putIfAbsent(
-                      key,
-                      token.orElse(new ContinuationToken(null, false))
-                    );
-                    return Collections.emptyList();
-                  }
-                } else {
-                  ListObjectsV2Result result = s3Client.listObjectsV2(request);
-                  List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
-                  for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                    if (
-                      search.getFileNamePrefixWhitelist().isEmpty() ||
-                      search
-                        .getFileNamePrefixWhitelist()
-                        .stream()
-                        .anyMatch(
-                          whitelistedPrefix ->
-                            objectSummary.getKey().startsWith(whitelistedPrefix)
-                        )
-                    ) {
-                      objectSummaryHolders.add(
-                        new S3ObjectSummaryHolder(group, objectSummary)
-                      );
-                    }
-                  }
-                  while (result.isTruncated() && result.getContinuationToken() != null) {
-                    result =
-                      s3Client.listObjectsV2(
-                        new ListObjectsV2Request()
-                          .withBucketName(s3Bucket)
-                          .withPrefix(s3Prefix)
-                          .withContinuationToken(result.getContinuationToken())
-                      );
+                    ListObjectsV2Result result = s3Client.listObjectsV2(request);
+                    List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                      objectSummaryHolders.add(
-                        new S3ObjectSummaryHolder(group, objectSummary)
-                      );
+                      if (
+                        search.getFileNamePrefixWhitelist().isEmpty() ||
+                        search
+                          .getFileNamePrefixWhitelist()
+                          .stream()
+                          .anyMatch(
+                            whitelistedPrefix ->
+                              objectSummary.getKey().startsWith(whitelistedPrefix)
+                          )
+                      ) {
+                        objectSummaryHolders.add(
+                          new S3ObjectSummaryHolder(group, objectSummary)
+                        );
+                      }
                     }
+                    while (
+                      result.isTruncated() && result.getContinuationToken() != null
+                    ) {
+                      result =
+                        s3Client.listObjectsV2(
+                          new ListObjectsV2Request()
+                            .withBucketName(s3Bucket)
+                            .withPrefix(s3Prefix)
+                            .withContinuationToken(result.getContinuationToken())
+                        );
+                      for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                        objectSummaryHolders.add(
+                          new S3ObjectSummaryHolder(group, objectSummary)
+                        );
+                      }
+                    }
+                    return objectSummaryHolders;
                   }
-                  return objectSummaryHolders;
+                } catch (Exception e) {
+                  LOG.warn(
+                    "Would not list objects in {} with prefix {}",
+                    s3Bucket,
+                    s3Prefix,
+                    e
+                  );
+                  throw e;
                 }
               }
             }
