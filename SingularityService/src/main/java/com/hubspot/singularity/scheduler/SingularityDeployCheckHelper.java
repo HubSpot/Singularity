@@ -138,14 +138,10 @@ public class SingularityDeployCheckHelper {
     return deployState.getCleanupType();
   }
 
-  public boolean isDeployOverdue(
+  public boolean isDeployStepOverdue(
     SingularityPendingDeploy pendingDeploy,
     SingularityDeploy deploy
   ) {
-    if (pendingDeploy.getDeployProgress().isStepLaunchComplete()) {
-      return false;
-    }
-
     final long startTime = getStartTime(pendingDeploy);
 
     final long deployDuration = System.currentTimeMillis() - startTime;
@@ -171,6 +167,17 @@ public class SingularityDeployCheckHelper {
 
       return false;
     }
+  }
+
+  public boolean isDeployOverdue(
+    SingularityPendingDeploy pendingDeploy,
+    SingularityDeploy deploy
+  ) {
+    if (pendingDeploy.getDeployProgress().isStepLaunchComplete()) {
+      return false;
+    }
+
+    return isDeployStepOverdue(pendingDeploy, deploy);
   }
 
   private long getStartTime(SingularityPendingDeploy pendingDeploy) {
@@ -241,6 +248,22 @@ public class SingularityDeployCheckHelper {
         pendingDeploy.getDeployMarker().getRequestId(),
         pendingDeploy.getDeployMarker().getDeployId(),
         pendingDeploy.getDeployProgress().getTargetActiveInstances(),
+        System.currentTimeMillis()
+      ),
+      LoadBalancerRequestType.DEPLOY,
+      Optional.empty()
+    );
+  }
+
+  public static LoadBalancerRequestId getRequestIdForRevert(
+    String requestId,
+    String deployId
+  ) {
+    return new LoadBalancerRequestId(
+      String.format(
+        "%s-%s-ADD-FOR-REVERT-%d",
+        requestId,
+        deployId,
         System.currentTimeMillis()
       ),
       LoadBalancerRequestType.DEPLOY,
