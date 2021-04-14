@@ -77,7 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -587,88 +586,106 @@ public class S3LogResource extends AbstractHistoryResource {
         }
         futures.add(
           executorService.submit(
-            new Callable<List<S3ObjectSummaryHolder>>() {
-
-              @Override
-              public List<S3ObjectSummaryHolder> call() throws Exception {
-                ListObjectsV2Request request = new ListObjectsV2Request()
-                  .withBucketName(s3Bucket)
-                  .withPrefix(s3Prefix);
-                if (paginated) {
-                  Optional<ContinuationToken> token = Optional.empty();
-                  if (
-                    search.getContinuationTokens().containsKey(key) &&
-                    !Strings.isNullOrEmpty(
-                      search.getContinuationTokens().get(key).getValue()
-                    )
-                  ) {
-                    request.setContinuationToken(
-                      search.getContinuationTokens().get(key).getValue()
-                    );
-                    token = Optional.of(search.getContinuationTokens().get(key));
-                  }
-                  int targetResultCount = search
-                    .getMaxPerPage()
-                    .orElse(DEFAULT_TARGET_MAX_RESULTS);
-                  request.setMaxKeys(targetResultCount);
-                  if (resultCount.get() < targetResultCount) {
-                    ListObjectsV2Result result = s3Client.listObjectsV2(request);
-                    if (result.getObjectSummaries().isEmpty()) {
-                      continuationTokens.putIfAbsent(
-                        key,
-                        new ContinuationToken(result.getNextContinuationToken(), true)
-                      );
-                      return Collections.emptyList();
-                    } else {
-                      boolean addToList = incrementIfLessThan(
-                        resultCount,
-                        result.getObjectSummaries().size(),
-                        targetResultCount
-                      );
-                      if (addToList) {
-                        continuationTokens.putIfAbsent(
-                          key,
-                          new ContinuationToken(
-                            result.getNextContinuationToken(),
-                            !result.isTruncated()
-                          )
-                        );
-                        List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
-                        for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                          if (
-                            search.getFileNamePrefixWhitelist().isEmpty() ||
-                            search
-                              .getFileNamePrefixWhitelist()
-                              .stream()
-                              .anyMatch(
-                                whitelistedPrefix ->
-                                  objectSummary.getKey().startsWith(whitelistedPrefix)
-                              )
-                          ) {
-                            objectSummaryHolders.add(
-                              new S3ObjectSummaryHolder(group, objectSummary)
-                            );
-                          }
-                        }
-                        return objectSummaryHolders;
-                      } else {
-                        continuationTokens.putIfAbsent(
-                          key,
-                          token.orElse(new ContinuationToken(null, false))
-                        );
-                        return Collections.emptyList();
-                      }
-                    }
-                  } else {
+            () -> {
+              ListObjectsV2Request request = new ListObjectsV2Request()
+                .withBucketName(s3Bucket)
+                .withPrefix(s3Prefix);
+              if (paginated) {
+                Optional<ContinuationToken> token = Optional.empty();
+                if (
+                  search.getContinuationTokens().containsKey(key) &&
+                  !Strings.isNullOrEmpty(
+                    search.getContinuationTokens().get(key).getValue()
+                  )
+                ) {
+                  request.setContinuationToken(
+                    search.getContinuationTokens().get(key).getValue()
+                  );
+                  token = Optional.of(search.getContinuationTokens().get(key));
+                }
+                int targetResultCount = search
+                  .getMaxPerPage()
+                  .orElse(DEFAULT_TARGET_MAX_RESULTS);
+                request.setMaxKeys(targetResultCount);
+                if (resultCount.get() < targetResultCount) {
+                  ListObjectsV2Result result = s3Client.listObjectsV2(request);
+                  if (result.getObjectSummaries().isEmpty()) {
                     continuationTokens.putIfAbsent(
                       key,
-                      token.orElse(new ContinuationToken(null, false))
+                      new ContinuationToken(result.getNextContinuationToken(), true)
                     );
                     return Collections.emptyList();
+                  } else {
+                    boolean addToList = incrementIfLessThan(
+                      resultCount,
+                      result.getObjectSummaries().size(),
+                      targetResultCount
+                    );
+                    if (addToList) {
+                      continuationTokens.putIfAbsent(
+                        key,
+                        new ContinuationToken(
+                          result.getNextContinuationToken(),
+                          !result.isTruncated()
+                        )
+                      );
+                      List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
+                      for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                        if (
+                          search.getFileNamePrefixWhitelist().isEmpty() ||
+                          search
+                            .getFileNamePrefixWhitelist()
+                            .stream()
+                            .anyMatch(
+                              whitelistedPrefix ->
+                                objectSummary.getKey().startsWith(whitelistedPrefix)
+                            )
+                        ) {
+                          objectSummaryHolders.add(
+                            new S3ObjectSummaryHolder(group, objectSummary)
+                          );
+                        }
+                      }
+                      return objectSummaryHolders;
+                    } else {
+                      continuationTokens.putIfAbsent(
+                        key,
+                        token.orElse(new ContinuationToken(null, false))
+                      );
+                      return Collections.emptyList();
+                    }
                   }
                 } else {
-                  ListObjectsV2Result result = s3Client.listObjectsV2(request);
-                  List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
+                  continuationTokens.putIfAbsent(
+                    key,
+                    token.orElse(new ContinuationToken(null, false))
+                  );
+                  return Collections.emptyList();
+                }
+              } else {
+                ListObjectsV2Result result = s3Client.listObjectsV2(request);
+                List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
+                for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                  if (
+                    search.getFileNamePrefixWhitelist().isEmpty() ||
+                    search
+                      .getFileNamePrefixWhitelist()
+                      .stream()
+                      .anyMatch(
+                        whitelistedPrefix ->
+                          objectSummary.getKey().startsWith(whitelistedPrefix)
+                      )
+                  ) {
+                    objectSummaryHolders.add(
+                      new S3ObjectSummaryHolder(group, objectSummary)
+                    );
+                  }
+                }
+                while (result.isTruncated() && result.getContinuationToken() != null) {
+                  result =
+                    s3Client.listObjectsV2(
+                      request.withContinuationToken(result.getContinuationToken())
+                    );
                   for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
                     if (
                       search.getFileNamePrefixWhitelist().isEmpty() ||
@@ -685,22 +702,8 @@ public class S3LogResource extends AbstractHistoryResource {
                       );
                     }
                   }
-                  while (result.isTruncated() && result.getContinuationToken() != null) {
-                    result =
-                      s3Client.listObjectsV2(
-                        new ListObjectsV2Request()
-                          .withBucketName(s3Bucket)
-                          .withPrefix(s3Prefix)
-                          .withContinuationToken(result.getContinuationToken())
-                      );
-                    for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                      objectSummaryHolders.add(
-                        new S3ObjectSummaryHolder(group, objectSummary)
-                      );
-                    }
-                  }
-                  return objectSummaryHolders;
                 }
+                return objectSummaryHolders;
               }
             }
           )
@@ -718,9 +721,7 @@ public class S3LogResource extends AbstractHistoryResource {
     );
 
     for (List<S3ObjectSummaryHolder> s3ObjectSummaryHolders : results) {
-      for (final S3ObjectSummaryHolder s3ObjectHolder : s3ObjectSummaryHolders) {
-        objects.add(s3ObjectHolder);
-      }
+      objects.addAll(s3ObjectSummaryHolders);
     }
 
     LOG.trace(
@@ -747,69 +748,63 @@ public class S3LogResource extends AbstractHistoryResource {
 
       logFutures.add(
         executorService.submit(
-          new Callable<SingularityS3LogMetadata>() {
+          () -> {
+            Optional<Long> maybeStartTime = Optional.empty();
+            Optional<Long> maybeEndTime = Optional.empty();
+            if (!search.isExcludeMetadata()) {
+              GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest(
+                s3Object.getBucketName(),
+                s3Object.getKey()
+              );
+              Map<String, String> objectMetadata = s3Client
+                .getObjectMetadata(metadataRequest)
+                .getUserMetadata();
+              maybeStartTime =
+                getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
+              maybeEndTime =
+                getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
+            }
 
-            @Override
-            public SingularityS3LogMetadata call() throws Exception {
-              Optional<Long> maybeStartTime = Optional.empty();
-              Optional<Long> maybeEndTime = Optional.empty();
-              if (!search.isExcludeMetadata()) {
-                GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest(
-                  s3Object.getBucketName(),
-                  s3Object.getKey()
-                );
-                Map<String, String> objectMetadata = s3Client
-                  .getObjectMetadata(metadataRequest)
-                  .getUserMetadata();
-                maybeStartTime =
-                  getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
-                maybeEndTime =
-                  getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
-              }
+            if (search.isListOnly()) {
+              return new SingularityS3LogMetadata(
+                s3Object.getKey(),
+                s3Object.getLastModified().getTime(),
+                s3Object.getSize(),
+                maybeStartTime,
+                maybeEndTime
+              );
+            } else {
+              GeneratePresignedUrlRequest getUrlRequest = new GeneratePresignedUrlRequest(
+                s3Object.getBucketName(),
+                s3Object.getKey()
+              )
+                .withMethod(HttpMethod.GET)
+                .withExpiration(expireAt);
+              String getUrl = s3Client.generatePresignedUrl(getUrlRequest).toString();
 
-              if (search.isListOnly()) {
-                return new SingularityS3LogMetadata(
-                  s3Object.getKey(),
-                  s3Object.getLastModified().getTime(),
-                  s3Object.getSize(),
-                  maybeStartTime,
-                  maybeEndTime
-                );
-              } else {
-                GeneratePresignedUrlRequest getUrlRequest = new GeneratePresignedUrlRequest(
-                  s3Object.getBucketName(),
-                  s3Object.getKey()
-                )
-                  .withMethod(HttpMethod.GET)
-                  .withExpiration(expireAt);
-                String getUrl = s3Client.generatePresignedUrl(getUrlRequest).toString();
+              ResponseHeaderOverrides downloadHeaders = new ResponseHeaderOverrides();
+              downloadHeaders.setContentDisposition(CONTENT_DISPOSITION_DOWNLOAD_HEADER);
+              downloadHeaders.setContentEncoding(CONTENT_ENCODING_DOWNLOAD_HEADER);
+              GeneratePresignedUrlRequest downloadUrlRequest = new GeneratePresignedUrlRequest(
+                s3Object.getBucketName(),
+                s3Object.getKey()
+              )
+                .withMethod(HttpMethod.GET)
+                .withExpiration(expireAt)
+                .withResponseHeaders(downloadHeaders);
+              String downloadUrl = s3Client
+                .generatePresignedUrl(downloadUrlRequest)
+                .toString();
 
-                ResponseHeaderOverrides downloadHeaders = new ResponseHeaderOverrides();
-                downloadHeaders.setContentDisposition(
-                  CONTENT_DISPOSITION_DOWNLOAD_HEADER
-                );
-                downloadHeaders.setContentEncoding(CONTENT_ENCODING_DOWNLOAD_HEADER);
-                GeneratePresignedUrlRequest downloadUrlRequest = new GeneratePresignedUrlRequest(
-                  s3Object.getBucketName(),
-                  s3Object.getKey()
-                )
-                  .withMethod(HttpMethod.GET)
-                  .withExpiration(expireAt)
-                  .withResponseHeaders(downloadHeaders);
-                String downloadUrl = s3Client
-                  .generatePresignedUrl(downloadUrlRequest)
-                  .toString();
-
-                return new SingularityS3Log(
-                  getUrl,
-                  s3Object.getKey(),
-                  s3Object.getLastModified().getTime(),
-                  s3Object.getSize(),
-                  downloadUrl,
-                  maybeStartTime,
-                  maybeEndTime
-                );
-              }
+              return new SingularityS3Log(
+                getUrl,
+                s3Object.getKey(),
+                s3Object.getLastModified().getTime(),
+                s3Object.getSize(),
+                downloadUrl,
+                maybeStartTime,
+                maybeEndTime
+              );
             }
           }
         )
@@ -885,7 +880,7 @@ public class S3LogResource extends AbstractHistoryResource {
           paginated
         )
       );
-      Collections.sort(logs, LOG_COMPARATOR);
+      logs.sort(LOG_COMPARATOR);
       return new SingularityS3SearchResult(
         continuationTokens,
         isFinalPageForAllPrefixes(continuationTokens.values()),
@@ -1006,8 +1001,7 @@ public class S3LogResource extends AbstractHistoryResource {
     @Parameter(
       description = "Do not generate download/get urls, only list the files and metadata"
     ) @QueryParam("list") @DefaultValue("false") boolean listOnly
-  )
-    throws Exception {
+  ) {
     checkS3();
 
     final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
@@ -1080,20 +1074,19 @@ public class S3LogResource extends AbstractHistoryResource {
     @Parameter(
       description = "Max number of results to return per bucket searched"
     ) @QueryParam("maxPerPage") Optional<Integer> maxPerPage
-  )
-    throws Exception {
+  ) {
     checkS3();
 
     try {
       final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
-        ImmutableMap.of(requestId, Collections.<String>emptyList()),
-        Collections.<String>emptyList(),
+        ImmutableMap.of(requestId, Collections.emptyList()),
+        Collections.emptyList(),
         start,
         end,
         excludeMetadata,
         listOnly,
-        Optional.<Integer>empty(),
-        Collections.<String, ContinuationToken>emptyMap()
+        Optional.empty(),
+        Collections.emptyMap()
       );
 
       return getS3Logs(
@@ -1157,20 +1150,19 @@ public class S3LogResource extends AbstractHistoryResource {
     @Parameter(
       description = "Max number of results to return per bucket searched"
     ) @QueryParam("maxPerPage") Optional<Integer> maxPerPage
-  )
-    throws Exception {
+  ) {
     checkS3();
 
     try {
       final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
         ImmutableMap.of(requestId, Collections.singletonList(deployId)),
-        Collections.<String>emptyList(),
+        Collections.emptyList(),
         start,
         end,
         excludeMetadata,
         listOnly,
-        Optional.<Integer>empty(),
-        Collections.<String, ContinuationToken>emptyMap()
+        Optional.empty(),
+        Collections.emptyMap()
       );
 
       return getS3Logs(
@@ -1220,8 +1212,7 @@ public class S3LogResource extends AbstractHistoryResource {
   public SingularityS3SearchResult getPaginatedS3Logs(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @RequestBody(required = true) SingularityS3SearchRequest search
-  )
-    throws Exception {
+  ) {
     checkS3();
 
     checkBadRequest(
