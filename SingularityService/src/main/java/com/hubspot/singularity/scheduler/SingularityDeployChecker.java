@@ -1032,7 +1032,8 @@ public class SingularityDeployChecker {
             deploy,
             deployActiveTasks,
             request,
-            updatePendingDeployRequest
+            updatePendingDeployRequest,
+            pendingDeploy.getDeployProgress()
           );
         }
 
@@ -1144,6 +1145,7 @@ public class SingularityDeployChecker {
         DeployState acceptanceHookDeployState = SingularityDeployAcceptanceManager.resultsToDeployState(
           updatedProgress.getStepAcceptanceResults()
         );
+        LOG.info("Acceptance checks had result {}", acceptanceHookDeployState);
         if (deploy.getCanaryDeploySettings().isEnableCanaryDeploy()) {
           if (acceptanceHookDeployState == DeployState.SUCCEEDED) {
             if (deployActiveTasks.size() >= request.getInstancesSafe()) {
@@ -1180,37 +1182,10 @@ public class SingularityDeployChecker {
               acceptanceHookDeployState,
               updatedProgress
             );
-            if (
-              !deploy.getCanaryDeploySettings().isEnableCanaryDeploy() &&
-              request.isLoadBalanced() &&
-              configuration.getLoadBalancerUri() != null
-            ) {
-              // Add previous tasks back to load balancer, since we previously took them out
-              if (pendingDeploy.getDeployProgress().getPendingLbUpdate().isPresent()) {
-                return checkLbRevertToActiveTasks(
-                  request,
-                  deploy,
-                  pendingDeploy,
-                  updatedProgress,
-                  acceptanceHookDeployState,
-                  deployActiveTasks,
-                  otherActiveTasks
-                );
-              } else {
-                return enqueueLbRevertToActiveTasks(
-                  request,
-                  pendingDeploy,
-                  updatedProgress,
-                  deployActiveTasks,
-                  otherActiveTasks
-                );
-              }
-            } else {
-              return new SingularityDeployResult(
-                acceptanceHookDeployState,
-                String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
-              );
-            }
+            return new SingularityDeployResult(
+              acceptanceHookDeployState,
+              String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+            );
           }
           updatePendingDeploy(pendingDeploy, acceptanceHookDeployState, updatedProgress);
           return new SingularityDeployResult(acceptanceHookDeployState);
@@ -1243,7 +1218,35 @@ public class SingularityDeployChecker {
                 acceptanceHookDeployState,
                 updatedProgress
               );
-              return new SingularityDeployResult(acceptanceHookDeployState);
+              if (
+                request.isLoadBalanced() && configuration.getLoadBalancerUri() != null
+              ) {
+                // Add previous tasks back to load balancer, since we previously took them out
+                if (updatedProgress.getPendingLbUpdate().isPresent()) {
+                  return checkLbRevertToActiveTasks(
+                    request,
+                    deploy,
+                    pendingDeploy,
+                    updatedProgress,
+                    acceptanceHookDeployState,
+                    deployActiveTasks,
+                    otherActiveTasks
+                  );
+                } else {
+                  return enqueueLbRevertToActiveTasks(
+                    request,
+                    pendingDeploy,
+                    updatedProgress,
+                    deployActiveTasks,
+                    otherActiveTasks
+                  );
+                }
+              } else {
+                return new SingularityDeployResult(
+                  acceptanceHookDeployState,
+                  String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+                );
+              }
           }
         }
       case NONE:
@@ -1383,7 +1386,8 @@ public class SingularityDeployChecker {
     SingularityDeployProgress deployProgress = updatedProgress.withPendingLbUpdate(
       enqueueResult,
       toAddBack,
-      Collections.emptyList()
+      deployActiveTasks,
+      true
     );
     updatePendingDeploy(pendingDeploy, DeployState.WAITING, deployProgress);
     return new SingularityDeployResult(DeployState.WAITING);
@@ -1535,7 +1539,7 @@ public class SingularityDeployChecker {
     // Save the lb enqueue + added/removed tasks for later
     SingularityDeployProgress deployProgress = pendingDeploy
       .getDeployProgress()
-      .withPendingLbUpdate(enqueueResult, deployActiveTasks, toRemoveFromLb);
+      .withPendingLbUpdate(enqueueResult, deployActiveTasks, toRemoveFromLb, false);
     updatePendingDeploy(pendingDeploy, DeployState.WAITING, deployProgress);
     maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
     return new SingularityDeployResult(DeployState.WAITING);
@@ -1576,18 +1580,19 @@ public class SingularityDeployChecker {
       pendingDeploy.getCurrentDeployState()
     );
     if (deployState == DeployState.SUCCEEDED) {
-      updatePendingDeploy(
-        pendingDeploy,
-        DeployState.WAITING,
-        deployProgress.withFinishedLbUpdate(lbUpdate, lbUpdateHolder)
+      SingularityDeployProgress updatedProgress = deployProgress.withFinishedLbUpdate(
+        lbUpdate,
+        lbUpdateHolder
       );
+      updatePendingDeploy(pendingDeploy, DeployState.WAITING, updatedProgress);
       // All tasks for current step are launched and in the LB if needed
       return markStepLaunchFinished(
         pendingDeploy,
         deploy,
         deployActiveTasks,
         request,
-        updatePendingDeployRequest
+        updatePendingDeployRequest,
+        updatedProgress
       );
     } else if (deployState == DeployState.WAITING) {
       updatePendingDeploy(
@@ -1596,7 +1601,8 @@ public class SingularityDeployChecker {
         deployProgress.withPendingLbUpdate(
           lbUpdate,
           lbUpdateHolder.getAdded(),
-          lbUpdateHolder.getRemoved()
+          lbUpdateHolder.getRemoved(),
+          false
         )
       );
       maybeUpdatePendingRequest(
@@ -1663,10 +1669,9 @@ public class SingularityDeployChecker {
     SingularityDeploy deploy,
     Collection<SingularityTaskId> deployActiveTasks,
     SingularityRequest request,
-    Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest
+    Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest,
+    SingularityDeployProgress deployProgress
   ) {
-    SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress();
-
     if (updatePendingDeployRequest.isPresent()) {
       maybeUpdatePendingRequest(
         pendingDeploy,

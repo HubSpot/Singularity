@@ -225,14 +225,16 @@ public class SingularityDeployProgress {
     return withPendingLbUpdate(
       loadBalancerUpdate,
       Collections.emptySet(),
-      Collections.emptySet()
+      Collections.emptySet(),
+      false
     );
   }
 
   public SingularityDeployProgress withPendingLbUpdate(
     SingularityLoadBalancerUpdate loadBalancerUpdate,
     Collection<SingularityTaskId> added,
-    Collection<SingularityTaskId> removed
+    Collection<SingularityTaskId> removed,
+    boolean stepLaunchComplete
   ) {
     Map<String, DeployProgressLbUpdateHolder> lbUpdateMap = new HashMap<>(lbUpdates);
     lbUpdateMap.put(
@@ -246,7 +248,7 @@ public class SingularityDeployProgress {
     return new SingularityDeployProgress(
       targetActiveInstances,
       currentActiveInstances,
-      false,
+      stepLaunchComplete,
       failedDeployTasks,
       System.currentTimeMillis(),
       lbUpdateMap,
