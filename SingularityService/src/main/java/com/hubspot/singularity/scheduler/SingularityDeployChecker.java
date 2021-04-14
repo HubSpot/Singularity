@@ -146,6 +146,15 @@ public class SingularityDeployChecker {
     final List<SingularityDeployMarker> cancelDeploys,
     List<SingularityUpdatePendingDeployRequest> updateRequests
   ) {
+    Thread
+      .currentThread()
+      .setName(
+        String.format(
+          "%s-%s-check",
+          pendingDeploy.getDeployMarker().getRequestId(),
+          pendingDeploy.getDeployMarker().getDeployId()
+        )
+      );
     final SingularityDeployKey deployKey = SingularityDeployKey.fromDeployMarker(
       pendingDeploy.getDeployMarker()
     );
@@ -1171,10 +1180,37 @@ public class SingularityDeployChecker {
               acceptanceHookDeployState,
               updatedProgress
             );
-            return new SingularityDeployResult(
-              acceptanceHookDeployState,
-              String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
-            );
+            if (
+              !deploy.getCanaryDeploySettings().isEnableCanaryDeploy() &&
+              request.isLoadBalanced() &&
+              configuration.getLoadBalancerUri() != null
+            ) {
+              // Add previous tasks back to load balancer, since we previously took them out
+              if (pendingDeploy.getDeployProgress().getPendingLbUpdate().isPresent()) {
+                return checkLbRevertToActiveTasks(
+                  request,
+                  deploy,
+                  pendingDeploy,
+                  updatedProgress,
+                  acceptanceHookDeployState,
+                  deployActiveTasks,
+                  otherActiveTasks
+                );
+              } else {
+                return enqueueLbRevertToActiveTasks(
+                  request,
+                  pendingDeploy,
+                  updatedProgress,
+                  deployActiveTasks,
+                  otherActiveTasks
+                );
+              }
+            } else {
+              return new SingularityDeployResult(
+                acceptanceHookDeployState,
+                String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+              );
+            }
           }
           updatePendingDeploy(pendingDeploy, acceptanceHookDeployState, updatedProgress);
           return new SingularityDeployResult(acceptanceHookDeployState);
@@ -1222,6 +1258,135 @@ public class SingularityDeployChecker {
           otherActiveTasks
         );
     }
+  }
+
+  private SingularityDeployResult checkLbRevertToActiveTasks(
+    SingularityRequest request,
+    SingularityDeploy deploy,
+    SingularityPendingDeploy pendingDeploy,
+    SingularityDeployProgress updatedProgress,
+    DeployState acceptanceHookDeployState,
+    Collection<SingularityTaskId> deployActiveTasks,
+    Collection<SingularityTaskId> otherActiveTasks
+  ) {
+    final SingularityLoadBalancerUpdate lbUpdate = lbClient.getState(
+      pendingDeploy
+        .getDeployProgress()
+        .getPendingLbUpdate()
+        .get()
+        .getLoadBalancerRequestId()
+    );
+    DeployProgressLbUpdateHolder lbUpdateHolder = updatedProgress
+      .getLbUpdates()
+      .get(lbUpdate.getLoadBalancerRequestId().toString());
+    if (lbUpdateHolder == null) {
+      return new SingularityDeployResult(
+        DeployState.FAILED_INTERNAL_STATE,
+        "Load balancer update metadata not found"
+      );
+    }
+    updateLoadBalancerStateForTasks(
+      lbUpdateHolder.getAdded(),
+      LoadBalancerRequestType.ADD,
+      lbUpdate
+    );
+    switch (lbUpdate.getLoadBalancerState()) {
+      case SUCCESS:
+        updatePendingDeploy(
+          pendingDeploy,
+          acceptanceHookDeployState,
+          updatedProgress.withFinishedLbUpdate(lbUpdate, lbUpdateHolder)
+        );
+        return new SingularityDeployResult(
+          acceptanceHookDeployState,
+          String.join(", ", updatedProgress.getAcceptanceResultMessageHistory())
+        );
+      case WAITING:
+        return new SingularityDeployResult(DeployState.WAITING);
+      default:
+        // Keep trying until we time out, since abandoning here would leave nothing in the LB
+        if (deployCheckHelper.isDeployOverdue(pendingDeploy, deploy)) {
+          LOG.error("Unable to revert load balancer for deploy failure");
+          return new SingularityDeployResult(
+            DeployState.FAILED_INTERNAL_STATE,
+            "Unable to revert load balancer for deploy failure"
+          );
+        } else {
+          LOG.warn(
+            "Retrying failed LB revert for {} {}",
+            pendingDeploy.getDeployMarker().getRequestId(),
+            pendingDeploy.getDeployMarker().getDeployId()
+          );
+          return enqueueLbRevertToActiveTasks(
+            request,
+            pendingDeploy,
+            updatedProgress,
+            deployActiveTasks,
+            otherActiveTasks
+          );
+        }
+    }
+  }
+
+  private SingularityDeployResult enqueueLbRevertToActiveTasks(
+    SingularityRequest request,
+    SingularityPendingDeploy pendingDeploy,
+    SingularityDeployProgress updatedProgress,
+    Collection<SingularityTaskId> deployActiveTasks,
+    Collection<SingularityTaskId> otherActiveTasks
+  ) {
+    Optional<String> activeDeployIdToRevertTo = deployManager.getActiveDeployId(
+      request.getId()
+    );
+    if (!activeDeployIdToRevertTo.isPresent()) {
+      return new SingularityDeployResult(
+        DeployState.FAILED_INTERNAL_STATE,
+        "No active deploy id  found to revert to"
+      );
+    }
+    Optional<SingularityDeploy> activeDeployToRevertTo = deployManager.getDeploy(
+      request.getId(),
+      activeDeployIdToRevertTo.get()
+    );
+    if (!activeDeployToRevertTo.isPresent()) {
+      return new SingularityDeployResult(
+        DeployState.FAILED_INTERNAL_STATE,
+        "No active deploy found to revert to"
+      );
+    }
+    SingularityDeploy toRevertTo = activeDeployToRevertTo.get();
+    Set<SingularityTaskId> toAddBack = otherActiveTasks
+      .stream()
+      .filter(t -> t.getDeployId().equals(toRevertTo.getId()))
+      .collect(Collectors.toSet());
+
+    // If we have gotten here, there is both an add and remove in the LB history and task is _not_ in the LB
+    // Many steps are based on the presence of an add when determining actions to take on shut down. So, clear
+    // this to make it as if the task was a net-new add to the LB, making cleanup act as before
+    for (SingularityTaskId toAddId : toAddBack) {
+      taskManager.clearLoadBalancerHistory(toAddId);
+    }
+    Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(
+      Iterables.concat(deployActiveTasks, toAddBack)
+    );
+    final LoadBalancerRequestId lbRequestId = SingularityDeployCheckHelper.getRequestIdForRevert(
+      request.getId(),
+      toRevertTo.getId()
+    );
+    SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(
+      lbRequestId,
+      request,
+      toRevertTo,
+      SingularityDeployCheckHelper.getTasks(toAddBack, tasks),
+      SingularityDeployCheckHelper.getTasks(deployActiveTasks, tasks)
+    );
+    SingularityDeployProgress deployProgress = updatedProgress.withPendingLbUpdate(
+      enqueueResult,
+      toAddBack,
+      Collections.emptyList()
+    );
+    updatePendingDeploy(pendingDeploy, DeployState.WAITING, deployProgress);
+    return new SingularityDeployResult(DeployState.WAITING);
   }
 
   private SingularityDeployResult checkCanaryMaybeFinished(
