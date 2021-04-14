@@ -33,7 +33,7 @@ public class TemplateManager {
     @Named(SingularityExecutorModule.ENVIRONMENT_TEMPLATE) Template environmentTemplate,
     @Named(SingularityExecutorModule.LOGROTATE_TEMPLATE) Template logrotateTemplate,
     @Named(
-      SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE
+      SingularityExecutorModule.LOGROTATE_HOURLY_OR_MORE_FREQUENT_TEMPLATE
     ) Template logrotateHourlyTemplate,
     @Named(
       SingularityExecutorModule.LOGROTATE_SIZE_BASED_TEMPLATE

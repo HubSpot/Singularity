@@ -74,6 +74,7 @@ public class SingularityS3UploaderDriver
   private final Set<SingularityUploader> expiring;
   private final SingularityS3UploaderMetrics metrics;
   private final JsonObjectFileHelper jsonObjectFileHelper;
+  private final S3ClientProvider s3ClientProvider;
   private final ProcessUtils processUtils;
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
@@ -91,6 +92,7 @@ public class SingularityS3UploaderDriver
     SingularityS3Configuration s3Configuration,
     SingularityS3UploaderMetrics metrics,
     JsonObjectFileHelper jsonObjectFileHelper,
+    S3ClientProvider s3ClientProvider,
     @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname,
     SingularityRunnerExceptionNotifier exceptionNotifier
   ) {
@@ -110,6 +112,7 @@ public class SingularityS3UploaderDriver
     this.fileSystem = FileSystems.getDefault();
 
     this.jsonObjectFileHelper = jsonObjectFileHelper;
+    this.s3ClientProvider = s3ClientProvider;
     this.configuration = configuration;
 
     this.metadataToUploader = Maps.newHashMap();
@@ -679,6 +682,7 @@ public class SingularityS3UploaderDriver
         uploader =
           new SingularityS3Uploader(
             bucketCreds.orElse(defaultCredentials),
+            s3ClientProvider,
             metadata,
             fileSystem,
             metrics,
