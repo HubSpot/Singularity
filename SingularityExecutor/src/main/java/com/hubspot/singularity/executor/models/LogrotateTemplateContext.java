@@ -19,11 +19,10 @@ import java.util.stream.Stream;
  */
 public class LogrotateTemplateContext {
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF = p ->
-    SingularityExecutorLogrotateFrequency
-      .HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.stream()
-      .map(SingularityExecutorLogrotateFrequency::getLogrotateValue)
-      .collect(Collectors.toSet())
-      .contains(p.getLogrotateFrequencyOverride());
+    p.getLogrotateFrequencyOverride().isPresent() &&
+    SingularityExecutorLogrotateFrequency.HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.contains(
+      p.getLogrotateFrequencyOverride().get()
+    );
 
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
     p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
@@ -131,7 +130,11 @@ public class LogrotateTemplateContext {
               file ->
                 file
                   .getLogrotateFrequencyOverride()
-                  .equals(singularityExecutorLogrotateFrequency.getLogrotateValue())
+                  .map(
+                    someFrequencyOverride ->
+                      someFrequencyOverride == singularityExecutorLogrotateFrequency
+                  )
+                  .orElse(false)
             )
             .collect(Collectors.toList())
       )
