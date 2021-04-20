@@ -192,7 +192,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     ) {
       LOG.info(
         "Baragon request {} already in the queue, will fetch current state instead",
-        loadBalancerRequestId.getId()
+        loadBalancerRequestId
       );
       return sendRequestWrapper(
         loadBalancerRequestId,

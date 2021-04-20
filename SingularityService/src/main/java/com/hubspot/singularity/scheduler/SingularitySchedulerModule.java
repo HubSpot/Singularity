@@ -26,6 +26,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityScheduler.class).in(Scopes.SINGLETON);
     bind(SingularityCrashLoopChecker.class).in(Scopes.SINGLETON);
     bind(SingularityDeployChecker.class).in(Scopes.SINGLETON);
+    bind(SingularityDeployCheckHelper.class).in(Scopes.SINGLETON);
     bind(SingularityCleaner.class).in(Scopes.SINGLETON);
     bind(SingularityCrashLoops.class).in(Scopes.SINGLETON);
     bind(SingularityDeployHealthHelper.class).in(Scopes.SINGLETON);
@@ -47,5 +48,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(RebalancingHelper.class).in(Scopes.SINGLETON);
     bind(SingularityUpstreamPoller.class).in(Scopes.SINGLETON);
     bind(SingularityUpstreamChecker.class).in(Scopes.SINGLETON);
+    bind(SingularityDeployAcceptanceManager.class).in(Scopes.SINGLETON);
   }
 }

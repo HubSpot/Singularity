@@ -21,7 +21,7 @@
   * [Expiring Actions](Docs/features/expiring-actions.md)
   * [Shell Commands](Docs/features/shell-commands.md)
   * [Task Search](Docs/features/task-search.md)
-  * [Incremental Deploys](Docs/features/incremental-deploys.md)
+  * [Canary Deploys](Docs/features/canary-deploys.md)
   * [Disaster Detection & Disabled Actions](Docs/features/disaster-detection.md)
   * [Cluster Coordinator](Docs/features/cluster-coordinator.md)
   * [Upgrading to Mesos 1](Docs/features/mesos-1.md)

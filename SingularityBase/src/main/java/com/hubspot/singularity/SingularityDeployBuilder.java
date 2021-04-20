@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -103,13 +105,34 @@ public class SingularityDeployBuilder {
   private Optional<String> loadBalancerServiceIdOverride;
   private Optional<String> loadBalancerUpstreamGroup;
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private Optional<Integer> deployInstanceCountPerStep;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private Optional<Integer> deployStepWaitTimeMs;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private Optional<Boolean> autoAdvanceDeploySteps;
+
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   private Optional<Integer> maxTaskRetries;
+
   private Optional<Boolean> shell;
   private Optional<String> user;
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
+  private Optional<CanaryDeploySettings> canaryDeploySettings;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -161,6 +184,7 @@ public class SingularityDeployBuilder {
     this.shell = Optional.empty();
     this.user = Optional.empty();
     this.s3UploaderAdditionalFiles = Collections.emptyList();
+    this.canaryDeploySettings = Optional.empty();
   }
 
   public SingularityDeploy build() {
@@ -213,7 +237,8 @@ public class SingularityDeployBuilder {
       maxTaskRetries,
       shell,
       user,
-      s3UploaderAdditionalFiles
+      s3UploaderAdditionalFiles,
+      canaryDeploySettings
     );
   }
 
@@ -631,10 +656,18 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public Optional<Integer> getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public SingularityDeployBuilder setDeployInstanceCountPerStep(
     Optional<Integer> deployInstanceCountPerStep
   ) {
@@ -642,10 +675,18 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public Optional<Integer> getDeployStepWaitTimeMs() {
     return deployStepWaitTimeMs;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public SingularityDeployBuilder setDeployStepWaitTimeMs(
     Optional<Integer> deployStepWaitTimeMs
   ) {
@@ -653,10 +694,18 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public Optional<Boolean> getAutoAdvanceDeploySteps() {
     return autoAdvanceDeploySteps;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public SingularityDeployBuilder setAutoAdvanceDeploySteps(
     Optional<Boolean> autoAdvanceDeploySteps
   ) {
@@ -664,10 +713,18 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public Optional<Integer> getMaxTaskRetries() {
     return maxTaskRetries;
   }
 
+  @Deprecated
+  /**
+   * @deprecated use {@link CanaryDeploySettings} instead
+   */
   public SingularityDeployBuilder setMaxTaskRetries(Optional<Integer> maxTaskRetries) {
     this.maxTaskRetries = maxTaskRetries;
     return this;
@@ -724,111 +781,71 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<CanaryDeploySettings> getCanaryDeploySettings() {
+    return canaryDeploySettings;
+  }
+
+  public SingularityDeployBuilder setCanaryDeploySettings(
+    CanaryDeploySettings canaryDeploySettings
+  ) {
+    this.canaryDeploySettings = Optional.ofNullable(canaryDeploySettings);
+    return this;
+  }
+
   @Override
   public String toString() {
-    return (
-      "SingularityDeployBuilder{" +
-      "requestId='" +
-      requestId +
-      '\'' +
-      ", id='" +
-      id +
-      '\'' +
-      ", version=" +
-      version +
-      ", timestamp=" +
-      timestamp +
-      ", metadata=" +
-      metadata +
-      ", containerInfo=" +
-      containerInfo +
-      ", customExecutorCmd=" +
-      customExecutorCmd +
-      ", customExecutorId=" +
-      customExecutorId +
-      ", customExecutorSource=" +
-      customExecutorSource +
-      ", customExecutorResources=" +
-      customExecutorResources +
-      ", resources=" +
-      resources +
-      ", command=" +
-      command +
-      ", arguments=" +
-      arguments +
-      ", env=" +
-      env +
-      ", taskEnv=" +
-      taskEnv +
-      ", runImmediately=" +
-      runImmediately +
-      ", uris=" +
-      uris +
-      ", executorData=" +
-      executorData +
-      ", labels=" +
-      labels +
-      ", mesosLabels=" +
-      mesosLabels +
-      ", taskLabels=" +
-      taskLabels +
-      ", mesosTaskLabels=" +
-      mesosTaskLabels +
-      ", healthcheckUri=" +
-      healthcheckUri +
-      ", healthcheckIntervalSeconds=" +
-      healthcheckIntervalSeconds +
-      ", healthcheckTimeoutSeconds=" +
-      healthcheckTimeoutSeconds +
-      ", healthcheckPortIndex=" +
-      healthcheckPortIndex +
-      ", healthcheckProtocol=" +
-      healthcheckProtocol +
-      ", healthcheckMaxRetries=" +
-      healthcheckMaxRetries +
-      ", healthcheckMaxTotalTimeoutSeconds=" +
-      healthcheckMaxTotalTimeoutSeconds +
-      ", skipHealthchecksOnDeploy=" +
-      skipHealthchecksOnDeploy +
-      ", healthcheck=" +
-      healthcheck +
-      ", deployHealthTimeoutSeconds=" +
-      deployHealthTimeoutSeconds +
-      ", considerHealthyAfterRunningForSeconds=" +
-      considerHealthyAfterRunningForSeconds +
-      ", serviceBasePath=" +
-      serviceBasePath +
-      ", loadBalancerGroups=" +
-      loadBalancerGroups +
-      ", loadBalancerPortIndex=" +
-      loadBalancerPortIndex +
-      ", loadBalancerOptions=" +
-      loadBalancerOptions +
-      ", loadBalancerDomains=" +
-      loadBalancerDomains +
-      ", loadBalancerAdditionalRoutes=" +
-      loadBalancerAdditionalRoutes +
-      ", loadBalancerTemplate=" +
-      loadBalancerTemplate +
-      ", loadBalancerServiceIdOverride=" +
-      loadBalancerServiceIdOverride +
-      ", loadBalancerUpstreamGroup=" +
-      loadBalancerUpstreamGroup +
-      ", deployInstanceCountPerStep=" +
-      deployInstanceCountPerStep +
-      ", deployStepWaitTimeMs=" +
-      deployStepWaitTimeMs +
-      ", autoAdvanceDeploySteps=" +
-      autoAdvanceDeploySteps +
-      ", maxTaskRetries=" +
-      maxTaskRetries +
-      ", shell=" +
-      shell +
-      ", user=" +
-      user +
-      ", s3UploaderAdditionalFiles=" +
-      s3UploaderAdditionalFiles +
-      '}'
-    );
+    return MoreObjects
+      .toStringHelper(this)
+      .add("requestId", requestId)
+      .add("id", id)
+      .add("version", version)
+      .add("timestamp", timestamp)
+      .add("metadata", metadata)
+      .add("containerInfo", containerInfo)
+      .add("customExecutorCmd", customExecutorCmd)
+      .add("customExecutorId", customExecutorId)
+      .add("customExecutorSource", customExecutorSource)
+      .add("customExecutorResources", customExecutorResources)
+      .add("resources", resources)
+      .add("command", command)
+      .add("arguments", arguments)
+      .add("env", env)
+      .add("taskEnv", taskEnv)
+      .add("runImmediately", runImmediately)
+      .add("uris", uris)
+      .add("executorData", executorData)
+      .add("labels", labels)
+      .add("mesosLabels", mesosLabels)
+      .add("taskLabels", taskLabels)
+      .add("mesosTaskLabels", mesosTaskLabels)
+      .add("healthcheckUri", healthcheckUri)
+      .add("healthcheckIntervalSeconds", healthcheckIntervalSeconds)
+      .add("healthcheckTimeoutSeconds", healthcheckTimeoutSeconds)
+      .add("healthcheckPortIndex", healthcheckPortIndex)
+      .add("healthcheckProtocol", healthcheckProtocol)
+      .add("healthcheckMaxRetries", healthcheckMaxRetries)
+      .add("healthcheckMaxTotalTimeoutSeconds", healthcheckMaxTotalTimeoutSeconds)
+      .add("skipHealthchecksOnDeploy", skipHealthchecksOnDeploy)
+      .add("healthcheck", healthcheck)
+      .add("deployHealthTimeoutSeconds", deployHealthTimeoutSeconds)
+      .add("considerHealthyAfterRunningForSeconds", considerHealthyAfterRunningForSeconds)
+      .add("serviceBasePath", serviceBasePath)
+      .add("loadBalancerGroups", loadBalancerGroups)
+      .add("loadBalancerPortIndex", loadBalancerPortIndex)
+      .add("loadBalancerOptions", loadBalancerOptions)
+      .add("loadBalancerDomains", loadBalancerDomains)
+      .add("loadBalancerAdditionalRoutes", loadBalancerAdditionalRoutes)
+      .add("loadBalancerTemplate", loadBalancerTemplate)
+      .add("loadBalancerServiceIdOverride", loadBalancerServiceIdOverride)
+      .add("loadBalancerUpstreamGroup", loadBalancerUpstreamGroup)
+      .add("deployInstanceCountPerStep", deployInstanceCountPerStep)
+      .add("deployStepWaitTimeMs", deployStepWaitTimeMs)
+      .add("autoAdvanceDeploySteps", autoAdvanceDeploySteps)
+      .add("maxTaskRetries", maxTaskRetries)
+      .add("shell", shell)
+      .add("user", user)
+      .add("s3UploaderAdditionalFiles", s3UploaderAdditionalFiles)
+      .add("canaryDeploySettings", canaryDeploySettings)
+      .toString();
   }
 }

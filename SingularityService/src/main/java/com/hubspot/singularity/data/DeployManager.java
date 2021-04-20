@@ -253,6 +253,8 @@ public class DeployManager extends CuratorAsyncManager {
       );
     }
 
+    LOG.info("Creating deploy {}", deployMarker);
+
     singularityEventListener.deployHistoryEvent(
       new SingularityDeployUpdate(
         deployMarker,
@@ -478,6 +480,10 @@ public class DeployManager extends CuratorAsyncManager {
       pendingDeploy,
       pendingDeployTranscoder
     );
+  }
+
+  public boolean pendingDeployInProgress(String requestId) {
+    return exists(getPendingDeployPath(requestId));
   }
 
   public SingularityCreateResult savePendingDeploy(

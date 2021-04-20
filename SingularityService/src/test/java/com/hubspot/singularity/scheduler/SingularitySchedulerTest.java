@@ -1409,6 +1409,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
     deployChecker.checkDeploys();
+    deployChecker.checkDeploys();
 
     // First task from old deploy should still have no LB updates, but should have a cleanup
     Assertions.assertFalse(
@@ -4064,6 +4065,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
     startTask(secondDeploy);
     deployChecker.checkDeploys();
+    deployChecker.checkDeploys();
 
     Assertions.assertEquals(
       DeployState.SUCCEEDED,
@@ -4184,7 +4186,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     );
     List<SingularityTaskId> healthyTaskIds = deployHealthHelper.getHealthyTasks(
       updatedRequest,
-      Optional.of(firstDeploy),
+      firstDeploy,
       activeTaskIds,
       false
     );
@@ -4194,7 +4196,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       DeployHealth.WAITING,
       deployHealthHelper.getDeployHealth(
         updatedRequest,
-        Optional.of(firstDeploy),
+        firstDeploy,
         activeTaskIds,
         false
       )
@@ -4215,7 +4217,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       DeployHealth.HEALTHY,
       deployHealthHelper.getDeployHealth(
         updatedRequest,
-        Optional.of(firstDeploy),
+        firstDeploy,
         activeTaskIds,
         false
       )
