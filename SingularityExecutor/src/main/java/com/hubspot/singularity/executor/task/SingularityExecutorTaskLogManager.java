@@ -531,11 +531,10 @@ public class SingularityExecutorTaskLogManager {
     Set<Path> frequencyBasedPaths = getCronFakedLogrotateAdditionalFileFrequencies()
       .stream()
       .map(this::getLogrotateHourlyConfPath)
+      .filter(Files::exists)
       .collect(Collectors.toSet());
     boolean regularConfExists = Files.exists(getLogrotateConfPath());
-    boolean hourlyConfExists = frequencyBasedPaths
-      .stream()
-      .anyMatch(p -> Files.exists(p));
+    boolean hourlyConfExists = !frequencyBasedPaths.isEmpty();
     boolean sizeConfExists = Files.exists(getLogrotateSizeBasedConfPath());
     if (!sizeConfExists && !hourlyConfExists && !regularConfExists) {
       log.info(
