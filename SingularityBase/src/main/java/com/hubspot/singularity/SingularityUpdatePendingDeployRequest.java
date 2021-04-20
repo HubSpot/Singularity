@@ -3,7 +3,6 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-// TODO - update for new canary settings
 @Schema(description = "A request to update a pending deploy")
 public class SingularityUpdatePendingDeployRequest {
   private final String requestId;

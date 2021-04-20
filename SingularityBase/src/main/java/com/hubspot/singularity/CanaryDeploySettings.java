@@ -51,8 +51,6 @@ public class CanaryDeploySettings {
    */
   private final int canaryCycleCount;
 
-  // TODO - max canary cycles - e.g. before skipping to all remaining instances
-
   public CanaryDeploySettings() {
     this(
       Optional.empty(),
