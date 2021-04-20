@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import jdk.internal.joptsimple.internal.Strings;
 import org.slf4j.Logger;
 
 public class SimpleProcessManager extends SafeProcessManager {
@@ -140,9 +139,7 @@ public class SimpleProcessManager extends SafeProcessManager {
           "Got unacceptable exit code %s while running %s. %s",
           exitCode,
           processToString,
-          reader.isPresent()
-            ? "Output was " + Strings.join(reader.get().output, "\n")
-            : ""
+          reader.isPresent() ? "Output was " + String.join("\n", reader.get().output) : ""
         )
       );
     }
