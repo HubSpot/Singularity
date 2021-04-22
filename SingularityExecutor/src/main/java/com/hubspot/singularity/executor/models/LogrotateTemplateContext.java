@@ -19,11 +19,10 @@ import java.util.stream.Stream;
  */
 public class LogrotateTemplateContext {
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_HOURLY_OR_MORE_FREQUENT_CRON_FORCED_LOGROTATE_CONF = p ->
-    SingularityExecutorLogrotateFrequency
-      .HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.stream()
-      .map(SingularityExecutorLogrotateFrequency::getLogrotateValue)
-      .collect(Collectors.toSet())
-      .contains(p.getLogrotateFrequencyOverride());
+    p.getLogrotateFrequencyOverride().isPresent() &&
+    SingularityExecutorLogrotateFrequency.HOURLY_OR_MORE_FREQUENT_LOGROTATE_VALUES.contains(
+      p.getLogrotateFrequencyOverride().get()
+    );
 
   private static final Predicate<LogrotateAdditionalFile> BELONGS_IN_SIZE_BASED_LOGROTATE_CONF = p ->
     p.getLogrotateSizeOverride() != null && !p.getLogrotateSizeOverride().isEmpty();
@@ -113,9 +112,12 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate hourly or .
-   * Since we don't want to rely on native `hourly` (or more frequent) support in logrotate(8), we fake it by running an hourly cron with a force `-f` flag.
+   * Extra files for logrotate to rotate hourly or more frequently than hourly.
+   * Since we don't want to rely on native `hourly` (or more frequent) support in logrotate(8),
+   *   we fake it by running an hourly cron with a force `-f` flag.
    * If these do not exist logrotate will continue without error.
+   * If `setExtrasFilesFrequencyFilter()` has been called on this instance,
+   *   then we only return matching logrotateAdditionalFiles configs.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourlyOrMoreFrequent() {
@@ -131,7 +133,11 @@ public class LogrotateTemplateContext {
               file ->
                 file
                   .getLogrotateFrequencyOverride()
-                  .equals(singularityExecutorLogrotateFrequency.getLogrotateValue())
+                  .map(
+                    someFrequencyOverride ->
+                      someFrequencyOverride == singularityExecutorLogrotateFrequency
+                  )
+                  .orElse(false)
             )
             .collect(Collectors.toList())
       )

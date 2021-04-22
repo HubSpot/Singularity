@@ -36,10 +36,14 @@ public class LogrotateAdditionalFile {
     return dateformat;
   }
 
-  public String getLogrotateFrequencyOverride() {
-    return logrotateFrequencyOverride.isPresent()
-      ? logrotateFrequencyOverride.get().getLogrotateValue()
-      : "";
+  public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequencyOverride() {
+    return logrotateFrequencyOverride;
+  }
+
+  public String getLogrotateFrequencyOverrideValue() {
+    return logrotateFrequencyOverride
+      .map(SingularityExecutorLogrotateFrequency::getLogrotateValue)
+      .orElse("");
   }
 
   public String getLogrotateSizeOverride() {
