@@ -1,8 +1,7 @@
 package com.hubspot.singularity.hooks;
 
-import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
+import com.hubspot.singularity.LoadBalancerUpstream;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityRequest;
@@ -35,12 +34,10 @@ public interface LoadBalancerClient {
     String serviceBasePath
   );
 
-  SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
-    String singularityRequestId
-  )
+  List<LoadBalancerUpstream> getUpstreamsForRequest(String singularityRequestId)
     throws IOException, InterruptedException, ExecutionException, TimeoutException;
 
-  List<UpstreamInfo> getUpstreamsForTasks(
+  List<LoadBalancerUpstream> getUpstreamsForTasks(
     List<SingularityTask> tasks,
     String requestId,
     Optional<String> loadBalancerUpstreamGroup
@@ -48,8 +45,8 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
-    List<UpstreamInfo> addUpstreams,
-    List<UpstreamInfo> removeUpstreams,
+    List<LoadBalancerUpstream> addUpstreams,
+    List<LoadBalancerUpstream> removeUpstreams,
     SingularityDeploy deploy,
     SingularityRequest request
   );

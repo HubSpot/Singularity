@@ -1,9 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
-import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.baragon.models.UpstreamInfo;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
+import com.hubspot.singularity.LoadBalancerUpstream;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
@@ -19,14 +18,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class TestingLoadBalancerClient implements LoadBalancerClient {
-  private BaragonRequestState requestState;
+  private LoadBalancerRequestState requestState;
 
   public TestingLoadBalancerClient() {
-    requestState = BaragonRequestState.WAITING;
+    requestState = LoadBalancerRequestState.WAITING;
   }
 
-  public void setNextBaragonRequestState(BaragonRequestState nextState) {
+  public void setNextRequestState(LoadBalancerRequestState nextState) {
     this.requestState = nextState;
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return true;
   }
 
   private SingularityLoadBalancerUpdate getReturnValue(
@@ -36,10 +40,10 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
     return new SingularityLoadBalancerUpdate(
       requestState,
       loadBalancerRequestId,
-      Optional.<String>empty(),
+      Optional.empty(),
       System.currentTimeMillis(),
       method,
-      Optional.<String>empty()
+      Optional.empty()
     );
   }
 
@@ -79,15 +83,13 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
-    String singularityRequestId
-  )
+  public List<LoadBalancerUpstream> getUpstreamsForRequest(String singularityRequestId)
     throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return new SingularityCheckingUpstreamsUpdate(Optional.empty(), singularityRequestId);
+    return Collections.emptyList();
   }
 
   @Override
-  public List<UpstreamInfo> getUpstreamsForTasks(
+  public List<LoadBalancerUpstream> getUpstreamsForTasks(
     List<SingularityTask> tasks,
     String requestId,
     Optional<String> loadBalancerUpstreamGroup
@@ -98,8 +100,8 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   @Override
   public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
-    List<UpstreamInfo> addUpstreams,
-    List<UpstreamInfo> removeUpstreams,
+    List<LoadBalancerUpstream> addUpstreams,
+    List<LoadBalancerUpstream> removeUpstreams,
     SingularityDeploy deploy,
     SingularityRequest request
   ) {

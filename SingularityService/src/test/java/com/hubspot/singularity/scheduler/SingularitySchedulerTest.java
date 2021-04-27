@@ -16,6 +16,7 @@ import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.MachineState;
@@ -389,7 +390,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     saveLoadBalancerState(
-      BaragonRequestState.SUCCESS,
+      LoadBalancerRequestState.SUCCESS,
       taskOne.getTaskId(),
       LoadBalancerRequestType.ADD
     );
@@ -418,7 +419,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // add to LB:
     saveLoadBalancerState(
-      BaragonRequestState.SUCCESS,
+      LoadBalancerRequestState.SUCCESS,
       taskTwo,
       LoadBalancerRequestType.ADD
     );
@@ -429,7 +430,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(2, taskManager.getNumActiveTasks());
 
     saveLoadBalancerState(
-      BaragonRequestState.SUCCESS,
+      LoadBalancerRequestState.SUCCESS,
       taskOne.getTaskId(),
       LoadBalancerRequestType.REMOVE
     );
@@ -1313,7 +1314,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     saveLoadBalancerState(
-      BaragonRequestState.SUCCESS,
+      LoadBalancerRequestState.SUCCESS,
       task.getTaskId(),
       LoadBalancerRequestType.ADD
     );
@@ -1322,7 +1323,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     cleaner.drainCleanupQueue();
     Assertions.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
@@ -1334,10 +1335,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(lbUpdate.isPresent());
     Assertions.assertTrue(
-      lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING
+      lbUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.WAITING
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.FAILED);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.FAILED);
 
     cleaner.drainCleanupQueue();
     Assertions.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
@@ -1347,10 +1348,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(lbUpdate.isPresent());
     Assertions.assertTrue(
-      lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED
+      lbUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.FAILED
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
 
     cleaner.drainCleanupQueue();
 
@@ -1365,7 +1366,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(lbUpdate.isPresent());
     Assertions.assertTrue(
-      lbUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS
+      lbUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.SUCCESS
     );
     Assertions.assertTrue(
       lbUpdate.get().getLoadBalancerRequestId().getAttemptNumber() == 2
@@ -1385,7 +1386,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       1,
       TaskState.TASK_RUNNING
     );
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
     deployChecker.checkDeploys();
 
     // First task from old deploy is still starting, never got added to LB so it should not have a removal request
@@ -1407,7 +1408,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .isPresent()
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
     deployChecker.checkDeploys();
     deployChecker.checkDeploys();
 
@@ -1565,7 +1566,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     requestResource.deleteRequest(requestId, Optional.of(deleteRequest), singularityUser);
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     Assertions.assertFalse(
       requestManager.getCleanupRequests().isEmpty(),
@@ -1595,7 +1596,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     requestResource.deleteRequest(requestId, Optional.empty(), singularityUser);
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     Assertions.assertFalse(
       requestManager.getCleanupRequests().isEmpty(),
@@ -1811,7 +1812,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       Optional.<String>empty()
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     cleaner.drainCleanupQueue();
     Assertions.assertTrue(!requestManager.getLbCleanupRequestIds().isEmpty());
@@ -1823,10 +1824,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(lbUpdate.isPresent());
     Assertions.assertTrue(
-      lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING
+      lbUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.WAITING
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.FAILED);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.FAILED);
 
     cleaner.drainCleanupQueue();
     Assertions.assertTrue(!requestManager.getLbCleanupRequestIds().isEmpty());
@@ -1836,10 +1837,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(lbUpdate.isPresent());
     Assertions.assertTrue(
-      lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED
+      lbUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.FAILED
     );
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
 
     cleaner.drainCleanupQueue();
     Assertions.assertTrue(requestManager.getLbCleanupRequestIds().isEmpty());
@@ -4497,7 +4498,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       taskId,
       LoadBalancerRequestType.REMOVE,
       new SingularityLoadBalancerUpdate(
-        BaragonRequestState.UNKNOWN,
+        LoadBalancerRequestState.UNKNOWN,
         new LoadBalancerRequestId(
           taskId.getId(),
           LoadBalancerRequestType.REMOVE,

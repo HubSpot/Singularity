@@ -1,19 +1,18 @@
 package com.hubspot.singularity.hooks;
 
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.UpstreamInfo;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
+import com.hubspot.singularity.LoadBalancerUpstream;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
-import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class NoOpLoadBalancerClient implements LoadBalancerClient {
 
@@ -33,21 +32,42 @@ public class NoOpLoadBalancerClient implements LoadBalancerClient {
     List<SingularityTask> add,
     List<SingularityTask> remove
   ) {
-    return null;
+    return new SingularityLoadBalancerUpdate(
+      LoadBalancerRequestState.SUCCESS,
+      loadBalancerRequestId,
+      Optional.empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.ENQUEUE,
+      Optional.empty()
+    );
   }
 
   @Override
   public SingularityLoadBalancerUpdate getState(
     LoadBalancerRequestId loadBalancerRequestId
   ) {
-    return null;
+    return new SingularityLoadBalancerUpdate(
+      LoadBalancerRequestState.SUCCESS,
+      loadBalancerRequestId,
+      Optional.empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.CHECK_STATE,
+      Optional.empty()
+    );
   }
 
   @Override
   public SingularityLoadBalancerUpdate cancel(
     LoadBalancerRequestId loadBalancerRequestId
   ) {
-    return null;
+    return new SingularityLoadBalancerUpdate(
+      LoadBalancerRequestState.SUCCESS,
+      loadBalancerRequestId,
+      Optional.empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.CANCEL,
+      Optional.empty()
+    );
   }
 
   @Override
@@ -57,34 +77,45 @@ public class NoOpLoadBalancerClient implements LoadBalancerClient {
     Set<String> loadBalancerGroups,
     String serviceBasePath
   ) {
-    return null;
+    return new SingularityLoadBalancerUpdate(
+      LoadBalancerRequestState.SUCCESS,
+      loadBalancerRequestId,
+      Optional.empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.DELETE,
+      Optional.empty()
+    );
   }
 
   @Override
-  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
-    String singularityRequestId
-  )
-    throws IOException, InterruptedException, ExecutionException, TimeoutException {
-    return null;
+  public List<LoadBalancerUpstream> getUpstreamsForRequest(String singularityRequestId) {
+    return Collections.emptyList();
   }
 
   @Override
-  public List<UpstreamInfo> getUpstreamsForTasks(
+  public List<LoadBalancerUpstream> getUpstreamsForTasks(
     List<SingularityTask> tasks,
     String requestId,
     Optional<String> loadBalancerUpstreamGroup
   ) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
-    List<UpstreamInfo> addUpstreams,
-    List<UpstreamInfo> removeUpstreams,
+    List<LoadBalancerUpstream> addUpstreams,
+    List<LoadBalancerUpstream> removeUpstreams,
     SingularityDeploy deploy,
     SingularityRequest request
   ) {
-    return null;
+    return new SingularityLoadBalancerUpdate(
+      LoadBalancerRequestState.SUCCESS,
+      loadBalancerRequestId,
+      Optional.empty(),
+      System.currentTimeMillis(),
+      LoadBalancerMethod.CHECK_STATE,
+      Optional.empty()
+    );
   }
 }

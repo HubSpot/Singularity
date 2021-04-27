@@ -2,14 +2,13 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @Schema(description = "An updated to load balancer configuration")
 public class SingularityLoadBalancerUpdate {
-  private final BaragonRequestState loadBalancerState;
+  private final LoadBalancerRequestState loadBalancerState;
   private final Optional<String> message;
   private final long timestamp;
   private final Optional<String> uri;
@@ -27,7 +26,7 @@ public class SingularityLoadBalancerUpdate {
 
   @JsonCreator
   public SingularityLoadBalancerUpdate(
-    @JsonProperty("state") BaragonRequestState loadBalancerState,
+    @JsonProperty("state") LoadBalancerRequestState loadBalancerState,
     @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId,
     @JsonProperty("message") Optional<String> message,
     @JsonProperty("timestamp") long timestamp,
@@ -45,7 +44,7 @@ public class SingularityLoadBalancerUpdate {
   @Schema(
     description = "The current state of the request to update load balancer configuration"
   )
-  public BaragonRequestState getLoadBalancerState() {
+  public LoadBalancerRequestState getLoadBalancerState() {
     return loadBalancerState;
   }
 
@@ -78,7 +77,7 @@ public class SingularityLoadBalancerUpdate {
     LoadBalancerRequestId lbRequestId
   ) {
     return new SingularityLoadBalancerUpdate(
-      BaragonRequestState.UNKNOWN,
+      LoadBalancerRequestState.UNKNOWN,
       lbRequestId,
       Optional.<String>empty(),
       System.currentTimeMillis(),

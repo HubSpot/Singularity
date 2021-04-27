@@ -1,13 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.CanaryDeploySettings;
 import com.hubspot.singularity.DeployAcceptanceMode;
 import com.hubspot.singularity.DeployAcceptanceResult;
 import com.hubspot.singularity.DeployAcceptanceState;
 import com.hubspot.singularity.DeployProgressLbUpdateHolder;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployResult;
@@ -334,18 +334,18 @@ public class SingularityDeployAcceptanceTest extends SingularitySchedulerTestBas
       .getPendingDeploy(requestId)
       .get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     deployChecker.checkDeploys();
 
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
 
     deployChecker.checkDeploys();
 
     // Acceptance checks fail
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
     deployChecker.checkDeploys();
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
@@ -368,7 +368,7 @@ public class SingularityDeployAcceptanceTest extends SingularitySchedulerTestBas
     Assertions.assertTrue(lbUpdateHolder.getAdded().contains(firstTask.getTaskId()));
     Assertions.assertTrue(lbUpdateHolder.getRemoved().contains(firstNewTaskId));
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
     deployChecker.checkDeploys();
     SingularityDeployResult deployResult = deployManager
       .getDeployResult(requestId, secondDeployId)

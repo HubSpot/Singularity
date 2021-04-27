@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -19,8 +18,8 @@ import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
+import com.hubspot.singularity.hooks.BaragonLoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.NoOpLoadBalancerClient;
 import com.hubspot.singularity.jersey.SingularityJerseyModule;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -59,7 +58,7 @@ public class SingularityServiceModule
         lbClientClass.orElseGet(
           () ->
             configuration.getLoadBalancerUri() != null
-              ? LoadBalancerClientImpl.class
+              ? BaragonLoadBalancerClientImpl.class
               : NoOpLoadBalancerClient.class
         )
       )
@@ -103,7 +102,9 @@ public class SingularityServiceModule
 
   @Provides
   @Singleton
-  public IndexViewConfiguration provideIndexViewConfiguration() {
+  public IndexViewConfiguration provideIndexViewConfiguration(
+    LoadBalancerClient loadBalancerClient
+  ) {
     SingularityConfiguration configuration = getConfiguration();
     return new IndexViewConfiguration(
       configuration.getUiConfiguration(),
@@ -117,7 +118,7 @@ public class SingularityServiceModule
       configuration.getHealthcheckTimeoutSeconds(),
       configuration.getHealthcheckMaxRetries(),
       configuration.getStartupTimeoutSeconds(),
-      !Strings.isNullOrEmpty(configuration.getLoadBalancerUri()),
+      loadBalancerClient.isEnabled(),
       configuration.getCommonHostnameSuffixToOmit(),
       configuration.getWarnIfScheduledJobIsRunningPastNextRunPct(),
       configuration.getAuthConfiguration().isEnabled() &&

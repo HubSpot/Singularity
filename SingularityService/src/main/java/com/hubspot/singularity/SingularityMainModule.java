@@ -39,7 +39,6 @@ import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.hubspot.singularity.hooks.AbstractWebhookChecker;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
 import com.hubspot.singularity.hooks.SnsWebhookManager;

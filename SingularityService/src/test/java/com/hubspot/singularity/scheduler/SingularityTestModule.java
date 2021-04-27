@@ -170,7 +170,9 @@ public class SingularityTestModule implements Module {
 
     mainBinder.install(
       Modules
-        .override(new SingularityMainModule(configuration))
+        .override(
+          new SingularityMainModule(configuration, TestingLoadBalancerClient.class)
+        )
         .with(
           new Module() {
 

@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestCleanupType;
@@ -1317,8 +1317,10 @@ public class SingularityCleaner {
         lbRemoveUpdate
       );
     } else if (
-      maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING ||
-      maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING
+      maybeLbRemoveUpdate.get().getLoadBalancerState() ==
+      LoadBalancerRequestState.WAITING ||
+      maybeLbRemoveUpdate.get().getLoadBalancerState() ==
+      LoadBalancerRequestState.CANCELING
     ) {
       lbRemoveUpdate = lbClient.getState(loadBalancerRequestId);
 
@@ -1608,8 +1610,9 @@ public class SingularityCleaner {
       cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
       requestManager.saveLbCleanupRequest(cleanup);
     } else if (
-      maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING ||
-      maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING
+      maybeDeleteUpdate.get().getLoadBalancerState() ==
+      LoadBalancerRequestState.WAITING ||
+      maybeDeleteUpdate.get().getLoadBalancerState() == LoadBalancerRequestState.CANCELING
     ) {
       lbDeleteUpdate = lbClient.getState(loadBalancerRequestId);
       cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
