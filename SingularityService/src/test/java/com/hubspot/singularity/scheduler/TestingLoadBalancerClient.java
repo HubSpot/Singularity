@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerUpstream;
@@ -8,6 +9,8 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import java.io.IOException;
 import java.util.Collections;
@@ -17,10 +20,14 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class TestingLoadBalancerClient implements LoadBalancerClient {
+public class TestingLoadBalancerClient extends LoadBalancerClient {
   private LoadBalancerRequestState requestState;
 
-  public TestingLoadBalancerClient() {
+  public TestingLoadBalancerClient(
+    SingularityConfiguration configuration,
+    ObjectMapper objectMapper
+  ) {
+    super(configuration, new MesosProtosUtils(objectMapper));
     requestState = LoadBalancerRequestState.WAITING;
   }
 

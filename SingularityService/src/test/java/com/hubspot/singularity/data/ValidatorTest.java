@@ -56,7 +56,8 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
         priorityManager,
         disasterManager,
         agentManager,
-        uiConfiguration
+        uiConfiguration,
+        testingLbClient
       );
   }
 

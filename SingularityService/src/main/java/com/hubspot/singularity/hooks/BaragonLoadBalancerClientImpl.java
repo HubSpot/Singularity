@@ -1,9 +1,6 @@
 package com.hubspot.singularity.hooks;
 
-import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -13,7 +10,6 @@ import com.hubspot.baragon.models.BaragonServiceState;
 import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.LoadBalancerUpstream;
@@ -22,10 +18,8 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
@@ -44,7 +38,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
+public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
   private static final Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
 
   private static final String CONTENT_TYPE_JSON = "application/json";
@@ -58,10 +52,8 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
   private final boolean preResolveUpstreamDNS;
   private final Set<String> skipDNSPreResolutionForRequests;
-  private final MesosProtosUtils mesosProtosUtils;
 
   private static final String OPERATION_URI = "%s/%s";
 
@@ -72,17 +64,15 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
     AsyncHttpClient httpClient,
     MesosProtosUtils mesosProtosUtils
   ) {
+    super(configuration, mesosProtosUtils);
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
-    this.taskLabelForLoadBalancerUpstreamGroup =
-      configuration.getTaskLabelForLoadBalancerUpstreamGroup();
     this.skipDNSPreResolutionForRequests =
       configuration.getSkipDNSPreResolutionForRequests();
     this.preResolveUpstreamDNS = configuration.isPreResolveUpstreamDNS();
-    this.mesosProtosUtils = mesosProtosUtils;
   }
 
   public boolean isEnabled() {
@@ -369,34 +359,6 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityLoadBalancerUpdate enqueue(
-    LoadBalancerRequestId loadBalancerRequestId,
-    SingularityRequest request,
-    SingularityDeploy deploy,
-    List<SingularityTask> add,
-    List<SingularityTask> remove
-  ) {
-    final List<LoadBalancerUpstream> addUpstreams = getUpstreamsForTasks(
-      add,
-      loadBalancerRequestId.toString(),
-      deploy.getLoadBalancerUpstreamGroup()
-    );
-    final List<LoadBalancerUpstream> removeUpstreams = getUpstreamsForTasks(
-      remove,
-      loadBalancerRequestId.toString(),
-      deploy.getLoadBalancerUpstreamGroup()
-    );
-
-    return makeAndSendLoadBalancerRequest(
-      loadBalancerRequestId,
-      addUpstreams,
-      removeUpstreams,
-      deploy,
-      request
-    );
-  }
-
-  @Override
   public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
     List<LoadBalancerUpstream> addUpstreams,
@@ -470,57 +432,6 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
     );
   }
 
-  public List<LoadBalancerUpstream> getUpstreamsForTasks(
-    List<SingularityTask> tasks,
-    String requestId,
-    Optional<String> loadBalancerUpstreamGroup
-  ) {
-    final List<LoadBalancerUpstream> upstreams = Lists.newArrayListWithCapacity(
-      tasks.size()
-    );
-
-    for (SingularityTask task : tasks) {
-      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(
-        mesosProtosUtils.toResourceList(task.getMesosTask().getResources()),
-        task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().orElse(0)
-      );
-
-      if (maybeLoadBalancerPort.isPresent()) {
-        String upstream = String.format(
-          "%s:%d",
-          task.getHostname(),
-          maybeLoadBalancerPort.get()
-        );
-        Optional<String> group = loadBalancerUpstreamGroup;
-
-        if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {
-          for (MesosParameter label : task.getMesosTask().getLabels().getLabels()) {
-            if (
-              label.hasKey() &&
-              label.getKey().equals(taskLabelForLoadBalancerUpstreamGroup.get()) &&
-              label.hasValue()
-            ) {
-              group = Optional.of(label.getValue());
-              break;
-            }
-          }
-        }
-
-        upstreams.add(
-          new LoadBalancerUpstream(upstream, group.orElse("default"), task.getRackId())
-        );
-      } else {
-        LOG.warn(
-          "Task {} is missing port but is being passed to LB  ({})",
-          task.getTaskId(),
-          task
-        );
-      }
-    }
-
-    return upstreams;
-  }
-
   @Override
   public SingularityLoadBalancerUpdate cancel(
     LoadBalancerRequestId loadBalancerRequestId
@@ -569,18 +480,6 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
       loadBalancerRequestId,
       loadBalancerRequest,
       LoadBalancerMethod.DELETE
-    );
-  }
-
-  public void validateDeploy(SingularityDeploy deploy) {
-    checkBadRequest(
-      deploy.getServiceBasePath().isPresent(),
-      "Deploy for loadBalanced request must include serviceBasePath"
-    );
-    checkBadRequest(
-      deploy.getLoadBalancerGroups().isPresent() &&
-      !deploy.getLoadBalancerGroups().get().isEmpty(),
-      "Deploy for a loadBalanced request must include at least one load balancer group"
     );
   }
 }
