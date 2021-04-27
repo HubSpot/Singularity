@@ -860,6 +860,12 @@ public class SingularityDeployChecker {
     );
 
     if (!newInactiveDeployTasks.isEmpty()) {
+      LOG.info(
+        "Found {} inactive tasks for {} - {}",
+        newInactiveDeployTasks.size(),
+        request.getId(),
+        pendingDeploy.getDeployMarker().getDeployId()
+      );
       if (CanaryDeployHelper.canRetryTasks(deploy, newInactiveDeployTasks)) {
         updatePendingDeploy(
           pendingDeploy,
@@ -915,6 +921,11 @@ public class SingularityDeployChecker {
       }
     }
 
+    LOG.debug(
+      "No inactive tasks found for {} - {}, checking deploy progress",
+      request.getId(),
+      pendingDeploy.getDeployMarker().getDeployId()
+    );
     return checkDeployProgress(
       request,
       pendingDeploy,
