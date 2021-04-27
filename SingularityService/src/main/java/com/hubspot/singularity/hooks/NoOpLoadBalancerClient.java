@@ -1,5 +1,6 @@
 package com.hubspot.singularity.hooks;
 
+import com.google.inject.Inject;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
@@ -14,43 +15,76 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public interface LoadBalancerClient {
-  boolean isEnabled();
-  SingularityLoadBalancerUpdate enqueue(
+public class NoOpLoadBalancerClient implements LoadBalancerClient {
+
+  @Inject
+  public NoOpLoadBalancerClient() {}
+
+  @Override
+  public boolean isEnabled() {
+    return false;
+  }
+
+  @Override
+  public SingularityLoadBalancerUpdate enqueue(
     LoadBalancerRequestId loadBalancerRequestId,
     SingularityRequest request,
     SingularityDeploy deploy,
     List<SingularityTask> add,
     List<SingularityTask> remove
-  );
+  ) {
+    return null;
+  }
 
-  SingularityLoadBalancerUpdate getState(LoadBalancerRequestId loadBalancerRequestId);
+  @Override
+  public SingularityLoadBalancerUpdate getState(
+    LoadBalancerRequestId loadBalancerRequestId
+  ) {
+    return null;
+  }
 
-  SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
+  @Override
+  public SingularityLoadBalancerUpdate cancel(
+    LoadBalancerRequestId loadBalancerRequestId
+  ) {
+    return null;
+  }
 
-  SingularityLoadBalancerUpdate delete(
+  @Override
+  public SingularityLoadBalancerUpdate delete(
     LoadBalancerRequestId loadBalancerRequestId,
     String requestId,
     Set<String> loadBalancerGroups,
     String serviceBasePath
-  );
+  ) {
+    return null;
+  }
 
-  SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
+  @Override
+  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
     String singularityRequestId
   )
-    throws IOException, InterruptedException, ExecutionException, TimeoutException;
+    throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    return null;
+  }
 
-  List<UpstreamInfo> getUpstreamsForTasks(
+  @Override
+  public List<UpstreamInfo> getUpstreamsForTasks(
     List<SingularityTask> tasks,
     String requestId,
     Optional<String> loadBalancerUpstreamGroup
-  );
+  ) {
+    return null;
+  }
 
-  SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
+  @Override
+  public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
     List<UpstreamInfo> addUpstreams,
     List<UpstreamInfo> removeUpstreams,
     SingularityDeploy deploy,
     SingularityRequest request
-  );
+  ) {
+    return null;
+  }
 }

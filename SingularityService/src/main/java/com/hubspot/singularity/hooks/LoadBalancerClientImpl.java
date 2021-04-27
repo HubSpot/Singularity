@@ -81,6 +81,10 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.mesosProtosUtils = mesosProtosUtils;
   }
 
+  public boolean isEnabled() {
+    return true;
+  }
+
   private String getStateUriFromRequestUri() {
     return loadBalancerUri.replace("request", "state");
   }
