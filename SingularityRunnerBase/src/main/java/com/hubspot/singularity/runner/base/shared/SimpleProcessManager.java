@@ -136,9 +136,10 @@ public class SimpleProcessManager extends SafeProcessManager {
     if (exitCode.isPresent() && !acceptableExitCodes.contains(exitCode.get())) {
       throw new ProcessFailedException(
         String.format(
-          "Got unacceptable exit code %s while running %s",
+          "Got unacceptable exit code %s while running %s. %s",
           exitCode,
-          processToString
+          processToString,
+          reader.isPresent() ? "Output was " + String.join("\n", reader.get().output) : ""
         )
       );
     }

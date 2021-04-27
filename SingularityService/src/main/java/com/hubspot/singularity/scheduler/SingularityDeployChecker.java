@@ -860,6 +860,12 @@ public class SingularityDeployChecker {
     );
 
     if (!newInactiveDeployTasks.isEmpty()) {
+      LOG.info(
+        "Found {} inactive tasks for {} - {}",
+        newInactiveDeployTasks.size(),
+        request.getId(),
+        pendingDeploy.getDeployMarker().getDeployId()
+      );
       if (CanaryDeployHelper.canRetryTasks(deploy, newInactiveDeployTasks)) {
         updatePendingDeploy(
           pendingDeploy,
@@ -915,6 +921,11 @@ public class SingularityDeployChecker {
       }
     }
 
+    LOG.debug(
+      "No inactive tasks found for {} - {}, checking deploy progress",
+      request.getId(),
+      pendingDeploy.getDeployMarker().getDeployId()
+    );
     return checkDeployProgress(
       request,
       pendingDeploy,
@@ -1128,6 +1139,7 @@ public class SingularityDeployChecker {
             otherActiveTasks
           );
         } else {
+          LOG.info("Waiting for timed deploy step for {}", request.getId());
           return new SingularityDeployResult(DeployState.WAITING);
         }
       case CHECKS:
@@ -1213,6 +1225,7 @@ public class SingularityDeployChecker {
               );
               return new SingularityDeployResult(DeployState.SUCCEEDED);
             default:
+              LOG.info("Acceptance checks failed, cleaning up");
               updatePendingDeploy(
                 pendingDeploy,
                 acceptanceHookDeployState,
@@ -1295,6 +1308,7 @@ public class SingularityDeployChecker {
     );
     switch (lbUpdate.getLoadBalancerState()) {
       case SUCCESS:
+        LOG.info("LB revert succeeded, continuing with original deploy status");
         updatePendingDeploy(
           pendingDeploy,
           acceptanceHookDeployState,
@@ -1363,6 +1377,7 @@ public class SingularityDeployChecker {
       .filter(t -> t.getDeployId().equals(toRevertTo.getId()))
       .collect(Collectors.toSet());
 
+    LOG.info("Attempting to roll back load balancer to previous active tasks");
     // If we have gotten here, there is both an add and remove in the LB history and task is _not_ in the LB
     // Many steps are based on the presence of an add when determining actions to take on shut down. So, clear
     // this to make it as if the task was a net-new add to the LB, making cleanup act as before
@@ -1528,6 +1543,11 @@ public class SingularityDeployChecker {
       toRemoveFromLb,
       LoadBalancerRequestType.REMOVE,
       SingularityLoadBalancerUpdate.preEnqueue(lbRequestId)
+    );
+    LOG.debug(
+      "Updating load balancer. Adding: {}, Removing: {}",
+      deployActiveTasks,
+      toRemoveFromLb
     );
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(
       lbRequestId,

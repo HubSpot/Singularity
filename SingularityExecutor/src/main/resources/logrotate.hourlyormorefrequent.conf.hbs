@@ -40,8 +40,8 @@ notifempty
   {{#if logrotateSizeOverride }}
     size {{{logrotateSizeOverride}}}
   {{else}}
-    {{#if logrotateFrequencyOverride }}
-      {{{logrotateFrequencyOverride}}}
+    {{#if logrotateFrequencyOverrideValue }}
+      {{{logrotateFrequencyOverrideValue}}}
     {{/if}}
   {{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
@@ -75,8 +75,8 @@ notifempty
   {{#if logrotateSizeOverride }}
     size {{{logrotateSizeOverride}}}
   {{else}}
-    {{#if logrotateFrequencyOverride }}
-      {{{logrotateFrequencyOverride}}}
+    {{#if logrotateFrequencyOverrideValue }}
+      {{{logrotateFrequencyOverrideValue}}}
     {{/if}}
   {{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
