@@ -51,6 +51,7 @@ import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.helpers.ImageName;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -116,6 +117,7 @@ public class SingularityValidator {
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
   private final AgentManager agentManager;
+  private final LoadBalancerClient loadBalancerClient;
 
   @Inject
   public SingularityValidator(
@@ -124,7 +126,8 @@ public class SingularityValidator {
     PriorityManager priorityManager,
     DisasterManager disasterManager,
     AgentManager agentManager,
-    UIConfiguration uiConfiguration
+    UIConfiguration uiConfiguration,
+    LoadBalancerClient loadBalancerClient
   ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
@@ -183,6 +186,7 @@ public class SingularityValidator {
 
     this.disasterManager = disasterManager;
     this.agentManager = agentManager;
+    this.loadBalancerClient = loadBalancerClient;
   }
 
   public SingularityRequest checkSingularityRequest(
@@ -420,16 +424,8 @@ public class SingularityValidator {
       "Deploy id must match request id"
     );
 
-    if (request.isLoadBalanced()) {
-      checkBadRequest(
-        deploy.getServiceBasePath().isPresent(),
-        "Deploy for loadBalanced request must include serviceBasePath"
-      );
-      checkBadRequest(
-        deploy.getLoadBalancerGroups().isPresent() &&
-        !deploy.getLoadBalancerGroups().get().isEmpty(),
-        "Deploy for a loadBalanced request must include at least one load balacner group"
-      );
+    if (request.isLoadBalanced() && loadBalancerClient.isEnabled()) {
+      loadBalancerClient.validateDeploy(deploy);
     }
 
     if (deploy.getEnv().isPresent()) {

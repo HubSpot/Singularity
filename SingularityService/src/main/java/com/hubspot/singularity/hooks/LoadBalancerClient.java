@@ -50,4 +50,6 @@ public interface LoadBalancerClient {
     SingularityDeploy deploy,
     SingularityRequest request
   );
+
+  void validateDeploy(SingularityDeploy deploy);
 }

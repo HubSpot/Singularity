@@ -1,5 +1,7 @@
 package com.hubspot.singularity.hooks;
 
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -567,6 +569,18 @@ public class BaragonLoadBalancerClientImpl implements LoadBalancerClient {
       loadBalancerRequestId,
       loadBalancerRequest,
       LoadBalancerMethod.DELETE
+    );
+  }
+
+  public void validateDeploy(SingularityDeploy deploy) {
+    checkBadRequest(
+      deploy.getServiceBasePath().isPresent(),
+      "Deploy for loadBalanced request must include serviceBasePath"
+    );
+    checkBadRequest(
+      deploy.getLoadBalancerGroups().isPresent() &&
+      !deploy.getLoadBalancerGroups().get().isEmpty(),
+      "Deploy for a loadBalanced request must include at least one load balancer group"
     );
   }
 }
