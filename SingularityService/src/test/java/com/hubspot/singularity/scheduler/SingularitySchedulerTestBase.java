@@ -2,7 +2,6 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -10,6 +9,7 @@ import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestType;
@@ -1194,7 +1194,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveLoadBalancerState(
-    BaragonRequestState brs,
+    LoadBalancerRequestState brs,
     SingularityTaskId taskId,
     LoadBalancerRequestType lbrt
   ) {

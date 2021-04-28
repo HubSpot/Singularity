@@ -1,5 +1,5 @@
 env:
-  MAVEN_ARGS: "-T 8 -Dsingularity.jar.name.format=\\${project.artifactId} -Dgpg.skip=true -DforkCount=2C"
+  MAVEN_ARGS: "-Dsingularity.jar.name.format=\\${project.artifactId} -Dgpg.skip=true"
   SET_VERSION_OVERRIDE: "1.5.0-$GIT_BRANCH-SNAPSHOT"
 
 buildResources:

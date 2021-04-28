@@ -112,7 +112,7 @@ public class SingularityTestModule implements Module {
     Logger hsLogger = context.getLogger("com.hubspot");
     hsLogger.setLevel(
       Level.toLevel(
-        System.getProperty("singularity.test.log.level.for.com.hubspot", "DEBUG")
+        System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")
       )
     );
 
@@ -170,7 +170,9 @@ public class SingularityTestModule implements Module {
 
     mainBinder.install(
       Modules
-        .override(new SingularityMainModule(configuration))
+        .override(
+          new SingularityMainModule(configuration, TestingLoadBalancerClient.class)
+        )
         .with(
           new Module() {
 
@@ -186,7 +188,10 @@ public class SingularityTestModule implements Module {
               binder.bind(SingularityMailer.class).toInstance(mailer);
               binder.bind(SingularityAbort.class).toInstance(abort);
 
-              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient(
+                configuration,
+                om
+              );
               binder.bind(LoadBalancerClient.class).toInstance(tlbc);
               binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
               if (configuration.isCacheOffers()) {
@@ -319,6 +324,9 @@ public class SingularityTestModule implements Module {
     config.setSmtpConfiguration(new SMTPConfiguration());
 
     ZooKeeperConfiguration zookeeperConfiguration = new ZooKeeperConfiguration();
+    zookeeperConfiguration.setZkNamespace(
+      Optional.ofNullable(System.getProperty("zkNamespace")).orElse("sy")
+    );
     zookeeperConfiguration.setQuorum(ts.getConnectString());
 
     config.setZooKeeperConfiguration(zookeeperConfiguration);

@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -19,15 +18,20 @@ import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
+import com.hubspot.singularity.hooks.BaragonLoadBalancerClientImpl;
+import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.hooks.NoOpLoadBalancerClient;
 import com.hubspot.singularity.jersey.SingularityJerseyModule;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
+import java.util.Optional;
 
 public class SingularityServiceModule
   extends DropwizardAwareModule<SingularityConfiguration> {
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
+  private Optional<Class<? extends LoadBalancerClient>> lbClientClass = Optional.empty();
 
   public SingularityServiceModule() {
     this.dbModuleProvider = SingularityDbModule::new;
@@ -39,9 +43,26 @@ public class SingularityServiceModule
     this.dbModuleProvider = dbModuleProvider;
   }
 
+  public void setLoadBalancerClientClass(
+    Class<? extends LoadBalancerClient> lbClientClass
+  ) {
+    this.lbClientClass = Optional.of(lbClientClass);
+  }
+
   @Override
   public void configure(Binder binder) {
-    binder.install(new SingularityMainModule(getConfiguration()));
+    SingularityConfiguration configuration = getConfiguration();
+    binder.install(
+      new SingularityMainModule(
+        getConfiguration(),
+        lbClientClass.orElseGet(
+          () ->
+            configuration.getLoadBalancerUri() != null
+              ? BaragonLoadBalancerClientImpl.class
+              : NoOpLoadBalancerClient.class
+        )
+      )
+    );
     binder.install(new SingularityDataModule(getConfiguration()));
     binder.install(new SingularitySchedulerModule());
     binder.install(
@@ -81,7 +102,9 @@ public class SingularityServiceModule
 
   @Provides
   @Singleton
-  public IndexViewConfiguration provideIndexViewConfiguration() {
+  public IndexViewConfiguration provideIndexViewConfiguration(
+    LoadBalancerClient loadBalancerClient
+  ) {
     SingularityConfiguration configuration = getConfiguration();
     return new IndexViewConfiguration(
       configuration.getUiConfiguration(),
@@ -95,7 +118,7 @@ public class SingularityServiceModule
       configuration.getHealthcheckTimeoutSeconds(),
       configuration.getHealthcheckMaxRetries(),
       configuration.getStartupTimeoutSeconds(),
-      !Strings.isNullOrEmpty(configuration.getLoadBalancerUri()),
+      loadBalancerClient.isEnabled(),
       configuration.getCommonHostnameSuffixToOmit(),
       configuration.getWarnIfScheduledJobIsRunningPastNextRunPct(),
       configuration.getAuthConfiguration().isEnabled() &&

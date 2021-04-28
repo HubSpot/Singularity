@@ -1,7 +1,6 @@
 package com.hubspot.singularity.hooks;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -11,18 +10,16 @@ import com.hubspot.baragon.models.BaragonServiceState;
 import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.protos.MesosParameter;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.LoadBalancerUpstream;
 import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.SingularityCheckingUpstreamsUpdate;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
@@ -37,10 +34,11 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LoadBalancerClientImpl implements LoadBalancerClient {
+public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
   private static final Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
 
   private static final String CONTENT_TYPE_JSON = "application/json";
@@ -54,31 +52,31 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
-  private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
   private final boolean preResolveUpstreamDNS;
   private final Set<String> skipDNSPreResolutionForRequests;
-  private final MesosProtosUtils mesosProtosUtils;
 
   private static final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(
+  public BaragonLoadBalancerClientImpl(
     SingularityConfiguration configuration,
     @Singularity ObjectMapper objectMapper,
     AsyncHttpClient httpClient,
     MesosProtosUtils mesosProtosUtils
   ) {
+    super(configuration, mesosProtosUtils);
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
-    this.taskLabelForLoadBalancerUpstreamGroup =
-      configuration.getTaskLabelForLoadBalancerUpstreamGroup();
     this.skipDNSPreResolutionForRequests =
       configuration.getSkipDNSPreResolutionForRequests();
     this.preResolveUpstreamDNS = configuration.isPreResolveUpstreamDNS();
-    this.mesosProtosUtils = mesosProtosUtils;
+  }
+
+  public boolean isEnabled() {
+    return true;
   }
 
   private String getStateUriFromRequestUri() {
@@ -93,9 +91,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     );
   }
 
-  public SingularityCheckingUpstreamsUpdate getLoadBalancerServiceStateForRequest(
-    String singularityRequestId
-  )
+  public List<LoadBalancerUpstream> getUpstreamsForRequest(String singularityRequestId)
     throws IOException, InterruptedException, ExecutionException, TimeoutException {
     final String loadBalancerStateUri = getLoadBalancerStateUri(singularityRequestId);
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(
@@ -119,10 +115,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     Optional<BaragonServiceState> maybeBaragonServiceState = Optional.ofNullable(
       objectMapper.readValue(response.getResponseBodyAsBytes(), BaragonServiceState.class)
     );
-    return new SingularityCheckingUpstreamsUpdate(
-      maybeBaragonServiceState,
-      singularityRequestId
-    );
+    return maybeBaragonServiceState
+      .map(BaragonServiceState::getUpstreams)
+      .orElse(Collections.emptyList())
+      .stream()
+      .map(LoadBalancerUpstream::fromBaragonUpstream)
+      .collect(Collectors.toList());
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
@@ -146,9 +144,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(uri);
 
-    if (loadBalancerQueryParams.isPresent()) {
-      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-    }
+    loadBalancerQueryParams.ifPresent(
+      stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+    );
 
     return sendRequestWrapper(
       loadBalancerRequestId,
@@ -210,7 +208,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       JavaUtils.duration(start)
     );
     return new SingularityLoadBalancerUpdate(
-      result.state,
+      LoadBalancerRequestState.fromBaragonRequestState(result.state),
       loadBalancerRequestId,
       result.message,
       start,
@@ -247,9 +245,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
         .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
         .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest));
 
-      if (loadBalancerQueryParams.isPresent()) {
-        addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-      }
+      loadBalancerQueryParams.ifPresent(
+        stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+      );
 
       return sendRequestWrapper(
         loadBalancerRequestId,
@@ -259,7 +257,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       );
     } catch (IOException e) {
       return new SingularityLoadBalancerUpdate(
-        BaragonRequestState.UNKNOWN,
+        LoadBalancerRequestState.UNKNOWN,
         loadBalancerRequestId,
         Optional.of(e.getMessage()),
         System.currentTimeMillis(),
@@ -361,47 +359,19 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityLoadBalancerUpdate enqueue(
-    LoadBalancerRequestId loadBalancerRequestId,
-    SingularityRequest request,
-    SingularityDeploy deploy,
-    List<SingularityTask> add,
-    List<SingularityTask> remove
-  ) {
-    final List<UpstreamInfo> addUpstreams = getUpstreamsForTasks(
-      add,
-      loadBalancerRequestId.toString(),
-      deploy.getLoadBalancerUpstreamGroup()
-    );
-    final List<UpstreamInfo> removeUpstreams = getUpstreamsForTasks(
-      remove,
-      loadBalancerRequestId.toString(),
-      deploy.getLoadBalancerUpstreamGroup()
-    );
-
-    return makeAndSendLoadBalancerRequest(
-      loadBalancerRequestId,
-      addUpstreams,
-      removeUpstreams,
-      deploy,
-      request
-    );
-  }
-
-  @Override
   public SingularityLoadBalancerUpdate makeAndSendLoadBalancerRequest(
     LoadBalancerRequestId loadBalancerRequestId,
-    List<UpstreamInfo> addUpstreams,
-    List<UpstreamInfo> removeUpstreams,
+    List<LoadBalancerUpstream> addUpstreams,
+    List<LoadBalancerUpstream> removeUpstreams,
     SingularityDeploy deploy,
     SingularityRequest request
   ) {
     final List<String> serviceOwners = request
       .getOwners()
-      .orElse(Collections.<String>emptyList());
+      .orElse(Collections.emptyList());
     final Set<String> loadBalancerGroups = deploy
       .getLoadBalancerGroups()
-      .orElse(Collections.<String>emptySet());
+      .orElse(Collections.emptySet());
 
     boolean enableDNSPreResolution;
     if (skipDNSPreResolutionForRequests.contains(request.getId())) {
@@ -426,10 +396,16 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final BaragonRequest loadBalancerRequest = new BaragonRequest(
       loadBalancerRequestId.toString(),
       lbService,
-      addUpstreams,
-      removeUpstreams,
-      Collections.<UpstreamInfo>emptyList(),
-      com.google.common.base.Optional.<String>absent(),
+      addUpstreams
+        .stream()
+        .map(u -> singularityToBaragonUpstream(u, loadBalancerRequestId.toString()))
+        .collect(Collectors.toList()),
+      removeUpstreams
+        .stream()
+        .map(u -> singularityToBaragonUpstream(u, loadBalancerRequestId.toString()))
+        .collect(Collectors.toList()),
+      Collections.emptyList(),
+      com.google.common.base.Optional.absent(),
       com.google.common.base.Optional.of(RequestAction.UPDATE),
       false,
       false,
@@ -443,59 +419,17 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     );
   }
 
-  public List<UpstreamInfo> getUpstreamsForTasks(
-    List<SingularityTask> tasks,
-    String requestId,
-    Optional<String> loadBalancerUpstreamGroup
+  private UpstreamInfo singularityToBaragonUpstream(
+    LoadBalancerUpstream loadBalancerUpstream,
+    String loadBalancerRequestId
   ) {
-    final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
-
-    for (SingularityTask task : tasks) {
-      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(
-        mesosProtosUtils.toResourceList(task.getMesosTask().getResources()),
-        task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().orElse(0)
-      );
-
-      if (maybeLoadBalancerPort.isPresent()) {
-        String upstream = String.format(
-          "%s:%d",
-          task.getHostname(),
-          maybeLoadBalancerPort.get()
-        );
-        Optional<String> group = loadBalancerUpstreamGroup;
-
-        if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {
-          for (MesosParameter label : task.getMesosTask().getLabels().getLabels()) {
-            if (
-              label.hasKey() &&
-              label.getKey().equals(taskLabelForLoadBalancerUpstreamGroup.get()) &&
-              label.hasValue()
-            ) {
-              group = Optional.of(label.getValue());
-              break;
-            }
-          }
-        }
-
-        upstreams.add(
-          new UpstreamInfo(
-            upstream,
-            com.google.common.base.Optional.of(requestId),
-            com.google.common.base.Optional.fromJavaUtil(task.getRackId()),
-            com.google.common.base.Optional.absent(),
-            com.google.common.base.Optional.fromJavaUtil(group)
-          )
-        );
-      } else {
-        LOG.warn(
-          "Task {} is missing port but is being passed to LB  ({})",
-          task.getTaskId(),
-          task
-        );
-      }
-    }
-
-    return upstreams;
+    return new UpstreamInfo(
+      loadBalancerUpstream.getUpstream(),
+      com.google.common.base.Optional.of(loadBalancerRequestId),
+      com.google.common.base.Optional.fromJavaUtil(loadBalancerUpstream.getRackId()),
+      com.google.common.base.Optional.absent(),
+      com.google.common.base.Optional.of(loadBalancerUpstream.getGroup())
+    );
   }
 
   @Override
@@ -506,9 +440,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
     final BoundRequestBuilder requestBuilder = httpClient.prepareDelete(uri);
 
-    if (loadBalancerQueryParams.isPresent()) {
-      addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-    }
+    loadBalancerQueryParams.ifPresent(
+      stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+    );
 
     return sendRequestWrapper(
       loadBalancerRequestId,

@@ -1,7 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
@@ -1006,13 +1006,13 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
       .get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     deployChecker.checkDeploys();
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
 
     deployChecker.checkDeploys();
     deployChecker.checkDeploys();
@@ -1026,7 +1026,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     cleaner.drainCleanupQueue();
     statusUpdate(firstTask, TaskState.TASK_KILLED);
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.WAITING);
 
     deployChecker.checkDeploys();
 
@@ -1062,7 +1062,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     pendingDeploy = deployManager.getPendingDeploy(requestId).get();
     Assertions.assertEquals(DeployState.WAITING, pendingDeploy.getCurrentDeployState());
 
-    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    testingLbClient.setNextRequestState(LoadBalancerRequestState.SUCCESS);
 
     deployChecker.checkDeploys();
     deployChecker.checkDeploys();
