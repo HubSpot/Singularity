@@ -81,7 +81,7 @@ public class SingularityCuratorTestBase {
   );
 
   @AfterEach
-  public void clearData() {
+  public synchronized void clearData() {
     try {
       // clean up most data
       for (String parent : cf.getChildren().forPath("/")) {
@@ -129,7 +129,7 @@ public class SingularityCuratorTestBase {
   }
 
   @BeforeAll
-  public void setup() throws Exception {
+  public synchronized void setup() throws Exception {
     JerseyGuiceUtils.reset();
     singularityTestModule = new SingularityTestModule(useDBTests, customConfigSetup);
 
@@ -172,7 +172,7 @@ public class SingularityCuratorTestBase {
   }
 
   @AfterAll
-  public void teardown() throws Exception {
+  public synchronized void teardown() throws Exception {
     if (singularityTestModule != null) {
       singularityTestModule.stop();
     }
