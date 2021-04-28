@@ -39,7 +39,6 @@ import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.hubspot.singularity.hooks.AbstractWebhookChecker;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
 import com.hubspot.singularity.hooks.SnsWebhookManager;
@@ -113,9 +112,14 @@ public class SingularityMainModule implements Module {
     "singularity.last.mesos.master.heartbeat.time";
 
   private final SingularityConfiguration configuration;
+  private final Class<? extends LoadBalancerClient> lbClientClass;
 
-  public SingularityMainModule(final SingularityConfiguration configuration) {
+  public SingularityMainModule(
+    final SingularityConfiguration configuration,
+    Class<? extends LoadBalancerClient> lbClientClass
+  ) {
     this.configuration = configuration;
+    this.lbClientClass = lbClientClass;
   }
 
   @Override
@@ -150,10 +154,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
     binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
-    binder
-      .bind(LoadBalancerClient.class)
-      .to(LoadBalancerClientImpl.class)
-      .in(Scopes.SINGLETON);
+    binder.bind(LoadBalancerClient.class).to(lbClientClass).in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
     binder.bind(StatusUpdateQueue.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);

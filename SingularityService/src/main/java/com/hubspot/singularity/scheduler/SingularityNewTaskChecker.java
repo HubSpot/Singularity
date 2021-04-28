@@ -5,9 +5,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityAbort;
@@ -540,7 +540,7 @@ public class SingularityNewTaskChecker {
         task.getTaskId(),
         LoadBalancerRequestType.ADD,
         new SingularityLoadBalancerUpdate(
-          BaragonRequestState.UNKNOWN,
+          LoadBalancerRequestState.UNKNOWN,
           loadBalancerRequestId,
           Optional.empty(),
           System.currentTimeMillis(),
@@ -579,14 +579,10 @@ public class SingularityNewTaskChecker {
       newLbUpdate.getLoadBalancerState()
     );
 
-    if (maybeCheckTaskState.isPresent()) {
-      return maybeCheckTaskState.get();
-    }
-
-    return CheckTaskState.LB_IN_PROGRESS_CHECK_AGAIN;
+    return maybeCheckTaskState.orElse(CheckTaskState.LB_IN_PROGRESS_CHECK_AGAIN);
   }
 
-  private Optional<CheckTaskState> checkLbState(BaragonRequestState lbState) {
+  private Optional<CheckTaskState> checkLbState(LoadBalancerRequestState lbState) {
     switch (lbState) {
       case SUCCESS:
         return Optional.of(CheckTaskState.HEALTHY);
@@ -665,7 +661,7 @@ public class SingularityNewTaskChecker {
 
   private boolean unknownNotRemoving(SingularityLoadBalancerUpdate update) {
     return (
-      update.getLoadBalancerState() == BaragonRequestState.UNKNOWN &&
+      update.getLoadBalancerState() == LoadBalancerRequestState.UNKNOWN &&
       update.getLoadBalancerRequestId().getRequestType() != LoadBalancerRequestType.REMOVE
     );
   }

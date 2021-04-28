@@ -2,11 +2,11 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployAcceptanceResult;
 import com.hubspot.singularity.DeployProgressLbUpdateHolder;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
@@ -1062,19 +1062,6 @@ public class SingularityDeployChecker {
           return new SingularityDeployResult(DeployState.WAITING);
         }
 
-        if (configuration.getLoadBalancerUri() == null) {
-          LOG.warn(
-            "Deploy {} required a load balancer URI but it wasn't set",
-            pendingDeploy
-          );
-          return new SingularityDeployResult(
-            DeployState.FAILED,
-            Optional.of("No valid load balancer URI was present"),
-            Collections.emptyList(),
-            System.currentTimeMillis()
-          );
-        }
-
         for (SingularityTaskId activeTaskId : deployActiveTasks) {
           taskManager.markHealthchecksFinished(activeTaskId);
           taskManager.clearStartupHealthchecks(activeTaskId);
@@ -1231,9 +1218,7 @@ public class SingularityDeployChecker {
                 acceptanceHookDeployState,
                 updatedProgress
               );
-              if (
-                request.isLoadBalanced() && configuration.getLoadBalancerUri() != null
-              ) {
+              if (request.isLoadBalanced() && lbClient.isEnabled()) {
                 // Add previous tasks back to load balancer, since we previously took them out
                 if (updatedProgress.getPendingLbUpdate().isPresent()) {
                   return checkLbRevertToActiveTasks(
@@ -1526,7 +1511,8 @@ public class SingularityDeployChecker {
       if (
         maybeAddUpdate.isPresent() &&
         (
-          maybeAddUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS ||
+          maybeAddUpdate.get().getLoadBalancerState() ==
+          LoadBalancerRequestState.SUCCESS ||
           maybeAddUpdate.get().getLoadBalancerState().isInProgress()
         )
       ) {

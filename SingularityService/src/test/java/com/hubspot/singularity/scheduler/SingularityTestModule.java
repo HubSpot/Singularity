@@ -170,7 +170,9 @@ public class SingularityTestModule implements Module {
 
     mainBinder.install(
       Modules
-        .override(new SingularityMainModule(configuration))
+        .override(
+          new SingularityMainModule(configuration, TestingLoadBalancerClient.class)
+        )
         .with(
           new Module() {
 
@@ -186,7 +188,10 @@ public class SingularityTestModule implements Module {
               binder.bind(SingularityMailer.class).toInstance(mailer);
               binder.bind(SingularityAbort.class).toInstance(abort);
 
-              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+              TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient(
+                configuration,
+                om
+              );
               binder.bind(LoadBalancerClient.class).toInstance(tlbc);
               binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
               if (configuration.isCacheOffers()) {
