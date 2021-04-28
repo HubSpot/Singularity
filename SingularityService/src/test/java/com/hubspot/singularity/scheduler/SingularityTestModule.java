@@ -324,6 +324,9 @@ public class SingularityTestModule implements Module {
     config.setSmtpConfiguration(new SMTPConfiguration());
 
     ZooKeeperConfiguration zookeeperConfiguration = new ZooKeeperConfiguration();
+    zookeeperConfiguration.setZkNamespace(
+      Optional.ofNullable(System.getProperty("zkNamespace")).orElse("sy")
+    );
     zookeeperConfiguration.setQuorum(ts.getConnectString());
 
     config.setZooKeeperConfiguration(zookeeperConfiguration);
