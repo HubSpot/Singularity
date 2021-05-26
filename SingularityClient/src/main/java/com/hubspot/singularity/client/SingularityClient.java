@@ -1168,12 +1168,12 @@ public class SingularityClient {
       String.format(DELETE_DEPLOY_FORMAT, getApiBase(host), deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(
-      requestUri,
-      "pending deploy",
-      new SingularityDeployKey(requestId, deployId).getId(),
-      Optional.empty(),
-      Optional.of(SingularityRequestParent.class)
-    )
+        requestUri,
+        "pending deploy",
+        new SingularityDeployKey(requestId, deployId).getId(),
+        Optional.empty(),
+        Optional.of(SingularityRequestParent.class)
+      )
       .get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
@@ -1414,12 +1414,12 @@ public class SingularityClient {
       String.format(TASKS_GET_ACTIVE_STATES_FORMAT, getApiBase(host));
 
     return getSingleWithParams(
-      requestUri,
-      "active tasks ids",
-      "all",
-      Optional.empty(),
-      new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
-    )
+        requestUri,
+        "active tasks ids",
+        "all",
+        Optional.empty(),
+        new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
+      )
       .orElse(Collections.emptyMap());
   }
 
@@ -1525,11 +1525,11 @@ public class SingularityClient {
       String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
 
     return post(
-      requestUri,
-      "start shell command",
-      Optional.of(shellCommand),
-      Optional.of(SingularityTaskShellCommandRequest.class)
-    )
+        requestUri,
+        "start shell command",
+        Optional.of(shellCommand),
+        Optional.of(SingularityTaskShellCommandRequest.class)
+      )
       .orElse(null);
   }
 
