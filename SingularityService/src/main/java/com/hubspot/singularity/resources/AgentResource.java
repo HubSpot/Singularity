@@ -174,6 +174,43 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
   }
 
   @POST
+  @Path("/agent/{agentId}/decommission/extend")
+  @Operation(summary = "Extend decommission time of a specific active agent")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  public Response extendDecommissionAgent(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(required = true, description = "Active agentId") @PathParam(
+      "agentId"
+    ) String agentId,
+    @RequestBody(
+      description = "Settings related to changing the state of a agent"
+    ) SingularityMachineChangeRequest changeRequest
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      changeRequest,
+      () -> {
+        extendDecommissionAgent(user, agentId, changeRequest);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  public void extendDecommissionAgent(
+    SingularityUser user,
+    String agentId,
+    SingularityMachineChangeRequest changeRequest
+  ) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
+      changeRequest
+    );
+
+    super.saveExpiring(maybeChangeRequest, user, agentId);
+  }
+
+  @POST
   @Path("/agent/{agentId}/freeze")
   @Operation(summary = "Freeze tasks on a specific agent")
   @Consumes({ MediaType.APPLICATION_JSON })

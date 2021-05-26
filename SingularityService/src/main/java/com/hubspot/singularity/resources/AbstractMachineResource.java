@@ -166,7 +166,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     saveExpiring(activateRequest, user, objectId);
   }
 
-  private void saveExpiring(
+  protected void saveExpiring(
     Optional<SingularityMachineChangeRequest> changeRequest,
     SingularityUser user,
     String objectId
