@@ -136,6 +136,8 @@ public class SingularityClient {
   private static final String AGENT_DETAIL_FORMAT = AGENTS_FORMAT + "/agent/%s/details";
   private static final String AGENTS_DECOMISSION_FORMAT =
     AGENTS_FORMAT + "/agent/%s/decommission";
+  private static final String EXTEND_AGENTS_DECOMISSION_FORMAT =
+    AGENTS_FORMAT + "/agent/%s/decommission/extend";
   private static final String AGENTS_FREEZE_FORMAT = AGENTS_FORMAT + "/agent/%s/freeze";
   private static final String AGENTS_ACTIVATE_FORMAT =
     AGENTS_FORMAT + "/agent/%s/activate";
@@ -1166,12 +1168,12 @@ public class SingularityClient {
       String.format(DELETE_DEPLOY_FORMAT, getApiBase(host), deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(
-        requestUri,
-        "pending deploy",
-        new SingularityDeployKey(requestId, deployId).getId(),
-        Optional.empty(),
-        Optional.of(SingularityRequestParent.class)
-      )
+      requestUri,
+      "pending deploy",
+      new SingularityDeployKey(requestId, deployId).getId(),
+      Optional.empty(),
+      Optional.of(SingularityRequestParent.class)
+    )
       .get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
@@ -1412,12 +1414,12 @@ public class SingularityClient {
       String.format(TASKS_GET_ACTIVE_STATES_FORMAT, getApiBase(host));
 
     return getSingleWithParams(
-        requestUri,
-        "active tasks ids",
-        "all",
-        Optional.empty(),
-        new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
-      )
+      requestUri,
+      "active tasks ids",
+      "all",
+      Optional.empty(),
+      new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
+    )
       .orElse(Collections.emptyMap());
   }
 
@@ -1523,11 +1525,11 @@ public class SingularityClient {
       String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
 
     return post(
-        requestUri,
-        "start shell command",
-        Optional.of(shellCommand),
-        Optional.of(SingularityTaskShellCommandRequest.class)
-      )
+      requestUri,
+      "start shell command",
+      Optional.of(shellCommand),
+      Optional.of(SingularityTaskShellCommandRequest.class)
+    )
       .orElse(null);
   }
 
@@ -1714,6 +1716,20 @@ public class SingularityClient {
     post(
       requestUri,
       String.format("decommission agent %s", agentId),
+      Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
+    );
+  }
+
+  public void extendDecommissionedAgent(
+    String agentId,
+    Optional<SingularityMachineChangeRequest> machineChangeRequest
+  ) {
+    final Function<String, String> requestUri = host ->
+      String.format(EXTEND_AGENTS_DECOMISSION_FORMAT, getApiBase(host), agentId);
+
+    post(
+      requestUri,
+      String.format("extend decommission agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
   }
