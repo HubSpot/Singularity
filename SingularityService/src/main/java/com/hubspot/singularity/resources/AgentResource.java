@@ -203,6 +203,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
+    authorizationHelper.checkAdminAuthorization(user);
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
