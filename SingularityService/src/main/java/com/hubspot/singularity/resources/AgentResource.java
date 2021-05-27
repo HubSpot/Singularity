@@ -37,15 +37,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.AGENT_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Manages Singularity agents")
 @Tags({ @Tag(name = "Agents") })
 public class AgentResource extends AbstractMachineResource<SingularityAgent> {
-  public static final Logger LOG = LoggerFactory.getLogger(AgentResource.class);
 
   @Inject
   public AgentResource(
@@ -208,18 +205,13 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
-    LOG.info("In decom extension for {}", agentId);
     authorizationHelper.checkAdminAuthorization(user);
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
     );
-    LOG.info("Got agent decom extension request for {}", agentId);
     if (manager.getExpiringObject(agentId).isPresent()) {
-      LOG.info("Deleting expiring object for {}", agentId);
       manager.deleteExpiringObject(agentId);
-      LOG.info("Saving new expiry object for {}", agentId);
       super.saveExpiring(maybeChangeRequest, user, agentId);
-      LOG.info("Saved new expiry object for {}", agentId);
     }
   }
 
