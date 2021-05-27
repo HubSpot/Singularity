@@ -207,7 +207,10 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
       changeRequest
     );
 
-    super.saveExpiring(maybeChangeRequest, user, agentId);
+    if (manager.getExpiringObject(agentId).isPresent()) {
+      manager.deleteExpiringObject(agentId);
+      super.saveExpiring(maybeChangeRequest, user, agentId);
+    }
   }
 
   @POST
