@@ -190,6 +190,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
       description = "Settings related to changing the state of a agent"
     ) SingularityMachineChangeRequest changeRequest
   ) {
+    LOG.info("Request to extend agent {} decom", agentId);
     return maybeProxyToLeader(
       requestContext,
       Response.class,
