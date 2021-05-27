@@ -196,6 +196,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
       Response.class,
       changeRequest,
       () -> {
+        LOG.info("Sending extension");
         extendDecommissionAgent(user, agentId, changeRequest);
         return Response.ok().build();
       }
@@ -207,6 +208,7 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     String agentId,
     SingularityMachineChangeRequest changeRequest
   ) {
+    LOG.info("In decom extension for {}", agentId);
     authorizationHelper.checkAdminAuthorization(user);
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
       changeRequest
