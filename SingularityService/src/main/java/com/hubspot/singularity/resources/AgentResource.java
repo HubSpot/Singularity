@@ -174,10 +174,10 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
   }
 
   @POST
-  @Path("/agent/{agentId}/decommission/extend")
-  @Operation(summary = "Extend decommission time of a specific active agent")
+  @Path("/agent/{agentId}/decommission/update")
+  @Operation(summary = "Update decommission of a specific active agent")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public Response extendDecommissionAgent(
+  public Response updateDecommissionAgent(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user,
     @Parameter(required = true, description = "Active agentId") @PathParam(
@@ -192,26 +192,10 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
       Response.class,
       changeRequest,
       () -> {
-        extendDecommissionAgent(user, agentId, changeRequest);
+        super.updateDecommissionAgent(user, agentId, changeRequest);
         return Response.ok().build();
       }
     );
-  }
-
-  public void extendDecommissionAgent(
-    SingularityUser user,
-    String agentId,
-    SingularityMachineChangeRequest changeRequest
-  ) {
-    authorizationHelper.checkAdminAuthorization(user);
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
-      changeRequest
-    );
-
-    if (manager.getExpiringObject(agentId).isPresent()) {
-      manager.deleteExpiringObject(agentId);
-      super.saveExpiring(maybeChangeRequest, user, agentId);
-    }
   }
 
   @POST

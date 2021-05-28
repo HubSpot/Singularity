@@ -132,6 +132,24 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     saveExpiring(decommissionRequest, user, objectId);
   }
 
+  public void updateDecommissionAgent(
+    SingularityUser user,
+    String agentId,
+    SingularityMachineChangeRequest changeRequest
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
+      changeRequest
+    );
+    validator.checkActionEnabled(SingularityAction.ACTIVATE_AGENT);
+    validator.checkActionEnabled(SingularityAction.DECOMMISSION_AGENT);
+
+    if (manager.getExpiringObject(agentId).isPresent()) {
+      manager.deleteExpiringObject(agentId);
+      saveExpiring(maybeChangeRequest, user, agentId);
+    }
+  }
+
   protected void freeze(
     String objectId,
     Optional<SingularityMachineChangeRequest> freezeRequest,
@@ -166,7 +184,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     saveExpiring(activateRequest, user, objectId);
   }
 
-  protected void saveExpiring(
+  private void saveExpiring(
     Optional<SingularityMachineChangeRequest> changeRequest,
     SingularityUser user,
     String objectId

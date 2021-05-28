@@ -136,8 +136,8 @@ public class SingularityClient {
   private static final String AGENT_DETAIL_FORMAT = AGENTS_FORMAT + "/agent/%s/details";
   private static final String AGENTS_DECOMISSION_FORMAT =
     AGENTS_FORMAT + "/agent/%s/decommission";
-  private static final String EXTEND_AGENTS_DECOMISSION_FORMAT =
-    AGENTS_FORMAT + "/agent/%s/decommission/extend";
+  private static final String UPDATE_AGENTS_DECOMISSION_FORMAT =
+    AGENTS_FORMAT + "/agent/%s/decommission/update";
   private static final String AGENTS_FREEZE_FORMAT = AGENTS_FORMAT + "/agent/%s/freeze";
   private static final String AGENTS_ACTIVATE_FORMAT =
     AGENTS_FORMAT + "/agent/%s/activate";
@@ -1720,16 +1720,16 @@ public class SingularityClient {
     );
   }
 
-  public void extendDecommissionedAgent(
+  public void updateDecommissionedAgent(
     String agentId,
     Optional<SingularityMachineChangeRequest> machineChangeRequest
   ) {
     final Function<String, String> requestUri = host ->
-      String.format(EXTEND_AGENTS_DECOMISSION_FORMAT, getApiBase(host), agentId);
+      String.format(UPDATE_AGENTS_DECOMISSION_FORMAT, getApiBase(host), agentId);
 
     post(
       requestUri,
-      String.format("extend decommission agent %s", agentId),
+      String.format("update decommission agent %s", agentId),
       Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty()))
     );
   }
