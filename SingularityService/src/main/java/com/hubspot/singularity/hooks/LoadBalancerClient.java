@@ -123,7 +123,12 @@ public abstract class LoadBalancerClient {
         }
 
         upstreams.add(
-          new LoadBalancerUpstream(upstream, group.orElse("default"), task.getRackId())
+          new LoadBalancerUpstream(
+            upstream,
+            group.orElse("default"),
+            task.getRackId(),
+            Optional.of(task.getTaskId().getId())
+          )
         );
       } else {
         LOG.warn(
