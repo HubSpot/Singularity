@@ -1463,7 +1463,9 @@ public class RequestResource extends AbstractRequestResource {
       "requestType"
     ) List<RequestType> requestTypes
   ) {
-    if (configuration.getMaxRequestPerApiCall().isPresent()) {
+    boolean fullRequestData = valueOrFalse(includeFullRequestData);
+
+    if (fullRequestData && configuration.getMaxRequestPerApiCall().isPresent()) {
       checkBadRequest(
         limit != null && limit < configuration.getMaxRequestPerApiCall().get(),
         "Must specify limit"
@@ -1477,7 +1479,7 @@ public class RequestResource extends AbstractRequestResource {
       ),
       user,
       valueOrFalse(filterRelevantForUser),
-      valueOrFalse(includeFullRequestData),
+      fullRequestData,
       Optional.ofNullable(limit),
       requestTypes
     );
