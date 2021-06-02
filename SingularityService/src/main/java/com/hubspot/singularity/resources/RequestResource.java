@@ -1464,7 +1464,7 @@ public class RequestResource extends AbstractRequestResource {
     ) List<RequestType> requestTypes,
     @Context HttpServletRequest requestContext
   ) {
-    LOG.info("getRequestsz: {}", requestContext.getRemoteAddr());
+    LOG.warn("getRequests: {}", requestContext.getRemoteAddr());
     boolean fullRequestData = valueOrFalse(includeFullRequestData);
 
     if (configuration.getMaxRequestPerApiCall().isPresent()) {
