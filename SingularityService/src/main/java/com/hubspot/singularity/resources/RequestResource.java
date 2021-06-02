@@ -1464,7 +1464,7 @@ public class RequestResource extends AbstractRequestResource {
     ) List<RequestType> requestTypes,
     @Context HttpServletRequest requestContext
   ) {
-    LOG.warn("getRequests: {}", requestContext.getRemoteAddr());
+    checkBadRequest(false, "Disabled endpoint");
     boolean fullRequestData = valueOrFalse(includeFullRequestData);
 
     if (configuration.getMaxRequestPerApiCall().isPresent()) {
