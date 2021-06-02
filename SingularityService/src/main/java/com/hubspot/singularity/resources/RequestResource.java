@@ -1463,6 +1463,12 @@ public class RequestResource extends AbstractRequestResource {
       "requestType"
     ) List<RequestType> requestTypes
   ) {
+    if (configuration.getMaxRequestPerApiCall().isPresent()) {
+      checkBadRequest(
+        limit != null && limit < configuration.getMaxRequestPerApiCall().get(),
+        "Must specify limit"
+      );
+    }
     return requestHelper.fillDataForRequestsAndFilter(
       filterAutorized(
         requestManager.getRequests(useWebCache(useWebCache)),

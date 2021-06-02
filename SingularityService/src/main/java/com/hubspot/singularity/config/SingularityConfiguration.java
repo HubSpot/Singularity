@@ -237,6 +237,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxUserIdSize = 100;
 
+  private Optional<Integer> maxRequestsPerApiCall = Optional.empty();
+
   private boolean storeAllMesosTaskInfoForDebugging = false;
 
   @JsonProperty("historyPurging")
@@ -818,6 +820,10 @@ public class SingularityConfiguration extends Configuration {
     return maxUserIdSize;
   }
 
+  public Optional<Integer> getMaxRequestPerApiCall() {
+    return maxRequestsPerApiCall;
+  }
+
   public int getMaxTasksPerOffer() {
     return maxTasksPerOffer;
   }
@@ -1220,6 +1226,11 @@ public class SingularityConfiguration extends Configuration {
 
   public SingularityConfiguration setMaxUserIdSize(int maxUserIdSize) {
     this.maxUserIdSize = maxUserIdSize;
+    return this;
+  }
+
+  public SingularityConfiguration setMaxRequestsPerApiCall(int maxRequestsPerApiCall) {
+    this.maxRequestsPerApiCall = Optional.of(maxRequestsPerApiCall);
     return this;
   }
 
