@@ -1461,8 +1461,10 @@ public class RequestResource extends AbstractRequestResource {
     ) Integer limit,
     @Parameter(description = "Only return requests of these types") @QueryParam(
       "requestType"
-    ) List<RequestType> requestTypes
+    ) List<RequestType> requestTypes,
+    @Context HttpServletRequest requestContext
   ) {
+    LOG.info("getRequestsz: {}", requestContext.getRemoteAddr());
     boolean fullRequestData = valueOrFalse(includeFullRequestData);
 
     if (configuration.getMaxRequestPerApiCall().isPresent()) {
