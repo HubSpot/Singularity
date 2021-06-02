@@ -1465,7 +1465,7 @@ public class RequestResource extends AbstractRequestResource {
   ) {
     boolean fullRequestData = valueOrFalse(includeFullRequestData);
 
-    if (fullRequestData && configuration.getMaxRequestPerApiCall().isPresent()) {
+    if (configuration.getMaxRequestPerApiCall().isPresent()) {
       checkBadRequest(
         limit != null && limit < configuration.getMaxRequestPerApiCall().get(),
         "Must specify limit"
