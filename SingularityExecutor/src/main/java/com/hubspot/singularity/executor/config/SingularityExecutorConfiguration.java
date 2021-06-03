@@ -189,7 +189,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private boolean failTaskOnInvalidArtifactSignature = true;
 
   @JsonProperty
-  private boolean failTaskOnMissingArtifactSignature = false;
+  private boolean failOnArtifactWithNoMatchingSignature = false;
 
   private boolean failOnSignatureWithNoMatchingArtifact = false;
 
@@ -605,14 +605,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
   }
 
-  public boolean isFailTaskOnMissingArtifactSignature() {
-    return failTaskOnMissingArtifactSignature;
+  public boolean isFailOnArtifactWithNoMatchingSignature() {
+    return failOnArtifactWithNoMatchingSignature;
   }
 
-  public void setFailTaskOnMissingArtifactSignature(
-    boolean failTaskOnMissingArtifactSignature
+  public void seFailOnArtifactWithNoMatchingSignature(
+    boolean failOnArtifactWithNoMatchingSignature
   ) {
-    this.failTaskOnMissingArtifactSignature = failTaskOnMissingArtifactSignature;
+    this.failOnArtifactWithNoMatchingSignature = failOnArtifactWithNoMatchingSignature;
   }
 
   public String getSignatureVerifyOut() {
@@ -940,8 +940,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
       artifactSignatureVerificationCommand +
       ", failTaskOnInvalidArtifactSignature=" +
       failTaskOnInvalidArtifactSignature +
-      ", failTaskOnMissingArtifactSignature=" +
-      failTaskOnMissingArtifactSignature +
+      ", failOnArtifactWithNoMatchingSignature=" +
+      failOnArtifactWithNoMatchingSignature +
       ", signatureVerifyOut='" +
       signatureVerifyOut +
       '\'' +
