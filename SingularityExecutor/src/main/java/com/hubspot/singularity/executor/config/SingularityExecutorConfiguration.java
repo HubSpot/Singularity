@@ -189,6 +189,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private boolean failTaskOnInvalidArtifactSignature = true;
 
   @JsonProperty
+  private boolean failTaskOnMissingArtifactSignature = false;
+
+  private boolean failOnSignatureWithNoMatchingArtifact = false;
+
+  @JsonProperty
   @NotEmpty
   private String signatureVerifyOut = "executor.gpg.out";
 
@@ -260,8 +265,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private boolean verifyAssignedPorts = false;
-
-  private boolean failOnSignatureWithNoMatchingArtifact = false;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -602,6 +605,16 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
   }
 
+  public boolean isFailTaskOnMissingArtifactSignature() {
+    return failTaskOnMissingArtifactSignature;
+  }
+
+  public void setFailTaskOnMissingArtifactSignature(
+    boolean failTaskOnMissingArtifactSignature
+  ) {
+    this.failTaskOnMissingArtifactSignature = failTaskOnMissingArtifactSignature;
+  }
+
   public String getSignatureVerifyOut() {
     return signatureVerifyOut;
   }
@@ -927,6 +940,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
       artifactSignatureVerificationCommand +
       ", failTaskOnInvalidArtifactSignature=" +
       failTaskOnInvalidArtifactSignature +
+      ", failTaskOnMissingArtifactSignature=" +
+      failTaskOnMissingArtifactSignature +
       ", signatureVerifyOut='" +
       signatureVerifyOut +
       '\'' +
