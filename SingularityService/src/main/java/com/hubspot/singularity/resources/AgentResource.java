@@ -198,21 +198,6 @@ public class AgentResource extends AbstractMachineResource<SingularityAgent> {
     );
   }
 
-  public void extendDecommissionAgent(
-    SingularityUser user,
-    String agentId,
-    SingularityMachineChangeRequest changeRequest
-  ) {
-    authorizationHelper.checkAdminAuthorization(user);
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(
-      changeRequest
-    );
-    if (manager.getExpiringObject(agentId).isPresent()) {
-      manager.deleteExpiringObject(agentId);
-      super.saveExpiring(maybeChangeRequest, user, agentId);
-    }
-  }
-
   @POST
   @Path("/agent/{agentId}/freeze")
   @Operation(summary = "Freeze tasks on a specific agent")
