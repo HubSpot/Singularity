@@ -609,7 +609,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return failOnArtifactWithNoMatchingSignature;
   }
 
-  public void seFailOnArtifactWithNoMatchingSignature(
+  public void setFailOnArtifactWithNoMatchingSignature(
     boolean failOnArtifactWithNoMatchingSignature
   ) {
     this.failOnArtifactWithNoMatchingSignature = failOnArtifactWithNoMatchingSignature;
