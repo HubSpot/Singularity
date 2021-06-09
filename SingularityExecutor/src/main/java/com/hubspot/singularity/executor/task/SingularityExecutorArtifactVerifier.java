@@ -1,5 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -10,7 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
 public class SingularityExecutorArtifactVerifier {
@@ -35,6 +39,53 @@ public class SingularityExecutorArtifactVerifier {
     List<S3Artifact> s3Artifacts,
     List<S3ArtifactSignature> s3ArtifactsWithSignatures
   ) {
+    Map<String, S3Artifact> artifactsByFilename = s3Artifacts
+      .stream()
+      .collect(Collectors.toMap(S3Artifact::getFilename, Function.identity()));
+    Map<String, S3ArtifactSignature> signaturesByFilename = s3ArtifactsWithSignatures
+      .stream()
+      .collect(
+        Collectors.toMap(S3ArtifactSignature::getArtifactFilename, Function.identity())
+      );
+
+    SetView<String> signaturesMissingArtifacts = Sets.difference(
+      signaturesByFilename.keySet(),
+      artifactsByFilename.keySet()
+    );
+
+    if (signaturesMissingArtifacts.size() > 0) {
+      if (executorConfiguration.isFailOnSignatureWithNoMatchingArtifact()) {
+        throw new ArtifactVerificationException(
+          String.format(
+            "No matching artifact(s) found for signature(s) %s",
+            signaturesMissingArtifacts
+          )
+        );
+      } else {
+        log.warn(
+          "No matching artifact(s) found for signature(s) {}",
+          signaturesMissingArtifacts
+        );
+      }
+    }
+
+    SetView<String> artifactsMissingSignatures = Sets.difference(
+      artifactsByFilename.keySet(),
+      signaturesByFilename.keySet()
+    );
+    if (artifactsMissingSignatures.size() > 0) {
+      if (executorConfiguration.isFailOnArtifactWithNoMatchingSignature()) {
+        throw new ArtifactVerificationException(
+          String.format(
+            "No signature(s) found for artifact(s) %s",
+            artifactsMissingSignatures
+          )
+        );
+      } else {
+        log.warn("No signature(s) found for artifact(s) {}", artifactsMissingSignatures);
+      }
+    }
+
     if (s3ArtifactsWithSignatures.isEmpty()) {
       log.info(
         "No files containing artifact signatures specified, skipping verification."
@@ -43,22 +94,11 @@ public class SingularityExecutorArtifactVerifier {
     }
 
     for (S3ArtifactSignature s3ArtifactSignature : s3ArtifactsWithSignatures) {
-      Optional<S3Artifact> maybeMatchingForSignature = s3Artifacts
-        .stream()
-        .filter(s -> s3ArtifactSignature.getArtifactFilename().equals(s.getFilename()))
-        .findFirst();
-      if (maybeMatchingForSignature.isPresent()) {
-        checkArtifactSignature(maybeMatchingForSignature.get(), s3ArtifactSignature);
-      } else {
-        log.warn("No matching artifact found for signature {}", s3ArtifactSignature);
-        if (executorConfiguration.isFailOnSignatureWithNoMatchingArtifact()) {
-          throw new ArtifactVerificationException(
-            String.format(
-              "No matching artifact found for signature %s",
-              s3ArtifactSignature.getFilename()
-            )
-          );
-        }
+      S3Artifact maybeMatchingForSignature = artifactsByFilename.get(
+        s3ArtifactSignature.getArtifactFilename()
+      );
+      if (maybeMatchingForSignature != null) {
+        checkArtifactSignature(maybeMatchingForSignature, s3ArtifactSignature);
       }
     }
   }
