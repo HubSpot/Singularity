@@ -41,11 +41,35 @@ public class SingularityExecutorArtifactVerifier {
   ) {
     Map<String, S3Artifact> artifactsByFilename = s3Artifacts
       .stream()
-      .collect(Collectors.toMap(S3Artifact::getFilename, Function.identity()));
+      .collect(
+        Collectors.toMap(
+          S3Artifact::getFilename,
+          Function.identity(),
+          (lhsDuplicate, rhsDuplicate) -> {
+            log.warn(
+              "Duplicate artifact filenames found ({}; {})",
+              lhsDuplicate,
+              rhsDuplicate
+            );
+            return lhsDuplicate;
+          }
+        )
+      );
     Map<String, S3ArtifactSignature> signaturesByFilename = s3ArtifactsWithSignatures
       .stream()
       .collect(
-        Collectors.toMap(S3ArtifactSignature::getArtifactFilename, Function.identity())
+        Collectors.toMap(
+          S3ArtifactSignature::getArtifactFilename,
+          Function.identity(),
+          (lhsDuplicate, rhsDuplicate) -> {
+            log.warn(
+              "Duplicate signature filenames found ({}; {})",
+              lhsDuplicate,
+              rhsDuplicate
+            );
+            return lhsDuplicate;
+          }
+        )
       );
 
     SetView<String> signaturesMissingArtifacts = Sets.difference(
