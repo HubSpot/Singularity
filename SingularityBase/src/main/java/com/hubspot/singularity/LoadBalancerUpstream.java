@@ -11,23 +11,27 @@ public class LoadBalancerUpstream {
   private final String upstream;
   private final String group;
   private final Optional<String> rackId;
+  private final Optional<String> taskId;
 
   @JsonCreator
   public LoadBalancerUpstream(
     @JsonProperty("upstream") String upstream,
     @JsonProperty("group") String group,
-    @JsonProperty("rackId") Optional<String> rackId
+    @JsonProperty("rackId") Optional<String> rackId,
+    @JsonProperty("taskId") Optional<String> taskId
   ) {
     this.upstream = upstream;
     this.group = group;
     this.rackId = rackId;
+    this.taskId = taskId;
   }
 
   public static LoadBalancerUpstream fromBaragonUpstream(UpstreamInfo upstreamInfo) {
     return new LoadBalancerUpstream(
       upstreamInfo.getUpstream(),
       upstreamInfo.getGroup(),
-      upstreamInfo.getRackId().toJavaUtil()
+      upstreamInfo.getRackId().toJavaUtil(),
+      Optional.empty()
     );
   }
 
@@ -41,6 +45,10 @@ public class LoadBalancerUpstream {
 
   public Optional<String> getRackId() {
     return rackId;
+  }
+
+  public Optional<String> getTaskId() {
+    return taskId;
   }
 
   @Override
