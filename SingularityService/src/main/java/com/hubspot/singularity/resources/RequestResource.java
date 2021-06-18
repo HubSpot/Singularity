@@ -1484,6 +1484,8 @@ public class RequestResource extends AbstractRequestResource {
       List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
 
       if (cachedRequests != null) {
+        LOG.info("Grabbed getRequests value for {} from cache", key);
+
         return cachedRequests;
       }
     }
@@ -1503,6 +1505,8 @@ public class RequestResource extends AbstractRequestResource {
 
     if (useCaffeineCache(useWebCache)) {
       requestsCache.put(key, requests);
+
+      LOG.info("Setting getRequests value for {} in cache", key);
     }
 
     return requests;
