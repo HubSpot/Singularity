@@ -1480,7 +1480,7 @@ public class RequestResource extends AbstractRequestResource {
       limit,
       requestTypes
     );
-    if (!useWebCache(useWebCache)) {
+    if (useCaffeineCache(useWebCache)) {
       List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
 
       if (cachedRequests != null) {
@@ -1501,9 +1501,15 @@ public class RequestResource extends AbstractRequestResource {
       requestTypes
     );
 
-    requestsCache.put(key, requests);
+    if (useCaffeineCache(useWebCache)) {
+      requestsCache.put(key, requests);
+    }
 
     return requests;
+  }
+
+  private boolean useCaffeineCache(boolean useWebCache) {
+    return !useWebCache(useWebCache) && configuration.useCaffeineCache();
   }
 
   private String getRequestCacheKey(

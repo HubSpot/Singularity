@@ -2076,7 +2076,7 @@ public class SingularityConfiguration extends Configuration {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 
-  public boolean isUseCaffeineCache() {
+  public boolean useCaffeineCache() {
     return useCaffeineCache;
   }
 
