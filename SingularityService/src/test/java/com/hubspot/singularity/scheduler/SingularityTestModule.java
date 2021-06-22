@@ -9,6 +9,8 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -18,10 +20,13 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
@@ -30,6 +35,8 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTestAuthenticator;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.auth.SingularityGroupsAuthorizer;
@@ -68,8 +75,10 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.setup.Environment;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.servlet.http.HttpServletRequest;
 import net.kencochrane.raven.Raven;
@@ -202,7 +211,6 @@ public class SingularityTestModule implements Module {
 
               binder.bind(ObjectMapper.class).toInstance(om);
               binder.bind(Environment.class).toInstance(environment);
-
               binder
                 .bind(HostAndPort.class)
                 .annotatedWith(named(HTTP_HOST_AND_PORT))
@@ -333,5 +341,12 @@ public class SingularityTestModule implements Module {
     config.setConsiderTaskHealthyAfterRunningForSeconds(0);
 
     return config;
+  }
+
+  @Provides
+  @Singleton
+  @Named(SingularityServiceModule.REQUESTS_CAFFEINE_CACHE)
+  public Cache<String, List<SingularityRequestParent>> getRequestsCaffeineCache() {
+    return Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.SECONDS).build();
   }
 }
