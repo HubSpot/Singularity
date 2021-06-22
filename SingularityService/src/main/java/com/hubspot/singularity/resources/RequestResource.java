@@ -5,6 +5,8 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -86,6 +88,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -120,6 +123,7 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityAgentAndRackManager agentAndRackManager;
+  private final Cache<String, List<SingularityRequestParent>> requestsCache;
 
   @Inject
   public RequestResource(
@@ -157,6 +161,12 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.agentAndRackManager = agentAndRackManager;
+
+    this.requestsCache =
+      Caffeine
+        .newBuilder()
+        .expireAfterWrite(configuration.getCaffeineCacheTtl(), TimeUnit.SECONDS)
+        .build();
   }
 
   private void submitRequest(
@@ -1463,7 +1473,24 @@ public class RequestResource extends AbstractRequestResource {
       "requestType"
     ) List<RequestType> requestTypes
   ) {
-    return requestHelper.fillDataForRequestsAndFilter(
+    String key = getRequestCacheKey(
+      user.getId(),
+      filterRelevantForUser,
+      includeFullRequestData,
+      limit,
+      requestTypes
+    );
+    if (useCaffeineCache(useWebCache)) {
+      List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
+
+      if (cachedRequests != null) {
+        LOG.info("Grabbed getRequests value for {} from cache", key);
+
+        return cachedRequests;
+      }
+    }
+
+    List<SingularityRequestParent> requests = requestHelper.fillDataForRequestsAndFilter(
       filterAutorized(
         requestManager.getRequests(useWebCache(useWebCache)),
         SingularityAuthorizationScope.READ,
@@ -1475,6 +1502,45 @@ public class RequestResource extends AbstractRequestResource {
       Optional.ofNullable(limit),
       requestTypes
     );
+
+    if (useCaffeineCache(useWebCache)) {
+      requestsCache.put(key, requests);
+
+      LOG.info("Setting getRequests value for {} in cache", key);
+    }
+
+    return requests;
+  }
+
+  private boolean useCaffeineCache(boolean useWebCache) {
+    return !useWebCache(useWebCache) && configuration.useCaffeineCache();
+  }
+
+  private String getRequestCacheKey(
+    String id,
+    Boolean filterRelevantForUser,
+    Boolean includeFullRequestData,
+    Integer limit,
+    List<RequestType> requestTypes
+  ) {
+    StringBuilder key = new StringBuilder(id);
+
+    if (filterRelevantForUser != null) {
+      key.append("_").append(filterRelevantForUser);
+    }
+    if (includeFullRequestData != null) {
+      key.append("_").append(includeFullRequestData);
+    }
+    if (limit != null) {
+      key.append("_").append(limit);
+    }
+    if (!requestTypes.isEmpty()) {
+      for (RequestType type : requestTypes) {
+        key.append("_").append(type.name());
+      }
+    }
+
+    return key.toString();
   }
 
   private boolean valueOrFalse(Boolean input) {

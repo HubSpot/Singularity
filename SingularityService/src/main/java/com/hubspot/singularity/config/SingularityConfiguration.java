@@ -443,6 +443,12 @@ public class SingularityConfiguration extends Configuration {
   // For blocking queue reconciliation if the queue is too full
   private double statusQueueNearlyFull = 0.8;
 
+  // Enable caffeine cache on heavily requested endpoint
+  private boolean useCaffeineCache = false;
+
+  // Caffeine cache ttl
+  private int caffeineCacheTtl = 1;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2068,5 +2074,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setStatusQueueNearlyFull(double statusQueueNearlyFull) {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
+  }
+
+  public boolean useCaffeineCache() {
+    return useCaffeineCache;
+  }
+
+  public void setUseCaffeineCache(boolean useCaffeineCache) {
+    this.useCaffeineCache = useCaffeineCache;
+  }
+
+  public int getCaffeineCacheTtl() {
+    return caffeineCacheTtl;
+  }
+
+  public void setCaffeineCacheTtl(int caffeineCacheTtl) {
+    this.caffeineCacheTtl = caffeineCacheTtl;
   }
 }
