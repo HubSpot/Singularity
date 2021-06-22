@@ -1483,7 +1483,7 @@ public class RequestResource extends AbstractRequestResource {
       List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
 
       if (cachedRequests != null) {
-        LOG.info("Grabbed getRequests value for {} from cache", key);
+        LOG.trace("Grabbed getRequests value for {} from cache", key);
 
         return cachedRequests;
       }
@@ -1505,7 +1505,7 @@ public class RequestResource extends AbstractRequestResource {
     if (!useWebCache(useWebCache) && configuration.useCaffeineCache()) {
       requestsCache.put(key, requests);
 
-      LOG.info("Setting getRequests value for {} in cache", key);
+      LOG.trace("Setting getRequests value for {} in cache", key);
     }
 
     return requests;
@@ -1521,15 +1521,16 @@ public class RequestResource extends AbstractRequestResource {
     StringBuilder key = new StringBuilder(id);
 
     if (filterRelevantForUser != null) {
-      key.append("_").append(filterRelevantForUser);
+      key.append("_filter_").append(filterRelevantForUser);
     }
     if (includeFullRequestData != null) {
-      key.append("_").append(includeFullRequestData);
+      key.append("_fullRequestData_").append(includeFullRequestData);
     }
     if (limit != null) {
-      key.append("_").append(limit);
+      key.append("_limit_").append(limit);
     }
     if (!requestTypes.isEmpty()) {
+      key.append("_types_");
       for (RequestType type : requestTypes) {
         key.append("_").append(type.name());
       }
