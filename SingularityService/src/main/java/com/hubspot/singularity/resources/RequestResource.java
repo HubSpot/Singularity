@@ -1480,7 +1480,6 @@ public class RequestResource extends AbstractRequestResource {
       limit,
       requestTypes
     );
-    LOG.info("Key {}", key);
     if (useCaffeineCache(useWebCache)) {
       LOG.info("Attempting to grab {} from the cache", key);
       List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
@@ -1515,6 +1514,8 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   private boolean useCaffeineCache(boolean useWebCache) {
+    LOG.info("Use web cache {}", useWebCache(useWebCache));
+    LOG.info("Use caffeine cache cache {}", configuration.useCaffeineCache());
     return !useWebCache(useWebCache) && configuration.useCaffeineCache();
   }
 
