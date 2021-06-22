@@ -1514,6 +1514,7 @@ public class RequestResource extends AbstractRequestResource {
       requestsCache.put(key, requests);
 
       LOG.info("Setting getRequests value for {} in cache", key);
+      LOG.info("Cache size: {}", requestsCache.estimatedSize());
     }
 
     return requests;
