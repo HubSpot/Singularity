@@ -35,7 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 public class SingularityServiceModule
   extends DropwizardAwareModule<SingularityConfiguration> {
-  public static final String REQUESTS_CAFFEINE_CACHE = "requests_caffeine_cache";
+  public static final String REQUESTS_CAFFEINE_CACHE =
+    "singularity.service.resources.request";
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
   private Optional<Class<? extends LoadBalancerClient>> lbClientClass = Optional.empty();
 
