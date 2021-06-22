@@ -10,6 +10,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.CrashLoopInfo;
@@ -35,6 +36,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -141,7 +143,10 @@ public class RequestResource extends AbstractRequestResource {
     @Singularity ObjectMapper objectMapper,
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier,
-    SingularityAgentAndRackManager agentAndRackManager
+    SingularityAgentAndRackManager agentAndRackManager,
+    @Named(
+      SingularityServiceModule.REQUESTS_CAFFEINE_CACHE
+    ) Cache<String, List<SingularityRequestParent>> requestsCache
   ) {
     super(
       requestManager,
@@ -161,12 +166,7 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.agentAndRackManager = agentAndRackManager;
-
-    this.requestsCache =
-      Caffeine
-        .newBuilder()
-        .expireAfterWrite(configuration.getCaffeineCacheTtl(), TimeUnit.SECONDS)
-        .build();
+    this.requestsCache = requestsCache;
   }
 
   private void submitRequest(
