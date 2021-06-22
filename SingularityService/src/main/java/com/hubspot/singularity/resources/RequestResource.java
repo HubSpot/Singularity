@@ -1521,15 +1521,16 @@ public class RequestResource extends AbstractRequestResource {
     StringBuilder key = new StringBuilder(id);
 
     if (filterRelevantForUser != null) {
-      key.append("_").append(filterRelevantForUser);
+      key.append("_filter_").append(filterRelevantForUser);
     }
     if (includeFullRequestData != null) {
-      key.append("_").append(includeFullRequestData);
+      key.append("_fullRequestData_").append(includeFullRequestData);
     }
     if (limit != null) {
-      key.append("_").append(limit);
+      key.append("_limit_").append(limit);
     }
     if (!requestTypes.isEmpty()) {
+      key.append("_types_");
       for (RequestType type : requestTypes) {
         key.append("_").append(type.name());
       }
