@@ -53,7 +53,8 @@ public class S3Artifact extends RemoteArtifact {
     }
     S3Artifact that = (S3Artifact) other;
     return (
-      Objects.equals(s3Bucket, that.s3Bucket) && Objects.equals(s3ObjectKey, s3ObjectKey)
+      Objects.equals(s3Bucket, that.s3Bucket) &&
+      Objects.equals(s3ObjectKey, that.s3ObjectKey)
     );
   }
 

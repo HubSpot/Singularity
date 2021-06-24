@@ -50,7 +50,7 @@ public class EmbeddedArtifact extends Artifact {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), content);
+    return Objects.hash(super.hashCode(), Arrays.hashCode(content));
   }
 
   @Override
