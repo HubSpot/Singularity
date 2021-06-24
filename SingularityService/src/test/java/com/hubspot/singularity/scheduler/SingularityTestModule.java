@@ -9,8 +9,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -35,7 +33,8 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityTestAuthenticator;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
@@ -49,6 +48,7 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.data.ManagerCache;
 import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
@@ -76,9 +76,9 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.setup.Environment;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.servlet.http.HttpServletRequest;
 import net.kencochrane.raven.Raven;
@@ -346,7 +346,14 @@ public class SingularityTestModule implements Module {
   @Provides
   @Singleton
   @Named(SingularityServiceModule.REQUESTS_CAFFEINE_CACHE)
-  public Cache<String, List<SingularityRequestParent>> getRequestsCaffeineCache() {
-    return Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.SECONDS).build();
+  public ManagerCache<String, List<SingularityRequestWithState>> getRequestsCaffeineCache() {
+    return new ManagerCache<>(getSingularityConfigurationForTestingServer(ts));
+  }
+
+  @Provides
+  @Singleton
+  @Named(SingularityServiceModule.DEPLOY_CAFFEINE_CACHE)
+  public ManagerCache<String, Map<String, SingularityRequestDeployState>> getDeployCaffeineCache() {
+    return new ManagerCache<>(getSingularityConfigurationForTestingServer(ts));
   }
 }
