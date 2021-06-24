@@ -140,7 +140,7 @@ public class DeployManager extends CuratorAsyncManager {
 
     Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
 
-    if (configuration.useCaffeineCache()) {
+    if (deployCache.isEnabled()) {
       deployStatesByRequestIds = deployCache.getAll(requestIds);
       if (deployStatesByRequestIds != null) {
         return deployStatesByRequestIds;

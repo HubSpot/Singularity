@@ -635,7 +635,7 @@ public class RequestManager extends CuratorAsyncManager {
       return webCache.getRequests();
     }
 
-    if (!useWebCache && configuration.useCaffeineCache()) {
+    if (requestsCache.isEnabled()) {
       List<SingularityRequestWithState> requests = requestsCache.get("all");
       if (requests != null) {
         return requests;

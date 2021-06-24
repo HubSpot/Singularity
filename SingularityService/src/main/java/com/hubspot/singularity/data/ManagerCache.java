@@ -33,10 +33,6 @@ public class ManagerCache<K, V> {
   }
 
   public V get(K key) {
-    if (!isEnabled) {
-      return null;
-    }
-
     V values = cache.get(key);
     if (values != null) {
       LOG.trace("Grabbed values for {} from cache", key);
@@ -48,15 +44,15 @@ public class ManagerCache<K, V> {
   }
 
   public Map<K, V> getAll(@Nonnull Iterable<? extends K> keys) {
-    if (!isEnabled) {
-      return null;
-    }
-
     Map<K, V> values = cache.getAll(keys);
     if (values.isEmpty()) {
       LOG.trace("Grabbed mapped values for {} from cache", keys);
     }
 
     return values.isEmpty() ? null : values;
+  }
+
+  public boolean isEnabled() {
+    return isEnabled;
   }
 }
