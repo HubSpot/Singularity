@@ -7,6 +7,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.CrashLoopInfo;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -90,6 +92,7 @@ public class RequestManager extends CuratorAsyncManager {
   );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
+  private final ManagerCache<String, List<SingularityRequestWithState>> requestsCache;
 
   @Inject
   public RequestManager(
@@ -108,7 +111,10 @@ public class RequestManager extends CuratorAsyncManager {
     Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
-    Transcoder<CrashLoopInfo> crashLoopInfoTranscoder
+    Transcoder<CrashLoopInfo> crashLoopInfoTranscoder,
+    @Named(
+      SingularityServiceModule.REQUESTS_CAFFEINE_CACHE
+    ) ManagerCache<String, List<SingularityRequestWithState>> requestsCache
   ) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
@@ -133,6 +139,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     this.leaderCache = leaderCache;
     this.webCache = webCache;
+    this.requestsCache = requestsCache;
   }
 
   private String getRequestPath(String requestId) {
@@ -632,10 +639,22 @@ public class RequestManager extends CuratorAsyncManager {
     if (useWebCache && webCache.useCachedRequests()) {
       return webCache.getRequests();
     }
+
+    if (!useWebCache && configuration.useCaffeineCache()) {
+      List<SingularityRequestWithState> requests = requestsCache.getIfPresent(
+        "getRequests"
+      );
+      if (requests != null) {
+        return requests;
+      }
+    }
+
     List<SingularityRequestWithState> requests = fetchRequests();
 
     if (useWebCache) {
       webCache.cacheRequests(requests);
+    } else if (configuration.useCaffeineCache()) {
+      requestsCache.put("getRequests", requests);
     }
     return requests;
   }

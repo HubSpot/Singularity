@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -20,6 +21,7 @@ import com.hubspot.singularity.SingularityDeployUpdate.DeployEventType;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -70,6 +72,8 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
+  private final ManagerCache<String, Map<String, SingularityRequestDeployState>> deployCache;
+
   @Inject
   public DeployManager(
     CuratorFramework curator,
@@ -85,7 +89,10 @@ public class DeployManager extends CuratorAsyncManager {
     IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
     Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder,
     ZkCache<SingularityDeploy> deploysCache,
-    SingularityLeaderCache leaderCache
+    SingularityLeaderCache leaderCache,
+    @Named(
+      SingularityServiceModule.DEPLOY_CAFFEINE_CACHE
+    ) ManagerCache<String, Map<String, SingularityRequestDeployState>> deployCache
   ) {
     super(curator, configuration, metricRegistry);
     this.singularityEventListener = singularityEventListener;
@@ -99,6 +106,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.updateRequestTranscoder = updateRequestTranscoder;
     this.deploysCache = deploysCache;
     this.leaderCache = leaderCache;
+    this.deployCache = deployCache;
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -124,7 +132,23 @@ public class DeployManager extends CuratorAsyncManager {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
     }
 
-    return fetchDeployStatesByRequestIds(requestIds);
+    Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
+
+    if (configuration.useCaffeineCache()) {
+      deployStatesByRequestIds =
+        deployCache.getIfPresent("getRequestDeployStatesByRequestIds");
+      if (deployStatesByRequestIds != null) {
+        return deployStatesByRequestIds;
+      }
+    }
+
+    deployStatesByRequestIds = fetchDeployStatesByRequestIds(requestIds);
+
+    if (configuration.useCaffeineCache()) {
+      deployCache.put("getRequestDeployStatesByRequestIds", deployStatesByRequestIds);
+    }
+
+    return deployStatesByRequestIds;
   }
 
   public Map<String, SingularityRequestDeployState> fetchDeployStatesByRequestIds(
