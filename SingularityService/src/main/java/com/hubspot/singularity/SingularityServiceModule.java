@@ -5,7 +5,6 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.mesos.client.UserAndPassword;
@@ -13,7 +12,6 @@ import com.hubspot.singularity.auth.dw.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.ManagerCache;
 import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityDbModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
@@ -28,17 +26,10 @@ import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class SingularityServiceModule
   extends DropwizardAwareModule<SingularityConfiguration> {
-  public static final String REQUESTS_CAFFEINE_CACHE =
-    "singularity.service.resources.request";
-  public static final String DEPLOY_CAFFEINE_CACHE =
-    "singularity.service.resources.deploy";
-
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
   private Optional<Class<? extends LoadBalancerClient>> lbClientClass = Optional.empty();
 
@@ -136,21 +127,5 @@ public class SingularityServiceModule
         .getAuthenticators()
         .contains(SingularityAuthenticatorClass.WEBHOOK)
     );
-  }
-
-  @Provides
-  @Singleton
-  @Named(REQUESTS_CAFFEINE_CACHE)
-  public ManagerCache<String, List<SingularityRequestWithState>> getRequestsCaffeineCache() {
-    SingularityConfiguration configuration = getConfiguration();
-    return new ManagerCache<>(configuration);
-  }
-
-  @Provides
-  @Singleton
-  @Named(DEPLOY_CAFFEINE_CACHE)
-  public ManagerCache<String, Map<String, SingularityRequestDeployState>> getDeployCaffeineCache() {
-    SingularityConfiguration configuration = getConfiguration();
-    return new ManagerCache<>(configuration);
   }
 }

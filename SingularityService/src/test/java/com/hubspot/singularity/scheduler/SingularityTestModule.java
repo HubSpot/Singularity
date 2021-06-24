@@ -342,18 +342,4 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
-
-  @Provides
-  @Singleton
-  @Named(SingularityServiceModule.REQUESTS_CAFFEINE_CACHE)
-  public ManagerCache<String, List<SingularityRequestWithState>> getRequestsCaffeineCache() {
-    return new ManagerCache<>(getSingularityConfigurationForTestingServer(ts));
-  }
-
-  @Provides
-  @Singleton
-  @Named(SingularityServiceModule.DEPLOY_CAFFEINE_CACHE)
-  public ManagerCache<String, Map<String, SingularityRequestDeployState>> getDeployCaffeineCache() {
-    return new ManagerCache<>(getSingularityConfigurationForTestingServer(ts));
-  }
 }
