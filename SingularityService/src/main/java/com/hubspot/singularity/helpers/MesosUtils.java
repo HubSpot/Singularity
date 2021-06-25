@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
@@ -29,6 +30,8 @@ import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Type;
 
 public final class MesosUtils {
+  private static final Pattern SPACES_PATTERN = Pattern.compile("( )+");
+
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
@@ -634,7 +637,7 @@ public final class MesosUtils {
   }
 
   public static String formatForLogging(Object object) {
-    return object.toString().replace("\n", "").replaceAll("( )+", " ");
+    return SPACES_PATTERN.matcher(object.toString().replace("\n", "")).replaceAll(" ");
   }
 
   public static String formatOfferIdsForLog(List<Offer> offers) {

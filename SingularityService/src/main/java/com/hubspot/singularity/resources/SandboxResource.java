@@ -56,6 +56,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Schema(title = "Provides a proxy to Mesos sandboxes")
 @Tags({ @Tag(name = "Sandbox") })
 public class SandboxResource extends AbstractHistoryResource {
+  private static final Pattern TRAILING_SLASHES = Pattern.compile("\\/+$");
   private final SandboxManager sandboxManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityConfiguration configuration;
@@ -141,7 +142,7 @@ public class SandboxResource extends AbstractHistoryResource {
 
     // Remove all trailing slashes from the path
     if (path != null) {
-      path = path.replaceAll("\\/+$", "");
+      path = TRAILING_SLASHES.matcher(path).replaceAll("");
     }
 
     final String currentDirectory = getCurrentDirectory(taskId, path);

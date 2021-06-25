@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,6 +30,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Schema(title = "Manage email notifications")
 @Tags({ @Tag(name = "Notifications") })
 public class NotificationsResource extends AbstractLeaderAwareResource {
+  private static final Pattern LEADING_TRAILING_QUOTES = Pattern.compile("^\"|\"$");
   private final NotificationsManager notificationsManager;
 
   @Inject
@@ -85,6 +87,6 @@ public class NotificationsResource extends AbstractLeaderAwareResource {
   }
 
   private String getFormattedEmail(String email) {
-    return email.replaceAll("^\"|\"$", "");
+    return LEADING_TRAILING_QUOTES.matcher(email).replaceAll("");
   }
 }

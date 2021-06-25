@@ -6,9 +6,11 @@ import com.hubspot.singularity.ExtendedTaskState;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.mesos.v1.Protos.TaskState;
 
 public class MesosUtils {
+  private static final Pattern SPACES_PATTERN = Pattern.compile("( )+");
 
   public static Path getTaskDirectoryPath(String taskId) {
     return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
@@ -19,7 +21,7 @@ public class MesosUtils {
   }
 
   public static String formatForLogging(Object object) {
-    return object.toString().replace("\n", "").replaceAll("( )+", " ");
+    return SPACES_PATTERN.matcher(object.toString().replace("\n", "")).replaceAll(" ");
   }
 
   private static final Map<TaskState, ExtendedTaskState> map;

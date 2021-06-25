@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
@@ -38,6 +39,11 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityWebhookSender.class
   );
+  private static final Pattern REQUEST_ID_TOKEN = Pattern.compile("\\$REQUEST_ID");
+  private static final Pattern DEPLOY_ID_TOKEN = Pattern.compile("\\$DEPLOY_ID");
+  private static final Pattern TASK_ID_TOKEN = Pattern.compile("\\$TASK_ID");
+  private static final Pattern USER_ID_TOKEN = Pattern.compile("\\$USER_ID");
+  private static final Pattern SCOPE_TOKEN = Pattern.compile("\\$SCOPE");
 
   private final SingularityConfiguration configuration;
   private final AsyncHttpClient http;
@@ -320,33 +326,47 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   }
 
   private String applyPlaceholders(String uri, SingularityRequestHistory requestHistory) {
-    return uri.replaceAll("\\$REQUEST_ID", requestHistory.getRequest().getId());
+    return replaceAll(uri, REQUEST_ID_TOKEN, requestHistory.getRequest().getId());
   }
 
   private String applyPlaceholders(String uri, SingularityDeployUpdate deployUpdate) {
-    return uri
-      .replaceAll("\\$REQUEST_ID", deployUpdate.getDeployMarker().getRequestId())
-      .replaceAll("\\$DEPLOY_ID", deployUpdate.getDeployMarker().getDeployId());
+    return replaceAll(
+      replaceAll(uri, REQUEST_ID_TOKEN, deployUpdate.getDeployMarker().getRequestId()),
+      DEPLOY_ID_TOKEN,
+      deployUpdate.getDeployMarker().getDeployId()
+    );
   }
 
   private String applyPlaceholders(String uri, CrashLoopInfo crashLoopUpdate) {
-    return uri
-      .replaceAll("\\$REQUEST_ID", crashLoopUpdate.getRequestId())
-      .replaceAll("\\$DEPLOY_ID", crashLoopUpdate.getDeployId());
+    return replaceAll(
+      replaceAll(uri, REQUEST_ID_TOKEN, crashLoopUpdate.getRequestId()),
+      DEPLOY_ID_TOKEN,
+      crashLoopUpdate.getDeployId()
+    );
   }
 
   private String applyPlaceholders(String uri, ElevatedAccessEvent elevatedAccessEvent) {
-    return uri
-      .replaceAll("\\$REQUEST_ID", elevatedAccessEvent.getRequestId())
-      .replaceAll("\\$USER_ID", elevatedAccessEvent.getUser())
-      .replaceAll("\\$SCOPE", elevatedAccessEvent.getScope().name());
+    return replaceAll(
+      replaceAll(
+        replaceAll(uri, REQUEST_ID_TOKEN, elevatedAccessEvent.getRequestId()),
+        USER_ID_TOKEN,
+        elevatedAccessEvent.getUser()
+      ),
+      SCOPE_TOKEN,
+      elevatedAccessEvent.getScope().name()
+    );
   }
 
   private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {
-    return uri
-      .replaceAll("\\$REQUEST_ID", taskUpdate.getTaskId().getRequestId())
-      .replaceAll("\\$DEPLOY_ID", taskUpdate.getTaskId().getDeployId())
-      .replaceAll("\\$TASK_ID", taskUpdate.getTaskId().getId());
+    return replaceAll(
+      replaceAll(
+        replaceAll(uri, REQUEST_ID_TOKEN, taskUpdate.getTaskId().getRequestId()),
+        DEPLOY_ID_TOKEN,
+        taskUpdate.getTaskId().getDeployId()
+      ),
+      TASK_ID_TOKEN,
+      taskUpdate.getTaskId().getId()
+    );
   }
 
   // TODO handle retries, errors.
@@ -378,5 +398,9 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
       webhookFuture.completeExceptionally(t);
     }
     return webhookFuture;
+  }
+
+  private String replaceAll(String base, Pattern pattern, String replacement) {
+    return pattern.matcher(base).replaceAll(replacement);
   }
 }

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class MailTemplateHelpers {
   private static final Logger LOG = LoggerFactory.getLogger(MailTemplateHelpers.class);
 
+  private static final Pattern TASK_ID_TOKEN = Pattern.compile("\\$MESOS_TASK_ID");
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
@@ -155,10 +156,9 @@ public class MailTemplateHelpers {
     for (String filePath : taskEmailTailFiles) {
       // To enable support for tailing the service.log file, replace instances of $MESOS_TASK_ID.
       filePath =
-        filePath.replaceAll(
-          "\\$MESOS_TASK_ID",
-          MesosUtils.getSafeTaskIdForDirectory(taskId.getId())
-        );
+        TASK_ID_TOKEN
+          .matcher(filePath)
+          .replaceAll(MesosUtils.getSafeTaskIdForDirectory(taskId.getId()));
 
       SingularityMailTaskLog logTail = null;
       if (filePath.contains("tail_of_finished_")) {
