@@ -136,8 +136,8 @@ public class RequestManager extends CuratorAsyncManager {
     this.webCache = webCache;
     this.requestsCache =
       new ManagerCache<>(
-        configuration.useCaffeineCache(),
-        configuration.getRequestCaffeineCacheTtl(),
+        configuration.useZKFastCache(),
+        configuration.getRequestCacheTtl(),
         key -> this.fetchRequests()
       );
   }

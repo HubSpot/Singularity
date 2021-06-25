@@ -444,11 +444,11 @@ public class SingularityConfiguration extends Configuration {
   private double statusQueueNearlyFull = 0.8;
 
   // Enable caffeine cache on heavily requested endpoint
-  private boolean useCaffeineCache = false;
+  private boolean useZKFastCache = false;
 
   // Caffeine cache TTLs
-  private int deployCaffeineCacheTtl = 1;
-  private int requestCaffeineCacheTtl = 1;
+  private int deployCacheTtlInSeconds = 1;
+  private int requestCacheTtlInSeconds = 1;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -2077,27 +2077,27 @@ public class SingularityConfiguration extends Configuration {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 
-  public boolean useCaffeineCache() {
-    return useCaffeineCache;
+  public boolean useZKFastCache() {
+    return useZKFastCache;
   }
 
-  public void setUseCaffeineCache(boolean useCaffeineCache) {
-    this.useCaffeineCache = useCaffeineCache;
+  public void setUseZKFastCache(boolean useZKFastCache) {
+    this.useZKFastCache = useZKFastCache;
   }
 
-  public int getDeployCaffeineCacheTtl() {
-    return deployCaffeineCacheTtl;
+  public int getDeployCacheTtl() {
+    return deployCacheTtlInSeconds;
   }
 
-  public void setDeployCaffeineCacheTtl(int deployCaffeineCacheTtl) {
-    this.deployCaffeineCacheTtl = deployCaffeineCacheTtl;
+  public void setDeployCacheTtl(int deployCacheTtlInSeconds) {
+    this.deployCacheTtlInSeconds = deployCacheTtlInSeconds;
   }
 
-  public int getRequestCaffeineCacheTtl() {
-    return requestCaffeineCacheTtl;
+  public int getRequestCacheTtl() {
+    return requestCacheTtlInSeconds;
   }
 
-  public void setRequestCaffeineCacheTtl(int requestCaffeineCacheTtl) {
-    this.requestCaffeineCacheTtl = requestCaffeineCacheTtl;
+  public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
+    this.requestCacheTtlInSeconds = requestCaffeineCacheTtl;
   }
 }
