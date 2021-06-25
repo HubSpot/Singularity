@@ -104,14 +104,22 @@ public class DeployManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.deployCache =
       new ManagerCache<>(
-        configuration,
-        requestId ->
-          getAsync(
-              "getRequestDeployStatesByRequestIds",
-              Collections.singletonList(getRequestDeployStatePath(requestId)),
-              requestDeployStateTranscoder
-            )
-            .get(0)
+        configuration.useCaffeineCache(),
+        configuration.getDeployCaffeineCacheTtl(),
+        requestId -> {
+          List<SingularityRequestDeployState> deployStates = getAsync(
+            "getRequestDeployStatesByRequestIds",
+            Collections.singletonList(getRequestDeployStatePath(requestId)),
+            requestDeployStateTranscoder
+          );
+
+          SingularityRequestDeployState deployState = null;
+          if (!deployStates.isEmpty()) {
+            deployState = deployStates.get(0);
+          }
+
+          return deployState;
+        }
       );
   }
 
@@ -142,7 +150,7 @@ public class DeployManager extends CuratorAsyncManager {
 
     if (deployCache.isEnabled()) {
       deployStatesByRequestIds = deployCache.getAll(requestIds);
-      if (deployStatesByRequestIds != null) {
+      if (!deployStatesByRequestIds.isEmpty()) {
         return deployStatesByRequestIds;
       }
     }

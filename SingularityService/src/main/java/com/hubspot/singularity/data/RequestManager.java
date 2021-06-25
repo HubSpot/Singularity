@@ -134,7 +134,12 @@ public class RequestManager extends CuratorAsyncManager {
 
     this.leaderCache = leaderCache;
     this.webCache = webCache;
-    this.requestsCache = new ManagerCache<>(configuration, key -> this.fetchRequests());
+    this.requestsCache =
+      new ManagerCache<>(
+        configuration.useCaffeineCache(),
+        configuration.getRequestCaffeineCacheTtl(),
+        key -> this.fetchRequests()
+      );
   }
 
   private String getRequestPath(String requestId) {

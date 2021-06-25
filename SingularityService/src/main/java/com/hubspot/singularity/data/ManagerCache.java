@@ -3,7 +3,6 @@ package com.hubspot.singularity.data;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -15,16 +14,11 @@ public class ManagerCache<K, V> {
   private static final Logger LOG = LoggerFactory.getLogger(ManagerCache.class);
 
   public final boolean isEnabled;
-  private final int cacheTtl;
-  private LoadingCache<K, V> cache;
+  private final LoadingCache<K, V> cache;
 
   @Inject
-  public ManagerCache(
-    SingularityConfiguration configuration,
-    Function<? super K, V> loader
-  ) {
-    isEnabled = configuration.useCaffeineCache();
-    cacheTtl = configuration.getCaffeineCacheTtl();
+  public ManagerCache(boolean isEnabled, int cacheTtl, Function<? super K, V> loader) {
+    this.isEnabled = isEnabled;
     cache =
       Caffeine
         .newBuilder()
@@ -45,11 +39,11 @@ public class ManagerCache<K, V> {
 
   public Map<K, V> getAll(@Nonnull Iterable<? extends K> keys) {
     Map<K, V> values = cache.getAll(keys);
-    if (values.isEmpty()) {
+    if (!values.isEmpty()) {
       LOG.trace("Grabbed mapped values for {} from cache", keys);
     }
 
-    return values.isEmpty() ? null : values;
+    return values;
   }
 
   public boolean isEnabled() {
