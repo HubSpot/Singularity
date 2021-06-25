@@ -29,9 +29,9 @@ public class ManagerCache<K, V> {
   public V get(K key) {
     V values = cache.get(key);
     if (values != null) {
-      LOG.trace("Grabbed values for {} from cache", key);
+      LOG.debug("Grabbed values for {} from cache", key);
     } else {
-      LOG.trace("{} not in cache, setting", key);
+      LOG.debug("{} not in cache, setting", key);
     }
 
     return values;
@@ -40,7 +40,7 @@ public class ManagerCache<K, V> {
   public Map<K, V> getAll(@Nonnull Iterable<? extends K> keys) {
     Map<K, V> values = cache.getAll(keys);
     if (!values.isEmpty()) {
-      LOG.trace("Grabbed mapped values for {} from cache", keys);
+      LOG.debug("Grabbed {} mapped values from cache", values.size());
     }
 
     return values;
