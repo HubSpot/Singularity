@@ -2098,6 +2098,6 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
-    this.requestCacheTtlInSeconds = requestCaffeineCacheTtl;
+    this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
   }
 }
