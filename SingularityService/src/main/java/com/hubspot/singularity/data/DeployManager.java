@@ -104,8 +104,8 @@ public class DeployManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.deployCache =
       new ManagerCache<>(
-        configuration.useCaffeineCache(),
-        configuration.getDeployCaffeineCacheTtl(),
+        configuration.useZKFastCache(),
+        configuration.getDeployCacheTtl(),
         requestId -> {
           List<SingularityRequestDeployState> deployStates = getAsync(
             "getRequestDeployStatesByRequestIds",
