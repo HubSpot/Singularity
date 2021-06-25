@@ -446,8 +446,9 @@ public class SingularityConfiguration extends Configuration {
   // Enable caffeine cache on heavily requested endpoint
   private boolean useCaffeineCache = false;
 
-  // Caffeine cache ttl
-  private int caffeineCacheTtl = 1;
+  // Caffeine cache TTLs
+  private int deployCaffeineCacheTtl = 1;
+  private int requestCaffeineCacheTtl = 1;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -2084,11 +2085,19 @@ public class SingularityConfiguration extends Configuration {
     this.useCaffeineCache = useCaffeineCache;
   }
 
-  public int getCaffeineCacheTtl() {
-    return caffeineCacheTtl;
+  public int getDeployCaffeineCacheTtl() {
+    return deployCaffeineCacheTtl;
   }
 
-  public void setCaffeineCacheTtl(int caffeineCacheTtl) {
-    this.caffeineCacheTtl = caffeineCacheTtl;
+  public void setDeployCaffeineCacheTtl(int deployCaffeineCacheTtl) {
+    this.deployCaffeineCacheTtl = deployCaffeineCacheTtl;
+  }
+
+  public int getRequestCaffeineCacheTtl() {
+    return requestCaffeineCacheTtl;
+  }
+
+  public void setRequestCaffeineCacheTtl(int requestCaffeineCacheTtl) {
+    this.requestCaffeineCacheTtl = requestCaffeineCacheTtl;
   }
 }

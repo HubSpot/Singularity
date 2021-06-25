@@ -90,6 +90,7 @@ public class RequestManager extends CuratorAsyncManager {
   );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
+  private final ManagerCache<String, List<SingularityRequestWithState>> requestsCache;
 
   @Inject
   public RequestManager(
@@ -133,6 +134,12 @@ public class RequestManager extends CuratorAsyncManager {
 
     this.leaderCache = leaderCache;
     this.webCache = webCache;
+    this.requestsCache =
+      new ManagerCache<>(
+        configuration.useCaffeineCache(),
+        configuration.getRequestCaffeineCacheTtl(),
+        key -> this.fetchRequests()
+      );
   }
 
   private String getRequestPath(String requestId) {
@@ -632,11 +639,20 @@ public class RequestManager extends CuratorAsyncManager {
     if (useWebCache && webCache.useCachedRequests()) {
       return webCache.getRequests();
     }
+
+    if (requestsCache.isEnabled()) {
+      List<SingularityRequestWithState> requests = requestsCache.get("all");
+      if (requests != null) {
+        return requests;
+      }
+    }
+
     List<SingularityRequestWithState> requests = fetchRequests();
 
     if (useWebCache) {
       webCache.cacheRequests(requests);
     }
+
     return requests;
   }
 

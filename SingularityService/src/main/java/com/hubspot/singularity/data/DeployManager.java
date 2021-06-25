@@ -27,6 +27,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,6 +71,8 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
+  private final ManagerCache<String, SingularityRequestDeployState> deployCache;
+
   @Inject
   public DeployManager(
     CuratorFramework curator,
@@ -99,6 +102,25 @@ public class DeployManager extends CuratorAsyncManager {
     this.updateRequestTranscoder = updateRequestTranscoder;
     this.deploysCache = deploysCache;
     this.leaderCache = leaderCache;
+    this.deployCache =
+      new ManagerCache<>(
+        configuration.useCaffeineCache(),
+        configuration.getDeployCaffeineCacheTtl(),
+        requestId -> {
+          List<SingularityRequestDeployState> deployStates = getAsync(
+            "getRequestDeployStatesByRequestIds",
+            Collections.singletonList(getRequestDeployStatePath(requestId)),
+            requestDeployStateTranscoder
+          );
+
+          SingularityRequestDeployState deployState = null;
+          if (!deployStates.isEmpty()) {
+            deployState = deployStates.get(0);
+          }
+
+          return deployState;
+        }
+      );
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -122,6 +144,15 @@ public class DeployManager extends CuratorAsyncManager {
   ) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
+    }
+
+    Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
+
+    if (deployCache.isEnabled()) {
+      deployStatesByRequestIds = deployCache.getAll(requestIds);
+      if (!deployStatesByRequestIds.isEmpty()) {
+        return deployStatesByRequestIds;
+      }
     }
 
     return fetchDeployStatesByRequestIds(requestIds);
