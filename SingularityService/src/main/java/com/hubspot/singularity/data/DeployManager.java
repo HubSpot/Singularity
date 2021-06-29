@@ -71,7 +71,7 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
-  private final ManagerCache<String, SingularityRequestDeployState> deployCache;
+  private final ApiCache<String, SingularityRequestDeployState> deployCache;
 
   @Inject
   public DeployManager(
@@ -103,8 +103,8 @@ public class DeployManager extends CuratorAsyncManager {
     this.deploysCache = deploysCache;
     this.leaderCache = leaderCache;
     this.deployCache =
-      new ManagerCache<>(
-        configuration.useZKFastCache(),
+      new ApiCache<>(
+        configuration.useApiCache(),
         configuration.getDeployCacheTtl(),
         requestId -> {
           List<SingularityRequestDeployState> deployStates = getAsync(

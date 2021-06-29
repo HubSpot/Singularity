@@ -444,7 +444,7 @@ public class SingularityConfiguration extends Configuration {
   private double statusQueueNearlyFull = 0.8;
 
   // Enable caffeine cache on heavily requested endpoint
-  private boolean useZKFastCache = false;
+  private boolean useApiCache = false;
 
   // Caffeine cache TTLs
   private int deployCacheTtlInSeconds = 1;
@@ -2077,12 +2077,12 @@ public class SingularityConfiguration extends Configuration {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 
-  public boolean useZKFastCache() {
-    return useZKFastCache;
+  public boolean useApiCache() {
+    return useApiCache;
   }
 
-  public void setUseZKFastCache(boolean useZKFastCache) {
-    this.useZKFastCache = useZKFastCache;
+  public void setUseApiCache(boolean useApiCache) {
+    this.useApiCache = useApiCache;
   }
 
   public int getDeployCacheTtl() {

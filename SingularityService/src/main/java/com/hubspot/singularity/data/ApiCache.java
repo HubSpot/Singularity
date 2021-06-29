@@ -10,14 +10,14 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ManagerCache<K, V> {
-  private static final Logger LOG = LoggerFactory.getLogger(ManagerCache.class);
+public class ApiCache<K, V> {
+  private static final Logger LOG = LoggerFactory.getLogger(ApiCache.class);
 
   public final boolean isEnabled;
   private final LoadingCache<K, V> cache;
 
   @Inject
-  public ManagerCache(boolean isEnabled, int cacheTtl, Function<? super K, V> loader) {
+  public ApiCache(boolean isEnabled, int cacheTtl, Function<? super K, V> loader) {
     this.isEnabled = isEnabled;
     cache =
       Caffeine
