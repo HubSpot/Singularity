@@ -90,7 +90,7 @@ public class RequestManager extends CuratorAsyncManager {
   );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
-  private final ManagerCache<String, List<SingularityRequestWithState>> requestsCache;
+  private final ApiCache<String, List<SingularityRequestWithState>> requestsCache;
 
   @Inject
   public RequestManager(
@@ -135,8 +135,8 @@ public class RequestManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.webCache = webCache;
     this.requestsCache =
-      new ManagerCache<>(
-        configuration.useZKFastCache(),
+      new ApiCache<>(
+        configuration.useApiCache(),
         configuration.getRequestCacheTtl(),
         key -> this.fetchRequests()
       );
