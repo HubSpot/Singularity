@@ -597,10 +597,7 @@ public class SingularityMesosOfferScheduler {
                               scorePerOffer.get(bestOffer.getAgentId()),
                               bestOffer.getSanitizedHost()
                             );
-                            acceptTask(
-                              bestOffer,
-                              taskRequestHolder
-                            );
+                            acceptTask(bestOffer, taskRequestHolder);
                             tasksScheduled.getAndIncrement();
                             updateAgentUsageScores(
                               taskRequestHolder,
