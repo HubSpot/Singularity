@@ -104,7 +104,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.deployCache =
       new ApiCache<>(
-        configuration.useApiCache(),
+        false,
         configuration.getDeployCacheTtl(),
         requestId -> {
           List<SingularityRequestDeployState> deployStates = getAsync(
