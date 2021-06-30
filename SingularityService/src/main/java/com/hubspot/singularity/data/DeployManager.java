@@ -27,7 +27,6 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +70,7 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
-  private final ApiCache<String, SingularityRequestDeployState> deployCache;
+  private final ApiCache<Collection<String>, Map<String, SingularityRequestDeployState>> deployCache;
 
   @Inject
   public DeployManager(
@@ -106,20 +105,7 @@ public class DeployManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCache(),
         configuration.getDeployCacheTtl(),
-        requestId -> {
-          List<SingularityRequestDeployState> deployStates = getAsync(
-            "getRequestDeployStatesByRequestIds",
-            Collections.singletonList(getRequestDeployStatePath(requestId)),
-            requestDeployStateTranscoder
-          );
-
-          SingularityRequestDeployState deployState = null;
-          if (!deployStates.isEmpty()) {
-            deployState = deployStates.get(0);
-          }
-
-          return deployState;
-        }
+        this::fetchDeployStatesByRequestIds
       );
   }
 
@@ -149,7 +135,7 @@ public class DeployManager extends CuratorAsyncManager {
     Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
 
     if (deployCache.isEnabled()) {
-      deployStatesByRequestIds = deployCache.getAll(requestIds);
+      deployStatesByRequestIds = deployCache.get(requestIds);
       if (!deployStatesByRequestIds.isEmpty()) {
         return deployStatesByRequestIds;
       }
