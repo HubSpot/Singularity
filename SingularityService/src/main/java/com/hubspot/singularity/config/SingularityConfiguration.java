@@ -444,7 +444,8 @@ public class SingularityConfiguration extends Configuration {
   private double statusQueueNearlyFull = 0.8;
 
   // Enable caffeine cache on heavily requested endpoint
-  private boolean useApiCache = false;
+  private boolean useApiCacheInRequestManager = false;
+  private boolean useApiCacheInDeployManager = false;
 
   // Caffeine cache TTLs
   private int deployCacheTtlInSeconds = 1;
@@ -2077,12 +2078,20 @@ public class SingularityConfiguration extends Configuration {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 
-  public boolean useApiCache() {
-    return useApiCache;
+  public boolean useApiCacheInRequestManager() {
+    return useApiCacheInRequestManager;
   }
 
-  public void setUseApiCache(boolean useApiCache) {
-    this.useApiCache = useApiCache;
+  public void setUseApiCacheInRequestManager(boolean useApiCacheInRequestManager) {
+    this.useApiCacheInRequestManager = useApiCacheInRequestManager;
+  }
+
+  public boolean useApiCacheInDeployManager() {
+    return useApiCacheInRequestManager;
+  }
+
+  public void setUseApiCacheInDeployManager(boolean useApiCacheInDeployManager) {
+    this.useApiCacheInDeployManager = useApiCacheInDeployManager;
   }
 
   public int getDeployCacheTtl() {

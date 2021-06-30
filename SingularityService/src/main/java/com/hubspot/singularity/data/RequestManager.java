@@ -136,7 +136,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.webCache = webCache;
     this.requestsCache =
       new ApiCache<>(
-        configuration.useApiCache(),
+        configuration.useApiCacheInRequestManager(),
         configuration.getRequestCacheTtl(),
         key -> this.fetchRequests()
       );
