@@ -105,7 +105,10 @@ public class DeployManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCacheInDeployManager(),
         configuration.getDeployCacheTtl(),
-        this::fetchDeployStatesByRequestIds
+        requestIds -> {
+          LOG.debug("Loading fetchDeployStatesByRequestIds");
+          return this.fetchDeployStatesByRequestIds(requestIds);
+        }
       );
   }
 
