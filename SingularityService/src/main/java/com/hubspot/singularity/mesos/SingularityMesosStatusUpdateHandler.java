@@ -68,6 +68,8 @@ public class SingularityMesosStatusUpdateHandler {
     MesosTaskState.TASK_STARTING,
     MesosTaskState.TASK_RUNNING
   );
+  private static final String RESOURCE_MISMATCH_ERR =
+    "required by task and its executor is more than available";
 
   private final TaskManager taskManager;
   private final DeployManager deployManager;
@@ -327,6 +329,23 @@ public class SingularityMesosStatusUpdateHandler {
       taskIdObj
     );
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
+
+    if (
+      taskState == ExtendedTaskState.TASK_ERROR &&
+      status.getMessage() != null &&
+      status.getMessage().contains(RESOURCE_MISMATCH_ERR)
+    ) {
+      LOG.error(
+        "Possible duplicate resource allocation",
+        new IllegalStateException(
+          String.format(
+            "Duplicate resource allocation for %s: %s",
+            taskId,
+            status.getMessage()
+          )
+        )
+      );
+    }
 
     if (
       isRecoveryStatusUpdate(
