@@ -103,7 +103,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.deployCache =
       new ApiCache<>(
-        configuration.useApiCache(),
+        configuration.useApiCacheInDeployManager(),
         configuration.getDeployCacheTtl(),
         this::fetchDeployStatesByRequestIds
       );
