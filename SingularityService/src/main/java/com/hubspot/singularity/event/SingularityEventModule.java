@@ -33,6 +33,19 @@ public class SingularityEventModule implements Module {
       LOG.info("Binding zookeeper webhook manager");
       eventListeners.addBinding().to(ZkWebhookQueue.class).in(Scopes.SINGLETON);
     }
+
+    // allow user to develop custom hook
+    if (webhookQueueConfiguration.getCustomHookClass() != null
+            && !webhookQueueConfiguration.getCustomHookClass().isEmpty()) {
+      try {
+        Class cls = Class.forName(webhookQueueConfiguration.getCustomHookClass()).getClass();
+        LOG.info("Binding user custom hook: {}", cls.getName());
+        eventListeners.addBinding().to(cls).in(Scopes.SINGLETON);
+      } catch (Exception e) {
+        throw new RuntimeException("load custom hook failed", e);
+      }
+    }
+
     binder
       .bind(SingularityEventListener.class)
       .to(SingularityEventController.class)
