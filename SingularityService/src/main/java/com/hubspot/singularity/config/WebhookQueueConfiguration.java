@@ -41,6 +41,8 @@ public class WebhookQueueConfiguration {
   // Protection for zookeeper so large list children calls will not take it down
   private int maxZkQueuedWebhooksPerParentNode = 3000;
 
+  private String customHookClass;
+
   public WebhookQueueType getQueueType() {
     return queueType;
   }
@@ -119,5 +121,13 @@ public class WebhookQueueConfiguration {
 
   public void setMaxZkQueuedWebhooksPerParentNode(int maxZkQueuedWebhooksPerParentNode) {
     this.maxZkQueuedWebhooksPerParentNode = maxZkQueuedWebhooksPerParentNode;
+  }
+
+  public String getCustomHookClass() {
+    return customHookClass;
+  }
+
+  public void setCustomHookClass(String customHookClass) {
+    this.customHookClass = customHookClass;
   }
 }
