@@ -27,9 +27,11 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
@@ -70,7 +72,7 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
-  private final ApiCache<Collection<String>, Map<String, SingularityRequestDeployState>> deployCache;
+  private final ApiCache<Set<String>, Map<String, SingularityRequestDeployState>> deployCache;
 
   @Inject
   public DeployManager(
@@ -138,7 +140,8 @@ public class DeployManager extends CuratorAsyncManager {
     Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
 
     if (deployCache.isEnabled()) {
-      deployStatesByRequestIds = deployCache.get(requestIds);
+      Set<String> requestsKey = new HashSet<>(requestIds);
+      deployStatesByRequestIds = deployCache.get(requestsKey);
       if (!deployStatesByRequestIds.isEmpty()) {
         return deployStatesByRequestIds;
       }
