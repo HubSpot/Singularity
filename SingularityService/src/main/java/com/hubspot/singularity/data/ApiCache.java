@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +17,10 @@ public class ApiCache<K, V> {
   private final LoadingCache<K, V> cache;
 
   @Inject
-  public ApiCache(boolean isEnabled, int cacheTtl, Function<? super K, V> loader) {
+  public ApiCache(boolean isEnabled, int cacheTtl, CacheLoader<K, V> loader) {
     this.isEnabled = isEnabled;
     cache =
-      Caffeine
-        .newBuilder()
-        .expireAfterWrite(cacheTtl, TimeUnit.SECONDS)
-        .build(loader::apply);
+      Caffeine.newBuilder().refreshAfterWrite(cacheTtl, TimeUnit.SECONDS).build(loader);
   }
 
   public V get(K key) {
