@@ -1,13 +1,10 @@
 package com.hubspot.singularity;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Function;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.mesos.client.UserAndPassword;
@@ -29,14 +26,10 @@ import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 public class SingularityServiceModule
   extends DropwizardAwareModule<SingularityConfiguration> {
-  public static final String REQUESTS_CAFFEINE_CACHE =
-    "singularity.service.resources.request";
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
   private Optional<Class<? extends LoadBalancerClient>> lbClientClass = Optional.empty();
 
@@ -134,17 +127,5 @@ public class SingularityServiceModule
         .getAuthenticators()
         .contains(SingularityAuthenticatorClass.WEBHOOK)
     );
-  }
-
-  @Provides
-  @Singleton
-  @Named(REQUESTS_CAFFEINE_CACHE)
-  public Cache<String, List<SingularityRequestParent>> getRequestsCaffeineCache() {
-    SingularityConfiguration configuration = getConfiguration();
-
-    return Caffeine
-      .newBuilder()
-      .expireAfterWrite(configuration.getCaffeineCacheTtl(), TimeUnit.SECONDS)
-      .build();
   }
 }
