@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,9 +139,9 @@ public class RequestManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCacheInRequestManager(),
         configuration.getRequestCacheTtl(),
-        key -> {
-          LOG.debug("Loading fetchRequests for {}", key);
-          return this.fetchRequests();
+        s -> {
+          LOG.debug("Loading fetchRequests");
+          return fetchRequests();
         }
       );
   }
