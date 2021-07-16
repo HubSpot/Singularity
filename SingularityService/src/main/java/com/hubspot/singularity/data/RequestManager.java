@@ -138,9 +138,9 @@ public class RequestManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCacheInRequestManager(),
         configuration.getRequestCacheTtl(),
-        key -> {
-          LOG.debug("Loading fetchRequests for {}", key);
-          return this.fetchRequests();
+        s -> {
+          LOG.debug("Loading fetchRequests");
+          return fetchRequests();
         }
       );
   }
