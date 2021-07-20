@@ -2112,11 +2112,29 @@ public class SingularityClient {
     );
   }
 
-  public Collection<SingularityDeployHistory> getRequestDeploys(String requestId) {
+  public Collection<SingularityDeployHistory> getRequestDeployHistory(
+    String requestId,
+    Integer count,
+    Integer page,
+    Optional<Boolean> skipZk
+  ) {
     final Function<String, String> requestUri = host ->
       String.format(REQUEST_DEPLOYS_HISTORY_FORMAT, getApiBase(host), requestId);
 
-    return getCollection(requestUri, "deploy history", REQUEST_DEPLOY_HISTORY_COLLECTION);
+    Map<String, Object> params = new HashMap<>();
+    params.put("count", count);
+    params.put("page", page);
+
+    if (skipZk.isPresent()) {
+      params.put("skipZk", skipZk.get());
+    }
+
+    return getCollectionWithParams(
+      requestUri,
+      "deploy history",
+      Optional.of(params),
+      REQUEST_DEPLOY_HISTORY_COLLECTION
+    );
   }
 
   /**
