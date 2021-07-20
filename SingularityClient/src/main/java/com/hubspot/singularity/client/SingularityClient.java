@@ -182,6 +182,8 @@ public class SingularityClient {
     HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT =
     HISTORY_FORMAT + "/request/%s/deploy/%s";
+  private static final String REQUEST_DEPLOYS_HISTORY_FORMAT =
+    HISTORY_FORMAT + "/request/%s/deploys";
 
   private static final String TASK_TRACKER_FORMAT = "%s/track";
   private static final String TRACK_BY_TASK_ID_FORMAT = TASK_TRACKER_FORMAT + "/task/%s";
@@ -288,6 +290,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityWebhook>> WEBHOOKS_COLLECTION = new TypeReference<Collection<SingularityWebhook>>() {};
   private static final TypeReference<Collection<SingularityDeployUpdate>> DEPLOY_UPDATES_COLLECTION = new TypeReference<Collection<SingularityDeployUpdate>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
+  private static final TypeReference<Collection<SingularityDeployHistory>> REQUEST_DEPLOY_HISTORY_COLLECTION = new TypeReference<Collection<SingularityDeployHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
   private static final TypeReference<Collection<SingularityTaskShellCommandHistory>> SHELL_COMMAND_HISTORY = new TypeReference<Collection<SingularityTaskShellCommandHistory>>() {};
@@ -2107,6 +2110,13 @@ public class SingularityClient {
       new SingularityDeployKey(requestId, deployId).getId(),
       SingularityDeployHistory.class
     );
+  }
+
+  public Collection<SingularityDeployHistory> getRequestDeploys(String requestId) {
+    final Function<String, String> requestUri = host ->
+      String.format(REQUEST_DEPLOYS_HISTORY_FORMAT, getApiBase(host), requestId);
+
+    return getCollection(requestUri, "deploy history", REQUEST_DEPLOY_HISTORY_COLLECTION);
   }
 
   /**
