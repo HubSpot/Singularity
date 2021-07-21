@@ -2112,7 +2112,7 @@ public class SingularityClient {
     );
   }
 
-  public Collection<SingularityDeployHistory> getRequestDeployHistory(
+  public Collection<SingularityDeployHistory> getRequestDeployHistories(
     String requestId,
     Integer count,
     Integer page,
