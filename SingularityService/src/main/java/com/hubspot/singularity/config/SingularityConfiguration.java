@@ -447,7 +447,7 @@ public class SingularityConfiguration extends Configuration {
   private boolean useApiCacheInRequestManager = false;
   private boolean useApiCacheInDeployManager = false;
 
-  // Caffeine cache TTLs
+  // Atomic Reference cache TTLs
   private int deployCacheTtlInSeconds = 1;
   private int requestCacheTtlInSeconds = 1;
 
