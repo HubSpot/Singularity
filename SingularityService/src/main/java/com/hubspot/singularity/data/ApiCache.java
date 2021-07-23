@@ -1,12 +1,15 @@
 package com.hubspot.singularity.data;
 
-import com.github.benmanes.caffeine.cache.CacheLoader;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,33 +17,45 @@ public class ApiCache<K, V> {
   private static final Logger LOG = LoggerFactory.getLogger(ApiCache.class);
 
   public final boolean isEnabled;
-  private final LoadingCache<K, V> cache;
+  private final AtomicReference<Map<K, V>> zkValues;
+  private final Supplier<Map<K, V>> supplyMap;
 
   @Inject
-  public ApiCache(boolean isEnabled, int cacheTtl, CacheLoader<K, V> loader) {
+  public ApiCache(
+    boolean isEnabled,
+    int cacheTtl,
+    Supplier<Map<K, V>> supplyMap,
+    ScheduledExecutorService executor
+  ) {
     this.isEnabled = isEnabled;
-    cache =
-      Caffeine.newBuilder().refreshAfterWrite(cacheTtl, TimeUnit.SECONDS).build(loader);
+    this.supplyMap = supplyMap;
+    this.zkValues = new AtomicReference<>(new HashMap<>());
+
+    if (this.isEnabled) {
+      executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
+    }
+  }
+
+  private void reloadZkValues() {
+    LOG.debug("Reloading values for map from ZooKeeper");
+    Map<K, V> newZkValues = supplyMap.get();
+    zkValues.set(newZkValues);
   }
 
   public V get(K key) {
-    V values = cache.get(key);
-    if (values != null) {
-      LOG.debug("Grabbed values for {} from cache", key);
-    } else {
-      LOG.debug("{} not in cache, setting", key);
-    }
-
-    return values;
+    return this.zkValues.get().get(key);
   }
 
-  public Map<K, V> getAll(@Nonnull Iterable<? extends K> keys) {
-    Map<K, V> values = cache.getAll(keys);
-    if (!values.isEmpty()) {
-      LOG.debug("Grabbed {} mapped values from cache", values.size());
-    }
+  public Map<K, V> getAll() {
+    return this.zkValues.get();
+  }
 
-    return values;
+  public Map<K, V> getAll(Collection<K> keys) {
+    Map<K, V> allValues = this.zkValues.get();
+    return keys
+      .stream()
+      .filter(allValues::containsKey)
+      .collect(Collectors.toMap(Function.identity(), allValues::get));
   }
 
   public boolean isEnabled() {

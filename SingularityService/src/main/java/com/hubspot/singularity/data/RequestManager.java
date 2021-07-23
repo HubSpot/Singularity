@@ -13,6 +13,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -32,11 +33,13 @@ import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -90,7 +93,7 @@ public class RequestManager extends CuratorAsyncManager {
   );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
-  private final ApiCache<String, List<SingularityRequestWithState>> requestsCache;
+  private final ApiCache<String, SingularityRequestWithState> requestsCache;
 
   @Inject
   public RequestManager(
@@ -109,7 +112,8 @@ public class RequestManager extends CuratorAsyncManager {
     Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
-    Transcoder<CrashLoopInfo> crashLoopInfoTranscoder
+    Transcoder<CrashLoopInfo> crashLoopInfoTranscoder,
+    SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory
   ) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
@@ -138,10 +142,11 @@ public class RequestManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCacheInRequestManager(),
         configuration.getRequestCacheTtl(),
-        s -> {
-          LOG.debug("Loading fetchRequests");
-          return fetchRequests();
-        }
+        () ->
+          fetchRequests()
+            .stream()
+            .collect(Collectors.toMap(r -> r.getRequest().getId(), Function.identity())),
+        scheduledExecutorServiceFactory.get("request-api-cache-reloader")
       );
   }
 
@@ -644,8 +649,10 @@ public class RequestManager extends CuratorAsyncManager {
     }
 
     if (requestsCache.isEnabled()) {
-      List<SingularityRequestWithState> requests = requestsCache.get("all");
-      if (requests != null) {
+      List<SingularityRequestWithState> requests = new ArrayList<>(
+        (requestsCache.getAll()).values()
+      );
+      if (requests.isEmpty()) {
         return requests;
       }
     }
