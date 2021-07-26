@@ -652,7 +652,7 @@ public class RequestManager extends CuratorAsyncManager {
       List<SingularityRequestWithState> requests = new ArrayList<>(
         (requestsCache.getAll()).values()
       );
-      if (requests.isEmpty()) {
+      if (!requests.isEmpty()) {
         return requests;
       }
     }
