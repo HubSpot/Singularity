@@ -38,9 +38,13 @@ public class ApiCache<K, V> {
 
   private void reloadZkValues() {
     LOG.debug("Reloading values for map from ZooKeeper");
-    Map<K, V> newZkValues = supplyMap.get();
-    LOG.debug("Loaded new ZooKeeper values: {}", newZkValues);
-    zkValues.set(newZkValues);
+    try {
+      Map<K, V> newZkValues = supplyMap.get();
+      LOG.debug("Loaded new ZooKeeper values: {}", newZkValues);
+      zkValues.set(newZkValues);
+    } catch (Exception e) {
+      LOG.warn("Reloading ApiCache failed: {}", e.getMessage());
+    }
   }
 
   public V get(K key) {
