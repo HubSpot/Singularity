@@ -48,15 +48,20 @@ public class ApiCache<K, V> {
   }
 
   public Map<K, V> getAll() {
-    return this.zkValues.get();
+    Map<K, V> allValues = this.zkValues.get();
+    LOG.debug("Get all returned {}", allValues);
+    return allValues;
   }
 
   public Map<K, V> getAll(Collection<K> keys) {
     Map<K, V> allValues = this.zkValues.get();
-    return keys
+    Map<K, V> filteredValues = keys
       .stream()
       .filter(allValues::containsKey)
       .collect(Collectors.toMap(Function.identity(), allValues::get));
+    LOG.debug("Get all from collection returned {}", filteredValues);
+
+    return filteredValues;
   }
 
   public boolean isEnabled() {
