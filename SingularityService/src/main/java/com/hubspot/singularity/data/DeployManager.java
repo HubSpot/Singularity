@@ -129,14 +129,8 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public Map<String, SingularityRequestDeployState> fetchAllDeployStates() {
-    return getAsyncChildren(BY_REQUEST_ROOT, requestDeployStateTranscoder)
-      .stream()
-      .collect(
-        Collectors.toMap(
-          SingularityRequestDeployState::getRequestId,
-          java.util.function.Function.identity()
-        )
-      );
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    return fetchDeployStatesByRequestIds(requestIds);
   }
 
   @Timed
