@@ -40,7 +40,6 @@ public class ApiCache<K, V> {
     LOG.debug("Reloading values for map from ZooKeeper");
     try {
       Map<K, V> newZkValues = supplyMap.get();
-      LOG.debug("Loaded new ZooKeeper values: {}", newZkValues);
       zkValues.set(newZkValues);
     } catch (Exception e) {
       LOG.warn("Reloading ApiCache failed: {}", e.getMessage());
