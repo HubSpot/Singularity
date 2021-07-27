@@ -32,7 +32,7 @@ public class ApiCache<K, V> {
     this.zkValues = new AtomicReference<>(new HashMap<>());
 
     if (this.isEnabled) {
-      executor.scheduleAtFixedRate(this::reloadZkValues, 1, cacheTtl, TimeUnit.SECONDS);
+      executor.scheduleAtFixedRate(this::reloadZkValues, 2, cacheTtl, TimeUnit.SECONDS);
     }
   }
 
