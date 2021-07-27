@@ -32,12 +32,16 @@ public class ApiCache<K, V> {
     this.zkValues = new AtomicReference<>(new HashMap<>());
 
     if (this.isEnabled) {
-      executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
+      executor.scheduleAtFixedRate(
+        this::reloadZkValues,
+        50,
+        TimeUnit.SECONDS.toMillis(cacheTtl),
+        TimeUnit.MILLISECONDS
+      );
     }
   }
 
   private void reloadZkValues() {
-    LOG.debug("Reloading values for map from ZooKeeper");
     try {
       Map<K, V> newZkValues = supplyMap.get();
       zkValues.set(newZkValues);
