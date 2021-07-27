@@ -52,7 +52,9 @@ public class ApiCache<K, V> {
 
   public Map<K, V> getAll() {
     Map<K, V> allValues = this.zkValues.get();
-    LOG.debug("Get all returned {}", allValues);
+    if (allValues.isEmpty()) {
+      LOG.debug("ApiCache getAll returned empty");
+    }
     return allValues;
   }
 
@@ -62,7 +64,10 @@ public class ApiCache<K, V> {
       .stream()
       .filter(allValues::containsKey)
       .collect(Collectors.toMap(Function.identity(), allValues::get));
-    LOG.debug("Get all from collection returned {}", filteredValues);
+
+    if (filteredValues.isEmpty()) {
+      LOG.debug("ApiCache getAll returned empty for {}", keys);
+    }
 
     return filteredValues;
   }
