@@ -42,6 +42,7 @@ public class ApiCache<K, V> {
 
   public void startReloader() {
     if (isEnabled) {
+      reloadZkValues();
       reloadingFuture =
         executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
     }
