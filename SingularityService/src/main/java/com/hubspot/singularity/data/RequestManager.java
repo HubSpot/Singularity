@@ -146,8 +146,16 @@ public class RequestManager extends CuratorAsyncManager {
           fetchRequests()
             .stream()
             .collect(Collectors.toMap(r -> r.getRequest().getId(), Function.identity())),
-        scheduledExecutorServiceFactory.get("request-api-cache-reloader")
+        scheduledExecutorServiceFactory.getSingleThreaded("request-api-cache-reloader")
       );
+  }
+
+  public void startApiCache() {
+    requestsCache.startReloader();
+  }
+
+  public void stopApiCache() {
+    requestsCache.stopReloader();
   }
 
   private String getRequestPath(String requestId) {

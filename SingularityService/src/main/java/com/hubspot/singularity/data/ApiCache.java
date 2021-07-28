@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -19,6 +21,10 @@ public class ApiCache<K, V> {
   public final boolean isEnabled;
   private final AtomicReference<Map<K, V>> zkValues;
   private final Supplier<Map<K, V>> supplyMap;
+  private final int cacheTtl;
+  private final ScheduledExecutorService executor;
+
+  private ScheduledFuture<?> reloadingFuture;
 
   @Inject
   public ApiCache(
@@ -30,9 +36,20 @@ public class ApiCache<K, V> {
     this.isEnabled = isEnabled;
     this.supplyMap = supplyMap;
     this.zkValues = new AtomicReference<>(new HashMap<>());
+    this.cacheTtl = cacheTtl;
+    this.executor = executor;
+  }
 
-    if (this.isEnabled) {
-      executor.scheduleAtFixedRate(this::reloadZkValues, 2, cacheTtl, TimeUnit.SECONDS);
+  public void startReloader() {
+    if (isEnabled) {
+      reloadingFuture =
+        executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
+    }
+  }
+
+  public void stopReloader() {
+    if (reloadingFuture != null) {
+      reloadingFuture.cancel(true);
     }
   }
 

@@ -9,7 +9,9 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
@@ -43,6 +45,8 @@ public class SingularityLifecycleManaged implements Managed {
   private final ExecutorIdGenerator executorIdGenerator;
   private final Set<SingularityLeaderOnlyPoller> leaderOnlyPollers;
   private final SingularityPreJettyLifecycle preJettyLifecycle;
+  private final DeployManager deployManager;
+  private final RequestManager requestManager;
   private final boolean readOnly;
 
   private final CuratorFramework curatorFramework;
@@ -63,7 +67,9 @@ public class SingularityLifecycleManaged implements Managed {
     ExecutorIdGenerator executorIdGenerator,
     Set<SingularityLeaderOnlyPoller> leaderOnlyPollers,
     SingularityConfiguration configuration,
-    SingularityPreJettyLifecycle preJettyLifecycle
+    SingularityPreJettyLifecycle preJettyLifecycle,
+    RequestManager requestManager,
+    DeployManager deployManager
   ) {
     this.cachedThreadPoolFactory = cachedThreadPoolFactory;
     this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
@@ -77,6 +83,8 @@ public class SingularityLifecycleManaged implements Managed {
     this.leaderOnlyPollers = leaderOnlyPollers;
     this.readOnly = configuration.isReadOnlyInstance();
     this.preJettyLifecycle = preJettyLifecycle;
+    this.requestManager = requestManager;
+    this.deployManager = deployManager;
   }
 
   @Override
@@ -95,6 +103,8 @@ public class SingularityLifecycleManaged implements Managed {
         leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
       }
       preJettyLifecycle.registerShutdownHook(this::preJettyStop);
+      requestManager.startApiCache();
+      deployManager.startApiCache();
     } else {
       LOG.info("Already started, will not call again");
     }
@@ -119,6 +129,8 @@ public class SingularityLifecycleManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (!stopped.getAndSet(true)) {
+      requestManager.stopApiCache();
+      deployManager.stopApiCache();
       stopOtherExecutors();
       stopCurator(); // disconnect from zk
       stopGraphiteReporter();

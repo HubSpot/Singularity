@@ -108,8 +108,16 @@ public class DeployManager extends CuratorAsyncManager {
         configuration.useApiCacheInDeployManager(),
         configuration.getDeployCacheTtl(),
         this::fetchAllDeployStates,
-        executorServiceFactory.get("deploy-api-cache-reloader")
+        executorServiceFactory.getSingleThreaded("deploy-api-cache-reloader")
       );
+  }
+
+  public void startApiCache() {
+    deployCache.startReloader();
+  }
+
+  public void stopApiCache() {
+    deployCache.stopReloader();
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
