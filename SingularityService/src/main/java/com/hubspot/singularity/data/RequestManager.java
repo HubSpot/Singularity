@@ -644,6 +644,16 @@ public class RequestManager extends CuratorAsyncManager {
         .collect(Collectors.toList());
     }
 
+    if (requestsCache.isEnabled()) {
+      List<SingularityRequestWithState> requests = new ArrayList<>(
+        requestsCache.getAll(requestIds).values()
+      );
+
+      if (!requests.isEmpty()) {
+        return requests;
+      }
+    }
+
     return fetchRequests(requestIds);
   }
 
@@ -700,6 +710,10 @@ public class RequestManager extends CuratorAsyncManager {
 
     if (useWebCache && webCache.useCachedRequests()) {
       return webCache.getRequest(requestId);
+    }
+
+    if (requestsCache.isEnabled()) {
+      return Optional.of(requestsCache.get(requestId));
     }
 
     return getData(getRequestPath(requestId), requestTranscoder);
