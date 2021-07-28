@@ -557,7 +557,7 @@ public class SingularityS3UploaderDriver
     if (durationSinceLastFile > expireAfterMillis) {
       LOG.info(
         "Expiring uploader {}, duration {} (max {}), isFinished: {})",
-        uploader,
+        uploader.getMetadataPath(),
         JavaUtils.durationFromMillis(durationSinceLastFile),
         JavaUtils.durationFromMillis(expireAfterMillis),
         isFinished
