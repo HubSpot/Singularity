@@ -448,8 +448,8 @@ public class SingularityConfiguration extends Configuration {
   private boolean useApiCacheInDeployManager = false;
 
   // Atomic Reference cache TTLs
-  private int deployCacheTtlInSeconds = 1;
-  private int requestCacheTtlInSeconds = 1;
+  private int deployCacheTtlInSeconds = 5;
+  private int requestCacheTtlInSeconds = 5;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
