@@ -313,6 +313,8 @@ public class SingularityClient {
 
   private final Retryer<HttpResponse> httpResponseRetryer;
 
+  private boolean skipApiCache = false;
+
   @Inject
   @Deprecated
   public SingularityClient(
@@ -406,6 +408,11 @@ public class SingularityClient {
         .retryIfResult(retryStrategy::test)
         .retryIfException()
         .build();
+  }
+
+  public SingularityClient skipApiCache() {
+    skipApiCache = true;
+    return this;
   }
 
   private String getApiBase(String host) {
@@ -896,6 +903,16 @@ public class SingularityClient {
     final Function<String, String> singularityApiRequestUri = host ->
       String.format(REQUEST_GET_FORMAT, getApiBase(host), requestId);
 
+    if (skipApiCache) {
+      return getSingleWithParams(
+        singularityApiRequestUri,
+        "request",
+        requestId,
+        Optional.of(ImmutableMap.of("skipCache", true)),
+        SingularityRequestParent.class
+      );
+    }
+
     return getSingle(
       singularityApiRequestUri,
       "request",
@@ -1236,7 +1253,14 @@ public class SingularityClient {
     return getCollectionWithParams(
       requestUri,
       "[ACTIVE, PAUSED, COOLDOWN] requests",
-      Optional.of(ImmutableMap.of("includeFullRequestData", includeFullRequestData)),
+      Optional.of(
+        ImmutableMap.of(
+          "includeFullRequestData",
+          includeFullRequestData,
+          "skipCache",
+          skipApiCache
+        )
+      ),
       REQUESTS_COLLECTION
     );
   }

@@ -1461,11 +1461,14 @@ public class RequestResource extends AbstractRequestResource {
     ) Integer limit,
     @Parameter(description = "Only return requests of these types") @QueryParam(
       "requestType"
-    ) List<RequestType> requestTypes
+    ) List<RequestType> requestTypes,
+    @Parameter(
+      description = "Skip the cache sitting in front of this request"
+    ) @QueryParam("skipCache") boolean skipCache
   ) {
     return requestHelper.fillDataForRequestsAndFilter(
       filterAutorized(
-        requestManager.getRequests(useWebCache(useWebCache)),
+        requestManager.getRequests(useWebCache(useWebCache), skipCache),
         SingularityAuthorizationScope.READ,
         user
       ),
@@ -1543,15 +1546,18 @@ public class RequestResource extends AbstractRequestResource {
     ) String requestId,
     @Parameter(
       description = "Fetched a cached version of this data to limit expensive operations"
-    ) @QueryParam("useWebCache") Boolean useWebCache
+    ) @QueryParam("useWebCache") Boolean useWebCache,
+    @Parameter(
+      description = "Skip the cache sitting in front of this request"
+    ) @QueryParam("skipCache") boolean skipCache
   ) {
     return fillEntireRequest(
-      fetchRequestWithState(requestId, useWebCache(useWebCache), user)
+      fetchRequestWithState(requestId, useWebCache(useWebCache), skipCache, user)
     );
   }
 
   public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
-    return fillEntireRequest(fetchRequestWithState(requestId, false, user));
+    return fillEntireRequest(fetchRequestWithState(requestId, false, false, user));
   }
 
   @GET
@@ -1571,7 +1577,7 @@ public class RequestResource extends AbstractRequestResource {
       description = "Fetched a cached version of this data to limit expensive operations"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
+    return fetchRequestWithState(requestId, useWebCache(useWebCache), false, user);
   }
 
   @DELETE

@@ -567,6 +567,15 @@ public class RequestManager extends CuratorAsyncManager {
       }
     }
 
+    if (requestsCache.isEnabled()) {
+      List<SingularityRequestWithState> requests = new ArrayList<>(
+        (requestsCache.getAll()).values()
+      );
+      if (!requests.isEmpty()) {
+        return requests;
+      }
+    }
+
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     for (String requestId : requestIds) {
       paths.add(getRequestPath(requestId));
@@ -658,6 +667,13 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
+    return getRequests(useWebCache, false);
+  }
+
+  public List<SingularityRequestWithState> getRequests(
+    boolean useWebCache,
+    boolean skipApiCache
+  ) {
     if (leaderCache.active()) {
       return leaderCache.getRequests();
     }
@@ -666,7 +682,7 @@ public class RequestManager extends CuratorAsyncManager {
       return webCache.getRequests();
     }
 
-    if (requestsCache.isEnabled()) {
+    if (requestsCache.isEnabled() && !skipApiCache) {
       List<SingularityRequestWithState> requests = new ArrayList<>(
         (requestsCache.getAll()).values()
       );
@@ -704,6 +720,14 @@ public class RequestManager extends CuratorAsyncManager {
     String requestId,
     boolean useWebCache
   ) {
+    return getRequest(requestId, useWebCache, false);
+  }
+
+  public Optional<SingularityRequestWithState> getRequest(
+    String requestId,
+    boolean useWebCache,
+    boolean skipApiCache
+  ) {
     if (leaderCache.active()) {
       return leaderCache.getRequest(requestId);
     }
@@ -712,7 +736,7 @@ public class RequestManager extends CuratorAsyncManager {
       return webCache.getRequest(requestId);
     }
 
-    if (requestsCache.isEnabled()) {
+    if (requestsCache.isEnabled() && !skipApiCache) {
       return Optional.of(requestsCache.get(requestId));
     }
 
