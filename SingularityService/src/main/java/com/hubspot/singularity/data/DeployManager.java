@@ -144,13 +144,21 @@ public class DeployManager extends CuratorAsyncManager {
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
     Collection<String> requestIds
   ) {
+    return getRequestDeployStatesByRequestIds(requestIds, false);
+  }
+
+  @Timed
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
+    Collection<String> requestIds,
+    boolean skipApiCache
+  ) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
     }
 
     Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
 
-    if (deployCache.isEnabled()) {
+    if (deployCache.isEnabled() && !skipApiCache) {
       deployStatesByRequestIds = deployCache.getAll(requestIds);
       if (!deployStatesByRequestIds.isEmpty()) {
         return deployStatesByRequestIds;

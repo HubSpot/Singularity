@@ -1476,7 +1476,8 @@ public class RequestResource extends AbstractRequestResource {
       valueOrFalse(filterRelevantForUser),
       valueOrFalse(includeFullRequestData),
       Optional.ofNullable(limit),
-      requestTypes
+      requestTypes,
+      skipCache
     );
   }
 
