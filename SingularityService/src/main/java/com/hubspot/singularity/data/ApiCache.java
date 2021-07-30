@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -57,20 +56,32 @@ public class ApiCache<K, V> {
   private void reloadZkValues() {
     try {
       Map<K, V> newZkValues = supplyMap.get();
-      zkValues.set(newZkValues);
+      if (!newZkValues.isEmpty()) {
+        zkValues.set(newZkValues);
+      } else {
+        LOG.warn("Empty values on cache reload, keeping old values");
+      }
     } catch (Exception e) {
       LOG.warn("Reloading ApiCache failed: {}", e.getMessage());
     }
   }
 
   public V get(K key) {
-    return this.zkValues.get().get(key);
+    V value = this.zkValues.get().get(key);
+
+    if (value == null) {
+      LOG.warn("ApiCache returned null for {}", key);
+    }
+
+    return value;
   }
 
   public Map<K, V> getAll() {
     Map<K, V> allValues = this.zkValues.get();
     if (allValues.isEmpty()) {
       LOG.debug("ApiCache getAll returned empty");
+    } else {
+      LOG.debug("getAll returned {}", allValues.size());
     }
     return allValues;
   }
@@ -84,6 +95,12 @@ public class ApiCache<K, V> {
 
     if (filteredValues.isEmpty()) {
       LOG.debug("ApiCache getAll returned empty for {}", keys);
+    } else {
+      LOG.debug(
+        "getAll returned {} for {} amount requested",
+        filteredValues.size(),
+        keys.size()
+      );
     }
 
     return filteredValues;

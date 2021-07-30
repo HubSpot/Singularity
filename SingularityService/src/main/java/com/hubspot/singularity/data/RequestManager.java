@@ -737,7 +737,10 @@ public class RequestManager extends CuratorAsyncManager {
     }
 
     if (requestsCache.isEnabled() && !skipApiCache) {
-      return Optional.of(requestsCache.get(requestId));
+      SingularityRequestWithState request = requestsCache.get(requestId);
+      if (request != null) {
+        return Optional.of(request);
+      }
     }
 
     return getData(getRequestPath(requestId), requestTranscoder);
