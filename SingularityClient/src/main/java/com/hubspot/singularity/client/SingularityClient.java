@@ -410,9 +410,9 @@ public class SingularityClient {
         .build();
   }
 
-  public SingularityClient skipApiCache() {
-    skipApiCache = true;
-    return this;
+  @Deprecated
+  public void setSkipApiCache(boolean skipApiCache) {
+    this.skipApiCache = skipApiCache;
   }
 
   private String getApiBase(String host) {
