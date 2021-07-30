@@ -70,7 +70,7 @@ public class ApiCache<K, V> {
     V value = this.zkValues.get().get(key);
 
     if (value == null) {
-      LOG.warn("ApiCache returned null for {}", key);
+      LOG.debug("ApiCache returned null for {}", key);
     }
 
     return value;
@@ -81,7 +81,7 @@ public class ApiCache<K, V> {
     if (allValues.isEmpty()) {
       LOG.debug("ApiCache getAll returned empty");
     } else {
-      LOG.debug("getAll returned {}", allValues.size());
+      LOG.debug("getAll returned {} values", allValues.size());
     }
     return allValues;
   }
