@@ -29,7 +29,7 @@ public class SingularityOfferHolder {
 
   private final List<Protos.Offer> offers;
   private final List<SingularityMesosTaskHolder> acceptedTasks;
-  private List<Resource> currentResources;
+  private volatile List<Resource> currentResources;
   private Set<String> roles;
 
   private final String rackId;
