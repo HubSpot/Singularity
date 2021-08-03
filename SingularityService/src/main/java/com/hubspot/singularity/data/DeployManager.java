@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -89,7 +90,8 @@ public class DeployManager extends CuratorAsyncManager {
     Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder,
     ZkCache<SingularityDeploy> deploysCache,
     SingularityLeaderCache leaderCache,
-    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
+    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
+    LeaderLatch leaderLatch
   ) {
     super(curator, configuration, metricRegistry);
     this.singularityEventListener = singularityEventListener;
@@ -105,7 +107,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.leaderCache = leaderCache;
     this.deployCache =
       new ApiCache<>(
-        configuration.useApiCacheInDeployManager(),
+        configuration.useApiCacheInDeployManager() && !leaderLatch.hasLeadership(),
         configuration.getDeployCacheTtl(),
         this::fetchAllDeployStates,
         executorServiceFactory.getSingleThreaded("deploy-api-cache-reloader")

@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +114,8 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
     Transcoder<CrashLoopInfo> crashLoopInfoTranscoder,
-    SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory
+    SingularityManagedScheduledExecutorServiceFactory scheduledExecutorServiceFactory,
+    LeaderLatch leaderLatch
   ) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
@@ -140,7 +142,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.webCache = webCache;
     this.requestsCache =
       new ApiCache<>(
-        configuration.useApiCacheInRequestManager(),
+        configuration.useApiCacheInRequestManager() && !leaderLatch.hasLeadership(),
         configuration.getRequestCacheTtl(),
         () ->
           fetchRequests()
@@ -569,7 +571,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     if (requestsCache.isEnabled()) {
       List<SingularityRequestWithState> requests = new ArrayList<>(
-        (requestsCache.getAll()).values()
+        (requestsCache.getAll(requestIds)).values()
       );
       if (!requests.isEmpty()) {
         return requests;
