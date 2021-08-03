@@ -11,17 +11,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApiCache<K, V> {
+public class ApiCache<K, V> implements LeaderLatchListener {
   private static final Logger LOG = LoggerFactory.getLogger(ApiCache.class);
 
-  public final boolean isEnabled;
   private final AtomicReference<Map<K, V>> zkValues;
   private final Supplier<Map<K, V>> supplyMap;
   private final int cacheTtl;
   private final ScheduledExecutorService executor;
+
+  private boolean isEnabled;
 
   private ScheduledFuture<?> reloadingFuture;
 
@@ -40,11 +42,9 @@ public class ApiCache<K, V> {
   }
 
   public void startReloader() {
-    if (isEnabled) {
-      reloadZkValues();
-      reloadingFuture =
-        executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
-    }
+    reloadZkValues();
+    reloadingFuture =
+      executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
   }
 
   public void stopReloader() {
@@ -108,5 +108,18 @@ public class ApiCache<K, V> {
 
   public boolean isEnabled() {
     return isEnabled;
+  }
+
+  @Override
+  public void isLeader() {
+    isEnabled = false;
+    stopReloader();
+    zkValues.get().clear();
+  }
+
+  @Override
+  public void notLeader() {
+    isEnabled = true;
+    startReloader();
   }
 }
