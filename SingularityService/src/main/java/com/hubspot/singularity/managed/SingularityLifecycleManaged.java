@@ -103,8 +103,8 @@ public class SingularityLifecycleManaged implements Managed {
         leaderOnlyPollers.forEach(SingularityLeaderOnlyPoller::start);
       }
       preJettyLifecycle.registerShutdownHook(this::preJettyStop);
-      requestManager.startApiCache();
-      deployManager.startApiCache();
+      requestManager.startApiCache(leaderLatch);
+      deployManager.startApiCache(leaderLatch);
     } else {
       LOG.info("Already started, will not call again");
     }

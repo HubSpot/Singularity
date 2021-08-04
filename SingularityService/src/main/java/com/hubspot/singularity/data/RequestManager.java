@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,8 +151,8 @@ public class RequestManager extends CuratorAsyncManager {
       );
   }
 
-  public void startApiCache() {
-    requestsCache.startReloader();
+  public void startApiCache(LeaderLatch leaderLatch) {
+    requestsCache.startReloader(leaderLatch);
   }
 
   public void stopApiCache() {

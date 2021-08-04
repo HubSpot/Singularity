@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -112,8 +113,8 @@ public class DeployManager extends CuratorAsyncManager {
       );
   }
 
-  public void startApiCache() {
-    deployCache.startReloader();
+  public void startApiCache(LeaderLatch leaderLatch) {
+    deployCache.startReloader(leaderLatch);
   }
 
   public void stopApiCache() {

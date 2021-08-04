@@ -11,19 +11,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApiCache<K, V> implements LeaderLatchListener {
+public class ApiCache<K, V> {
   private static final Logger LOG = LoggerFactory.getLogger(ApiCache.class);
 
+  private final boolean isEnabled;
   private final AtomicReference<Map<K, V>> zkValues;
   private final Supplier<Map<K, V>> supplyMap;
   private final int cacheTtl;
   private final ScheduledExecutorService executor;
 
-  private boolean isEnabled;
+  private LeaderLatch leaderLatch;
 
   private ScheduledFuture<?> reloadingFuture;
 
@@ -41,10 +42,13 @@ public class ApiCache<K, V> implements LeaderLatchListener {
     this.executor = executor;
   }
 
-  public void startReloader() {
-    reloadZkValues();
-    reloadingFuture =
-      executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
+  public void startReloader(LeaderLatch leaderLatch) {
+    this.leaderLatch = leaderLatch;
+    if (isEnabled) {
+      reloadZkValues();
+      reloadingFuture =
+        executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
+    }
   }
 
   public void stopReloader() {
@@ -54,15 +58,21 @@ public class ApiCache<K, V> implements LeaderLatchListener {
   }
 
   private void reloadZkValues() {
-    try {
-      Map<K, V> newZkValues = supplyMap.get();
-      if (!newZkValues.isEmpty()) {
-        zkValues.set(newZkValues);
-      } else {
-        LOG.warn("Empty values on cache reload, keeping old values");
+    if (!leaderLatch.hasLeadership()) {
+      try {
+        Map<K, V> newZkValues = supplyMap.get();
+        if (!newZkValues.isEmpty()) {
+          zkValues.set(newZkValues);
+        } else {
+          LOG.warn("Empty values on cache reload, keeping old values");
+        }
+      } catch (Exception e) {
+        LOG.warn("Reloading ApiCache failed: {}", e.getMessage());
       }
-    } catch (Exception e) {
-      LOG.warn("Reloading ApiCache failed: {}", e.getMessage());
+    } else {
+      if (!zkValues.get().isEmpty()) {
+        zkValues.get().clear();
+      }
     }
   }
 
@@ -108,20 +118,5 @@ public class ApiCache<K, V> implements LeaderLatchListener {
 
   public boolean isEnabled() {
     return isEnabled;
-  }
-
-  @Override
-  public void isLeader() {
-    isEnabled = false;
-    stopReloader();
-    zkValues.get().clear();
-    LOG.debug("Stopping ZK reloader and clearing references");
-  }
-
-  @Override
-  public void notLeader() {
-    isEnabled = true;
-    startReloader();
-    LOG.debug("Starting ZK reloader");
   }
 }
