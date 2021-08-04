@@ -85,7 +85,7 @@ public class ApiCache<K, V> {
     V value = this.zkValues.get().get(key);
 
     if (value == null) {
-      LOG.debug("ApiCache returned null for {}", key);
+      LOG.trace("ApiCache returned null for {}", key);
     }
 
     return value;
@@ -94,9 +94,9 @@ public class ApiCache<K, V> {
   public Map<K, V> getAll() {
     Map<K, V> allValues = this.zkValues.get();
     if (allValues.isEmpty()) {
-      LOG.debug("ApiCache getAll returned empty");
+      LOG.trace("ApiCache getAll returned empty");
     } else {
-      LOG.debug("getAll returned {} values", allValues.size());
+      LOG.trace("getAll returned {} values", allValues.size());
     }
     return allValues;
   }
@@ -109,9 +109,9 @@ public class ApiCache<K, V> {
       .collect(Collectors.toMap(Function.identity(), allValues::get));
 
     if (filteredValues.isEmpty()) {
-      LOG.debug("ApiCache getAll returned empty for {}", keys);
+      LOG.trace("ApiCache getAll returned empty for {}", keys);
     } else {
-      LOG.debug(
+      LOG.trace(
         "getAll returned {} for {} amount requested",
         filteredValues.size(),
         keys.size()
