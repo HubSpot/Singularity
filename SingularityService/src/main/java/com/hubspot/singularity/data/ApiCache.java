@@ -71,6 +71,7 @@ public class ApiCache<K, V> {
       }
     } else {
       if (!zkValues.get().isEmpty()) {
+        LOG.debug("Clearing ZK values because instance is leader");
         zkValues.get().clear();
       }
     }
