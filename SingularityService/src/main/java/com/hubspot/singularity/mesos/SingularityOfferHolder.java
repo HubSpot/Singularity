@@ -124,7 +124,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void subtractResources(List<Resource> resources) {
+  public synchronized void subtractResources(List<Resource> resources) {
     currentResources = MesosUtils.subtractResources(currentResources, resources);
   }
 
