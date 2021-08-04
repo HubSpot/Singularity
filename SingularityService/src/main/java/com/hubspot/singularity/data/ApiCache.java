@@ -115,11 +115,13 @@ public class ApiCache<K, V> implements LeaderLatchListener {
     isEnabled = false;
     stopReloader();
     zkValues.get().clear();
+    LOG.debug("Stopping ZK reloader and clearing references");
   }
 
   @Override
   public void notLeader() {
     isEnabled = true;
     startReloader();
+    LOG.debug("Starting ZK reloader");
   }
 }
