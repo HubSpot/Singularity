@@ -45,7 +45,11 @@ public class ApiCache<K, V> {
   public void startReloader(LeaderLatch leaderLatch) {
     this.leaderLatch = leaderLatch;
     if (isEnabled) {
-      reloadZkValues();
+      if (leaderLatch.hasLeadership()) {
+        LOG.debug("Not doing initial ApiCache load");
+      } else {
+        reloadZkValues();
+      }
       reloadingFuture =
         executor.scheduleAtFixedRate(this::reloadZkValues, 0, cacheTtl, TimeUnit.SECONDS);
     }
