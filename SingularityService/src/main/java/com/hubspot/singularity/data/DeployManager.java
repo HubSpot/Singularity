@@ -17,6 +17,7 @@ import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityDeployUpdate.DeployEventType;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -70,6 +72,8 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_STATISTICS_KEY = "STATISTICS";
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
+  private final ApiCache<String, SingularityRequestDeployState> deployCache;
+
   @Inject
   public DeployManager(
     CuratorFramework curator,
@@ -85,7 +89,8 @@ public class DeployManager extends CuratorAsyncManager {
     IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
     Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder,
     ZkCache<SingularityDeploy> deploysCache,
-    SingularityLeaderCache leaderCache
+    SingularityLeaderCache leaderCache,
+    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
   ) {
     super(curator, configuration, metricRegistry);
     this.singularityEventListener = singularityEventListener;
@@ -99,6 +104,21 @@ public class DeployManager extends CuratorAsyncManager {
     this.updateRequestTranscoder = updateRequestTranscoder;
     this.deploysCache = deploysCache;
     this.leaderCache = leaderCache;
+    this.deployCache =
+      new ApiCache<>(
+        configuration.useApiCacheInDeployManager(),
+        configuration.getDeployCacheTtl(),
+        this::fetchAllDeployStates,
+        executorServiceFactory.getSingleThreaded("deploy-api-cache-reloader")
+      );
+  }
+
+  public void startApiCache(LeaderLatch leaderLatch) {
+    deployCache.startReloader(leaderLatch);
+  }
+
+  public void stopApiCache() {
+    deployCache.stopReloader();
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -116,12 +136,34 @@ public class DeployManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents("getAllDeployIds", paths, deployKeyTranscoder);
   }
 
+  public Map<String, SingularityRequestDeployState> fetchAllDeployStates() {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    return fetchDeployStatesByRequestIds(requestIds);
+  }
+
   @Timed
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
     Collection<String> requestIds
   ) {
+    return getRequestDeployStatesByRequestIds(requestIds, false);
+  }
+
+  @Timed
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
+    Collection<String> requestIds,
+    boolean skipApiCache
+  ) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
+    }
+
+    Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
+
+    if (deployCache.isEnabled() && !skipApiCache) {
+      deployStatesByRequestIds = deployCache.getAll(requestIds);
+      if (!deployStatesByRequestIds.isEmpty()) {
+        return deployStatesByRequestIds;
+      }
     }
 
     return fetchDeployStatesByRequestIds(requestIds);

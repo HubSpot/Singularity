@@ -444,10 +444,12 @@ public class SingularityConfiguration extends Configuration {
   private double statusQueueNearlyFull = 0.8;
 
   // Enable caffeine cache on heavily requested endpoint
-  private boolean useCaffeineCache = false;
+  private boolean useApiCacheInRequestManager = false;
+  private boolean useApiCacheInDeployManager = false;
 
-  // Caffeine cache ttl
-  private int caffeineCacheTtl = 1;
+  // Atomic Reference cache TTLs
+  private int deployCacheTtlInSeconds = 5;
+  private int requestCacheTtlInSeconds = 5;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -2076,19 +2078,35 @@ public class SingularityConfiguration extends Configuration {
     this.statusQueueNearlyFull = statusQueueNearlyFull;
   }
 
-  public boolean useCaffeineCache() {
-    return useCaffeineCache;
+  public boolean useApiCacheInRequestManager() {
+    return useApiCacheInRequestManager;
   }
 
-  public void setUseCaffeineCache(boolean useCaffeineCache) {
-    this.useCaffeineCache = useCaffeineCache;
+  public void setUseApiCacheInRequestManager(boolean useApiCacheInRequestManager) {
+    this.useApiCacheInRequestManager = useApiCacheInRequestManager;
   }
 
-  public int getCaffeineCacheTtl() {
-    return caffeineCacheTtl;
+  public boolean useApiCacheInDeployManager() {
+    return useApiCacheInDeployManager;
   }
 
-  public void setCaffeineCacheTtl(int caffeineCacheTtl) {
-    this.caffeineCacheTtl = caffeineCacheTtl;
+  public void setUseApiCacheInDeployManager(boolean useApiCacheInDeployManager) {
+    this.useApiCacheInDeployManager = useApiCacheInDeployManager;
+  }
+
+  public int getDeployCacheTtl() {
+    return deployCacheTtlInSeconds;
+  }
+
+  public void setDeployCacheTtl(int deployCacheTtlInSeconds) {
+    this.deployCacheTtlInSeconds = deployCacheTtlInSeconds;
+  }
+
+  public int getRequestCacheTtl() {
+    return requestCacheTtlInSeconds;
+  }
+
+  public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
+    this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
   }
 }
