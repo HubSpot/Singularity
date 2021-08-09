@@ -5,11 +5,9 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.CrashLoopInfo;
@@ -35,7 +33,6 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityServiceModule;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -89,7 +86,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -124,7 +120,6 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityAgentAndRackManager agentAndRackManager;
-  private final Cache<String, List<SingularityRequestParent>> requestsCache;
 
   @Inject
   public RequestResource(
@@ -142,10 +137,7 @@ public class RequestResource extends AbstractRequestResource {
     @Singularity ObjectMapper objectMapper,
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier,
-    SingularityAgentAndRackManager agentAndRackManager,
-    @Named(
-      SingularityServiceModule.REQUESTS_CAFFEINE_CACHE
-    ) Cache<String, List<SingularityRequestParent>> requestsCache
+    SingularityAgentAndRackManager agentAndRackManager
   ) {
     super(
       requestManager,
@@ -165,7 +157,6 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.agentAndRackManager = agentAndRackManager;
-    this.requestsCache = requestsCache;
   }
 
   private void submitRequest(
@@ -1470,28 +1461,14 @@ public class RequestResource extends AbstractRequestResource {
     ) Integer limit,
     @Parameter(description = "Only return requests of these types") @QueryParam(
       "requestType"
-    ) List<RequestType> requestTypes
+    ) List<RequestType> requestTypes,
+    @Parameter(
+      description = "Skip the cache sitting in front of this request"
+    ) @QueryParam("skipCache") boolean skipCache
   ) {
-    String key = getRequestCacheKey(
-      user.getId(),
-      filterRelevantForUser,
-      includeFullRequestData,
-      limit,
-      requestTypes
-    );
-    if (!useWebCache(useWebCache) && configuration.useCaffeineCache()) {
-      List<SingularityRequestParent> cachedRequests = requestsCache.getIfPresent(key);
-
-      if (cachedRequests != null) {
-        LOG.trace("Grabbed getRequests value for {} from cache", key);
-
-        return cachedRequests;
-      }
-    }
-
-    List<SingularityRequestParent> requests = requestHelper.fillDataForRequestsAndFilter(
+    return requestHelper.fillDataForRequestsAndFilter(
       filterAutorized(
-        requestManager.getRequests(useWebCache(useWebCache)),
+        requestManager.getRequests(useWebCache(useWebCache), skipCache),
         SingularityAuthorizationScope.READ,
         user
       ),
@@ -1499,44 +1476,9 @@ public class RequestResource extends AbstractRequestResource {
       valueOrFalse(filterRelevantForUser),
       valueOrFalse(includeFullRequestData),
       Optional.ofNullable(limit),
-      requestTypes
+      requestTypes,
+      skipCache
     );
-
-    if (!useWebCache(useWebCache) && configuration.useCaffeineCache()) {
-      requestsCache.put(key, requests);
-
-      LOG.trace("Setting getRequests value for {} in cache", key);
-    }
-
-    return requests;
-  }
-
-  private String getRequestCacheKey(
-    String id,
-    Boolean filterRelevantForUser,
-    Boolean includeFullRequestData,
-    Integer limit,
-    List<RequestType> requestTypes
-  ) {
-    StringBuilder key = new StringBuilder(id);
-
-    if (filterRelevantForUser != null) {
-      key.append("_filter_").append(filterRelevantForUser);
-    }
-    if (includeFullRequestData != null) {
-      key.append("_fullRequestData_").append(includeFullRequestData);
-    }
-    if (limit != null) {
-      key.append("_limit_").append(limit);
-    }
-    if (!requestTypes.isEmpty()) {
-      key.append("_types_");
-      for (RequestType type : requestTypes) {
-        key.append("_").append(type.name());
-      }
-    }
-
-    return key.toString();
   }
 
   private boolean valueOrFalse(Boolean input) {
@@ -1605,15 +1547,18 @@ public class RequestResource extends AbstractRequestResource {
     ) String requestId,
     @Parameter(
       description = "Fetched a cached version of this data to limit expensive operations"
-    ) @QueryParam("useWebCache") Boolean useWebCache
+    ) @QueryParam("useWebCache") Boolean useWebCache,
+    @Parameter(
+      description = "Skip the cache sitting in front of this request"
+    ) @QueryParam("skipCache") boolean skipCache
   ) {
     return fillEntireRequest(
-      fetchRequestWithState(requestId, useWebCache(useWebCache), user)
+      fetchRequestWithState(requestId, useWebCache(useWebCache), skipCache, user)
     );
   }
 
   public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
-    return fillEntireRequest(fetchRequestWithState(requestId, false, user));
+    return fillEntireRequest(fetchRequestWithState(requestId, false, false, user));
   }
 
   @GET
@@ -1633,7 +1578,7 @@ public class RequestResource extends AbstractRequestResource {
       description = "Fetched a cached version of this data to limit expensive operations"
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
-    return fetchRequestWithState(requestId, useWebCache(useWebCache), user);
+    return fetchRequestWithState(requestId, useWebCache(useWebCache), false, user);
   }
 
   @DELETE
