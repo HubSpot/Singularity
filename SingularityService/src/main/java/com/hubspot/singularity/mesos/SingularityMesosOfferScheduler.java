@@ -546,16 +546,19 @@ public class SingularityMesosOfferScheduler {
                         int evaluated = 0;
                         for (SingularityTaskRequestHolder taskRequestHolder : entry.getValue()) {
                           long now = System.currentTimeMillis();
-                          if (
+                          boolean isOfferLoopTakingTooLong =
                             now -
                             startCheck >
-                            mesosConfiguration.getOfferLoopTimeoutMillis() ||
+                            mesosConfiguration.getOfferLoopTimeoutMillis();
+                          boolean isRequestInOfferLoopTakingTooLong =
                             (
                               now -
                               startRequest >
                               mesosConfiguration.getOfferLoopRequestTimeoutMillis() &&
                               evaluated > 1
-                            )
+                            );
+                          if (
+                            isOfferLoopTakingTooLong || isRequestInOfferLoopTakingTooLong
                           ) {
                             LOG.warn(
                               "{} is holding the offer lock for too long, skipping remaining {} tasks for scheduling",
