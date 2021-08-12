@@ -614,12 +614,8 @@ public class SingularityMesosOfferScheduler {
                               scorePerOffer.get(bestOffer.getAgentId()),
                               bestOffer.getSanitizedHost()
                             );
-                            SingularityMesosTaskHolder taskHolder = acceptTask(
-                              bestOffer,
-                              taskRequestHolder
-                            );
+                            acceptTask(bestOffer, taskRequestHolder);
                             tasksScheduled.getAndIncrement();
-                            bestOffer.addMatchedTask(taskHolder);
                             updateAgentUsageScores(
                               taskRequestHolder,
                               currentUsagesById,
@@ -1016,7 +1012,11 @@ public class SingularityMesosOfferScheduler {
     return score;
   }
 
-  private SingularityMesosTaskHolder acceptTask(
+  // This method is synchronized to avoid resource reuse within a single offer.
+  // Decisions about resources to use, specifically ports are made during the buildTask call, however
+  // these resources aren't subtracted from the offer until the addMatchedTask call, making this method
+  // not thread safe
+  private synchronized void acceptTask(
     SingularityOfferHolder offerHolder,
     SingularityTaskRequestHolder taskRequestHolder
   ) {
@@ -1040,7 +1040,7 @@ public class SingularityMesosOfferScheduler {
     );
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
-    return taskHolder;
+    offerHolder.addMatchedTask(taskHolder);
   }
 
   private boolean isTooManyInstancesForRequest(
