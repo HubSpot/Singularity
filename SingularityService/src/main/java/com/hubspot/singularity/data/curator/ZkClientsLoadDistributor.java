@@ -29,4 +29,8 @@ public class ZkClientsLoadDistributor {
   public CuratorFramework getCuratorFramework() {
     return iterator.next();
   }
+
+  public List<CuratorFramework> getAll() {
+    return this.curatorFrameworks;
+  }
 }

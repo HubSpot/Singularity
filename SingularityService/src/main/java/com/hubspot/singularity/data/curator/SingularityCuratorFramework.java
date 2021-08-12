@@ -50,7 +50,7 @@ public class SingularityCuratorFramework implements CuratorFramework {
 
   @Override
   public CuratorFrameworkState getState() {
-    return null;
+    return distributor.getCuratorFramework().getState();
   }
 
   @Override
@@ -60,127 +60,133 @@ public class SingularityCuratorFramework implements CuratorFramework {
 
   @Override
   public CreateBuilder create() {
-    return null;
+    return distributor.getCuratorFramework().create();
   }
 
   @Override
   public DeleteBuilder delete() {
-    return null;
+    return distributor.getCuratorFramework().delete();
   }
 
   @Override
   public ExistsBuilder checkExists() {
-    return null;
+    return distributor.getCuratorFramework().checkExists();
   }
 
   @Override
   public GetDataBuilder getData() {
-    return null;
+    return distributor.getCuratorFramework().getData();
   }
 
   @Override
   public SetDataBuilder setData() {
-    return null;
+    return distributor.getCuratorFramework().setData();
   }
 
   @Override
   public GetChildrenBuilder getChildren() {
-    return null;
+    return distributor.getCuratorFramework().getChildren();
   }
 
   @Override
   public GetACLBuilder getACL() {
-    return null;
+    return distributor.getCuratorFramework().getACL();
   }
 
   @Override
   public SetACLBuilder setACL() {
-    return null;
+    return distributor.getCuratorFramework().setACL();
   }
 
   @Override
   public ReconfigBuilder reconfig() {
-    return null;
+    return distributor.getCuratorFramework().reconfig();
   }
 
   @Override
   public GetConfigBuilder getConfig() {
-    return null;
+    return distributor.getCuratorFramework().getConfig();
   }
 
   @Override
   public CuratorTransaction inTransaction() {
-    return null;
+    return distributor.getCuratorFramework().inTransaction();
   }
 
   @Override
   public CuratorMultiTransaction transaction() {
-    return null;
+    return distributor.getCuratorFramework().transaction();
   }
 
   @Override
   public TransactionOp transactionOp() {
-    return null;
+    return distributor.getCuratorFramework().transactionOp();
   }
 
   @Override
-  public void sync(String path, Object backgroundContextObject) {}
+  public void sync(String path, Object backgroundContextObject) {
+    distributor.getCuratorFramework().sync(path, backgroundContextObject);
+  }
 
   @Override
-  public void createContainers(String path) throws Exception {}
+  public void createContainers(String path) throws Exception {
+    distributor.getCuratorFramework().createContainers(path);
+  }
 
   @Override
   public SyncBuilder sync() {
-    return null;
+    return distributor.getCuratorFramework().sync();
   }
 
   @Override
   public RemoveWatchesBuilder watches() {
-    return null;
+    return distributor.getCuratorFramework().watches();
   }
 
   @Override
   public Listenable<ConnectionStateListener> getConnectionStateListenable() {
-    return null;
+    return distributor.getCuratorFramework().getConnectionStateListenable();
   }
 
   @Override
   public Listenable<CuratorListener> getCuratorListenable() {
-    return null;
+    return distributor.getCuratorFramework().getCuratorListenable();
   }
 
   @Override
   public Listenable<UnhandledErrorListener> getUnhandledErrorListenable() {
-    return null;
+    return distributor.getCuratorFramework().getUnhandledErrorListenable();
   }
 
   @Override
   public CuratorFramework nonNamespaceView() {
-    return null;
+    return distributor.getCuratorFramework().nonNamespaceView();
   }
 
   @Override
   public CuratorFramework usingNamespace(String newNamespace) {
-    return null;
+    return distributor.getCuratorFramework().usingNamespace(newNamespace);
   }
 
   @Override
   public String getNamespace() {
-    return null;
+    return distributor.getCuratorFramework().getNamespace();
   }
 
   @Override
   public CuratorZookeeperClient getZookeeperClient() {
-    return null;
+    return distributor.getCuratorFramework().getZookeeperClient();
   }
 
   @Override
   public EnsurePath newNamespaceAwareEnsurePath(String path) {
-    return null;
+    return distributor.getCuratorFramework().newNamespaceAwareEnsurePath(path);
   }
 
   @Override
-  public void clearWatcherReferences(Watcher watcher) {}
+  public void clearWatcherReferences(Watcher watcher) {
+    distributor.getCuratorFramework().clearWatcherReferences(watcher);
+  }
 
   @Override
   public boolean blockUntilConnected(int maxWaitTime, TimeUnit units)
@@ -193,31 +199,31 @@ public class SingularityCuratorFramework implements CuratorFramework {
 
   @Override
   public WatcherRemoveCuratorFramework newWatcherRemoveCuratorFramework() {
-    return null;
+    return distributor.getCuratorFramework().newWatcherRemoveCuratorFramework();
   }
 
   @Override
   public ConnectionStateErrorPolicy getConnectionStateErrorPolicy() {
-    return null;
+    return distributor.getCuratorFramework().getConnectionStateErrorPolicy();
   }
 
   @Override
   public QuorumVerifier getCurrentConfig() {
-    return null;
+    return distributor.getCuratorFramework().getCurrentConfig();
   }
 
   @Override
   public SchemaSet getSchemaSet() {
-    return null;
+    return distributor.getCuratorFramework().getSchemaSet();
   }
 
   @Override
   public boolean isZk34CompatibilityMode() {
-    return false;
+    return distributor.getCuratorFramework().isZk34CompatibilityMode();
   }
 
   @Override
   public CompletableFuture<Void> runSafe(Runnable runnable) {
-    return null;
+    return distributor.getCuratorFramework().runSafe(runnable);
   }
 }
