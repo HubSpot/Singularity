@@ -80,6 +80,8 @@ public class MesosConfiguration {
   // Set to a value at least a few seconds below the configured mesos offer timeout
   private long offerTimeout = 45000;
   private long offerLockTimeout = 1000;
+  private long offerLoopTimeoutMillis = 60000; // should be set well below the mesos offer timeout
+  private long offerLoopRequestTimeoutMillis = 30000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -467,5 +469,21 @@ public class MesosConfiguration {
 
   public void setGoodEnoughScoreThreshold(double goodEnoughScoreThreshold) {
     this.goodEnoughScoreThreshold = goodEnoughScoreThreshold;
+  }
+
+  public long getOfferLoopTimeoutMillis() {
+    return offerLoopTimeoutMillis;
+  }
+
+  public void setOfferLoopTimeoutMillis(long offerLoopTimeoutMillis) {
+    this.offerLoopTimeoutMillis = offerLoopTimeoutMillis;
+  }
+
+  public long getOfferLoopRequestTimeoutMillis() {
+    return offerLoopRequestTimeoutMillis;
+  }
+
+  public void setOfferLoopRequestTimeoutMillis(long offerLoopRequestTimeoutMillis) {
+    this.offerLoopRequestTimeoutMillis = offerLoopRequestTimeoutMillis;
   }
 }
