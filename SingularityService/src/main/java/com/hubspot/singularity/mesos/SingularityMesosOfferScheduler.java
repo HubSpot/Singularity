@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -541,7 +542,32 @@ public class SingularityMesosOfferScheduler {
                     () -> {
                       offerCheckTempLock.lock();
                       try {
+                        long startRequest = System.currentTimeMillis();
+                        int evaluated = 0;
                         for (SingularityTaskRequestHolder taskRequestHolder : entry.getValue()) {
+                          long now = System.currentTimeMillis();
+                          boolean isOfferLoopTakingTooLong =
+                            now -
+                            startCheck >
+                            mesosConfiguration.getOfferLoopTimeoutMillis();
+                          boolean isRequestInOfferLoopTakingTooLong =
+                            (
+                              now -
+                              startRequest >
+                              mesosConfiguration.getOfferLoopRequestTimeoutMillis() &&
+                              evaluated > 1
+                            );
+                          if (
+                            isOfferLoopTakingTooLong || isRequestInOfferLoopTakingTooLong
+                          ) {
+                            LOG.warn(
+                              "{} is holding the offer lock for too long, skipping remaining {} tasks for scheduling",
+                              taskRequestHolder.getTaskRequest().getRequest().getId(),
+                              entry.getValue().size() - evaluated
+                            );
+                            break;
+                          }
+                          evaluated++;
                           List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(
                             taskRequestHolder.getTaskRequest().getRequest().getId()
                           );
