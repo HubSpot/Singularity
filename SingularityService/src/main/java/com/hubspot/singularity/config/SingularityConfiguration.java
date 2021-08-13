@@ -2087,7 +2087,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public boolean useApiCacheInDeployManager() {
-    return useApiCacheInRequestManager;
+    return useApiCacheInDeployManager;
   }
 
   public void setUseApiCacheInDeployManager(boolean useApiCacheInDeployManager) {
