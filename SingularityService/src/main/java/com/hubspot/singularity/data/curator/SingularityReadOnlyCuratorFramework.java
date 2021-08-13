@@ -31,10 +31,10 @@ import org.apache.curator.utils.EnsurePath;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 
-public class SingularityCuratorFramework implements CuratorFramework {
+public class SingularityReadOnlyCuratorFramework implements CuratorFramework {
   private final ZkClientsLoadDistributor distributor;
 
-  public SingularityCuratorFramework(ZkClientsLoadDistributor distributor) {
+  public SingularityReadOnlyCuratorFramework(ZkClientsLoadDistributor distributor) {
     this.distributor = distributor;
   }
 
