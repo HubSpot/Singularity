@@ -60,7 +60,7 @@ public class SingularityS3UploaderFile {
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
-    this.checkIfOpen = checkIfOpen.orElse(false);
+    this.checkIfOpen = checkIfOpen.orElse(true);
   }
 
   @Schema(description = "The name of the file")
