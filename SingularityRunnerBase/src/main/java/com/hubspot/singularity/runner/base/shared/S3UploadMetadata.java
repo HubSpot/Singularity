@@ -110,7 +110,7 @@ public class S3UploadMetadata {
     this.uploadImmediately = uploadImmediately;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
-    this.checkIfOpen = checkIfOpen.orElse(false);
+    this.checkIfOpen = checkIfOpen.orElse(true);
     this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
     this.gcsCredentials =
       gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
