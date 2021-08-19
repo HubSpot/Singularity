@@ -105,6 +105,7 @@ public abstract class SingularityUploader {
       final Path file = toUpload.get(i);
       if (
         !configuration.isCheckForOpenFiles() ||
+        !uploadMetadata.isCheckIfOpen() ||
         uploadMetadata.isImmediate() ||
         !isFileOpen(file, configuration.isCheckOpenFilesViaFuser())
       ) {
