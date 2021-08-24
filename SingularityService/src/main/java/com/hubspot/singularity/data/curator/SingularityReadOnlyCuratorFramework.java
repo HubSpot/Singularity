@@ -55,7 +55,7 @@ public class SingularityReadOnlyCuratorFramework implements CuratorFramework {
 
   @Override
   public boolean isStarted() {
-    return false;
+    return distributor.isStarted();
   }
 
   @Override
