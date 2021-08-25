@@ -436,6 +436,17 @@ const RequestForm = (props) => {
     />
   );
 
+  const priorityLevel = (
+    <TextFormGroup
+      id="priority-level"
+      onChange={event => updateField('taskPriorityLevel', event.target.value)}
+      value={getValue('taskPriorityLevel')}
+      label="Scheduler Priority Level (0.0 - 1.0)"
+      required={INDEXED_FIELDS.taskPriorityLevel.required}
+      feedback={feedback('taskPriorityLevel')}
+    />
+  );
+
   const killOldNonLongRunningTasksAfterMillis = (
     <TextFormGroup
       id="killOldNRL"
@@ -672,6 +683,7 @@ const RequestForm = (props) => {
           { shouldRenderField('scheduleTimeZone') && scheduleTimeZone }
           { (shouldRenderField(CRON_SCHEDULE) || shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
           { shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
+          { shouldRenderField('priorityLevel') && priorityLevel }
           { shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
           { shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
           { shouldRenderField('taskExecutionTimeLimitMillis') && taskExecutionTimeLimitMillis }

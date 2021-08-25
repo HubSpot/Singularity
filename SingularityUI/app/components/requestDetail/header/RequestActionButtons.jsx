@@ -26,7 +26,7 @@ import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthch
 import Utils from '../../../utils';
 import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
 
-const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchRequest, fetchRequestHistory, fetchActiveTasks, fetchRequestShuffleOptOut, router}) => {
+const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOptOut, fetchRequest, fetchRequestHistory, fetchActiveTasks, fetchRequestShuffleOptOut, router}) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
     return Promise.all([
       fetchRequest(),
@@ -130,7 +130,7 @@ const RequestActionButtons = ({requestParent, fetchingShuffleOptOut, fetchReques
   }
 
   let maybeEditButton;
-  if (!config.hideNewRequestButton) {
+  if (showRequestEdit) {
     maybeEditButton = (
       <Link to={`requests/edit/${request.id}`}>
         <Button bsStyle="primary">
@@ -223,12 +223,14 @@ RequestActionButtons.propTypes = {
   requestParent: PropTypes.object,
   fetchRequest: PropTypes.func.isRequired,
   fetchActiveTasks: PropTypes.func.isRequired,
-  router: PropTypes.shape({push: PropTypes.func.isRequired}).isRequired
+  router: PropTypes.shape({push: PropTypes.func.isRequired}).isRequired,
+  admin: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => ({
   requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
   fetchingShuffleOptOut: Utils.maybe(state.api.shuffleOptOut, [ownProps.requestId, 'isFetching'], true),
+  showRequestEdit: Utils.maybe(state.api.user, ['data', 'user', 'groups'], []).includes(config.showRequestButtonsForGroup),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({

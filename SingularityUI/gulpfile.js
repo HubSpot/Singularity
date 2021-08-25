@@ -49,8 +49,8 @@ var templateData = {
   authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
   quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}',
   navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '{}',
-
-  lessTerminalPath: process.env.SINGULARITY_LESS_TERMINAL_PATH || ''
+  lessTerminalPath: process.env.SINGULARITY_LESS_TERMINAL_PATH || '',
+  showRequestButtonsForGroup: process.env.SINGULARITY_SHOW_REQUEST_BUTTONS_FOR_GROUP || ''
 };
 
 var dest = path.resolve(__dirname, 'dist');
