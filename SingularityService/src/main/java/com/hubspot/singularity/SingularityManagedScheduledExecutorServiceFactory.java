@@ -66,6 +66,29 @@ public class SingularityManagedScheduledExecutorServiceFactory {
     return service;
   }
 
+  public synchronized ScheduledExecutorService getSingleThreaded(String name) {
+    return getSingleThreaded(name, false);
+  }
+
+  public synchronized ScheduledExecutorService getSingleThreaded(
+    String name,
+    boolean isLeaderOnlyPoller
+  ) {
+    checkState(!stopped.get(), "already stopped");
+
+    ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor(
+      new ThreadFactoryBuilder().setNameFormat(name + "-%d").setDaemon(true).build()
+    );
+
+    if (isLeaderOnlyPoller) {
+      leaderPollerPools.put(name, service);
+    } else {
+      executorPools.put(name, service);
+    }
+
+    return service;
+  }
+
   public void stopLeaderPollers() throws Exception {
     if (!leaderStopped.getAndSet(true)) {
       long timeoutLeftInMillis = timeoutInMillis;

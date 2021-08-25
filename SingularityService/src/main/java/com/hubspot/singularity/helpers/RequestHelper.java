@@ -301,8 +301,29 @@ public class RequestHelper {
     Optional<Integer> limit,
     List<RequestType> requestTypeFilters
   ) {
+    return fillDataForRequestsAndFilter(
+      requests,
+      user,
+      filterRelevantForUser,
+      includeFullRequestData,
+      limit,
+      requestTypeFilters,
+      false
+    );
+  }
+
+  public List<SingularityRequestParent> fillDataForRequestsAndFilter(
+    List<SingularityRequestWithState> requests,
+    SingularityUser user,
+    boolean filterRelevantForUser,
+    boolean includeFullRequestData,
+    Optional<Integer> limit,
+    List<RequestType> requestTypeFilters,
+    boolean skipApiCache
+  ) {
     final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(
-      requests.stream().map(r -> r.getRequest().getId()).collect(Collectors.toList())
+      requests.stream().map(r -> r.getRequest().getId()).collect(Collectors.toList()),
+      skipApiCache
     );
     final Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory;
 

@@ -374,7 +374,7 @@ public class SingularityS3UploaderDriver
       expiring.remove(uploader);
 
       try {
-        LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
+        LOG.info("Deleting finished immediate uploader {}", uploader.getMetadataPath());
         Files.delete(uploader.getMetadataPath());
       } catch (NoSuchFileException nfe) {
         LOG.warn("File {} was already deleted", nfe.getFile());
@@ -466,7 +466,7 @@ public class SingularityS3UploaderDriver
       expiring.remove(expiredUploader);
 
       try {
-        LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
+        LOG.info("Deleting expired uploader {}", expiredUploader.getMetadataPath());
         Files.delete(expiredUploader.getMetadataPath());
       } catch (NoSuchFileException nfe) {
         LOG.warn("File {} was already deleted", nfe.getFile());
@@ -555,6 +555,13 @@ public class SingularityS3UploaderDriver
       .orElse(configuration.getStopCheckingAfterMillisWithoutNewFile());
 
     if (durationSinceLastFile > expireAfterMillis) {
+      LOG.info(
+        "Expiring uploader {}, duration {} (max {}), isFinished: {})",
+        uploader.getMetadataPath(),
+        JavaUtils.durationFromMillis(durationSinceLastFile),
+        JavaUtils.durationFromMillis(expireAfterMillis),
+        isFinished
+      );
       return true;
     } else {
       LOG.trace(

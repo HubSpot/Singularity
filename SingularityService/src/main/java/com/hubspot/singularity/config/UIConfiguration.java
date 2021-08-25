@@ -114,6 +114,9 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> lessTerminalPath = Optional.empty();
 
+  @JsonProperty
+  private Optional<String> showRequestButtonsForGroup = Optional.empty();
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -328,5 +331,13 @@ public class UIConfiguration {
 
   public void setLessTerminalPath(Optional<String> lessTerminalPath) {
     this.lessTerminalPath = lessTerminalPath;
+  }
+
+  public Optional<String> getShowRequestButtonsForGroup() {
+    return showRequestButtonsForGroup;
+  }
+
+  public void setShowRequestButtonsForGroup(Optional<String> showRequestButtonsForGroup) {
+    this.showRequestButtonsForGroup = showRequestButtonsForGroup;
   }
 }

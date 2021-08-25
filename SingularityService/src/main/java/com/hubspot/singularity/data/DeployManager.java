@@ -2,7 +2,6 @@ package com.hubspot.singularity.data;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,6 +17,7 @@ import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityDeployUpdate.DeployEventType;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -28,13 +28,11 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -91,7 +89,8 @@ public class DeployManager extends CuratorAsyncManager {
     IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
     Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder,
     ZkCache<SingularityDeploy> deploysCache,
-    SingularityLeaderCache leaderCache
+    SingularityLeaderCache leaderCache,
+    SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
   ) {
     super(curator, configuration, metricRegistry);
     this.singularityEventListener = singularityEventListener;
@@ -109,35 +108,17 @@ public class DeployManager extends CuratorAsyncManager {
       new ApiCache<>(
         configuration.useApiCacheInDeployManager(),
         configuration.getDeployCacheTtl(),
-        new CacheLoader<String, SingularityRequestDeployState>() {
-
-          @Nullable
-          @Override
-          public SingularityRequestDeployState load(@Nonnull String requestId) {
-            LOG.debug("Loading deploy state for {}", requestId);
-
-            List<SingularityRequestDeployState> deployStates = getAsync(
-              "getRequestDeployStatesByRequestIds",
-              Collections.singletonList(getRequestDeployStatePath(requestId)),
-              requestDeployStateTranscoder
-            );
-            SingularityRequestDeployState deployState = null;
-            if (!deployStates.isEmpty()) {
-              deployState = deployStates.get(0);
-            }
-            return deployState;
-          }
-
-          @Nonnull
-          @Override
-          public Map<String, SingularityRequestDeployState> loadAll(
-            @Nonnull Iterable<? extends String> requestIds
-          ) {
-            LOG.debug("Loading all deploy states from list of request ids");
-            return fetchDeployStatesByRequestIds((Collection<String>) requestIds);
-          }
-        }
+        this::fetchAllDeployStates,
+        executorServiceFactory.getSingleThreaded("deploy-api-cache-reloader")
       );
+  }
+
+  public void startApiCache(LeaderLatch leaderLatch) {
+    deployCache.startReloader(leaderLatch);
+  }
+
+  public void stopApiCache() {
+    deployCache.stopReloader();
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -155,9 +136,22 @@ public class DeployManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents("getAllDeployIds", paths, deployKeyTranscoder);
   }
 
+  public Map<String, SingularityRequestDeployState> fetchAllDeployStates() {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    return fetchDeployStatesByRequestIds(requestIds);
+  }
+
   @Timed
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
     Collection<String> requestIds
+  ) {
+    return getRequestDeployStatesByRequestIds(requestIds, false);
+  }
+
+  @Timed
+  public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(
+    Collection<String> requestIds,
+    boolean skipApiCache
   ) {
     if (leaderCache.active()) {
       return leaderCache.getRequestDeployStateByRequestId(requestIds);
@@ -165,7 +159,7 @@ public class DeployManager extends CuratorAsyncManager {
 
     Map<String, SingularityRequestDeployState> deployStatesByRequestIds;
 
-    if (deployCache.isEnabled()) {
+    if (deployCache.isEnabled() && !skipApiCache) {
       deployStatesByRequestIds = deployCache.getAll(requestIds);
       if (!deployStatesByRequestIds.isEmpty()) {
         return deployStatesByRequestIds;
