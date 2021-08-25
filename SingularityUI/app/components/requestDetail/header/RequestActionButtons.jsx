@@ -130,7 +130,7 @@ const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOp
   }
 
   let maybeEditButton;
-  if (showRequestEdit) {
+  if (showRequestEdit || !config.hideNewRequestButton) {
     maybeEditButton = (
       <Link to={`requests/edit/${request.id}`}>
         <Button bsStyle="primary">
