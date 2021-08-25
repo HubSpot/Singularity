@@ -683,7 +683,7 @@ const RequestForm = (props) => {
           { shouldRenderField('scheduleTimeZone') && scheduleTimeZone }
           { (shouldRenderField(CRON_SCHEDULE) || shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
           { shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
-          { shouldRenderField('priorityLevel') && priorityLevel }
+          { shouldRenderField('taskPriorityLevel') && priorityLevel }
           { shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
           { shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
           { shouldRenderField('taskExecutionTimeLimitMillis') && taskExecutionTimeLimitMillis }
