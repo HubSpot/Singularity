@@ -352,6 +352,10 @@ public class IndexView extends View {
     return vendorJsPath;
   }
 
+  public String getShowRequestButtonsForGroup() {
+    return showRequestButtonsForGroup;
+  }
+
   @Override
   public String toString() {
     return (
