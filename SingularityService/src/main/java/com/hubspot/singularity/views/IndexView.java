@@ -69,7 +69,7 @@ public class IndexView extends View {
   private final String quickLinks;
   private final String navTitleLinks;
   private final String lessTerminalPath;
-
+  private final String showRequestButtonsForGroup;
   private final String appJsPath;
   private final String appCssPath;
   private final String vendorJsPath;
@@ -176,6 +176,8 @@ public class IndexView extends View {
     }
 
     this.lessTerminalPath = uiConfiguration.getLessTerminalPath().orElse("");
+    this.showRequestButtonsForGroup =
+      uiConfiguration.getShowRequestButtonsForGroup().orElse("");
 
     try {
       Map<String, String> revManifest = mapper.readValue(
@@ -348,6 +350,10 @@ public class IndexView extends View {
 
   public String getVendorJsPath() {
     return vendorJsPath;
+  }
+
+  public String getShowRequestButtonsForGroup() {
+    return showRequestButtonsForGroup;
   }
 
   @Override
