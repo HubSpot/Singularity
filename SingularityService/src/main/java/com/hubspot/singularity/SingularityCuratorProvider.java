@@ -2,9 +2,13 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.Lists;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.data.LoggingCuratorFramework;
+import com.hubspot.singularity.data.curator.SingularityReadOnlyCuratorFramework;
+import com.hubspot.singularity.data.curator.ZkClientsLoadDistributor;
+import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import org.apache.curator.framework.CuratorFramework;
@@ -27,10 +31,46 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
     final SingularityManagedScheduledExecutorServiceFactory executorServiceFactory
   ) {
     checkNotNull(configuration, "configuration is null");
+    if (configuration.useLoggingCuratorFramework()) {
+      LOG.trace("Creating a logging curator framework");
+      this.curatorFramework =
+        new LoggingCuratorFramework(
+          getCuratorFrameworkForSingularityInstanceType(configuration),
+          executorServiceFactory
+        );
+    } else {
+      this.curatorFramework =
+        getCuratorFrameworkForSingularityInstanceType(configuration);
+    }
+  }
 
+  private CuratorFramework getCuratorFrameworkForSingularityInstanceType(
+    SingularityConfiguration configuration
+  ) {
     ZooKeeperConfiguration zookeeperConfig = configuration.getZooKeeperConfiguration();
 
-    CuratorFramework tempCuratorFramework = CuratorFrameworkFactory
+    if (configuration.isReadOnlyInstance()) {
+      LOG.trace("Creating multiple logging curator frameworks for read-only instance");
+      int numberOfCuratorFrameworks = zookeeperConfig.getCuratorFrameworkInstances();
+      List<CuratorFramework> curatorFrameworks = Lists.newArrayListWithExpectedSize(
+        numberOfCuratorFrameworks
+      );
+      for (int i = 0; i < numberOfCuratorFrameworks; i++) {
+        curatorFrameworks.add(buildCuratorFrameworkInstance(zookeeperConfig));
+      }
+      return new SingularityReadOnlyCuratorFramework(
+        new ZkClientsLoadDistributor(curatorFrameworks)
+      );
+    } else {
+      LOG.trace("Creating curator framework for leader instance");
+      return buildCuratorFrameworkInstance(zookeeperConfig);
+    }
+  }
+
+  private CuratorFramework buildCuratorFrameworkInstance(
+    ZooKeeperConfiguration zookeeperConfig
+  ) {
+    return CuratorFrameworkFactory
       .builder()
       .defaultData(null)
       .connectionStateErrorPolicy(new SessionConnectionStateErrorPolicy())
@@ -45,13 +85,6 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
       )
       .namespace(zookeeperConfig.getZkNamespace())
       .build();
-
-    if (configuration.useLoggingCuratorFramework()) {
-      tempCuratorFramework =
-        new LoggingCuratorFramework(tempCuratorFramework, executorServiceFactory);
-    }
-
-    this.curatorFramework = tempCuratorFramework;
   }
 
   @Override

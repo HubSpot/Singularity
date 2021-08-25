@@ -19,6 +19,9 @@ public class ZooKeeperConfiguration {
   private int retryMaxTries = 3;
 
   @NotNull
+  private int curatorFrameworkInstances = 3;
+
+  @NotNull
   private String zkNamespace;
 
   private long abortAfterConnectionLostForMillis = 30000;
@@ -79,5 +82,13 @@ public class ZooKeeperConfiguration {
     long abortAfterConnectionLostForMillis
   ) {
     this.abortAfterConnectionLostForMillis = abortAfterConnectionLostForMillis;
+  }
+
+  public int getCuratorFrameworkInstances() {
+    return curatorFrameworkInstances;
+  }
+
+  public void setCuratorFrameworkInstances(int curatorFrameworkInstances) {
+    this.curatorFrameworkInstances = curatorFrameworkInstances;
   }
 }
