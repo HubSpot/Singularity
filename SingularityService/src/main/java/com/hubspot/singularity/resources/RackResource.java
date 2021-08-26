@@ -42,7 +42,6 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Schema(title = "Manage Singularity racks")
 @Tags({ @Tag(name = "Racks") })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
-
   @Inject
   public RackResource(
     AsyncHttpClient httpClient,
@@ -234,5 +233,41 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     return super.getExpiringStateChanges(user);
+  }
+
+  @POST
+  @Path("/rack-sensitivity/enable")
+  @Operation(summary = "Enable global rack sensitivity, respecting request settings")
+  public Response enableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        super.configure(c -> c.setRackSensitive(true), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/rack-sensitivity/disable")
+  @Operation(summary = "Disable global rack sensitivity, overriding request settings")
+  public Response disableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        super.configure(c -> c.setRackSensitive(false), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        return Response.ok().build();
+      }
+    );
   }
 }

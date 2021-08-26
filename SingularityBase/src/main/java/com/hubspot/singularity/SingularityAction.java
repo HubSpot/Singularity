@@ -40,6 +40,7 @@ public enum SingularityAction {
   FREEZE_RACK(true),
   ACTIVATE_RACK(true),
   DECOMMISSION_RACK(true),
+  SET_GLOBAL_RACK_SENSITIVITY(true),
   VIEW_RACKS(false),
   SEND_EMAIL(true),
   PROCESS_OFFERS(true),
