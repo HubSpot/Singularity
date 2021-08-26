@@ -244,7 +244,7 @@ public class SingularityAgentAndRackManager {
       }
     }
 
-    if (taskRequest.getRequest().isRackSensitive()) {
+    if (configuration.isRackSensitive() && taskRequest.getRequest().isRackSensitive()) {
       final boolean isRackOk = isRackOk(
         countPerRack,
         sanitizedRackId,
