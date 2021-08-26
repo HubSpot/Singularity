@@ -42,6 +42,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Schema(title = "Manage Singularity racks")
 @Tags({ @Tag(name = "Racks") })
 public class RackResource extends AbstractMachineResource<SingularityRack> {
+
   @Inject
   public RackResource(
     AsyncHttpClient httpClient,
@@ -247,7 +248,11 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setAllowRackSensitivity(true), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        super.configure(
+          c -> c.setAllowRackSensitivity(true),
+          user,
+          SingularityAction.SET_GLOBAL_RACK_SENSITIVITY
+        );
         return Response.ok().build();
       }
     );
@@ -265,7 +270,11 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setAllowRackSensitivity(false), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        super.configure(
+          c -> c.setAllowRackSensitivity(false),
+          user,
+          SingularityAction.SET_GLOBAL_RACK_SENSITIVITY
+        );
         return Response.ok().build();
       }
     );
@@ -273,7 +282,9 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @POST
   @Path("/placement/separate/enable")
-  @Operation(summary = "Enable separate placement strategy globally, respecting request settings")
+  @Operation(
+    summary = "Enable separate placement strategy globally, respecting request settings"
+  )
   public Response enableSeparatePlacement(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user
@@ -283,7 +294,11 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setAllowSeparatePlacement(true), user, SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY);
+        super.configure(
+          c -> c.setAllowSeparatePlacement(true),
+          user,
+          SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY
+        );
         return Response.ok().build();
       }
     );
@@ -291,7 +306,9 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @POST
   @Path("/placement/separate/disable")
-  @Operation(summary = "Disable separate placement strategy globally, overriding request settings")
+  @Operation(
+    summary = "Disable separate placement strategy globally, overriding request settings"
+  )
   public Response disableSeparatePlacement(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user
@@ -301,7 +318,11 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setAllowSeparatePlacement(false), user, SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY);
+        super.configure(
+          c -> c.setAllowSeparatePlacement(false),
+          user,
+          SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY
+        );
         return Response.ok().build();
       }
     );
