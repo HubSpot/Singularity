@@ -368,18 +368,7 @@ public class SingularityAgentAndRackManager {
   }
 
   private AgentPlacement maybeOverrideAgentPlacement(AgentPlacement placement) {
-    if (configuration.isAllowSeparatePlacement()) {
-      return placement;
-    }
-    switch (placement) {
-      case SEPARATE:
-      case SEPARATE_BY_DEPLOY:
-      case SPREAD_ALL_SLAVES:
-      case SPREAD_ALL_AGENTS:
-        return AgentPlacement.OPTIMISTIC;
-      default:
-        return placement;
-    }
+    return configuration.getAgentPlacementOverride().orElse(placement);
   }
 
   private boolean isPreferredByAllowedAttributes(
