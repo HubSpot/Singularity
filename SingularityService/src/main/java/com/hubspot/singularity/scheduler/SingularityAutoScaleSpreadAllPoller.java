@@ -56,7 +56,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
       lock.runWithRequestLock(
         () -> {
           SingularityRequest request = requestWithState.getRequest();
-          // TODO - support global override here?
+          // global override not supported here
           AgentPlacement placement = request
             .getAgentPlacement()
             .orElse(defaultAgentPlacement);
