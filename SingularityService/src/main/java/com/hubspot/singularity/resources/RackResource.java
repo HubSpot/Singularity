@@ -247,7 +247,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setRackSensitive(true), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        super.configure(c -> c.setAllowRackSensitivity(true), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
         return Response.ok().build();
       }
     );
@@ -265,7 +265,43 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       Response.class,
       null,
       () -> {
-        super.configure(c -> c.setRackSensitive(false), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        super.configure(c -> c.setAllowRackSensitivity(false), user, SingularityAction.SET_GLOBAL_RACK_SENSITIVITY);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement/separate/enable")
+  @Operation(summary = "Enable separate placement strategy globally, respecting request settings")
+  public Response enableSeparatePlacement(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        super.configure(c -> c.setAllowSeparatePlacement(true), user, SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement/separate/disable")
+  @Operation(summary = "Disable separate placement strategy globally, overriding request settings")
+  public Response disableSeparatePlacement(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        super.configure(c -> c.setAllowSeparatePlacement(false), user, SingularityAction.SET_GLOBAL_PLACEMENT_STRATEGY);
         return Response.ok().build();
       }
     );

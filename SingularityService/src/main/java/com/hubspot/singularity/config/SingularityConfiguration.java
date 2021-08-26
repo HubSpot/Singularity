@@ -453,7 +453,8 @@ public class SingularityConfiguration extends Configuration {
 
   // If true, respect rack sensitive requests and distribute them across racks.
   // Set to false in case of rack outages/decommissions.
-  private boolean rackSensitive = true;
+  private boolean allowRackSensitivity = true;
+  private boolean allowSeparatePlacement;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -2114,11 +2115,19 @@ public class SingularityConfiguration extends Configuration {
     this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
   }
 
-  public boolean isRackSensitive() {
-    return rackSensitive;
+  public boolean isAllowRackSensitivity() {
+    return allowRackSensitivity;
   }
 
-  public void setRackSensitive(boolean rackSensitive) {
-    this.rackSensitive = rackSensitive;
+  public void setAllowRackSensitivity(boolean allowRackSensitivity) {
+    this.allowRackSensitivity = allowRackSensitivity;
+  }
+
+  public boolean isAllowSeparatePlacement() {
+    return allowSeparatePlacement;
+  }
+
+  public void setAllowSeparatePlacement(boolean allowSeparatePlacement) {
+    this.allowSeparatePlacement = allowSeparatePlacement;
   }
 }
