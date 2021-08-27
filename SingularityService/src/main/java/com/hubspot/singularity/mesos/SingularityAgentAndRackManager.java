@@ -159,10 +159,12 @@ public class SingularityAgentAndRackManager {
       return AgentMatchState.AGENT_ATTRIBUTES_DO_NOT_MATCH;
     }
 
-    final AgentPlacement agentPlacement = taskRequest
-      .getRequest()
-      .getAgentPlacement()
-      .orElse(configuration.getDefaultAgentPlacement());
+    final AgentPlacement agentPlacement = maybeOverrideAgentPlacement(
+      taskRequest
+        .getRequest()
+        .getAgentPlacement()
+        .orElse(configuration.getDefaultAgentPlacement())
+    );
 
     if (
       !taskRequest.getRequest().isRackSensitive() &&
@@ -244,7 +246,9 @@ public class SingularityAgentAndRackManager {
       }
     }
 
-    if (taskRequest.getRequest().isRackSensitive()) {
+    if (
+      configuration.isAllowRackSensitivity() && taskRequest.getRequest().isRackSensitive()
+    ) {
       final boolean isRackOk = isRackOk(
         countPerRack,
         sanitizedRackId,
@@ -361,6 +365,10 @@ public class SingularityAgentAndRackManager {
       isPreferredByAllowedAttributes(offerHolder, taskRequest) ||
       isPreferredByCpuMemory(offerHolder, requestUtilization)
     );
+  }
+
+  private AgentPlacement maybeOverrideAgentPlacement(AgentPlacement placement) {
+    return configuration.getAgentPlacementOverride().orElse(placement);
   }
 
   private boolean isPreferredByAllowedAttributes(
