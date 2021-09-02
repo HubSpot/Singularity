@@ -16,8 +16,9 @@ class LiveConfiguration extends Component {
   render() {
     return (
       <Section title="Configure">
-          <div style={{ display: 'flex' }}>
-            <h3 style={{ margin: 0 }}>Rack Sensitivity</h3>
+        <div className="row">
+          <div className="col-md-6">
+            <h3>Rack Sensitivity</h3>
             <button
               className="btn btn-primary"
               alt="Enable Rack Sensitivity"
@@ -31,16 +32,17 @@ class LiveConfiguration extends Component {
               Disable
             </button>
           </div>
-          <div style={{ display: 'flex' }}>
-              <h3 style={{ margin: 0 }}>Placement Strategy</h3>
-              <input type="text" />
-              <button
+          <div className="col-md-6">
+            <h3>Placement Strategy</h3>
+            <input type="text" />
+            <button
               className="btn btn-danger"
               alt="Override Placement Strategy"
               title="Override Placement Strategy">
               Override
             </button>
           </div>
+        </div>
       </Section>
     );
   }
