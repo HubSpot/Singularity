@@ -76,6 +76,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       () -> {
         LOG.info("Config override - ALLOW_RACK_SENSITIVE=true");
         config.setAllowRackSensitivity(true);
+        LOG.info("hello what's going on here nginx");
         return Response.ok().build();
       }
     );
