@@ -27,12 +27,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.CONFIGURATION_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Exposes some live Singularity configuration")
 @Tags({ @Tag(name = "Singularity configuration") })
 public class SingularityConfigurationResource extends AbstractLeaderAwareResource {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityConfigurationResource.class
+  );
   private final SingularityConfiguration config;
   private final SingularityAuthorizer auth;
 
@@ -69,6 +74,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
+        LOG.info("Config override - ALLOW_RACK_SENSITIVE=true");
         config.setAllowRackSensitivity(true);
         return Response.ok().build();
       }
@@ -88,6 +94,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
+        LOG.info("Config override - ALLOW_RACK_SENSITIVE=false");
         config.setAllowRackSensitivity(false);
         return Response.ok().build();
       }
@@ -112,6 +119,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
+        LOG.info("Config override - PLACEMENT_STRATEGY={}", strategy);
         config.setAgentPlacementOverride(Optional.ofNullable(strategy));
         return Response.ok().build();
       }
@@ -133,6 +141,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
+        LOG.info("Config override - PLACEMENT_STRATEGY=");
         config.setAgentPlacementOverride(Optional.empty());
         return Response.ok().build();
       }
