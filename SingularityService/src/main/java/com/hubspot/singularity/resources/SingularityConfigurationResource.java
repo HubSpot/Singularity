@@ -95,13 +95,13 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   }
 
   @POST
-  @Path("/agent-placement/override/set/{strategy}")
+  @Path("/placement-strategy/override/set/{strategy}")
   @Operation(
     summary = "Set global placement strategy override, causing scheduling to ignore the default and request settings."
   )
   public Response setPlacementStrategyOverride(
     @Context HttpServletRequest requestContext,
-    @Parameter(required = true, description = "Placement strategy name") @PathParam(
+    @Parameter(required = false, description = "Placement strategy name") @PathParam(
       "strategy"
     ) AgentPlacement strategy,
     @Parameter(hidden = true) @Auth SingularityUser user
@@ -119,7 +119,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   }
 
   @POST
-  @Path("/agent-placement/override/clear")
+  @Path("/placement-strategy/override/clear")
   @Operation(
     summary = "Clear global placement strategy override, causing scheduling to respect the default and request settings."
   )
