@@ -22,7 +22,7 @@ export const OverridePlacementStrategy = buildJsonApiAction(
     }
 
     return {
-      url: `/configuration/placement-strategy/set/${strategy}`
+      url: `/configuration/placement-strategy/override/set/${strategy}`
     };
   }
 );
