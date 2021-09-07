@@ -68,20 +68,19 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   @POST
   @Path("/rack-sensitive/enable")
   @Operation(summary = "Enable global rack sensitivity, respecting request settings")
-  public OverrideConfiguration enableGlobalRackSensitivity(
+  public Response enableGlobalRackSensitivity(
     @Context HttpServletRequest requestContext,
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
-    auth.checkAdminAuthorization(user);
     return maybeProxyToLeader(
       requestContext,
-      OverrideConfiguration.class,
+      Response.class,
       null,
       () -> {
+        auth.checkAdminAuthorization(user);
         LOG.info("Config override - allowRackSensitivity=true");
         overrides.setAllowRackSensitivity(true);
-        LOG.info("hello what's going on here nginx");
-        return overrides;
+        return Response.ok().build();
       }
     );
   }
