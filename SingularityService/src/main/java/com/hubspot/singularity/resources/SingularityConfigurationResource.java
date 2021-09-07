@@ -8,6 +8,7 @@ import com.hubspot.singularity.SingularityLimits;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.OverrideConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import io.dropwizard.auth.Auth;
@@ -40,10 +41,12 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   );
   private final SingularityConfiguration config;
   private final SingularityAuthorizer auth;
+  private final OverrideConfiguration overrides;
 
   @Inject
   public SingularityConfigurationResource(
     SingularityConfiguration config,
+    OverrideConfiguration overrides,
     SingularityAuthorizer authorizationHelper,
     LeaderLatch leaderLatch,
     AsyncHttpClient httpClient,
@@ -51,6 +54,7 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.config = config;
+    this.overrides = overrides;
     this.auth = authorizationHelper;
   }
 
@@ -74,8 +78,8 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
-        LOG.info("Config override - ALLOW_RACK_SENSITIVE=true");
-        config.setAllowRackSensitivity(true);
+        LOG.info("Config override - allowRackSensitivity=true");
+        overrides.setAllowRackSensitivity(true);
         LOG.info("hello what's going on here nginx");
         return Response.ok().build();
       }
@@ -95,8 +99,8 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
-        LOG.info("Config override - ALLOW_RACK_SENSITIVE=false");
-        config.setAllowRackSensitivity(false);
+        LOG.info("Config override - allowRackSensitivity=false");
+        overrides.setAllowRackSensitivity(false);
         return Response.ok().build();
       }
     );
@@ -120,8 +124,8 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
-        LOG.info("Config override - PLACEMENT_STRATEGY={}", strategy);
-        config.setAgentPlacementOverride(Optional.ofNullable(strategy));
+        LOG.info("Config override - agentPlacementOverride={}", strategy);
+        overrides.setAgentPlacementOverride(Optional.ofNullable(strategy));
         return Response.ok().build();
       }
     );
@@ -142,8 +146,8 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
       Response.class,
       null,
       () -> {
-        LOG.info("Config override - PLACEMENT_STRATEGY=");
-        config.setAgentPlacementOverride(Optional.empty());
+        LOG.info("Config override - agentPlacementOverride=");
+        overrides.setAgentPlacementOverride(Optional.empty());
         return Response.ok().build();
       }
     );

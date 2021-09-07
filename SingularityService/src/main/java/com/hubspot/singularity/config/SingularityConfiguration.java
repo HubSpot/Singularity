@@ -451,11 +451,6 @@ public class SingularityConfiguration extends Configuration {
   private int deployCacheTtlInSeconds = 5;
   private int requestCacheTtlInSeconds = 5;
 
-  // If true, respect rack sensitive requests and distribute them across racks.
-  // Set to false in case of rack outages/decommissions.
-  private boolean allowRackSensitivity = true;
-  private Optional<AgentPlacement> agentPlacementOverride = Optional.empty();
-
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2113,21 +2108,5 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
     this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
-  }
-
-  public boolean isAllowRackSensitivity() {
-    return allowRackSensitivity;
-  }
-
-  public void setAllowRackSensitivity(boolean allowRackSensitivity) {
-    this.allowRackSensitivity = allowRackSensitivity;
-  }
-
-  public Optional<AgentPlacement> getAgentPlacementOverride() {
-    return agentPlacementOverride;
-  }
-
-  public void setAgentPlacementOverride(Optional<AgentPlacement> agentPlacementOverride) {
-    this.agentPlacementOverride = agentPlacementOverride;
   }
 }
