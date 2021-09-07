@@ -23,17 +23,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.config.CustomExecutorConfiguration;
-import com.hubspot.singularity.config.HistoryPurgingConfiguration;
-import com.hubspot.singularity.config.MesosConfiguration;
-import com.hubspot.singularity.config.S3Configuration;
-import com.hubspot.singularity.config.S3GroupConfiguration;
-import com.hubspot.singularity.config.SMTPConfiguration;
-import com.hubspot.singularity.config.SentryConfiguration;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
-import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.config.*;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
@@ -406,6 +396,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public UIConfiguration uiConfiguration(final SingularityConfiguration config) {
     return config.getUiConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public OverrideConfiguration overrideConfiguration() {
+    return new OverrideConfiguration();
   }
 
   @Provides
