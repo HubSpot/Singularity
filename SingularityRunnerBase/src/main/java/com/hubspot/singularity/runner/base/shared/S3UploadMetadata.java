@@ -53,6 +53,7 @@ public class S3UploadMetadata {
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyStorageClassIfOverBytes;
   private final Optional<Boolean> uploadImmediately;
+  private final boolean checkIfInUse;
   private final boolean checkSubdirectories;
   private final boolean compressBeforeUpload;
   private final SingularityUploaderType uploaderType;
@@ -80,6 +81,7 @@ public class S3UploadMetadata {
       "applyStorageClassIfOverBytes"
     ) Optional<Long> applyStorageClassIfOverBytes,
     @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
+    @JsonProperty("checkIfInUse") Optional<Boolean> checkIfInUse,
     @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
     @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload,
     @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
@@ -106,6 +108,7 @@ public class S3UploadMetadata {
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
     this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
     this.uploadImmediately = uploadImmediately;
+    this.checkIfInUse = checkIfInUse.orElse(true);
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
     this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
@@ -210,6 +213,10 @@ public class S3UploadMetadata {
     return uploadImmediately;
   }
 
+  public boolean isCheckIfInUse() {
+    return checkIfInUse;
+  }
+
   public boolean isCheckSubdirectories() {
     return checkSubdirectories;
   }
@@ -273,6 +280,8 @@ public class S3UploadMetadata {
       applyStorageClassIfOverBytes +
       ", uploadImmediately=" +
       uploadImmediately +
+      ", checkIfInUse=" +
+        checkIfInUse +
       ", checkSubdirectories=" +
       checkSubdirectories +
       ", compressBeforeUpload=" +

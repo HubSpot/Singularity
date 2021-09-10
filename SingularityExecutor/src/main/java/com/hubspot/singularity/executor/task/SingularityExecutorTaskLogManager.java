@@ -203,6 +203,7 @@ public class SingularityExecutorTaskLogManager {
           additionalFile.getApplyS3StorageClassAfterBytes().isPresent()
             ? additionalFile.getApplyS3StorageClassAfterBytes()
             : taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          additionalFile.isCheckIfInUse(),
           additionalFile.isCheckSubdirectories(),
           additionalFile.isCompressBeforeUpload()
         );
@@ -226,6 +227,7 @@ public class SingularityExecutorTaskLogManager {
           finished,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          true,
           false,
           false
         );
@@ -398,6 +400,7 @@ public class SingularityExecutorTaskLogManager {
           true,
           taskDefinition.getExecutorData().getS3StorageClass(),
           taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          true,
           false,
           false
         );
@@ -680,6 +683,7 @@ public class SingularityExecutorTaskLogManager {
     boolean finished,
     Optional<String> s3StorageClass,
     Optional<Long> applyS3StorageClassAfterBytes,
+    boolean checkIfInUse,
     boolean checkSubdirectories,
     boolean compressBeforeUpload
   ) {
@@ -711,6 +715,7 @@ public class SingularityExecutorTaskLogManager {
       s3StorageClass,
       applyS3StorageClassAfterBytes,
       Optional.of(finished),
+      Optional.of(checkIfInUse),
       Optional.of(checkSubdirectories),
       Optional.of(compressBeforeUpload),
       Optional.empty(),

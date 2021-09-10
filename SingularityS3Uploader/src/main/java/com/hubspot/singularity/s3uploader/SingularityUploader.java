@@ -106,6 +106,7 @@ public abstract class SingularityUploader {
       if (
         !configuration.isCheckForOpenFiles() ||
         uploadMetadata.isImmediate() ||
+        !uploadMetadata.isCheckIfInUse() ||
         !isFileOpen(file, configuration.isCheckOpenFilesViaFuser())
       ) {
         try {

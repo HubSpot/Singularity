@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @Schema(
-  description = "Describes a file that shouldbe uploaded by the SingularityS3Uploader"
+  description = "Describes a file that should be uploaded by the SingularityS3Uploader"
 )
 public class SingularityS3UploaderFile {
   private final String filename;
@@ -16,6 +16,7 @@ public class SingularityS3UploaderFile {
   private final Optional<String> directory;
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
+  private final boolean checkIfInUse;
   private final boolean checkSubdirectories;
   private final boolean compressBeforeUpload;
 
@@ -23,6 +24,7 @@ public class SingularityS3UploaderFile {
   public static SingularityS3UploaderFile fromString(String value) {
     return new SingularityS3UploaderFile(
       value,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -45,6 +47,7 @@ public class SingularityS3UploaderFile {
     @JsonProperty(
       "applyS3StorageClassAfterBytes"
     ) Optional<Long> applyS3StorageClassAfterBytes,
+    @JsonProperty("checkIfInUse") Optional<Boolean> checkIfInUse,
     @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
     @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload
   ) {
@@ -55,6 +58,7 @@ public class SingularityS3UploaderFile {
     this.directory = directory;
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
+    this.checkIfInUse = checkIfInUse.orElse(true);
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
   }
@@ -118,6 +122,14 @@ public class SingularityS3UploaderFile {
   }
 
   @Schema(
+    title = "Check if the file is in use before uploading",
+    defaultValue = "true"
+  )
+  public boolean isCheckIfInUse() {
+    return checkIfInUse;
+  }
+
+  @Schema(
     title = "Recursively check directories for matching files",
     defaultValue = "false"
   )
@@ -149,6 +161,8 @@ public class SingularityS3UploaderFile {
       s3StorageClass +
       ", applyS3StorageClassAfterBytes=" +
       applyS3StorageClassAfterBytes +
+      ", checkIfInUse=" +
+        checkIfInUse +
       ", checkSubdirectories=" +
       checkSubdirectories +
       ", compressBeforeUpload=" +
