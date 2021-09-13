@@ -71,6 +71,7 @@ public class AbstractLeaderAwareResource {
     switch (request.getMethod().toUpperCase()) {
       case "POST":
         requestBuilder = httpClient.preparePost(url);
+        requestBuilder.setBody("");
         break;
       case "PUT":
         requestBuilder = httpClient.preparePut(url);
