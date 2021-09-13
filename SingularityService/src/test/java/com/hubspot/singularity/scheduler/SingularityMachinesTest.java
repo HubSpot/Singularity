@@ -1343,12 +1343,12 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testAgentPlacementOverride() {
     initRequest();
-    initFirstDeploy();
+    initFirstDeployWithResources(10, 10000);
 
     saveAndSchedule(
       request
         .toBuilder()
-        .setInstances(Optional.of(2))
+        .setInstances(Optional.of(4))
         .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
     );
 
@@ -1356,23 +1356,33 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(
         Arrays.asList(
-          createOffer(20, 20000, 50000, "agent1", "host1"),
-          createOffer(20, 20000, 50000, "agent1", "host1")
+          createOffer(20, 10000, 50000, "agent1", "host1"),
+          createOffer(20, 10000, 50000, "agent1", "host1")
         )
       )
       .join();
 
-    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 3);
     Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
     // with override, ignores request placement strategy
+    // note - if we ever bother parallelizing the tests this'll cause issues with other placement tests
     overrides.setAgentPlacementOverride(Optional.of(AgentPlacement.GREEDY));
     sms
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
       .join();
 
-    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 0);
-    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 2);
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+
+    // without override, respects request placement strategy but leaves running tasks
+    overrides.setAgentPlacementOverride(Optional.empty());
+    sms
+      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
+      .join();
+
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
   }
 
   @Test
@@ -2058,6 +2068,15 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     // with the override, rack1 should get a third instance despite rack3 not having a second
     overrides.setAllowRackSensitivity(false);
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
+
+    // without the override, rack1 should not get another instance
+    overrides.setAllowRackSensitivity(true);
     sms
       .resourceOffers(
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
