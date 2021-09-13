@@ -2,15 +2,8 @@ package com.hubspot.singularity.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.hubspot.singularity.AgentPlacement;
-import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
