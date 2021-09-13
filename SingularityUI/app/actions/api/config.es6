@@ -3,19 +3,13 @@ import { buildJsonApiAction } from './base';
 export const EnableRackSensitivity = buildJsonApiAction(
   'ENABLE_RACK_SENSITIVITY',
   'POST',
-  {
-    url: '/disasters/rack-sensitive/enable',
-    body: {}
-  }
+  {url: '/configuration/rack-sensitive/enable'}
 );
 
 export const DisableRackSensitivity = buildJsonApiAction(
   'DISABLE_RACK_SENSITIVITY',
   'POST',
-  {
-    url: '/disasters/rack-sensitive/disable',
-    body: {}
-  }
+  {url: '/configuration/rack-sensitive/disable'}
 );
 
 
@@ -28,8 +22,7 @@ export const OverridePlacementStrategy = buildJsonApiAction(
     }
 
     return {
-      url: `/disasters/placement-strategy/override/set/${strategy}`,
-      body: {}
+      url: `/configuration/placement-strategy/override/set/${strategy}`
     };
   }
 );
