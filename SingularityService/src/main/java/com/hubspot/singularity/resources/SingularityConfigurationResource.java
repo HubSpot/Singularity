@@ -64,4 +64,91 @@ public class SingularityConfigurationResource extends AbstractLeaderAwareResourc
   public SingularityLimits getSingularityLimits() {
     return new SingularityLimits(config.getMaxDecommissioningAgents());
   }
+
+  @POST
+  @Path("/rack-sensitive/enable")
+  @Operation(summary = "Enable global rack sensitivity, respecting request settings")
+  public Response enableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        auth.checkAdminAuthorization(user);
+        LOG.info("Config override - allowRackSensitivity=true");
+        overrides.setAllowRackSensitivity(true);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/rack-sensitive/disable")
+  @Operation(summary = "Disable global rack sensitivity, overriding request settings")
+  public Response disableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    auth.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - allowRackSensitivity=false");
+        overrides.setAllowRackSensitivity(false);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement-strategy/override/set/{strategy}")
+  @Operation(
+    summary = "Set global placement strategy override, causing scheduling to ignore the default and request settings."
+  )
+  public Response setPlacementStrategyOverride(
+    @Context HttpServletRequest requestContext,
+    @Parameter(required = false, description = "Placement strategy name") @PathParam(
+      "strategy"
+    ) AgentPlacement strategy,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    auth.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - agentPlacementOverride={}", strategy);
+        overrides.setAgentPlacementOverride(Optional.ofNullable(strategy));
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement-strategy/override/clear")
+  @Operation(
+    summary = "Clear global placement strategy override, causing scheduling to respect the default and request settings."
+  )
+  public Response disableSeparatePlacement(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    auth.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - agentPlacementOverride=");
+        overrides.setAgentPlacementOverride(Optional.empty());
+        return Response.ok().build();
+      }
+    );
+  }
 }
