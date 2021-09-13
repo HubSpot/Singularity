@@ -2,17 +2,12 @@ package com.hubspot.singularity.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.hubspot.singularity.Singularity;
-import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.*;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.OverrideConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.ning.http.client.AsyncHttpClient;
 import io.dropwizard.auth.Auth;
@@ -51,6 +46,7 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   private final DisasterManager disasterManager;
   private final SingularityAuthorizer authorizationHelper;
   private final SingularityAbort abort;
+  private final OverrideConfiguration overrides;
 
   @Inject
   public DisastersResource(
@@ -59,12 +55,14 @@ public class DisastersResource extends AbstractLeaderAwareResource {
     LeaderLatch leaderLatch,
     AsyncHttpClient httpClient,
     @Singularity ObjectMapper objectMapper,
-    SingularityAbort abort
+    SingularityAbort abort,
+    OverrideConfiguration overrides
   ) {
     super(httpClient, leaderLatch, objectMapper);
     this.disasterManager = disasterManager;
     this.authorizationHelper = authorizationHelper;
     this.abort = abort;
+    this.overrides = overrides;
   }
 
   @GET
@@ -217,5 +215,92 @@ public class DisastersResource extends AbstractLeaderAwareResource {
       Executors.newSingleThreadExecutor()
     );
     return Response.ok().build();
+  }
+
+  @POST
+  @Path("/rack-sensitive/enable")
+  @Operation(summary = "Enable global rack sensitivity, respecting request settings")
+  public Response enableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - allowRackSensitivity=true");
+        overrides.setAllowRackSensitivity(true);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/rack-sensitive/disable")
+  @Operation(summary = "Disable global rack sensitivity, overriding request settings")
+  public Response disableGlobalRackSensitivity(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - allowRackSensitivity=false");
+        overrides.setAllowRackSensitivity(false);
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement-strategy/override/set/{strategy}")
+  @Operation(
+    summary = "Set global placement strategy override, causing scheduling to ignore the default and request settings."
+  )
+  public Response setPlacementStrategyOverride(
+    @Context HttpServletRequest requestContext,
+    @Parameter(required = false, description = "Placement strategy name") @PathParam(
+      "strategy"
+    ) AgentPlacement strategy,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - agentPlacementOverride={}", strategy);
+        overrides.setAgentPlacementOverride(Optional.ofNullable(strategy));
+        return Response.ok().build();
+      }
+    );
+  }
+
+  @POST
+  @Path("/placement-strategy/override/clear")
+  @Operation(
+    summary = "Clear global placement strategy override, causing scheduling to respect the default and request settings."
+  )
+  public Response disableSeparatePlacement(
+    @Context HttpServletRequest requestContext,
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return maybeProxyToLeader(
+      requestContext,
+      Response.class,
+      null,
+      () -> {
+        LOG.info("Config override - agentPlacementOverride=");
+        overrides.setAgentPlacementOverride(Optional.empty());
+        return Response.ok().build();
+      }
+    );
   }
 }
