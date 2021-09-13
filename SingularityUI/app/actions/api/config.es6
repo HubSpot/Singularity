@@ -18,7 +18,9 @@ export const OverridePlacementStrategy = buildJsonApiAction(
   'POST',
   strategy => {
     if (!strategy) {
-      strategy = '';
+      return {
+        url: `/configuration/placement-strategy/override/clear`
+      };
     }
 
     return {
