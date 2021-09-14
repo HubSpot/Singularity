@@ -71,6 +71,8 @@ public class AbstractLeaderAwareResource {
     switch (request.getMethod().toUpperCase()) {
       case "POST":
         requestBuilder = httpClient.preparePost(url);
+        // necessary to ensure POST requests without bodies work (will hit 30 second timeout otherwise)
+        requestBuilder.setBody("");
         break;
       case "PUT":
         requestBuilder = httpClient.preparePut(url);

@@ -6,6 +6,7 @@ import DisabledActions from './DisabledActions';
 import ManageDisasters from './ManageDisasters';
 import DisasterStats from './DisasterStats';
 import { refresh } from '../../actions/ui/disasters';
+import LiveConfiguration from './LiveConfiguration';
 
 class Disasters extends Component {
   static propTypes = {
@@ -50,6 +51,7 @@ class Disasters extends Component {
           user={this.props.user}
           automatedActionsDisabled={this.props.disastersData.automatedActionsDisabled}
         />
+        <LiveConfiguration />
         <DisasterStats stats={this.props.disastersData.stats} />
       </div>
     );

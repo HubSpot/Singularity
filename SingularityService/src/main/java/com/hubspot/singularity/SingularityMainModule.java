@@ -26,6 +26,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.OverrideConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.config.S3GroupConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
@@ -406,6 +407,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public UIConfiguration uiConfiguration(final SingularityConfiguration config) {
     return config.getUiConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public OverrideConfiguration overrideConfiguration() {
+    return new OverrideConfiguration();
   }
 
   @Provides

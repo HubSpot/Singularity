@@ -42,6 +42,7 @@ import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
+import com.hubspot.singularity.config.OverrideConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.AgentManager;
@@ -160,6 +161,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Inject
   protected SingularityConfiguration configuration;
+
+  @Inject
+  protected OverrideConfiguration overrides;
 
   @Inject
   protected SingularityTaskMetadataConfiguration taskMetadataConfiguration;
