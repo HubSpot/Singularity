@@ -1341,6 +1341,51 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testAgentPlacementOverride() {
+    initRequest();
+    initFirstDeployWithResources(10, 10000);
+
+    saveAndSchedule(
+      request
+        .toBuilder()
+        .setInstances(Optional.of(4))
+        .setAgentPlacement(Optional.of(AgentPlacement.SEPARATE))
+    );
+
+    // initially respects separate placement
+    sms
+      .resourceOffers(
+        Arrays.asList(
+          createOffer(20, 10000, 50000, "agent1", "host1"),
+          createOffer(20, 10000, 50000, "agent1", "host1")
+        )
+      )
+      .join();
+
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 3);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+
+    // with override, ignores request placement strategy
+    // note - if we ever bother parallelizing the tests this'll cause issues with other placement tests
+    overrides.setAgentPlacementOverride(Optional.of(AgentPlacement.GREEDY));
+    sms
+      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
+      .join();
+
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+
+    // without override, respects request placement strategy but leaves running tasks
+    overrides.setAgentPlacementOverride(Optional.empty());
+    sms
+      .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
+      .join();
+
+    Assertions.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assertions.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+  }
+
+  @Test
   public void testSlavePlacementSpread() {
     initRequest();
     initFirstDeploy();
@@ -1954,6 +1999,90 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       )
       .join();
     Assertions.assertEquals(7, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
+  public void testRackSensitiveOverride() {
+    // Set up 3 active racks
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2", Optional.of("rack2")))
+      )
+      .join();
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent3", "host3", Optional.of("rack3")))
+      )
+      .join();
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(
+      request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true))
+    );
+
+    // rack1 -> 1, rack2 -> 2, rack3 -> 3
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2", Optional.of("rack2")))
+      )
+      .join();
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent3", "host3", Optional.of("rack3")))
+      )
+      .join();
+
+    Assertions.assertEquals(3, taskManager.getActiveTaskIds().size());
+
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
+
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
+
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2", Optional.of("rack2")))
+      )
+      .join();
+    Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    // with the override, rack1 should get a third instance despite rack3 not having a second
+    overrides.setAllowRackSensitivity(false);
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
+
+    // without the override, rack1 should not get another instance
+    overrides.setAllowRackSensitivity(true);
+    sms
+      .resourceOffers(
+        Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
+      )
+      .join();
+    Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
   }
 
   @Test

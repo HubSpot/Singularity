@@ -32,6 +32,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
   private final Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder;
   private final int maxHistoryEntries;
+  private final SingularityConfiguration configuration;
 
   public AbstractMachineManager(
     CuratorFramework curator,
@@ -46,6 +47,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     this.historyTranscoder = historyTranscoder;
     this.expiringMachineStateTranscoder = expiringMachineStateTranscoder;
     this.maxHistoryEntries = configuration.getMaxMachineHistoryEntries();
+    this.configuration = configuration;
   }
 
   protected abstract String getRoot();
@@ -153,6 +155,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   protected abstract void deleteFromLeaderCache(String objectId);
+
+  public SingularityConfiguration getConfiguration() {
+    return configuration;
+  }
 
   public enum StateChangeResult {
     FAILURE_NOT_FOUND,

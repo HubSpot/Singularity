@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.OverrideConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AgentManager;
@@ -64,11 +65,13 @@ public class SingularityAgentAndRackManager {
   private final SingularityAgentAndRackHelper agentAndRackHelper;
   private final AtomicInteger activeAgentsLost;
   private final SingularityLeaderCache leaderCache;
+  private final OverrideConfiguration overrides;
 
   @Inject
   SingularityAgentAndRackManager(
     SingularityAgentAndRackHelper agentAndRackHelper,
     SingularityConfiguration configuration,
+    OverrideConfiguration overrides,
     SingularityExceptionNotifier exceptionNotifier,
     RackManager rackManager,
     AgentManager agentManager,
@@ -80,6 +83,7 @@ public class SingularityAgentAndRackManager {
     SingularityLeaderCache leaderCache
   ) {
     this.configuration = configuration;
+    this.overrides = overrides;
 
     this.exceptionNotifier = exceptionNotifier;
     this.agentAndRackHelper = agentAndRackHelper;
@@ -159,10 +163,12 @@ public class SingularityAgentAndRackManager {
       return AgentMatchState.AGENT_ATTRIBUTES_DO_NOT_MATCH;
     }
 
-    final AgentPlacement agentPlacement = taskRequest
-      .getRequest()
-      .getAgentPlacement()
-      .orElse(configuration.getDefaultAgentPlacement());
+    final AgentPlacement agentPlacement = maybeOverrideAgentPlacement(
+      taskRequest
+        .getRequest()
+        .getAgentPlacement()
+        .orElse(configuration.getDefaultAgentPlacement())
+    );
 
     if (
       !taskRequest.getRequest().isRackSensitive() &&
@@ -244,7 +250,9 @@ public class SingularityAgentAndRackManager {
       }
     }
 
-    if (taskRequest.getRequest().isRackSensitive()) {
+    if (
+      overrides.isAllowRackSensitivity() && taskRequest.getRequest().isRackSensitive()
+    ) {
       final boolean isRackOk = isRackOk(
         countPerRack,
         sanitizedRackId,
@@ -361,6 +369,10 @@ public class SingularityAgentAndRackManager {
       isPreferredByAllowedAttributes(offerHolder, taskRequest) ||
       isPreferredByCpuMemory(offerHolder, requestUtilization)
     );
+  }
+
+  private AgentPlacement maybeOverrideAgentPlacement(AgentPlacement placement) {
+    return overrides.getAgentPlacementOverride().orElse(placement);
   }
 
   private boolean isPreferredByAllowedAttributes(

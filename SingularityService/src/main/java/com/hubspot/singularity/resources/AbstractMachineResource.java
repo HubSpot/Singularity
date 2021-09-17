@@ -10,6 +10,7 @@ import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -18,6 +19,7 @@ import com.ning.http.client.AsyncHttpClient;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -130,6 +132,16 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
       user.getEmail()
     );
     saveExpiring(decommissionRequest, user, objectId);
+  }
+
+  protected void configure(
+    Consumer<SingularityConfiguration> configurer,
+    SingularityUser user,
+    SingularityAction action
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(action);
+    configurer.accept(manager.getConfiguration());
   }
 
   public void updateDecommissionAgent(
