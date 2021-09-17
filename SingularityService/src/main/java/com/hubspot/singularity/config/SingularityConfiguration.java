@@ -288,7 +288,7 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private SMTPConfiguration smtpConfiguration;
 
-  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(1);
+  private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   @JsonProperty("ui")
   @Valid
@@ -2063,7 +2063,7 @@ public class SingularityConfiguration extends Configuration {
   }
 
   public boolean isOptInEmailMode() {
-    return true;
+    return optInEmailMode;
   }
 
   public void setOptInEmailMode(boolean optInEmailMode) {

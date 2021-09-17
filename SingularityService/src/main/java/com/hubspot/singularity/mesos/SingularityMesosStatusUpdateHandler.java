@@ -308,7 +308,7 @@ public class SingularityMesosStatusUpdateHandler {
     long now = System.currentTimeMillis();
     long delta = now - timestamp;
 
-    LOG.info(
+    LOG.debug(
       "Update: task {} is now {} ({}) at {} (delta: {})",
       taskId,
       status.getState(),
@@ -649,11 +649,8 @@ public class SingularityMesosStatusUpdateHandler {
   public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(
     Protos.TaskStatus status
   ) {
-    LOG.info("Creating status update -- task: " + status.getTaskId());
     return CompletableFuture.supplyAsync(
       () -> {
-        LOG.info("Starting status update -- task: " + status.getTaskId());
-
         final String taskId = status.getTaskId().getValue();
         final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
