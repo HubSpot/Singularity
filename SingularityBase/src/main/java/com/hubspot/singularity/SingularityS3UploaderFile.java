@@ -18,11 +18,13 @@ public class SingularityS3UploaderFile {
   private final Optional<Long> applyS3StorageClassAfterBytes;
   private final boolean checkSubdirectories;
   private final boolean compressBeforeUpload;
+  private final boolean checkIfOpen;
 
   @JsonCreator
   public static SingularityS3UploaderFile fromString(String value) {
     return new SingularityS3UploaderFile(
       value,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -46,7 +48,8 @@ public class SingularityS3UploaderFile {
       "applyS3StorageClassAfterBytes"
     ) Optional<Long> applyS3StorageClassAfterBytes,
     @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
-    @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload
+    @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload,
+    @JsonProperty("checkIfOpen") Optional<Boolean> checkIfOpen
   ) {
     this.filename = filename;
     this.s3UploaderBucket = s3UploaderBucket;
@@ -57,6 +60,7 @@ public class SingularityS3UploaderFile {
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
+    this.checkIfOpen = checkIfOpen.orElse(true);
   }
 
   @Schema(description = "The name of the file")
@@ -130,6 +134,14 @@ public class SingularityS3UploaderFile {
     return compressBeforeUpload;
   }
 
+  @Schema(
+    title = "Check if matched files are open before processing them for upload",
+    defaultValue = "true"
+  )
+  public boolean isCheckIfOpen() {
+    return checkIfOpen;
+  }
+
   @Override
   public String toString() {
     return (
@@ -153,6 +165,8 @@ public class SingularityS3UploaderFile {
       checkSubdirectories +
       ", compressBeforeUpload=" +
       compressBeforeUpload +
+      ", checkIfOpen=" +
+      checkIfOpen +
       '}'
     );
   }

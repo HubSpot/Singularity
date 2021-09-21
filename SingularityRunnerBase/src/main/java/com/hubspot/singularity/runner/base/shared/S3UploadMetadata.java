@@ -55,6 +55,7 @@ public class S3UploadMetadata {
   private final Optional<Boolean> uploadImmediately;
   private final boolean checkSubdirectories;
   private final boolean compressBeforeUpload;
+  private final boolean checkIfOpen;
   private final SingularityUploaderType uploaderType;
   private final Map<String, Object> gcsCredentials;
   private final Optional<String> gcsStorageClass;
@@ -82,6 +83,7 @@ public class S3UploadMetadata {
     @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
     @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
     @JsonProperty("compressBeforeUpload") Optional<Boolean> compressBeforeUpload,
+    @JsonProperty("checkIfOpen") Optional<Boolean> checkIfOpen,
     @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
     @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
     @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
@@ -108,6 +110,7 @@ public class S3UploadMetadata {
     this.uploadImmediately = uploadImmediately;
     this.checkSubdirectories = checkSubdirectories.orElse(false);
     this.compressBeforeUpload = compressBeforeUpload.orElse(false);
+    this.checkIfOpen = checkIfOpen.orElse(true);
     this.uploaderType = uploaderType.orElse(SingularityUploaderType.S3);
     this.gcsCredentials =
       gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
@@ -218,6 +221,10 @@ public class S3UploadMetadata {
     return compressBeforeUpload;
   }
 
+  public boolean isCheckIfOpen() {
+    return checkIfOpen;
+  }
+
   public SingularityUploaderType getUploaderType() {
     return uploaderType;
   }
@@ -277,6 +284,8 @@ public class S3UploadMetadata {
       checkSubdirectories +
       ", compressBeforeUpload=" +
       compressBeforeUpload +
+      ", checkIfOpen=" +
+      checkIfOpen +
       ", uploaderType=" +
       uploaderType +
       ", gcsStorageClass=" +
