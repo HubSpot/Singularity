@@ -3424,6 +3424,61 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
+  @Test
+  public void testPortUsage() {
+    SingularityRequest ra = new SingularityRequestBuilder("a", RequestType.SERVICE)
+      .setInstances(Optional.of(2))
+      .build();
+    SingularityRequest rb = new SingularityRequestBuilder("b", RequestType.SERVICE)
+      .setInstances(Optional.of(2))
+      .build();
+
+    requestResource.postRequest(ra, singularityUser);
+    requestResource.postRequest(rb, singularityUser);
+
+    deployRequest(ra, "a0", new Resources(1, 1, 3));
+    deployRequest(rb, "b0", new Resources(1, 1, 3));
+
+    scheduler.drainPendingQueue();
+
+    // mesos offers ports as an array of ranges - eg ["65:70", "80:80"]
+    sms
+      .resourceOffers(
+        Arrays.asList(
+          createOffer(
+            20,
+            20000,
+            50000,
+            "agent1",
+            "host1",
+            Optional.<String>empty(),
+            Collections.<String, String>emptyMap(),
+            new String[] {}
+          )
+        )
+      )
+      .join();
+    Assertions.assertEquals(0, taskManager.getActiveTasks().size());
+
+    sms
+      .resourceOffers(
+        Arrays.asList(
+          createOffer(
+            20,
+            20000,
+            50000,
+            "agent1",
+            "host1",
+            Optional.<String>empty(),
+            Collections.<String, String>emptyMap(),
+            new String[] { "60:61", "70:71", "80:81", "90:91", "100:101", "110:111" }
+          )
+        )
+      )
+      .join();
+    Assertions.assertEquals(4, taskManager.getActiveTasks().size());
+  }
+
   private SingularityDeployBuilder dockerDeployWithPorts() {
     final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(
       Optional.<SingularityPortMappingType>empty(),
