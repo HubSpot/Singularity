@@ -183,12 +183,47 @@ public class MesosUtilsTest {
       )
     );
 
-    // TODO - mesos utils expects but does not validate that subtraction of resources produces valid results
+    // TODO - mesos utils expects but does not validate that subtraction arguments produce positive/valid results
     Assertions.assertNotEquals(
       createResources(3, 60, "23:23", "100:100", "103:1000"),
       MesosUtils.subtractResources(
         createResources(5, 100, "23:23", "100:1000"),
         createResources(2, 40, "24:24", "101:102")
+      )
+    );
+  }
+
+  @Test
+  public void testSubtractDuplicatePorts() {
+    // TODO - if an offer were to have duplicate port ranges, subtraction will not dedup
+    Assertions.assertEquals(
+      createResources(3, 60, "23:23", "100:100", "103:1000", "100:100", "103:1000"),
+      MesosUtils.subtractResources(
+        createResources(5, 100, "23:23", "23:23", "100:1000", "100:1000"),
+        createResources(2, 40, "23:23", "101:102")
+      )
+    );
+  }
+
+  @Test
+  public void testCombineDuplicatePorts() {
+    Assertions.assertEquals(
+      createResources(7, 140, "23:23", "100:1000"),
+      MesosUtils.combineResources(
+        Arrays.asList(
+          createResources(5, 100, "23:23", "100:1000"),
+          createResources(2, 40, "23:23", "100:420")
+        )
+      )
+    );
+
+    Assertions.assertEquals(
+      createResources(7, 140, "23:23", "24:24", "25:32", "100:1000"),
+      MesosUtils.combineResources(
+        Arrays.asList(
+          createResources(5, 100, "23:23", "25:30", "100:1000"),
+          createResources(2, 40, "23:23", "24:24", "27:32", "100:420")
+        )
       )
     );
   }
