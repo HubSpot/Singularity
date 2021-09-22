@@ -359,7 +359,7 @@ public class SingularityScheduler {
             () ->
               lock.runWithRequestLock(
                 () ->
-                  handlePendingRequestsForDeployKey(
+                  handlePendingRequestsForDeployKeySafe(
                     obsoleteRequests,
                     heldForScheduledActiveTask,
                     totalNewScheduledTasks,
@@ -382,6 +382,26 @@ public class SingularityScheduler {
       heldForScheduledActiveTask.get(),
       JavaUtils.duration(start)
     );
+  }
+
+  private void handlePendingRequestsForDeployKeySafe(
+    AtomicInteger obsoleteRequests,
+    AtomicInteger heldForScheduledActiveTask,
+    AtomicInteger totalNewScheduledTasks,
+    SingularityDeployKey deployKey,
+    List<SingularityPendingRequest> pendingRequestsForDeploy
+  ) {
+    try {
+      handlePendingRequestsForDeployKey(
+        obsoleteRequests,
+        heldForScheduledActiveTask,
+        totalNewScheduledTasks,
+        deployKey,
+        pendingRequestsForDeploy
+      );
+    } catch (Exception e) {
+      LOG.error("Error handling pending requests for {}, skipping", deployKey, e);
+    }
   }
 
   private void handlePendingRequestsForDeployKey(
