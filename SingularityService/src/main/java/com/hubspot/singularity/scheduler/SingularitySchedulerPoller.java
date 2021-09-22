@@ -72,4 +72,9 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       "SingularitySchedulerPoller"
     );
   }
+
+  @Override
+  protected boolean abortsOnError() {
+    return false;
+  }
 }
