@@ -414,7 +414,7 @@ public final class MesosUtils {
 
     int s = 0;
 
-    for (Range range : ranges.getRangeList()) {
+    for (Range range : sortedRanges) {
       Range.Builder currentRange = range.toBuilder();
 
       for (int i = s; i < subtractRanges.size(); i++) {
@@ -439,6 +439,59 @@ public final class MesosUtils {
 
       if (currentRange.getEnd() >= currentRange.getBegin()) {
         newRanges.addRange(currentRange.build());
+      }
+    }
+
+    return newRanges.build();
+  }
+
+  private static Ranges combineRanges(Ranges ranges1, Ranges ranges2) {
+    // assumes that each list does not contain overlapping ranges,
+    // but handles cases where they overlap with each other
+    Ranges.Builder newRanges = Ranges.newBuilder();
+
+    List<Range> sortedRanges1 = Lists.newArrayList(ranges1.getRangeList());
+    sortedRanges1.sort(RANGE_COMPARATOR);
+
+    List<Range> sortedRanges2 = Lists.newArrayList(ranges2.getRangeList());
+    sortedRanges2.sort(RANGE_COMPARATOR);
+
+    int i = 0;
+    int j = 0;
+
+    // while there are unmerged ranges
+    while (i < sortedRanges1.size() || j < sortedRanges2.size()) {
+      // easy case - one of the lists is exhausted, just add ranges from the other one
+      if (i >= sortedRanges1.size()) {
+        newRanges.addRange(sortedRanges2.get(j++));
+        continue;
+      }
+
+      if (j >= sortedRanges2.size()) {
+        newRanges.addRange(sortedRanges1.get(i++));
+        continue;
+      }
+
+      // else need to handle possible overlap between ranges
+      Range r1 = sortedRanges1.get(i);
+      Range r2 = sortedRanges2.get(j);
+
+      // no overlap between the ranges -> add lowest non-overlapping range
+      // can't add both - the higher range may still overlap with a range from the other list
+      if (r1.getEnd() < r2.getBegin()) {
+        newRanges.addRange(r1);
+        i++;
+      } else if (r1.getBegin() > r2.getEnd()) {
+        newRanges.addRange(r2);
+        j++;
+      } else {
+        // handle overlap between ranges by smacking them together
+        Range.Builder merged = Range.newBuilder();
+        merged.setBegin(Math.min(r1.getBegin(), r2.getBegin()));
+        merged.setEnd(Math.max(r1.getEnd(), r2.getEnd()));
+        newRanges.addRange(merged);
+        i++;
+        j++;
       }
     }
 
@@ -510,9 +563,10 @@ public final class MesosUtils {
             );
             resources.set(index, resourceBuilder.build());
           } else if (resource.hasRanges()) {
-            Ranges.Builder newRanges = Ranges.newBuilder();
-            resource.getRanges().getRangeList().forEach(newRanges::addRange);
-            matched.get().getRanges().getRangeList().forEach(newRanges::addRange);
+            Ranges newRanges = combineRanges(
+              resource.getRanges(),
+              matched.get().getRanges()
+            );
             resourceBuilder.setRanges(newRanges);
             resources.set(index, resourceBuilder.build());
           } else {

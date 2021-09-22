@@ -1047,6 +1047,12 @@ public class SingularityMesosOfferScheduler {
       offerHolder.getAgentId(),
       offerHolder.getHostname()
     );
+    LOG.info(
+      "Task {} offer resource usage: {} / {}",
+      taskHolder.getTask().getTaskId(),
+      taskHolder.getMesosTask().getResourcesList(),
+      offerHolder.getCurrentResources()
+    );
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
     offerHolder.addMatchedTask(taskHolder);

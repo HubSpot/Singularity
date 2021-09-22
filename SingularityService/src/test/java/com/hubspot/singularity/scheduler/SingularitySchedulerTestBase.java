@@ -811,6 +811,24 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return deploy;
   }
 
+  protected SingularityDeploy deployRequest(
+    SingularityRequest request,
+    String deployId,
+    Resources resources
+  ) {
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId)
+      .setCommand(Optional.of("sleep 1"))
+      .setResources(Optional.of(resources))
+      .build();
+
+    deployResource.deploy(
+      new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty()),
+      singularityUser
+    );
+
+    return deploy;
+  }
+
   protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(
       requestId,

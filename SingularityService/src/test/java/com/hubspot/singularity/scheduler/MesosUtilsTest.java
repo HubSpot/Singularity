@@ -163,30 +163,90 @@ public class MesosUtilsTest {
     );
   }
 
+  @Test
+  public void testSubtractMissingResources() {
+    // cpu
+    Assertions.assertEquals(
+      createResources(-3, 60, "100:1000"),
+      MesosUtils.subtractResources(
+        createResources(2, 100, "23:23", "100:1000"),
+        createResources(5, 40, "23:23")
+      )
+    );
+
+    // memory
+    Assertions.assertEquals(
+      createResources(3, -60, "100:1000"),
+      MesosUtils.subtractResources(
+        createResources(5, 40, "23:23", "100:1000"),
+        createResources(2, 100, "23:23")
+      )
+    );
+
+    // TODO - mesos utils expects but does not validate that subtraction arguments produce positive/valid results
+    Assertions.assertNotEquals(
+      createResources(3, 60, "23:23", "100:100", "103:1000"),
+      MesosUtils.subtractResources(
+        createResources(5, 100, "23:23", "100:1000"),
+        createResources(2, 40, "24:24", "101:102")
+      )
+    );
+  }
+
+  @Test
+  public void testSubtractDuplicatePorts() {
+    // TODO - if an offer were to have duplicate port ranges, subtraction will not dedup
+    Assertions.assertEquals(
+      createResources(3, 60, "23:23", "100:100", "103:1000", "100:100", "103:1000"),
+      MesosUtils.subtractResources(
+        createResources(5, 100, "23:23", "23:23", "100:1000", "100:1000"),
+        createResources(2, 40, "23:23", "101:102")
+      )
+    );
+  }
+
+  @Test
+  public void testCombineDuplicatePorts() {
+    Assertions.assertEquals(
+      createResources(7, 140, "23:23", "100:1000"),
+      MesosUtils.combineResources(
+        Arrays.asList(
+          createResources(5, 100, "23:23", "100:1000"),
+          createResources(2, 40, "23:23", "100:420")
+        )
+      )
+    );
+
+    Assertions.assertEquals(
+      createResources(7, 140, "23:23", "24:24", "25:32", "100:1000"),
+      MesosUtils.combineResources(
+        Arrays.asList(
+          createResources(5, 100, "23:23", "25:30", "100:1000"),
+          createResources(2, 40, "23:23", "24:24", "27:32", "100:420")
+        )
+      )
+    );
+  }
+
   private List<Resource> createResources(int cpus, int memory, String... ranges) {
     List<Resource> resources = Lists.newArrayList();
 
-    if (cpus > 0) {
-      resources.add(
-        Resource
-          .newBuilder()
-          .setType(Type.SCALAR)
-          .setName(MesosUtils.CPUS)
-          .setScalar(Scalar.newBuilder().setValue(cpus).build())
-          .build()
-      );
-    }
-
-    if (memory > 0) {
-      resources.add(
-        Resource
-          .newBuilder()
-          .setType(Type.SCALAR)
-          .setName(MesosUtils.MEMORY)
-          .setScalar(Scalar.newBuilder().setValue(memory).build())
-          .build()
-      );
-    }
+    resources.add(
+      Resource
+        .newBuilder()
+        .setType(Type.SCALAR)
+        .setName(MesosUtils.CPUS)
+        .setScalar(Scalar.newBuilder().setValue(cpus).build())
+        .build()
+    );
+    resources.add(
+      Resource
+        .newBuilder()
+        .setType(Type.SCALAR)
+        .setName(MesosUtils.MEMORY)
+        .setScalar(Scalar.newBuilder().setValue(memory).build())
+        .build()
+    );
 
     if (ranges.length > 0) {
       resources.add(buildPortRanges(ranges));
