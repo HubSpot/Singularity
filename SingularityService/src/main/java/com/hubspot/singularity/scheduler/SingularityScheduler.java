@@ -1682,6 +1682,7 @@ public class SingularityScheduler {
             scheduleFrom
           );
         } catch (ParseException | InvalidRecurrenceRuleException pe) {
+          LOG.error("Failed to get next run on {}", request, pe);
           throw new RuntimeException(pe);
         }
       }
