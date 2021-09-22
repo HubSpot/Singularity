@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.rx.java.AwaitableSubscription;
@@ -61,6 +62,7 @@ import rx.subjects.SerializedSubject;
  * <p>
  * http://mesos.apache.org/documentation/latest/scheduler-http-api/
  */
+@Singleton
 public class SingularityMesosSchedulerClient {
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosSchedulerClient.class
