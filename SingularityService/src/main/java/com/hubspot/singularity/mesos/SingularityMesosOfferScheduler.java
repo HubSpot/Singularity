@@ -1042,11 +1042,16 @@ public class SingularityMesosOfferScheduler {
 
     LOG.trace("Accepted and built task {}", zkTask);
     LOG.info(
-      "Launching task {} slot on agent {} ({}) with resources: {}",
+      "Launching task {} slot on agent {} ({})",
       taskHolder.getTask().getTaskId(),
       offerHolder.getAgentId(),
-      offerHolder.getHostname(),
-      taskHolder.getMesosTask().getResourcesList()
+      offerHolder.getHostname()
+    );
+    LOG.info(
+      "Task {} offer resource usage: {} / {}",
+      taskHolder.getTask().getTaskId(),
+      taskHolder.getMesosTask().getResourcesList(),
+      offerHolder.getCurrentResources()
     );
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
