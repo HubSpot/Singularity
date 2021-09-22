@@ -1047,7 +1047,7 @@ public class SingularityMesosOfferScheduler {
       offerHolder.getAgentId(),
       offerHolder.getHostname()
     );
-    LOG.info(
+    LOG.trace(
       "Task {} offer resource usage: {} / {}",
       taskHolder.getTask().getTaskId(),
       taskHolder.getMesosTask().getResourcesList(),
