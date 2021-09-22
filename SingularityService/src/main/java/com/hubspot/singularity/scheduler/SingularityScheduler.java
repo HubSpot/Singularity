@@ -1682,6 +1682,7 @@ public class SingularityScheduler {
             scheduleFrom
           );
         } catch (ParseException | InvalidRecurrenceRuleException pe) {
+          LOG.error("Failed quartz parse on {}", request.getId(), pe);
           throw new RuntimeException(pe);
         }
       }
