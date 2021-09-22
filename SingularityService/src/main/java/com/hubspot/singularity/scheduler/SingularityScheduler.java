@@ -1628,105 +1628,113 @@ public class SingularityScheduler {
     RequestState state,
     SingularityPendingRequest pendingRequest
   ) {
-    PendingType pendingType = pendingRequest.getPendingType();
-    final long now = System.currentTimeMillis();
+    try {
+      PendingType pendingType = pendingRequest.getPendingType();
+      final long now = System.currentTimeMillis();
 
-    long nextRunAt = now;
+      long nextRunAt = now;
 
-    if (request.isScheduled()) {
-      if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
-        LOG.info("Scheduling requested immediate run of {}", request.getId());
-      } else {
-        try {
-          Date nextRunAtDate = null;
-          Date scheduleFrom = null;
+      if (request.isScheduled()) {
+        if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
+          LOG.info("Scheduling requested immediate run of {}", request.getId());
+        } else {
+          try {
+            Date nextRunAtDate = null;
+            Date scheduleFrom = null;
 
-          if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
-            final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(
-              request.getSchedule().get()
-            );
-            nextRunAtDate = rfc5545Schedule.getNextValidTime();
-            scheduleFrom = new Date(rfc5545Schedule.getStartDateTime().getMillis());
-          } else {
-            scheduleFrom = new Date(now);
-            final CronExpression cronExpression = new CronExpression(
-              request.getQuartzScheduleSafe()
-            );
-            if (request.getScheduleTimeZone().isPresent()) {
-              cronExpression.setTimeZone(
-                TimeZone.getTimeZone(request.getScheduleTimeZone().get())
+            if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
+              final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(
+                request.getSchedule().get()
               );
+              nextRunAtDate = rfc5545Schedule.getNextValidTime();
+              scheduleFrom = new Date(rfc5545Schedule.getStartDateTime().getMillis());
+            } else {
+              scheduleFrom = new Date(now);
+
+              final CronExpression cronExpression = new CronExpression(
+                request.getQuartzScheduleSafe()
+              );
+              if (request.getScheduleTimeZone().isPresent()) {
+                cronExpression.setTimeZone(
+                  TimeZone.getTimeZone(request.getScheduleTimeZone().get())
+                );
+              }
+              nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
             }
-            nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
+
+            if (nextRunAtDate == null) {
+              return Optional.empty();
+            }
+
+            LOG.trace(
+              "Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})",
+              request.getId(),
+              request.getSchedule(),
+              nextRunAtDate,
+              scheduleFrom
+            );
+
+            nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
+
+            LOG.trace(
+              "Scheduling next run of {} (schedule: {}) at {} (from: {})",
+              request.getId(),
+              request.getSchedule(),
+              nextRunAtDate,
+              scheduleFrom
+            );
+          } catch (ParseException | InvalidRecurrenceRuleException pe) {
+            throw new RuntimeException(pe);
           }
-
-          if (nextRunAtDate == null) {
-            return Optional.empty();
-          }
-
-          LOG.trace(
-            "Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})",
-            request.getId(),
-            request.getSchedule(),
-            nextRunAtDate,
-            scheduleFrom
-          );
-
-          nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
-
-          LOG.trace(
-            "Scheduling next run of {} (schedule: {}) at {} (from: {})",
-            request.getId(),
-            request.getSchedule(),
-            nextRunAtDate,
-            scheduleFrom
-          );
-        } catch (ParseException | InvalidRecurrenceRuleException pe) {
-          throw new RuntimeException(pe);
         }
       }
-    }
 
-    if (!request.isLongRunning() && pendingRequest.getRunAt().isPresent()) {
-      nextRunAt = Math.max(nextRunAt, pendingRequest.getRunAt().get());
-    }
+      if (!request.isLongRunning() && pendingRequest.getRunAt().isPresent()) {
+        nextRunAt = Math.max(nextRunAt, pendingRequest.getRunAt().get());
+      }
 
-    if (
-      pendingType == PendingType.TASK_DONE &&
-      request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().orElse(0L) > 0
-    ) {
-      nextRunAt =
-        Math.max(
+      if (
+        pendingType == PendingType.TASK_DONE &&
+        request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().orElse(0L) > 0
+      ) {
+        nextRunAt =
+          Math.max(
+            nextRunAt,
+            now + request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()
+          );
+
+        LOG.trace(
+          "Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule",
+          request.getId(),
           nextRunAt,
-          now + request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()
+          JavaUtils.durationFromMillis(
+            request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()
+          )
         );
+      }
 
-      LOG.trace(
-        "Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule",
-        request.getId(),
-        nextRunAt,
-        JavaUtils.durationFromMillis(
-          request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()
-        )
-      );
-    }
-
-    if (state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY) {
-      final long prevNextRunAt = nextRunAt;
-      nextRunAt =
-        Math.max(
+      if (
+        state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY
+      ) {
+        final long prevNextRunAt = nextRunAt;
+        nextRunAt =
+          Math.max(
+            nextRunAt,
+            now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())
+          );
+        LOG.trace(
+          "Adjusted next run of {} to {} (from: {}) due to cooldown",
+          request.getId(),
           nextRunAt,
-          now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds())
+          prevNextRunAt
         );
-      LOG.trace(
-        "Adjusted next run of {} to {} (from: {}) due to cooldown",
-        request.getId(),
-        nextRunAt,
-        prevNextRunAt
-      );
-    }
+      }
 
-    return Optional.of(nextRunAt);
+      return Optional.of(nextRunAt);
+    } catch (Throwable t) {
+      LOG.error("Error getting next runAt", t);
+      return Optional.empty();
+    }
   }
 
   private SingularityRequest updatedRequest(
