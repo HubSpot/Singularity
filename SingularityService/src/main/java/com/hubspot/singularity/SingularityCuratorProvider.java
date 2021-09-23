@@ -50,11 +50,15 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
     ZooKeeperConfiguration zookeeperConfig = configuration.getZooKeeperConfiguration();
 
     if (configuration.isReadOnlyInstance()) {
-      LOG.trace("Creating multiple logging curator frameworks for read-only instance");
       int numberOfCuratorFrameworks = Math.max(
         1,
         zookeeperConfig.getCuratorFrameworkInstances()
       );
+      LOG.info(
+        "Creating {} logging curator frameworks for read-only instance",
+        numberOfCuratorFrameworks
+      );
+
       List<CuratorFramework> curatorFrameworks = Lists.newArrayListWithExpectedSize(
         numberOfCuratorFrameworks
       );
@@ -65,7 +69,7 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
         new ZkClientsLoadDistributor(curatorFrameworks)
       );
     } else {
-      LOG.trace("Creating curator framework for leader instance");
+      LOG.info("Creating curator framework for leader instance");
       return buildCuratorFrameworkInstance(zookeeperConfig);
     }
   }
