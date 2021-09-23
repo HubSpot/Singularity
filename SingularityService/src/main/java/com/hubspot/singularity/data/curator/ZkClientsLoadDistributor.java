@@ -1,8 +1,7 @@
 package com.hubspot.singularity.data.curator;
 
-import com.google.common.collect.Iterators;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,11 +12,11 @@ public class ZkClientsLoadDistributor {
   );
 
   private final List<CuratorFramework> curatorFrameworks;
-  private final Iterator<CuratorFramework> iterator;
+  private final AtomicInteger curatorIndex;
 
   public ZkClientsLoadDistributor(List<CuratorFramework> curatorFrameworks) {
     this.curatorFrameworks = curatorFrameworks;
-    this.iterator = Iterators.cycle(curatorFrameworks);
+    this.curatorIndex = new AtomicInteger(0);
   }
 
   public void start() {
@@ -41,7 +40,8 @@ public class ZkClientsLoadDistributor {
   }
 
   public CuratorFramework getCuratorFramework() {
-    return iterator.next();
+    int ci = curatorIndex.getAndUpdate(i -> (i + 1) % curatorFrameworks.size());
+    return curatorFrameworks.get(ci);
   }
 
   public List<CuratorFramework> getAll() {

@@ -51,7 +51,10 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
 
     if (configuration.isReadOnlyInstance()) {
       LOG.trace("Creating multiple logging curator frameworks for read-only instance");
-      int numberOfCuratorFrameworks = zookeeperConfig.getCuratorFrameworkInstances();
+      int numberOfCuratorFrameworks = Math.max(
+        1,
+        zookeeperConfig.getCuratorFrameworkInstances()
+      );
       List<CuratorFramework> curatorFrameworks = Lists.newArrayListWithExpectedSize(
         numberOfCuratorFrameworks
       );
