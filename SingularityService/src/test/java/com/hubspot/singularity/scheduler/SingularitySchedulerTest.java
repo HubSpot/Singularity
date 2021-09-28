@@ -96,7 +96,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.quartz.CronExpression;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Inject
@@ -3840,12 +3839,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       newScheduleQuartz,
       requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe()
     );
-  }
-
-  @Test
-  public void testBrokenQuartzCron() throws Exception {
-    String quartz = "0 0/60 * * * ?";
-    new CronExpression(quartz);
   }
 
   @Test
