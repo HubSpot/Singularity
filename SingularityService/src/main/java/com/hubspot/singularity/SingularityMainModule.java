@@ -107,6 +107,8 @@ public class SingularityMainModule implements Module {
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
+  public static final String UNSCHEDULED_TASKS_METER =
+    "singularity.unscheduled.tasks.meter";
 
   public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
   public static final String LAST_MESOS_MASTER_HEARTBEAT_TIME =
@@ -505,6 +507,13 @@ public class SingularityMainModule implements Module {
   @Named(LOST_TASKS_METER)
   public Meter providesLostTasksMeter(MetricRegistry registry) {
     return registry.meter("com.hubspot.singularity.lostTasks");
+  }
+
+  @Provides
+  @Singleton
+  @Named(UNSCHEDULED_TASKS_METER)
+  public Meter providesUnscheduledTasksMeter(MetricRegistry registry) {
+    return registry.meter("com.hubspot.singularity.unscheduledTasks");
   }
 
   @Provides
