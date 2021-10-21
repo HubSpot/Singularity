@@ -1,11 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
@@ -22,6 +24,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -104,6 +107,7 @@ public class SingularityScheduler {
   private final SingularitySchedulerLock lock;
   private final ExecutorService schedulerExecutorService;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
+  private final Meter unscheduledTasksMetric;
 
   private final Map<SingularityTaskId, Long> requestedReconciles;
 
@@ -122,7 +126,8 @@ public class SingularityScheduler {
     SingularityLeaderCache leaderCache,
     SingularitySchedulerLock lock,
     SingularityManagedThreadPoolFactory threadPoolFactory,
-    SingularityMesosSchedulerClient mesosSchedulerClient
+    SingularityMesosSchedulerClient mesosSchedulerClient,
+    @Named(SingularityMainModule.UNSCHEDULED_TASKS_METER) Meter unscheduledTasksMetric
   ) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
@@ -140,6 +145,7 @@ public class SingularityScheduler {
       threadPoolFactory.get("scheduler", configuration.getCoreThreadpoolSize());
     this.mesosSchedulerClient = mesosSchedulerClient;
     this.requestedReconciles = new HashMap<>();
+    this.unscheduledTasksMetric = unscheduledTasksMetric;
   }
 
   private void cleanupTaskDueToDecomission(
@@ -359,7 +365,7 @@ public class SingularityScheduler {
             () ->
               lock.runWithRequestLock(
                 () ->
-                  handlePendingRequestsForDeployKey(
+                  handlePendingRequestsForDeployKeySafe(
                     obsoleteRequests,
                     heldForScheduledActiveTask,
                     totalNewScheduledTasks,
@@ -382,6 +388,27 @@ public class SingularityScheduler {
       heldForScheduledActiveTask.get(),
       JavaUtils.duration(start)
     );
+  }
+
+  private void handlePendingRequestsForDeployKeySafe(
+    AtomicInteger obsoleteRequests,
+    AtomicInteger heldForScheduledActiveTask,
+    AtomicInteger totalNewScheduledTasks,
+    SingularityDeployKey deployKey,
+    List<SingularityPendingRequest> pendingRequestsForDeploy
+  ) {
+    try {
+      handlePendingRequestsForDeployKey(
+        obsoleteRequests,
+        heldForScheduledActiveTask,
+        totalNewScheduledTasks,
+        deployKey,
+        pendingRequestsForDeploy
+      );
+    } catch (Exception e) {
+      LOG.error("Error handling pending requests for {}, skipping", deployKey, e);
+      unscheduledTasksMetric.mark();
+    }
   }
 
   private void handlePendingRequestsForDeployKey(
