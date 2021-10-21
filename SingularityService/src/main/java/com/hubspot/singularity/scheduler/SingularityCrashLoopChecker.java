@@ -105,8 +105,9 @@ public class SingularityCrashLoopChecker {
       ) {
         continue;
       }
+
       // Remove outdated loops on new deploy
-      List<CrashLoopInfo> previouslyActive = requestManager
+      List<CrashLoopInfo> crashLoopHistory = requestManager
         .getCrashLoopsForRequest(request.getRequest().getId())
         .stream()
         .filter(
@@ -122,6 +123,18 @@ public class SingularityCrashLoopChecker {
             return true;
           }
         )
+        .collect(Collectors.toList());
+
+      // Only keep the most recent 10 crash loop infos
+      crashLoopHistory
+        .stream()
+        .filter(l -> l.getEnd().isPresent())
+        .sorted(Comparator.comparingLong(CrashLoopInfo::getStart).reversed())
+        .skip(10)
+        .forEach(requestManager::deleteCrashLoop);
+
+      List<CrashLoopInfo> previouslyActive = crashLoopHistory
+        .stream()
         .filter(l -> !l.getEnd().isPresent())
         .collect(Collectors.toList());
 
@@ -173,14 +186,6 @@ public class SingularityCrashLoopChecker {
           }
         );
       }
-
-      // Only keep the most recent 20 crash loop infos
-      previouslyActive
-        .stream()
-        .filter(l -> l.getEnd().isPresent())
-        .sorted(Comparator.comparingLong(CrashLoopInfo::getStart).reversed())
-        .skip(10)
-        .forEach(requestManager::deleteCrashLoop);
     }
 
     LOG.info(
