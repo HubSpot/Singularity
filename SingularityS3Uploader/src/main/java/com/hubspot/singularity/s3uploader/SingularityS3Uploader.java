@@ -105,15 +105,15 @@ public class SingularityS3Uploader extends SingularityUploader {
         () -> {
           final long start = System.currentTimeMillis();
 
-          final String key = SingularityS3FormatHelper.getKey(
-            uploadMetadata.getS3KeyFormat(),
-            sequence,
-            Files.getLastModifiedTime(file).toMillis(),
-            Objects.toString(file.getFileName()),
-            hostname
-          );
-
           try {
+            final String key = SingularityS3FormatHelper.getKey(
+              uploadMetadata.getS3KeyFormat(),
+              sequence,
+              Files.getLastModifiedTime(file).toMillis(),
+              Objects.toString(file.getFileName()),
+              hostname
+            );
+
             long fileSizeBytes = Files.size(file);
             LOG.info(
               "{} Uploading {} to {}/{} (size {})",
@@ -218,6 +218,13 @@ public class SingularityS3Uploader extends SingularityUploader {
               }
               s3Client.putObject(putObjectRequest);
             }
+
+            LOG.info(
+              "{} Uploaded {} in {}",
+              logIdentifier,
+              key,
+              JavaUtils.duration(start)
+            );
           } catch (AmazonS3Exception se) {
             if (se.getMessage().contains("does not exist in our records")) {
               LOG.warn(
@@ -246,8 +253,6 @@ public class SingularityS3Uploader extends SingularityUploader {
             LOG.warn("Exception uploading {}", file, e);
             throw e;
           }
-
-          LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
 
           return true;
         }
