@@ -43,6 +43,38 @@ public class SingularitySchedulerLock {
     return System.currentTimeMillis();
   }
 
+  /** Returns start time of lock if successful, -1 otherwise. */
+  private long tryLock(String requestId, String name, long timeout, TimeUnit timeunit) {
+    try {
+      final long start = System.currentTimeMillis();
+      LOG.trace("{} - Trying Locking {}", name, requestId);
+      ReentrantLock lock = requestLocks.computeIfAbsent(
+        requestId,
+        r -> new ReentrantLock()
+      );
+      boolean locked = lock.tryLock(timeout, timeunit);
+      if (locked) {
+        LOG.trace(
+          "{} - Acquired lock on {} ({})",
+          name,
+          requestId,
+          JavaUtils.duration(start)
+        );
+        return start;
+      } else {
+        LOG.trace(
+          "{} - Failed to acquire lock on {} ({})",
+          name,
+          requestId,
+          JavaUtils.duration(start)
+        );
+        return -1;
+      }
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private void unlock(String requestId, String name, long start) {
     long duration = System.currentTimeMillis() - start;
     if (duration > 1000) {
@@ -63,6 +95,23 @@ public class SingularitySchedulerLock {
       function.run();
     } finally {
       unlock(requestId, name, start);
+    }
+  }
+
+  public void tryRunWithRequestLock(
+    Runnable function,
+    String requestId,
+    String name,
+    long timeout,
+    TimeUnit timeunit
+  ) {
+    long start = tryLock(requestId, name, timeout, timeunit);
+    if (start > 0) {
+      try {
+        function.run();
+      } finally {
+        unlock(requestId, name, start);
+      }
     }
   }
 
