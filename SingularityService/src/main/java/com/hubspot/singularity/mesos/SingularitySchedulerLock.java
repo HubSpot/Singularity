@@ -45,9 +45,9 @@ public class SingularitySchedulerLock {
 
   /** Returns start time of lock if successful, -1 otherwise. */
   private long tryLock(String requestId, String name, long timeout, TimeUnit timeunit) {
+    final long start = System.currentTimeMillis();
     try {
-      final long start = System.currentTimeMillis();
-      LOG.trace("{} - Trying Locking {}", name, requestId);
+      LOG.trace("{} - TryLocking {}", name, requestId);
       ReentrantLock lock = requestLocks.computeIfAbsent(
         requestId,
         r -> new ReentrantLock()
@@ -71,7 +71,13 @@ public class SingularitySchedulerLock {
         return -1;
       }
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      LOG.info(
+        "{} - Interrupted trying to acquire lock on {} ({})",
+        name,
+        requestId,
+        JavaUtils.duration(start)
+      );
+      return -1;
     }
   }
 
