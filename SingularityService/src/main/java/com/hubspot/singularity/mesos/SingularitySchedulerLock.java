@@ -62,7 +62,7 @@ public class SingularitySchedulerLock {
         );
         return start;
       } else {
-        LOG.trace(
+        LOG.info(
           "{} - Failed to acquire lock on {} ({})",
           name,
           requestId,
