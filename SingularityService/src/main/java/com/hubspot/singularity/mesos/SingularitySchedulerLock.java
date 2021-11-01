@@ -77,6 +77,7 @@ public class SingularitySchedulerLock {
         requestId,
         JavaUtils.duration(start)
       );
+      Thread.currentThread().interrupt();
       return -1;
     }
   }
