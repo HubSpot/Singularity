@@ -156,7 +156,7 @@ public class SingularityMesosOfferScheduler {
       this.normalizedDiskWeight = diskWeight;
     }
     this.offerScoringExecutor =
-      threadPoolFactory.fixed("offer-scoring", configuration.getCoreThreadpoolSize());
+      threadPoolFactory.get("offer-scoring", configuration.getCoreThreadpoolSize());
   }
 
   public void resourceOffers(List<Offer> uncached) {
