@@ -46,21 +46,7 @@ public class SingularityManagedThreadPoolFactory {
     return service;
   }
 
-  public synchronized ExecutorService get(String name, int maxSize) {
-    checkState(!stopped.get(), "already stopped");
-    ExecutorService service = new ThreadPoolExecutor(
-      1,
-      maxSize,
-      60L,
-      TimeUnit.SECONDS,
-      new LinkedBlockingQueue<>(),
-      new ThreadFactoryBuilder().setNameFormat(name + "-%d").build()
-    );
-    executorPools.add(service);
-    return service;
-  }
-
-  public synchronized ExecutorService fixed(String name, int size) {
+  public synchronized ExecutorService get(String name, int size) {
     checkState(!stopped.get(), "already stopped");
     ExecutorService service = new ThreadPoolExecutor(
       size,
