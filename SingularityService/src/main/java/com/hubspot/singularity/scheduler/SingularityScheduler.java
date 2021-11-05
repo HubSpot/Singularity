@@ -491,12 +491,25 @@ public class SingularityScheduler {
         pendingRequest,
         maybePendingDeploy
       );
-      if (
-        missingInstances == 0 &&
-        !matchingTaskIds.isEmpty() &&
-        updatedRequest.isScheduled() &&
-        pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
-      ) {
+      boolean scheduledRequestWithActiveTask =
+        (
+          missingInstances == 0 &&
+          !matchingTaskIds.isEmpty() &&
+          updatedRequest.isScheduled() &&
+          pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
+        );
+      boolean scheduledRequestWithOutdatedActiveTask =
+        (
+          missingInstances == 0 &&
+          matchingTaskIds.isEmpty() &&
+          updatedRequest.isScheduled() &&
+          (
+            pendingRequest.getPendingType() == PendingType.NEW_DEPLOY ||
+            pendingRequest.getPendingType() == PendingType.STARTUP
+          )
+        );
+
+      if (scheduledRequestWithActiveTask || scheduledRequestWithOutdatedActiveTask) {
         LOG.trace(
           "Holding pending request {} because it is scheduled and has an active task",
           pendingRequest
