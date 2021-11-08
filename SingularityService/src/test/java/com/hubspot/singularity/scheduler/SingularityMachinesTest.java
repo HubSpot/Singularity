@@ -97,7 +97,6 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     agentManager.saveObject(liveSlave);
     agentManager.saveObject(deadSlave);
-
     agentReconciliationPoller.runActionOnPoll();
 
     Assertions.assertEquals(
@@ -115,6 +114,74 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       agentManager.getObjectsFiltered(MachineState.ACTIVE).size()
     );
     Assertions.assertEquals(0, agentManager.getObjectsFiltered(MachineState.DEAD).size());
+  }
+
+  @Test
+  public void testMissingSlavesArePurged() {
+    SingularityAgent liveSlave = new SingularityAgent(
+      "1",
+      "h1",
+      "r1",
+      ImmutableMap.of("uniqueAttribute", "1"),
+      Optional.empty()
+    );
+    SingularityAgent missingSlave = new SingularityAgent(
+      "2",
+      "h1",
+      "r1",
+      ImmutableMap.of("uniqueAttribute", "2"),
+      Optional.empty()
+    );
+
+    final long now = System.currentTimeMillis();
+
+    liveSlave =
+      liveSlave.changeState(
+        new SingularityMachineStateHistoryUpdate(
+          "1",
+          MachineState.ACTIVE,
+          100,
+          Optional.empty(),
+          Optional.empty()
+        )
+      );
+    missingSlave =
+      missingSlave.changeState(
+        new SingularityMachineStateHistoryUpdate(
+          "2",
+          MachineState.MISSING_ON_STARTUP,
+          now - TimeUnit.HOURS.toMillis(10),
+          Optional.empty(),
+          Optional.empty()
+        )
+      );
+
+    agentManager.saveObject(liveSlave);
+    agentManager.saveObject(missingSlave);
+
+    agentReconciliationPoller.runActionOnPoll();
+
+    Assertions.assertEquals(
+      1,
+      agentManager.getObjectsFiltered(MachineState.ACTIVE).size()
+    );
+    Assertions.assertEquals(
+      1,
+      agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP).size()
+    );
+
+    configuration.setDeleteDeadAgentsAfterHours(1);
+
+    agentReconciliationPoller.runActionOnPoll();
+
+    Assertions.assertEquals(
+      1,
+      agentManager.getObjectsFiltered(MachineState.ACTIVE).size()
+    );
+    Assertions.assertEquals(
+      0,
+      agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP).size()
+    );
   }
 
   @Test
@@ -1022,6 +1089,31 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     for (SingularityAgent agent : agents) {
       if (agent.getId().equals("2")) {
         Assertions.assertEquals(MachineState.DEAD, agent.getCurrentState().getState());
+      } else {
+        Assertions.assertEquals(MachineState.ACTIVE, agent.getCurrentState().getState());
+      }
+    }
+  }
+
+  @Test
+  public void testReconcileSlavesOnStartup() {
+    // Load 3 agents on startup
+    MesosMasterStateObject state = getMasterState(3);
+    singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
+
+    // Load 2 agents on startup
+    MesosMasterStateObject newState = getMasterState(2); // 2 agents, third has died
+    singularityAgentAndRackManager.loadAgentsAndRacksFromMaster(newState, true);
+    List<SingularityAgent> agents = agentManager.getObjects();
+
+    Assertions.assertEquals(3, agents.size());
+
+    for (SingularityAgent agent : agents) {
+      if (agent.getId().equals("2")) {
+        Assertions.assertEquals(
+          MachineState.MISSING_ON_STARTUP,
+          agent.getCurrentState().getState()
+        );
       } else {
         Assertions.assertEquals(MachineState.ACTIVE, agent.getCurrentState().getState());
       }

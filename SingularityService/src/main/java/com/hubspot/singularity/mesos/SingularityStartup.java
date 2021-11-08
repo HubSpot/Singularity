@@ -108,7 +108,7 @@ class SingularityStartup {
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-    agentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
+    agentAndRackManager.loadAgentsAndRacksFromMaster(state, true); // TODO: is this correctly doing host reconciliation?
 
     ExecutorService startupExecutor = Executors.newFixedThreadPool(
       configuration.getSchedulerStartupConcurrency(),
