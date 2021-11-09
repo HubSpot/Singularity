@@ -119,17 +119,17 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   @Test
   public void testMissingSlavesArePurged() {
     SingularityAgent liveSlave = new SingularityAgent(
-      "1",
+      "3",
       "h1",
       "r1",
-      ImmutableMap.of("uniqueAttribute", "1"),
+      ImmutableMap.of("uniqueAttribute", "3"),
       Optional.empty()
     );
     SingularityAgent missingSlave = new SingularityAgent(
-      "2",
+      "4",
       "h1",
       "r1",
-      ImmutableMap.of("uniqueAttribute", "2"),
+      ImmutableMap.of("uniqueAttribute", "4"),
       Optional.empty()
     );
 
@@ -138,7 +138,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     liveSlave =
       liveSlave.changeState(
         new SingularityMachineStateHistoryUpdate(
-          "1",
+          "3",
           MachineState.ACTIVE,
           100,
           Optional.empty(),
@@ -148,7 +148,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     missingSlave =
       missingSlave.changeState(
         new SingularityMachineStateHistoryUpdate(
-          "2",
+          "4",
           MachineState.MISSING_ON_STARTUP,
           now - TimeUnit.HOURS.toMillis(10),
           Optional.empty(),
