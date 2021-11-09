@@ -264,6 +264,11 @@ public class DeployResource extends AbstractRequestResource {
       // This can cause a conflict if run outside the lock, causing the pending deploy to be checked before deploy data is saved
       schedulerLock.runWithRequestLock(
         () -> {
+          deployManager.createDeployIfNotExists(
+            updatedRequest,
+            deployMarker,
+            validatedDeploy
+          );
           deployAlreadyInProgress.set(
             deployManager.createPendingDeploy(pendingDeployObj) ==
             SingularityCreateResult.EXISTED
