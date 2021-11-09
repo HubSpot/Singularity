@@ -54,16 +54,16 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
 
   @Override
   public void runActionOnPoll() {
-    refereshSlavesAndRacks();
-    checkInactiveSlaves();
+    refereshAgentsAndRacks();
+    checkInactiveAgents();
     inactiveAgentManager.cleanInactiveAgentsList(
       System.currentTimeMillis() -
       TimeUnit.HOURS.toMillis(configuration.getCleanInactiveHostListEveryHours())
     );
-    clearOldSlaveHistory();
+    clearOldAgentHistory();
   }
 
-  private void refereshSlavesAndRacks() {
+  private void refereshAgentsAndRacks() {
     try {
       Optional<MasterInfo> maybeMasterInfo = mesosScheduler.getMaster();
       if (maybeMasterInfo.isPresent()) {
@@ -79,18 +79,18 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
     }
   }
 
-  private void checkInactiveSlaves() {
+  private void checkInactiveAgents() {
     final long start = System.currentTimeMillis();
 
-    final List<SingularityAgent> inactiveSlaves = agentManager.getObjectsFiltered(
+    final List<SingularityAgent> inactiveAgents = agentManager.getObjectsFiltered(
       MachineState.DEAD
     );
 
-    inactiveSlaves.addAll(
+    inactiveAgents.addAll(
       agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP)
     );
 
-    if (inactiveSlaves.isEmpty()) {
+    if (inactiveAgents.isEmpty()) {
       LOG.trace("No inactive agents");
       return;
     }
@@ -100,18 +100,18 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
       configuration.getDeleteDeadAgentsAfterHours()
     );
 
-    for (SingularityAgent inactiveSlave : inactiveSlaves) {
+    for (SingularityAgent inactiveAgent : inactiveAgents) {
       final long duration =
-        System.currentTimeMillis() - inactiveSlave.getCurrentState().getTimestamp();
+        System.currentTimeMillis() - inactiveAgent.getCurrentState().getTimestamp();
 
       if (duration > maxDuration) {
-        SingularityDeleteResult result = agentManager.deleteObject(inactiveSlave.getId());
+        SingularityDeleteResult result = agentManager.deleteObject(inactiveAgent.getId());
 
         deleted++;
 
         LOG.info(
           "Removing inactive agent {} ({}) after {} (max {})",
-          inactiveSlave.getId(),
+          inactiveAgent.getId(),
           result,
           JavaUtils.durationFromMillis(duration),
           JavaUtils.durationFromMillis(maxDuration)
@@ -121,13 +121,13 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
 
     LOG.debug(
       "Checked {} inactive agents, deleted {} in {}",
-      inactiveSlaves.size(),
+      inactiveAgents.size(),
       deleted,
       JavaUtils.duration(start)
     );
   }
 
-  private void clearOldSlaveHistory() {
+  private void clearOldAgentHistory() {
     for (SingularityAgent singularityAgent : agentManager.getObjects()) {
       agentManager.clearOldHistory(singularityAgent.getId());
     }
