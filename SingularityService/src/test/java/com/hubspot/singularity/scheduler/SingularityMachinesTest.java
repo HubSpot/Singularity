@@ -56,15 +56,15 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDeadSlavesArePurged() {
-    SingularityAgent liveSlave = new SingularityAgent(
+  public void testDeadAgentsArePurged() {
+    SingularityAgent liveAgent = new SingularityAgent(
       "1",
       "h1",
       "r1",
       ImmutableMap.of("uniqueAttribute", "1"),
       Optional.empty()
     );
-    SingularityAgent deadSlave = new SingularityAgent(
+    SingularityAgent deadAgent = new SingularityAgent(
       "2",
       "h1",
       "r1",
@@ -74,8 +74,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     final long now = System.currentTimeMillis();
 
-    liveSlave =
-      liveSlave.changeState(
+    liveAgent =
+      liveAgent.changeState(
         new SingularityMachineStateHistoryUpdate(
           "1",
           MachineState.ACTIVE,
@@ -84,8 +84,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
           Optional.empty()
         )
       );
-    deadSlave =
-      deadSlave.changeState(
+    deadAgent =
+      deadAgent.changeState(
         new SingularityMachineStateHistoryUpdate(
           "2",
           MachineState.DEAD,
@@ -95,8 +95,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         )
       );
 
-    agentManager.saveObject(liveSlave);
-    agentManager.saveObject(deadSlave);
+    agentManager.saveObject(liveAgent);
+    agentManager.saveObject(deadAgent);
     agentReconciliationPoller.runActionOnPoll();
 
     Assertions.assertEquals(
@@ -117,15 +117,15 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testMissingSlavesArePurged() {
-    SingularityAgent liveSlave = new SingularityAgent(
+  public void testMissingAgentsArePurged() {
+    SingularityAgent liveAgent = new SingularityAgent(
       "3",
       "h1",
       "r1",
       ImmutableMap.of("uniqueAttribute", "3"),
       Optional.empty()
     );
-    SingularityAgent missingSlave = new SingularityAgent(
+    SingularityAgent missingAgent = new SingularityAgent(
       "4",
       "h1",
       "r1",
@@ -135,8 +135,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     final long now = System.currentTimeMillis();
 
-    liveSlave =
-      liveSlave.changeState(
+    liveAgent =
+      liveAgent.changeState(
         new SingularityMachineStateHistoryUpdate(
           "3",
           MachineState.ACTIVE,
@@ -145,8 +145,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
           Optional.empty()
         )
       );
-    missingSlave =
-      missingSlave.changeState(
+    missingAgent =
+      missingAgent.changeState(
         new SingularityMachineStateHistoryUpdate(
           "4",
           MachineState.MISSING_ON_STARTUP,
@@ -156,8 +156,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         )
       );
 
-    agentManager.saveObject(liveSlave);
-    agentManager.saveObject(missingSlave);
+    agentManager.saveObject(liveAgent);
+    agentManager.saveObject(missingAgent);
 
     agentReconciliationPoller.runActionOnPoll();
 
