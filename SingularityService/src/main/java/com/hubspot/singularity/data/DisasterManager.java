@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
+import com.hubspot.singularity.FireAlarm;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -32,11 +33,14 @@ public class DisasterManager extends CuratorAsyncManager {
   private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/statistics";
   private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
 
+  private static final String FIRE_ALARM_PATH = "/firealarm";
+
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
 
   private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
   private final Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder;
+  private final Transcoder<FireAlarm> fireAlarmTranscoder;
 
   @Inject
   public DisasterManager(
@@ -44,11 +48,13 @@ public class DisasterManager extends CuratorAsyncManager {
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry,
     Transcoder<SingularityDisabledAction> disabledActionTranscoder,
-    Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder
+    Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder,
+    Transcoder<FireAlarm> fireAlarmTranscoder
   ) {
     super(curator, configuration, metricRegistry);
     this.disabledActionTranscoder = disabledActionTranscoder;
     this.disasterStatsTranscoder = disasterStatsTranscoder;
+    this.fireAlarmTranscoder = fireAlarmTranscoder;
   }
 
   private String getActionPath(SingularityAction action) {
@@ -260,5 +266,13 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public boolean isAutomatedDisabledActionsDisabled() {
     return exists(DISABLE_AUTOMATED_PATH);
+  }
+
+  public void setFireAlarm(FireAlarm fireAlarm) {
+    save(FIRE_ALARM_PATH, fireAlarm, fireAlarmTranscoder);
+  }
+
+  public void deleteFireAlarm() {
+    delete(FIRE_ALARM_PATH);
   }
 }
