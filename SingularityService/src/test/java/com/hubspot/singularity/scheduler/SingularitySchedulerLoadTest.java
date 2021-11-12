@@ -1,91 +1,29 @@
 package com.hubspot.singularity.scheduler;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityContainerInfo;
-import com.hubspot.mesos.SingularityContainerType;
-import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerNetworkType;
-import com.hubspot.mesos.SingularityDockerPortMapping;
-import com.hubspot.mesos.SingularityPortMappingType;
-import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.mesos.protos.MesosTaskState;
-import com.hubspot.singularity.AgentPlacement;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.LoadBalancerRequestState;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.RequestCleanupType;
-import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.ScheduleType;
-import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityDeployResult;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityKilledTaskIdRecord;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
-import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityRequestLbCleanup;
-import com.hubspot.singularity.SingularityRunNowRequestBuilder;
-import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
-import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.hubspot.singularity.api.SingularityKillTaskRequest;
-import com.hubspot.singularity.api.SingularityPauseRequest;
-import com.hubspot.singularity.api.SingularityPriorityFreeze;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
-import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
-import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
-import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
-import com.jayway.awaitility.Awaitility;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
-import javax.ws.rs.WebApplicationException;
-import org.apache.mesos.v1.Protos.AgentID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
@@ -93,8 +31,6 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 
 public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   @Inject
@@ -118,8 +54,93 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   @Inject
   SingularityMesosStatusUpdateHandler updateHandler;
 
+  private int racks = 3;
+  private int agents = 150;
+  private AtomicInteger requestId = new AtomicInteger();
+  private AtomicInteger deployId = new AtomicInteger();
+  private double cpuPerAgent = 24;
+  private double memPerAgent = 1024;
+  private double dskPerAgent = 1024;
+  private String[] portsPerAgent = new String[] { "1:100" };
+  private AtomicDouble cpu = new AtomicDouble(agents * cpuPerAgent);
+  private AtomicDouble mem = new AtomicDouble(agents * memPerAgent);
+
   public SingularitySchedulerLoadTest() {
     super(false);
+  }
+
+  @Test
+  public void test() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(1000);
+    configuration.setMaxTasksPerOffer(15);
+    configuration.setMaxTasksPerOfferPerRequest(5);
+    configuration.getMesosConfiguration().setOfferLoopTimeoutMillis(10_000);
+
+    initResourceOffers();
+    initSchedulingLoad();
+    scheduler.drainPendingQueue();
+
+    Assertions.assertEquals(0, requestManager.getPendingRequests().size());
+    Assertions.assertEquals(0, scheduler.getDueTasks().size());
+  }
+
+  private void initResourceOffers() {
+    List<Offer> offers = new ArrayList<>(agents);
+    for (int agentId = 0; agentId < agents; agentId++) {
+      Optional<String> rack = Optional.of(String.valueOf(agentId % racks));
+      offers.add(
+        createOffer(
+          cpuPerAgent,
+          memPerAgent,
+          dskPerAgent,
+          String.valueOf(agentId),
+          String.valueOf(agentId),
+          rack,
+          Collections.emptyMap(),
+          portsPerAgent
+        )
+      );
+    }
+
+    sms.resourceOffers(offers);
+  }
+
+  private void initSchedulingLoad() {
+    for (int i = 0; i < agents; i++) {
+      generateRequest(RequestType.WORKER);
+    }
+  }
+
+  private void generateRequest(RequestType type) {
+    SingularityRequest request = new SingularityRequestBuilder(requestId(), type).build();
+    saveRequest(request);
+
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId())
+      .setCommand(Optional.of("sleep 1"))
+      .build();
+
+    saveDeploy(request, deploy);
+  }
+
+  private void saveDeploy(SingularityRequest request, SingularityDeploy deploy) {
+    SingularityDeployMarker marker = new SingularityDeployMarker(
+      deploy.getRequestId(),
+      deploy.getId(),
+      System.currentTimeMillis(),
+      Optional.<String>empty(),
+      Optional.<String>empty()
+    );
+    deployManager.saveDeploy(request, marker, deploy);
+    finishDeploy(marker, deploy);
+  }
+
+  private String requestId() {
+    return String.valueOf(requestId.getAndIncrement());
+  }
+
+  private String deployId() {
+    return String.valueOf(deployId.getAndIncrement());
   }
 
   private SingularityPendingTask pendingTask(
