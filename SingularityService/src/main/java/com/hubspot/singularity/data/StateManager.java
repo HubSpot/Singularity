@@ -334,10 +334,10 @@ public class StateManager extends CuratorManager {
     );
   }
 
-  private SingularityScheduledTasksInfo getScheduledTasksInfo() {
+  public List<SingularityPendingTaskId> getLateTasks() {
     long now = System.currentTimeMillis();
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
-    List<SingularityPendingTaskId> lateTasks = allPendingTaskIds
+    return allPendingTaskIds
       .stream()
       .filter(
         p ->
@@ -346,6 +346,11 @@ public class StateManager extends CuratorManager {
           singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis()
       )
       .collect(Collectors.toList());
+  }
+
+  private SingularityScheduledTasksInfo getScheduledTasksInfo() {
+    long now = System.currentTimeMillis();
+    List<SingularityPendingTaskId> lateTasks = getLateTasks();
 
     Map<Boolean, List<SingularityPendingTaskId>> lateTasksPartitionedByOnDemand = lateTasks
       .stream()

@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.data.StateManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -18,17 +19,35 @@ public class SingularitySchedulerLock {
   private final ReentrantLock stateLock;
   private final ReentrantLock offersLock;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
+  private final StateManager stateManager;
 
   @Inject
-  public SingularitySchedulerLock() {
+  public SingularitySchedulerLock(StateManager stateManager) {
     this.stateLock = new ReentrantLock();
     this.offersLock = new ReentrantLock();
     this.requestLocks = new ConcurrentHashMap<>();
+    this.stateManager = stateManager;
   }
 
-  private long lock(String requestId, String name) {
+  private long lock(String requestId, String name, Priority priority) {
     final long start = System.currentTimeMillis();
     LOG.trace("{} - Locking {}", name, requestId);
+
+    switch (priority) {
+      case HIGH:
+        break;
+      case LOW:
+        boolean late = stateManager
+          .getLateTasks()
+          .stream()
+          .anyMatch(task -> task.getRequestId().equals(requestId));
+        if (late) {
+          throw new IllegalStateException(
+            "Failed to acquire lock due to late tasks for request " + requestId
+          );
+        }
+    }
+
     ReentrantLock lock = requestLocks.computeIfAbsent(
       requestId,
       r -> new ReentrantLock()
@@ -97,7 +116,7 @@ public class SingularitySchedulerLock {
   }
 
   public void runWithRequestLock(Runnable function, String requestId, String name) {
-    long start = lock(requestId, name);
+    long start = lock(requestId, name, Priority.LOW);
     try {
       function.run();
     } finally {
@@ -127,7 +146,7 @@ public class SingularitySchedulerLock {
     String requestId,
     String name
   ) {
-    long start = lock(requestId, name);
+    long start = lock(requestId, name, Priority.LOW);
     try {
       return function.call();
     } catch (Exception e) {
@@ -207,5 +226,10 @@ public class SingularitySchedulerLock {
   private void unlockOffers(String name, long start) {
     LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
     offersLock.unlock();
+  }
+
+  public enum Priority {
+    LOW,
+    HIGH
   }
 }
