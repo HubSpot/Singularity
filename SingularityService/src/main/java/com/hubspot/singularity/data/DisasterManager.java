@@ -272,6 +272,10 @@ public class DisasterManager extends CuratorAsyncManager {
     save(FIRE_ALARM_PATH, fireAlarm, fireAlarmTranscoder);
   }
 
+  public Optional<FireAlarm> getFireAlarm() {
+    return getData(FIRE_ALARM_PATH, fireAlarmTranscoder);
+  }
+
   public void deleteFireAlarm() {
     delete(FIRE_ALARM_PATH);
   }

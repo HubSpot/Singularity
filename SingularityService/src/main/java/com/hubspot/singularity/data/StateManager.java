@@ -52,6 +52,7 @@ public class StateManager extends CuratorManager {
   private final DeployManager deployManager;
   private final AgentManager agentManager;
   private final RackManager rackManager;
+  private final DisasterManager disasterManager;
   private final Transcoder<SingularityState> stateTranscoder;
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
@@ -71,6 +72,7 @@ public class StateManager extends CuratorManager {
     DeployManager deployManager,
     AgentManager agentManager,
     RackManager rackManager,
+    DisasterManager disasterManager,
     Transcoder<SingularityState> stateTranscoder,
     Transcoder<SingularityHostState> hostStateTranscoder,
     SingularityConfiguration singularityConfiguration,
@@ -89,6 +91,7 @@ public class StateManager extends CuratorManager {
     this.hostStateTranscoder = hostStateTranscoder;
     this.agentManager = agentManager;
     this.rackManager = rackManager;
+    this.disasterManager = disasterManager;
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
@@ -330,7 +333,8 @@ public class StateManager extends CuratorManager {
       authDatastoreHealthy,
       minimumPriorityLevel,
       (long) statusUpdateDeltas.getSnapshot().getMean(),
-      lastHeartbeatTime.get()
+      lastHeartbeatTime.get(),
+      disasterManager.getFireAlarm()
     );
   }
 
