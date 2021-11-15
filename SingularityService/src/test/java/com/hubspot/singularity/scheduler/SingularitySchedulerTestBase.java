@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -1181,6 +1182,31 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       random.nextInt(10),
       PendingType.NEW_DEPLOY,
       System.currentTimeMillis()
+    );
+
+    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+      .setPendingTaskId(pendingTaskId)
+      .build();
+
+    taskManager.savePendingTask(pendingTask);
+
+    return pendingTask;
+  }
+
+  protected SingularityPendingTask createAndSchedulePendingTask(
+    String requestId,
+    String deployId
+  ) {
+    Random random = new Random();
+    long now = System.currentTimeMillis();
+
+    SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(
+      requestId,
+      deployId,
+      now,
+      random.nextInt(10),
+      PendingType.NEW_DEPLOY,
+      now
     );
 
     SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
