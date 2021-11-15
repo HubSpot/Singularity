@@ -57,6 +57,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testDeadAgentsArePurged() {
+    long deleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
     SingularityAgent liveAgent = new SingularityAgent(
       "1",
       "h1",
@@ -114,10 +115,14 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       agentManager.getObjectsFiltered(MachineState.ACTIVE).size()
     );
     Assertions.assertEquals(0, agentManager.getObjectsFiltered(MachineState.DEAD).size());
+
+    // reset to previous value
+    configuration.setDeleteDeadAgentsAfterHours(deleteDeadAgentsAfterHours);
   }
 
   @Test
   public void testMissingAgentsArePurged() {
+    long deleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
     SingularityAgent liveAgent = new SingularityAgent(
       "3",
       "h1",
@@ -182,6 +187,9 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       0,
       agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP).size()
     );
+
+    // reset to previous value
+    configuration.setDeleteDeadAgentsAfterHours(deleteDeadAgentsAfterHours);
   }
 
   @Test
