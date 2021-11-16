@@ -122,6 +122,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           if (cache.isPresent()) {
             cache.get().set(event.getPath(), object);
           }
+        } catch (Exception e) {
+          LOG.error("Exception processing curator result", e);
         } finally {
           latch.countDown();
         }

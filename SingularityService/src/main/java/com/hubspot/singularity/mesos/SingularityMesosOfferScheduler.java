@@ -526,7 +526,7 @@ public class SingularityMesosOfferScheduler {
 
     // We spend much of the offer check loop for request level locks. Wait for the locks in parallel, but ensure that actual offer checks
     // are done in serial to not over commit a single offer
-    ReentrantLock offerCheckTempLock = new ReentrantLock(true);
+    ReentrantLock offerCheckTempLock = new ReentrantLock(false);
     CompletableFutures
       .allOf(
         sortedTaskRequestHolders
@@ -538,7 +538,7 @@ public class SingularityMesosOfferScheduler {
             entry ->
               runAsync(
                 () -> {
-                  lock.runWithRequestLock(
+                  lock.tryRunWithRequestLock(
                     () -> {
                       offerCheckTempLock.lock();
                       try {
@@ -640,7 +640,9 @@ public class SingularityMesosOfferScheduler {
                       }
                     },
                     entry.getKey(),
-                    String.format("%s#%s", getClass().getSimpleName(), "checkOffers")
+                    String.format("%s#%s", getClass().getSimpleName(), "checkOffers"),
+                    mesosConfiguration.getOfferLoopRequestTimeoutMillis(),
+                    TimeUnit.MILLISECONDS
                   );
                 }
               )
