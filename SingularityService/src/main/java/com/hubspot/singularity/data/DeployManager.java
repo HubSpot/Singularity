@@ -276,12 +276,12 @@ public class DeployManager extends CuratorAsyncManager {
     return deployKeyToDeploy;
   }
 
-  public SingularityCreateResult saveDeploy(
+  public SingularityCreateResult createDeployIfNotExists(
     SingularityRequest request,
     SingularityDeployMarker deployMarker,
     SingularityDeploy deploy
   ) {
-    final SingularityCreateResult deploySaveResult = create(
+    SingularityCreateResult deploySaveResult = create(
       getDeployDataPath(deploy.getRequestId(), deploy.getId()),
       deploy,
       deployTranscoder
@@ -294,7 +294,15 @@ public class DeployManager extends CuratorAsyncManager {
         deployMarker
       );
     }
+    return deploySaveResult;
+  }
 
+  public SingularityCreateResult saveDeploy(
+    SingularityRequest request,
+    SingularityDeployMarker deployMarker,
+    SingularityDeploy deploy
+  ) {
+    createDeployIfNotExists(request, deployMarker, deploy);
     LOG.info("Creating deploy {}", deployMarker);
 
     singularityEventListener.deployHistoryEvent(

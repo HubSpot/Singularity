@@ -1655,18 +1655,59 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void purgeStaleRequests(List<String> activeRequestIds, long deleteBeforeTime) {
-    final List<String> requestIds = getChildren(HISTORY_PATH_ROOT);
-    for (String requestId : requestIds) {
-      if (!activeRequestIds.contains(requestId)) {
-        String path = getRequestPath(requestId);
-        Optional<Stat> maybeStat = checkExists(path);
-        if (
-          maybeStat.isPresent() &&
-          maybeStat.get().getMtime() < deleteBeforeTime &&
-          getChildren(path).size() == 0
-        ) {
-          delete(path);
-        }
+    getChildren(HISTORY_PATH_ROOT)
+      .forEach(
+        (
+          requestId ->
+            purgePathForRequest(
+              activeRequestIds,
+              deleteBeforeTime,
+              HISTORY_PATH_ROOT,
+              requestId
+            )
+        )
+      );
+    getChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT)
+      .forEach(
+        (
+          requestId ->
+            purgePathForRequest(
+              activeRequestIds,
+              deleteBeforeTime,
+              LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
+              requestId
+            )
+        )
+      );
+    getChildren(PENDING_PATH_ROOT)
+      .forEach(
+        (
+          requestId ->
+            purgePathForRequest(
+              activeRequestIds,
+              deleteBeforeTime,
+              PENDING_PATH_ROOT,
+              requestId
+            )
+        )
+      );
+  }
+
+  private void purgePathForRequest(
+    List<String> activeRequestIds,
+    long deleteBeforeTime,
+    String parentPath,
+    String requestId
+  ) {
+    if (!activeRequestIds.contains(requestId)) {
+      String path = ZKPaths.makePath(parentPath, requestId);
+      Optional<Stat> maybeStat = checkExists(path);
+      if (
+        maybeStat.isPresent() &&
+        maybeStat.get().getMtime() < deleteBeforeTime &&
+        getChildren(path).size() == 0
+      ) {
+        delete(path);
       }
     }
   }
