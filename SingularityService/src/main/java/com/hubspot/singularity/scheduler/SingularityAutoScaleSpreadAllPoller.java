@@ -87,7 +87,8 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
           }
         },
         requestWithState.getRequest().getId(),
-        getClass().getSimpleName()
+        getClass().getSimpleName(),
+        SingularitySchedulerLock.Priority.LOW
       );
     }
   }

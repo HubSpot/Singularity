@@ -127,6 +127,7 @@ public class SingularitySchedulerLock {
     Priority priority
   ) {
     if (priority == Priority.LOW && taskLag.isLagged(requestId)) {
+      LOG.info("{} - Skipping low priority lock on {}", name, requestId);
       return;
     }
 
