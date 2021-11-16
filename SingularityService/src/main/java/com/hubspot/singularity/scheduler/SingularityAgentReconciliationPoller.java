@@ -82,6 +82,7 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
   private void checkInactiveAgents() {
     final long start = System.currentTimeMillis();
 
+    // filter dead and missing on startup agents for cleanup
     final List<SingularityAgent> inactiveAgents = agentManager.getObjectsFiltered(
       MachineState.DEAD
     );
@@ -106,6 +107,7 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
 
       if (duration > maxDuration) {
         SingularityDeleteResult result = agentManager.deleteObject(inactiveAgent.getId());
+        inactiveAgentManager.cleanInactiveAgent(inactiveAgent.getHost()); // delete agent from inactive list too
 
         deleted++;
 

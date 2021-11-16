@@ -57,7 +57,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testDeadAgentsArePurged() {
-    long deleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
+    long previousDeleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
     SingularityAgent liveAgent = new SingularityAgent(
       "1",
       "h1",
@@ -108,7 +108,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     configuration.setDeleteDeadAgentsAfterHours(1);
 
-    agentReconciliationPoller.runActionOnPoll();
+    agentReconciliationPoller.runActionOnPoll(); // dead agent should be deleted
 
     Assertions.assertEquals(
       1,
@@ -116,13 +116,13 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     );
     Assertions.assertEquals(0, agentManager.getObjectsFiltered(MachineState.DEAD).size());
 
-    // reset to previous value
-    configuration.setDeleteDeadAgentsAfterHours(deleteDeadAgentsAfterHours);
+    // reset config to previous value for subsequent tests
+    configuration.setDeleteDeadAgentsAfterHours(previousDeleteDeadAgentsAfterHours);
   }
 
   @Test
   public void testMissingAgentsArePurged() {
-    long deleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
+    long previousDeleteDeadAgentsAfterHours = configuration.getDeleteDeadAgentsAfterHours();
     SingularityAgent liveAgent = new SingularityAgent(
       "3",
       "h1",
@@ -163,7 +163,6 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     agentManager.saveObject(liveAgent);
     agentManager.saveObject(missingAgent);
-
     agentReconciliationPoller.runActionOnPoll();
 
     Assertions.assertEquals(
@@ -177,7 +176,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
 
     configuration.setDeleteDeadAgentsAfterHours(1);
 
-    agentReconciliationPoller.runActionOnPoll();
+    agentReconciliationPoller.runActionOnPoll(); // missing agent should be deleted
 
     Assertions.assertEquals(
       1,
@@ -188,8 +187,8 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
       agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP).size()
     );
 
-    // reset to previous value
-    configuration.setDeleteDeadAgentsAfterHours(deleteDeadAgentsAfterHours);
+    // reset config to previous value for subsequent tests
+    configuration.setDeleteDeadAgentsAfterHours(previousDeleteDeadAgentsAfterHours);
   }
 
   @Test
