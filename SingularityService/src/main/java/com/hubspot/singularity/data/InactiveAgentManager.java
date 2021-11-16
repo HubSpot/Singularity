@@ -43,6 +43,17 @@ public class InactiveAgentManager extends CuratorManager {
     return String.format("%s/%s", ROOT_PATH, host);
   }
 
+  /**
+   * Delete single agent from inactive agent list.
+   * @param host agent hostname
+   */
+  public void cleanInactiveAgent(String host) {
+    Optional<Stat> stat = checkExists(pathOf(host));
+    if (stat.isPresent()) {
+      delete(pathOf(host));
+    }
+  }
+
   public void cleanInactiveAgentsList(long thresholdTime) {
     for (String host : getInactiveAgents()) {
       Optional<Stat> stat = checkExists(pathOf(host));
