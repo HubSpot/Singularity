@@ -29,6 +29,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
@@ -79,6 +80,8 @@ public class RequestManager extends CuratorAsyncManager {
     EXPIRING_ACTION_PATH_ROOT + "/pause";
   private static final String EXPIRING_SCALE_PATH_ROOT =
     EXPIRING_ACTION_PATH_ROOT + "/scale";
+  private static final String EXPIRING_PRIORITY_PATH_ROOT =
+    EXPIRING_ACTION_PATH_ROOT + "/priority";
   private static final String EXPIRING_SKIP_HC_PATH_ROOT =
     EXPIRING_ACTION_PATH_ROOT + "/skipHc";
 
@@ -90,7 +93,9 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityExpiringScale.class,
     EXPIRING_SCALE_PATH_ROOT,
     SingularityExpiringSkipHealthchecks.class,
-    EXPIRING_SKIP_HC_PATH_ROOT
+    EXPIRING_SKIP_HC_PATH_ROOT,
+    SingularityExpiringPriority.class,
+    EXPIRING_PRIORITY_PATH_ROOT
   );
 
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;

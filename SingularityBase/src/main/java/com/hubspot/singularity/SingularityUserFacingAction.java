@@ -5,6 +5,7 @@ public enum SingularityUserFacingAction {
   BOUNCE,
   PAUSE,
   SCALE,
+  PRIORITIZE,
   KILL_TASK,
   DELETE_SCHEDULED_TASK,
   RUN_SHELL_COMMAND

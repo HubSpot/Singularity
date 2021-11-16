@@ -33,6 +33,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
@@ -95,6 +96,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         new SingularityExpiringBounceHandler(),
         new SingularityExpiringPauseHandler(),
         new SingularityExpiringScaleHandler(),
+        new SingularityExpiringPriorityHandler(),
         new SingularityExpiringSkipHealthchecksHandler(),
         new SingularityExpiringSlaveStateHandler(),
         new SingularityExpiringRackStateHandler()
@@ -203,6 +205,53 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
           requestManager.deleteExpiringObject(getClazz(), expiringObject.getRequestId());
         }
+      }
+    }
+  }
+
+  private class SingularityExpiringPriorityHandler
+    extends SingularityExpiringRequestActionHandler<SingularityExpiringPriority> {
+
+    private SingularityExpiringPriorityHandler() {
+      super(SingularityExpiringPriority.class);
+    }
+
+    @Override
+    protected String getActionName() {
+      return "Priority";
+    }
+
+    @Override
+    protected void handleExpiringObject(
+      SingularityExpiringPriority expiringObject,
+      SingularityRequestWithState requestWithState,
+      String message
+    ) {
+      final SingularityRequest oldRequest = requestWithState.getRequest();
+      final SingularityRequest newRequest = oldRequest
+        .toBuilder()
+        .setTaskPriorityLevel(expiringObject.getRevertToPriority())
+        .build();
+
+      try {
+        requestHelper.updateRequest(
+          newRequest,
+          Optional.of(oldRequest),
+          requestWithState.getState(),
+          Optional.of(RequestHistoryType.PRIORITY_REVERTED),
+          expiringObject.getUser(),
+          Optional.empty(),
+          Optional.of(message),
+          Optional.empty()
+        );
+        // TODO - email
+      } catch (WebApplicationException wae) {
+        LOG.error(
+          "While trying to apply {} for {}",
+          expiringObject,
+          expiringObject.getRequestId(),
+          wae
+        );
       }
     }
   }
