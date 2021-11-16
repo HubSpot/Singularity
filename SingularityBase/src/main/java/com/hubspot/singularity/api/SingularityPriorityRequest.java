@@ -1,11 +1,13 @@
 package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.singularity.SingularityRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
-@Schema(description = "Describes the new priority for a request")
+@Schema(description = "Describes the new priority (0 to 1) for a request")
 public class SingularityPriorityRequest extends SingularityExpiringRequestParent {
+  /** see {@link SingularityRequest#getTaskPriorityLevel()} */
   private final Optional<Double> priority;
 
   public SingularityPriorityRequest(

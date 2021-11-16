@@ -1667,7 +1667,7 @@ public class RequestResource extends AbstractRequestResource {
     ) @PathParam("requestId") String requestId,
     @Context HttpServletRequest requestContext,
     @RequestBody(
-      description = "Request priority"
+      description = "Request priority (0.0 to 1.0)"
     ) SingularityPriorityRequest priorityRequest
   ) {
     return maybeProxyToLeader(
