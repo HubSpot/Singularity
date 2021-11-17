@@ -9,10 +9,13 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class InactiveAgentManager extends CuratorManager {
   private static final String ROOT_PATH = "/inactiveSlaves";
+  private static final Logger LOG = LoggerFactory.getLogger(InactiveAgentManager.class);
 
   @Inject
   public InactiveAgentManager(
@@ -52,6 +55,7 @@ public class InactiveAgentManager extends CuratorManager {
     Optional<Stat> stat = checkExists(pathOf(host));
     if (stat.isPresent()) {
       delete(pathOf(host));
+      LOG.debug("Deleted inactive host {}", host);
     }
   }
 
@@ -61,6 +65,7 @@ public class InactiveAgentManager extends CuratorManager {
       Optional<Stat> stat = checkExists(pathOf(host));
       if (stat.isPresent() && stat.get().getMtime() < thresholdTime) {
         delete(pathOf(host));
+        LOG.debug("Deleted inactive host {}", host);
       }
     }
   }
