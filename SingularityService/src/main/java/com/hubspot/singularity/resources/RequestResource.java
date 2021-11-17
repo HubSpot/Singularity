@@ -1702,7 +1702,7 @@ public class RequestResource extends AbstractRequestResource {
       .setTaskPriorityLevel(priorityRequest.getPriority())
       .build();
     String message = String.format(
-      "Scaling from %d -> %d",
+      "Scaling from %s -> %s",
       oldRequest.getTaskPriorityLevel(),
       newRequest.getTaskPriorityLevel()
     );
