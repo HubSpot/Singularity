@@ -1,57 +1,66 @@
 package com.hubspot.singularity.helpers;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class TaskLagGuardrail {
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;
+  private final ScheduledExecutorService executor;
   private ConcurrentMap<String, Integer> lateTasksByRequestId;
-  private long lastUpdate;
 
   @Inject
   public TaskLagGuardrail(
     SingularityConfiguration configuration,
+    SingularityManagedScheduledExecutorServiceFactory factory,
     TaskManager taskManager
   ) {
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.lateTasksByRequestId = new ConcurrentHashMap<>();
-    this.lastUpdate = 0;
+    this.executor = factory.getSingleThreaded(getClass().getSimpleName());
+    executor.scheduleWithFixedDelay(
+      this::updateLateTasksByRequestId,
+      0,
+      configuration.getRequestCacheTtl(),
+      TimeUnit.SECONDS
+    );
   }
 
   public boolean isLagged(String requestId) {
-    updateLateTasksByRequestId();
     return lateTasksByRequestId.containsKey(requestId);
   }
 
   private void updateLateTasksByRequestId() {
     long now = System.currentTimeMillis();
-    if (now - lastUpdate > 1000L * configuration.getRequestCacheTtl()) {
-      List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
-      this.lateTasksByRequestId =
-        allPendingTaskIds
-          .stream()
-          .filter(
-            p ->
-              now -
-              p.getNextRunAt() >
-              configuration.getDeltaAfterWhichTasksAreLateMillis()
+    List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
+
+    // not a thread safe assignment, but should be fine for periodic updates
+    this.lateTasksByRequestId =
+      allPendingTaskIds
+        .stream()
+        .filter(
+          p ->
+            now - p.getNextRunAt() > configuration.getDeltaAfterWhichTasksAreLateMillis()
+        )
+        .collect(
+          Collectors.toConcurrentMap(
+            SingularityPendingTaskId::getRequestId,
+            p -> 1,
+            Integer::sum
           )
-          .collect(
-            Collectors.toConcurrentMap(
-              SingularityPendingTaskId::getRequestId,
-              p -> 1,
-              Integer::sum
-            )
-          );
-      this.lastUpdate = System.currentTimeMillis();
-    }
+        );
   }
 }
