@@ -2,15 +2,12 @@ package com.hubspot.singularity.helpers;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
-import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
