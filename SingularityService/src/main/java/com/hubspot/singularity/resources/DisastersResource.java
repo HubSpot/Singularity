@@ -222,7 +222,7 @@ public class DisastersResource extends AbstractLeaderAwareResource {
 
   @GET
   @Path("/firealarm")
-  @Operation(summary = "Set a firealarm warning in singularity")
+  @Operation(summary = "Get a firealarm warning in singularity")
   public Optional<FireAlarm> getFireAlarm(
     @Parameter(hidden = true) @Auth SingularityUser user,
     FireAlarm fireAlarm
