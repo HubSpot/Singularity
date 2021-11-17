@@ -31,9 +31,7 @@ public class SingularityRequestHistory
     DEPLOYED_TO_UNPAUSE,
     BOUNCED,
     SCALED,
-    SCALE_REVERTED,
-    PRIORITIZED,
-    PRIORITY_REVERTED
+    SCALE_REVERTED
   }
 
   @JsonCreator

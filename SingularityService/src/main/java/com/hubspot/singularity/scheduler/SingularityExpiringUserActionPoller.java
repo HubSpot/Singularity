@@ -238,7 +238,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           newRequest,
           Optional.of(oldRequest),
           requestWithState.getState(),
-          Optional.of(RequestHistoryType.PRIORITY_REVERTED),
+          Optional.of(RequestHistoryType.UPDATED),
           expiringObject.getUser(),
           Optional.empty(),
           Optional.of(message),

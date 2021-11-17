@@ -1715,7 +1715,7 @@ public class RequestResource extends AbstractRequestResource {
     submitRequest(
       newRequest,
       Optional.of(oldRequestWithState),
-      Optional.of(RequestHistoryType.PRIORITIZED),
+      Optional.of(RequestHistoryType.UPDATED),
       Optional.of(false),
       Optional.of(message),
       Optional.empty(),
