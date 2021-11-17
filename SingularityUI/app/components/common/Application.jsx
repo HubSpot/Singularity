@@ -5,6 +5,7 @@ import Navigation from './Navigation';
 import GlobalSearch from '../globalSearch/GlobalSearch';
 import Title from './Title';
 import Utils from '../../utils';
+import FireAlarm from './FireAlarm';
 
 const DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS = 1000 * 60 * 60;
 const MAX_LATE_REQUESTS = 100;
@@ -58,6 +59,7 @@ class Application extends Component {
         <Title routes={this.props.routes} params={this.props.params} />
         <Navigation location={this.props.location} history={this.props.history} />
         <GlobalSearch />
+        <FireAlarm />
         {this.props.children}
       </div>
     );
