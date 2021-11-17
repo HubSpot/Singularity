@@ -51,7 +51,6 @@ public class InactiveAgentManager extends CuratorManager {
    * @param host agent hostname
    */
   public void cleanInactiveAgent(String host) {
-    LOG.debug("Attempting to clean inactive host {}", host);
     Optional<Stat> stat = checkExists(pathOf(host));
     if (stat.isPresent()) {
       delete(pathOf(host));
@@ -61,7 +60,6 @@ public class InactiveAgentManager extends CuratorManager {
 
   public void cleanInactiveAgentsList(long thresholdTime) {
     for (String host : getInactiveAgents()) {
-      LOG.debug("Attempting to clean inactive host {}", host);
       Optional<Stat> stat = checkExists(pathOf(host));
       if (stat.isPresent() && stat.get().getMtime() < thresholdTime) {
         delete(pathOf(host));
