@@ -126,7 +126,7 @@ public class SingularitySchedulerLock {
     String name,
     Priority priority
   ) {
-    if (priority == Priority.LOW && taskLag.isLagged(requestId)) {
+    if (priority == Priority.LOW && isLocked(requestId) && taskLag.isLagged(requestId)) {
       LOG.info("{} - Skipping low priority lock on {}", name, requestId);
       return;
     }
@@ -241,6 +241,11 @@ public class SingularitySchedulerLock {
   private void unlockOffers(String name, long start) {
     LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
     offersLock.unlock();
+  }
+
+  private boolean isLocked(String requestId) {
+    ReentrantLock lock = requestLocks.get(requestId);
+    return lock != null && lock.isLocked();
   }
 
   public enum Priority {
