@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 public enum SingularityAction {
   BOUNCE_REQUEST(true),
   SCALE_REQUEST(true),
-  PRIORITIZE_REQUEST(true),
+  PRIORITY_REQUEST(true),
   REMOVE_REQUEST(true),
   CREATE_REQUEST(true),
   UPDATE_REQUEST(true),
