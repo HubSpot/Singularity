@@ -13,7 +13,6 @@ import com.hubspot.singularity.data.InactiveAgentManager;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityAgentAndRackManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -84,21 +83,13 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
     final long start = System.currentTimeMillis();
 
     // filter dead and missing on startup agents for cleanup
-    List<SingularityAgent> deadAgents = agentManager.getObjectsFiltered(
+    final List<SingularityAgent> inactiveAgents = agentManager.getObjectsFiltered(
       MachineState.DEAD
     );
 
-    LOG.debug("Found {} dead agents", deadAgents.size());
-
-    List<SingularityAgent> missingOnStartupAgents = agentManager.getObjectsFiltered(
-      MachineState.MISSING_ON_STARTUP
+    inactiveAgents.addAll(
+      agentManager.getObjectsFiltered(MachineState.MISSING_ON_STARTUP)
     );
-
-    LOG.debug("Found {} agents missing on startup", missingOnStartupAgents.size());
-
-    List<SingularityAgent> inactiveAgents = new ArrayList<>();
-    inactiveAgents.addAll(deadAgents);
-    inactiveAgents.addAll(missingOnStartupAgents);
 
     if (inactiveAgents.isEmpty()) {
       LOG.trace("No inactive agents");
