@@ -64,7 +64,7 @@ public class SingularityState {
 
   private final long avgStatusUpdateDelayMs;
   private final long lastHeartbeatAt;
-  private final Optional<FireAlarm> fireAlarm;
+  private final Optional<SingularityFireAlarm> fireAlarm;
 
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityState(
@@ -108,7 +108,7 @@ public class SingularityState {
     Optional<Double> minimumPriorityLevel,
     long avgStatusUpdateDelayMs,
     long lastHeartbeatAt,
-    Optional<FireAlarm> fireAlarm
+    Optional<SingularityFireAlarm> fireAlarm
   ) {
     this(
       activeTasks,
@@ -207,7 +207,7 @@ public class SingularityState {
     @JsonProperty("deadAgents") Integer deadAgents,
     @JsonProperty("decommissioningAgents") Integer decommissioningAgents,
     @JsonProperty("unknownAgents") Integer unknownAgents,
-    @JsonProperty("fireAlarm") Optional<FireAlarm> fireAlarm
+    @JsonProperty("fireAlarm") Optional<SingularityFireAlarm> fireAlarm
   ) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
@@ -528,7 +528,7 @@ public class SingularityState {
   }
 
   @Schema(description = "Fire alarm status")
-  public Optional<FireAlarm> getFireAlarm() {
+  public Optional<SingularityFireAlarm> getFireAlarm() {
     return fireAlarm;
   }
 

@@ -8,13 +8,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Schema(description = "Warning to users users about potential destructive actions")
-public class FireAlarm {
+public class SingularityFireAlarm {
   private final String title;
   private final String message;
   private final Optional<String> url;
 
   @JsonCreator
-  public FireAlarm(
+  public SingularityFireAlarm(
     @JsonProperty("title") String title,
     @JsonProperty("message") String message,
     @JsonProperty("url") Optional<String> url
@@ -47,7 +47,7 @@ public class FireAlarm {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    FireAlarm that = (FireAlarm) o;
+    SingularityFireAlarm that = (SingularityFireAlarm) o;
     return (
       Objects.equals(title, that.title) &&
       Objects.equals(message, that.message) &&

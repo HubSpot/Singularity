@@ -2,7 +2,6 @@ package com.hubspot.singularity.data;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
-import com.hubspot.singularity.FireAlarm;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -11,6 +10,7 @@ import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityFireAlarm;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -40,7 +40,7 @@ public class DisasterManager extends CuratorAsyncManager {
 
   private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
   private final Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder;
-  private final Transcoder<FireAlarm> fireAlarmTranscoder;
+  private final Transcoder<SingularityFireAlarm> fireAlarmTranscoder;
 
   @Inject
   public DisasterManager(
@@ -49,7 +49,7 @@ public class DisasterManager extends CuratorAsyncManager {
     MetricRegistry metricRegistry,
     Transcoder<SingularityDisabledAction> disabledActionTranscoder,
     Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder,
-    Transcoder<FireAlarm> fireAlarmTranscoder
+    Transcoder<SingularityFireAlarm> fireAlarmTranscoder
   ) {
     super(curator, configuration, metricRegistry);
     this.disabledActionTranscoder = disabledActionTranscoder;
@@ -268,11 +268,11 @@ public class DisasterManager extends CuratorAsyncManager {
     return exists(DISABLE_AUTOMATED_PATH);
   }
 
-  public void setFireAlarm(FireAlarm fireAlarm) {
+  public void setFireAlarm(SingularityFireAlarm fireAlarm) {
     save(FIRE_ALARM_PATH, fireAlarm, fireAlarmTranscoder);
   }
 
-  public Optional<FireAlarm> getFireAlarm() {
+  public Optional<SingularityFireAlarm> getFireAlarm() {
     return getData(FIRE_ALARM_PATH, fireAlarmTranscoder);
   }
 
