@@ -224,8 +224,7 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   @Path("/firealarm")
   @Operation(summary = "Get a firealarm warning in singularity")
   public Optional<FireAlarm> getFireAlarm(
-    @Parameter(hidden = true) @Auth SingularityUser user,
-    FireAlarm fireAlarm
+    @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     return disasterManager.getFireAlarm();
   }
