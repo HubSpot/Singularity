@@ -1695,7 +1695,7 @@ public class RequestResource extends AbstractRequestResource {
       SingularityAuthorizationScope.WRITE,
       SingularityUserFacingAction.PRIORITIZE
     );
-    validator.checkActionEnabled(SingularityAction.PRIORITIZE_REQUEST);
+    validator.checkActionEnabled(SingularityAction.PRIORITY_REQUEST);
 
     SingularityRequest newRequest = oldRequest
       .toBuilder()
