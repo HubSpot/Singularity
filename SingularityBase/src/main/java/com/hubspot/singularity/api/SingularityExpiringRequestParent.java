@@ -11,6 +11,7 @@ import java.util.Optional;
     SingularityMachineChangeRequest.class,
     SingularityExpiringParent.class,
     SingularityScaleRequest.class,
+    SingularityPriorityRequest.class,
     SingularityBounceRequest.class,
     SingularityExpiringSkipHealthchecks.class
   }
