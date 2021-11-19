@@ -2,7 +2,6 @@ package com.hubspot.singularity.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.hubspot.singularity.FireAlarm;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -10,6 +9,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityFireAlarm;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
@@ -223,7 +223,7 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/firealarm")
   @Operation(summary = "Get a firealarm warning in singularity")
-  public Optional<FireAlarm> getFireAlarm(
+  public Optional<SingularityFireAlarm> getFireAlarm(
     @Parameter(hidden = true) @Auth SingularityUser user
   ) {
     return disasterManager.getFireAlarm();
@@ -234,7 +234,7 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   @Operation(summary = "Set a firealarm warning in singularity")
   public void enableFireAlarm(
     @Parameter(hidden = true) @Auth SingularityUser user,
-    FireAlarm fireAlarm
+    SingularityFireAlarm fireAlarm
   ) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.setFireAlarm(fireAlarm);
