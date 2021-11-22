@@ -14,6 +14,7 @@ public class SingularityRequestBuilder {
 
   private Optional<List<String>> owners;
   private Optional<Integer> numRetriesOnFailure;
+  private Optional<Integer> maxScale;
 
   private Optional<String> schedule;
   private Optional<String> quartzSchedule;
@@ -60,6 +61,7 @@ public class SingularityRequestBuilder {
     this.requestType = checkNotNull(requestType, "requestType cannot be null");
     this.owners = Optional.empty();
     this.numRetriesOnFailure = Optional.empty();
+    this.maxScale = Optional.empty();
     this.schedule = Optional.empty();
     this.scheduleType = Optional.empty();
     this.killOldNonLongRunningTasksAfterMillis = Optional.empty();
@@ -99,6 +101,7 @@ public class SingularityRequestBuilder {
       requestType,
       owners,
       numRetriesOnFailure,
+      maxScale,
       schedule,
       instances,
       rackSensitive,
@@ -184,6 +187,15 @@ public class SingularityRequestBuilder {
     Optional<Integer> numRetriesOnFailure
   ) {
     this.numRetriesOnFailure = numRetriesOnFailure;
+    return this;
+  }
+
+  public Optional<Integer> getMaxScale() {
+    return maxScale;
+  }
+
+  public SingularityRequestBuilder setMaxScale(Optional<Integer> maxScale) {
+    this.maxScale = maxScale;
     return this;
   }
 
@@ -535,6 +547,7 @@ public class SingularityRequestBuilder {
       requestType == that.requestType &&
       Objects.equals(owners, that.owners) &&
       Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
+      Objects.equals(maxScale, that.maxScale) &&
       Objects.equals(schedule, that.schedule) &&
       Objects.equals(quartzSchedule, that.quartzSchedule) &&
       Objects.equals(scheduleTimeZone, that.scheduleTimeZone) &&
@@ -588,6 +601,7 @@ public class SingularityRequestBuilder {
       requestType,
       owners,
       numRetriesOnFailure,
+      maxScale,
       schedule,
       quartzSchedule,
       scheduleTimeZone,
@@ -635,6 +649,8 @@ public class SingularityRequestBuilder {
       owners +
       ", numRetriesOnFailure=" +
       numRetriesOnFailure +
+      ", maxScale=" +
+      maxScale +
       ", schedule=" +
       schedule +
       ", quartzSchedule=" +

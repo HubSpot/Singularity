@@ -230,12 +230,22 @@ public class SingularityValidator {
       !request.getInstances().isPresent() || request.getInstances().get() > 0,
       "Instances must be greater than 0"
     );
-    checkBadRequest(
-      request.getInstancesSafe() <= maxInstancesPerRequest,
-      "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)",
-      request.getInstancesSafe(),
-      maxInstancesPerRequest
-    );
+
+    if (request.getMaxScale().isPresent()) { // check if number of instances exceeds request-level max scale first
+      checkBadRequest(
+        request.getInstancesSafe() <= request.getMaxScale().get(),
+        "Instances (%s) cannot be greater than %s (maxScale in request)",
+        request.getInstancesSafe(),
+        request.getMaxScale()
+      );
+    } else { // check if exceeds global config max scale
+      checkBadRequest(
+        request.getInstancesSafe() <= maxInstancesPerRequest,
+        "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
+        request.getInstancesSafe(),
+        maxInstancesPerRequest
+      );
+    }
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(

@@ -162,6 +162,77 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void itForbidsRequestInstancesGreaterThanRequestMaxScale() {
+    int maxScale = 10;
+    SingularityRequest request = new SingularityRequestBuilder(
+      "requestId",
+      RequestType.RUN_ONCE
+    )
+      .setInstances(Optional.of(maxScale + 1)) // instances > request level max scale
+      .setMaxScale(Optional.of(maxScale))
+      .build();
+
+    Assertions.assertThrows(
+      WebApplicationException.class,
+      () ->
+        validator.checkSingularityRequest(
+          request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+  }
+
+  @Test
+  public void itForbidsRequestInstancesGreaterThanGlobalMaxScale() {
+    int globalMaxScale = configuration
+      .getMesosConfiguration()
+      .getMaxNumInstancesPerRequest();
+    SingularityRequest request = new SingularityRequestBuilder(
+      "requestId",
+      RequestType.RUN_ONCE
+    )
+      .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
+      .build();
+
+    Assertions.assertThrows(
+      WebApplicationException.class,
+      () ->
+        validator.checkSingularityRequest(
+          request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+  }
+
+  @Test
+  public void itOverridesGlobalMaxScale() {
+    int globalMaxScale = configuration
+      .getMesosConfiguration()
+      .getMaxNumInstancesPerRequest();
+    SingularityRequest request = new SingularityRequestBuilder(
+      "requestId",
+      RequestType.RUN_ONCE
+    )
+      .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
+      .setMaxScale(Optional.of(globalMaxScale + 5)) // instances < request level max scale
+      .build();
+
+    Assertions.assertDoesNotThrow(
+      () ->
+        validator.checkSingularityRequest(
+          request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+  }
+
+  @Test
   public void itForbidsRunNowOfScheduledWhenAlreadyRunning() {
     String deployID = "deploy";
     Optional<String> userEmail = Optional.empty();
