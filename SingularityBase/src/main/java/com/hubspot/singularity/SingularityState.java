@@ -64,6 +64,7 @@ public class SingularityState {
 
   private final long avgStatusUpdateDelayMs;
   private final long lastHeartbeatAt;
+  private final Optional<SingularityFireAlarm> fireAlarm;
 
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
   public SingularityState(
@@ -106,7 +107,8 @@ public class SingularityState {
     Optional<Boolean> authDatastoreHealthy,
     Optional<Double> minimumPriorityLevel,
     long avgStatusUpdateDelayMs,
-    long lastHeartbeatAt
+    long lastHeartbeatAt,
+    Optional<SingularityFireAlarm> fireAlarm
   ) {
     this(
       activeTasks,
@@ -152,7 +154,8 @@ public class SingularityState {
       activeAgents,
       deadAgents,
       decommissioningAgents,
-      unknownAgents
+      unknownAgents,
+      fireAlarm
     );
   }
 
@@ -203,7 +206,8 @@ public class SingularityState {
     @JsonProperty("activeAgents") Integer activeAgents,
     @JsonProperty("deadAgents") Integer deadAgents,
     @JsonProperty("decommissioningAgents") Integer decommissioningAgents,
-    @JsonProperty("unknownAgents") Integer unknownAgents
+    @JsonProperty("unknownAgents") Integer unknownAgents,
+    @JsonProperty("fireAlarm") Optional<SingularityFireAlarm> fireAlarm
   ) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
@@ -247,6 +251,7 @@ public class SingularityState {
     this.minimumPriorityLevel = minimumPriorityLevel;
     this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
     this.lastHeartbeatAt = lastHeartbeatAt;
+    this.fireAlarm = fireAlarm;
   }
 
   @Schema(description = "Count of requests in finished state")
@@ -522,6 +527,11 @@ public class SingularityState {
     return lastHeartbeatAt;
   }
 
+  @Schema(description = "Fire alarm status")
+  public Optional<SingularityFireAlarm> getFireAlarm() {
+    return fireAlarm;
+  }
+
   @Override
   public String toString() {
     return (
@@ -606,6 +616,8 @@ public class SingularityState {
       avgStatusUpdateDelayMs +
       ", lastHeartbeatAt=" +
       lastHeartbeatAt +
+      ", fireAlarm=" +
+      fireAlarm +
       '}'
     );
   }

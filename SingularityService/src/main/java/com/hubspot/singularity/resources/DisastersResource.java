@@ -9,6 +9,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityFireAlarm;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizer;
@@ -217,5 +218,33 @@ public class DisastersResource extends AbstractLeaderAwareResource {
       Executors.newSingleThreadExecutor()
     );
     return Response.ok().build();
+  }
+
+  @GET
+  @Path("/firealarm")
+  @Operation(summary = "Get a firealarm warning in singularity")
+  public Optional<SingularityFireAlarm> getFireAlarm(
+    @Parameter(hidden = true) @Auth SingularityUser user
+  ) {
+    return disasterManager.getFireAlarm();
+  }
+
+  @POST
+  @Path("/firealarm")
+  @Operation(summary = "Set a firealarm warning in singularity")
+  public void enableFireAlarm(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    SingularityFireAlarm fireAlarm
+  ) {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.setFireAlarm(fireAlarm);
+  }
+
+  @DELETE
+  @Path("/firealarm")
+  @Operation(summary = "Deleting ongoing fire alarm")
+  public void disableFireAlarm(@Parameter(hidden = true) @Auth SingularityUser user) {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.deleteFireAlarm();
   }
 }

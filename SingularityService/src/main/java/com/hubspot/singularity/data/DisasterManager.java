@@ -10,6 +10,7 @@ import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityFireAlarm;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -32,11 +33,14 @@ public class DisasterManager extends CuratorAsyncManager {
   private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/statistics";
   private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
 
+  private static final String FIRE_ALARM_PATH = "/firealarm";
+
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
 
   private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
   private final Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder;
+  private final Transcoder<SingularityFireAlarm> fireAlarmTranscoder;
 
   @Inject
   public DisasterManager(
@@ -44,11 +48,13 @@ public class DisasterManager extends CuratorAsyncManager {
     SingularityConfiguration configuration,
     MetricRegistry metricRegistry,
     Transcoder<SingularityDisabledAction> disabledActionTranscoder,
-    Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder
+    Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder,
+    Transcoder<SingularityFireAlarm> fireAlarmTranscoder
   ) {
     super(curator, configuration, metricRegistry);
     this.disabledActionTranscoder = disabledActionTranscoder;
     this.disasterStatsTranscoder = disasterStatsTranscoder;
+    this.fireAlarmTranscoder = fireAlarmTranscoder;
   }
 
   private String getActionPath(SingularityAction action) {
@@ -260,5 +266,17 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public boolean isAutomatedDisabledActionsDisabled() {
     return exists(DISABLE_AUTOMATED_PATH);
+  }
+
+  public void setFireAlarm(SingularityFireAlarm fireAlarm) {
+    save(FIRE_ALARM_PATH, fireAlarm, fireAlarmTranscoder);
+  }
+
+  public Optional<SingularityFireAlarm> getFireAlarm() {
+    return getData(FIRE_ALARM_PATH, fireAlarmTranscoder);
+  }
+
+  public void deleteFireAlarm() {
+    delete(FIRE_ALARM_PATH);
   }
 }
