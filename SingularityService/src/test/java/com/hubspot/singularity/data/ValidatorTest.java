@@ -213,9 +213,8 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
     int globalMaxScale = configuration
       .getMesosConfiguration()
       .getMaxNumInstancesPerRequest();
-
-    SingularityRequest request = new SingularityRequestBuilder(
-      "requestId",
+    SingularityRequest request1 = new SingularityRequestBuilder(
+      "requestId1",
       RequestType.RUN_ONCE
     )
       .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
@@ -225,7 +224,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
     Assertions.assertDoesNotThrow(
       () ->
         validator.checkSingularityRequest(
-          request,
+          request1,
           Optional.empty(),
           Optional.empty(),
           Optional.empty()
