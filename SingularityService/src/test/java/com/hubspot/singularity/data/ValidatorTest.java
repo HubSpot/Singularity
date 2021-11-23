@@ -162,14 +162,14 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void itForbidsRequestInstancesGreaterThanRequestMaxScale() {
-    int maxScale = 10;
+  public void itForbidsInstancesGreaterThanRequestMaxScale() {
+    int requestMaxScale = 10;
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
       RequestType.RUN_ONCE
     )
-      .setInstances(Optional.of(maxScale + 1)) // instances > request level max scale
-      .setMaxScale(Optional.of(maxScale))
+      .setMaxScale(Optional.of(requestMaxScale))
+      .setInstances(Optional.of(requestMaxScale + 1)) // instances > request level max scale
       .build();
 
     Assertions.assertThrows(
@@ -185,7 +185,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void itForbidsRequestInstancesGreaterThanGlobalMaxScale() {
+  public void itForbidsInstancesGreaterThanGlobalMaxScale() {
     int globalMaxScale = configuration
       .getMesosConfiguration()
       .getMaxNumInstancesPerRequest();
@@ -209,10 +209,11 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void itOverridesGlobalMaxScale() {
+  public void itOverridesGlobalMaxScaleWithRequestLevel() {
     int globalMaxScale = configuration
       .getMesosConfiguration()
       .getMaxNumInstancesPerRequest();
+
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
       RequestType.RUN_ONCE
@@ -225,6 +226,25 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       () ->
         validator.checkSingularityRequest(
           request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+
+    SingularityRequest request2 = new SingularityRequestBuilder(
+      "requestId2",
+      RequestType.RUN_ONCE
+    )
+      .setInstances(Optional.of(globalMaxScale - 1)) // instances < global max scale (mesos config)
+      .setMaxScale(Optional.of(globalMaxScale - 5)) // instances > request level max scale
+      .build();
+
+    Assertions.assertThrows(
+      WebApplicationException.class,
+      () ->
+        validator.checkSingularityRequest(
+          request2,
           Optional.empty(),
           Optional.empty(),
           Optional.empty()
