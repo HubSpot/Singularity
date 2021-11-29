@@ -83,7 +83,8 @@ public class SingularityCrashLoopChecker {
                         }
                       },
                       cooldownRequest.getRequest().getId(),
-                      getClass().getSimpleName()
+                      getClass().getSimpleName(),
+                      SingularitySchedulerLock.Priority.LOW
                     ),
                   cooldownExecutor
                 )

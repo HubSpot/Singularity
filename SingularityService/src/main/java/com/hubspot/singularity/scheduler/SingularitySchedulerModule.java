@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.helpers.RebalancingHelper;
+import com.hubspot.singularity.helpers.TaskLagGuardrail;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 
