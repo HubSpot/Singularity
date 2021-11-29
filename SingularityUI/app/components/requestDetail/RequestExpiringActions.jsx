@@ -93,7 +93,7 @@ const RequestExpiringActions = ({
           persistText="Make Permanent"
           persistAction={persistPriority}
           revertText={`Revert to ${revertToPriority}`}
-          revertAction={() => prioritize(revertToInstances).then(persistPriority())}
+          revertAction={() => prioritize(revertToPriority).then(persistPriority())}
           message={message}
         />
       );
