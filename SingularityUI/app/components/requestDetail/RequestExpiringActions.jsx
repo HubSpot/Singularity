@@ -18,12 +18,16 @@ import EnableHealthchecksButton from '../common/modalButtons/EnableHealthchecksB
 import DisableHealthchecksButton from '../common/modalButtons/DisableHealthchecksButton';
 
 import ExpiringActionNotice from './ExpiringActionNotice';
+import { PersistRequestPriority } from '../../actions/api/requests.es6';
+import { PriorityRequest } from '../../actions/api/requests.es6';
 
 const RequestExpiringActions = ({
   requestId,
   requestParent,
   scale,
   persistScale,
+  prioritize,
+  persistPriority,
   cancelBounce,
   persistPause,
   persistSkipHealthchecks
@@ -56,6 +60,40 @@ const RequestExpiringActions = ({
           persistAction={persistScale}
           revertText={`Revert to ${revertToInstances} ${revertToInstances === 1 ? 'instance' : 'instances'}`}
           revertAction={() => scale(revertToInstances).then(persistScale())}
+          message={message}
+        />
+      );
+    }
+  }
+
+  let maybePriorityExpiration;
+  if (requestParent.expiringPriority) {
+    const {
+      expiringPriority: {
+        startMillis,
+        user,
+        revertToPriority,
+        expiringAPIRequestObject: {
+          durationMillis,
+          message
+        }
+      },
+      request: {
+        taskPriorityLevel
+      }
+    } = requestParent;
+    const endMillis = startMillis + durationMillis;
+    if (endMillis > new Date().getTime()) {
+      maybeScaleExpiration = (
+        <ExpiringActionNotice
+          action={`Priority override (to ${taskPriorityLevel})`}
+          user={user ? user.split('@')[0] : ''}
+          endMillis={endMillis}
+          canRevert={true}
+          persistText="Make Permanent"
+          persistAction={persistPriority}
+          revertText={`Revert to ${revertToPriority}`}
+          revertAction={() => prioritize(revertToInstances).then(persistPriority())}
           message={message}
         />
       );
@@ -173,6 +211,7 @@ const RequestExpiringActions = ({
   return (
     <div>
       {maybeScaleExpiration}
+      {maybePriorityExpiration}
       {maybeBounceExpiration}
       {maybePauseExpiration}
       {maybeSkipHealthchecksExpiration}
@@ -185,6 +224,7 @@ RequestExpiringActions.propTypes = {
   requestParent: PropTypes.object.isRequired,
   scale: PropTypes.func.isRequired,
   persistScale: PropTypes.func.isRequired,
+  persistPriority: PropTypes.func.isRequired,
   cancelBounce: PropTypes.func.isRequired,
   persistPause: PropTypes.func.isRequired,
   persistSkipHealthchecks: PropTypes.func.isRequired
@@ -196,7 +236,9 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   scale: (instances) => dispatch(ScaleRequest.trigger(ownProps.requestId, {instances})),
+  prioritize: (priority) => dispatch(PriorityRequest.trigger(ownProps.requestId, {priority})),
   persistScale: () => dispatch(PersistRequestScale.trigger(ownProps.requestId)),
+  persistPriority: () => dispatch(PersistRequestPriority.trigger(ownProps.requestId)),
   cancelBounce: () => dispatch(CancelRequestBounce.trigger(ownProps.requestId)),
   persistPause: () => dispatch(PersistRequestPause.trigger(ownProps.requestId)),
   persistSkipHealthchecks: () => dispatch(PersistSkipRequestHealthchecks.trigger(ownProps.requestId)),

@@ -1678,6 +1678,26 @@ public class RequestResource extends AbstractRequestResource {
     );
   }
 
+  @DELETE
+  @Path("/request/{requestId}/priority")
+  @Operation(
+    summary = "Delete/cancel the expiring request priority change. This makes the request priority change permanent",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "No Request or expiring priority change for that ID"
+      )
+    }
+  )
+  public SingularityRequestParent deleteExpiringPriority(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(required = true, description = "The Request ID") @PathParam(
+      "requestId"
+    ) String requestId
+  ) {
+    return deleteExpiringObject(SingularityExpiringPriority.class, requestId, user);
+  }
+
   public SingularityRequestParent setPriority(
     String requestId,
     SingularityPriorityRequest priorityRequest,

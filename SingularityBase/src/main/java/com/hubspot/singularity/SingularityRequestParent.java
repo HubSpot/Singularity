@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +22,7 @@ public class SingularityRequestParent {
   private final Optional<SingularityExpiringPause> expiringPause;
   private final Optional<SingularityExpiringScale> expiringScale;
   private final Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks;
+  private final Optional<SingularityExpiringPriority> expiringPriority;
   private final Optional<SingularityTaskIdsByStatus> taskIds;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
@@ -36,6 +38,7 @@ public class SingularityRequestParent {
       request,
       state,
       requestDeployState,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -63,6 +66,9 @@ public class SingularityRequestParent {
     @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
     @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
     @JsonProperty(
+      "expiringPriority"
+    ) Optional<SingularityExpiringPriority> expiringPriority,
+    @JsonProperty(
       "expiringSkipHealthchecks"
     ) Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
     @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds
@@ -76,6 +82,7 @@ public class SingularityRequestParent {
     this.expiringBounce = expiringBounce;
     this.expiringPause = expiringPause;
     this.expiringScale = expiringScale;
+    this.expiringPriority = expiringPriority;
     this.expiringSkipHealthchecks = expiringSkipHealthchecks;
     this.taskIds = taskIds;
   }
@@ -154,6 +161,14 @@ public class SingularityRequestParent {
   }
 
   @Schema(
+    description = "Details about an request priority action that will eventually revert",
+    nullable = true
+  )
+  public Optional<SingularityExpiringPriority> getExpiringPriority() {
+    return expiringPriority;
+  }
+
+  @Schema(
     description = "A list of active and pending task ids, separated by status",
     nullable = true
   )
@@ -185,6 +200,8 @@ public class SingularityRequestParent {
       expiringScale +
       ", expiringSkipHealthchecks=" +
       expiringSkipHealthchecks +
+      ", expiringPriority=" +
+      expiringPriority +
       ", taskIds=" +
       taskIds +
       '}'
