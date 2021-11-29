@@ -934,4 +934,8 @@ public class RequestManager extends CuratorAsyncManager {
       .flatMap(r -> getCrashLoopsForRequest(r).stream())
       .collect(Collectors.toList());
   }
+
+  public Optional<SingularityExpiringPriority> getExpiringPriority(String id) {
+    return getExpiringObject(SingularityExpiringPriority.class, id);
+  }
 }
