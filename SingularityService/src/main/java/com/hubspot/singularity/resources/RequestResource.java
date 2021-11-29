@@ -1689,12 +1689,7 @@ public class RequestResource extends AbstractRequestResource {
     );
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
-    authorizationHelper.checkForAuthorization(
-      oldRequest,
-      user,
-      SingularityAuthorizationScope.WRITE,
-      SingularityUserFacingAction.PRIORITIZE
-    );
+    authorizationHelper.checkAdminAuthorization(user);
     validator.checkActionEnabled(SingularityAction.PRIORITY_REQUEST);
 
     SingularityRequest newRequest = oldRequest

@@ -98,7 +98,7 @@ const RequestActionButtons = ({ showRequestEdit, requestParent, fetchingShuffleO
   }
 
   let maybePriorityButton;
-  if (this.props.admin) {
+  if (this.props.showRequestEdit || !config.hideNewRequestButton) {
     maybePriorityButton = (
       <PriorityButton
         requestId={request.id}
@@ -224,6 +224,7 @@ const RequestActionButtons = ({ showRequestEdit, requestParent, fetchingShuffleO
       {maybeEditButton}
       {maybeToggleHealthchecksButton}
       {shuffleOptOutButton}
+      {maybePriorityButton}
       {removeButton}
       {quickLinks.length > 0 &&
         <DropdownButton bsStyle="default" title="Quick Links" pullRight>
