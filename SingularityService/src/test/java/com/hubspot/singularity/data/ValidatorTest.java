@@ -163,12 +163,15 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
 
   @Test
   public void itForbidsInstancesGreaterThanRequestMaxScale() {
-    int requestMaxScale = 10;
+    int globalMaxScale = configuration
+      .getMesosConfiguration()
+      .getMaxNumInstancesPerRequest();
+    int requestMaxScale = globalMaxScale - 5;
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
       RequestType.RUN_ONCE
     )
-      .setMaxScale(Optional.of(requestMaxScale))
+      .setMaxScale(Optional.of(requestMaxScale)) // request level max scale < global max scale
       .setInstances(Optional.of(requestMaxScale + 1)) // instances > request level max scale
       .build();
 
@@ -189,10 +192,12 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
     int globalMaxScale = configuration
       .getMesosConfiguration()
       .getMaxNumInstancesPerRequest();
+    int requestMaxScale = globalMaxScale + 5;
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
       RequestType.RUN_ONCE
     )
+      .setMaxScale(Optional.of(requestMaxScale)) // global max scale < request level max scale
       .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
       .build();
 
@@ -201,49 +206,6 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       () ->
         validator.checkSingularityRequest(
           request,
-          Optional.empty(),
-          Optional.empty(),
-          Optional.empty()
-        )
-    );
-  }
-
-  @Test
-  public void itOverridesGlobalMaxScaleWithRequestLevel() {
-    int globalMaxScale = configuration
-      .getMesosConfiguration()
-      .getMaxNumInstancesPerRequest();
-    SingularityRequest request1 = new SingularityRequestBuilder(
-      "requestId1",
-      RequestType.RUN_ONCE
-    )
-      .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
-      .setMaxScale(Optional.of(globalMaxScale + 5)) // instances < request level max scale
-      .build();
-
-    Assertions.assertDoesNotThrow(
-      () ->
-        validator.checkSingularityRequest(
-          request1,
-          Optional.empty(),
-          Optional.empty(),
-          Optional.empty()
-        )
-    );
-
-    SingularityRequest request2 = new SingularityRequestBuilder(
-      "requestId2",
-      RequestType.RUN_ONCE
-    )
-      .setInstances(Optional.of(globalMaxScale - 1)) // instances < global max scale (mesos config)
-      .setMaxScale(Optional.of(globalMaxScale - 5)) // instances > request level max scale
-      .build();
-
-    Assertions.assertThrows(
-      WebApplicationException.class,
-      () ->
-        validator.checkSingularityRequest(
-          request2,
           Optional.empty(),
           Optional.empty(),
           Optional.empty()
