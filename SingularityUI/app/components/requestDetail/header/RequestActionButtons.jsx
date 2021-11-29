@@ -98,7 +98,7 @@ const RequestActionButtons = ({ showRequestEdit, requestParent, fetchingShuffleO
   }
 
   let maybePriorityButton;
-  if (this.props.showRequestEdit || !config.hideNewRequestButton) {
+  if (showRequestEdit || !config.hideNewRequestButton) {
     maybePriorityButton = (
       <PriorityButton
         requestId={request.id}
