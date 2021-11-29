@@ -116,6 +116,7 @@ public class RequestManager extends CuratorAsyncManager {
     Transcoder<SingularityExpiringScale> expiringScaleTranscoder,
     Transcoder<SingularityExpiringPause> expiringPauseTranscoder,
     Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+    Transcoder<SingularityExpiringPriority> expiringPriorityTranscoder,
     SingularityWebCache webCache,
     SingularityLeaderCache leaderCache,
     Transcoder<CrashLoopInfo> crashLoopInfoTranscoder,
@@ -139,7 +140,9 @@ public class RequestManager extends CuratorAsyncManager {
         SingularityExpiringScale.class,
         expiringScaleTranscoder,
         SingularityExpiringSkipHealthchecks.class,
-        expiringSkipHealthchecksTranscoder
+        expiringSkipHealthchecksTranscoder,
+        SingularityExpiringPriority.class,
+        expiringPriorityTranscoder
       );
 
     this.leaderCache = leaderCache;
