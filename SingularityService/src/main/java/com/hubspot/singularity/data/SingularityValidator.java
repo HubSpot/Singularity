@@ -231,7 +231,7 @@ public class SingularityValidator {
       "Instances must be greater than 0"
     );
 
-    validateScale(request);
+    validateAgainstMaxScale(request);
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(
@@ -373,7 +373,7 @@ public class SingularityValidator {
       .build();
   }
 
-  public void validateScale(SingularityRequest request) {
+  public void validateAgainstMaxScale(SingularityRequest request) {
     // requested instances cannot exceed request-level max scale (if present) or global max scale
     if (request.getMaxScale().isPresent()) {
       if (request.getMaxScale().get() < maxInstancesPerRequest) {
@@ -1224,6 +1224,8 @@ public class SingularityValidator {
         requiredAgentCount,
         currentActiveAgentCount
       );
+
+      validateAgainstMaxScale(request);
     }
   }
 
