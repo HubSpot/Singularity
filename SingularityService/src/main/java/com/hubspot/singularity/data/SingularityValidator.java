@@ -231,31 +231,7 @@ public class SingularityValidator {
       "Instances must be greater than 0"
     );
 
-    // requested instances cannot exceed request-level max scale (if present) or global max scale
-    if (request.getMaxScale().isPresent()) {
-      if (request.getMaxScale().get() < maxInstancesPerRequest) {
-        checkBadRequest(
-          request.getInstancesSafe() <= request.getMaxScale().get(),
-          "Instances (%s) cannot be greater than %s (maxScale in request)",
-          request.getInstancesSafe(),
-          request.getMaxScale()
-        );
-      } else {
-        checkBadRequest(
-          request.getInstancesSafe() <= maxInstancesPerRequest,
-          "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
-          request.getInstancesSafe(),
-          maxInstancesPerRequest
-        );
-      }
-    } else {
-      checkBadRequest(
-        request.getInstancesSafe() <= maxInstancesPerRequest,
-        "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
-        request.getInstancesSafe(),
-        maxInstancesPerRequest
-      );
-    }
+    validateScale(request);
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(
@@ -395,6 +371,34 @@ public class SingularityValidator {
       .toBuilder()
       .setQuartzSchedule(Optional.ofNullable(quartzSchedule))
       .build();
+  }
+
+  public void validateScale(SingularityRequest request) {
+    // requested instances cannot exceed request-level max scale (if present) or global max scale
+    if (request.getMaxScale().isPresent()) {
+      if (request.getMaxScale().get() < maxInstancesPerRequest) {
+        checkBadRequest(
+          request.getInstancesSafe() <= request.getMaxScale().get(),
+          "Instances (%s) cannot be greater than %s (maxScale in request)",
+          request.getInstancesSafe(),
+          request.getMaxScale()
+        );
+      } else {
+        checkBadRequest(
+          request.getInstancesSafe() <= maxInstancesPerRequest,
+          "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
+          request.getInstancesSafe(),
+          maxInstancesPerRequest
+        );
+      }
+    } else {
+      checkBadRequest(
+        request.getInstancesSafe() <= maxInstancesPerRequest,
+        "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
+        request.getInstancesSafe(),
+        maxInstancesPerRequest
+      );
+    }
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
