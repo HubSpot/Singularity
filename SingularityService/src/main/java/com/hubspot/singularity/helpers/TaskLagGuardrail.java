@@ -40,7 +40,7 @@ public class TaskLagGuardrail {
     return lateTasksByRequestId.containsKey(requestId);
   }
 
-  private void updateLateTasksByRequestId() {
+  public void updateLateTasksByRequestId() {
     long now = System.currentTimeMillis();
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
 
