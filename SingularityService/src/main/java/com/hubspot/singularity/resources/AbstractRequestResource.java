@@ -114,6 +114,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
       requestManager.getExpiringBounce(requestId),
       requestManager.getExpiringPause(requestId),
       requestManager.getExpiringScale(requestId),
+      requestManager.getExpiringPriority(requestId),
       requestManager.getExpiringSkipHealthchecks(requestId),
       requestHelper.getTaskIdsByStatusForRequest(requestId)
     );

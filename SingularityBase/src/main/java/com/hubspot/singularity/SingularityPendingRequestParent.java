@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
       singularityRequestParent.getExpiringBounce(),
       singularityRequestParent.getExpiringPause(),
       singularityRequestParent.getExpiringScale(),
+      singularityRequestParent.getExpiringPriority(),
       singularityRequestParent.getExpiringSkipHealthchecks(),
       singularityRequestParent.getTaskIds()
     );
@@ -43,6 +45,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
       Optional.empty(),
       Optional.empty(),
       pendingRequest,
+      Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
@@ -68,6 +71,9 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
     @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
     @JsonProperty(
+      "expiringPriority"
+    ) Optional<SingularityExpiringPriority> expiringPriority,
+    @JsonProperty(
       "expiringSkipHealthchecks"
     ) Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
     @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds
@@ -82,6 +88,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
       expiringBounce,
       expiringPause,
       expiringScale,
+      expiringPriority,
       expiringSkipHealthchecks,
       taskIds
     );

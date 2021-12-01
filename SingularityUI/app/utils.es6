@@ -456,6 +456,9 @@ const Utils = {
         && Utils.request.hasActiveDeploy(requestParent)
         && Utils.request.isLongRunning(requestParent);
     },
+    canBePrioritized: (requestParent) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(requestParent.state);
+    },
     runningInstanceCount: (activeTasksForRequest) => {
       return activeTasksForRequest.filter(
         (task) => task.lastTaskState === 'TASK_RUNNING'

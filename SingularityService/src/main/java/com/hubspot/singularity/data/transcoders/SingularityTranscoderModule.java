@@ -58,6 +58,7 @@ import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 
@@ -96,6 +97,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityExpiringBounce.class);
     bindTranscoder(binder).asJson(SingularityExpiringPause.class);
     bindTranscoder(binder).asJson(SingularityExpiringScale.class);
+    bindTranscoder(binder).asJson(SingularityExpiringPriority.class);
     bindTranscoder(binder).asJson(SingularityExpiringSkipHealthchecks.class);
     bindTranscoder(binder).asJson(SingularityTaskDestroyFrameworkMessage.class);
     bindTranscoder(binder).asJson(SingularityTaskReconciliationStatistics.class);

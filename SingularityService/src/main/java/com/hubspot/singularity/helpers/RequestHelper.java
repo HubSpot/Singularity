@@ -32,6 +32,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UserManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
@@ -466,6 +467,14 @@ public class RequestHelper {
                   )
               )
               .exceptionally(throwable -> Optional.empty());
+            CompletableFuture<Optional<SingularityExpiringPriority>> maybeExpiringPriority = CompletableFuture
+              .supplyAsync(
+                () ->
+                  requestManager.getExpiringPriority(
+                    requestWithState.getRequest().getId()
+                  )
+              )
+              .exceptionally(throwable -> Optional.empty());
             return new SingularityRequestParent(
               requestWithState.getRequest(),
               requestWithState.getState(),
@@ -478,6 +487,7 @@ public class RequestHelper {
               maybeExpiringBounce.join(),
               maybeExpiringPause.join(),
               maybeExpiringScale.join(),
+              maybeExpiringPriority.join(),
               maybeExpiringSkipHealthchecks.join(),
               maybeTaskIdsByStatus.join()
             );
@@ -488,6 +498,7 @@ public class RequestHelper {
               Optional.ofNullable(
                 deployStates.get(requestWithState.getRequest().getId())
               ),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),

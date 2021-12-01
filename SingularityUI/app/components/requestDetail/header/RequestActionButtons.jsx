@@ -25,8 +25,9 @@ import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthch
 
 import Utils from '../../../utils';
 import ShuffleOptOutButton from '../../common/modalButtons/ShuffleOptOutButton';
+import PriorityButton from '../../common/modalButtons/PriorityButton';
 
-const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOptOut, fetchRequest, fetchRequestHistory, fetchActiveTasks, fetchRequestShuffleOptOut, router}) => {
+const RequestActionButtons = ({ showRequestEdit, requestParent, fetchingShuffleOptOut, fetchRequest, fetchRequestHistory, fetchActiveTasks, fetchRequestShuffleOptOut, router }) => {
   let fetchRequestAndHistoryAndActiveTasks = () => {
     return Promise.all([
       fetchRequest(),
@@ -45,7 +46,7 @@ const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOp
   if (!requestParent || !requestParent.request || fetchingShuffleOptOut) {
     return <div></div>;
   }
-  const {request, state} = requestParent;
+  const { request, state } = requestParent;
 
   let maybeNewDeployButton;
   if (!config.hideNewDeployButton) {
@@ -94,6 +95,21 @@ const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOp
         </Button>
       </ScaleButton>
     );
+  }
+
+  let maybePriorityButton;
+  if (showRequestEdit || !config.hideNewRequestButton) {
+    maybePriorityButton = (
+      <PriorityButton
+        requestId={request.id}
+        current={request.taskPriorityLevel}
+        then={fetchRequestAndHistoryAndActiveTasks}
+      >
+        <Button bsStyle="primary">
+          Priority
+        </Button>
+      </PriorityButton>
+    )
   }
 
   let togglePauseButton;
@@ -208,6 +224,7 @@ const RequestActionButtons = ({showRequestEdit, requestParent, fetchingShuffleOp
       {maybeEditButton}
       {maybeToggleHealthchecksButton}
       {shuffleOptOutButton}
+      {maybePriorityButton}
       {removeButton}
       {quickLinks.length > 0 &&
         <DropdownButton bsStyle="default" title="Quick Links" pullRight>
@@ -223,7 +240,7 @@ RequestActionButtons.propTypes = {
   requestParent: PropTypes.object,
   fetchRequest: PropTypes.func.isRequired,
   fetchActiveTasks: PropTypes.func.isRequired,
-  router: PropTypes.shape({push: PropTypes.func.isRequired}).isRequired,
+  router: PropTypes.shape({ push: PropTypes.func.isRequired }).isRequired,
   admin: PropTypes.bool.isRequired,
 };
 

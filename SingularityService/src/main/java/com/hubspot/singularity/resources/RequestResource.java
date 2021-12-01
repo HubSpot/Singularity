@@ -46,6 +46,7 @@ import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityExitCooldownRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityPriorityRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
@@ -61,6 +62,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringPriority;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
@@ -1646,6 +1648,112 @@ public class RequestResource extends AbstractRequestResource {
     mailer.sendRequestRemovedMail(request, user.getEmail().orElse(user.getId()), message);
 
     return request;
+  }
+
+  @PUT
+  @Path("/request/{requestId}/priority")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @Operation(
+    summary = "Set the task scheduling priority for the request",
+    responses = {
+      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+    }
+  )
+  public SingularityRequestParent setPriority(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(
+      required = true,
+      description = "The Request ID to modify priority for"
+    ) @PathParam("requestId") String requestId,
+    @Context HttpServletRequest requestContext,
+    @RequestBody(
+      description = "Request priority (0.0 to 1.0)"
+    ) SingularityPriorityRequest priorityRequest
+  ) {
+    return maybeProxyToLeader(
+      requestContext,
+      SingularityRequestParent.class,
+      priorityRequest,
+      () -> setPriority(requestId, priorityRequest, user)
+    );
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/priority")
+  @Operation(
+    summary = "Delete/cancel the expiring request priority change. This makes the request priority change permanent",
+    responses = {
+      @ApiResponse(
+        responseCode = "404",
+        description = "No Request or expiring priority change for that ID"
+      )
+    }
+  )
+  public SingularityRequestParent deleteExpiringPriority(
+    @Parameter(hidden = true) @Auth SingularityUser user,
+    @Parameter(required = true, description = "The Request ID") @PathParam(
+      "requestId"
+    ) String requestId
+  ) {
+    return deleteExpiringObject(SingularityExpiringPriority.class, requestId, user);
+  }
+
+  public SingularityRequestParent setPriority(
+    String requestId,
+    SingularityPriorityRequest priorityRequest,
+    SingularityUser user
+  ) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(
+      requestId,
+      user
+    );
+
+    SingularityRequest oldRequest = oldRequestWithState.getRequest();
+    authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(SingularityAction.PRIORITY_REQUEST);
+
+    SingularityRequest newRequest = oldRequest
+      .toBuilder()
+      .setTaskPriorityLevel(priorityRequest.getPriority())
+      .build();
+    String message = String.format(
+      "Scaling from %s -> %s",
+      oldRequest.getTaskPriorityLevel(),
+      newRequest.getTaskPriorityLevel()
+    );
+    if (priorityRequest.getMessage().isPresent()) {
+      message = String.format("%s -- %s", priorityRequest.getMessage().get(), message);
+    } else {
+      message = String.format("%s", message);
+    }
+
+    submitRequest(
+      newRequest,
+      Optional.of(oldRequestWithState),
+      Optional.of(RequestHistoryType.UPDATED),
+      Optional.of(false),
+      Optional.of(message),
+      Optional.empty(),
+      user
+    );
+
+    if (priorityRequest.getDurationMillis().isPresent()) {
+      requestManager.saveExpiringObject(
+        new SingularityExpiringPriority(
+          requestId,
+          user.getEmail(),
+          System.currentTimeMillis(),
+          priorityRequest,
+          oldRequest.getTaskPriorityLevel(),
+          priorityRequest.getActionId().orElse(UUID.randomUUID().toString())
+        )
+      );
+    } else {
+      requestManager.deleteExpiringObject(SingularityExpiringPriority.class, requestId);
+    }
+
+    // TODO - email
+    return fillEntireRequest(fetchRequestWithState(requestId, user));
   }
 
   @PUT

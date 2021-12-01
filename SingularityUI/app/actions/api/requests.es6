@@ -143,6 +143,23 @@ export const ScaleRequest = buildJsonApiAction(
   })
 );
 
+export const PriorityRequest = buildJsonApiAction(
+  'PRIORITY_REQUEST',
+  'PUT',
+  (requestId, {priority, durationMillis, message, actionId }) => ({
+    url: `/requests/request/${requestId}/priority`,
+    body: { priority, durationMillis, message, actionId }
+  })
+);
+
+export const PersistRequestPriority = buildJsonApiAction(
+  'PERSIST_REQUEST_SCALE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/priority`
+  })
+);
+
 export const PersistRequestScale = buildJsonApiAction(
   'PERSIST_REQUEST_SCALE',
   'DELETE',
