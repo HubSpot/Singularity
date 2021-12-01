@@ -355,7 +355,8 @@ public class SingularityUpstreamChecker {
       lock.runWithRequestLock(
         () -> syncUpstreamsForService(singularityRequest),
         singularityRequest.getId(),
-        getClass().getSimpleName()
+        getClass().getSimpleName(),
+        SingularitySchedulerLock.Priority.LOW
       );
     }
   }

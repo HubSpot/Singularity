@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.TaskLagGuardrail;
 import com.hubspot.singularity.hooks.DeployAcceptanceHook;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,6 +35,7 @@ public class SingularityMesosModule extends AbstractModule {
     bind(SingularityStartup.class).in(Scopes.SINGLETON);
     bind(SingularitySchedulerLock.class).in(Scopes.SINGLETON);
     bind(SingularityMesosSchedulerClient.class).in(Scopes.SINGLETON);
+    bind(TaskLagGuardrail.class).in(Scopes.SINGLETON);
 
     Multibinder.newSetBinder(binder(), DeployAcceptanceHook.class);
   }

@@ -199,7 +199,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
                 );
               },
               requestWithState.get().getRequest().getId(),
-              getClazz().getSimpleName()
+              getClazz().getSimpleName(),
+              SingularitySchedulerLock.Priority.LOW
             );
           }
 

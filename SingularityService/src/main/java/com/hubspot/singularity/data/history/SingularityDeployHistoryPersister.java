@@ -135,7 +135,8 @@ public class SingularityDeployHistoryPersister
             }
           },
           requestId,
-          getClass().getSimpleName()
+          getClass().getSimpleName(),
+          SingularitySchedulerLock.Priority.LOW
         );
       }
 

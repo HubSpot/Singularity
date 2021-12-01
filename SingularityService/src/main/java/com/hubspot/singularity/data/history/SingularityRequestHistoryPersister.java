@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
@@ -167,7 +168,8 @@ public class SingularityRequestHistoryPersister
             }
           },
           requestHistoryParent.requestId,
-          "request history purger"
+          "request history purger",
+          SingularitySchedulerLock.Priority.LOW
         );
       }
 

@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.helpers.TaskLagGuardrail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -18,9 +19,11 @@ public class SingularitySchedulerLock {
   private final ReentrantLock stateLock;
   private final ReentrantLock offersLock;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
+  private final TaskLagGuardrail taskLag;
 
   @Inject
-  public SingularitySchedulerLock() {
+  public SingularitySchedulerLock(TaskLagGuardrail taskLag) {
+    this.taskLag = taskLag;
     this.stateLock = new ReentrantLock();
     this.offersLock = new ReentrantLock();
     this.requestLocks = new ConcurrentHashMap<>();
@@ -96,7 +99,38 @@ public class SingularitySchedulerLock {
     lock.unlock();
   }
 
+  /**
+   * Run the given function with the specified request lock.
+   *
+   * @param function The function to run.
+   * @param requestId Request to lock.
+   * @param name Description of this request lock.
+   */
   public void runWithRequestLock(Runnable function, String requestId, String name) {
+    runWithRequestLock(function, requestId, name, Priority.HIGH);
+  }
+
+  /**
+   * Run the given function with the specified request lock, unless run with low priority.
+   * If run with low priority, the function will not run if the request is lagged
+   * to allow higher priority components to acquire the lock.
+   *
+   * @param function The function to run.
+   * @param requestId Request to lock.
+   * @param name Description of this request lock.
+   * @param priority Priority of this request lock.
+   */
+  public void runWithRequestLock(
+    Runnable function,
+    String requestId,
+    String name,
+    Priority priority
+  ) {
+    if (priority == Priority.LOW && isLocked(requestId) && taskLag.isLagged(requestId)) {
+      LOG.info("{} - Skipping low priority lock on {}", name, requestId);
+      return;
+    }
+
     long start = lock(requestId, name);
     try {
       function.run();
@@ -207,5 +241,15 @@ public class SingularitySchedulerLock {
   private void unlockOffers(String name, long start) {
     LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
     offersLock.unlock();
+  }
+
+  private boolean isLocked(String requestId) {
+    ReentrantLock lock = requestLocks.get(requestId);
+    return lock != null && lock.isLocked();
+  }
+
+  public enum Priority {
+    LOW,
+    HIGH
   }
 }
