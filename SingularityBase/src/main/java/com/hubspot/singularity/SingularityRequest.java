@@ -14,13 +14,14 @@ import java.util.Optional;
 import java.util.Set;
 
 @Schema(
-  description = "Settings that apply to all tasks and deploys assocaited with this request"
+  description = "Settings that apply to all tasks and deploys associated with this request"
 )
 public class SingularityRequest {
   private final String id;
   private final RequestType requestType;
   private final Optional<List<String>> owners;
   private final Optional<Integer> numRetriesOnFailure;
+  private final Optional<Integer> maxScale;
   private final Optional<String> schedule;
   private final Optional<String> quartzSchedule;
   private final Optional<ScheduleType> scheduleType;
@@ -61,6 +62,7 @@ public class SingularityRequest {
     @JsonProperty("requestType") RequestType requestType,
     @JsonProperty("owners") Optional<List<String>> owners,
     @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure,
+    @JsonProperty("maxScale") Optional<Integer> maxScale,
     @JsonProperty("schedule") Optional<String> schedule,
     @JsonProperty("instances") Optional<Integer> instances,
     @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive,
@@ -129,6 +131,7 @@ public class SingularityRequest {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
+    this.maxScale = maxScale;
     this.schedule = schedule;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
@@ -183,6 +186,7 @@ public class SingularityRequest {
       .setLoadBalanced(loadBalanced)
       .setInstances(instances)
       .setNumRetriesOnFailure(numRetriesOnFailure)
+      .setMaxScale(maxScale)
       .setOwners(copyOfList(owners))
       .setRackSensitive(rackSensitive)
       .setSchedule(schedule)
@@ -241,6 +245,10 @@ public class SingularityRequest {
   )
   public Optional<Integer> getNumRetriesOnFailure() {
     return numRetriesOnFailure;
+  }
+
+  public Optional<Integer> getMaxScale() {
+    return maxScale;
   }
 
   @Schema(nullable = true, description = "A schedule in cron, RFC5545, or quartz format")
@@ -586,6 +594,7 @@ public class SingularityRequest {
       requestType == that.requestType &&
       Objects.equals(owners, that.owners) &&
       Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
+      Objects.equals(maxScale, that.maxScale) &&
       Objects.equals(schedule, that.schedule) &&
       Objects.equals(quartzSchedule, that.quartzSchedule) &&
       Objects.equals(scheduleType, that.scheduleType) &&
@@ -639,6 +648,7 @@ public class SingularityRequest {
       requestType,
       owners,
       numRetriesOnFailure,
+      maxScale,
       schedule,
       quartzSchedule,
       scheduleType,
@@ -686,6 +696,8 @@ public class SingularityRequest {
       owners +
       ", numRetriesOnFailure=" +
       numRetriesOnFailure +
+      ", maxScale=" +
+      maxScale +
       ", schedule=" +
       schedule +
       ", quartzSchedule=" +

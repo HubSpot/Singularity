@@ -162,6 +162,58 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void itForbidsInstancesGreaterThanRequestMaxScale() {
+    int globalMaxScale = configuration
+      .getMesosConfiguration()
+      .getMaxNumInstancesPerRequest();
+    int requestMaxScale = globalMaxScale - 5;
+    SingularityRequest request = new SingularityRequestBuilder(
+      "requestId",
+      RequestType.SERVICE
+    )
+      .setMaxScale(Optional.of(requestMaxScale)) // request level max scale < global max scale
+      .setInstances(Optional.of(requestMaxScale + 1)) // instances > request level max scale
+      .build();
+
+    Assertions.assertThrows(
+      WebApplicationException.class,
+      () ->
+        validator.checkSingularityRequest(
+          request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+  }
+
+  @Test
+  public void itForbidsInstancesGreaterThanGlobalMaxScale() {
+    int globalMaxScale = configuration
+      .getMesosConfiguration()
+      .getMaxNumInstancesPerRequest();
+    int requestMaxScale = globalMaxScale + 5;
+    SingularityRequest request = new SingularityRequestBuilder(
+      "requestId",
+      RequestType.SERVICE
+    )
+      .setMaxScale(Optional.of(requestMaxScale)) // global max scale < request level max scale
+      .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
+      .build();
+
+    Assertions.assertThrows(
+      WebApplicationException.class,
+      () ->
+        validator.checkSingularityRequest(
+          request,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty()
+        )
+    );
+  }
+
+  @Test
   public void itForbidsRunNowOfScheduledWhenAlreadyRunning() {
     String deployID = "deploy";
     Optional<String> userEmail = Optional.empty();
