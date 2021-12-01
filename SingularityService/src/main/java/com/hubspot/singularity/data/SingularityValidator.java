@@ -119,6 +119,8 @@ public class SingularityValidator {
   private final AgentManager agentManager;
   private final LoadBalancerClient loadBalancerClient;
 
+  private final SingularityConfiguration singularityConfiguration;
+
   @Inject
   public SingularityValidator(
     SingularityConfiguration configuration,
@@ -187,6 +189,8 @@ public class SingularityValidator {
     this.disasterManager = disasterManager;
     this.agentManager = agentManager;
     this.loadBalancerClient = loadBalancerClient;
+
+    this.singularityConfiguration = configuration;
   }
 
   public SingularityRequest checkSingularityRequest(
@@ -231,7 +235,10 @@ public class SingularityValidator {
       "Instances must be greater than 0"
     );
 
-    checkRequestAgainstMaxScale(request);
+    if (request.getRequestType().isLongRunning()) {
+      checkBadRequestScaleGlobal(request);
+      checkBadRequestScale(request);
+    }
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(
@@ -373,30 +380,18 @@ public class SingularityValidator {
       .build();
   }
 
-  private void checkRequestAgainstMaxScale(SingularityRequest request) {
-    // requested instances cannot exceed request-level max scale (if present) or global max scale
+  private void checkBadRequestScaleGlobal(SingularityRequest request) {
+    checkBadRequest(
+      request.getInstancesSafe() <= maxInstancesPerRequest,
+      "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)"
+    );
+  }
+
+  private void checkBadRequestScale(SingularityRequest request) {
     if (request.getMaxScale().isPresent()) {
-      if (request.getMaxScale().get() < maxInstancesPerRequest) {
-        checkBadRequest(
-          request.getInstancesSafe() <= request.getMaxScale().get(),
-          "Instances (%s) cannot be greater than %s (maxScale in request)",
-          request.getInstancesSafe(),
-          request.getMaxScale()
-        );
-      } else {
-        checkBadRequest(
-          request.getInstancesSafe() <= maxInstancesPerRequest,
-          "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
-          request.getInstancesSafe(),
-          maxInstancesPerRequest
-        );
-      }
-    } else {
       checkBadRequest(
-        request.getInstancesSafe() <= maxInstancesPerRequest,
-        "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)",
-        request.getInstancesSafe(),
-        maxInstancesPerRequest
+        request.getInstancesSafe() <= request.getMaxScale().get(),
+        "Instances (%s) cannot be greater than %s (maxScale in request)"
       );
     }
   }
@@ -1225,7 +1220,9 @@ public class SingularityValidator {
         currentActiveAgentCount
       );
 
-      checkRequestAgainstMaxScale(request);
+      if (request.getRequestType().isLongRunning()) {
+        checkBadRequestScale(request);
+      }
     }
   }
 

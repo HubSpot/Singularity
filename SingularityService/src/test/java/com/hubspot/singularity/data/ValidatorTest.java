@@ -169,7 +169,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
     int requestMaxScale = globalMaxScale - 5;
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
-      RequestType.RUN_ONCE
+      RequestType.SERVICE
     )
       .setMaxScale(Optional.of(requestMaxScale)) // request level max scale < global max scale
       .setInstances(Optional.of(requestMaxScale + 1)) // instances > request level max scale
@@ -195,7 +195,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
     int requestMaxScale = globalMaxScale + 5;
     SingularityRequest request = new SingularityRequestBuilder(
       "requestId",
-      RequestType.RUN_ONCE
+      RequestType.SERVICE
     )
       .setMaxScale(Optional.of(requestMaxScale)) // global max scale < request level max scale
       .setInstances(Optional.of(globalMaxScale + 1)) // instances > global max scale (mesos config)
