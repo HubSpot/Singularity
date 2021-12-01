@@ -235,9 +235,18 @@ public class SingularityValidator {
       "Instances must be greater than 0"
     );
 
-    if (request.getRequestType().isLongRunning()) {
-      checkBadRequestScaleGlobal(request);
-      checkBadRequestScale(request);
+    checkBadRequest(
+      request.getInstancesSafe() <= maxInstancesPerRequest,
+      "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)",
+      request.getInstancesSafe(),
+      maxInstancesPerRequest
+    );
+
+    if (request.getRequestType().isLongRunning() && request.getMaxScale().isPresent()) {
+      checkBadRequest(
+        request.getInstancesSafe() <= request.getMaxScale().get(),
+        "Instances (%s) cannot be greater than %s (maxScale in request)"
+      );
     }
 
     if (request.getTaskPriorityLevel().isPresent()) {
@@ -378,22 +387,6 @@ public class SingularityValidator {
       .toBuilder()
       .setQuartzSchedule(Optional.ofNullable(quartzSchedule))
       .build();
-  }
-
-  private void checkBadRequestScaleGlobal(SingularityRequest request) {
-    checkBadRequest(
-      request.getInstancesSafe() <= maxInstancesPerRequest,
-      "Instances (%s) cannot be greater than %s (maxInstancesPerRequest in mesos configuration)"
-    );
-  }
-
-  private void checkBadRequestScale(SingularityRequest request) {
-    if (request.getMaxScale().isPresent()) {
-      checkBadRequest(
-        request.getInstancesSafe() <= request.getMaxScale().get(),
-        "Instances (%s) cannot be greater than %s (maxScale in request)"
-      );
-    }
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -1220,8 +1213,11 @@ public class SingularityValidator {
         currentActiveAgentCount
       );
 
-      if (request.getRequestType().isLongRunning()) {
-        checkBadRequestScale(request);
+      if (request.getRequestType().isLongRunning() && request.getMaxScale().isPresent()) {
+        checkBadRequest(
+          request.getInstancesSafe() <= request.getMaxScale().get(),
+          "Instances (%s) cannot be greater than %s (maxScale in request)"
+        );
       }
     }
   }
