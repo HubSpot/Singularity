@@ -247,7 +247,7 @@ public class SingularityValidator {
         request.getInstancesSafe() <= request.getMaxScale().get(),
         "Instances (%s) cannot be greater than %s (maxScale in request)",
         request.getInstancesSafe(),
-        request.getMaxScale()
+        request.getMaxScale().get()
       );
     }
 
@@ -1220,7 +1220,7 @@ public class SingularityValidator {
           request.getInstancesSafe() <= request.getMaxScale().get(),
           "Instances (%s) cannot be greater than %s (maxScale in request)",
           request.getInstancesSafe(),
-          request.getMaxScale()
+          request.getMaxScale().get()
         );
       }
     }
