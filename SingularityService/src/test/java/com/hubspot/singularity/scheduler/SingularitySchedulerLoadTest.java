@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.async.CompletableFutures;
+import com.hubspot.singularity.data.CuratorManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -39,9 +41,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.TaskID;
@@ -50,8 +54,14 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularitySchedulerLoadTest.class
+  );
+
   @Inject
   private SingularityValidator validator;
 
@@ -73,9 +83,15 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   @Inject
   SingularityMesosStatusUpdateHandler updateHandler;
 
+  @Inject
+  SingularitySchedulerPoller poller;
+
+  @Inject
+  CuratorFramework curator;
+
   private int racks = 3;
   private int agents = 150;
-  private int requests = 1000;
+  private int requests = 10;
   private int maxTasksPerRequest = 50;
   private AtomicInteger requestId = new AtomicInteger();
   private AtomicInteger deployId = new AtomicInteger();
@@ -89,25 +105,48 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   private ExecutorService executor = Executors.newCachedThreadPool();
 
   public SingularitySchedulerLoadTest() {
-    super(false);
+    super(
+      false,
+      cfg -> {
+        cfg.getZooKeeperConfiguration().setCuratorFrameworkInstances(1);
+        cfg.setCoreThreadpoolSize(8);
+        cfg.setCacheOffers(true);
+        cfg.setOfferCacheSize(1000);
+        cfg.setMaxTasksPerOffer(1000);
+        cfg.setMaxTasksPerOfferPerRequest(5);
+        cfg.getMesosConfiguration().setOfferLoopTimeoutMillis(60_000);
+        cfg.getMesosConfiguration().setOfferLoopRequestTimeoutMillis(30_000);
+        return null;
+      }
+    );
   }
 
   @Test
-  public void test() {
-    configuration.setCacheOffers(true);
-    configuration.setOfferCacheSize(1000);
-    configuration.setMaxTasksPerOffer(15);
-    configuration.setMaxTasksPerOfferPerRequest(5);
-    configuration.getMesosConfiguration().setOfferLoopTimeoutMillis(10_000);
+  public void test() throws Exception {
+    this.run();
+  }
 
-    initSchedulingLoad();
+  private void run() {
+    time("Resource offers", this::initResourceOffers);
+    time("Creating pending tasks", this::initSchedulingLoad);
 
+    LOG.info("Due tasks: {}", scheduler.getDueTasks().size());
+    System.out.println(scheduler.getDueTasks().size());
     Assertions.assertTrue(requests <= scheduler.getDueTasks().size());
 
-    //    scheduler.drainPendingQueue();
-    initResourceOffers();
-    Assertions.assertEquals(0, requestManager.getPendingRequests().size());
+    time(
+      String.format("Scheduling %d tasks", scheduler.getDueTasks().size()),
+      poller::runActionOnPoll
+    );
+
+    LOG.info("Remaining due tasks: {}", scheduler.getDueTasks().size());
     Assertions.assertEquals(0, scheduler.getDueTasks().size());
+  }
+
+  private void time(String message, Runnable runnable) {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    runnable.run();
+    System.out.println(message + " took " + stopwatch.elapsed());
   }
 
   private void initResourceOffers() {
@@ -158,11 +197,16 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   }
 
   private void generateRequest(RequestType type, Resources resources) {
-    SingularityRequest request = new SingularityRequestBuilder(requestId(), type)
-      .setInstances(
+    SingularityRequestBuilder rb = new SingularityRequestBuilder(requestId(), type)
+    .setInstances(
         Optional.of(ThreadLocalRandom.current().nextInt(1, maxTasksPerRequest))
-      )
-      .build();
+      );
+
+    //    if (type == RequestType.SERVICE) {
+    //      rb.setRackSensitive(Optional.of(true));
+    //    }
+
+    SingularityRequest request = rb.build();
     saveRequest(request);
 
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId())
@@ -223,17 +267,8 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
     return new Resources(cpu, mem, ports);
   }
 
-  private void takeResources(String agentId, List<Protos.Resource> resources) {}
-
   private double nextGaussian(double origin, double bound) {
     return ThreadLocalRandom.current().nextGaussian() * (bound - origin) + origin;
-  }
-
-  private Resources offerToResources(Offer offer) {
-    return MesosUtils.buildResourcesFromMesosResourceList(
-      offer.getResourcesList(),
-      Optional.empty()
-    );
   }
 
   private SingularityPendingTask pendingTask(

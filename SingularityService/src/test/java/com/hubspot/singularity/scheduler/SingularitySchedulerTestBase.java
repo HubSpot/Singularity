@@ -7,7 +7,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
-import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -26,7 +25,6 @@ import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -59,7 +57,6 @@ import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.AgentResource;
-import com.hubspot.singularity.resources.AgentResourceDeprecated;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
@@ -81,6 +78,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import org.apache.mesos.v1.Protos.Address;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -226,6 +224,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected Optional<String> user = Optional.empty();
 
   protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
+  protected AtomicInteger autoIncrement = new AtomicInteger();
 
   private final boolean runZkMigrations;
 
@@ -415,7 +414,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     return Offer
       .newBuilder()
-      .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
+      .setId(
+        OfferID.newBuilder().setValue("offer" + autoIncrement.getAndIncrement()).build()
+      )
       .setFrameworkId(frameworkId)
       .setAgentId(agentId)
       .setHostname(host)
