@@ -119,6 +119,8 @@ public class SingularityValidator {
   private final AgentManager agentManager;
   private final LoadBalancerClient loadBalancerClient;
 
+  private final SingularityConfiguration singularityConfiguration;
+
   @Inject
   public SingularityValidator(
     SingularityConfiguration configuration,
@@ -187,6 +189,8 @@ public class SingularityValidator {
     this.disasterManager = disasterManager;
     this.agentManager = agentManager;
     this.loadBalancerClient = loadBalancerClient;
+
+    this.singularityConfiguration = configuration;
   }
 
   public SingularityRequest checkSingularityRequest(
@@ -230,12 +234,22 @@ public class SingularityValidator {
       !request.getInstances().isPresent() || request.getInstances().get() > 0,
       "Instances must be greater than 0"
     );
+
     checkBadRequest(
       request.getInstancesSafe() <= maxInstancesPerRequest,
       "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)",
       request.getInstancesSafe(),
       maxInstancesPerRequest
     );
+
+    if (request.getRequestType().isLongRunning() && request.getMaxScale().isPresent()) {
+      checkBadRequest(
+        request.getInstancesSafe() <= request.getMaxScale().get(),
+        "Instances (%s) cannot be greater than %s (maxScale in request)",
+        request.getInstancesSafe(),
+        request.getMaxScale().get()
+      );
+    }
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(
@@ -1200,6 +1214,15 @@ public class SingularityValidator {
         requiredAgentCount,
         currentActiveAgentCount
       );
+
+      if (request.getRequestType().isLongRunning() && request.getMaxScale().isPresent()) {
+        checkBadRequest(
+          request.getInstancesSafe() <= request.getMaxScale().get(),
+          "Instances (%s) cannot be greater than %s (maxScale in request)",
+          request.getInstancesSafe(),
+          request.getMaxScale().get()
+        );
+      }
     }
   }
 
