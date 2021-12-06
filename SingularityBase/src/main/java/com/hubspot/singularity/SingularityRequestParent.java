@@ -50,6 +50,42 @@ public class SingularityRequestParent {
     );
   }
 
+  @Deprecated
+  public SingularityRequestParent(
+    @JsonProperty("request") SingularityRequest request,
+    @JsonProperty("state") RequestState state,
+    @JsonProperty(
+      "requestDeployState"
+    ) Optional<SingularityRequestDeployState> requestDeployState,
+    @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy,
+    @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
+    @JsonProperty(
+      "pendingDeployState"
+    ) Optional<SingularityPendingDeploy> pendingDeployState,
+    @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
+    @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
+    @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
+    @JsonProperty(
+      "expiringSkipHealthchecks"
+    ) Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+    @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds
+  ) {
+    this(
+      request,
+      state,
+      requestDeployState,
+      activeDeploy,
+      pendingDeploy,
+      pendingDeployState,
+      expiringBounce,
+      expiringPause,
+      expiringScale,
+      Optional.empty(),
+      expiringSkipHealthchecks,
+      taskIds
+    );
+  }
+
   @JsonCreator
   public SingularityRequestParent(
     @JsonProperty("request") SingularityRequest request,
