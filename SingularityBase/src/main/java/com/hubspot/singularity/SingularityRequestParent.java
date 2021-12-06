@@ -52,23 +52,17 @@ public class SingularityRequestParent {
 
   @Deprecated
   public SingularityRequestParent(
-    @JsonProperty("request") SingularityRequest request,
-    @JsonProperty("state") RequestState state,
-    @JsonProperty(
-      "requestDeployState"
-    ) Optional<SingularityRequestDeployState> requestDeployState,
-    @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy,
-    @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
-    @JsonProperty(
-      "pendingDeployState"
-    ) Optional<SingularityPendingDeploy> pendingDeployState,
-    @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
-    @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
-    @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
-    @JsonProperty(
-      "expiringSkipHealthchecks"
-    ) Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
-    @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds
+    SingularityRequest request,
+    RequestState state,
+    Optional<SingularityRequestDeployState> requestDeployState,
+    Optional<SingularityDeploy> activeDeploy,
+    Optional<SingularityDeploy> pendingDeploy,
+    Optional<SingularityPendingDeploy> pendingDeployState,
+    Optional<SingularityExpiringBounce> expiringBounce,
+    Optional<SingularityExpiringPause> expiringPause,
+    Optional<SingularityExpiringScale> expiringScale,
+    Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+    Optional<SingularityTaskIdsByStatus> taskIds
   ) {
     this(
       request,
