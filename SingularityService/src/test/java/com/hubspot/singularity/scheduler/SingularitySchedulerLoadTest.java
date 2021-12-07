@@ -29,6 +29,7 @@ import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,36 +64,15 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
   );
 
   @Inject
-  private SingularityValidator validator;
-
-  @Inject
-  private SingularityDeployHealthHelper deployHealthHelper;
-
-  @Inject
-  private SingularityMesosTaskPrioritizer taskPrioritizer;
-
-  @Inject
-  private SingularitySchedulerPoller schedulerPoller;
-
-  @Inject
-  private OfferCache offerCache;
-
-  @Inject
-  private MesosProtosUtils mesosProtosUtils;
-
-  @Inject
-  SingularityMesosStatusUpdateHandler updateHandler;
-
-  @Inject
   SingularitySchedulerPoller poller;
 
-  @Inject
-  CuratorFramework curator;
+  //  @Inject
+  //  CuratorFramework curator;
 
   private int racks = 3;
   private int agents = 150;
-  private int requests = 10;
-  private int maxTasksPerRequest = 50;
+  private int requests = 50;
+  private int maxTasksPerRequest = 10;
   private AtomicInteger requestId = new AtomicInteger();
   private AtomicInteger deployId = new AtomicInteger();
   private double cpuPerAgent = 24;
@@ -114,7 +94,7 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
         cfg.setOfferCacheSize(1000);
         cfg.setMaxTasksPerOffer(1000);
         cfg.setMaxTasksPerOfferPerRequest(5);
-        cfg.getMesosConfiguration().setOfferLoopTimeoutMillis(60_000);
+        cfg.getMesosConfiguration().setOfferLoopTimeoutMillis(120_000);
         cfg.getMesosConfiguration().setOfferLoopRequestTimeoutMillis(30_000);
         return null;
       }
@@ -126,12 +106,11 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
     this.run();
   }
 
-  private void run() {
+  private void run() throws IOException {
     time("Resource offers", this::initResourceOffers);
     time("Creating pending tasks", this::initSchedulingLoad);
 
-    LOG.info("Due tasks: {}", scheduler.getDueTasks().size());
-    System.out.println(scheduler.getDueTasks().size());
+    System.out.printf("Due tasks: %d%n", scheduler.getDueTasks().size());
     Assertions.assertTrue(requests <= scheduler.getDueTasks().size());
 
     time(
@@ -139,13 +118,15 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
       poller::runActionOnPoll
     );
 
-    LOG.info("Remaining due tasks: {}", scheduler.getDueTasks().size());
+    System.out.printf("Remaining due tasks: %d%n", scheduler.getDueTasks().size());
     Assertions.assertEquals(0, scheduler.getDueTasks().size());
   }
 
   private void time(String message, Runnable runnable) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     runnable.run();
+
+    // LOG.info doesn't print in intellij
     System.out.println(message + " took " + stopwatch.elapsed());
   }
 
@@ -175,8 +156,7 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
     // excluding scheduled/run-once to simplify things
     RequestType[] requestTypes = new RequestType[] {
       RequestType.SERVICE,
-      RequestType.WORKER,
-      RequestType.ON_DEMAND
+      RequestType.WORKER
     };
 
     List<CompletableFuture<Void>> futures = IntStream
@@ -230,14 +210,14 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
       Optional.<String>empty()
     );
     deployManager.saveDeploy(request, marker, deploy);
-    deployManager.savePendingDeploy(
-      new SingularityPendingDeploy(
-        marker,
-        DeployState.WAITING,
-        SingularityDeployProgress.forNewDeploy(request.getInstancesSafe(), false),
-        Optional.of(request)
-      )
+
+    SingularityPendingDeploy pending = new SingularityPendingDeploy(
+      marker,
+      DeployState.WAITING,
+      SingularityDeployProgress.forNewDeploy(request.getInstancesSafe(), false),
+      Optional.of(request)
     );
+    deployManager.savePendingDeploy(pending);
 
     finishDeploy(marker, deploy);
 
@@ -288,45 +268,5 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
         )
       )
       .build();
-  }
-
-  private void runTest(RequestType requestType, Reason reason, boolean shouldRetry) {
-    initRequestWithType(requestType, false);
-    initFirstDeploy();
-
-    SingularityTask task = startTask(firstDeploy);
-    Assertions.assertEquals(0, taskManager.getPendingTaskIds().size());
-    Assertions.assertEquals(0, requestManager.getPendingRequests().size());
-
-    try {
-      updateHandler
-        .processStatusUpdateAsync(
-          TaskStatus
-            .newBuilder()
-            .setState(TaskState.TASK_LOST)
-            .setReason(reason)
-            .setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId()))
-            .build()
-        )
-        .get();
-    } catch (InterruptedException | ExecutionException e) {
-      Assertions.assertTrue(false);
-    }
-
-    if (shouldRetry) {
-      Assertions.assertEquals(requestManager.getPendingRequests().size(), 1);
-      Assertions.assertEquals(
-        requestManager.getPendingRequests().get(0).getPendingType(),
-        PendingType.RETRY
-      );
-    } else {
-      if (requestManager.getPendingRequests().size() > 0) {
-        Assertions.assertEquals(
-          requestManager.getPendingRequests().get(0).getPendingType(),
-          PendingType.TASK_DONE
-        );
-      }
-    }
-    scheduler.drainPendingQueue();
   }
 }
