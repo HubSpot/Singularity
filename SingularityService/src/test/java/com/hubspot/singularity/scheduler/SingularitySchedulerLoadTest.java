@@ -110,7 +110,7 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
     time("Resource offers", this::initResourceOffers);
     time("Creating pending tasks", this::initSchedulingLoad);
 
-    System.out.printf("Due tasks: %d%n", scheduler.getDueTasks().size());
+    LOG.info("Due tasks: {}", scheduler.getDueTasks().size());
     Assertions.assertTrue(requests <= scheduler.getDueTasks().size());
 
     time(
@@ -118,7 +118,7 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
       poller::runActionOnPoll
     );
 
-    System.out.printf("Remaining due tasks: %d%n", scheduler.getDueTasks().size());
+    LOG.info("Remaining due tasks: {}", scheduler.getDueTasks().size());
     Assertions.assertEquals(0, scheduler.getDueTasks().size());
   }
 
@@ -126,8 +126,8 @@ public class SingularitySchedulerLoadTest extends SingularitySchedulerTestBase {
     Stopwatch stopwatch = Stopwatch.createStarted();
     runnable.run();
 
-    // LOG.info doesn't print in intellij
-    System.out.println(message + " took " + stopwatch.elapsed());
+    // may need to modify log level in test base classes
+    LOG.info("{} took {}", message, stopwatch.elapsed());
   }
 
   private void initResourceOffers() {
