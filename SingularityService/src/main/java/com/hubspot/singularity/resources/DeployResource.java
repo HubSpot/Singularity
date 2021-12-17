@@ -164,6 +164,13 @@ public class DeployResource extends AbstractRequestResource {
     );
 
     SingularityRequest request = requestWithState.getRequest();
+    authorizationHelper.checkForAuthorization(
+      request,
+      deploy,
+      user,
+      SingularityAuthorizationScope.WRITE
+    );
+
     final Optional<SingularityRequest> updatedValidatedRequest;
     if (deployRequest.getUpdatedRequest().isPresent()) {
       authorizationHelper.checkForAuthorizedChanges(
