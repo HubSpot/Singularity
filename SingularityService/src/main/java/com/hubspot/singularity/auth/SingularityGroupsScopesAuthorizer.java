@@ -27,7 +27,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     SingularityGroupsScopesAuthorizer.class
   );
 
-  private final AuthConfiguration authConfiguration;
+  protected final AuthConfiguration authConfiguration;
   private final ScopesConfiguration scopesConfiguration;
   private final SingularityEventListener singularityEventListener;
 
@@ -227,7 +227,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     return groupsIntersect(authConfiguration.getJitaGroups(), user.getGroups());
   }
 
-  private boolean isAdmin(SingularityUser user) {
+  protected boolean isAdmin(SingularityUser user) {
     return hasScope(user, SingularityAuthorizationScope.ADMIN);
   }
 

@@ -32,7 +32,7 @@ public abstract class SingularityAuthorizer {
     this.authEnabled = authEnabled;
   }
 
-  static boolean groupsIntersect(Set<String> a, Set<String> b) {
+  public static boolean groupsIntersect(Set<String> a, Set<String> b) {
     return !Sets.intersection(a, b).isEmpty();
   }
 
