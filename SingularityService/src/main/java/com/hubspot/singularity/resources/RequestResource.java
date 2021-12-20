@@ -193,14 +193,14 @@ public class RequestResource extends AbstractRequestResource {
       ? Optional.of(oldRequestWithState.get().getRequest())
       : Optional.<SingularityRequest>empty();
 
+    authorizationHelper.checkForAuthorizedChanges(request, oldRequest, user);
+
     if (oldRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(
         oldRequest.get(),
-        request,
         user,
         SingularityAuthorizationScope.WRITE
       );
-      authorizationHelper.checkForAuthorizedChanges(request, oldRequest.get(), user);
       validator.checkActionEnabled(SingularityAction.UPDATE_REQUEST);
     } else {
       validator.checkActionEnabled(SingularityAction.CREATE_REQUEST);
