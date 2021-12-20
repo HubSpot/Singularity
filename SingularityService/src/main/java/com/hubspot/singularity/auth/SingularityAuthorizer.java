@@ -45,6 +45,15 @@ public abstract class SingularityAuthorizer {
   public abstract void checkReadAuthorization(SingularityUser user);
 
   public void checkForAuthorization(
+    SingularityRequest oldRequest,
+    SingularityRequest newRequest,
+    SingularityUser user,
+    SingularityAuthorizationScope scope
+  ) {
+    checkForAuthorization(oldRequest, user, scope, Optional.empty());
+  }
+
+  public void checkForAuthorization(
     SingularityRequest request,
     SingularityUser user,
     SingularityAuthorizationScope scope

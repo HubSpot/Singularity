@@ -196,6 +196,7 @@ public class RequestResource extends AbstractRequestResource {
     if (oldRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(
         oldRequest.get(),
+        request,
         user,
         SingularityAuthorizationScope.WRITE
       );
