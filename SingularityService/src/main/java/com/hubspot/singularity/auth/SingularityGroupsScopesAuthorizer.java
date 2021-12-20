@@ -290,7 +290,7 @@ public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
     );
   }
 
-  private Set<String> getGroups(
+  protected Set<String> getGroups(
     SingularityRequest request,
     SingularityAuthorizationScope scope
   ) {
