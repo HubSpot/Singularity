@@ -50,6 +50,36 @@ public class SingularityRequestParent {
     );
   }
 
+  @Deprecated
+  public SingularityRequestParent(
+    SingularityRequest request,
+    RequestState state,
+    Optional<SingularityRequestDeployState> requestDeployState,
+    Optional<SingularityDeploy> activeDeploy,
+    Optional<SingularityDeploy> pendingDeploy,
+    Optional<SingularityPendingDeploy> pendingDeployState,
+    Optional<SingularityExpiringBounce> expiringBounce,
+    Optional<SingularityExpiringPause> expiringPause,
+    Optional<SingularityExpiringScale> expiringScale,
+    Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+    Optional<SingularityTaskIdsByStatus> taskIds
+  ) {
+    this(
+      request,
+      state,
+      requestDeployState,
+      activeDeploy,
+      pendingDeploy,
+      pendingDeployState,
+      expiringBounce,
+      expiringPause,
+      expiringScale,
+      Optional.empty(),
+      expiringSkipHealthchecks,
+      taskIds
+    );
+  }
+
   @JsonCreator
   public SingularityRequestParent(
     @JsonProperty("request") SingularityRequest request,
