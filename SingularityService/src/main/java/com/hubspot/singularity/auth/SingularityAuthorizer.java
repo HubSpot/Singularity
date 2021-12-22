@@ -106,7 +106,7 @@ public abstract class SingularityAuthorizer {
   ) {
     if (oldRequest.isPresent()) {
       checkForAuthorizedChanges(newRequest, oldRequest.get(), user);
-    } else {}
+    }
   }
 
   public abstract void checkForAuthorizedChanges(
