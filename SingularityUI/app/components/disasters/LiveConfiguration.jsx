@@ -59,6 +59,13 @@ class LiveConfiguration extends Component {
               onClick={() => this.props.overridePlacementStrategy(this.state.placementStrategy)}>
               Override
             </button>
+            <button
+              className="btn btn-primary"
+              alt="Clear Placement Strategy Override"
+              title="Clear Placement Strategy Override"
+              onClick={() => this.props.overridePlacementStrategy('')}>
+              Clear
+            </button>
           </div>
         </div>
       </Section>
