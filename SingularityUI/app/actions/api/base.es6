@@ -89,6 +89,11 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
             return Promise.resolve();
           }
           if (response.headers.get('Content-Type') === 'application/json') {
+            // void response cannot be parsed as JSON
+            if (response.headers.get('Content-Length') === '0') {
+              return Promise.resolve();
+            }
+
             return response.json();
           }
           return response.text();

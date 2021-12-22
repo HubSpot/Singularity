@@ -84,12 +84,14 @@ function mapDispatchToProps(dispatch) {
   return {
     enableRackSensitivity: () => dispatch(EnableRackSensitivity.trigger()).then(() => {
       Messenger().info({
-        message: `Enabled rack sensitivity.`
+        message: `Enabled rack sensitivity.`,
+        hideAfter: 5,
       });
     }),
     disableRackSensitivity: () => dispatch(DisableRackSensitivity.trigger()).then(() => {
       Messenger().info({
-        message: `Disabled rack sensitivity.`
+        message: `Disabled rack sensitivity.`,
+        hideAfter: 5,
       });
     }),
     overridePlacementStrategy: strategy => dispatch(OverridePlacementStrategy.trigger(strategy)).then(() => {
@@ -98,7 +100,8 @@ function mapDispatchToProps(dispatch) {
         : `Cleared default placement strategy override`;
 
       Messenger().info({
-        message
+        message,
+        hideAfter: 5,
       });
     }),
   }
