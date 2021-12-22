@@ -1,5 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
+import Messenger from 'messenger';
 import Utils from '../../utils';
 import Section from '../common/Section';
 import { EnableRackSensitivity, DisableRackSensitivity, OverridePlacementStrategy } from '../../actions/api/config';
@@ -74,9 +75,25 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    enableRackSensitivity: () => dispatch(EnableRackSensitivity.trigger()),
-    disableRackSensitivity: () => dispatch(DisableRackSensitivity.trigger()),
-    overridePlacementStrategy: strategy => dispatch(OverridePlacementStrategy.trigger(strategy)),
+    enableRackSensitivity: () => dispatch(EnableRackSensitivity.trigger()).then(() => {
+      Messenger().info({
+        message: `Enabled rack sensitivity.`
+      });
+    }),
+    disableRackSensitivity: () => dispatch(DisableRackSensitivity.trigger()).then(() => {
+      Messenger().info({
+        message: `Disabled rack sensitivity.`
+      });
+    }),
+    overridePlacementStrategy: strategy => dispatch(OverridePlacementStrategy.trigger(strategy)).then(() => {
+      const message = strategy
+        ? `Set default placement strategy to ${strategy}.`
+        : `Cleared default placement strategy override`;
+
+      Messenger().info({
+        message
+      });
+    }),
   }
 }
 
