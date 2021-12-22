@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import { combineReducers } from 'redux';
+import Messenger from 'messenger';
 import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
