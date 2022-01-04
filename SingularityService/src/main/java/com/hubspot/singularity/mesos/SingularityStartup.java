@@ -109,6 +109,7 @@ class SingularityStartup {
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
     agentAndRackManager.loadAgentsAndRacksFromMaster(state, true);
+    agentAndRackManager.checkDecommissionedAgentsFromMaster(state, true);
 
     ExecutorService startupExecutor = Executors.newFixedThreadPool(
       configuration.getSchedulerStartupConcurrency(),

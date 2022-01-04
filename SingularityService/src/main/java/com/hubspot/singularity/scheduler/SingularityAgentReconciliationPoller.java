@@ -96,15 +96,9 @@ public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyP
 
     LOG.debug("Found {} agents missing on startup", missingOnStartupAgents.size());
 
-    List<SingularityAgent> decommissionedAgents = agentManager.getObjectsFiltered(
-      MachineState.DECOMMISSIONED
-    );
-    LOG.debug("Found {} agents decommissioned", decommissionedAgents.size());
-
     List<SingularityAgent> inactiveAgents = new ArrayList<>();
     inactiveAgents.addAll(deadAgents);
     inactiveAgents.addAll(missingOnStartupAgents);
-    inactiveAgents.addAll(decommissionedAgents);
 
     if (inactiveAgents.isEmpty()) {
       LOG.trace("No inactive agents");
