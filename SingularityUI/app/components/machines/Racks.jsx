@@ -5,7 +5,7 @@ import FormModalButton from '../common/modal/FormModalButton';
 import FormModal from '../common/modal/FormModal';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
+import { DecommissionRack, RemoveRack, ReactivateRack, FreezeRack, FetchRacks } from '../../actions/api/racks.es6';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import Column from '../common/table/Column';
@@ -25,9 +25,9 @@ const Racks = (props) => {
     label: 'Message (optional)'
   }
 
-  const showUser = (rack) => Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
+  const showUser = (rack) => Utils.isIn(rack.currentState.state, ['ACTIVE', 'FROZEN', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
 
-  const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+  const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['FROZEN', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
     <FormModalButton
       name="Reactivate Rack"
       buttonChildren={<Glyphicon glyph="new-window" />}
@@ -35,9 +35,9 @@ const Racks = (props) => {
       onConfirm={(data) => props.reactivateRack(rack, data.message)}
       tooltipText={`Reactivate ${rack.id}`}
       formElements={[messageElement]}>
-      <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
+      <p>Are you sure you want to cancel decommission/freeze and reactivate this rack??</p>
       <pre>{rack.id}</pre>
-      <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
+      <p>Reactivating a rack will cancel the decommission/freeze without erasing the rack's history and move it back to the active state.</p>
     </FormModalButton>
   );
 
@@ -55,6 +55,24 @@ const Racks = (props) => {
         Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere,
         as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
         This process may take time as replacement tasks must be considered healthy before old tasks are killed.
+      </p>
+    </FormModalButton>
+  ));
+
+  const getMaybeFreezeButton = (rack) => (rack.currentState.state === 'ACTIVE' && (
+    <FormModalButton
+      name="Freeze Rack"
+      buttonChildren={<Glyphicon glyph="pause" />}
+      action="Freeze Rack"
+      onConfirm={(data) => props.freezeRack(rack, data.message)}
+      tooltipText={`Freeze ${rack.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to freeze this rack?</p>
+      <pre>{rack.id}</pre>
+      <p>
+        Freezing a rack prevents new tasks from being scheduled on the rack, but tasks currently running on it will not be rescheduled.
+        New tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
+        This process should be near-instant, as no tasks need to be replaced/killed.
       </p>
     </FormModalButton>
   ));
@@ -131,6 +149,7 @@ const Racks = (props) => {
           <span>
             {getMaybeReactivateButton(rack)}
             {getMaybeDecommissionButton(rack)}
+            {getMaybeFreezeButton(rack)}
             {getMaybeRemoveButton(rack)}
             <JSONButton object={rack} showOverlay={true}>
               {'{ }'}
@@ -145,7 +164,7 @@ const Racks = (props) => {
   const activeRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['ACTIVE']));
 
   const decommissioningRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
-
+  const frozenRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['FROZEN']));
   const inactiveRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
 
   const states = [
@@ -160,6 +179,12 @@ const Racks = (props) => {
       emptyMessage: 'No Decommissioning Racks',
       columns: getColumns('decommissioning'),
       hostsInState: decommissioningRacks
+    },
+    {
+      stateName: 'Frozen',
+      emptyMessage: 'No Frozen Racks',
+      columns: getColumns('frozen'),
+      hostsInState: frozenRacks
     },
     {
       stateName: 'Inactive',
@@ -183,6 +208,7 @@ Racks.propTypes = {
     state: PropTypes.string
   })),
   removeRack: PropTypes.func.isRequired,
+  freezeRack: PropTypes.func.isRequired,
   decommissionRack: PropTypes.func.isRequired,
   reactivateRack: PropTypes.func.isRequired,
   clear: PropTypes.func.isRequired,
@@ -190,7 +216,7 @@ Racks.propTypes = {
 };
 
 function getErrorFromState(state) {
-  const { decommissionRack, removeRack, reactivateRack } = state.api;
+  const { decommissionRack, removeRack, reactivateRack, freezeRack } = state.api;
   if (decommissionRack.error) {
     return `Error decommissioning rack: ${ state.api.decommissionRack.error.message }`;
   }
@@ -199,6 +225,9 @@ function getErrorFromState(state) {
   }
   if (reactivateRack.error) {
     return `Error reactivating rack: ${ state.api.reactivateRack.error.message }`;
+  }
+  if (freezeRack.error) {
+    return `Error freezing rack: ${state.api.freezeRack.error.message}`;
   }
   return null;
 }
@@ -214,12 +243,14 @@ function mapDispatchToProps(dispatch) {
   function clear() {
     return Promise.all([
       dispatch(DecommissionRack.clear()),
+      dispatch(FreezeRack.clear()),
       dispatch(RemoveRack.clear()),
       dispatch(ReactivateRack.clear())
     ]);
   }
   return {
     decommissionRack: (rack, message) => { clear().then(() => dispatch(DecommissionRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
+    freezeRack: (rack, message) => { clear().then(() => dispatch(FreezeRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
     removeRack: (rack, message) => { clear().then(() => dispatch(RemoveRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
     reactivateRack: (rack, message) => { clear().then(() => dispatch(ReactivateRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
     fetchRacks: () => dispatch(FetchRacks.trigger()),
