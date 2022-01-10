@@ -41,7 +41,7 @@ const Racks = (props) => {
     </FormModalButton>
   );
 
-  const getMaybeDecommissionButton = (rack) => (rack.currentState.state === 'ACTIVE' && (
+  const getMaybeDecommissionButton = (rack) => (Utils.isIn(rack.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
       name="Decommission Rack"
       buttonChildren={<Glyphicon glyph="trash" />}
