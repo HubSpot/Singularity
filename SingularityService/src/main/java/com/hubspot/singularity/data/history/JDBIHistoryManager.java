@@ -358,9 +358,11 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.trace("saveTaskHistory -- will insert taskHistory {}", taskHistory);
     }
 
+    String taskId = getTruncatedTaskId(taskIdHistory.getTaskId().getId());
+
     history.insertTaskHistory(
       taskIdHistory.getTaskId().getRequestId(),
-      taskIdHistory.getTaskId().getId(),
+      taskId,
       taskHistory,
       new Date(taskIdHistory.getUpdatedAt()),
       lastTaskStatus,
@@ -373,13 +375,25 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
+    String maybeTruncatedTaskId = getTruncatedTaskId(taskId);
     Optional<SingularityTaskHistory> maybeTaskHistory = Optional.ofNullable(
-      history.getTaskHistoryForTask(taskId)
+      history.getTaskHistoryForTask(maybeTruncatedTaskId)
     );
     if (!maybeTaskHistory.isPresent() && fallBackToBytesFields) {
       return fromBytes(history.getTaskHistoryBytesForTask(taskId));
     }
     return maybeTaskHistory;
+  }
+
+  public String getTruncatedTaskId(String taskId) {
+    if (
+      configuration.isTruncateLargeTaskIds() &&
+      taskId.length() > configuration.getTaskIdSize()
+    ) {
+      return taskId.substring(0, configuration.getTaskIdSize());
+    }
+
+    return taskId;
   }
 
   @Override

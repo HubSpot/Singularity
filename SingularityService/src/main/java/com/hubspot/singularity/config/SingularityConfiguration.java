@@ -451,6 +451,9 @@ public class SingularityConfiguration extends Configuration {
   private int deployCacheTtlInSeconds = 5;
   private int requestCacheTtlInSeconds = 5;
 
+  private boolean truncateLargeTaskIds = false;
+  private int taskIdSize = 200;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2108,5 +2111,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
     this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
+  }
+
+  public boolean isTruncateLargeTaskIds() {
+    return truncateLargeTaskIds;
+  }
+
+  public void setTruncateLargeTaskIds(boolean truncateLargeTaskIds) {
+    this.truncateLargeTaskIds = truncateLargeTaskIds;
+  }
+
+  public int getTaskIdSize() {
+    return taskIdSize;
+  }
+
+  public void setTaskIdSize(int taskIdSize) {
+    this.taskIdSize = taskIdSize;
   }
 }
