@@ -2116,7 +2116,7 @@ public class SingularityConfiguration extends Configuration {
     return skipPersistingTooLongTaskIds;
   }
 
-  public void skipPersistingTooLongTaskIds(boolean skipPersistingTooLongTaskIds) {
+  public void setSkipPersistingTooLongTaskIds(boolean skipPersistingTooLongTaskIds) {
     this.skipPersistingTooLongTaskIds = skipPersistingTooLongTaskIds;
   }
 }
