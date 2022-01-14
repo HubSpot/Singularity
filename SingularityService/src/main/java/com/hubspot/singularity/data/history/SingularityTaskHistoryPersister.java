@@ -102,8 +102,12 @@ public class SingularityTaskHistoryPersister
                   taskId.getId()
                 );
                 purgeFromZk(taskId);
+              } else {
+                LOG.error(
+                  "Task ID {} too long to persist to DB, skipping",
+                  taskId.getId()
+                );
               }
-              LOG.error("Task ID {} too long to pesist to DB, skipping", taskId.getId());
             } else {
               if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
                 LOG.debug("Transferred task {}", taskId);
