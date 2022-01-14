@@ -88,6 +88,13 @@ public class SingularityTaskHistoryPersister
           int forRequest = 0;
           int transferred = 0;
           for (SingularityTaskId taskId : taskIds) {
+            LOG.info(
+              "Skip long tasks: {}, Singularity task ID: {}, task ID length: {}, task length too long: {}",
+              configuration.skipPersistingTooLongTaskIds(),
+              taskId.getId(),
+              taskId.getId().length(),
+              taskId.getId().length() > 200
+            );
             if (
               configuration.skipPersistingTooLongTaskIds() &&
               taskId.getId().length() > 200
