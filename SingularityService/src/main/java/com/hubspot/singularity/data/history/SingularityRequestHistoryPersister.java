@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
@@ -164,6 +163,7 @@ public class SingularityRequestHistoryPersister
             if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
               numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
             } else {
+              LOG.error("Request History Persister failed on {}", requestHistoryParent);
               persisterSuccess.getAndSet(false);
             }
           },
@@ -210,7 +210,7 @@ public class SingularityRequestHistoryPersister
       try {
         historyManager.saveRequestHistoryUpdate(requestHistory);
       } catch (Throwable t) {
-        LOG.warn("Failed to persist {} into History", requestHistory, t);
+        LOG.error("Failed to persist {} into History", requestHistory, t);
         return false;
       }
 
