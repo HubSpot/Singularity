@@ -451,6 +451,8 @@ public class SingularityConfiguration extends Configuration {
   private int deployCacheTtlInSeconds = 5;
   private int requestCacheTtlInSeconds = 5;
 
+  private boolean skipPersistingTooLongTaskIds = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2108,5 +2110,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
     this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
+  }
+
+  public boolean skipPersistingTooLongTaskIds() {
+    return skipPersistingTooLongTaskIds;
+  }
+
+  public void setSkipPersistingTooLongTaskIds(boolean skipPersistingTooLongTaskIds) {
+    this.skipPersistingTooLongTaskIds = skipPersistingTooLongTaskIds;
   }
 }

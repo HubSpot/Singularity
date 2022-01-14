@@ -88,21 +88,44 @@ public class SingularityTaskHistoryPersister
           int forRequest = 0;
           int transferred = 0;
           for (SingularityTaskId taskId : taskIds) {
-            if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
-              LOG.debug("Transferred task {}", taskId);
-              transferred++;
+            if (
+              configuration.skipPersistingTooLongTaskIds() &&
+              taskId.getId().length() > 200
+            ) {
+              if (
+                System.currentTimeMillis() -
+                taskId.getCreateTimestampForCalculatingHistoryAge() >
+                TimeUnit.DAYS.toMillis(7)
+              ) {
+                LOG.warn(
+                  "Deleting {} from ZK, could not persist in DB because of task ID length",
+                  taskId.getId()
+                );
+                purgeFromZk(taskId);
+              } else {
+                LOG.error(
+                  "Task ID {} too long to persist to DB, skipping",
+                  taskId.getId()
+                );
+              }
             } else {
-              persisterSuccess = false;
-            }
+              if (moveToHistoryOrCheckForPurge(taskId, forRequest)) {
+                LOG.debug("Transferred task {}", taskId);
+                transferred++;
+              } else {
+                LOG.error("Task History Persister failed on {}", taskId);
+                persisterSuccess = false;
+              }
 
-            forRequest++;
+              forRequest++;
+            }
+            LOG.debug(
+              "Transferred {} out of {} inactive task ids in {}",
+              transferred,
+              taskIds.size(),
+              JavaUtils.duration(start)
+            );
           }
-          LOG.debug(
-            "Transferred {} out of {} inactive task ids in {}",
-            transferred,
-            taskIds.size(),
-            JavaUtils.duration(start)
-          );
         } catch (Exception e) {
           LOG.error("Could not persist", e);
         }
@@ -200,7 +223,7 @@ public class SingularityTaskHistoryPersister
       try {
         historyManager.saveTaskHistory(taskHistory.get());
       } catch (Throwable t) {
-        LOG.warn("Failed to persist task into History for task {}", object, t);
+        LOG.error("Failed to persist task into History for task {}", object, t);
         return false;
       }
     } else {
