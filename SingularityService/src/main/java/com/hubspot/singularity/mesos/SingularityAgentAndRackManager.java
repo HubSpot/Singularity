@@ -802,15 +802,9 @@ public class SingularityAgentAndRackManager {
       String agentId = agentJsonObject.getId();
       if (agentsById.containsKey(agentId)) {
         SingularityAgent agent = agentsById.get(agentId);
-        if (
-          agent != null &&
-          (
-            !agent.getResources().isPresent() ||
-            !agent.getResources().get().equals(agentJsonObject.getResources())
-          )
-        ) {
-          LOG.trace(
-            "Found updated resources ({}) for decommissioned agent {}",
+        if (agent != null) {
+          LOG.info(
+            "Found resources ({}) for decommissioned agent {}",
             agentJsonObject.getResources(),
             agent
           );
