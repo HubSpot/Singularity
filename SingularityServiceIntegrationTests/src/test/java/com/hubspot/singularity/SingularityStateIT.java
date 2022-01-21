@@ -24,14 +24,8 @@ public class SingularityStateIT {
   }
 
   @Test
-  public void testLateTasksEndpoint(SingularityClient singularityClient) {
-    final int lateTasks = singularityClient.getNumLateTasks();
-    // TODO: assertion
-  }
-
-  @Test
-  public void testTaskLagEndpoint(SingularityClient singularityClient) {
-    final long taskLag = singularityClient.getMaxTaskLag();
+  public void testScheduledTasksInfoEndpoint(SingularityClient singularityClient) {
+    final SingularityScheduledTasksInfo scheduledTasksInfo = singularityClient.getScheduledTasksInfo();
     // TODO: assertion
   }
 }

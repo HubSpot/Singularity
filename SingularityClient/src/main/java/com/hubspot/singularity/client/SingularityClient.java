@@ -53,6 +53,7 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
@@ -118,8 +119,7 @@ public class SingularityClient {
     AUTH_FORMAT + "/groups/auth-check";
 
   private static final String STATE_FORMAT = "%s/state";
-  private static final String LATE_TASKS_FORMAT = "%s/state/late-tasks";
-  private static final String TASK_LAG_FORMAT = "%s/state/task-lag";
+  private static final String SCHEDULED_TASKS_INFO_FORMAT = "%s/scheduled-tasks-info";
   private static final String TASK_RECONCILIATION_FORMAT =
     STATE_FORMAT + "/task-reconciliation";
 
@@ -831,11 +831,11 @@ public class SingularityClient {
   // GLOBAL
   //
 
-  public int getNumLateTasks() {
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
     final Function<String, String> uri = host ->
-      String.format(LATE_TASKS_FORMAT, getApiBase(host));
+      String.format(SCHEDULED_TASKS_INFO_FORMAT, getApiBase(host));
 
-    LOG.info("Fetching number of late tasks from {}", uri);
+    LOG.info("Fetching scheduled tasks info from {}", uri);
 
     final long start = System.currentTimeMillis();
 
@@ -848,35 +848,11 @@ public class SingularityClient {
       queryParams
     );
 
-    checkResponse("number of late tasks", response);
+    checkResponse("singularity scheduled tasks info", response);
 
-    LOG.info("Got number of late tasks in {}ms", System.currentTimeMillis() - start);
+    LOG.info("Got scheduled tasks info {}ms", System.currentTimeMillis() - start);
 
-    return response.getAs(Integer.class);
-  }
-
-  public long getMaxTaskLag() {
-    final Function<String, String> uri = host ->
-      String.format(TASK_LAG_FORMAT, getApiBase(host));
-
-    LOG.info("Fetching maximum task lag from {}", uri);
-
-    final long start = System.currentTimeMillis();
-
-    Map<String, Boolean> queryParams = new HashMap<>();
-
-    HttpResponse response = executeRequest(
-      uri,
-      Method.GET,
-      Optional.empty(),
-      queryParams
-    );
-
-    checkResponse("max task lag", response);
-
-    LOG.info("Got maximum task lag in {}ms", System.currentTimeMillis() - start);
-
-    return response.getAs(Long.class);
+    return response.getAs(SingularityScheduledTasksInfo.class);
   }
 
   public SingularityState getState(

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.config.ApiPaths;
@@ -33,17 +34,10 @@ public class StateResource {
   }
 
   @GET
-  @Path("/late-tasks")
-  @Operation(summary = "Retrieve the number of late tasks.")
-  public int getLateTasks() {
-    return stateManager.getNumLateTasks();
-  }
-
-  @GET
-  @Path("/task-lag")
-  @Operation(summary = "Retrieve the maximum task lag.")
-  public long getTaskLag() {
-    return stateManager.getMaxTaskLag();
+  @Path("/scheduled-tasks-info")
+  @Operation(summary = "Retrieve the scheduled tasks info.")
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
+    return stateManager.getScheduledTasksInfo();
   }
 
   @GET

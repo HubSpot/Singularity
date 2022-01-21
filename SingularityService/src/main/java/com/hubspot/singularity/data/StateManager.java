@@ -139,14 +139,6 @@ public class StateManager extends CuratorManager {
     }
   }
 
-  public int getNumLateTasks() {
-    return getScheduledTasksInfo().getLateTasks().size();
-  }
-
-  public long getMaxTaskLag() {
-    return getScheduledTasksInfo().getMaxTaskLag();
-  }
-
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
     if (!skipCache) {
       return getData(STATE_PATH, stateTranscoder).orElse(null);
@@ -346,7 +338,7 @@ public class StateManager extends CuratorManager {
     );
   }
 
-  private SingularityScheduledTasksInfo getScheduledTasksInfo() {
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
     long now = System.currentTimeMillis();
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
     List<SingularityPendingTaskId> lateTasks = allPendingTaskIds
