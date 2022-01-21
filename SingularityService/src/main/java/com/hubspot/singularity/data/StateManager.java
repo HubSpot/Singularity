@@ -139,6 +139,14 @@ public class StateManager extends CuratorManager {
     }
   }
 
+  public int getNumLateTasks() {
+    return getScheduledTasksInfo().getLateTasks().size();
+  }
+
+  public long getMaxTaskLag() {
+    return getScheduledTasksInfo().getMaxTaskLag();
+  }
+
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
     if (!skipCache) {
       return getData(STATE_PATH, stateTranscoder).orElse(null);

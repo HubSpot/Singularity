@@ -22,4 +22,16 @@ public class SingularityStateIT {
 
     assertEquals(3, state.getActiveAgents());
   }
+
+  @Test
+  public void testLateTasksEndpoint(SingularityClient singularityClient) {
+    final int lateTasks = singularityClient.getNumLateTasks();
+    // TODO: assertion
+  }
+
+  @Test
+  public void testTaskLagEndpoint(SingularityClient singularityClient) {
+    final long taskLag = singularityClient.getMaxTaskLag();
+    // TODO: assertion
+  }
 }
