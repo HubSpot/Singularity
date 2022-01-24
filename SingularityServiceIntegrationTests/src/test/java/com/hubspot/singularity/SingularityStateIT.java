@@ -22,10 +22,4 @@ public class SingularityStateIT {
 
     assertEquals(3, state.getActiveAgents());
   }
-
-  @Test
-  public void testScheduledTasksInfoEndpoint(SingularityClient singularityClient) {
-    final SingularityScheduledTasksInfo scheduledTasksInfo = singularityClient.getScheduledTasksInfo();
-    // TODO: assertion
-  }
 }
