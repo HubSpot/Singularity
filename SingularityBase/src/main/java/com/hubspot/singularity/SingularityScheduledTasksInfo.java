@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class SingularityScheduledTasksInfo {
@@ -9,12 +11,13 @@ public class SingularityScheduledTasksInfo {
   private final List<SingularityPendingTaskId> lateTasks;
   private final List<SingularityPendingTaskId> onDemandLateTasks;
 
+  @JsonCreator
   public SingularityScheduledTasksInfo(
-    List<SingularityPendingTaskId> lateTasks,
-    List<SingularityPendingTaskId> onDemandLateTasks,
-    int numFutureTasks,
-    long maxTaskLag,
-    long timestamp
+    @JsonProperty("lateTasks") List<SingularityPendingTaskId> lateTasks,
+    @JsonProperty("onDemandLateTasks") List<SingularityPendingTaskId> onDemandLateTasks,
+    @JsonProperty("numFutureTasks") int numFutureTasks,
+    @JsonProperty("maxTaskLag") long maxTaskLag,
+    @JsonProperty("timestamp") long timestamp
   ) {
     this.lateTasks = lateTasks;
     this.onDemandLateTasks = onDemandLateTasks;
