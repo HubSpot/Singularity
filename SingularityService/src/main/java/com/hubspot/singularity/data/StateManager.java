@@ -338,7 +338,7 @@ public class StateManager extends CuratorManager {
     );
   }
 
-  private SingularityScheduledTasksInfo getScheduledTasksInfo() {
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
     long now = System.currentTimeMillis();
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
     List<SingularityPendingTaskId> lateTasks = allPendingTaskIds
