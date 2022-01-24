@@ -839,13 +839,11 @@ public class SingularityClient {
 
     final long start = System.currentTimeMillis();
 
-    Map<String, Boolean> queryParams = new HashMap<>();
-
     HttpResponse response = executeRequest(
       uri,
       Method.GET,
       Optional.empty(),
-      queryParams
+      Collections.emptyMap()
     );
 
     checkResponse("singularity scheduled tasks info", response);
