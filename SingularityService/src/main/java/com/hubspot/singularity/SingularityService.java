@@ -100,7 +100,7 @@ public class SingularityService<T extends SingularityConfiguration>
 
     GuiceBundle.Builder<SingularityConfiguration> guiceBundleBuilder = GuiceBundle
       .defaultBuilder(SingularityConfiguration.class)
-      .modules(getServiceModule(), getObjectMapperModule(), new SingularityAuthModule())
+      .modules(getServiceModule(), getObjectMapperModule(), getAuthModule())
       .modules(additionalModules)
       .enableGuiceEnforcer(false)
       .stage(getGuiceStage());
@@ -169,6 +169,10 @@ public class SingularityService<T extends SingularityConfiguration>
         .bind(ObjectMapper.class)
         .toProvider(DropwizardObjectMapperProvider.class)
         .in(Scopes.SINGLETON);
+  }
+
+  public Module getAuthModule() {
+    return new SingularityAuthModule();
   }
 
   /**
