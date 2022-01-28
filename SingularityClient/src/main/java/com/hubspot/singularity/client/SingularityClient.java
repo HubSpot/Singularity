@@ -849,7 +849,6 @@ public class SingularityClient {
     checkResponse("singularity scheduled tasks info", response);
 
     LOG.info("Got scheduled tasks info in {}ms", System.currentTimeMillis() - start);
-    LOG.info("Scheduled tasks info: {}", response);
 
     return response.getAs(SingularityScheduledTasksInfo.class);
   }
