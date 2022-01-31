@@ -114,7 +114,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(RequestUtilization.class);
     bindTranscoder(binder).asJson(CrashLoopInfo.class);
     bindTranscoder(binder).asJson(ElevatedAccessEvent.class);
-    //    bindTranscoder(binder).asJson(SingularityScheduledTasksInfo.class);
+    bindTranscoder(binder).asJson(SingularityScheduledTasksInfo.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);
@@ -126,7 +126,6 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asCompressedJson(SingularityTaskStatusHolder.class);
     bindTranscoder(binder).asCompressedJson(SingularityTask.class);
     bindTranscoder(binder).asCompressedJson(SingularityTaskMetadata.class);
-    bindTranscoder(binder).asCompressedJson(SingularityScheduledTasksInfo.class);
 
     bindTranscoder(binder).asJson(SingularityPriorityFreezeParent.class);
   }
