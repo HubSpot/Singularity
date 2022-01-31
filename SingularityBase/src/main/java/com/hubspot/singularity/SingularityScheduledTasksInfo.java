@@ -67,7 +67,7 @@ public class SingularityScheduledTasksInfo {
       maxTaskLag +
       ", timestamp" +
       timestamp +
-      "}"
+      '}'
     );
   }
 }
