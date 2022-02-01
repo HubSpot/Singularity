@@ -52,4 +52,22 @@ public class SingularityScheduledTasksInfo {
   public long getTimestamp() {
     return timestamp;
   }
+
+  @Override
+  public String toString() {
+    return (
+      "SingularityScheduledTasksInfo{" +
+      "lateTasks=" +
+      lateTasks +
+      ", onDemandLateTasks=" +
+      onDemandLateTasks +
+      ", numFutureTasks" +
+      numFutureTasks +
+      ", maxTaskLag" +
+      maxTaskLag +
+      ", timestamp" +
+      timestamp +
+      '}'
+    );
+  }
 }
