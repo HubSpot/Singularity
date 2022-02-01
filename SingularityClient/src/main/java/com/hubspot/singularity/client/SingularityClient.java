@@ -119,7 +119,8 @@ public class SingularityClient {
     AUTH_FORMAT + "/groups/auth-check";
 
   private static final String STATE_FORMAT = "%s/state";
-  private static final String SCHEDULED_TASKS_INFO_FORMAT = "%s/scheduled-tasks-info";
+  private static final String SCHEDULED_TASKS_INFO_FORMAT =
+    STATE_FORMAT + "/scheduled-tasks-info";
   private static final String TASK_RECONCILIATION_FORMAT =
     STATE_FORMAT + "/task-reconciliation";
 
@@ -849,7 +850,6 @@ public class SingularityClient {
     checkResponse("singularity scheduled tasks info", response);
 
     LOG.info("Got scheduled tasks info in {}ms", System.currentTimeMillis() - start);
-    LOG.info("Scheduled tasks info response: {}", response);
 
     return response.getAs(SingularityScheduledTasksInfo.class);
   }
