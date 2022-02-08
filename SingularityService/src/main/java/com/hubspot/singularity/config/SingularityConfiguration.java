@@ -453,6 +453,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean skipPersistingTooLongTaskIds = false;
 
+  private boolean allowSettingRequestInstances = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -2118,5 +2120,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSkipPersistingTooLongTaskIds(boolean skipPersistingTooLongTaskIds) {
     this.skipPersistingTooLongTaskIds = skipPersistingTooLongTaskIds;
+  }
+
+  public boolean allowSettingRequestInstances() {
+    return allowSettingRequestInstances;
+  }
+
+  public void setAllowSettingRequestInstances(boolean allowSettingRequestInstances) {
+    this.allowSettingRequestInstances = allowSettingRequestInstances;
   }
 }

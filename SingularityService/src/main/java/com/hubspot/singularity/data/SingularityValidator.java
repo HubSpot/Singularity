@@ -230,10 +230,30 @@ public class SingularityValidator {
       request.getId().length(),
       request.getId()
     );
-    checkBadRequest(
-      !request.getInstances().isPresent() || request.getInstances().get() > 0,
-      "Instances must be greater than 0"
-    );
+
+    if (singularityConfiguration.allowSettingRequestInstances()) {
+      checkBadRequest(
+        (
+          !existingRequest.flatMap(SingularityRequest::getInstances).isPresent() &&
+          !request.getInstances().isPresent()
+        ) ||
+        request.getInstances().get() > 0,
+        "Instances must be greater than 0"
+      );
+
+      if (
+        existingRequest.flatMap(SingularityRequest::getInstances).isPresent() &&
+        !request.getInstances().isPresent()
+      ) {
+        request =
+          request.toBuilder().setInstances(existingRequest.get().getInstances()).build();
+      }
+    } else {
+      checkBadRequest(
+        !request.getInstances().isPresent() || request.getInstances().get() > 0,
+        "Instances must be greater than 0"
+      );
+    }
 
     checkBadRequest(
       request.getInstancesSafe() <= maxInstancesPerRequest,
