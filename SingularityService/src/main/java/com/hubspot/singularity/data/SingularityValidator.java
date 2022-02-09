@@ -231,7 +231,7 @@ public class SingularityValidator {
       request.getId()
     );
 
-    if (singularityConfiguration.allowSettingRequestInstances()) {
+    if (singularityConfiguration.allowEmptyRequestInstances()) {
       checkBadRequest(
         (
           !existingRequest.flatMap(SingularityRequest::getInstances).isPresent() &&
@@ -242,6 +242,10 @@ public class SingularityValidator {
       );
 
       if (
+        (
+          request.getRequestType().equals(RequestType.SERVICE) ||
+          request.getRequestType().equals(RequestType.WORKER)
+        ) &&
         existingRequest.flatMap(SingularityRequest::getInstances).isPresent() &&
         !request.getInstances().isPresent()
       ) {
