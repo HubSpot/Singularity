@@ -800,18 +800,7 @@ public class SingularityAgentAndRackManager {
 
     for (MesosMasterAgentObject agentJsonObject : state.getAgents()) {
       String agentId = agentJsonObject.getId();
-      if (agentsById.containsKey(agentId)) {
-        SingularityAgent agent = agentsById.get(agentId);
-        if (agent != null) {
-          LOG.info(
-            "Found resources ({}) for decommissioned agent {}",
-            agentJsonObject.getResources(),
-            agent
-          );
-          agentManager.saveObject(agent.withResources(agentJsonObject.getResources()));
-        }
-        agentsById.remove(agentId);
-      }
+      agentsById.remove(agentId);
     }
 
     for (SingularityAgent leftOverAgent : agentsById.values()) {
