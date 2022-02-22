@@ -3,9 +3,11 @@ package com.hubspot.singularity.data.history;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,18 +22,24 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   protected final SingularityConfiguration configuration;
   protected final ReentrantLock persisterLock;
-
+  protected final ExecutorService persisterExecutor;
   protected final AtomicLong lastPersisterSuccess;
 
   public SingularityHistoryPersister(
     SingularityConfiguration configuration,
     ReentrantLock persisterLock,
-    AtomicLong lastPersisterSuccess
+    AtomicLong lastPersisterSuccess,
+    SingularityManagedThreadPoolFactory managedThreadPoolFactory
   ) {
     super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS);
     this.configuration = configuration;
     this.persisterLock = persisterLock;
     this.lastPersisterSuccess = lastPersisterSuccess;
+    this.persisterExecutor =
+      managedThreadPoolFactory.get(
+        "persister",
+        configuration.getHistoryPollerConcurrency()
+      );
   }
 
   @Override
