@@ -428,7 +428,7 @@ public class SingularityScheduler {
     );
 
     if (!isRequestActive(maybeRequest)) {
-      LOG.debug(
+      LOG.info(
         "Pending request {} was obsolete (request {})",
         requestId,
         SingularityRequestWithState.getRequestState(maybeRequest)
@@ -475,7 +475,7 @@ public class SingularityScheduler {
           maybeRequestDeployState
         )
       ) {
-        LOG.debug(
+        LOG.info(
           "Pending request {} was obsolete (request {})",
           pendingRequest,
           SingularityRequestWithState.getRequestState(maybeRequest)
