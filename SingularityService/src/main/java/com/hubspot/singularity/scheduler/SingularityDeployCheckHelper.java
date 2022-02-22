@@ -444,25 +444,6 @@ public class SingularityDeployCheckHelper {
       pendingDeploy.getDeployProgress().getFailedDeployTasks()
     );
 
-    return newInactiveDeployTasks
-      .stream()
-      .filter(
-        t -> {
-          // All TASK_LOSTs that are not resource limit related should be able to be retried
-          for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(
-            t
-          )) {
-            String historyUpdateReason = historyUpdate.getStatusReason().orElse("");
-            if (
-              historyUpdate.getTaskState() == ExtendedTaskState.TASK_LOST &&
-              !historyUpdateReason.startsWith("REASON_CONTAINER_LIM")
-            ) {
-              return false;
-            }
-          }
-          return true;
-        }
-      )
-      .collect(Collectors.toSet());
+    return newInactiveDeployTasks;
   }
 }
