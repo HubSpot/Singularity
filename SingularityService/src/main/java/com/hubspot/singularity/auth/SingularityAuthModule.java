@@ -19,14 +19,20 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class SingularityAuthModule
   extends DropwizardAwareModule<SingularityConfiguration> {
   public static final String WEBHOOK_AUTH_HTTP_CLIENT =
     "singularity.webhook.auth.http.client";
+  private Optional<Class<? extends SingularityAuthorizer>> authorizerClass = Optional.empty();
 
   public SingularityAuthModule() {}
+
+  public void setAuthorizerClass(Class<? extends SingularityAuthorizer> authorizerClass) {
+    this.authorizerClass = Optional.of(authorizerClass);
+  }
 
   @Override
   public void configure(Binder binder) {
@@ -64,27 +70,10 @@ public class SingularityAuthModule
       }
     }
 
-    switch (getConfiguration().getAuthConfiguration().getAuthMode()) {
-      case GROUPS_SCOPES:
-        binder
-          .bind(SingularityAuthorizer.class)
-          .to(SingularityGroupsScopesAuthorizer.class)
-          .in(Scopes.SINGLETON);
-        break;
-      case GROUPS_LOG_SCOPES:
-        binder
-          .bind(SingularityAuthorizer.class)
-          .to(SingularityDualAuthorizer.class)
-          .in(Scopes.SINGLETON);
-        break;
-      case GROUPS:
-      default:
-        binder
-          .bind(SingularityAuthorizer.class)
-          .to(SingularityGroupsAuthorizer.class)
-          .in(Scopes.SINGLETON);
-        break;
-    }
+    binder
+      .bind(SingularityAuthorizer.class)
+      .to(authorizerClass.orElseGet(this::getAuthClassFromConfig))
+      .in(Scopes.SINGLETON);
 
     switch (getConfiguration().getAuthConfiguration().getAuthResponseParser()) {
       case RAW:
@@ -109,5 +98,17 @@ public class SingularityAuthModule
       .to(
         getConfiguration().getAuthConfiguration().getDatastore().getAuthDatastoreClass()
       );
+  }
+
+  private Class<? extends SingularityAuthorizer> getAuthClassFromConfig() {
+    switch (getConfiguration().getAuthConfiguration().getAuthMode()) {
+      case GROUPS_SCOPES:
+        return SingularityGroupsScopesAuthorizer.class;
+      case GROUPS_LOG_SCOPES:
+        return SingularityDualAuthorizer.class;
+      case GROUPS:
+      default:
+        return SingularityGroupsAuthorizer.class;
+    }
   }
 }

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.config.ApiPaths;
@@ -12,12 +13,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
 import java.util.Optional;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+@Consumes(MediaType.APPLICATION_JSON)
 @Path(ApiPaths.STATE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Provides information about the current state of Singularity")
@@ -28,6 +31,13 @@ public class StateResource {
   @Inject
   public StateResource(StateManager stateManager) {
     this.stateManager = stateManager;
+  }
+
+  @GET
+  @Path("/scheduled-tasks-info")
+  @Operation(summary = "Retrieve the scheduled tasks info.")
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
+    return stateManager.getScheduledTasksInfo();
   }
 
   @GET

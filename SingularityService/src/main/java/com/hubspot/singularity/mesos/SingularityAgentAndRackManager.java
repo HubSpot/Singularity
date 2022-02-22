@@ -790,6 +790,34 @@ public class SingularityAgentAndRackManager {
     );
   }
 
+  public void checkDecommissionedAgentsFromMaster(
+    MesosMasterStateObject state,
+    boolean isStartup
+  ) {
+    Map<String, SingularityAgent> agentsById = agentManager.getObjectsByIdForState(
+      MachineState.DECOMMISSIONED
+    );
+
+    for (MesosMasterAgentObject agentJsonObject : state.getAgents()) {
+      String agentId = agentJsonObject.getId();
+      agentsById.remove(agentId);
+    }
+
+    for (SingularityAgent leftOverAgent : agentsById.values()) {
+      MachineState newState = isStartup
+        ? MachineState.MISSING_ON_STARTUP
+        : MachineState.DEAD;
+
+      LOG.info("Marking decommissioned agent without mesos resources as {}", newState);
+      agentManager.changeState(
+        leftOverAgent,
+        newState,
+        Optional.empty(),
+        Optional.empty()
+      );
+    }
+  }
+
   public enum CheckResult {
     NEW,
     NOT_ACCEPTING_TASKS,

@@ -53,6 +53,7 @@ import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
@@ -118,6 +119,8 @@ public class SingularityClient {
     AUTH_FORMAT + "/groups/auth-check";
 
   private static final String STATE_FORMAT = "%s/state";
+  private static final String SCHEDULED_TASKS_INFO_FORMAT =
+    STATE_FORMAT + "/scheduled-tasks-info";
   private static final String TASK_RECONCILIATION_FORMAT =
     STATE_FORMAT + "/task-reconciliation";
 
@@ -828,6 +831,28 @@ public class SingularityClient {
   //
   // GLOBAL
   //
+
+  public SingularityScheduledTasksInfo getScheduledTasksInfo() {
+    final Function<String, String> uri = host ->
+      String.format(SCHEDULED_TASKS_INFO_FORMAT, getApiBase(host));
+
+    LOG.info("Fetching scheduled tasks info from {}", uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpResponse response = executeRequest(
+      uri,
+      Method.GET,
+      Optional.empty(),
+      Collections.emptyMap()
+    );
+
+    checkResponse("singularity scheduled tasks info", response);
+
+    LOG.info("Got scheduled tasks info in {}ms", System.currentTimeMillis() - start);
+
+    return response.getAs(SingularityScheduledTasksInfo.class);
+  }
 
   public SingularityState getState(
     Optional<Boolean> skipCache,

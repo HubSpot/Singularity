@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -1621,5 +1622,38 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     Assertions.assertEquals(0, taskManager.getNumActiveTasks());
     Assertions.assertEquals(1, taskManager.getNumScheduledTasks());
+  }
+
+  @Test
+  public void testDeployWithLostTasksFails() {
+    initRequest();
+    deploy(
+      firstDeployId,
+      Optional.<Boolean>empty(),
+      Optional.of(1),
+      Optional.of(false),
+      false
+    );
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
+
+    Assertions.assertEquals(1, taskManager.getPendingTaskIds().size());
+
+    resourceOffers();
+    Assertions.assertEquals(
+      1,
+      taskManager.getActiveTaskIdsForDeploy(requestId, firstDeployId).size()
+    );
+
+    SingularityTaskId firstTaskId = taskManager
+      .getActiveTaskIdsForDeploy(requestId, firstDeployId)
+      .get(0);
+    statusUpdate(taskManager.getTask(firstTaskId).get(), TaskState.TASK_LOST);
+
+    deployChecker.checkDeploys();
+    Assertions.assertEquals(
+      DeployState.FAILED,
+      deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState()
+    );
   }
 }

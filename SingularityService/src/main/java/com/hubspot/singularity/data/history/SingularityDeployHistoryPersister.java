@@ -139,6 +139,7 @@ public class SingularityDeployHistoryPersister
                     if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
                       numTransferred.increment();
                     } else {
+                      LOG.error("Deploy History Persister failed on {}", deployHistory);
                       persisterSuccess.getAndSet(false);
                     }
                   }
@@ -221,7 +222,7 @@ public class SingularityDeployHistoryPersister
     try {
       historyManager.saveDeployHistory(deployHistory);
     } catch (Throwable t) {
-      LOG.warn(
+      LOG.error(
         "Failed to persist deploy {}",
         SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()),
         t

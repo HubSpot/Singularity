@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -31,7 +32,7 @@ public abstract class SingularityAuthorizer {
     this.authEnabled = authEnabled;
   }
 
-  static boolean groupsIntersect(Set<String> a, Set<String> b) {
+  public static boolean groupsIntersect(Set<String> a, Set<String> b) {
     return !Sets.intersection(a, b).isEmpty();
   }
 
@@ -67,6 +68,13 @@ public abstract class SingularityAuthorizer {
     Optional<SingularityUserFacingAction> action
   );
 
+  public void checkForAuthorization(
+    SingularityRequest request,
+    SingularityDeploy deploy,
+    SingularityUser user,
+    SingularityAuthorizationScope scope
+  ) {}
+
   public boolean isAuthorizedForRequest(
     SingularityRequest request,
     SingularityUser user,
@@ -90,6 +98,16 @@ public abstract class SingularityAuthorizer {
     SingularityAuthorizationScope scope,
     Optional<SingularityUserFacingAction> action
   );
+
+  public void checkForAuthorizedChanges(
+    SingularityRequest newRequest,
+    Optional<SingularityRequest> oldRequest,
+    SingularityUser user
+  ) {
+    if (oldRequest.isPresent()) {
+      checkForAuthorizedChanges(newRequest, oldRequest.get(), user);
+    }
+  }
 
   public abstract void checkForAuthorizedChanges(
     SingularityRequest request,
