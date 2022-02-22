@@ -1277,6 +1277,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
@@ -1296,6 +1297,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
@@ -1316,6 +1318,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
@@ -1336,6 +1339,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
     resourceOffers();
 
     // TODO - new deploys have new deploy statistics, so we lose track of the # of retries
