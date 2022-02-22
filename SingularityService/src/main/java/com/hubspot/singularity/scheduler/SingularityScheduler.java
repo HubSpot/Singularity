@@ -1014,12 +1014,27 @@ public class SingularityScheduler {
     );
 
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
-      LOG.debug(
-        "Task {} completed, but it didn't match active deploy state {} - ignoring",
-        taskId.getId(),
-        requestDeployState
-      );
-      return Optional.empty();
+      // failed tasks with remaining retries cannot short circuit here
+      if (
+        state.equals(ExtendedTaskState.TASK_FAILED) &&
+        (
+          deployStatistics.getNumSequentialRetries() <
+          request.getNumRetriesOnFailure().orElse(0)
+        )
+      ) {
+        LOG.info(
+          "Task {} failed, but it didn't match active deploy state {} - may retry with current deploy state",
+          taskId.getId(),
+          requestDeployState
+        );
+      } else {
+        LOG.info(
+          "Task {} completed, but it didn't match active deploy state {} - ignoring",
+          taskId.getId(),
+          requestDeployState
+        );
+        return Optional.empty();
+      }
     }
 
     if (
