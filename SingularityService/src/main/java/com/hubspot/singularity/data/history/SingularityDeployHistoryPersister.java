@@ -6,15 +6,19 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,12 +46,13 @@ public class SingularityDeployHistoryPersister
     DeployManager deployManager,
     HistoryManager historyManager,
     SingularitySchedulerLock schedulerLock,
+    SingularityManagedThreadPoolFactory managedThreadPoolFactory,
     @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
     @Named(
       SingularityHistoryModule.LAST_DEPLOY_PERSISTER_SUCCESS
     ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock, lastPersisterSuccess);
+    super(configuration, persisterLock, lastPersisterSuccess, managedThreadPoolFactory);
     this.schedulerLock = schedulerLock;
     this.deployManager = deployManager;
     this.historyManager = historyManager;
@@ -72,73 +77,83 @@ public class SingularityDeployHistoryPersister
           Collectors.groupingBy(SingularityDeployKey::getRequestId, Collectors.toList())
         );
 
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
       for (String requestId : deployManager
         .getAllRequestDeployStatesByRequestId()
         .keySet()) {
-        LOG.debug("Checking deploy histories to persist for request {}", requestId);
-        schedulerLock.runWithRequestLock(
-          () -> {
-            Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(
-              requestId
-            );
+        futures.add(
+          CompletableFuture.runAsync(
+            () -> {
+              LOG.debug("Checking deploy histories to persist for request {}", requestId);
+              schedulerLock.runWithRequestLock(
+                () -> {
+                  Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(
+                    requestId
+                  );
 
-            if (!deployState.isPresent()) {
-              LOG.warn("No request deploy state for {}", requestId);
-              return;
-            }
+                  if (!deployState.isPresent()) {
+                    LOG.warn("No request deploy state for {}", requestId);
+                    return;
+                  }
 
-            int i = 0;
-            List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest
-              .getOrDefault(requestId, Collections.emptyList())
-              .stream()
-              .map(
-                deployKey ->
-                  deployManager.getDeployHistory(
-                    deployKey.getRequestId(),
-                    deployKey.getDeployId(),
-                    true
-                  )
-              )
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .sorted(
-                Comparator
-                  .comparingLong(
-                    SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge
-                  )
-                  .reversed()
-              )
-              .collect(Collectors.toList());
+                  int i = 0;
+                  List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest
+                    .getOrDefault(requestId, Collections.emptyList())
+                    .stream()
+                    .map(
+                      deployKey ->
+                        deployManager.getDeployHistory(
+                          deployKey.getRequestId(),
+                          deployKey.getDeployId(),
+                          true
+                        )
+                    )
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .sorted(
+                      Comparator
+                        .comparingLong(
+                          SingularityDeployHistory::getCreateTimestampForCalculatingHistoryAge
+                        )
+                        .reversed()
+                    )
+                    .collect(Collectors.toList());
 
-            for (SingularityDeployHistory deployHistory : deployHistories) {
-              numTotal.increment();
-              if (
-                !shouldTransferDeploy(
-                  requestId,
-                  deployState.get(),
-                  deployHistory.getDeployMarker().getDeployId()
-                )
-              ) {
-                continue;
-              }
+                  for (SingularityDeployHistory deployHistory : deployHistories) {
+                    numTotal.increment();
+                    if (
+                      !shouldTransferDeploy(
+                        requestId,
+                        deployState.get(),
+                        deployHistory.getDeployMarker().getDeployId()
+                      )
+                    ) {
+                      continue;
+                    }
 
-              LOG.info(
-                "Persisting deploy {} for request {}",
-                deployHistory.getDeployMarker().getDeployId(),
-                requestId
+                    LOG.info(
+                      "Persisting deploy {} for request {}",
+                      deployHistory.getDeployMarker().getDeployId(),
+                      requestId
+                    );
+                    if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
+                      numTransferred.increment();
+                    } else {
+                      persisterSuccess.getAndSet(false);
+                    }
+                  }
+                },
+                requestId,
+                getClass().getSimpleName(),
+                SingularitySchedulerLock.Priority.LOW
               );
-              if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
-                numTransferred.increment();
-              } else {
-                persisterSuccess.getAndSet(false);
-              }
-            }
-          },
-          requestId,
-          getClass().getSimpleName(),
-          SingularitySchedulerLock.Priority.LOW
+            },
+            persisterExecutor
+          )
         );
       }
+
+      CompletableFutures.allOf(futures).join();
 
       LOG.info(
         "Transferred {} out of {} deploys in {}",

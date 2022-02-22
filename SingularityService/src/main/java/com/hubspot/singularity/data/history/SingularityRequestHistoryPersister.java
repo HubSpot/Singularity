@@ -6,7 +6,9 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;
+import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister.SingularityRequestHistoryParent;
@@ -16,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,12 +46,13 @@ public class SingularityRequestHistoryPersister
     RequestManager requestManager,
     HistoryManager historyManager,
     SingularitySchedulerLock lock,
+    SingularityManagedThreadPoolFactory managedThreadPoolFactory,
     @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
     @Named(
       SingularityHistoryModule.LAST_REQUEST_PERSISTER_SUCCESS
     ) AtomicLong lastPersisterSuccess
   ) {
-    super(configuration, persisterLock, lastPersisterSuccess);
+    super(configuration, persisterLock, lastPersisterSuccess, managedThreadPoolFactory);
     this.requestManager = requestManager;
     this.historyManager = historyManager;
     this.lock = lock;
@@ -158,21 +162,34 @@ public class SingularityRequestHistoryPersister
       Collections.sort(requestHistoryParents, Collections.reverseOrder()); // createdAt descending
 
       AtomicInteger i = new AtomicInteger();
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
       for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
-        lock.runWithRequestLock(
-          () -> {
-            if (moveToHistoryOrCheckForPurge(requestHistoryParent, i.getAndIncrement())) {
-              numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
-            } else {
-              persisterSuccess.getAndSet(false);
-            }
-          },
-          requestHistoryParent.requestId,
-          "request history purger",
-          SingularitySchedulerLock.Priority.LOW
+        futures.add(
+          CompletableFuture.runAsync(
+            () ->
+              lock.runWithRequestLock(
+                () -> {
+                  if (
+                    moveToHistoryOrCheckForPurge(
+                      requestHistoryParent,
+                      i.getAndIncrement()
+                    )
+                  ) {
+                    numHistoryTransferred.getAndAdd(requestHistoryParent.history.size());
+                  } else {
+                    persisterSuccess.getAndSet(false);
+                  }
+                },
+                requestHistoryParent.requestId,
+                "request history purger",
+                SingularitySchedulerLock.Priority.LOW
+              ),
+            persisterExecutor
+          )
         );
       }
 
+      CompletableFutures.allOf(futures).join();
       LOG.info(
         "Transferred {} history updates for {} requests in {}",
         numHistoryTransferred,
