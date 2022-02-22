@@ -1016,7 +1016,7 @@ public class SingularityScheduler {
     if (!isDeployInUse(requestDeployState, taskId.getDeployId(), true)) {
       // failed tasks with remaining retries cannot short circuit here
       if (
-        state.equals(ExtendedTaskState.TASK_FAILED) &&
+        !state.equals(ExtendedTaskState.TASK_FINISHED) &&
         (
           deployStatistics.getNumSequentialRetries() <
           request.getNumRetriesOnFailure().orElse(0)
