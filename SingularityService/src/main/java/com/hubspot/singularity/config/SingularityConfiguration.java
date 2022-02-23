@@ -261,6 +261,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.MINUTES.toSeconds(2);
 
+  private int historyPollerConcurrency = 5;
+
   private int maxPendingImmediatePersists = 200;
 
   private long reconcileAgentsEveryMinutes = TimeUnit.HOURS.toMinutes(1);
@@ -2110,6 +2112,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRequestCacheTtl(int requestCacheTtlInSeconds) {
     this.requestCacheTtlInSeconds = requestCacheTtlInSeconds;
+  }
+
+  public int getHistoryPollerConcurrency() {
+    return historyPollerConcurrency;
+  }
+
+  public void setHistoryPollerConcurrency(int historyPollerConcurrency) {
+    this.historyPollerConcurrency = historyPollerConcurrency;
   }
 
   public boolean skipPersistingTooLongTaskIds() {
