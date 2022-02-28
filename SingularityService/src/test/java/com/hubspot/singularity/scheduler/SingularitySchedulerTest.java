@@ -1255,6 +1255,98 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assertions.assertTrue(taskManager.getActiveTaskIds().isEmpty());
   }
 
+  @Test
+  public void testRetriesWithNewDeploys() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(
+      requestId,
+      RequestType.RUN_ONCE
+    );
+    request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
+    saveRequest(request);
+
+    deployResource.deploy(
+      new SingularityDeployRequest(
+        new SingularityDeployBuilder(requestId, "d1")
+          .setCommand(Optional.of("cmd"))
+          .build(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
+
+    scheduler.drainPendingQueue();
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    deployResource.deploy(
+      new SingularityDeployRequest(
+        new SingularityDeployBuilder(requestId, "d2")
+          .setCommand(Optional.of("cmd"))
+          .build(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    scheduler.drainPendingQueue();
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertEquals("d2", taskManager.getActiveTaskIds().get(0).getDeployId());
+
+    deployResource.deploy(
+      new SingularityDeployRequest(
+        new SingularityDeployBuilder(requestId, "d3")
+          .setCommand(Optional.of("cmd"))
+          .build(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    scheduler.drainPendingQueue();
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertEquals("d3", taskManager.getActiveTaskIds().get(0).getDeployId());
+
+    deployResource.deploy(
+      new SingularityDeployRequest(
+        new SingularityDeployBuilder(requestId, "d4")
+          .setCommand(Optional.of("cmd"))
+          .build(),
+        Optional.empty(),
+        Optional.empty()
+      ),
+      singularityUser
+    );
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    scheduler.drainPendingQueue();
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    // TODO - new deploys have new deploy statistics, so we lose track of the # of retries
+    Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assertions.assertEquals("d4", taskManager.getActiveTaskIds().get(0).getDeployId());
+  }
+
   /* @Test
   public void testCooldownAfterSequentialFailures() {
     initRequest();
