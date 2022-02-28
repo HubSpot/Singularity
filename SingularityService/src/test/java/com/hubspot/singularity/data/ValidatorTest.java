@@ -562,4 +562,30 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
         )
     );
   }
+
+  @Test
+  public void itKeepPreviousInstancesCountWhenEmpty() {
+    singularityConfiguration.setAllowEmptyRequestInstances(true);
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+      .setInstances(Optional.of(5))
+      .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder(
+      "test",
+      RequestType.WORKER
+    )
+    .build();
+
+    SingularityRequest returnedRequest = validator.checkSingularityRequest(
+      newRequest,
+      Optional.of(request),
+      Optional.empty(),
+      Optional.empty()
+    );
+
+    Assertions.assertTrue(returnedRequest.getInstances().isPresent());
+    Assertions.assertSame(
+      returnedRequest.getInstances().get(),
+      request.getInstances().get()
+    );
+  }
 }

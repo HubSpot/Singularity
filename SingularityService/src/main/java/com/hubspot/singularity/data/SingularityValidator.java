@@ -231,16 +231,12 @@ public class SingularityValidator {
       request.getId()
     );
 
-    if (singularityConfiguration.allowEmptyRequestInstances()) {
-      checkBadRequest(
-        (
-          !existingRequest.flatMap(SingularityRequest::getInstances).isPresent() &&
-          !request.getInstances().isPresent()
-        ) ||
-        request.getInstances().get() > 0,
-        "Instances must be greater than 0"
-      );
+    checkBadRequest(
+      !request.getInstances().isPresent() || request.getInstances().get() > 0,
+      "Instances must be greater than 0"
+    );
 
+    if (singularityConfiguration.allowEmptyRequestInstances()) {
       if (
         (
           request.getRequestType().equals(RequestType.SERVICE) ||
@@ -252,11 +248,6 @@ public class SingularityValidator {
         request =
           request.toBuilder().setInstances(existingRequest.get().getInstances()).build();
       }
-    } else {
-      checkBadRequest(
-        !request.getInstances().isPresent() || request.getInstances().get() > 0,
-        "Instances must be greater than 0"
-      );
     }
 
     checkBadRequest(

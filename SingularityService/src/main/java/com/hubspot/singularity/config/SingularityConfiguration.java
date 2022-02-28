@@ -2136,7 +2136,7 @@ public class SingularityConfiguration extends Configuration {
     return allowEmptyRequestInstances;
   }
 
-  public void setallowEmptyRequestInstances(boolean allowEmptyRequestInstances) {
+  public void setAllowEmptyRequestInstances(boolean allowEmptyRequestInstances) {
     this.allowEmptyRequestInstances = allowEmptyRequestInstances;
   }
 }
