@@ -218,8 +218,6 @@ public class SingularityScheduler {
         agent.getId()
       );
 
-      // TODO: Is there a guaranteed order these come out of ZK in to prevent sort?
-      //       Probably nbd because this list will be very short, but still
       SingularityMachineStateHistoryUpdate stateHistoryUpdate = history
         .stream()
         .filter(update -> update.getState() == MachineState.STARTING_DECOMMISSION)
