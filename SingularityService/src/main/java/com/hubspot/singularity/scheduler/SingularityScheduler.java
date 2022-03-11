@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedThreadPoolFactory;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -152,7 +153,8 @@ public class SingularityScheduler {
     final Map<String, Optional<String>> requestIdsToUserToReschedule,
     final Set<SingularityTaskId> matchingTaskIds,
     SingularityTask task,
-    SingularityMachineAbstraction<?> decommissioningObject
+    SingularityMachineAbstraction<?> decommissioningObject,
+    Optional<String> decomissionReason
   ) {
     requestIdsToUserToReschedule.put(
       task.getTaskRequest().getRequest().getId(),
@@ -175,9 +177,10 @@ public class SingularityScheduler {
         task.getTaskId(),
         Optional.of(
           String.format(
-            "%s %s is decomissioning",
+            "%s %s is decomissioning%s",
             decommissioningObject.getTypeName(),
-            decommissioningObject.getName()
+            decommissioningObject.getName(),
+            decomissionReason.map(r -> String.format(" (message: %s)", r)).orElse("")
           )
         ),
         Optional.<String>empty(),
@@ -211,6 +214,15 @@ public class SingularityScheduler {
 
     for (SingularityAgent agent : agents.keySet()) {
       boolean foundTask = false;
+      List<SingularityMachineStateHistoryUpdate> history = agentManager.getHistory(
+        agent.getId()
+      );
+
+      SingularityMachineStateHistoryUpdate stateHistoryUpdate = history
+        .stream()
+        .filter(update -> update.getState() == MachineState.STARTING_DECOMMISSION)
+        .max(Comparator.comparing(SingularityMachineStateHistoryUpdate::getTimestamp))
+        .get();
 
       for (SingularityTask activeTask : taskManager.getTasksOnAgent(
         activeTaskIds,
@@ -220,7 +232,8 @@ public class SingularityScheduler {
           requestIdsToUserToReschedule,
           matchingTaskIds,
           activeTask,
-          agent
+          agent,
+          stateHistoryUpdate.getMessage()
         );
         foundTask = true;
       }
@@ -256,7 +269,8 @@ public class SingularityScheduler {
             requestIdsToUserToReschedule,
             matchingTaskIds,
             maybeTask.get(),
-            rack
+            rack,
+            Optional.empty()
           );
         }
       }
