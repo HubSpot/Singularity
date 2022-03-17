@@ -1497,31 +1497,6 @@ public class SingularityDeployChecker {
 
     Iterable<SingularityTaskId> allIds = Iterables.concat(deployActiveTasks, toShutDown);
     final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(allIds);
-    // Handle a case where occasionally a task's data cannot be found in zk, but the task is running
-    if (
-      !tasks.keySet().containsAll(deployActiveTasks) ||
-      !tasks.keySet().containsAll(toShutDown)
-    ) {
-      LOG.warn("Could not find task data for task to shut down, will check taskCache");
-      for (SingularityTaskId taskId : deployActiveTasks) {
-        if (!tasks.containsKey(taskId)) {
-          Optional<SingularityTask> maybeRepaired = taskManager.tryRepairTask(taskId);
-          if (maybeRepaired.isPresent()) {
-            LOG.info("Repaired and fetched definition for {}", taskId);
-            tasks.put(taskId, maybeRepaired.get());
-          }
-        }
-      }
-      for (SingularityTaskId taskId : toShutDown) {
-        if (!tasks.containsKey(taskId)) {
-          Optional<SingularityTask> maybeRepaired = taskManager.tryRepairTask(taskId);
-          if (maybeRepaired.isPresent()) {
-            LOG.info("Repaired and fetched definition for {}", taskId);
-            tasks.put(taskId, maybeRepaired.get());
-          }
-        }
-      }
-    }
     final LoadBalancerRequestId lbRequestId = SingularityDeployCheckHelper.getNewLoadBalancerRequestId(
       pendingDeploy
     );

@@ -1394,10 +1394,9 @@ public class TaskManager extends CuratorAsyncManager {
       }
     }
 
+    AtomicBoolean hasErr = new AtomicBoolean(false);
     try {
       final String path = getTaskPath(task.getTaskId());
-
-      AtomicBoolean hasErr = new AtomicBoolean(false);
       curator
         .transaction()
         .forOperations(
@@ -1422,12 +1421,13 @@ public class TaskManager extends CuratorAsyncManager {
       // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
+    } catch (KeeperException.NodeExistsException nee) {
+      LOG.error("Task or active path already existed for {}", task.getTaskId());
+    } finally {
       if (hasErr.get()) {
         // Rare case, but in case the transaction failed to write task data, try again from the cache data
         tryRepairTask(task.getTaskId());
       }
-    } catch (KeeperException.NodeExistsException nee) {
-      LOG.error("Task or active path already existed for {}", task.getTaskId());
     }
   }
 
