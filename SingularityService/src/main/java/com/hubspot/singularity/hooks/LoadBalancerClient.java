@@ -96,14 +96,6 @@ public abstract class LoadBalancerClient {
     );
 
     for (SingularityTask task : tasks) {
-      // Temp logging to debug FAILED_INTERNAL_STATE issue
-      if (task == null || task.getMesosTask() == null) {
-        LOG.warn(
-          "Unable to get ports for task {}",
-          task,
-          new RuntimeException("For a stack trace")
-        );
-      }
       final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(
         mesosProtosUtils.toResourceList(task.getMesosTask().getResources()),
         task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().orElse(0)
