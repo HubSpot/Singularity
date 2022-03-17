@@ -50,12 +50,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
+import org.apache.zookeeper.OpResult.ErrorResult;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1304,6 +1307,21 @@ public class TaskManager extends CuratorAsyncManager {
     }
   }
 
+  public Optional<SingularityTask> tryRepairTask(SingularityTaskId taskId) {
+    try {
+      Optional<SingularityTask> maybeTask = getTask(taskId); // checks zkCache for task data
+      String path = getTaskPath(taskId);
+      if (maybeTask.isPresent() && !exists(path)) {
+        LOG.info("Found info for task {} from cache not in zk node, rewriting", taskId);
+        save(path, maybeTask.map(taskTranscoder::toBytes));
+        leaderCache.putActiveTask(taskId);
+      }
+      return maybeTask;
+    } catch (Exception e) {
+      return Optional.empty();
+    }
+  }
+
   public Map<SingularityTaskId, SingularityTask> getTasks(
     Iterable<SingularityTaskId> taskIds
   ) {
@@ -1376,29 +1394,40 @@ public class TaskManager extends CuratorAsyncManager {
       }
     }
 
+    AtomicBoolean hasErr = new AtomicBoolean(false);
     try {
       final String path = getTaskPath(task.getTaskId());
-
-      CuratorTransactionFinal transaction = curator
-        .inTransaction()
-        .create()
-        .forPath(path, taskTranscoder.toBytes(task))
-        .and();
-
-      transaction
-        .create()
-        .forPath(
-          getLastActiveTaskStatusPath(task.getTaskId()),
-          taskStatusTranscoder.toBytes(taskStatusHolder)
+      curator
+        .transaction()
+        .forOperations(
+          curator.transactionOp().create().forPath(path, taskTranscoder.toBytes(task)),
+          curator
+            .transactionOp()
+            .create()
+            .forPath(
+              getLastActiveTaskStatusPath(task.getTaskId()),
+              taskStatusTranscoder.toBytes(taskStatusHolder)
+            )
         )
-        .and()
-        .commit();
+        .forEach(
+          r -> {
+            if (r.getError() > 0) {
+              LOG.error("Error committing new task {} to zk {}", task.getTaskId(), r);
+              hasErr.set(true);
+            }
+          }
+        );
 
       // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
+    } finally {
+      if (hasErr.get()) {
+        // Rare case, but in case the transaction failed to write task data, try again from the cache data
+        tryRepairTask(task.getTaskId());
+      }
     }
   }
 
