@@ -45,6 +45,8 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -762,6 +764,12 @@ public class SingularityDeployChecker {
         pendingDeploy.getDeployMarker().getDeployId(),
         e
       );
+
+      StringWriter sWriter = new StringWriter();
+      PrintWriter pWriter = new PrintWriter(sWriter);
+      e.printStackTrace(pWriter);
+      LOG.info(sWriter.toString());
+
       return new SingularityDeployResult(
         DeployState.FAILED_INTERNAL_STATE,
         String.format("Uncaught exception: %s", e.getMessage())
