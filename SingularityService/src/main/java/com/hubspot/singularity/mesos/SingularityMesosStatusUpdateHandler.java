@@ -515,7 +515,7 @@ public class SingularityMesosStatusUpdateHandler {
       return StatusUpdateResult.IGNORED;
     }
 
-    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
     if (status.getState() == TaskState.TASK_LOST) {
       boolean isMesosFailure =
@@ -542,6 +542,9 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     if (!taskState.isDone()) {
+      if (!task.isPresent()) {
+        task = taskManager.tryRepairTask(taskIdObj);
+      }
       if (task.isPresent()) {
         final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(
           taskIdObj.getRequestId()

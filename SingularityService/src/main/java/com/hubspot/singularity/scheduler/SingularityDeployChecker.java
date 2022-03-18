@@ -1495,9 +1495,8 @@ public class SingularityDeployChecker {
       toShutDown = otherActiveTasks;
     }
 
-    final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(
-      Iterables.concat(deployActiveTasks, toShutDown)
-    );
+    Iterable<SingularityTaskId> allIds = Iterables.concat(deployActiveTasks, toShutDown);
+    final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(allIds);
     final LoadBalancerRequestId lbRequestId = SingularityDeployCheckHelper.getNewLoadBalancerRequestId(
       pendingDeploy
     );
