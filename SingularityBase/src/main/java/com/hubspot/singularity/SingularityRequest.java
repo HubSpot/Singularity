@@ -52,6 +52,7 @@ public class SingularityRequest {
   private final Optional<Double> taskPriorityLevel;
   private final Optional<Integer> maxTasksPerOffer;
   private final Optional<Boolean> allowBounceToSameHost;
+  private final Optional<Boolean> largeScaleDownAcknowledged;
 
   @Deprecated
   private final Optional<String> dataCenter;
@@ -126,7 +127,10 @@ public class SingularityRequest {
     @JsonProperty(
       "agentAttributeMinimums"
     ) Optional<Map<String, Map<String, Integer>>> agentAttributeMinimums,
-    @JsonProperty("agentPlacement") Optional<AgentPlacement> agentPlacement
+    @JsonProperty("agentPlacement") Optional<AgentPlacement> agentPlacement,
+    @JsonProperty(
+      "largeScaleDownAcknowledged"
+    ) Optional<Boolean> largeScaleDownAcknowledged
   ) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
@@ -179,6 +183,7 @@ public class SingularityRequest {
       this.requestType = requestType;
     }
     this.dataCenter = dataCenter;
+    this.largeScaleDownAcknowledged = largeScaleDownAcknowledged;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -574,6 +579,14 @@ public class SingularityRequest {
     return taskPriorityLevel;
   }
 
+  @Schema(
+    nullable = true,
+    description = "Whether a user acknowledged that a change in scale is large"
+  )
+  public Boolean getLargeScaleDownAcknowledged() {
+    return largeScaleDownAcknowledged.orElse(false);
+  }
+
   @Deprecated
   @Schema(nullable = true, description = "the data center associated with this request")
   public Optional<String> getDataCenter() {
@@ -637,6 +650,7 @@ public class SingularityRequest {
       Objects.equals(taskPriorityLevel, that.taskPriorityLevel) &&
       Objects.equals(maxTasksPerOffer, that.maxTasksPerOffer) &&
       Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost) &&
+      Objects.equals(largeScaleDownAcknowledged, that.largeScaleDownAcknowledged) &&
       Objects.equals(dataCenter, that.dataCenter)
     );
   }
@@ -758,6 +772,8 @@ public class SingularityRequest {
       maxTasksPerOffer +
       ", allowBounceToSameHost=" +
       allowBounceToSameHost +
+      ", largeScaleDownAcknowledged=" +
+      largeScaleDownAcknowledged +
       ", dataCenter=" +
       dataCenter +
       '}'

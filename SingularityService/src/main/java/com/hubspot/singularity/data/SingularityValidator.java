@@ -1239,6 +1239,22 @@ public class SingularityValidator {
         );
       }
     }
+
+    if (previousScale.isPresent() && !request.getLargeScaleDownAcknowledged()) {
+      boolean scaleDownExceedsAbsoluteMax =
+        previousScale.get() - request.getInstancesSafe() > 10;
+      boolean scaleDownExceedsRelativeMax =
+        request.getInstancesSafe() < (previousScale.get() / 2);
+      checkBadRequest(
+        !scaleDownExceedsAbsoluteMax,
+        "Cannot scale down by more than %s instances at a time",
+        10
+      );
+      checkBadRequest(
+        !(previousScale.get() > 10 && scaleDownExceedsRelativeMax),
+        "Cannot scale down by more than half of current instances."
+      );
+    }
   }
 
   public void validateExpiringMachineStateChange(
