@@ -237,6 +237,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxUserIdSize = 100;
 
+  private int maxScaleDownWithoutAcknowledgement = 10;
+
   private boolean storeAllMesosTaskInfoForDebugging = false;
 
   @JsonProperty("historyPurging")
@@ -832,6 +834,10 @@ public class SingularityConfiguration extends Configuration {
     return maxUserIdSize;
   }
 
+  public int getMaxScaleDownWithoutAcknowledgement() {
+    return maxScaleDownWithoutAcknowledgement;
+  }
+
   public int getMaxTasksPerOffer() {
     return maxTasksPerOffer;
   }
@@ -1243,6 +1249,12 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
     this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
+  }
+
+  public void setMaxScaleDownWithoutAcknowledgement(
+    int maxScaleDownWithoutAcknowledgement
+  ) {
+    this.maxScaleDownWithoutAcknowledgement = maxScaleDownWithoutAcknowledgement;
   }
 
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {

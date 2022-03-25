@@ -1241,18 +1241,21 @@ public class SingularityValidator {
     }
 
     if (previousScale.isPresent() && !request.getLargeScaleDownAcknowledged()) {
+      int absMaxScaleDown = singularityConfiguration.getMaxScaleDownWithoutAcknowledgement();
       boolean scaleDownExceedsAbsoluteMax =
-        previousScale.get() - request.getInstancesSafe() > 10;
+        previousScale.get() - request.getInstancesSafe() > absMaxScaleDown;
       boolean scaleDownExceedsRelativeMax =
         request.getInstancesSafe() < (previousScale.get() / 2);
       checkBadRequest(
         !scaleDownExceedsAbsoluteMax,
-        "Cannot scale down by more than %s instances at a time",
-        10
+        "Cannot scale down by more than %s instances at a time without explicit " +
+        "acknowledgement (set the largeScaleDownAcknowledged field in the request)",
+        absMaxScaleDown
       );
       checkBadRequest(
-        !(previousScale.get() > 10 && scaleDownExceedsRelativeMax),
-        "Cannot scale down by more than half of current instances."
+        !(previousScale.get() > absMaxScaleDown && scaleDownExceedsRelativeMax),
+        "Cannot scale down by more than half of current instances without explicit " +
+        "acknowledgement (set the largeScaleDownAcknowledged field in the request)"
       );
     }
   }
