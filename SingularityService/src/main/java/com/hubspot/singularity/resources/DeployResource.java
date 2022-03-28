@@ -133,7 +133,7 @@ public class DeployResource extends AbstractRequestResource {
       required = true,
       description = "Deploy data"
     ) SingularityDeployRequest deployRequest,
-    @QueryParam("largeScaleDownAcknowledged") Boolean largeScaleDownAcknowledged
+    @QueryParam("largeScaleDownAcknowledged") Optional<Boolean> largeScaleDownAcknowledged
   ) {
     return maybeProxyToLeader(
       requestContext,
@@ -146,7 +146,7 @@ public class DeployResource extends AbstractRequestResource {
   public SingularityRequestParent deploy(
     SingularityDeployRequest deployRequest,
     SingularityUser user,
-    Boolean largeScaleDownAcknowledged
+    Optional<Boolean> largeScaleDownAcknowledged
   ) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();

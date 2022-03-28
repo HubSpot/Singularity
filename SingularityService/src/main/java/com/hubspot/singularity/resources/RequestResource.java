@@ -168,7 +168,8 @@ public class RequestResource extends AbstractRequestResource {
     Optional<Boolean> skipHealthchecks,
     Optional<String> message,
     Optional<SingularityBounceRequest> maybeBounceRequest,
-    SingularityUser user
+    SingularityUser user,
+    Optional<Boolean> largeScaleDownAcknowledged
   ) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(
@@ -224,11 +225,14 @@ public class RequestResource extends AbstractRequestResource {
         request.toBuilder().setInstances(Optional.of(currentActiveAgentCount)).build();
     }
 
-    if (
-      !oldRequest.isPresent() ||
-      !(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())
-    ) {
-      validator.checkScale(request, Optional.empty(), false);
+    if (!oldRequest.isPresent()) {
+      validator.checkScale(request, Optional.empty(), largeScaleDownAcknowledged);
+    } else if (!(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())) {
+      validator.checkScale(
+        request,
+        Optional.of(oldRequest.get().getInstancesSafe()),
+        largeScaleDownAcknowledged
+      );
     }
 
     authorizationHelper.checkForAuthorization(
@@ -383,7 +387,8 @@ public class RequestResource extends AbstractRequestResource {
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
-      user
+      user,
+      Optional.empty()
     );
     return fillEntireRequest(fetchRequestWithState(request.getId(), user));
   }
@@ -463,7 +468,8 @@ public class RequestResource extends AbstractRequestResource {
       Optional.empty(),
       updateGroupsRequest.getMessage(),
       Optional.empty(),
-      user
+      user,
+      Optional.empty()
     );
     return fillEntireRequest(fetchRequestWithState(requestId, user));
   }
@@ -1735,7 +1741,8 @@ public class RequestResource extends AbstractRequestResource {
       Optional.of(false),
       Optional.of(message),
       Optional.empty(),
-      user
+      user,
+      Optional.empty()
     );
 
     if (priorityRequest.getDurationMillis().isPresent()) {
@@ -1775,13 +1782,14 @@ public class RequestResource extends AbstractRequestResource {
     @RequestBody(
       required = true,
       description = "Object to hold number of instances to request"
-    ) SingularityScaleRequest scaleRequest
+    ) SingularityScaleRequest scaleRequest,
+    @QueryParam("largeScaleDownAcknowledged") Optional<Boolean> largeScaleDownAcknowledged
   ) {
     return maybeProxyToLeader(
       requestContext,
       SingularityRequestParent.class,
       scaleRequest,
-      () -> scale(requestId, scaleRequest, user)
+      () -> scale(requestId, scaleRequest, user, largeScaleDownAcknowledged)
     );
   }
 
@@ -1789,6 +1797,15 @@ public class RequestResource extends AbstractRequestResource {
     String requestId,
     SingularityScaleRequest scaleRequest,
     SingularityUser user
+  ) {
+    return scale(requestId, scaleRequest, user, Optional.empty());
+  }
+
+  public SingularityRequestParent scale(
+    String requestId,
+    SingularityScaleRequest scaleRequest,
+    SingularityUser user,
+    Optional<Boolean> largeScaleDownAcknowledged
   ) {
     SingularityRequestWithState oldRequestWithState = fetchRequestWithState(
       requestId,
@@ -1808,7 +1825,11 @@ public class RequestResource extends AbstractRequestResource {
       .toBuilder()
       .setInstances(scaleRequest.getInstances())
       .build();
-    validator.checkScale(newRequest, Optional.<Integer>empty(), false);
+    validator.checkScale(
+      newRequest,
+      oldRequest.getInstances(),
+      largeScaleDownAcknowledged
+    );
 
     checkBadRequest(
       oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(),
@@ -1871,7 +1892,8 @@ public class RequestResource extends AbstractRequestResource {
         scaleRequest.getSkipHealthchecks(),
         Optional.of(scaleMessage),
         Optional.of(bounceRequest),
-        user
+        user,
+        largeScaleDownAcknowledged
       );
     } else {
       submitRequest(
@@ -1881,7 +1903,8 @@ public class RequestResource extends AbstractRequestResource {
         scaleRequest.getSkipHealthchecks(),
         Optional.of(scaleMessage),
         Optional.empty(),
-        user
+        user,
+        largeScaleDownAcknowledged
       );
     }
 
@@ -2117,7 +2140,8 @@ public class RequestResource extends AbstractRequestResource {
       Optional.empty(),
       skipHealthchecksRequest.getMessage(),
       Optional.empty(),
-      user
+      user,
+      Optional.empty()
     );
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
