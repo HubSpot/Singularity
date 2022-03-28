@@ -1160,7 +1160,25 @@ public class SingularityClient {
     SingularityDeploy pendingDeploy,
     Optional<Boolean> deployUnpause,
     Optional<String> message,
-    Optional<SingularityRequest> updatedRequest
+    Optional<Boolean> largeScaleDownAcknowledged
+  ) {
+    return createDeployForSingularityRequest(
+      requestId,
+      pendingDeploy,
+      deployUnpause,
+      message,
+      Optional.empty(),
+      largeScaleDownAcknowledged
+    );
+  }
+
+  public SingularityRequestParent createDeployForSingularityRequest(
+    String requestId,
+    SingularityDeploy pendingDeploy,
+    Optional<Boolean> deployUnpause,
+    Optional<String> message,
+    Optional<SingularityRequest> updatedRequest,
+    Optional<Boolean> largeScaleDownAcknowledged
   ) {
     final Function<String, String> requestUri = (String host) ->
       String.format(DEPLOYS_FORMAT, getApiBase(host));
@@ -1178,6 +1196,10 @@ public class SingularityClient {
           message,
           updatedRequest
         )
+      ),
+      Collections.singletonMap(
+        "largeScaleDownAcknowledged",
+        largeScaleDownAcknowledged.orElse(false)
       )
     );
 
