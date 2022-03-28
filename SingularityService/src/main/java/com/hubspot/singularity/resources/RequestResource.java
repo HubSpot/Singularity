@@ -228,7 +228,7 @@ public class RequestResource extends AbstractRequestResource {
       !oldRequest.isPresent() ||
       !(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())
     ) {
-      validator.checkScale(request, Optional.empty());
+      validator.checkScale(request, Optional.empty(), false);
     }
 
     authorizationHelper.checkForAuthorization(
@@ -1808,7 +1808,7 @@ public class RequestResource extends AbstractRequestResource {
       .toBuilder()
       .setInstances(scaleRequest.getInstances())
       .build();
-    validator.checkScale(newRequest, Optional.<Integer>empty());
+    validator.checkScale(newRequest, Optional.<Integer>empty(), false);
 
     checkBadRequest(
       oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(),

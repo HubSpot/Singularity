@@ -52,7 +52,6 @@ public class SingularityRequestBuilder {
   private Optional<Double> taskPriorityLevel;
   private Optional<Integer> maxTasksPerOffer;
   private Optional<Boolean> allowBounceToSameHost;
-  private Optional<Boolean> largeScaleDownAcknowledged;
 
   @Deprecated
   private Optional<String> dataCenter;
@@ -94,7 +93,6 @@ public class SingularityRequestBuilder {
     this.allowBounceToSameHost = Optional.empty();
     this.requiredRole = Optional.empty();
     this.dataCenter = Optional.empty();
-    this.largeScaleDownAcknowledged = Optional.of(false);
   }
 
   public SingularityRequest build() {
@@ -139,8 +137,7 @@ public class SingularityRequestBuilder {
       requiredAgentAttributes,
       allowedAgentAttributes,
       agentAttributeMinimums,
-      agentPlacement,
-      largeScaleDownAcknowledged
+      agentPlacement
     );
   }
 
@@ -525,17 +522,6 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Optional<Boolean> getLargeScaleDownAcknowledged() {
-    return largeScaleDownAcknowledged;
-  }
-
-  public SingularityRequestBuilder setLargeScaleDownAcknowledged(
-    Optional<Boolean> largeScaleDownAcknowledged
-  ) {
-    this.largeScaleDownAcknowledged = largeScaleDownAcknowledged;
-    return this;
-  }
-
   @Deprecated
   public Optional<String> getDataCenter() {
     return dataCenter;
@@ -604,7 +590,6 @@ public class SingularityRequestBuilder {
       Objects.equals(taskPriorityLevel, that.taskPriorityLevel) &&
       Objects.equals(maxTasksPerOffer, that.maxTasksPerOffer) &&
       Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost) &&
-      Objects.equals(largeScaleDownAcknowledged, that.largeScaleDownAcknowledged) &&
       Objects.equals(dataCenter, that.dataCenter)
     );
   }
@@ -647,7 +632,6 @@ public class SingularityRequestBuilder {
       taskPriorityLevel,
       maxTasksPerOffer,
       allowBounceToSameHost,
-      largeScaleDownAcknowledged,
       dataCenter
     );
   }
@@ -727,8 +711,6 @@ public class SingularityRequestBuilder {
       maxTasksPerOffer +
       ", allowBounceToSameHost=" +
       allowBounceToSameHost +
-      ", largeScaleDownAcknowledged=" +
-      largeScaleDownAcknowledged +
       ", dataCenter=" +
       dataCenter +
       '}'

@@ -1209,7 +1209,11 @@ public class SingularityValidator {
     }
   }
 
-  public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
+  public void checkScale(
+    SingularityRequest request,
+    Optional<Integer> previousScale,
+    Boolean largeScaleDownAcknowledged
+  ) {
     AgentPlacement placement = request.getAgentPlacement().orElse(defaultAgentPlacement);
 
     if (placement != AgentPlacement.GREEDY && placement != AgentPlacement.OPTIMISTIC) {
@@ -1240,7 +1244,7 @@ public class SingularityValidator {
       }
     }
 
-    if (previousScale.isPresent() && !request.getLargeScaleDownAcknowledged()) {
+    if (previousScale.isPresent() && !largeScaleDownAcknowledged) {
       int absMaxScaleDown = singularityConfiguration.getMaxScaleDownWithoutAcknowledgement();
       boolean scaleDownExceedsAbsoluteMax =
         previousScale.get() - request.getInstancesSafe() > absMaxScaleDown;
