@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
@@ -141,6 +142,14 @@ public class DeployResource extends AbstractRequestResource {
       deployRequest,
       () -> deploy(deployRequest, user, largeScaleDownAcknowledged)
     );
+  }
+
+  @VisibleForTesting
+  public SingularityRequestParent deploy(
+    SingularityDeployRequest deployRequest,
+    SingularityUser user
+  ) {
+    return deploy(deployRequest, user, Optional.empty());
   }
 
   public SingularityRequestParent deploy(
