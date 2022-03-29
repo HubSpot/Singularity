@@ -45,13 +45,17 @@ export default class FormModal extends React.Component {
   }
 
   static FormItem = (props) => {
-    if ((props.element.dependsOn && props.formState[props.element.dependsOn]) || !props.element.dependsOn) {
+    const noDepends = (!props.element.dependsOn && !props.element.dependsOnFormState);
+    const dependsOnOk = (props.element.dependsOn && props.formState[props.element.dependsOn]);
+    const dependsOnFormStateOk = (props.element.dependsOnFormState && props.element.dependsOnFormState(props.formState));
+    if (noDepends || dependsOnOk || dependsOnFormStateOk) {
       return (
         <div className={classNames(props.className, {'childItem': props.formState[props.element.dependsOn]})}>
           {props.children}
         </div>
       );
     }
+
     return null;
   };
 
@@ -502,6 +506,7 @@ FormModal.propTypes = {
     values: React.PropTypes.array,
     defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number, React.PropTypes.array]),
     validateField: React.PropTypes.func, // String -> String, return field validation error or falsey value if valid
-    dependsOn: React.PropTypes.string // Only show this item if the other item (referenced by name) has a truthy value
+    dependsOn: React.PropTypes.string, // Only show this item if the other item (referenced by name) has a truthy value
+    dependsOnFormState: React.PropTypes.func, // Only show this item if this function applied to form state returns a truthy value
   })).isRequired
 };
