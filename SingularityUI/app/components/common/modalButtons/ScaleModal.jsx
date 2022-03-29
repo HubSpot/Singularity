@@ -39,7 +39,7 @@ class ScaleModal extends Component {
   }
 
   handleScale(data) {
-    const { instances, durationMillis, message, bounce, incremental } = data;
+    const { instances, durationMillis, message, bounce, incremental, largeScaleDownAcknowledged } = data;
     const isIncremental = incremental === 'incremental';
     this.props.scaleRequest(
       {
@@ -47,7 +47,8 @@ class ScaleModal extends Component {
         durationMillis,
         message,
         bounce,
-        incremental: isIncremental
+        incremental: isIncremental,
+        largeScaleDownAcknowledged
       }
     );
   }
@@ -95,6 +96,13 @@ class ScaleModal extends Component {
             name: 'message',
             type: FormModal.INPUT_TYPES.STRING,
             label: 'Message: (optional)'
+          },
+          {
+            name: 'largeScaleDownAcknowledged',
+            type: FormModal.INPUT_TYPES.BOOLEAN,
+            label: 'Explciit acknowledgement of large (>=10) scale down',
+            defaultValue: false,
+            dependsOnFormState: data => (this.props.currentInstances - data.instances) >= 10,
           }
         ]}>
         <p>Scaling request:</p>
