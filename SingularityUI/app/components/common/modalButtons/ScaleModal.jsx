@@ -100,9 +100,14 @@ class ScaleModal extends Component {
           {
             name: 'largeScaleDownAcknowledged',
             type: FormModal.INPUT_TYPES.BOOLEAN,
-            label: 'Explciit acknowledgement of large (>=10) scale down',
+            label: 'Explciit acknowledgement of large scale down (less than -10 or 1/2 of previous)',
             defaultValue: false,
-            dependsOnFormState: data => (this.props.currentInstances - data.instances) >= 10,
+            dependsOnFormState: data => {
+              const scaleDownExceedsAbsoluteMax = (this.props.currentInstances - data.instances) > 10;
+              const scaleDownExceedsRelativeMax = (this.props.currentInstances > 10) && (data.instances < (this.props.currentInstances / 2));
+              // window.config flag in case the numbers change at some point
+              return scaleDownExceedsAbsoluteMax || scaleDownExceedsRelativeMax || window.config.largeScaleDownAcknowledged;
+            },
           }
         ]}>
         <p>Scaling request:</p>
