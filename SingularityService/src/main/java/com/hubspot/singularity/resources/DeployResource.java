@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
@@ -56,6 +57,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -131,19 +133,29 @@ public class DeployResource extends AbstractRequestResource {
     @RequestBody(
       required = true,
       description = "Deploy data"
-    ) SingularityDeployRequest deployRequest
+    ) SingularityDeployRequest deployRequest,
+    @QueryParam("largeScaleDownAcknowledged") Optional<Boolean> largeScaleDownAcknowledged
   ) {
     return maybeProxyToLeader(
       requestContext,
       SingularityRequestParent.class,
       deployRequest,
-      () -> deploy(deployRequest, user)
+      () -> deploy(deployRequest, user, largeScaleDownAcknowledged)
     );
+  }
+
+  @VisibleForTesting
+  public SingularityRequestParent deploy(
+    SingularityDeployRequest deployRequest,
+    SingularityUser user
+  ) {
+    return deploy(deployRequest, user, Optional.empty());
   }
 
   public SingularityRequestParent deploy(
     SingularityDeployRequest deployRequest,
-    SingularityUser user
+    SingularityUser user,
+    Optional<Boolean> largeScaleDownAcknowledged
   ) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
@@ -197,7 +209,8 @@ public class DeployResource extends AbstractRequestResource {
 
     validator.checkScale(
       request,
-      Optional.of(taskManager.getActiveTaskIdsForRequest(request.getId()).size())
+      Optional.of(taskManager.getActiveTaskIdsForRequest(request.getId()).size()),
+      largeScaleDownAcknowledged
     );
 
     if (
