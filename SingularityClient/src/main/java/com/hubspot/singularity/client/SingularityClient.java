@@ -1160,15 +1160,15 @@ public class SingularityClient {
     SingularityDeploy pendingDeploy,
     Optional<Boolean> deployUnpause,
     Optional<String> message,
-    Optional<Boolean> largeScaleDownAcknowledged
+    Optional<SingularityRequest> updatedRequest
   ) {
     return createDeployForSingularityRequest(
       requestId,
       pendingDeploy,
       deployUnpause,
       message,
-      Optional.empty(),
-      largeScaleDownAcknowledged
+      updatedRequest,
+      Optional.empty()
     );
   }
 
