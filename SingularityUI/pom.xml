@@ -11,8 +11,8 @@
   <artifactId>SingularityUI</artifactId>
 
   <properties>
-    <nodeVersion>v17.7.2</nodeVersion>
-    <npmVersion>8.5.2</npmVersion>
+    <nodeVersion>v8.9.3</nodeVersion>
+    <npmVersion>5.5.1</npmVersion>
   </properties>
 
   <profiles>
