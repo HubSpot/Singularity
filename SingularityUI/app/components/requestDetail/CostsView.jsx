@@ -9,6 +9,9 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 const CostsView = ({requestId, costsAPI}) => {
+  if (!config.costsApiUrlFormat) {
+    return (<div></div>);
+  }
   const costs = costsAPI ? costsAPI.data : [];
   const title = costs.length ? 'Average Daily Costs ($' + costs.map((c) => c.cost).reduce((p, c) => p + c).toFixed(4) + ')' : 'Average Daily Costs';
   return  (
@@ -18,8 +21,9 @@ const CostsView = ({requestId, costsAPI}) => {
         keyGetter={(c) => c.activityType + c.cost + c.costKey+ c.costType}
         defaultSortBy={'cost'}
         defaultSortDirection={'DESC'}
-        showPageLoaderWhenFetching={true}
+        showPageLoaderWhenFetching={false}
         isFetching={!costs.length}
+        emptyTableMessage={'No Cost Data'}
       >
         <Column
           label="Activity Type"
