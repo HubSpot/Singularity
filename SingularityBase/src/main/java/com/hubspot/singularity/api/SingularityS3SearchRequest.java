@@ -11,7 +11,7 @@ import java.util.Optional;
 @Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
   private final Map<String, List<String>> requestsAndDeploys;
-  private final List<String> fileNamePrefixWhitelist;
+  private final List<String> fileNamePrefixAllowlist;
   private final List<String> taskIds;
   private final Optional<Long> start;
   private final Optional<Long> end;
@@ -33,6 +33,7 @@ public class SingularityS3SearchRequest {
     this(
       requestsAndDeploys,
       null,
+      null,
       taskIds,
       start,
       end,
@@ -46,7 +47,10 @@ public class SingularityS3SearchRequest {
   @JsonCreator
   public SingularityS3SearchRequest(
     @JsonProperty("requestsAndDeploys") Map<String, List<String>> requestsAndDeploys,
-    @JsonProperty("fileNamePrefixWhitelist") List<String> fileNamePrefixWhitelist,
+    @JsonProperty(
+      "fileNamePrefixWhitelist"
+    ) List<String> fileNamePrefixAllowlistDeprecated,
+    @JsonProperty("fileNamePrefixAllowlist") List<String> fileNamePrefixAllowlist,
     @JsonProperty("taskIds") List<String> taskIds,
     @JsonProperty("start") Optional<Long> start,
     @JsonProperty("end") Optional<Long> end,
@@ -59,8 +63,14 @@ public class SingularityS3SearchRequest {
       requestsAndDeploys != null
         ? requestsAndDeploys
         : Collections.<String, List<String>>emptyMap();
-    this.fileNamePrefixWhitelist =
-      fileNamePrefixWhitelist != null ? fileNamePrefixWhitelist : Collections.emptyList();
+    this.fileNamePrefixAllowlist =
+      fileNamePrefixAllowlistDeprecated != null
+        ? fileNamePrefixAllowlistDeprecated
+        : (
+          fileNamePrefixAllowlist != null
+            ? fileNamePrefixAllowlist
+            : Collections.emptyList()
+        );
     this.taskIds = taskIds != null ? taskIds : Collections.<String>emptyList();
     this.start = start;
     this.end = end;
@@ -78,9 +88,9 @@ public class SingularityS3SearchRequest {
     return requestsAndDeploys;
   }
 
-  @Schema(description = "A whitelist of file name prefixes which should be returned")
-  public List<String> getFileNamePrefixWhitelist() {
-    return fileNamePrefixWhitelist;
+  @Schema(description = "An allowlist of file name prefixes which should be returned")
+  public List<String> getFileNamePrefixAllowlist() {
+    return fileNamePrefixAllowlist;
   }
 
   @Schema(description = "A list of task IDs to search for")
