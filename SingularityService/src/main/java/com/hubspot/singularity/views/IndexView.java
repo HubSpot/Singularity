@@ -171,7 +171,7 @@ public class IndexView extends View {
     }
 
     try {
-      this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getNavTitleLinks());
+      this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getFormattedNavLinks());
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
