@@ -4,6 +4,7 @@ import { withRouter } from 'react-router';
 
 import rootComponent from '../../rootComponent';
 import * as RefreshActions from '../../actions/ui/refresh';
+import { FetchCostData } from '../../actions/api/costs';
 import { FetchRequest } from '../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
@@ -16,6 +17,7 @@ import {
   FetchTaskCleanups
 } from '../../actions/api/tasks';
 
+import CostsView from './CostsView';
 import RequestHeader from './RequestHeader';
 import RequestExpiringActions from './RequestExpiringActions';
 import ActiveTasksTable from './ActiveTasksTable';
@@ -32,6 +34,10 @@ import { refresh, initialize } from '../../actions/ui/requestDetail';
 class RequestDetailPage extends Component {
   componentDidMount() {
     this.props.refresh();
+    if (config.costsApiUrlFormat) {
+      const { requestId } = this.props.params;
+      this.props.fetchCostsData(requestId);
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -63,6 +69,7 @@ class RequestDetailPage extends Component {
             initialPageNumber={Number(taskHistoryPage) || 1}
           />
         )}
+        {deleted || <CostsView requestId={requestId}/>}
         {deleted || <RequestUtilization requestId={requestId} />}
         {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />
@@ -108,6 +115,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     cancelRefresh: () => dispatch(
       RefreshActions.CancelAutoRefresh(`RequestDetailPage-${ownProps.index}`)
     ),
+    fetchCostsData: (requestId) => dispatch(FetchCostData.trigger(requestId, config.costsApiUrlFormat)),
     fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId, true)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),

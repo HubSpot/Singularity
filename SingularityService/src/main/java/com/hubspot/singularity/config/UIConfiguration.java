@@ -117,6 +117,9 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> showRequestButtonsForGroup = Optional.empty();
 
+  @JsonProperty
+  private Optional<String> costsApiUrlFormat = Optional.empty();
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -339,5 +342,13 @@ public class UIConfiguration {
 
   public void setShowRequestButtonsForGroup(Optional<String> showRequestButtonsForGroup) {
     this.showRequestButtonsForGroup = showRequestButtonsForGroup;
+  }
+
+  public Optional<String> getCostsApiUrlFormat() {
+    return costsApiUrlFormat;
+  }
+
+  public void setCostsApiUrlFormat(Optional<String> costsApiUrlFormat) {
+    this.costsApiUrlFormat = costsApiUrlFormat;
   }
 }
