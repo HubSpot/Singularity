@@ -2,7 +2,6 @@ package com.hubspot.singularity.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UINavLinkConfiguration {
