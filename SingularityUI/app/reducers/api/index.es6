@@ -39,6 +39,10 @@ import {
 } from '../../actions/api/racks';
 
 import {
+  FetchCostData
+  } from '../../actions/api/costs';
+
+import {
   FetchRequests,
   FetchRequestIds,
   FetchRequest,
@@ -116,6 +120,7 @@ const freezeRack = buildApiActionReducer(FreezeRack, []);
 const decommissionRack = buildApiActionReducer(DecommissionRack, []);
 const removeRack = buildApiActionReducer(RemoveRack, []);
 const reactivateRack = buildApiActionReducer(ReactivateRack, []);
+const costs = buildKeyedApiActionReducer(FetchCostData, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
 const requestIds = buildApiActionReducer(FetchRequestIds, [])
 const saveRequest = buildApiActionReducer(SaveRequest);
@@ -175,6 +180,7 @@ export default combineReducers({
   decommissionRack,
   removeRack,
   reactivateRack,
+  costs,
   request,
   saveRequest,
   removeRequest,

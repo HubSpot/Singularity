@@ -241,7 +241,6 @@ RequestActionButtons.propTypes = {
   fetchRequest: PropTypes.func.isRequired,
   fetchActiveTasks: PropTypes.func.isRequired,
   router: PropTypes.shape({ push: PropTypes.func.isRequired }).isRequired,
-  admin: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => ({

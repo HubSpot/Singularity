@@ -40,7 +40,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
     } else { // Something else happened, display the error
       Messenger().post({
-        message: `<p>An error occurred while accessing <code>${options.url}</code></p><pre>${err}</pre>`,
+        message: `<p>An error occurred while accessing <code>${options.url}</code></p><div class='err-message-content'><pre>${err}</pre></div>`,
         type: 'error'
       });
     }
@@ -82,13 +82,16 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         options.headers.Authorization = Utils.getAuthTokenHeader();
       }
 
-      return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
+      const baseUrl = options.url.startsWith('https://') ? options.url : config.apiRoot + options.url;
+
+      return fetch(baseUrl + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
           if (response.status === 204) {
             return Promise.resolve();
           }
-          if (response.headers.get('Content-Type') === 'application/json') {
+          const contentType = response.headers.get('Content-Type');
+          if (contentType === 'application/json' || contentType === 'application/json;charset=utf-8') {
             // void response cannot be parsed as JSON
             if (response.headers.get('Content-Length') === '0') {
               return Promise.resolve();

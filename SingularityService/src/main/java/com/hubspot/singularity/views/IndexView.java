@@ -73,6 +73,7 @@ public class IndexView extends View {
   private final String appJsPath;
   private final String appCssPath;
   private final String vendorJsPath;
+  private final String costsApiUrlFormat;
 
   public IndexView(
     String singularityUriBase,
@@ -170,7 +171,7 @@ public class IndexView extends View {
     }
 
     try {
-      this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getNavTitleLinks());
+      this.navTitleLinks = ow.writeValueAsString(uiConfiguration.getFormattedNavLinks());
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
@@ -190,6 +191,7 @@ public class IndexView extends View {
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }
+    this.costsApiUrlFormat = uiConfiguration.getCostsApiUrlFormat().orElse("");
   }
 
   public String getAppRoot() {
@@ -356,6 +358,10 @@ public class IndexView extends View {
     return showRequestButtonsForGroup;
   }
 
+  public String getCostsApiUrlFormat() {
+    return costsApiUrlFormat;
+  }
+
   @Override
   public String toString() {
     return (
@@ -462,6 +468,9 @@ public class IndexView extends View {
       '\'' +
       ", vendorJsPath='" +
       vendorJsPath +
+      '\'' +
+      ", costsApiUrlFormat='" +
+      costsApiUrlFormat +
       '\'' +
       "} " +
       super.toString()

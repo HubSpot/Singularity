@@ -44,6 +44,9 @@ public class UIConfiguration {
   private Optional<String> navColor = Optional.empty();
 
   @JsonProperty
+  private List<UINavLinkConfiguration> formattedNavLinks = Collections.emptyList();
+
+  @JsonProperty
   private String baseUrl;
 
   @NotEmpty
@@ -109,6 +112,7 @@ public class UIConfiguration {
 
   // e.g. {"QA": "https://singularity-qa.my-paas.net", "Production": "https://singularity-prod.my-paas.net"}
   @JsonProperty
+  @Deprecated
   private Map<String, String> navTitleLinks = Collections.emptyMap();
 
   @JsonProperty
@@ -116,6 +120,9 @@ public class UIConfiguration {
 
   @JsonProperty
   private Optional<String> showRequestButtonsForGroup = Optional.empty();
+
+  @JsonProperty
+  private Optional<String> costsApiUrlFormat = Optional.empty();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -339,5 +346,21 @@ public class UIConfiguration {
 
   public void setShowRequestButtonsForGroup(Optional<String> showRequestButtonsForGroup) {
     this.showRequestButtonsForGroup = showRequestButtonsForGroup;
+  }
+
+  public Optional<String> getCostsApiUrlFormat() {
+    return costsApiUrlFormat;
+  }
+
+  public void setCostsApiUrlFormat(Optional<String> costsApiUrlFormat) {
+    this.costsApiUrlFormat = costsApiUrlFormat;
+  }
+
+  public List<UINavLinkConfiguration> getFormattedNavLinks() {
+    return formattedNavLinks;
+  }
+
+  public void setFormattedNavLinks(List<UINavLinkConfiguration> formattedNavLinks) {
+    this.formattedNavLinks = formattedNavLinks;
   }
 }

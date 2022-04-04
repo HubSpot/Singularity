@@ -6,6 +6,8 @@ import classnames from 'classnames';
 import Utils from '../../utils';
 
 import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 function handleSearchClick(event, toggleGlobalSearch) {
   event.preventDefault();
@@ -58,11 +60,29 @@ const Navigation = (props) => {
             {config.title} <span className="caret" />
           </a>
           <ul className="dropdown-menu">
-            {Object.keys(config.navTitleLinks).map((linkTitle, index) =>
-              <li key={index}>
-                <a href={config.navTitleLinks[linkTitle].replace('{CURRENT_PATH}', currentPathForLink(props.location.pathname))}>{linkTitle}</a>
-              </li>
-            )}
+            {config.navTitleLinks.map((linkConfig, index) => {
+              if (linkConfig['divider']) {
+                return (<li key={index} role="separator" className="divider"></li>);
+              }
+              let link = (<a href={linkConfig['linkFormat'].replace('{CURRENT_PATH}', currentPathForLink(props.location.pathname))}>{linkConfig['title']}</a>);
+              if ('tooltip' in linkConfig) {
+                const tooltip = (
+                  <ToolTip id="view-nav-tip">
+                    {linkConfig['tooltip']}
+                  </ToolTip>
+                );
+                link = (
+                  <OverlayTrigger  placement="right" id="view-nav-tip-overlay" overlay={tooltip}>
+                    {link}
+                  </OverlayTrigger>
+                );
+              }
+              return (
+                <li key={index}>
+                  {link}
+                </li>
+              );
+            })}
           </ul>
         </li>
       </ul>
