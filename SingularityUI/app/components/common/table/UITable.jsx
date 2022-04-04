@@ -187,7 +187,7 @@ class UITable extends Component {
       );
     });
 
-    if (sortDirection === UITable.SortDirection.ASC) {
+    if (sortDirection === UITable.SortDirection.DESC) {
       sorted.reverse();
     }
 
