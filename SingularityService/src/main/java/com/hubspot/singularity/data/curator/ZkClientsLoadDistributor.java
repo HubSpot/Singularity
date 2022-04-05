@@ -10,6 +10,7 @@ public class ZkClientsLoadDistributor {
   private static final Logger LOG = LoggerFactory.getLogger(
     ZkClientsLoadDistributor.class
   );
+  private static final ThreadLocal<Integer> ZK_CONTEXT = new ThreadLocal<>();
 
   private final List<CuratorFramework> curatorFrameworks;
   private final AtomicInteger curatorIndex;
@@ -40,8 +41,11 @@ public class ZkClientsLoadDistributor {
   }
 
   public CuratorFramework getCuratorFramework() {
-    int ci = curatorIndex.getAndUpdate(i -> (i + 1) % curatorFrameworks.size());
-    return curatorFrameworks.get(ci);
+    if (ZK_CONTEXT.get() == null) {
+      int ci = curatorIndex.getAndUpdate(i -> (i + 1) % curatorFrameworks.size());
+      ZK_CONTEXT.set(ci);
+    }
+    return curatorFrameworks.get(ZK_CONTEXT.get());
   }
 
   public List<CuratorFramework> getAll() {

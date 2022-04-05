@@ -486,10 +486,12 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private List<SingularityTaskId> getActiveTaskIdsUncached() {
-    return getAsyncNestedChildIdsAsList(
-      LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
-      LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
-      taskIdTranscoder
+    return new ArrayList<>(
+      getAsyncNestedChildIdsAsList(
+        LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
+        LAST_ACTIVE_TASK_STATUSES_PATH_ROOT,
+        taskIdTranscoder
+      )
     );
   }
 
