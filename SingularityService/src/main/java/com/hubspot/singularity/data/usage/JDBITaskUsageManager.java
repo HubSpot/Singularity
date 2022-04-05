@@ -36,6 +36,10 @@ public class JDBITaskUsageManager implements TaskUsageManager {
     SingularityTaskId taskId,
     SingularityTaskUsage usage
   ) {
+    if (taskId.getId().length() > 200) {
+      LOG.warn("Skipping too long task id in usage table: {}", taskId);
+      return;
+    }
     taskUsageJDBI.saveSpecificTaskUsage(
       taskId.getRequestId(),
       taskId.getId(),
