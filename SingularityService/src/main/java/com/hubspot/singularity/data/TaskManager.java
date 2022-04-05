@@ -1254,6 +1254,9 @@ public class TaskManager extends CuratorAsyncManager {
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(
     final String requestId
   ) {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTaskIdsForRequest(requestId);
+    }
     return getChildrenAsIds(getPendingForRequestPath(requestId), pendingTaskIdTranscoder);
   }
 

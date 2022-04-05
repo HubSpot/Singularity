@@ -132,8 +132,12 @@ class SingularityStartup {
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }
 
-  private Map<SingularityDeployKey, SingularityPendingTaskId> getDeployKeyToPendingTaskId() {
-    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+  private Map<SingularityDeployKey, SingularityPendingTaskId> getDeployKeyToPendingTaskId(
+    String requestId
+  ) {
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(
+      requestId
+    );
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = Maps.newHashMapWithExpectedSize(
       pendingTaskIds.size()
     );
@@ -163,8 +167,6 @@ class SingularityStartup {
   ) {
     final long now = System.currentTimeMillis();
 
-    final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
-
     List<CompletableFuture<Void>> checkFutures = new ArrayList<>();
     for (String requestId : requestManager.getAllRequestIds()) {
       checkFutures.add(
@@ -172,6 +174,10 @@ class SingularityStartup {
           () ->
             lock.runWithRequestLock(
               () -> {
+                final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId(
+                  requestId
+                );
+
                 Optional<SingularityRequestWithState> maybeWithState = requestManager.getRequest(
                   requestId
                 );

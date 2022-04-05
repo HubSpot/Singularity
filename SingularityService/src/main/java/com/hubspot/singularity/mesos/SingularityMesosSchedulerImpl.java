@@ -9,6 +9,7 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -43,6 +44,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -178,6 +180,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
             }
             startup.startup(newMasterInfo);
             state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
+            // Recheck for inconsistent state in case we started receiving/denying status updates while running startup
+            recheckState();
             restartInProgress.set(false);
             handleQueuedStatusUpdates();
           },
@@ -186,6 +190,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         ),
       subscribeExecutor
     );
+  }
+
+  private void recheckState() {
+    ExecutorService startupExecutor = Executors.newFixedThreadPool(
+      configuration.getSchedulerStartupConcurrency(),
+      new ThreadFactoryBuilder().setNameFormat("startup-%d").build()
+    );
+    startup.checkSchedulerForInconsistentState(startupExecutor);
+    startupExecutor.shutdown();
   }
 
   @Timed
