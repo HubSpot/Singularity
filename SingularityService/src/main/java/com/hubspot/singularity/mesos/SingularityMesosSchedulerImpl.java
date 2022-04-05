@@ -180,10 +180,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
             }
             startup.startup(newMasterInfo);
             state.setMesosSchedulerState(MesosSchedulerState.SUBSCRIBED);
-            // Recheck for inconsistent state in case we started receiving/denying status updates while running startup
-            recheckState();
             restartInProgress.set(false);
             handleQueuedStatusUpdates();
+            // Recheck for inconsistent state in case we started receiving/denying status updates while running startup
+            recheckState();
           },
           "subscribed",
           false
