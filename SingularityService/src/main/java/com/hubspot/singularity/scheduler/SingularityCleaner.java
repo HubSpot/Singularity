@@ -1626,6 +1626,10 @@ public class SingularityCleaner {
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
+        if (lbDeleteUpdate.getMessage().orElse("").contains("Invalid request due to")) {
+          LOG.warn("Unable to complete LB delete for {}", loadBalancerRequestId);
+          return CheckLBState.DONE;
+        }
         LOG.error(
           "LB delete request {} ({}) got unexpected response {}",
           lbDeleteUpdate,

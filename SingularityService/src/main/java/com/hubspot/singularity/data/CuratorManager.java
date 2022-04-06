@@ -319,7 +319,7 @@ public abstract class CuratorManager {
         cachedValue.isPresent() &&
         (
           !shouldCheckExists.isPresent() ||
-          (shouldCheckExists.get().booleanValue() && checkExists(path).isPresent())
+          (shouldCheckExists.get() && checkExists(path).isPresent())
         )
       ) {
         return cachedValue;
@@ -332,9 +332,7 @@ public abstract class CuratorManager {
     try {
       GetDataBuilder bldr = curator.getData();
 
-      if (stat.isPresent()) {
-        bldr.storingStatIn(stat.get());
-      }
+      stat.ifPresent(bldr::storingStatIn);
 
       byte[] data = bldr.forPath(path);
 
@@ -347,9 +345,7 @@ public abstract class CuratorManager {
 
       final T object = transcoder.fromBytes(data);
 
-      if (zkCache.isPresent()) {
-        zkCache.get().set(path, object);
-      }
+      zkCache.ifPresent(tZkCache -> tZkCache.set(path, object));
 
       return Optional.of(object);
     } catch (NoNodeException nne) {
@@ -380,7 +376,7 @@ public abstract class CuratorManager {
   ) {
     return getData(
       path,
-      Optional.<Stat>empty(),
+      Optional.empty(),
       transcoder,
       Optional.of(zkCache),
       Optional.of(shouldCheckExists)
@@ -390,10 +386,10 @@ public abstract class CuratorManager {
   protected Optional<String> getStringData(String path) {
     return getData(
       path,
-      Optional.<Stat>empty(),
+      Optional.empty(),
       StringTranscoder.INSTANCE,
-      Optional.<ZkCache<String>>empty(),
-      Optional.<Boolean>empty()
+      Optional.empty(),
+      Optional.empty()
     );
   }
 }

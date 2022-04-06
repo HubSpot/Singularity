@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.BackgroundCallback;
 import org.apache.curator.framework.api.CuratorEvent;
@@ -57,22 +58,16 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final Transcoder<T> transcoder
   )
     throws Exception {
-    try {
-      List<String> children = getChildren(parent);
-      final List<String> paths = Lists.newArrayListWithCapacity(children.size());
+    List<String> children = getChildren(parent);
+    final List<String> paths = Lists.newArrayListWithCapacity(children.size());
 
-      for (String child : children) {
-        paths.add(ZKPaths.makePath(parent, child));
-      }
-
-      List<T> result = new ArrayList<>(
-        getAsyncThrows(parent, paths, transcoder, Optional.empty()).values()
-      );
-
-      return result;
-    } catch (Throwable t) {
-      throw t;
+    for (String child : children) {
+      paths.add(ZKPaths.makePath(parent, child));
     }
+
+    return new ArrayList<>(
+      getAsyncThrows(parent, paths, transcoder, Optional.empty()).values()
+    );
   }
 
   private <T> Map<String, T> getAsyncThrows(
@@ -104,29 +99,22 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final CountDownLatch latch = new CountDownLatch(paths.size());
     final AtomicInteger bytes = new AtomicInteger();
 
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getData() == null || event.getData().length == 0) {
-            LOG.trace("Expected active node {} but it wasn't there", event.getPath());
-            return;
-          }
-
-          bytes.getAndAdd(event.getData().length);
-          final T object = transcoder.fromBytes(event.getData());
-          synchronizedObjects.put(event.getPath(), object);
-
-          if (cache.isPresent()) {
-            cache.get().set(event.getPath(), object);
-          }
-        } catch (Exception e) {
-          LOG.error("Exception processing curator result", e);
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getData() == null || event.getData().length == 0) {
+          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          return;
         }
+
+        bytes.getAndAdd(event.getData().length);
+        final T object = transcoder.fromBytes(event.getData());
+        synchronizedObjects.put(event.getPath(), object);
+
+        cache.ifPresent(tZkCache -> tZkCache.set(event.getPath(), object));
+      } catch (Exception e) {
+        LOG.error("Exception processing curator result", e);
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -169,25 +157,21 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final CountDownLatch latch = new CountDownLatch(parents.size());
 
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getChildren() == null || event.getChildren().size() == 0) {
-            LOG.trace("Expected children for node {} - but found none", event.getPath());
-            return;
-          }
-          synchronizedObjects.addAll(
-            Lists.transform(
-              event.getChildren(),
-              Transcoders.getFromStringFunction(idTranscoder)
-            )
-          );
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getChildren() == null || event.getChildren().size() == 0) {
+          LOG.trace("Expected children for node {} - but found none", event.getPath());
+          return;
         }
+        synchronizedObjects.addAll(
+          event
+            .getChildren()
+            .stream()
+            .map(Transcoders.getFromStringFunction(idTranscoder))
+            .collect(Collectors.toList())
+        );
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -218,10 +202,10 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final String rootPath,
     final IdTranscoder<T> idTranscoder
   ) {
-    return Lists.transform(
-      getChildren(rootPath),
-      Transcoders.getFromStringFunction(idTranscoder)
-    );
+    return getChildren(rootPath)
+      .stream()
+      .map(Transcoders.getFromStringFunction(idTranscoder))
+      .collect(Collectors.toList());
   }
 
   private <T extends SingularityId> List<T> existsThrows(
@@ -238,22 +222,17 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
 
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getStat() != null) {
-            objects.add(
-              Transcoders
-                .getFromStringFunction(idTranscoder)
-                .apply(ZKPaths.getNodeFromPath(event.getPath()))
-            );
-          }
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getStat() != null) {
+          objects.add(
+            Transcoders
+              .getFromStringFunction(idTranscoder)
+              .apply(ZKPaths.getNodeFromPath(event.getPath()))
+          );
         }
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -293,18 +272,13 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final CountDownLatch latch = new CountDownLatch(pathsMap.size());
 
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getStat() == null) {
-            objects.add(pathsMap.get(event.getPath()));
-          }
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getStat() == null) {
+          objects.add(pathsMap.get(event.getPath()));
         }
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -352,25 +326,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   ) {
     try {
       return new ArrayList<>(
-        getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>>empty())
-          .values()
-      );
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
-  protected <T> Map<String, T> getAsyncWithPath(
-    final String pathNameForLogs,
-    final Collection<String> paths,
-    final Transcoder<T> transcoder
-  ) {
-    try {
-      return getAsyncThrows(
-        pathNameForLogs,
-        paths,
-        transcoder,
-        Optional.<ZkCache<T>>empty()
+        getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.empty()).values()
       );
     } catch (Throwable t) {
       throw new RuntimeException(t);
@@ -404,24 +360,19 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final List<T> results = new ArrayList<>();
     final CountDownLatch latch = new CountDownLatch(allPaths.size());
     final AtomicInteger bytes = new AtomicInteger();
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getData() == null || event.getData().length == 0) {
-            LOG.trace("Expected active node {} but it wasn't there", event.getPath());
-            return;
-          }
-          bytes.getAndAdd(event.getData().length);
-
-          final T object = transcoder.fromBytes(event.getData());
-
-          results.add(object);
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getData() == null || event.getData().length == 0) {
+          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          return;
         }
+        bytes.getAndAdd(event.getData().length);
+
+        final T object = transcoder.fromBytes(event.getData());
+
+        results.add(object);
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -468,27 +419,22 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final ConcurrentHashMap<T, List<Q>> resultsMap = new ConcurrentHashMap<>();
     final CountDownLatch latch = new CountDownLatch(allPathsMap.size());
     final AtomicInteger bytes = new AtomicInteger();
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          if (event.getData() == null || event.getData().length == 0) {
-            LOG.trace("Expected active node {} but it wasn't there", event.getPath());
-            return;
-          }
-          bytes.getAndAdd(event.getData().length);
-
-          final Q object = transcoder.fromBytes(event.getData());
-
-          if (allPathsMap.get(event.getPath()) != null) {
-            resultsMap.putIfAbsent(allPathsMap.get(event.getPath()), new ArrayList<Q>());
-            resultsMap.get(allPathsMap.get(event.getPath())).add(object);
-          }
-        } finally {
-          latch.countDown();
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        if (event.getData() == null || event.getData().length == 0) {
+          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          return;
         }
+        bytes.getAndAdd(event.getData().length);
+
+        final Q object = transcoder.fromBytes(event.getData());
+
+        if (allPathsMap.get(event.getPath()) != null) {
+          resultsMap.putIfAbsent(allPathsMap.get(event.getPath()), new ArrayList<>());
+          resultsMap.get(allPathsMap.get(event.getPath())).add(object);
+        }
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -535,24 +481,19 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final List<T> results = new ArrayList<>();
     final CountDownLatch latch = new CountDownLatch(allPaths.size());
     final AtomicInteger bytes = new AtomicInteger();
-    final BackgroundCallback callback = new BackgroundCallback() {
-
-      @Override
-      public void processResult(CuratorFramework client, CuratorEvent event)
-        throws Exception {
-        try {
-          event
-            .getChildren()
-            .forEach(
-              child -> {
-                final T object = transcoder.fromString(child);
-                bytes.getAndAdd(child.getBytes().length);
-                results.add(object);
-              }
-            );
-        } finally {
-          latch.countDown();
-        }
+    final BackgroundCallback callback = (client, event) -> {
+      try {
+        event
+          .getChildren()
+          .forEach(
+            child -> {
+              final T object = transcoder.fromString(child);
+              bytes.getAndAdd(child.getBytes().length);
+              results.add(object);
+            }
+          );
+      } finally {
+        latch.countDown();
       }
     };
 
@@ -612,7 +553,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       log(
         method.operationType,
         Optional.of(paths.size()),
-        bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>empty(),
+        bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.empty(),
         start,
         pathNameForLogs
       );

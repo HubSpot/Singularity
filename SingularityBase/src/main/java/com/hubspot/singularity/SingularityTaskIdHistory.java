@@ -17,7 +17,6 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final Optional<ExtendedTaskState> lastTaskState;
   private final Optional<String> runId;
 
-  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   public static SingularityTaskIdHistory fromTaskIdAndTaskAndUpdates(
     SingularityTaskId taskId,
     SingularityTask task,
@@ -26,10 +25,15 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
 
-    if (updates != null && !updates.isEmpty()) {
-      SingularityTaskHistoryUpdate lastUpdate = Collections.max(updates);
-      lastTaskState = lastUpdate.getTaskState();
-      updatedAt = lastUpdate.getTimestamp();
+    if (updates != null) {
+      Optional<SingularityTaskHistoryUpdate> maybeLastUpdate = updates
+        .stream()
+        .filter(Objects::nonNull)
+        .max(SingularityTaskHistoryUpdate::compareTo);
+      if (maybeLastUpdate.isPresent()) {
+        lastTaskState = maybeLastUpdate.get().getTaskState();
+        updatedAt = maybeLastUpdate.get().getTimestamp();
+      }
     }
 
     return new SingularityTaskIdHistory(

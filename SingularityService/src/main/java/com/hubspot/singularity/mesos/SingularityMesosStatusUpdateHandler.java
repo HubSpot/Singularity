@@ -575,6 +575,19 @@ public class SingularityMesosStatusUpdateHandler {
           "Task %s is active but is missing task data",
           taskId
         );
+        taskManager.createTaskCleanup(
+          new SingularityTaskCleanup(
+            Optional.empty(),
+            TaskCleanupType.UNHEALTHY_NEW_TASK,
+            System.currentTimeMillis(),
+            taskIdObj,
+            Optional.of(
+              "Task is active but had no task data. Unable to continue running"
+            ),
+            Optional.empty(),
+            Optional.empty()
+          )
+        );
         exceptionNotifier.notify(message);
         LOG.error(message);
       }
