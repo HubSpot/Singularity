@@ -1402,38 +1402,61 @@ public class TaskManager extends CuratorAsyncManager {
     AtomicBoolean hasErr = new AtomicBoolean(false);
     try {
       final String path = getTaskPath(task.getTaskId());
-      curator
-        .transaction()
-        .forOperations(
-          curator.transactionOp().create().forPath(path, taskTranscoder.toBytes(task)),
-          curator
-            .transactionOp()
-            .create()
-            .forPath(
-              getLastActiveTaskStatusPath(task.getTaskId()),
-              taskStatusTranscoder.toBytes(taskStatusHolder)
-            )
-        )
-        .forEach(
-          r -> {
-            if (r.getError() > 0) {
-              LOG.error("Error committing new task {} to zk {}", task.getTaskId(), r);
-              hasErr.set(true);
-            }
-          }
-        );
-
+      saveTaskDeletePendingInTransaction(hasErr, path, task, taskStatusHolder);
       // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
+      if (configuration.isVerifyTaskDataWrites()) {
+        Optional<SingularityTask> maybeTask = getTaskCheckCache(task.getTaskId(), true);
+        if (!maybeTask.isPresent()) {
+          LOG.error("Found empty task after write for {}", task.getTaskId());
+          saveTaskDeletePendingInTransaction(hasErr, path, task, taskStatusHolder);
+        }
+      }
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
+    } catch (Exception e) {
+      LOG.error("Could not save task data for {}", task.getTaskId(), e);
+      throw new RuntimeException(e);
     } finally {
       if (hasErr.get()) {
         // Rare case, but in case the transaction failed to write task data, try again from the cache data
         tryRepairTask(task.getTaskId());
       }
     }
+  }
+
+  private void saveTaskDeletePendingInTransaction(
+    AtomicBoolean hasErr,
+    String taskPath,
+    SingularityTask task,
+    SingularityTaskStatusHolder taskStatusHolder
+  )
+    throws Exception {
+    byte[] taskBytes = taskTranscoder.toBytes(task);
+    if (taskBytes == null || taskBytes.length == 0) {
+      LOG.error("Encountered null or empty task bytes for {}", task.getTaskId());
+    }
+    curator
+      .transaction()
+      .forOperations(
+        curator.transactionOp().create().forPath(taskPath, taskBytes),
+        curator
+          .transactionOp()
+          .create()
+          .forPath(
+            getLastActiveTaskStatusPath(task.getTaskId()),
+            taskStatusTranscoder.toBytes(taskStatusHolder)
+          )
+      )
+      .forEach(
+        r -> {
+          if (r.getError() > 0) {
+            LOG.error("Error committing new task {} to zk {}", task.getTaskId(), r);
+            hasErr.set(true);
+          }
+        }
+      );
   }
 
   public List<SingularityTaskId> getLBCleanupTasks() {
