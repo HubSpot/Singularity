@@ -693,14 +693,6 @@ public class SingularityClient {
   private HttpResponse put(
     Function<String, String> hostToUri,
     String type,
-    Optional<?> body
-  ) {
-    return executeRequest(hostToUri, type, body, Method.PUT, Optional.empty());
-  }
-
-  private HttpResponse put(
-    Function<String, String> hostToUri,
-    String type,
     Optional<?> body,
     Map<String, Object> queryParams
   ) {
