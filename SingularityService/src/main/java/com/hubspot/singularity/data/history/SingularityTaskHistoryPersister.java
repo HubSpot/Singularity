@@ -17,12 +17,14 @@ import com.hubspot.singularity.data.TaskManager;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
@@ -71,8 +73,13 @@ public class SingularityTaskHistoryPersister
 
       final long start = System.currentTimeMillis();
       List<String> requestIds = taskManager.getRequestIdsInTaskHistory();
+      Map<String, Integer> taskCounts = requestIds
+        .stream()
+        .collect(
+          Collectors.toMap(Function.identity(), taskManager::getTaskCountForRequest)
+        );
       requestIds.sort(
-        Comparator.comparingLong(taskManager::getTaskCountForRequest).reversed()
+        Comparator.comparingLong(r -> taskCounts.getOrDefault(r, 0)).reversed()
       );
       List<CompletableFuture<Void>> futures = new ArrayList<>();
       for (String requestId : requestIds) {
