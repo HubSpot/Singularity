@@ -2622,14 +2622,23 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assertions.assertTrue(taskManager.isActiveTask(taskOne.getTaskId()));
 
-    statusUpdate(taskOne, TaskState.TASK_RUNNING);
-    List<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(
-      taskOne.getTaskId()
+    // assert that we sent back a status that was not DONE for the status update (e.g. KILL_TASK)
+    Assertions.assertFalse(
+      sms
+        .statusUpdate(
+          TaskStatus
+            .newBuilder()
+            .setTaskId(MesosProtosUtils.toTaskId(taskOne.getMesosTask().getTaskId()))
+            .setAgentId(MesosProtosUtils.toAgentId(taskOne.getAgentId()))
+            .setState(TaskState.TASK_RUNNING)
+            .build()
+        )
+        .join()
     );
-    Assertions.assertEquals(2, updates.size());
-    Assertions.assertTrue(
-      updates.stream().anyMatch(t -> t.getTaskState() == ExtendedTaskState.TASK_CLEANING)
-    );
+
+    // Task should get killed because we cannot recover any state
+    statusUpdate(taskOne, TaskState.TASK_KILLED);
+    Assertions.assertFalse(taskManager.isActiveTask(taskOne.getTaskId()));
   }
 
   @Test
