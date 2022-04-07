@@ -693,9 +693,10 @@ public class SingularityClient {
   private HttpResponse put(
     Function<String, String> hostToUri,
     String type,
-    Optional<?> body
+    Optional<?> body,
+    Map<String, Object> queryParams
   ) {
-    return executeRequest(hostToUri, type, body, Method.PUT, Optional.empty());
+    return executeRequest(hostToUri, type, body, Method.PUT, Optional.of(queryParams));
   }
 
   private <T> Optional<T> post(
@@ -1039,12 +1040,24 @@ public class SingularityClient {
     String requestId,
     SingularityScaleRequest scaleRequest
   ) {
+    scaleSingularityRequest(requestId, scaleRequest, Optional.empty());
+  }
+
+  public void scaleSingularityRequest(
+    String requestId,
+    SingularityScaleRequest scaleRequest,
+    Optional<Boolean> largeScaleDownAcknowledged
+  ) {
     final Function<String, String> requestUri = host ->
       String.format(REQUEST_SCALE_FORMAT, getApiBase(host), requestId);
     put(
       requestUri,
       String.format("Scale of Request %s", requestId),
-      Optional.of(scaleRequest)
+      Optional.of(scaleRequest),
+      Collections.singletonMap(
+        "largeScaleDownAcknowledged",
+        largeScaleDownAcknowledged.orElse(false)
+      )
     );
   }
 

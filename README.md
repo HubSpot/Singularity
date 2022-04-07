@@ -55,10 +55,10 @@ Then simply run `docker-compose up` and it will start containers for...
 ## Getting Started ##
 ##### Requirements #####
 
- - [Mesos](http://mesos.apache.org/gettingstarted/)
+ - [Mesos](https://mesos.apache.org/getting-started/)
  - [ZooKeeper](https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html) 
  - Java 7+
- - [MySQL](http://dev.mysql.com/usingmysql/get_started.html) (optional)
+ - [MySQL](https://dev.mysql.com/doc/mysql-getting-started/en/) (optional)
  - PostgreSQL (optional)
 
 ##### Contact #####
