@@ -308,7 +308,7 @@ public class SingularityMesosStatusUpdateHandler {
     long now = System.currentTimeMillis();
     long delta = now - timestamp;
 
-    LOG.debug(
+    LOG.info(
       "Update: task {} is now {} ({}) at {} (delta: {})",
       taskId,
       status.getState(),
@@ -507,15 +507,38 @@ public class SingularityMesosStatusUpdateHandler {
       } else {
         return StatusUpdateResult.KILL_TASK;
       }
-    } else if (
+    }
+
+    // If a task is missing data in Singularity there is not much we can do to recover it
+    Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
+    if (!maybeTask.isPresent()) {
+      LOG.warn("Missing task data for {}, trying to recover", taskId);
+      maybeTask = taskManager.tryRepairTask(taskIdObj);
+    }
+    if (!maybeTask.isPresent()) {
+      if (taskState.isDone()) {
+        saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+        return StatusUpdateResult.DONE;
+      } else {
+        final String message = String.format(
+          "Task %s is active but is missing task data, killing task",
+          taskId
+        );
+        exceptionNotifier.notify(message);
+        LOG.error(message);
+        return StatusUpdateResult.KILL_TASK;
+      }
+    }
+
+    SingularityTask task = maybeTask.get();
+
+    if (
       isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)
     ) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
       return StatusUpdateResult.IGNORED;
     }
-
-    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
     if (status.getState() == TaskState.TASK_LOST) {
       boolean isMesosFailure =
@@ -526,14 +549,12 @@ public class SingularityMesosStatusUpdateHandler {
         status.getReason() == Reason.REASON_MASTER_DISCONNECTED ||
         status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
 
-      RequestType requestType = task.isPresent()
-        ? task.get().getTaskRequest().getRequest().getRequestType()
-        : null;
+      RequestType requestType = task.getTaskRequest().getRequest().getRequestType();
       boolean isRelaunchable = requestType != null && !requestType.isLongRunning();
 
       if (isMesosFailure && isRelaunchable) {
         LOG.info("Relaunching lost task {}", task);
-        relaunchTask(task.get());
+        relaunchTask(task);
       }
       lostTasksMeter.mark();
       if (configuration.getDisasterDetection().isEnabled()) {
@@ -542,67 +563,40 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     if (!taskState.isDone()) {
-      if (!task.isPresent()) {
-        task = taskManager.tryRepairTask(taskIdObj);
+      final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(
+        taskIdObj.getRequestId()
+      );
+
+      Optional<SingularityRequestWithState> requestWithState = Optional.empty();
+
+      if (taskState == ExtendedTaskState.TASK_RUNNING) {
+        requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
+        healthchecker.enqueueHealthcheck(task, pendingDeploy, requestWithState);
       }
-      if (task.isPresent()) {
-        final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(
-          taskIdObj.getRequestId()
-        );
 
-        Optional<SingularityRequestWithState> requestWithState = Optional.empty();
-
-        if (taskState == ExtendedTaskState.TASK_RUNNING) {
+      if (
+        !pendingDeploy.isPresent() ||
+        !pendingDeploy
+          .get()
+          .getDeployMarker()
+          .getDeployId()
+          .equals(taskIdObj.getDeployId())
+      ) {
+        if (!requestWithState.isPresent()) {
           requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
-          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestWithState);
         }
-
-        if (
-          !pendingDeploy.isPresent() ||
-          !pendingDeploy
-            .get()
-            .getDeployMarker()
-            .getDeployId()
-            .equals(taskIdObj.getDeployId())
-        ) {
-          if (!requestWithState.isPresent()) {
-            requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
-          }
-          newTaskChecker.enqueueNewTaskCheck(task.get(), requestWithState, healthchecker);
-        }
-      } else {
-        final String message = String.format(
-          "Task %s is active but is missing task data",
-          taskId
-        );
-        taskManager.createTaskCleanup(
-          new SingularityTaskCleanup(
-            Optional.empty(),
-            TaskCleanupType.UNHEALTHY_NEW_TASK,
-            System.currentTimeMillis(),
-            taskIdObj,
-            Optional.of(
-              "Task is active but had no task data. Unable to continue running"
-            ),
-            Optional.empty(),
-            Optional.empty()
-          )
-        );
-        exceptionNotifier.notify(message);
-        LOG.error(message);
+        newTaskChecker.enqueueNewTaskCheck(task, requestWithState, healthchecker);
       }
     }
 
-    final Optional<String> statusMessage = getStatusMessage(status, task);
+    final Optional<String> statusMessage = getStatusMessage(status, Optional.of(task));
 
     final SingularityTaskHistoryUpdate taskUpdate = new SingularityTaskHistoryUpdate(
       taskIdObj,
       timestamp,
       taskState,
       statusMessage,
-      status.hasReason()
-        ? Optional.of(status.getReason().name())
-        : Optional.<String>empty()
+      status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
     );
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(
       taskUpdate
@@ -621,7 +615,7 @@ public class SingularityMesosStatusUpdateHandler {
         taskIdObj,
         taskState,
         taskHistoryUpdateCreateResult,
-        task,
+        Optional.of(task),
         timestamp
       );
     }
@@ -665,8 +659,11 @@ public class SingularityMesosStatusUpdateHandler {
   public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(
     Protos.TaskStatus status
   ) {
+    LOG.info("Creating status update -- task: " + status.getTaskId());
     return CompletableFuture.supplyAsync(
       () -> {
+        LOG.info("Starting status update -- task: " + status.getTaskId());
+
         final String taskId = status.getTaskId().getValue();
         final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
