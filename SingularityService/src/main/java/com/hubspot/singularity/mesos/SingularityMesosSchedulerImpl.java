@@ -787,7 +787,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
             );
           }
           if (result == StatusUpdateResult.KILL_TASK) {
-            LOG.info(
+            LOG.warn(
               "Killing a task {} which Singularity has no remaining active state for. It will be given 1 minute to shut down gracefully",
               status.getTaskId().getValue()
             );
