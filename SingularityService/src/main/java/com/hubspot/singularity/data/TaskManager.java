@@ -1315,15 +1315,29 @@ public class TaskManager extends CuratorAsyncManager {
   public Optional<SingularityTask> tryRepairTask(SingularityTaskId taskId) {
     try {
       Optional<SingularityTask> maybeTask = getTask(taskId); // checks zkCache for task data
-      String path = getTaskPath(taskId);
-      if (maybeTask.isPresent() && !exists(path)) {
-        LOG.info("Found info for task {} from cache not in zk node, rewriting", taskId);
-        save(path, maybeTask.map(taskTranscoder::toBytes));
-        leaderCache.putActiveTask(taskId);
+      if (maybeTask.isPresent() && repairFoundTask(maybeTask.get())) {
+        return maybeTask;
       }
-      return maybeTask;
     } catch (Exception e) {
-      return Optional.empty();
+      LOG.error("Could not find or repair task data for {}", taskId, e);
+    }
+    return Optional.empty();
+  }
+
+  public boolean repairFoundTask(SingularityTask task) {
+    try {
+      String path = getTaskPath(task.getTaskId());
+      LOG.info(
+        "Found info for task {} from cache not in zk node, rewriting",
+        task.getTaskId()
+      );
+      save(path, Optional.of(taskTranscoder.toBytes(task)));
+      leaderCache.putActiveTask(task.getTaskId());
+      taskCache.set(path, task);
+      return true;
+    } catch (Exception e) {
+      LOG.error("Could not repair task data for {}", task.getTaskId(), e);
+      return false;
     }
   }
 
@@ -1406,13 +1420,6 @@ public class TaskManager extends CuratorAsyncManager {
       // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
-      if (configuration.isVerifyTaskDataWrites()) {
-        Optional<SingularityTask> maybeTask = getTaskCheckCache(task.getTaskId(), true);
-        if (!maybeTask.isPresent()) {
-          LOG.error("Found empty task after write for {}", task.getTaskId());
-          saveTaskDeletePendingInTransaction(hasErr, path, task, taskStatusHolder);
-        }
-      }
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
     } catch (Exception e) {

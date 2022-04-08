@@ -37,6 +37,8 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
@@ -90,6 +92,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final Meter lostTasksMeter;
   private final Histogram statusUpdateDeltas;
   private final LoadBalancerClient lbClient;
+  private final HistoryManager historyManager;
 
   private final ExecutorAndQueue statusUpdatesExecutor;
 
@@ -111,6 +114,7 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityLeaderCache leaderCache,
     MesosProtosUtils mesosProtosUtils,
     LoadBalancerClient lbClient,
+    HistoryManager historyManager,
     SingularityManagedThreadPoolFactory threadPoolFactory,
     @Named(
       SingularityMesosModule.TASK_LOST_REASONS_COUNTER
@@ -134,6 +138,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.schedulerLock = schedulerLock;
     this.configuration = configuration;
     this.lbClient = lbClient;
+    this.historyManager = historyManager;
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
@@ -355,179 +360,29 @@ public class SingularityMesosStatusUpdateHandler {
         newTaskStatusHolder
       )
     ) {
-      LOG.info(
-        "Found recovery status update with reason {} for task {}",
-        status.getReason(),
-        taskId
+      return tryRecoverTask(
+        status,
+        taskIdObj,
+        taskId,
+        newTaskStatusHolder,
+        taskState,
+        now
       );
-      final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(
-        taskIdObj
-      );
-      if (
-        !maybeTaskHistory.isPresent() ||
-        !maybeTaskHistory.get().getLastTaskUpdate().isPresent()
-      ) {
-        LOG.warn(
-          "Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos",
-          taskIdObj
-        );
-        return StatusUpdateResult.KILL_TASK;
-      } else if (status.getReason() == Reason.REASON_AGENT_REREGISTERED) {
-        Optional<SingularityLoadBalancerUpdate> maybeLbUpdate = taskManager.getLoadBalancerState(
-          taskIdObj,
-          LoadBalancerRequestType.REMOVE
-        );
-        if (maybeLbUpdate.isPresent()) {
-          LOG.info(
-            "LB removal for recovered task {} was already started. Attempting to clear and start as new task",
-            taskId
-          );
-          boolean canRecoverLbState = true;
-          if (maybeLbUpdate.get().getLoadBalancerState().isInProgress()) {
-            try {
-              if (
-                lbClient
-                  .getState(maybeLbUpdate.get().getLoadBalancerRequestId())
-                  .getLoadBalancerState()
-                  .isInProgress()
-              ) {
-                // We don't want to block here and wait for LB removal to finish in case it is stuck. Mark this task for cleaning
-                canRecoverLbState = false;
-              }
-            } catch (Exception e) {
-              LOG.warn("Could not verify LB state for {}", taskId, e);
-              canRecoverLbState = false;
-            }
-          }
-          if (
-            canRecoverLbState &&
-            deployManager
-              .getActiveDeployId(taskIdObj.getRequestId())
-              .map(d -> d.equals(taskIdObj.getDeployId()))
-              .orElse(false) &&
-            taskManager.reactivateTask(
-              taskIdObj,
-              taskState,
-              newTaskStatusHolder,
-              Optional.ofNullable(status.getMessage()),
-              status.hasReason()
-                ? Optional.of(status.getReason().name())
-                : Optional.empty()
-            )
-          ) {
-            Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
-            Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
-              taskIdObj.getRequestId()
-            );
-            if (
-              maybeTask.isPresent() &&
-              maybeRequest.isPresent() &&
-              maybeRequest.get().getState().isRunnable()
-            ) {
-              LOG.info(
-                "Task {} can be recovered. Clearing LB state and enqueuing check as new task",
-                taskId
-              );
-              taskManager.clearLoadBalancerHistory(taskIdObj);
-              newTaskChecker.enqueueCheckWithDelay(maybeTask.get(), 0, healthchecker);
-              requestManager.addToPendingQueue(
-                new SingularityPendingRequest(
-                  taskIdObj.getRequestId(),
-                  taskIdObj.getDeployId(),
-                  now,
-                  Optional.empty(),
-                  PendingType.TASK_RECOVERED,
-                  Optional.empty(),
-                  Optional.of(
-                    String.format("Agent %s recovered", status.getAgentId().getValue())
-                  )
-                )
-              );
-              return StatusUpdateResult.DONE;
-            }
-          } else {
-            LOG.info("Could not recover task {}, will clean up", taskId);
-            taskManager.createTaskCleanup(
-              new SingularityTaskCleanup(
-                Optional.empty(),
-                TaskCleanupType.DECOMISSIONING,
-                System.currentTimeMillis(),
-                taskIdObj,
-                Optional.of(
-                  "Agent re-registered after load balancer removal started. Task cannot be reactivated."
-                ),
-                Optional.empty(),
-                Optional.empty()
-              )
-            );
-            requestManager.addToPendingQueue(
-              new SingularityPendingRequest(
-                taskIdObj.getRequestId(),
-                taskIdObj.getDeployId(),
-                now,
-                Optional.empty(),
-                PendingType.TASK_RECOVERED,
-                Optional.empty(),
-                Optional.of(
-                  String.format("Agent %s recovered", status.getAgentId().getValue())
-                )
-              )
-            );
-            return StatusUpdateResult.DONE;
-          }
-        }
-      }
-
-      // Check tasks with no lb component or not yet removed from LB
-      boolean reactivated =
-        deployManager
-          .getActiveDeployId(taskIdObj.getRequestId())
-          .map(d -> d.equals(taskIdObj.getDeployId()))
-          .orElse(false) &&
-        taskManager.reactivateTask(
-          taskIdObj,
-          taskState,
-          newTaskStatusHolder,
-          Optional.ofNullable(status.getMessage()),
-          status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
-        );
-      requestManager.addToPendingQueue(
-        new SingularityPendingRequest(
-          taskIdObj.getRequestId(),
-          taskIdObj.getDeployId(),
-          now,
-          Optional.empty(),
-          PendingType.TASK_RECOVERED,
-          Optional.empty(),
-          Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue()))
-        )
-      );
-      if (reactivated) {
-        return StatusUpdateResult.DONE;
-      } else {
-        return StatusUpdateResult.KILL_TASK;
-      }
     }
 
     // If a task is missing data in Singularity there is not much we can do to recover it
     Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
     if (!maybeTask.isPresent()) {
-      LOG.warn("Missing task data for {}, trying to recover", taskId);
-      maybeTask = taskManager.tryRepairTask(taskIdObj);
+      maybeTask = tryFindMissingTaskData(taskIdObj, taskId, taskState);
     }
     if (!maybeTask.isPresent()) {
-      if (taskState.isDone()) {
-        saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-        return StatusUpdateResult.DONE;
-      } else {
-        final String message = String.format(
-          "Task %s is active but is missing task data, killing task",
-          taskId
-        );
-        exceptionNotifier.notify(message);
-        LOG.error(message);
-        return StatusUpdateResult.KILL_TASK;
-      }
+      return handledMissingTaskData(
+        taskIdObj,
+        taskId,
+        newTaskStatusHolder,
+        taskState,
+        now
+      );
     }
 
     SingularityTask task = maybeTask.get();
@@ -624,6 +479,263 @@ public class SingularityMesosStatusUpdateHandler {
     return StatusUpdateResult.DONE;
   }
 
+  private StatusUpdateResult tryRecoverTask(
+    Protos.TaskStatus status,
+    SingularityTaskId taskIdObj,
+    String taskId,
+    SingularityTaskStatusHolder newTaskStatusHolder,
+    ExtendedTaskState taskState,
+    long now
+  ) {
+    LOG.info(
+      "Found recovery status update with reason {} for task {}",
+      status.getReason(),
+      taskId
+    );
+    final Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(
+      taskIdObj
+    );
+    if (
+      !maybeTaskHistory.isPresent() ||
+      !maybeTaskHistory.get().getLastTaskUpdate().isPresent()
+    ) {
+      LOG.warn(
+        "Task {} not found to recover, it may have already been persisted. Triggering a kill via mesos",
+        taskIdObj
+      );
+
+      return StatusUpdateResult.KILL_TASK;
+    } else if (status.getReason() == Reason.REASON_AGENT_REREGISTERED) {
+      Optional<SingularityLoadBalancerUpdate> maybeLbUpdate = taskManager.getLoadBalancerState(
+        taskIdObj,
+        LoadBalancerRequestType.REMOVE
+      );
+      if (maybeLbUpdate.isPresent()) {
+        LOG.info(
+          "LB removal for recovered task {} was already started. Attempting to clear and start as new task",
+          taskId
+        );
+        boolean canRecoverLbState = true;
+        if (maybeLbUpdate.get().getLoadBalancerState().isInProgress()) {
+          try {
+            if (
+              lbClient
+                .getState(maybeLbUpdate.get().getLoadBalancerRequestId())
+                .getLoadBalancerState()
+                .isInProgress()
+            ) {
+              // We don't want to block here and wait for LB removal to finish in case it is stuck. Mark this task for cleaning
+              canRecoverLbState = false;
+            }
+          } catch (Exception e) {
+            LOG.warn("Could not verify LB state for {}", taskId, e);
+            canRecoverLbState = false;
+          }
+        }
+        if (
+          canRecoverLbState &&
+          deployManager
+            .getActiveDeployId(taskIdObj.getRequestId())
+            .map(d -> d.equals(taskIdObj.getDeployId()))
+            .orElse(false) &&
+          taskManager.reactivateTask(
+            taskIdObj,
+            taskState,
+            newTaskStatusHolder,
+            Optional.ofNullable(status.getMessage()),
+            status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
+          )
+        ) {
+          Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
+          Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
+            taskIdObj.getRequestId()
+          );
+          if (
+            maybeTask.isPresent() &&
+            maybeRequest.isPresent() &&
+            maybeRequest.get().getState().isRunnable()
+          ) {
+            LOG.info(
+              "Task {} can be recovered. Clearing LB state and enqueuing check as new task",
+              taskId
+            );
+            taskManager.clearLoadBalancerHistory(taskIdObj);
+            newTaskChecker.enqueueCheckWithDelay(maybeTask.get(), 0, healthchecker);
+            requestManager.addToPendingQueue(
+              new SingularityPendingRequest(
+                taskIdObj.getRequestId(),
+                taskIdObj.getDeployId(),
+                now,
+                Optional.empty(),
+                PendingType.TASK_RECOVERED,
+                Optional.empty(),
+                Optional.of(
+                  String.format("Agent %s recovered", status.getAgentId().getValue())
+                )
+              )
+            );
+            return StatusUpdateResult.DONE;
+          }
+        } else {
+          LOG.info("Could not recover task {}, will clean up", taskId);
+          taskManager.createTaskCleanup(
+            new SingularityTaskCleanup(
+              Optional.empty(),
+              TaskCleanupType.DECOMISSIONING,
+              System.currentTimeMillis(),
+              taskIdObj,
+              Optional.of(
+                "Agent re-registered after load balancer removal started. Task cannot be reactivated."
+              ),
+              Optional.empty(),
+              Optional.empty()
+            )
+          );
+          requestManager.addToPendingQueue(
+            new SingularityPendingRequest(
+              taskIdObj.getRequestId(),
+              taskIdObj.getDeployId(),
+              now,
+              Optional.empty(),
+              PendingType.TASK_RECOVERED,
+              Optional.empty(),
+              Optional.of(
+                String.format("Agent %s recovered", status.getAgentId().getValue())
+              )
+            )
+          );
+          return StatusUpdateResult.DONE;
+        }
+      }
+    }
+
+    // Check tasks with no lb component or not yet removed from LB
+    boolean reactivated =
+      deployManager
+        .getActiveDeployId(taskIdObj.getRequestId())
+        .map(d -> d.equals(taskIdObj.getDeployId()))
+        .orElse(false) &&
+      taskManager.reactivateTask(
+        taskIdObj,
+        taskState,
+        newTaskStatusHolder,
+        Optional.ofNullable(status.getMessage()),
+        status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty()
+      );
+    requestManager.addToPendingQueue(
+      new SingularityPendingRequest(
+        taskIdObj.getRequestId(),
+        taskIdObj.getDeployId(),
+        now,
+        Optional.empty(),
+        PendingType.TASK_RECOVERED,
+        Optional.empty(),
+        Optional.of(String.format("Agent %s recovered", status.getAgentId().getValue()))
+      )
+    );
+    if (reactivated) {
+      return StatusUpdateResult.DONE;
+    } else {
+      return StatusUpdateResult.KILL_TASK;
+    }
+  }
+
+  private Optional<SingularityTask> tryFindMissingTaskData(
+    SingularityTaskId taskIdObj,
+    String taskId,
+    ExtendedTaskState taskState
+  ) {
+    LOG.warn("Missing task data for {}, trying to recover", taskId);
+    // If found in this first step, it was a bad zk write and everything should just work
+    Optional<SingularityTask> maybeTask = taskManager.tryRepairTask(taskIdObj);
+    if (!maybeTask.isPresent()) {
+      // Ensure history manager calls cannot interrupt the status update path
+      try {
+        Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(
+          taskId
+        );
+        if (maybeTaskHistory.isPresent()) {
+          maybeTask = maybeTaskHistory.map(SingularityTaskHistory::getTask);
+          if (
+            maybeTaskHistory
+              .get()
+              .getLastTaskUpdate()
+              .map(SingularityTaskHistoryUpdate::getTaskState)
+              .orElse(taskState)
+              .isDone() &&
+            !taskState.isDone()
+          ) {
+            // Don't bother with LB state/etc recovery, let the task get killed and replaced as a cleaner replacement
+            LOG.info(
+              "Recovered task {} was previously marked as done. Will not reactivate fully",
+              taskId
+            );
+            taskManager.repairFoundTask(maybeTask.get());
+            return Optional.empty();
+          }
+        }
+      } catch (Exception e) {
+        LOG.error("Could not fetch {} from history", taskId, e);
+      }
+      if (maybeTask.isPresent() && taskManager.repairFoundTask(maybeTask.get())) {
+        LOG.info("Successfully repaired task data in zk for {}", taskId);
+      }
+    }
+    // TODO - could we also try to fetch this from mesos agent somehow?
+    return maybeTask;
+  }
+
+  private StatusUpdateResult handledMissingTaskData(
+    SingularityTaskId taskIdObj,
+    String taskId,
+    SingularityTaskStatusHolder newTaskStatusHolder,
+    ExtendedTaskState taskState,
+    long now
+  ) {
+    if (taskState.isDone()) {
+      LOG.info("No task data present for {} but task has finished, ignoring", taskId);
+      saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+      requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+          taskIdObj.getRequestId(),
+          taskIdObj.getDeployId(),
+          now,
+          Optional.empty(),
+          PendingType.TASK_DONE,
+          Optional.empty(),
+          Optional.of(String.format("Unable to recover task %s", taskId))
+        )
+      );
+      return StatusUpdateResult.DONE;
+    } else {
+      final String message = String.format(
+        "Task %s is active but is missing task data, killing task",
+        taskId
+      );
+      exceptionNotifier.notify(message);
+      LOG.error(message);
+      saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+      // Also save a task killed event to clean up active task list
+      saveNewTaskStatusHolder(
+        taskIdObj,
+        newTaskStatusHolder,
+        ExtendedTaskState.TASK_KILLED
+      );
+      requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+          taskIdObj.getRequestId(),
+          taskIdObj.getDeployId(),
+          now,
+          Optional.empty(),
+          PendingType.TASK_DONE,
+          Optional.empty(),
+          Optional.of(String.format("Unable to recover task %s", taskId))
+        )
+      );
+      return StatusUpdateResult.KILL_TASK;
+    }
+  }
+
   private synchronized void handleCompletedTaskState(
     TaskStatus status,
     SingularityTaskId taskIdObj,
@@ -659,11 +771,8 @@ public class SingularityMesosStatusUpdateHandler {
   public CompletableFuture<StatusUpdateResult> processStatusUpdateAsync(
     Protos.TaskStatus status
   ) {
-    LOG.info("Creating status update -- task: " + status.getTaskId());
     return CompletableFuture.supplyAsync(
       () -> {
-        LOG.info("Starting status update -- task: " + status.getTaskId());
-
         final String taskId = status.getTaskId().getValue();
         final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
