@@ -1420,13 +1420,6 @@ public class TaskManager extends CuratorAsyncManager {
       // Not checking isActive here, already called within offer check flow
       leaderCache.putActiveTask(task.getTaskId());
       taskCache.set(path, task);
-      if (configuration.isVerifyTaskDataWrites()) {
-        Optional<SingularityTask> maybeTask = getTaskCheckCache(task.getTaskId(), true);
-        if (!maybeTask.isPresent()) {
-          LOG.error("Found empty task after write for {}", task.getTaskId());
-          saveTaskDeletePendingInTransaction(hasErr, path, task, taskStatusHolder);
-        }
-      }
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
     } catch (Exception e) {
