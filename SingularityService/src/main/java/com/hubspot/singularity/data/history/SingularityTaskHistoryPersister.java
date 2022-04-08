@@ -14,6 +14,7 @@ import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -42,6 +43,7 @@ public class SingularityTaskHistoryPersister
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
   private final int agentReregisterTimeoutSeconds;
+  private final SingularitySchedulerLock singularitySchedulerLock;
 
   @Inject
   public SingularityTaskHistoryPersister(
@@ -50,6 +52,7 @@ public class SingularityTaskHistoryPersister
     DeployManager deployManager,
     HistoryManager historyManager,
     SingularityManagedThreadPoolFactory managedThreadPoolFactory,
+    SingularitySchedulerLock singularitySchedulerLock,
     @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock,
     @Named(
       SingularityHistoryModule.LAST_TASK_PERSISTER_SUCCESS
@@ -61,6 +64,7 @@ public class SingularityTaskHistoryPersister
     this.deployManager = deployManager;
     this.agentReregisterTimeoutSeconds =
       configuration.getMesosConfiguration().getAgentReregisterTimeoutSeconds();
+    this.singularitySchedulerLock = singularitySchedulerLock;
   }
 
   @Override
@@ -88,22 +92,30 @@ public class SingularityTaskHistoryPersister
             () -> {
               try {
                 LOG.debug("Checking request {}", requestId);
-                List<SingularityTaskId> taskIds = taskManager.getTaskIdsForRequest(
-                  requestId
+                List<SingularityTaskId> taskIds = singularitySchedulerLock.runWithRequestLockAndReturn(
+                  () -> {
+                    List<SingularityTaskId> ids = taskManager.getTaskIdsForRequest(
+                      requestId
+                    );
+                    ids.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
+                    ids.removeAll(taskManager.getLBCleanupTasks());
+                    List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+                    ids =
+                      ids
+                        .stream()
+                        .filter(
+                          taskId ->
+                            !isPartOfPendingDeploy(pendingDeploys, taskId) &&
+                            !couldReturnWithRecoveredAgent(taskId)
+                        )
+                        .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
+                        .collect(Collectors.toList());
+                    return ids;
+                  },
+                  requestId,
+                  "task history persister fetch"
                 );
-                taskIds.removeAll(taskManager.getActiveTaskIdsForRequest(requestId));
-                taskIds.removeAll(taskManager.getLBCleanupTasks());
-                List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
-                taskIds =
-                  taskIds
-                    .stream()
-                    .filter(
-                      taskId ->
-                        !isPartOfPendingDeploy(pendingDeploys, taskId) &&
-                        !couldReturnWithRecoveredAgent(taskId)
-                    )
-                    .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
-                    .collect(Collectors.toList());
+
                 int forRequest = 0;
                 int transferred = 0;
                 for (SingularityTaskId taskId : taskIds) {

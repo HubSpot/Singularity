@@ -373,10 +373,16 @@ public class SingularityMesosStatusUpdateHandler {
     // If a task is missing data in Singularity there is not much we can do to recover it
     Optional<SingularityTask> maybeTask = taskManager.getTask(taskIdObj);
     if (!maybeTask.isPresent()) {
-      maybeTask = tryFindMissingTaskData(taskIdObj, taskId);
+      maybeTask = tryFindMissingTaskData(taskIdObj, taskId, taskState);
     }
     if (!maybeTask.isPresent()) {
-      handledMissingTaskData(taskIdObj, taskId, newTaskStatusHolder, taskState, now);
+      return handledMissingTaskData(
+        taskIdObj,
+        taskId,
+        newTaskStatusHolder,
+        taskState,
+        now
+      );
     }
 
     SingularityTask task = maybeTask.get();
@@ -636,15 +642,38 @@ public class SingularityMesosStatusUpdateHandler {
 
   private Optional<SingularityTask> tryFindMissingTaskData(
     SingularityTaskId taskIdObj,
-    String taskId
+    String taskId,
+    ExtendedTaskState taskState
   ) {
     LOG.warn("Missing task data for {}, trying to recover", taskId);
+    // If found in this first step, it was a bad zk write and everything should just work
     Optional<SingularityTask> maybeTask = taskManager.tryRepairTask(taskIdObj);
     if (!maybeTask.isPresent()) {
       // Ensure history manager calls cannot interrupt the status update path
       try {
-        maybeTask =
-          historyManager.getTaskHistory(taskId).map(SingularityTaskHistory::getTask);
+        Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistory(
+          taskId
+        );
+        if (maybeTaskHistory.isPresent()) {
+          maybeTask = maybeTaskHistory.map(SingularityTaskHistory::getTask);
+          if (
+            maybeTaskHistory
+              .get()
+              .getLastTaskUpdate()
+              .map(SingularityTaskHistoryUpdate::getTaskState)
+              .orElse(taskState)
+              .isDone() &&
+            !taskState.isDone()
+          ) {
+            // Don't bother with LB state/etc recovery, let the task get killed and replaced as a cleaner replacement
+            LOG.info(
+              "Recovered task {} was previously marked as done. Will not reactivate fully",
+              taskId
+            );
+            taskManager.repairFoundTask(maybeTask.get());
+            return Optional.empty();
+          }
+        }
       } catch (Exception e) {
         LOG.error("Could not fetch {} from history", taskId, e);
       }
