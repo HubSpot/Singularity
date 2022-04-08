@@ -5045,8 +5045,8 @@ modify-filename@^1.0.0, modify-filename@^1.1.0:
   resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/modify-filename/-/modify-filename-1.1.0.tgz#9a2dec83806fbb2d975f22beec859ca26b393aa1"
 
 moment@^2.13.0, moment@^2.8.2:
-  version "2.29.1"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  version "2.29.2"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.2.tgz#00910c60b20843bcba52d37d58c628b47b1f20e4"
 
 ms@2.0.0:
   version "2.0.0"
