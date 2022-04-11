@@ -1244,7 +1244,11 @@ public class SingularityValidator {
       }
     }
 
-    if (previousScale.isPresent() && !largeScaleDownAcknowledged.orElse(false)) {
+    if (
+      previousScale.isPresent() &&
+      !largeScaleDownAcknowledged.orElse(false) &&
+      request.getRequestType() != RequestType.ON_DEMAND
+    ) {
       int absMaxScaleDown = singularityConfiguration.getMaxScaleDownWithoutAcknowledgement();
       boolean scaleDownExceedsAbsoluteMax =
         previousScale.get() - request.getInstancesSafe() > absMaxScaleDown;
