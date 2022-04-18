@@ -44,12 +44,19 @@ const CostsView = ({requestId, costsAPI}) => {
           cellData={(c) => Utils.humanizeText(c.costType)}
         />
         <Column
+          label="Monthly Emissions"
+          id="monthlyEmissions"
+          key="monthlyEmissions"
+          cellData={(c) => c.monthlyEmissions}
+          cellRender={(e) => e + ' MTCO2e'}
+        />
+        <Column
           label="Cost"
           id="cost"
           key="cost"
           forceSortHeader={true}
           cellData={(c) => c.cost}
-          cellRender={(c) => '$' + c}
+          cellRender={(c) => '$' + c + ' /day'}
         />
       </UITable>
     </CollapsableSection>
