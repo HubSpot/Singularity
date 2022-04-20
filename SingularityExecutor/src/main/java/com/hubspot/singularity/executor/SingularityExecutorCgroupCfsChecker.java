@@ -66,11 +66,16 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
       )
     );
     for (String cgroup : cgroups) {
-      if (cgroup.contains(":cpu:")) {
-        String[] segments = cgroup.split(":");
-        String cgroupPath = getBaseCgroupPath() + segments[segments.length - 1];
-        LOG.info("Will start watcher for directory {}", cgroupPath);
-        return Paths.get(cgroupPath);
+      String[] segments = cgroup.split(":", 3);
+      if (segments.length == 3) {
+        String[] subsystems = segments[1].split(",");
+        for (String subsystem : subsystems) {
+          if (subsystem.equals("cpu")) {
+            String cgroupPath = getBaseCgroupPath() + segments[2];
+            LOG.info("Will start watcher for directory {}", cgroupPath);
+            return Paths.get(cgroupPath);
+          }
+        }
       }
     }
     throw new RuntimeException(
