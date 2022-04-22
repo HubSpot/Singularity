@@ -394,21 +394,21 @@ public class SingularityExecutorThreadChecker {
     );
     if (Files.exists(procCgroupPath)) {
       for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
-        final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
-        if (matcher.matches()) {
-          return Optional.of(
-            Files
-              .readAllLines(
-                Paths.get(
-                  String.format(
-                    configuration.getCgroupsMesosCpuTasksFormat(),
-                    matcher.group(1)
-                  )
-                ),
-                Charsets.UTF_8
-              )
-              .size()
-          );
+        String[] segments = line.split(":", 3);
+        if (segments.length == 3) {
+          String[] subsystems = segments[1].split(",");
+          String cgroup = segments[2];
+          for (String subsystem : subsystems) {
+            if (subsystem.equals("cpu")) {
+              String tasksPath = String.format(
+                configuration.getCgroupsMesosCpuTasksFormat(),
+                cgroup
+              );
+              return Optional.of(
+                Files.readAllLines(Paths.get(tasksPath), Charsets.UTF_8).size()
+              );
+            }
+          }
         }
       }
       LOG.warn("Unable to parse cgroup container from {}", procCgroupPath.toString());
