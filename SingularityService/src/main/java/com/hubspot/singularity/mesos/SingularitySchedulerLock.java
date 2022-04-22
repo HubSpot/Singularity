@@ -29,7 +29,7 @@ public class SingularitySchedulerLock {
     this.requestLocks = new ConcurrentHashMap<>();
   }
 
-  private long lock(String requestId, String name) {
+  public long lock(String requestId, String name) {
     final long start = System.currentTimeMillis();
     LOG.trace("{} - Locking {}", name, requestId);
     ReentrantLock lock = requestLocks.computeIfAbsent(
@@ -85,7 +85,7 @@ public class SingularitySchedulerLock {
     }
   }
 
-  private void unlock(String requestId, String name, long start) {
+  public void unlock(String requestId, String name, long start) {
     long duration = System.currentTimeMillis() - start;
     if (duration > 1000) {
       LOG.debug("{} - Unlocking {} after {}ms", name, requestId, duration);
