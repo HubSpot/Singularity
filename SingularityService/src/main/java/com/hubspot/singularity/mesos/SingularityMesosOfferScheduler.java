@@ -82,6 +82,7 @@ public class SingularityMesosOfferScheduler {
   private final DisasterManager disasterManager;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
   private final OfferCache offerCache;
+  private final SingularitySchedulerMetrics metrics;
 
   private final double normalizedCpuWeight;
   private final double normalizedMemWeight;
@@ -108,7 +109,8 @@ public class SingularityMesosOfferScheduler {
     SingularityManagedThreadPoolFactory threadPoolFactory,
     DisasterManager disasterManager,
     SingularityMesosSchedulerClient mesosSchedulerClient,
-    OfferCache offerCache
+    OfferCache offerCache,
+    SingularitySchedulerMetrics metrics
   ) {
     this.defaultResources =
       new Resources(
@@ -142,6 +144,7 @@ public class SingularityMesosOfferScheduler {
     this.usageManager = usageManager;
     this.deployManager = deployManager;
     this.lock = lock;
+    this.metrics = metrics;
 
     double cpuWeight = mesosConfiguration.getCpuWeight();
     double memWeight = mesosConfiguration.getMemWeight();
@@ -330,6 +333,8 @@ public class SingularityMesosOfferScheduler {
 
       throw t;
     }
+
+    metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
 
     LOG.info(
       "Finished handling {} new offer(s) {} from cache ({}), {} accepted, {} declined/cached",
@@ -624,6 +629,7 @@ public class SingularityMesosOfferScheduler {
                               bestOffer.getSanitizedHost()
                             );
                             acceptTask(bestOffer, taskRequestHolder);
+                            metrics.getTasksScheduled().inc();
                             tasksScheduled.getAndIncrement();
                             updateAgentUsageScores(
                               taskRequestHolder,
@@ -651,6 +657,9 @@ public class SingularityMesosOfferScheduler {
       )
       .join();
 
+    metrics.getOfferLoopTasksRemaining().update(numDueTasks - tasksScheduled.get());
+    metrics.getOfferLoopOverLoadedHosts().update(overloadedHosts.size());
+    metrics.getOfferLoopNoMatches().update(noMatches.get());
     LOG.info(
       "{} tasks scheduled, {} tasks remaining after examining {} offers ({} overloaded hosts, {} had no offer matches)",
       tasksScheduled,

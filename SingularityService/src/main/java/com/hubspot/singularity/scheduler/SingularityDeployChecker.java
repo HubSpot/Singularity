@@ -44,6 +44,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import com.hubspot.singularity.mesos.SingularitySchedulerMetrics;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,6 +78,7 @@ public class SingularityDeployChecker {
   private final UsageManager usageManager;
   private final SingularityDeployAcceptanceManager deployAcceptanceManager;
   private final ExecutorService deployCheckExecutor;
+  private final SingularitySchedulerMetrics metrics;
 
   @Inject
   public SingularityDeployChecker(
@@ -90,7 +92,8 @@ public class SingularityDeployChecker {
     SingularitySchedulerLock lock,
     UsageManager usageManager,
     SingularityManagedThreadPoolFactory threadPoolFactory,
-    SingularityDeployAcceptanceManager deployAcceptanceManager
+    SingularityDeployAcceptanceManager deployAcceptanceManager,
+    SingularitySchedulerMetrics metrics
   ) {
     this.configuration = configuration;
     this.lbClient = lbClient;
@@ -104,9 +107,11 @@ public class SingularityDeployChecker {
     this.deployAcceptanceManager = deployAcceptanceManager;
     this.deployCheckExecutor =
       threadPoolFactory.get("deploy-checker", configuration.getCoreThreadpoolSize());
+    this.metrics = metrics;
   }
 
   public int checkDeploys() {
+    long start = System.currentTimeMillis();
     final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
     final List<SingularityDeployMarker> cancelDeploys = deployManager.getCancelDeploys();
     final List<SingularityUpdatePendingDeployRequest> updateRequests = deployManager.getPendingDeployUpdates();
@@ -138,6 +143,7 @@ public class SingularityDeployChecker {
     cancelDeploys.forEach(deployManager::deleteCancelDeployRequest);
     updateRequests.forEach(deployManager::deleteUpdatePendingDeployRequest);
 
+    metrics.getDeployPollerTime().update(System.currentTimeMillis() - start);
     return pendingDeploys.size();
   }
 
@@ -1589,6 +1595,12 @@ public class SingularityDeployChecker {
         lbUpdate,
         lbUpdateHolder
       );
+      metrics
+        .getLbUpdateTime()
+        .update(
+          System.currentTimeMillis() -
+          lbUpdateHolder.getLoadBalancerUpdate().getTimestamp()
+        );
       updatePendingDeploy(pendingDeploy, DeployState.WAITING, updatedProgress);
       // All tasks for current step are launched and in the LB if needed
       return markStepLaunchFinished(
