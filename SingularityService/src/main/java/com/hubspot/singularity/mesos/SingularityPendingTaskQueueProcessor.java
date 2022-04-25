@@ -244,7 +244,7 @@ public class SingularityPendingTaskQueueProcessor {
         .runAsync(() -> matchAndLaunch(start, pendingTaskId), taskLaunchExecutor)
         .join();
     } catch (Exception e) {
-      LOG.error("Could not acquire lock for task {}", pendingTaskId, e);
+      LOG.error("Exception while launching task {}", pendingTaskId, e);
     } finally {
       lock.unlock(
         pendingTaskId.getRequestId(),
