@@ -69,6 +69,7 @@ public class TestMesosSchedulerImpl extends SingularityMesosSchedulerImpl {
   public CompletableFuture<Void> resourceOffers(List<Offer> offers) {
     super.resourceOffers(offers);
     queueProcessor.drainHandledTasks();
+    // TODO - clear offer cache - preserves previous test behavior
     return CompletableFuture.completedFuture(null);
   }
 }

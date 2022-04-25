@@ -239,6 +239,7 @@ public class SingularityPendingTaskQueueProcessor {
         pendingTaskId.getId(),
         System.currentTimeMillis() - start
       );
+      // Run this on the single thread responsible for offer matching and launches
       CompletableFuture
         .runAsync(() -> matchAndLaunch(start, pendingTaskId), taskLaunchExecutor)
         .join();
@@ -314,14 +315,6 @@ public class SingularityPendingTaskQueueProcessor {
         //TODO metrics metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
       } catch (Exception e) {
         LOG.error("Error running task launch", e);
-      } finally {
-        lock.unlock(
-          pendingTaskId.getRequestId(),
-          LOCK_NAME,
-          Optional
-            .ofNullable(lockStarts.remove(pendingTaskId.getId()))
-            .orElse(System.currentTimeMillis())
-        );
       }
     } catch (Exception e) {
       LOG.error("Exception while polling for tasks to launch", e);
