@@ -1891,6 +1891,7 @@ public class SingularityScheduler {
         }
       }
     );
+    LOG.debug("Added {} task requests to launch queue", taskRequests.size());
   }
 
   private boolean isTooManyInstancesForRequest(

@@ -30,10 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,6 @@ public class SingularityPendingTaskQueueProcessor {
   private static final int PARALLEL_LOCK_WAIT = 15;
   private static final String LOCK_NAME = "pending-task-queue";
 
-  private final LeaderLatch leaderLatch;
   private final SingularityOfferScoring offerScoring;
   private final SingularityMesosOfferManager offerManager;
   private final TaskRequestManager taskRequestManager;
@@ -59,25 +57,23 @@ public class SingularityPendingTaskQueueProcessor {
   private final PriorityManager priorityManager;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
-  private final PriorityBlockingQueue<SingularityPendingTaskId> preLockQueue;
-  private final PriorityBlockingQueue<SingularityPendingTaskId> pendingTaskQueue;
-  private final ExecutorService lockExecutor;
-  private final ExecutorService queueExecutor;
-  private final AtomicBoolean running;
   private final SingularitySchedulerMetrics metrics;
   private final SingularitySchedulerLock lock;
+  private final SingularityMesosSchedulerClient schedulerClient;
+
   private final Map<String, Long> lockStarts;
   private final Set<SingularityPendingTaskId> handled;
-  private final SingularityMesosSchedulerClient schedulerClient;
+  private final PriorityBlockingQueue<SingularityPendingTaskId> preLockQueue;
+  private final ExecutorService taskLaunchExecutor;
+  private final ExecutorService queuePollExecutor;
+  private final AtomicBoolean running;
   private final Resources defaultResources;
   private final Resources defaultCustomExecutorResources;
 
-  private Future<?> queueFuture = null;
   private Future<?> lockFuture = null;
 
   @Inject
   public SingularityPendingTaskQueueProcessor(
-    LeaderLatch leaderLatch,
     SingularityOfferScoring offerScoring,
     SingularityMesosOfferManager offerManager,
     UsageManager usageManager,
@@ -93,7 +89,6 @@ public class SingularityPendingTaskQueueProcessor {
     SingularityMesosTaskBuilder mesosTaskBuilder,
     SingularityTaskSizeOptimizer taskSizeOptimizer
   ) {
-    this.leaderLatch = leaderLatch;
     this.offerScoring = offerScoring;
     this.offerManager = offerManager;
     this.usageManager = usageManager;
@@ -103,14 +98,13 @@ public class SingularityPendingTaskQueueProcessor {
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.priorityManager = priorityManager;
-    this.pendingTaskQueue = new PriorityBlockingQueue<>();
     this.preLockQueue =
       new PriorityBlockingQueue<>(
         11,
         (a, b) -> Doubles.compare(getWeightedPriority(a), getWeightedPriority(b))
       );
-    this.queueExecutor = threadPoolFactory.get("pending-task-queue", 2);
-    this.lockExecutor =
+    this.queuePollExecutor = threadPoolFactory.getSingleThreaded("pending-task-queue");
+    this.taskLaunchExecutor =
       threadPoolFactory.get("pending-task-lock-wait", PARALLEL_LOCK_WAIT);
     this.running = new AtomicBoolean(false);
     this.metrics = metrics;
@@ -137,17 +131,11 @@ public class SingularityPendingTaskQueueProcessor {
   }
 
   public void start() {
-    if (leaderLatch.hasLeadership()) {
-      if (lockFuture != null) {
-        lockFuture.cancel(true);
-      }
-      if (queueFuture != null) {
-        queueFuture.cancel(true);
-      }
-      running.set(true);
-      queueFuture = queueExecutor.submit(this::run);
-      lockFuture = queueExecutor.submit(this::runLockWait);
+    if (lockFuture != null) {
+      lockFuture.cancel(true);
     }
+    running.set(true);
+    lockFuture = queuePollExecutor.submit(this::runLockWait);
   }
 
   public void addPendingTaskIfNotInQueue(SingularityPendingTaskId pendingTask) {
@@ -168,7 +156,7 @@ public class SingularityPendingTaskQueueProcessor {
   // Method only for testing. Need a synchronous way of waiting for task launch in unit tests
   @VisibleForTesting
   public boolean drainHandledTasks() {
-    long timeout = 5000;
+    long timeout = 500;
 
     long start = System.currentTimeMillis();
     while (!handled.isEmpty()) {
@@ -187,17 +175,15 @@ public class SingularityPendingTaskQueueProcessor {
   public void removePendingTask(SingularityPendingTaskId toRemove) {
     synchronized (handled) {
       if (!preLockQueue.remove(toRemove)) {
-        if (!pendingTaskQueue.remove(toRemove)) {
-          LOG.warn("Unable to remove pending task {}", toRemove.getId());
-        }
+        LOG.warn("Unable to remove pending task {}", toRemove.getId());
       }
     }
   }
 
   public void stop() {
     running.set(false);
-    if (queueFuture != null) {
-      queueFuture.cancel(false);
+    if (lockFuture != null) {
+      lockFuture.cancel(false);
     }
   }
 
@@ -207,20 +193,32 @@ public class SingularityPendingTaskQueueProcessor {
       long start = System.currentTimeMillis();
       try {
         if (waitFutures.size() < PARALLEL_LOCK_WAIT) {
-          SingularityPendingTaskId pendingTask = preLockQueue.poll();
+          SingularityPendingTaskId pendingTask = preLockQueue.poll(
+            1000,
+            TimeUnit.MILLISECONDS
+          );
+          if (pendingTask == null) {
+            continue;
+          }
           waitFutures.put(
             pendingTask,
             CompletableFuture.runAsync(
-              () -> waitLockAndEnqueue(start, pendingTask),
-              lockExecutor
+              () -> waitLockAndLaunch(start, pendingTask),
+              taskLaunchExecutor
             )
           );
         } else {
-          Set<SingularityPendingTaskId> keys = waitFutures.keySet();
+          Set<SingularityPendingTaskId> keys = new HashSet<>(waitFutures.keySet());
           for (SingularityPendingTaskId key : keys) {
             if (waitFutures.get(key).isDone()) {
               waitFutures.remove(key);
             }
+          }
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException ie) {
+            LOG.warn("Interrupted waiting between lock queue loops");
+            running.set(false);
           }
         }
       } catch (Exception e) {
@@ -229,21 +227,21 @@ public class SingularityPendingTaskQueueProcessor {
     }
   }
 
-  private void waitLockAndEnqueue(long start, SingularityPendingTaskId pendingTaskId) {
+  private void waitLockAndLaunch(long start, SingularityPendingTaskId pendingTaskId) {
     try {
       lockStarts.put(
         pendingTaskId.getId(),
         lock.lock(pendingTaskId.getRequestId(), LOCK_NAME)
       );
-      LOG.debug(
-        "Got request lock to launch pending task after {}",
+      LOG.trace(
+        "Got request lock to launch pending task {} after {}",
+        pendingTaskId.getId(),
         System.currentTimeMillis() - start
       );
-      synchronized (pendingTaskQueue) {
-        pendingTaskQueue.put(pendingTaskId);
-      }
+      matchAndLaunch(start, pendingTaskId);
     } catch (Exception e) {
       LOG.error("Could not acquire lock for task {}", pendingTaskId, e);
+    } finally {
       lock.unlock(
         pendingTaskId.getRequestId(),
         LOCK_NAME,
@@ -255,10 +253,9 @@ public class SingularityPendingTaskQueueProcessor {
   }
 
   // Everything in this method is run behind a request-level lock and offer lock
-  private void run() {
-    while (running.get()) {
-      long start = System.currentTimeMillis();
-      SingularityPendingTaskId pendingTaskId = pendingTaskQueue.poll();
+  private void matchAndLaunch(long start, SingularityPendingTaskId pendingTaskId) {
+    try {
+      long startLaunch = System.currentTimeMillis();
       try {
         Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(
           pendingTaskId
@@ -274,6 +271,11 @@ public class SingularityPendingTaskQueueProcessor {
           defaultCustomExecutorResources
         );
         List<SingularityOfferHolder> offers = offerManager.checkoutOffers();
+        if (offers.isEmpty()) {
+          preLockQueue.put(toLaunch.getPendingTaskId());
+          return;
+        }
+        LOG.info("Checking {} offers for pending task {}", offers.size(), pendingTaskId);
         SingularityOfferHolder bestOffer = null;
         double maxOfferScore = 0.0;
         for (SingularityOfferHolder offer : offers) {
@@ -306,8 +308,7 @@ public class SingularityPendingTaskQueueProcessor {
           .flatMap(s -> s.getOffers().stream())
           .map(Offer::getId)
           .forEach(offerManager::returnOffer);
-
-        metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
+        //metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
       } catch (Exception e) {
         LOG.error("Error running task launch", e);
       } finally {
@@ -319,6 +320,9 @@ public class SingularityPendingTaskQueueProcessor {
             .orElse(System.currentTimeMillis())
         );
       }
+    } catch (Exception e) {
+      LOG.error("Exception while polling for tasks to launch", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -327,23 +331,22 @@ public class SingularityPendingTaskQueueProcessor {
     SingularityOfferHolder offer
   ) {
     Optional<SingularityAgentUsageWithId> maybeUsage = checkRecalculateAndGetUsage(offer);
-    if (!maybeUsage.isPresent()) {
-      // Update usage async
-      return 0;
-    }
     return offerScoring.score(
       taskRequestHolder,
       offer,
-      new SingularityAgentUsageWithCalculatedScores(
-        maybeUsage.get(),
-        mesosConfiguration.getScoreUsingSystemLoad(),
-        offerScoring.getMaxProbableUsageForAgent(
-          offer.getSanitizedHost(),
-          defaultResources
-        ),
-        mesosConfiguration.getLoad5OverloadedThreshold(),
-        mesosConfiguration.getLoad1OverloadedThreshold(),
-        maybeUsage.get().getTimestamp()
+      maybeUsage.map(
+        u ->
+          new SingularityAgentUsageWithCalculatedScores(
+            u,
+            mesosConfiguration.getScoreUsingSystemLoad(),
+            offerScoring.getMaxProbableUsageForAgent(
+              offer.getSanitizedHost(),
+              defaultResources
+            ),
+            mesosConfiguration.getLoad5OverloadedThreshold(),
+            mesosConfiguration.getLoad1OverloadedThreshold(),
+            maybeUsage.get().getTimestamp()
+          )
       )
     );
   }
@@ -412,12 +415,6 @@ public class SingularityPendingTaskQueueProcessor {
       taskHolder.getTask().getTaskId(),
       offerHolder.getAgentId(),
       offerHolder.getHostname()
-    );
-    LOG.trace(
-      "Task {} offer resource usage: {} / {}",
-      taskHolder.getTask().getTaskId(),
-      taskHolder.getMesosTask().getResourcesList(),
-      offerHolder.getCurrentResources()
     );
 
     taskManager.createTaskAndDeletePendingTask(zkTask);

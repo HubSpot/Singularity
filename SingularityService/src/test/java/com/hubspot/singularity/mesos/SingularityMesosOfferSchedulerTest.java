@@ -110,7 +110,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.5,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5),
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -125,7 +125,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       1,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 0, 10, 0, 0, 10, 0),
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -135,7 +135,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.85,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0),
+        Optional.of(getUsage(0, 10, 0, 5, 10, 5, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -143,7 +143,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.76,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0),
+        Optional.of(getUsage(0, 10, 0, 8, 10, 8, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -153,7 +153,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.75,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0),
+        Optional.of(getUsage(5, 10, 5, 0, 10, 0, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -161,7 +161,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.60,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0),
+        Optional.of(getUsage(8, 10, 8, 0, 10, 0, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -171,7 +171,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.90,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5),
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -179,7 +179,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.84,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8),
+        Optional.of(getUsage(0, 10, 0, 0, 10, 0, 8, 10, 8)),
         AgentMatchState.OK
       )
     );
@@ -189,7 +189,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.60,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0),
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -197,7 +197,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.36,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0),
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 0, 10, 0)),
         AgentMatchState.OK
       )
     );
@@ -207,7 +207,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.65,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 0, 10, 0, 5, 10, 5),
+        Optional.of(getUsage(5, 10, 5, 0, 10, 0, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -215,7 +215,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.44,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 0, 10, 0, 8, 10, 8),
+        Optional.of(getUsage(8, 10, 8, 0, 10, 0, 8, 10, 8)),
         AgentMatchState.OK
       )
     );
@@ -225,7 +225,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.75,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 5, 10, 5, 5, 10, 5),
+        Optional.of(getUsage(0, 10, 0, 5, 10, 5, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -233,7 +233,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.60,
       offerScoring.score(
         AGENT_ID,
-        getUsage(0, 10, 0, 8, 10, 8, 8, 10, 8),
+        Optional.of(getUsage(0, 10, 0, 8, 10, 8, 8, 10, 8)),
         AgentMatchState.OK
       )
     );
@@ -243,7 +243,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.5,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5),
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -251,7 +251,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.2,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8),
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
         AgentMatchState.OK
       )
     );
@@ -263,7 +263,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.50,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5),
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
         AgentMatchState.OK
       )
     );
@@ -271,7 +271,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.75,
       offerScoring.score(
         AGENT_ID,
-        getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5),
+        Optional.of(getUsage(5, 10, 5, 5, 10, 5, 5, 10, 5)),
         AgentMatchState.PREFERRED_AGENT
       )
     );
@@ -280,7 +280,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.20,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8),
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
         AgentMatchState.OK
       )
     );
@@ -288,7 +288,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0.30,
       offerScoring.score(
         AGENT_ID,
-        getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8),
+        Optional.of(getUsage(8, 10, 8, 8, 10, 8, 8, 10, 8)),
         AgentMatchState.PREFERRED_AGENT
       )
     );

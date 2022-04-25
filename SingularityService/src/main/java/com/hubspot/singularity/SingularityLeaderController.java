@@ -89,6 +89,7 @@ public class SingularityLeaderController
     scheduler.notifyStopping();
     statePoller.finish();
     TIMER.cancel();
+    pendingTaskQueueProcessor.stop();
   }
 
   @Override
@@ -165,8 +166,8 @@ public class SingularityLeaderController
         if (!isTestMode()) {
           statePoller.wake();
           scheduler.start();
-          pendingTaskQueueProcessor.start();
         }
+        pendingTaskQueueProcessor.start();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
         exceptionNotifier.notify(
@@ -232,6 +233,9 @@ public class SingularityLeaderController
           },
           5000
         );
+      } else {
+        // This is still running in test mode
+        pendingTaskQueueProcessor.stop();
       }
     } finally {
       stateHandlerLock.unlock();

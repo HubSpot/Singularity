@@ -13,6 +13,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 import com.ning.http.client.AsyncHttpClient;

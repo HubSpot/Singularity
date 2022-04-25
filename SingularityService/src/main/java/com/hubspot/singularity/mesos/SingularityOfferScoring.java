@@ -79,7 +79,7 @@ public class SingularityOfferScoring {
   public double score(
     SingularityTaskRequestHolder taskRequestHolder,
     SingularityOfferHolder offerHolder,
-    SingularityAgentUsageWithCalculatedScores agentUsage
+    Optional<SingularityAgentUsageWithCalculatedScores> maybeUsage
   ) {
     Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations();
     SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
@@ -97,17 +97,18 @@ public class SingularityOfferScoring {
     }
     if (
       mesosConfiguration.isOmitOverloadedHosts() &&
-      agentUsage.isCpuOverloaded(estimatedCpusToAdd)
+      maybeUsage.isPresent() &&
+      maybeUsage.get().isCpuOverloaded(estimatedCpusToAdd)
     ) {
       LOG.debug(
         "Agent {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}, already committed cpus: {}), ignoring offer",
         offerHolder.getHostname(),
-        agentUsage.getAgentUsage().getSystemLoad5Min(),
-        agentUsage.getAgentUsage().getSystemCpusTotal(),
-        agentUsage.getAgentUsage().getSystemLoad1Min(),
-        agentUsage.getAgentUsage().getSystemCpusTotal(),
+        maybeUsage.get().getAgentUsage().getSystemLoad5Min(),
+        maybeUsage.get().getAgentUsage().getSystemCpusTotal(),
+        maybeUsage.get().getAgentUsage().getSystemLoad1Min(),
+        maybeUsage.get().getAgentUsage().getSystemCpusTotal(),
         estimatedCpusToAdd,
-        agentUsage.getEstimatedAddedCpusUsage()
+        maybeUsage.get().getEstimatedAddedCpusUsage()
       );
       return 0;
     }
@@ -142,7 +143,7 @@ public class SingularityOfferScoring {
     );
 
     if (agentMatchState.isMatchAllowed()) {
-      return score(offerHolder.getHostname(), agentUsage, agentMatchState);
+      return score(offerHolder.getHostname(), maybeUsage, agentMatchState);
     } else if (LOG.isTraceEnabled()) {
       LOG.trace(
         "Ignoring offer on host {} with roles {} on {} for task {}; matched resources: true, agent match state: {}",
@@ -179,18 +180,18 @@ public class SingularityOfferScoring {
   @VisibleForTesting
   double score(
     String hostname,
-    SingularityAgentUsageWithCalculatedScores agentUsage,
+    Optional<SingularityAgentUsageWithCalculatedScores> maybeUsage,
     AgentMatchState agentMatchState
   ) {
-    if (agentUsage == null || agentUsage.isMissingUsageData()) {
+    if (!maybeUsage.isPresent() || maybeUsage.get().isMissingUsageData()) {
       if (mesosConfiguration.isOmitForMissingUsageData()) {
-        LOG.info("Skipping agent {} with missing usage data ({})", hostname, agentUsage);
+        LOG.info("Skipping agent {} with missing usage data ({})", hostname, maybeUsage);
         return 0.0;
       } else {
         LOG.info(
           "Agent {} has missing usage data ({}). Will default to {}",
           hostname,
-          agentUsage,
+          maybeUsage,
           0.5
         );
         return 0.5;
@@ -198,12 +199,12 @@ public class SingularityOfferScoring {
     }
 
     double calculatedScore = calculateScore(
-      1 - agentUsage.getMemAllocatedScore(),
-      agentUsage.getMemInUseScore(),
-      1 - agentUsage.getCpusAllocatedScore(),
-      agentUsage.getCpusInUseScore(),
-      1 - agentUsage.getDiskAllocatedScore(),
-      agentUsage.getDiskInUseScore(),
+      1 - maybeUsage.get().getMemAllocatedScore(),
+      maybeUsage.get().getMemInUseScore(),
+      1 - maybeUsage.get().getCpusAllocatedScore(),
+      maybeUsage.get().getCpusInUseScore(),
+      1 - maybeUsage.get().getDiskAllocatedScore(),
+      maybeUsage.get().getDiskInUseScore(),
       mesosConfiguration.getInUseResourceWeight(),
       mesosConfiguration.getAllocatedResourceWeight()
     );
