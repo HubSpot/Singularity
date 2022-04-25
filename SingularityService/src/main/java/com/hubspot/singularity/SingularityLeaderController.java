@@ -7,8 +7,9 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -44,9 +45,10 @@ public class SingularityLeaderController
   private final long saveStateEveryMs;
   private final StatePoller statePoller;
   private final SingularityMesosScheduler scheduler;
-  private final OfferCache offerCache;
+  private final SingularityMesosOfferManager offerCache;
   private final SingularityConfiguration configuration;
   private final ReentrantLock stateHandlerLock;
+  private final SingularityPendingTaskQueueProcessor pendingTaskQueueProcessor;
 
   private volatile TimerTask lostConnectionStateChecker;
   private volatile boolean master;
@@ -59,7 +61,8 @@ public class SingularityLeaderController
     SingularityExceptionNotifier exceptionNotifier,
     @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
     SingularityMesosScheduler scheduler,
-    OfferCache offerCache
+    SingularityMesosOfferManager offerCache,
+    SingularityPendingTaskQueueProcessor pendingTaskQueueProcessor
   ) {
     this.stateManager = stateManager;
     this.abort = abort;
@@ -72,6 +75,7 @@ public class SingularityLeaderController
     this.scheduler = scheduler;
     this.configuration = configuration;
     this.offerCache = offerCache;
+    this.pendingTaskQueueProcessor = pendingTaskQueueProcessor;
 
     this.master = false;
     this.stateHandlerLock = new ReentrantLock();
@@ -161,6 +165,7 @@ public class SingularityLeaderController
         if (!isTestMode()) {
           statePoller.wake();
           scheduler.start();
+          pendingTaskQueueProcessor.start();
         }
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
@@ -218,6 +223,7 @@ public class SingularityLeaderController
                 } else {
                   LOG.info("No longer the leader, stopping scheduler actions");
                   scheduler.notLeader();
+                  pendingTaskQueueProcessor.stop();
                 }
               } finally {
                 stateHandlerLock.unlock();

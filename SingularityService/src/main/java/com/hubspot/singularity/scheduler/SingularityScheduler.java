@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -58,6 +57,8 @@ import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
+import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import java.text.ParseException;
@@ -109,6 +110,8 @@ public class SingularityScheduler {
   private final ExecutorService schedulerExecutorService;
   private final SingularityMesosSchedulerClient mesosSchedulerClient;
   private final Meter unscheduledTasksMetric;
+  private final SingularityPendingTaskQueueProcessor taskQueueProcessor;
+  private final SingularityMesosTaskPrioritizer taskPrioritizer;
 
   private final Map<SingularityTaskId, Long> requestedReconciles;
 
@@ -128,6 +131,8 @@ public class SingularityScheduler {
     SingularitySchedulerLock lock,
     SingularityManagedThreadPoolFactory threadPoolFactory,
     SingularityMesosSchedulerClient mesosSchedulerClient,
+    SingularityPendingTaskQueueProcessor taskQueueProcessor,
+    SingularityMesosTaskPrioritizer taskPrioritizer,
     @Named(SingularityMainModule.UNSCHEDULED_TASKS_METER) Meter unscheduledTasksMetric
   ) {
     this.taskRequestManager = taskRequestManager;
@@ -145,6 +150,8 @@ public class SingularityScheduler {
     this.schedulerExecutorService =
       threadPoolFactory.get("scheduler", configuration.getCoreThreadpoolSize());
     this.mesosSchedulerClient = mesosSchedulerClient;
+    this.taskQueueProcessor = taskQueueProcessor;
+    this.taskPrioritizer = taskPrioritizer;
     this.requestedReconciles = new HashMap<>();
     this.unscheduledTasksMetric = unscheduledTasksMetric;
   }
@@ -199,7 +206,6 @@ public class SingularityScheduler {
     return map;
   }
 
-  @Timed
   public void checkForDecomissions() {
     final long start = System.currentTimeMillis();
 
@@ -343,7 +349,6 @@ public class SingularityScheduler {
     }
   }
 
-  @Timed
   public void drainPendingQueue() {
     final long start = System.currentTimeMillis();
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(
@@ -402,6 +407,8 @@ public class SingularityScheduler {
       heldForScheduledActiveTask.get(),
       JavaUtils.duration(start)
     );
+
+    managePendingTasksInQueue();
   }
 
   private void handlePendingRequestsForDeployKeySafe(
@@ -642,7 +649,6 @@ public class SingularityScheduler {
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
 
-  @Timed
   public List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
@@ -1866,5 +1872,56 @@ public class SingularityScheduler {
       .filter(t -> t.getStartedAt() < now - TimeUnit.MINUTES.toMillis(15))
       .collect(Collectors.toSet());
     toRemove.forEach(requestedReconciles::remove);
+  }
+
+  public void managePendingTasksInQueue() {
+    List<SingularityTaskRequest> taskRequests = getDueTasks();
+    taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
+    taskRequests.forEach(
+      dueTask -> {
+        if (
+          !isTooManyInstancesForRequest(
+            dueTask,
+            taskManager.getActiveTaskIdsForRequest(dueTask.getRequest().getId())
+          )
+        ) {
+          taskQueueProcessor.addPendingTaskIfNotInQueue(
+            dueTask.getPendingTask().getPendingTaskId()
+          );
+        }
+      }
+    );
+  }
+
+  private boolean isTooManyInstancesForRequest(
+    SingularityTaskRequest taskRequest,
+    List<SingularityTaskId> activeTaskIdsForRequest
+  ) {
+    if (taskRequest.getRequest().getRequestType() == RequestType.ON_DEMAND) {
+      int maxActiveOnDemandTasks = taskRequest
+        .getRequest()
+        .getInstances()
+        .orElse(configuration.getMaxActiveOnDemandTasksPerRequest());
+      if (maxActiveOnDemandTasks > 0) {
+        int activeTasksForRequest = activeTaskIdsForRequest.size();
+        long alreadyPending = taskQueueProcessor
+          .getHandledTasks()
+          .stream()
+          .filter(p -> p.getRequestId().equals(taskRequest.getRequest().getId()))
+          .count();
+        LOG.debug(
+          "Running {} instances for request {}, already pending {}. Max is {}",
+          activeTasksForRequest,
+          taskRequest.getRequest().getId(),
+          alreadyPending,
+          maxActiveOnDemandTasks
+        );
+        if (activeTasksForRequest + alreadyPending >= maxActiveOnDemandTasks) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }

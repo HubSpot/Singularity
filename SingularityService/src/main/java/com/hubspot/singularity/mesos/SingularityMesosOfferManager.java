@@ -10,34 +10,41 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager.CachedOffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class SingularityOfferCache
-  implements OfferCache, RemovalListener<String, CachedOffer> {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
+public class SingularityMesosOfferManager
+  implements RemovalListener<OfferID, CachedOffer> {
+  private static final Logger LOG = LoggerFactory.getLogger(
+    SingularityMesosOfferManager.class
+  );
 
-  private final Cache<String, CachedOffer> offerCache;
+  private final Cache<OfferID, CachedOffer> offerCache;
   private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularityConfiguration configuration;
+  private final SingularityAgentAndRackHelper agentAndRackHelper;
   private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
-  public SingularityOfferCache(
+  public SingularityMesosOfferManager(
     SingularityConfiguration configuration,
-    SingularityMesosSchedulerClient schedulerClient
+    SingularityMesosSchedulerClient schedulerClient,
+    SingularityAgentAndRackHelper agentAndRackHelper
   ) {
     this.configuration = configuration;
     this.schedulerClient = schedulerClient;
+    this.agentAndRackHelper = agentAndRackHelper;
 
     offerCache =
       CacheBuilder
@@ -51,7 +58,6 @@ public class SingularityOfferCache
         .build();
   }
 
-  @Override
   public void cacheOffer(long timestamp, Offer offer) {
     if (!useOfferCache.get()) {
       schedulerClient.decline(Collections.singletonList(offer.getId()));
@@ -63,11 +69,10 @@ public class SingularityOfferCache
       JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis())
     );
 
-    offerCache.put(offer.getId().getValue(), new CachedOffer(offer));
+    offerCache.put(offer.getId(), new CachedOffer(offer));
   }
 
-  @Override
-  public void onRemoval(RemovalNotification<String, CachedOffer> notification) {
+  public void onRemoval(RemovalNotification<OfferID, CachedOffer> notification) {
     if (notification.getCause() == RemovalCause.EXPLICIT) {
       return;
     }
@@ -80,16 +85,15 @@ public class SingularityOfferCache
 
     synchronized (offerCache) {
       if (notification.getValue().offerState == OfferState.AVAILABLE) {
-        declineOffer(notification.getValue());
+        declineOffer(notification.getKey());
       } else {
         notification.getValue().expire();
       }
     }
   }
 
-  @Override
   public void rescindOffer(OfferID offerId) {
-    CachedOffer maybeCached = offerCache.getIfPresent(offerId.getValue());
+    CachedOffer maybeCached = offerCache.getIfPresent(offerId);
     if (maybeCached != null) {
       LOG.info(
         "Offer {} on {} rescinded",
@@ -99,25 +103,18 @@ public class SingularityOfferCache
     } else {
       LOG.info("Offer {} rescinded (not in cache)", offerId.getValue());
     }
-    offerCache.invalidate(offerId.getValue());
+    offerCache.invalidate(offerId);
   }
 
-  @Override
   public void invalidateAll() {
     offerCache.invalidateAll();
   }
 
-  @Override
-  public void useOffer(CachedOffer cachedOffer) {
-    offerCache.invalidate(cachedOffer.offerId);
+  public void useOffer(OfferID offerId) {
+    offerCache.invalidate(offerId);
   }
 
-  @Override
-  public List<CachedOffer> checkoutOffers() {
-    if (!useOfferCache.get()) {
-      return Collections.emptyList();
-    }
-
+  public List<SingularityOfferHolder> checkoutOffers() {
     // Force Guava cache to perform maintenance operations and reach a consistent state.
     offerCache.cleanUp();
 
@@ -126,10 +123,30 @@ public class SingularityOfferCache
       cachedOffer.checkOut();
       offers.add(cachedOffer);
     }
-    return offers;
+    return offers
+      .stream()
+      .map(c -> c.offer)
+      .collect(Collectors.groupingBy(o -> o.getAgentId().getValue()))
+      .entrySet()
+      .stream()
+      .filter(e -> e.getValue().size() > 0)
+      .map(
+        e -> {
+          List<Offer> offersList = e.getValue();
+          String agentId = e.getKey();
+          return new SingularityOfferHolder(
+            offersList,
+            agentAndRackHelper.getRackIdOrDefault(offersList.get(0)),
+            agentId,
+            offersList.get(0).getHostname(),
+            agentAndRackHelper.getTextAttributes(offersList.get(0)),
+            agentAndRackHelper.getReservedAgentAttributes(offersList.get(0))
+          );
+        }
+      )
+      .collect(Collectors.toList());
   }
 
-  @Override
   public List<Offer> peekOffers() {
     if (!useOfferCache.get()) {
       return Collections.emptyList();
@@ -141,39 +158,33 @@ public class SingularityOfferCache
     return offers;
   }
 
-  @Override
-  public void returnOffer(CachedOffer cachedOffer) {
+  public void returnOffer(OfferID offerId) {
     synchronized (offerCache) {
+      CachedOffer cachedOffer = offerCache.getIfPresent(offerId);
+      if (cachedOffer == null) {
+        LOG.error("No cached offer {} in memory", offerId.getValue());
+        return;
+      }
       if (cachedOffer.offerState == OfferState.EXPIRED) {
-        declineOffer(cachedOffer);
+        declineOffer(offerId);
       } else {
         cachedOffer.checkIn();
       }
     }
   }
 
-  @Override
-  public void disableOfferCache() {
-    useOfferCache.set(false);
-  }
-
-  @Override
-  public void enableOfferCache() {
-    useOfferCache.set(true);
-  }
-
-  private void declineOffer(CachedOffer offer) {
+  private void declineOffer(OfferID offerId) {
     if (!schedulerClient.isRunning()) {
       LOG.error(
         "No active scheduler driver present to handle expired offer {} - this should never happen",
-        offer.offerId
+        offerId.getValue()
       );
       return;
     }
 
-    schedulerClient.decline(Collections.singletonList(offer.offer.getId()));
+    schedulerClient.decline(Collections.singletonList(offerId));
 
-    LOG.debug("Declined cached offer {}", offer.offerId);
+    LOG.debug("Declined cached offer {}", offerId.getValue());
   }
 
   private enum OfferState {

@@ -127,7 +127,6 @@ public class SingularityMesosTaskBuilderTest {
     offerHolder =
       new SingularityOfferHolder(
         Collections.singletonList(offer),
-        1,
         "DEFAULT",
         offer.getAgentId().getValue(),
         offer.getHostname(),

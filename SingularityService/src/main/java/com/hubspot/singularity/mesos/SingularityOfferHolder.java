@@ -28,7 +28,6 @@ public class SingularityOfferHolder {
   );
 
   private final List<Protos.Offer> offers;
-  private final List<SingularityMesosTaskHolder> acceptedTasks;
   private List<Resource> currentResources;
   private Set<String> roles;
 
@@ -41,9 +40,10 @@ public class SingularityOfferHolder {
   private final Map<String, String> textAttributes;
   private final Map<String, String> reservedAgentAttributes;
 
+  private SingularityMesosTaskHolder acceptedTask;
+
   public SingularityOfferHolder(
     List<Protos.Offer> offers,
-    int taskSizeHint,
     String rackId,
     String agentId,
     String hostname,
@@ -55,7 +55,7 @@ public class SingularityOfferHolder {
     this.hostname = hostname;
     this.offers = offers;
     this.roles = MesosUtils.getRoles(offers.get(0));
-    this.acceptedTasks = Lists.newArrayListWithExpectedSize(taskSizeHint);
+    this.acceptedTask = null;
     this.currentResources =
       offers.size() > 1
         ? MesosUtils.combineResources(
@@ -110,7 +110,7 @@ public class SingularityOfferHolder {
       taskHolder.getTask().getTaskId(),
       offers.stream().map(Offer::getId).collect(Collectors.toList())
     );
-    acceptedTasks.add(taskHolder);
+    acceptedTask = taskHolder;
 
     // subtract task resources from offer
     subtractResources(taskHolder.getMesosTask().getResourcesList());
@@ -131,25 +131,16 @@ public class SingularityOfferHolder {
   public List<Offer> launchTasksAndGetUnusedOffers(
     SingularityMesosSchedulerClient schedulerClient
   ) {
-    final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
-    final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(
-      acceptedTasks.size()
+    LOG.debug(
+      "Launching {} with possible offers {}",
+      acceptedTask.getTask().getTaskId(),
+      MesosUtils.formatOfferIdsForLog(offers)
     );
-
-    for (SingularityMesosTaskHolder taskHolder : acceptedTasks) {
-      taskIds.add(taskHolder.getTask().getTaskId());
-      toLaunch.add(taskHolder.getMesosTask());
-      LOG.debug(
-        "Launching {} with possible offers {}",
-        taskHolder.getTask().getTaskId(),
-        MesosUtils.formatOfferIdsForLog(offers)
-      );
-      LOG.trace(
-        "Launching {} mesos task: {}",
-        taskHolder.getTask().getTaskId(),
-        MesosUtils.formatForLogging(taskHolder.getMesosTask())
-      );
-    }
+    LOG.trace(
+      "Launching {} mesos task: {}",
+      acceptedTask.getTask().getTaskId(),
+      MesosUtils.formatForLogging(acceptedTask.getMesosTask())
+    );
 
     // At this point, `currentResources` contains a list of unused resources, because we subtracted out the required resources of every task we accepted.
     // Let's try and reclaim offers by trying to pull each offer's list of resources out of the combined pool of leftover resources.
@@ -221,23 +212,25 @@ public class SingularityOfferHolder {
         Operation
           .newBuilder()
           .setType(Type.LAUNCH)
-          .setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch).build())
+          .setLaunch(
+            Launch.newBuilder().addTaskInfos(acceptedTask.getMesosTask()).build()
+          )
           .build()
       )
     );
 
     LOG.debug(
-      "Launched tasks with offers {}, unused: {}",
+      "Launched task {} with offers {}, unused: {}",
+      acceptedTask.getTask().getTaskId(),
       MesosUtils.formatOfferIdsForLog(neededOffers),
       MesosUtils.formatOfferIdsForLog(leftoverOffers)
     );
 
-    LOG.info("{} tasks ({}) launched", taskIds.size(), taskIds);
     return leftoverOffers;
   }
 
-  public List<SingularityMesosTaskHolder> getAcceptedTasks() {
-    return acceptedTasks;
+  public SingularityMesosTaskHolder getAcceptedTask() {
+    return acceptedTask;
   }
 
   List<Resource> getCurrentResources() {
@@ -285,8 +278,8 @@ public class SingularityOfferHolder {
       "SingularityOfferHolder{" +
       "offers=" +
       offers +
-      ", acceptedTasks=" +
-      acceptedTasks +
+      ", acceptedTask=" +
+      acceptedTask +
       ", currentResources=" +
       currentResources +
       ", roles=" +

@@ -32,6 +32,50 @@ public class TaskRequestManager {
     this.requestManager = requestManager;
   }
 
+  public SingularityTaskRequest getTaskRequest(SingularityPendingTask task) {
+    Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(
+      task.getPendingTaskId().getRequestId()
+    );
+    if (!maybeRequest.isPresent()) {
+      LOG.warn("Could not find request for {}", task.getPendingTaskId());
+      return null;
+    }
+    SingularityRequestWithState request = maybeRequest.get();
+    if (!request.getState().isRunnable()) {
+      LOG.warn("Request was in state {} for pending task {}", request.getState(), task);
+      return null;
+    }
+
+    Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(
+      task.getPendingTaskId().getRequestId(),
+      task.getPendingTaskId().getDeployId()
+    );
+    if (!maybeDeploy.isPresent()) {
+      LOG.warn("Could not find deploy for {}", task.getPendingTaskId());
+      return null;
+    }
+    SingularityDeploy deploy = maybeDeploy.get();
+
+    Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(
+      request.getRequest().getId()
+    );
+
+    Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() &&
+      maybePendingDeploy
+        .get()
+        .getDeployMarker()
+        .getDeployId()
+        .equals(task.getPendingTaskId().getDeployId())
+      ? maybePendingDeploy.get().getUpdatedRequest()
+      : Optional.<SingularityRequest>empty();
+
+    return new SingularityTaskRequest(
+      updatedRequest.orElse(request.getRequest()),
+      deploy,
+      task
+    );
+  }
+
   public List<SingularityTaskRequest> getTaskRequests(
     List<SingularityPendingTask> tasks
   ) {

@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -101,7 +102,7 @@ public class SingularityAgentAndRackManager {
     SingularityOfferHolder offerHolder,
     SingularityTaskRequest taskRequest,
     List<SingularityTaskId> activeTaskIdsForRequest,
-    boolean isPreemptibleTask,
+    Supplier<Boolean> isPreemptibleTask,
     RequestUtilization requestUtilization
   ) {
     final String host = offerHolder.getHostname();
@@ -419,7 +420,7 @@ public class SingularityAgentAndRackManager {
   private boolean isAttributesMatch(
     SingularityOfferHolder offer,
     SingularityTaskRequest taskRequest,
-    boolean isPreemptibleTask
+    Supplier<Boolean> isPreemptibleTask
   ) {
     final Map<String, String> requiredAttributes = getRequiredAttributes(taskRequest);
     final Map<String, String> allowedAttributes = getAllowedAttributes(taskRequest);
@@ -461,7 +462,7 @@ public class SingularityAgentAndRackManager {
           offer.getTextAttributes(),
           configuration.getPreemptibleTasksOnlyMachineAttributes()
         ) &&
-        !isPreemptibleTask
+        !isPreemptibleTask.get()
       ) {
         LOG.debug("Host {} is reserved for preemptible tasks", offer.getHostname());
         return false;

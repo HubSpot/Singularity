@@ -4,7 +4,7 @@ import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularityAgentUsage;
 
 class SingularityAgentUsageWithCalculatedScores {
-  private final SingularityAgentUsage slaveUsage;
+  private final SingularityAgentUsage agentUsage;
   private final MachineLoadMetric systemLoadMetric;
   private final MaxProbableUsage maxProbableTaskUsage;
   private boolean missingUsageData;
@@ -29,17 +29,17 @@ class SingularityAgentUsageWithCalculatedScores {
   private final long timestamp;
 
   SingularityAgentUsageWithCalculatedScores(
-    SingularityAgentUsage slaveUsage,
+    SingularityAgentUsage agentUsage,
     MachineLoadMetric systemLoadMetric,
     MaxProbableUsage maxProbableTaskUsage,
     double load5Threshold,
     double load1Threshold,
     long timestamp
   ) {
-    this.slaveUsage = slaveUsage;
+    this.agentUsage = agentUsage;
     this.systemLoadMetric = systemLoadMetric;
     this.maxProbableTaskUsage = maxProbableTaskUsage;
-    if (missingUsageData(slaveUsage)) {
+    if (missingUsageData(agentUsage)) {
       this.missingUsageData = true;
       setScores(0, 0, 0, 0, 0, 0);
     } else {
@@ -55,16 +55,16 @@ class SingularityAgentUsageWithCalculatedScores {
     return (
       (
         (
-          slaveUsage.getSystemLoad5Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
+          agentUsage.getSystemLoad5Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
         ) /
-        slaveUsage.getSystemCpusTotal()
+        agentUsage.getSystemCpusTotal()
       ) >
       load5Threshold ||
       (
         (
-          slaveUsage.getSystemLoad1Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
+          agentUsage.getSystemLoad1Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd
         ) /
-        slaveUsage.getSystemCpusTotal()
+        agentUsage.getSystemCpusTotal()
       ) >
       load1Threshold
     );
@@ -86,35 +86,35 @@ class SingularityAgentUsageWithCalculatedScores {
     this.diskInUseScore = diskInUseScore;
   }
 
-  private boolean missingUsageData(SingularityAgentUsage slaveUsage) {
+  private boolean missingUsageData(SingularityAgentUsage agentUsage) {
     return (
-      !slaveUsage.getCpusTotal().isPresent() ||
-      !slaveUsage.getMemoryMbTotal().isPresent() ||
-      !slaveUsage.getDiskMbTotal().isPresent()
+      !agentUsage.getCpusTotal().isPresent() ||
+      !agentUsage.getMemoryMbTotal().isPresent() ||
+      !agentUsage.getDiskMbTotal().isPresent()
     );
   }
 
   void recalculateScores() {
     setScores(
-      (slaveUsage.getCpusReserved() + estimatedAddedCpusUsage) /
-      slaveUsage.getCpusTotal().get(),
+      (agentUsage.getCpusReserved() + estimatedAddedCpusUsage) /
+      agentUsage.getCpusTotal().get(),
       (
-        (slaveUsage.getMemoryMbReserved() * SingularityAgentUsage.BYTES_PER_MEGABYTE) +
+        (agentUsage.getMemoryMbReserved() * SingularityAgentUsage.BYTES_PER_MEGABYTE) +
         estimatedAddedMemoryBytesUsage
       ) /
-      slaveUsage.getMemoryBytesTotal().get(),
+      agentUsage.getMemoryBytesTotal().get(),
       (
-        (slaveUsage.getDiskMbReserved() * SingularityAgentUsage.BYTES_PER_MEGABYTE) +
+        (agentUsage.getDiskMbReserved() * SingularityAgentUsage.BYTES_PER_MEGABYTE) +
         estimatedAddedDiskBytesUsage
       ) /
-      slaveUsage.getDiskBytesTotal().get(),
+      agentUsage.getDiskBytesTotal().get(),
       Math.max(
         0,
-        1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())
+        1 - (getMaxProbableCpuWithEstimatedUsage() / agentUsage.getSystemCpusTotal())
       ),
       1 -
-      (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes()),
-      1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getDiskTotal())
+      (getMaxProbableMemBytesWithEstimatedUsage() / agentUsage.getSystemMemTotalBytes()),
+      1 - (getMaxProbableDiskBytesWithEstimatedUsage() / agentUsage.getDiskTotal())
     );
   }
 
@@ -128,7 +128,7 @@ class SingularityAgentUsageWithCalculatedScores {
   private double getMaxProbableMemBytesWithEstimatedUsage() {
     return (
       Math.max(
-        slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes(),
+        agentUsage.getSystemMemTotalBytes() - agentUsage.getSystemMemFreeBytes(),
         maxProbableTaskUsage.getMemBytes()
       ) +
       estimatedAddedMemoryBytesUsage
@@ -137,7 +137,7 @@ class SingularityAgentUsageWithCalculatedScores {
 
   private double getMaxProbableDiskBytesWithEstimatedUsage() {
     return (
-      Math.max(slaveUsage.getDiskUsed(), maxProbableTaskUsage.getDiskBytes()) +
+      Math.max(agentUsage.getDiskUsed(), maxProbableTaskUsage.getDiskBytes()) +
       estimatedAddedDiskBytesUsage
     );
   }
@@ -147,7 +147,7 @@ class SingularityAgentUsageWithCalculatedScores {
   }
 
   SingularityAgentUsage getAgentUsage() {
-    return slaveUsage;
+    return agentUsage;
   }
 
   double getCpusAllocatedScore() {
@@ -205,12 +205,12 @@ class SingularityAgentUsageWithCalculatedScores {
   private double getSystemLoadMetric() {
     switch (systemLoadMetric) {
       case LOAD_1:
-        return slaveUsage.getSystemLoad1Min();
+        return agentUsage.getSystemLoad1Min();
       case LOAD_15:
-        return slaveUsage.getSystemLoad15Min();
+        return agentUsage.getSystemLoad15Min();
       case LOAD_5:
       default:
-        return slaveUsage.getSystemLoad5Min();
+        return agentUsage.getSystemLoad5Min();
     }
   }
 
@@ -243,7 +243,7 @@ class SingularityAgentUsageWithCalculatedScores {
     return (
       "SingularityAgentUsageWithCalculatedScores{" +
       "slaveUsage=" +
-      slaveUsage +
+      agentUsage +
       ", missingUsageData=" +
       missingUsageData +
       ", cpusAllocatedScore=" +

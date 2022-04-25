@@ -17,7 +17,6 @@ public class SingularitySchedulerLock {
   );
 
   private final ReentrantLock stateLock;
-  private final ReentrantLock offersLock;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
   private final TaskLagGuardrail taskLag;
 
@@ -25,7 +24,6 @@ public class SingularitySchedulerLock {
   public SingularitySchedulerLock(TaskLagGuardrail taskLag) {
     this.taskLag = taskLag;
     this.stateLock = new ReentrantLock();
-    this.offersLock = new ReentrantLock();
     this.requestLocks = new ConcurrentHashMap<>();
   }
 
@@ -44,45 +42,6 @@ public class SingularitySchedulerLock {
       JavaUtils.duration(start)
     );
     return System.currentTimeMillis();
-  }
-
-  /** Returns start time of lock if successful, -1 otherwise. */
-  private long tryLock(String requestId, String name, long timeout, TimeUnit timeunit) {
-    final long start = System.currentTimeMillis();
-    try {
-      LOG.trace("{} - TryLocking {}", name, requestId);
-      ReentrantLock lock = requestLocks.computeIfAbsent(
-        requestId,
-        r -> new ReentrantLock()
-      );
-      boolean locked = lock.tryLock(timeout, timeunit);
-      if (locked) {
-        LOG.trace(
-          "{} - Acquired lock on {} ({})",
-          name,
-          requestId,
-          JavaUtils.duration(start)
-        );
-        return start;
-      } else {
-        LOG.info(
-          "{} - Failed to acquire lock on {} ({})",
-          name,
-          requestId,
-          JavaUtils.duration(start)
-        );
-        return -1;
-      }
-    } catch (InterruptedException e) {
-      LOG.info(
-        "{} - Interrupted trying to acquire lock on {} ({})",
-        name,
-        requestId,
-        JavaUtils.duration(start)
-      );
-      Thread.currentThread().interrupt();
-      return -1;
-    }
   }
 
   public void unlock(String requestId, String name, long start) {
@@ -139,23 +98,6 @@ public class SingularitySchedulerLock {
     }
   }
 
-  public void tryRunWithRequestLock(
-    Runnable function,
-    String requestId,
-    String name,
-    long timeout,
-    TimeUnit timeunit
-  ) {
-    long start = tryLock(requestId, name, timeout, timeunit);
-    if (start > 0) {
-      try {
-        function.run();
-      } finally {
-        unlock(requestId, name, start);
-      }
-    }
-  }
-
   public <T> T runWithRequestLockAndReturn(
     Callable<T> function,
     String requestId,
@@ -191,56 +133,6 @@ public class SingularitySchedulerLock {
   private void unlockState(String name, long start) {
     LOG.info("{} - Unlocking state lock ({})", name, JavaUtils.duration(start));
     stateLock.unlock();
-  }
-
-  public void runWithOffersLock(Runnable function, String name) {
-    long start = lockOffers(name);
-    try {
-      function.run();
-    } finally {
-      unlockOffers(name, start);
-    }
-  }
-
-  public void runWithOffersLockAndtimeout(
-    Function<Boolean, Void> function,
-    String name,
-    long timeoutMillis
-  ) {
-    final long start = System.currentTimeMillis();
-    LOG.debug("{} - Locking offers lock", name);
-    try {
-      boolean acquired = offersLock.tryLock(timeoutMillis, TimeUnit.MILLISECONDS);
-      LOG.debug(
-        "{} - Acquired offers lock ({}) ({})",
-        name,
-        acquired,
-        JavaUtils.duration(start)
-      );
-      long functionStart = System.currentTimeMillis();
-      try {
-        function.apply(acquired);
-      } finally {
-        if (acquired) {
-          unlockOffers(name, functionStart);
-        }
-      }
-    } catch (InterruptedException ie) {
-      LOG.warn("Interrupted waiting for offer lock", ie);
-    }
-  }
-
-  private long lockOffers(String name) {
-    final long start = System.currentTimeMillis();
-    LOG.debug("{} - Locking offers lock", name);
-    offersLock.lock();
-    LOG.debug("{} - Acquired offers lock ({})", name, JavaUtils.duration(start));
-    return System.currentTimeMillis();
-  }
-
-  private void unlockOffers(String name, long start) {
-    LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
-    offersLock.unlock();
   }
 
   private boolean isLocked(String requestId) {

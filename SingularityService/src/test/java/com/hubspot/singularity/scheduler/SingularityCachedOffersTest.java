@@ -7,7 +7,7 @@ import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +20,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
   private SingularitySchedulerPoller schedulerPoller;
 
   @Inject
-  private OfferCache offerCache;
+  private SingularityMesosOfferManager offerCache;
 
   public SingularityCachedOffersTest() {
     super(

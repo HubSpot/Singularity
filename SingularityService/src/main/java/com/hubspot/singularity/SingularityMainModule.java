@@ -47,10 +47,8 @@ import com.hubspot.singularity.hooks.SnsWebhookRetryer;
 import com.hubspot.singularity.hooks.WebhookQueueType;
 import com.hubspot.singularity.managed.SingularityLifecycleManaged;
 import com.hubspot.singularity.managed.SingularityPreJettyLifecycle;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
-import com.hubspot.singularity.mesos.SingularityNoOfferCache;
-import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.mesos.StatusUpdateQueue;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporter;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
@@ -215,15 +213,7 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityLifecycleManaged.class).asEagerSingleton();
     binder.bind(SingularityPreJettyLifecycle.class).asEagerSingleton();
-
-    if (configuration.isCacheOffers()) {
-      binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
-    } else {
-      binder
-        .bind(OfferCache.class)
-        .to(SingularityNoOfferCache.class)
-        .in(Scopes.SINGLETON);
-    }
+    binder.bind(SingularityMesosOfferManager.class).in(Scopes.SINGLETON);
   }
 
   @Provides

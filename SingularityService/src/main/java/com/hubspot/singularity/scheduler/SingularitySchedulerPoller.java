@@ -6,9 +6,8 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
@@ -20,27 +19,27 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     SingularitySchedulerPoller.class
   );
 
-  private final SingularityMesosOfferScheduler offerScheduler;
   private final TaskManager taskManager;
   private final SingularityScheduler scheduler;
   private final DisasterManager disasterManager;
   private final SingularitySchedulerLock lock;
+  private final SingularityPendingTaskQueueProcessor taskQueueProcessor;
 
   @Inject
   SingularitySchedulerPoller(
-    SingularityMesosOfferScheduler offerScheduler,
     TaskManager taskManager,
     SingularityScheduler scheduler,
     SingularityConfiguration configuration,
     SingularitySchedulerLock lock,
-    DisasterManager disasterManager
+    DisasterManager disasterManager,
+    SingularityPendingTaskQueueProcessor taskQueueProcessor
   ) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS);
-    this.offerScheduler = offerScheduler;
     this.taskManager = taskManager;
     this.scheduler = scheduler;
     this.disasterManager = disasterManager;
     this.lock = lock;
+    this.taskQueueProcessor = taskQueueProcessor;
   }
 
   @Override
@@ -50,26 +49,22 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       return;
     }
 
-    lock.runWithOffersLock(
-      () -> {
-        for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
-          lock.runWithRequestLock(
-            () -> taskManager.deletePendingTask(taskId),
-            taskId.getRequestId(),
-            String.format(
-              "%s#%s",
-              getClass().getSimpleName(),
-              "checkOffers -> pendingTaskDeletes"
-            )
-          );
-        }
+    for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
+      lock.runWithRequestLock(
+        () -> {
+          taskQueueProcessor.removePendingTask(taskId);
+          taskManager.deletePendingTask(taskId);
+        },
+        taskId.getRequestId(),
+        String.format(
+          "%s#%s",
+          getClass().getSimpleName(),
+          "checkOffers -> pendingTaskDeletes"
+        )
+      );
+    }
 
-        scheduler.drainPendingQueue();
-        scheduler.checkForStalledTaskLaunches();
-        // Check against only cached offers
-        offerScheduler.resourceOffers(Collections.emptyList());
-      },
-      "SingularitySchedulerPoller"
-    );
+    scheduler.drainPendingQueue();
+    scheduler.checkForStalledTaskLaunches();
   }
 }

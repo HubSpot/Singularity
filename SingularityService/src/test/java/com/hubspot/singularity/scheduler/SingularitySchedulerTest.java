@@ -3,7 +3,6 @@ package com.hubspot.singularity.scheduler;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -67,7 +66,7 @@ import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
@@ -111,7 +110,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   private SingularitySchedulerPoller schedulerPoller;
 
   @Inject
-  private OfferCache offerCache;
+  private SingularityMesosOfferManager offerCache;
 
   @Inject
   private MesosProtosUtils mesosProtosUtils;

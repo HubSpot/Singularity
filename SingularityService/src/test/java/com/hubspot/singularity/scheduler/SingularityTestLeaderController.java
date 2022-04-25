@@ -8,8 +8,9 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityTestLeaderController extends SingularityLeaderController {
@@ -22,7 +23,8 @@ public class SingularityTestLeaderController extends SingularityLeaderController
     SingularityExceptionNotifier exceptionNotifier,
     @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
     SingularityMesosScheduler scheduler,
-    OfferCache offerCache
+    SingularityMesosOfferManager singularityMesosOfferManager,
+    SingularityPendingTaskQueueProcessor pendingTaskQueueProcessor
   ) {
     super(
       stateManager,
@@ -31,7 +33,8 @@ public class SingularityTestLeaderController extends SingularityLeaderController
       exceptionNotifier,
       hostAndPort,
       scheduler,
-      offerCache
+      singularityMesosOfferManager,
+      pendingTaskQueueProcessor
     );
   }
 

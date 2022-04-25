@@ -6,7 +6,7 @@ import com.google.inject.Provider;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ZkCache;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
@@ -58,7 +58,7 @@ public class SingularityCuratorTestBase {
   private ZkCache<SingularityTask> taskZkCache;
 
   @Inject
-  private OfferCache offerCache;
+  private SingularityMesosOfferManager offerCache;
 
   @Inject
   protected MesosProtosUtils mesosProtosUtils;
