@@ -46,8 +46,8 @@
     <dep.hk2.version>2.5.0-b63</dep.hk2.version>
     <dep.httpclient.version>4.5.5</dep.httpclient.version>
     <dep.httpcore.version>4.4.9</dep.httpcore.version>
-    <dep.jackson-databind.version>2.9.9.3</dep.jackson-databind.version>
-    <dep.jackson.version>2.9.9</dep.jackson.version>
+    <dep.jackson-databind.version>2.12.6</dep.jackson-databind.version>
+    <dep.jackson.version>2.12.6</dep.jackson.version>
     <dep.javassist.version>3.24.1-GA</dep.javassist.version>
     <dep.jboss-logging.version>3.3.0.Final</dep.jboss-logging.version>
     <dep.jdbi3.version>3.28.0</dep.jdbi3.version>
@@ -67,7 +67,7 @@
     <dep.protobuf-java.version>3.11.4</dep.protobuf-java.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
     <dep.rxJava.version>1.3.8</dep.rxJava.version>
-    <dep.slf4j.version>1.7.26</dep.slf4j.version>
+    <dep.slf4j.version>1.7.32</dep.slf4j.version>
     <dep.swagger.version>2.0.0</dep.swagger.version>
     <dep.zookeeper.version>3.4.14</dep.zookeeper.version>
     <dropwizard.guicier.version>1.3.5.1</dropwizard.guicier.version>
@@ -705,7 +705,7 @@
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>1.23</version>
+        <version>1.27</version>
       </dependency>
 
       <dependency>
