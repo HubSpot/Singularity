@@ -149,6 +149,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     List<Offer> offers2 = resourceOffers(); // cached as well
 
     sms.rescind(offers2.get(0).getId());
+
     sms.rescind(offers2.get(1).getId());
 
     initRequest();
@@ -798,6 +799,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 129, 1025, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     scheduler.drainPendingQueue();
     sms
       .resourceOffers(
@@ -3463,6 +3465,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithSomeRequestedPorts = { "80:82" };
@@ -3482,6 +3485,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithRequestedButNotEnoughPorts = { "80:80", "8080:8080" };
@@ -3501,6 +3505,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithNeededPorts = { "80:83", "8080:8080" };
@@ -3520,6 +3525,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
@@ -3557,6 +3563,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(0, taskManager.getActiveTasks().size());
 
     sms
@@ -3575,6 +3582,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         )
       )
       .join();
+
     Assertions.assertEquals(4, taskManager.getActiveTasks().size());
   }
 
@@ -4448,6 +4456,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(Arrays.asList(createOffer(5, 5, 5, Optional.of("test-role"))))
       .join();
+
     SingularityTask task = taskManager.getActiveTasks().get(0);
     Assertions.assertEquals(
       MesosUtils.getNumCpus(

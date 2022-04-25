@@ -167,23 +167,21 @@ public class SingularityPendingTaskQueueProcessor {
 
   // Method only for testing. Need a synchronous way of waiting for task launch in unit tests
   @VisibleForTesting
-  CompletableFuture<Boolean> drainHandledTasks(long timeout) {
-    return CompletableFuture.supplyAsync(
-      () -> {
-        long start = System.currentTimeMillis();
-        while (!handled.isEmpty()) {
-          try {
-            Thread.sleep(50);
-          } catch (InterruptedException ie) {
-            LOG.warn("Interrupted waiting for tasks to schedule");
-          }
-          if (System.currentTimeMillis() - start > timeout) {
-            return false;
-          }
-        }
-        return true;
+  public boolean drainHandledTasks() {
+    long timeout = 5000;
+
+    long start = System.currentTimeMillis();
+    while (!handled.isEmpty()) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException ie) {
+        LOG.warn("Interrupted waiting for tasks to schedule");
       }
-    );
+      if (System.currentTimeMillis() - start > timeout) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public void removePendingTask(SingularityPendingTaskId toRemove) {

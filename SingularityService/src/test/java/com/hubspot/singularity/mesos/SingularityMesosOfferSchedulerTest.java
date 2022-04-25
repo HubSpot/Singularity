@@ -382,7 +382,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
     singularityScheduler.drainPendingQueue();
     sms.resourceOffers(ImmutableList.of(host2Offer, host3Offer));
-    queueProcessor.drainHandledTasks(5000);
+
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     Assertions.assertEquals(2, activeTaskIds.size());
     Assertions.assertNotEquals(
@@ -488,7 +488,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     agentAndRackManager.checkOffer(host3Offer);
 
     singularityScheduler.drainPendingQueue();
-    queueProcessor.drainHandledTasks(5000);
+
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     Assertions.assertEquals(2, activeTaskIds.size());
     Assertions.assertNotEquals(

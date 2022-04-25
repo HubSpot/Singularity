@@ -1512,6 +1512,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent2", "host2")))
       .join();
+
     Assertions.assertTrue(agentManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
 
     spreadAllPoller.runActionOnPoll();
@@ -1590,6 +1591,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(Arrays.asList(createOffer(2, 128 * 2, 1024 * 2, "agent1", "host1")))
       .join();
+
     Assertions.assertEquals(2, taskManager.getActiveTaskIds().size());
 
     // Now that at least one other host is running tasks for this request, we expect an even-ish spread,
@@ -1597,18 +1599,21 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
     sms
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent2", "host2")))
       .join();
+
     Assertions.assertEquals(13, taskManager.getActiveTaskIds().size());
 
     // ...but now we won't schedule more tasks on host2, because it's hosting a disproportionate number of tasks.
     sms
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent2", "host2")))
       .join();
+
     Assertions.assertEquals(13, taskManager.getActiveTaskIds().size());
 
     // ...but since host1 is only hosting 2 tasks, we will schedule more tasks on it when an offer is received.
     sms
       .resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "agent1", "host1")))
       .join();
+
     Assertions.assertEquals(20, taskManager.getActiveTaskIds().size());
 
     Map<String, List<SingularityTaskId>> tasksByHost = taskManager
@@ -2061,6 +2066,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2068,6 +2074,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2075,6 +2082,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2", Optional.of("rack2")))
       )
       .join();
+
     Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
 
     // rack1 should not get a third instance until rack3 has a second
@@ -2083,6 +2091,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2090,6 +2099,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent3", "host3", Optional.of("rack3")))
       )
       .join();
+
     Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2097,6 +2107,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(7, taskManager.getActiveTaskIds().size());
   }
 
@@ -2149,6 +2160,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2156,6 +2168,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
     sms
@@ -2163,6 +2176,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent2", "host2", Optional.of("rack2")))
       )
       .join();
+
     Assertions.assertEquals(5, taskManager.getActiveTaskIds().size());
 
     // with the override, rack1 should get a third instance despite rack3 not having a second
@@ -2181,6 +2195,7 @@ public class SingularityMachinesTest extends SingularitySchedulerTestBase {
         Arrays.asList(createOffer(1, 128, 1024, "agent1", "host1", Optional.of("rack1")))
       )
       .join();
+
     Assertions.assertEquals(6, taskManager.getActiveTaskIds().size());
   }
 

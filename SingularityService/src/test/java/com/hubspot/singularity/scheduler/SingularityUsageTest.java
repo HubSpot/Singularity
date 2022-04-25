@@ -1052,6 +1052,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           )
         )
         .join();
+
       SingularityAgentUsage highMemUsage = new SingularityAgentUsage(
         10,
         10,
@@ -1781,8 +1782,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
         )
         .join();
 
-      System.out.println(taskManager.getActiveTaskIds());
-
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
       SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
       SingularityTaskId task2 = taskIdMap.get("host1").get(t2id);
@@ -1941,8 +1940,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           ImmutableList.of(createOffer(10, 100000, 100000, "agent1", "host1"))
         )
         .join();
-
-      System.out.println(taskManager.getActiveTaskIds());
 
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
       SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
@@ -2108,8 +2105,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           ImmutableList.of(createOffer(10, 100000, 100000, "agent1", "host1"))
         )
         .join();
-
-      System.out.println(taskManager.getActiveTaskIds());
 
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
       SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
@@ -2286,8 +2281,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           ImmutableList.of(createOffer(10, 100000 * 4, 100000, "agent1", "host1"))
         )
         .join();
-
-      System.out.println(taskManager.getActiveTaskIds());
 
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
       SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);
@@ -2480,8 +2473,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
           ImmutableList.of(createOffer(10, 100000, 100000, "agent3", "host3"))
         )
         .join();
-
-      System.out.println(taskManager.getActiveTaskIds());
 
       Map<String, Map<String, SingularityTaskId>> taskIdMap = getTaskIdMapByHostByRequest();
       SingularityTaskId task1 = taskIdMap.get("host1").get(t1id);

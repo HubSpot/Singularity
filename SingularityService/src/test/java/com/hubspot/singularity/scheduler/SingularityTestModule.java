@@ -55,7 +55,9 @@ import com.hubspot.singularity.managed.SingularityLifecycleManagedTest;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.mesos.SingularityMesosOfferManager;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
+import com.hubspot.singularity.mesos.TestMesosSchedulerImpl;
 import com.hubspot.singularity.resources.AgentResource;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -247,6 +249,7 @@ public class SingularityTestModule implements Module {
             );
             when(mockClient.isRunning()).thenReturn(true);
             binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
+            binder.bind(SingularityMesosScheduler.class).to(TestMesosSchedulerImpl.class);
             Multibinder
               .newSetBinder(binder, DeployAcceptanceHook.class)
               .addBinding()

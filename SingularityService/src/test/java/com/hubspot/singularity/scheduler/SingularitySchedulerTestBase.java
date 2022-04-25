@@ -57,6 +57,7 @@ import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.mesos.SingularityPendingTaskQueueProcessor;
 import com.hubspot.singularity.resources.AgentResource;
 import com.hubspot.singularity.resources.AgentResourceDeprecated;
 import com.hubspot.singularity.resources.DeployResource;
@@ -102,6 +103,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
+  @Inject
+  protected SingularityPendingTaskQueueProcessor queueProcessor;
+
   @Inject
   protected SingularityLeaderCache leaderCache;
 
