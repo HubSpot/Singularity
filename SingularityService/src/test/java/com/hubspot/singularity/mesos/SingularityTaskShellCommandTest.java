@@ -40,9 +40,6 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
   private SingularityTaskShellCommandDispatchPoller dispatchPoller;
 
   @Inject
-  private SingularityMesosScheduler mesosScheduler;
-
-  @Inject
   private Transcoder<SingularityTaskShellCommandUpdate> updateTranscoder;
 
   @Inject
@@ -134,7 +131,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
       taskManager.getTaskShellCommandRequestsForTask(task.getTaskId()).size()
     );
 
-    mesosScheduler.message(
+    sms.message(
       Event
         .Message.newBuilder()
         .setExecutorId(
@@ -157,7 +154,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
         .build()
     );
 
-    mesosScheduler.message(
+    sms.message(
       Event
         .Message.newBuilder()
         .setExecutorId(
@@ -184,7 +181,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
         .build()
     );
 
-    mesosScheduler.message(
+    sms.message(
       Event
         .Message.newBuilder()
         .setExecutorId(

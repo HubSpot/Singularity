@@ -32,7 +32,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +63,7 @@ public class SingularityPendingTaskQueueProcessor {
   private final Map<String, Long> lockStarts;
   private final Set<SingularityPendingTaskId> handled;
   private final PriorityBlockingQueue<SingularityPendingTaskId> preLockQueue;
+  private final ExecutorService lockWaitExecutor;
   private final ExecutorService taskLaunchExecutor;
   private final ExecutorService queuePollExecutor;
   private final AtomicBoolean running;
@@ -104,8 +104,9 @@ public class SingularityPendingTaskQueueProcessor {
         (a, b) -> Doubles.compare(getWeightedPriority(a), getWeightedPriority(b))
       );
     this.queuePollExecutor = threadPoolFactory.getSingleThreaded("pending-task-queue");
-    this.taskLaunchExecutor =
+    this.lockWaitExecutor =
       threadPoolFactory.get("pending-task-lock-wait", PARALLEL_LOCK_WAIT);
+    this.taskLaunchExecutor = threadPoolFactory.getSingleThreaded("task-launch");
     this.running = new AtomicBoolean(false);
     this.metrics = metrics;
     this.lock = lock;
@@ -204,7 +205,7 @@ public class SingularityPendingTaskQueueProcessor {
             pendingTask,
             CompletableFuture.runAsync(
               () -> waitLockAndLaunch(start, pendingTask),
-              taskLaunchExecutor
+              lockWaitExecutor
             )
           );
         } else {
@@ -238,7 +239,9 @@ public class SingularityPendingTaskQueueProcessor {
         pendingTaskId.getId(),
         System.currentTimeMillis() - start
       );
-      matchAndLaunch(start, pendingTaskId);
+      CompletableFuture
+        .runAsync(() -> matchAndLaunch(start, pendingTaskId), taskLaunchExecutor)
+        .join();
     } catch (Exception e) {
       LOG.error("Could not acquire lock for task {}", pendingTaskId, e);
     } finally {
@@ -308,7 +311,7 @@ public class SingularityPendingTaskQueueProcessor {
           .flatMap(s -> s.getOffers().stream())
           .map(Offer::getId)
           .forEach(offerManager::returnOffer);
-        //metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
+        //TODO metrics metrics.getOfferLoopTime().update(System.currentTimeMillis() - start);
       } catch (Exception e) {
         LOG.error("Error running task launch", e);
       } finally {

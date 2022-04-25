@@ -1,8 +1,6 @@
 package com.hubspot.singularity.mesos;
 
-import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import java.util.Collections;
@@ -18,14 +16,11 @@ import org.apache.mesos.v1.Protos.Offer.Operation;
 import org.apache.mesos.v1.Protos.Offer.Operation.Launch;
 import org.apache.mesos.v1.Protos.Offer.Operation.Type;
 import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityOfferHolder {
-  private static final Logger LOG = LoggerFactory.getLogger(
-    SingularityMesosScheduler.class
-  );
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferHolder.class);
 
   private final List<Protos.Offer> offers;
   private List<Resource> currentResources;

@@ -249,7 +249,10 @@ public class SingularityTestModule implements Module {
             );
             when(mockClient.isRunning()).thenReturn(true);
             binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
-            binder.bind(SingularityMesosScheduler.class).to(TestMesosSchedulerImpl.class);
+            binder
+              .bind(SingularityMesosScheduler.class)
+              .to(TestMesosSchedulerImpl.class)
+              .in(Scopes.SINGLETON);
             Multibinder
               .newSetBinder(binder, DeployAcceptanceHook.class)
               .addBinding()
