@@ -29,7 +29,7 @@
   </modules>
 
   <properties>
-    <project.build.targetJdk>1.11</project.build.targetJdk>
+    <project.build.targetJdk>11</project.build.targetJdk>
     <project.build.sourceJdk>${project.build.targetJdk}</project.build.sourceJdk>
     <project.build.releaseJdk>11</project.build.releaseJdk>
 
