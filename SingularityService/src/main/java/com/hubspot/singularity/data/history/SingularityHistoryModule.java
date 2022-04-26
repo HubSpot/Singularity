@@ -7,7 +7,6 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityIdMapper;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityJsonStringMapper;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -65,7 +64,6 @@ public class SingularityHistoryModule extends AbstractModule {
       .addBinding()
       .to(SingularityMappers.SingularityBytesMapper.class)
       .in(Scopes.SINGLETON);
-    columnMappers.addBinding().to(SingularityIdMapper.class).in(Scopes.SINGLETON);
     columnMappers.addBinding().to(SingularityJsonStringMapper.class).in(Scopes.SINGLETON);
     columnMappers
       .addBinding()

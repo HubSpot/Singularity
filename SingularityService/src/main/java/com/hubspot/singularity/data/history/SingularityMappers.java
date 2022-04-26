@@ -68,17 +68,6 @@ public class SingularityMappers {
     }
   }
 
-  static class SingularityIdMapper implements ColumnMapper<String> {
-
-    @Inject
-    SingularityIdMapper() {}
-
-    @Override
-    public String map(ResultSet r, int index, StatementContext ctx) throws SQLException {
-      return r.getString("id");
-    }
-  }
-
   static class SingularityTimestampMapper implements ColumnMapper<Long> {
 
     @Inject
