@@ -29,10 +29,6 @@
   </modules>
 
   <properties>
-    <project.build.targetJdk>11</project.build.targetJdk>
-    <project.build.sourceJdk>${project.build.targetJdk}</project.build.sourceJdk>
-    <project.build.releaseJdk>11</project.build.releaseJdk>
-
     <aws.sdk.version>1.11.497</aws.sdk.version>
     <baragon.version>0.9.0</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
