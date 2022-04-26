@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>25.6</version>
+    <version>25.7</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
@@ -29,6 +29,10 @@
   </modules>
 
   <properties>
+    <project.build.targetJdk>1.11</project.build.targetJdk>
+    <project.build.sourceJdk>${project.build.targetJdk}</project.build.sourceJdk>
+    <project.build.releaseJdk>11</project.build.releaseJdk>
+
     <aws.sdk.version>1.11.497</aws.sdk.version>
     <baragon.version>0.9.0</baragon.version>
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
