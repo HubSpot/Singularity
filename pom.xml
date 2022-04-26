@@ -898,6 +898,12 @@
                     <ignoreClasses>
                       <ignoreClass>module-info</ignoreClass>
                     </ignoreClasses>
+                    <scopes>
+                      <scope>compile</scope>
+                      <scope>provided</scope>
+                    </scopes>
+                    <findAllDuplicates>true</findAllDuplicates>
+                    <ignoreWhenIdentical>true</ignoreWhenIdentical>
                   </banDuplicateClasses>
                 </rules>
               </configuration>
