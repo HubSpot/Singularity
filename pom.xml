@@ -846,6 +846,64 @@
             </ignoredResourcePatterns>
           </configuration>
         </plugin>
+
+        <!-- mostly copied from basepom with additions for java 9+ module-info -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>default</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <phase>${basepom.check.phase-enforcer}</phase>
+            </execution>
+            <execution>
+              <id>basepom-banned-dependencies</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <phase>${basepom.check.phase-enforcer}</phase>
+              <configuration>
+                <skip>${basepom.check.skip-enforcer}</skip>
+                <fail>${basepom.check.fail-enforcer}</fail>
+                <rules>
+                  <!-- The following dependencies are hazardous for builds. -->
+                  <bannedDependencies>
+                    <excludes>
+                      <!-- clashes with commons-logging:commons-logging -->
+                      <exclude>commons-logging:commons-logging-api</exclude>
+                      <!-- junit repackages hamcrest into its own jar, which is a big no-no.
+                           junit-dep fixes this problem -->
+                      <exclude>junit:junit-dep</exclude>
+                      <exclude>junit:junit:[,4.11)</exclude>
+                      <!-- completely and utterly broken -->
+                      <exclude>org.weakref:jmxutils:(,1.11]</exclude>
+                      <!-- use guava -->
+                      <exclude>com.google.collections:google-collections</exclude>
+                      <!-- but not the badly numbered ones... -->
+                      <exclude>com.google.guava:guava</exclude>
+                      <!-- 1.8 and 1.9 are generified badly -->
+                      <exclude>commons-configuration:commons-configuration:[1.8,1.9]</exclude>
+                      <!-- ban all versions of asm that do not work on JDK8 -->
+                      <exclude>org.ow2.asm:asm:[,5.0.2)</exclude>
+                    </excludes>
+                    <includes>
+                      <!-- whitelist the well numbered guava releases -->
+                      <include>com.google.guava:guava:[10.0.1,)</include>
+                    </includes>
+                  </bannedDependencies>
+                  <banDuplicateClasses>
+                    <ignoreClasses>
+                      <ignoreClass>module-info</ignoreClass>
+                    </ignoreClasses>
+                  </banDuplicateClasses>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
