@@ -38,7 +38,6 @@
     <dep.swagger.version>2.0.0</dep.swagger.version>
     <horizon.version>0.1.2</horizon.version>
     <mesos.docker.tag>1.9.0</mesos.docker.tag>
-    <!-- 1.10.0 not available yet, still compatible -->
     <mesos.version>1.10.0</mesos.version>
     <ning.async.version>1.9.38</ning.async.version>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>
