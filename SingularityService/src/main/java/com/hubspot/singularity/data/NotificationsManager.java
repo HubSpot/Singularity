@@ -5,13 +5,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
+@Singleton
 public class NotificationsManager extends CuratorManager {
+
   private static final String NOTIFICATIONS_ROOT = "/notifications";
   private static final String BLOCKLIST_ROOT = NOTIFICATIONS_ROOT + "/blacklist";
   private static final String ALLOWLIST_ROOT = NOTIFICATIONS_ROOT + "/allowlist";
@@ -31,7 +34,6 @@ public class NotificationsManager extends CuratorManager {
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build(
           new CacheLoader<String, List<String>>() {
-
             @Override
             public List<String> load(String key) throws Exception {
               return getChildren(key);

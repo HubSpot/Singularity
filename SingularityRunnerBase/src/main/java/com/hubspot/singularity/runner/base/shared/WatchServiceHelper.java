@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class WatchServiceHelper implements Closeable {
+
   private static final Logger LOG = LoggerFactory.getLogger(WatchServiceHelper.class);
 
   private final WatchService watchService;

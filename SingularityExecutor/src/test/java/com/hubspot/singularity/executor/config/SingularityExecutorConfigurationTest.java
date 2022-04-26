@@ -66,7 +66,7 @@ public class SingularityExecutorConfigurationTest {
         SingularityExecutorConfiguration.class,
         Optional.of(
           new File(getClass().getClassLoader().getResource(file).toURI())
-          .getAbsolutePath()
+            .getAbsolutePath()
         )
       );
 
@@ -215,18 +215,18 @@ public class SingularityExecutorConfigurationTest {
     LogrotateCronTemplateContext context = mock(LogrotateCronTemplateContext.class);
 
     doReturn(
-        ImmutableList.of(
-          new LogrotateForceConfig("/etc/logrotate.d/hourly/task.HOURLY", "0 * * * *"),
-          new LogrotateForceConfig(
-            "/etc/logrotate.d/hourly/task.EVERY_MINUTE",
-            "* * * * *"
-          ),
-          new LogrotateForceConfig(
-            "/etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES",
-            "*/5 * * * *"
-          )
+      ImmutableList.of(
+        new LogrotateForceConfig("/etc/logrotate.d/hourly/task.HOURLY", "0 * * * *"),
+        new LogrotateForceConfig(
+          "/etc/logrotate.d/hourly/task.EVERY_MINUTE",
+          "* * * * *"
+        ),
+        new LogrotateForceConfig(
+          "/etc/logrotate.d/hourly/task.EVERY_FIVE_MINUTES",
+          "*/5 * * * *"
         )
       )
+    )
       .when(context)
       .getLogrotateForceConfigs();
 

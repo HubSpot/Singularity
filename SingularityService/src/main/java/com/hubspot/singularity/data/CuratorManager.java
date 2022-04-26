@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class CuratorManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(CuratorManager.class);
   private static final byte[] EMPTY_BYTES = new byte[0];
 
@@ -69,10 +70,11 @@ public abstract class CuratorManager {
     CHECK_EXISTS,
     GET_CHILDREN,
     DELETE,
-    WRITE
+    WRITE,
   }
 
   private static class Metrics {
+
     private final Meter bytesMeter;
     private final Meter itemsMeter;
     private final Timer timer;
@@ -130,7 +132,9 @@ public abstract class CuratorManager {
       if (s != null) {
         return s.getNumChildren();
       }
-    } catch (NoNodeException nne) {} catch (Throwable t) {
+    } catch (NoNodeException nne) {
+      // didn't see that
+    } catch (Throwable t) {
       throw new RuntimeException(t);
     }
 

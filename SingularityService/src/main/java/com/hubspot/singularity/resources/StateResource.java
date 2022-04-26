@@ -26,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 @Schema(title = "Provides information about the current state of Singularity")
 @Tags({ @Tag(name = "State") })
 public class StateResource {
+
   private final StateManager stateManager;
 
   @Inject
@@ -75,7 +76,7 @@ public class StateResource {
       @ApiResponse(
         responseCode = "404",
         description = "No reconciliation statistics are present"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {

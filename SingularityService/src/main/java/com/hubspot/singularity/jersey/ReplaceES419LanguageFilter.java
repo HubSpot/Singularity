@@ -11,6 +11,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * Replaces language header containing es-419 (LATAM spanish) with es-ES.
  */
 public class ReplaceES419LanguageFilter implements ContainerRequestFilter {
+
   public static final String ES_419 = "es-419";
   public static final String ES_ES = "es-ES";
 

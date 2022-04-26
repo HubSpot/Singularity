@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TaskRequestManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(TaskRequestManager.class);
 
   private final DeployManager deployManager;

@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 public class SingularityRequestHistoryQuery {
+
   private final String requestId;
   private final Optional<Long> createdBefore;
   private final Optional<Long> createdAfter;
@@ -41,7 +42,6 @@ public class SingularityRequestHistoryQuery {
 
   public Predicate<SingularityRequestHistory> getHistoryFilter() {
     return new Predicate<SingularityRequestHistory>() {
-
       @Override
       public boolean apply(SingularityRequestHistory input) {
         if (!requestId.equals(input.getRequest().getId())) {
@@ -65,7 +65,6 @@ public class SingularityRequestHistoryQuery {
     final OrderDirection localOrderDirection = orderDirection.orElse(OrderDirection.DESC);
 
     return new Comparator<SingularityRequestHistory>() {
-
       @Override
       public int compare(SingularityRequestHistory o1, SingularityRequestHistory o2) {
         ComparisonChain chain = ComparisonChain.start();

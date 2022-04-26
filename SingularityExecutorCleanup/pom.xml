@@ -12,6 +12,7 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.executor.cleanup.SingularityExecutorCleanupRunner</basepom.shaded.main-class>
+    <hubspot.module.type>EXECUTABLE</hubspot.module.type>
   </properties>
 
   <dependencies>
@@ -42,7 +43,7 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityExecutor</artifactId>
+      <artifactId>SingularityExecutorBase</artifactId>
     </dependency>
 
     <dependency>
@@ -65,10 +66,6 @@
       <artifactId>docker-client</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.hibernate</groupId>
@@ -84,6 +81,10 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
   </dependencies>

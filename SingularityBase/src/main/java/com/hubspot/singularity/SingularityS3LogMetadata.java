@@ -10,6 +10,7 @@ import java.util.Optional;
   subTypes = { SingularityS3Log.class }
 )
 public class SingularityS3LogMetadata {
+
   public static final String LOG_START_S3_ATTR = "starttime";
   public static final String LOG_END_S3_ATTR = "endtime";
 

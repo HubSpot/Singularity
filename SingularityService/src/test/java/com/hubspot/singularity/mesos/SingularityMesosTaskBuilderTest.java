@@ -71,6 +71,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class SingularityMesosTaskBuilderTest {
+
   private final SingularityConfiguration configuration = new SingularityConfiguration();
   private SingularityMesosTaskBuilder builder;
   private Resources taskResources;
@@ -142,7 +143,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setCommand(Optional.of("/bin/echo hi"))
       .build();
@@ -170,7 +171,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setCommand(Optional.of("/bin/echo hi"))
       .build();
@@ -215,7 +216,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setCommand(Optional.of("/bin/echo hi"))
       .build();
@@ -257,7 +258,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setCommand(Optional.of("/bin/echo"))
       .setArguments(Optional.of(Collections.singletonList("wat")))
@@ -285,13 +286,13 @@ public class SingularityMesosTaskBuilderTest {
   public void testDockerTask() {
     taskResources = new Resources(1, 1, 1, 0);
 
-    final Protos.Resource portsResource = Protos
-      .Resource.newBuilder()
+    final Protos.Resource portsResource = Protos.Resource
+      .newBuilder()
       .setName("ports")
       .setType(Protos.Value.Type.RANGES)
       .setRanges(
-        Protos
-          .Value.Ranges.newBuilder()
+        Protos.Value.Ranges
+          .newBuilder()
           .addRange(Protos.Value.Range.newBuilder().setBegin(31000).setEnd(31000).build())
           .build()
       )
@@ -316,7 +317,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.DOCKER,
       Optional.of(
@@ -449,13 +450,13 @@ public class SingularityMesosTaskBuilderTest {
   public void testGetPortByIndex() throws Exception {
     taskResources = new Resources(1, 1, 4, 0);
 
-    final Protos.Resource portsResource = Protos
-      .Resource.newBuilder()
+    final Protos.Resource portsResource = Protos.Resource
+      .newBuilder()
       .setName("ports")
       .setType(Protos.Value.Type.RANGES)
       .setRanges(
-        Protos
-          .Value.Ranges.newBuilder()
+        Protos.Value.Ranges
+          .newBuilder()
           .addRange(Protos.Value.Range.newBuilder().setBegin(31003).setEnd(31006).build())
           .build()
       )
@@ -465,7 +466,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setCommand(Optional.of("/bin/echo"))
       .setArguments(Optional.of(Collections.singletonList("wat")))
@@ -493,7 +494,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.DOCKER,
       Optional.empty(),
@@ -544,7 +545,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.DOCKER,
       Optional.empty(),
@@ -604,7 +605,7 @@ public class SingularityMesosTaskBuilderTest {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.MESOS,
       Optional.of(
@@ -712,6 +713,7 @@ public class SingularityMesosTaskBuilderTest {
   }
 
   private static class CreateFakeId implements Answer<String> {
+
     private final AtomicLong string = new AtomicLong();
 
     @Override

@@ -9,6 +9,7 @@ import java.util.Objects;
 @Beta
 @Schema(description = "Describes a docker image")
 public class SingularityDockerImage {
+
   private final String name;
 
   @JsonCreator

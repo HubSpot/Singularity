@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class RackManager extends AbstractMachineManager<SingularityRack> {
+
   private static final Logger LOG = LoggerFactory.getLogger(RackManager.class);
 
   private static final String RACK_ROOT = "/racks";

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SingularityPendingRequestBuilder {
+
   private String requestId;
   private String deployId;
   private long timestamp;

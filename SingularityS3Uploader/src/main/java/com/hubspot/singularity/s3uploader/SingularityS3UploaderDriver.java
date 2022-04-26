@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 public class SingularityS3UploaderDriver
   extends WatchServiceHelper
   implements SingularityDriver {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3UploaderDriver.class
   );
@@ -164,21 +165,19 @@ public class SingularityS3UploaderDriver
         1
       )
     ) {
-      paths.forEach(
-        file -> {
-          if (!isS3MetadataFile(file)) {
-            return;
-          }
-
-          try {
-            if (handleNewOrModifiedS3Metadata(file)) {
-              foundFiles.incrementAndGet();
-            }
-          } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-          }
+      paths.forEach(file -> {
+        if (!isS3MetadataFile(file)) {
+          return;
         }
-      );
+
+        try {
+          if (handleNewOrModifiedS3Metadata(file)) {
+            foundFiles.incrementAndGet();
+          }
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
     }
 
     LOG.info("Found {} file(s) in {}", foundFiles, JavaUtils.duration(start));

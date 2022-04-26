@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TaskFailureEvent {
+
   private final int instance;
   private final long timestamp;
   private final TaskFailureType type;

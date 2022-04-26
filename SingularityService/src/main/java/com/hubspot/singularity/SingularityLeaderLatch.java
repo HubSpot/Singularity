@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityLeaderLatch extends LeaderLatch {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderLatch.class);
 
   private static final String LEADER_PATH = "/leader";
@@ -23,8 +24,7 @@ public class SingularityLeaderLatch extends LeaderLatch {
     CuratorFramework curatorFramework,
     Set<LeaderLatchListener> listeners,
     @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort httpHostAndPort
-  )
-    throws Exception {
+  ) throws Exception {
     super(
       checkNotNull(curatorFramework, "curatorFramework is null"),
       LEADER_PATH,

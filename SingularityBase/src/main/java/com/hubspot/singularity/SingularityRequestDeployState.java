@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Data about active and pending deploys")
 public class SingularityRequestDeployState {
+
   private final String requestId;
 
   private final Optional<SingularityDeployMarker> activeDeploy;

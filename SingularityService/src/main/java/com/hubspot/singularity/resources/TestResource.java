@@ -23,11 +23,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
@@ -35,7 +38,10 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 @Path(ApiPaths.TEST_RESOURCE_PATH)
 @Schema(title = "Misc testing endpoints")
 @Tags({ @Tag(name = "Test") })
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class TestResource {
+
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
   private final SingularityConfiguration configuration;
@@ -80,7 +86,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void statusUpdate(
@@ -111,7 +117,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void setLeader() {
@@ -131,7 +137,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void setNotLeader() {
@@ -151,7 +157,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void stop() throws Exception {
@@ -171,7 +177,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void abort() {
@@ -194,7 +200,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void start() throws Exception {
@@ -214,7 +220,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void throwException(
@@ -233,7 +239,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void startTaskReconciliation() throws Exception {
@@ -252,7 +258,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void runHistoryPurge() throws Exception {
@@ -271,7 +277,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void runRequestHistoryPurge() throws Exception {
@@ -290,7 +296,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void runDeployHistoryPurge() throws Exception {
@@ -309,7 +315,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void reconnectMesos() {
@@ -328,7 +334,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void persistTaskHistory() {
@@ -347,7 +353,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void persistDeployHistory() {
@@ -366,7 +372,7 @@ public class TestResource {
       @ApiResponse(
         responseCode = "403",
         description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable"
-      )
+      ),
     }
   )
   public void persistRequestHistory() {

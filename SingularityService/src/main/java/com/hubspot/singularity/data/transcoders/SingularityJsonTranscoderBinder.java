@@ -30,7 +30,7 @@ public final class SingularityJsonTranscoderBinder {
 
   public <T> void asJson(Class<T> clazz) {
     TypeToken<Transcoder<T>> typeToken = new TypeToken<Transcoder<T>>() {}
-    .where(new TypeParameter<T>() {}, clazz);
+      .where(new TypeParameter<T>() {}, clazz);
     @SuppressWarnings("unchecked")
     Key<Transcoder<T>> key = (Key<Transcoder<T>>) Key.get(typeToken.getType());
     binder
@@ -41,7 +41,7 @@ public final class SingularityJsonTranscoderBinder {
 
   public <T> void asCompressedJson(Class<T> clazz) {
     TypeToken<Transcoder<T>> typeToken = new TypeToken<Transcoder<T>>() {}
-    .where(new TypeParameter<T>() {}, clazz);
+      .where(new TypeParameter<T>() {}, clazz);
     @SuppressWarnings("unchecked")
     Key<Transcoder<T>> key = (Key<Transcoder<T>>) Key.get(typeToken.getType());
     binder
@@ -52,13 +52,14 @@ public final class SingularityJsonTranscoderBinder {
 
   public <T extends SingularityId> void asSingularityId(Class<T> clazz) {
     TypeToken<IdTranscoder<T>> typeToken = new TypeToken<IdTranscoder<T>>() {}
-    .where(new TypeParameter<T>() {}, clazz);
+      .where(new TypeParameter<T>() {}, clazz);
     @SuppressWarnings("unchecked")
     Key<IdTranscoder<T>> key = (Key<IdTranscoder<T>>) Key.get(typeToken.getType());
     binder.bind(key).toInstance(new IdTranscoder<T>(clazz));
   }
 
   static class JsonTranscoderProvider<T> implements Provider<JsonTranscoder<T>> {
+
     private final Class<T> clazz;
     private ObjectMapper objectMapper;
 
@@ -81,6 +82,7 @@ public final class SingularityJsonTranscoderBinder {
 
   static class CompressingJsonTranscoderProvider<T>
     implements Provider<CompressingJsonTranscoder<T>> {
+
     private final Class<T> clazz;
     private ObjectMapper objectMapper;
     private SingularityConfiguration singularityConfiguration;

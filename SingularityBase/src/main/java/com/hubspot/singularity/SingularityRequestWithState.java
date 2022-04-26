@@ -6,11 +6,12 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class SingularityRequestWithState {
+
   private final SingularityRequest request;
   private final RequestState state;
   private final long timestamp;
 
-  public static Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = input ->
+  public static final Function<SingularityRequestWithState, String> REQUEST_STATE_TO_REQUEST_ID = input ->
     input.getRequest().getId();
 
   public static String getRequestState(

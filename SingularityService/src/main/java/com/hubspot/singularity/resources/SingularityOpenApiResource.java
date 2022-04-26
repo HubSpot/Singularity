@@ -5,6 +5,7 @@ import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.ServletConfig;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -16,7 +17,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 @Path(ApiPaths.OPEN_API_RESOURCE_PATH)
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces({ MediaType.APPLICATION_JSON })
 public class SingularityOpenApiResource extends BaseOpenApiResource {
+
   @Context
   ServletConfig config;
 
@@ -26,7 +30,6 @@ public class SingularityOpenApiResource extends BaseOpenApiResource {
   private final AtomicReference<Response> cachedApiJson = new AtomicReference<>();
 
   @GET
-  @Produces({ MediaType.APPLICATION_JSON })
   @Operation(hidden = true)
   public Response getOpenApi(@Context HttpHeaders headers, @Context UriInfo uriInfo)
     throws Exception {

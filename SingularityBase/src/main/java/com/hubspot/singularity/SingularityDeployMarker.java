@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Uniquely identifies a deploy")
 public class SingularityDeployMarker implements Comparable<SingularityDeployMarker> {
+
   private final String requestId;
   private final String deployId;
   private final long timestamp;

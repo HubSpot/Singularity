@@ -13,6 +13,7 @@ import java.util.Optional;
 public class SingularityTaskHealthcheckResult
   extends SingularityTaskIdHolder
   implements Comparable<SingularityTaskHealthcheckResult> {
+
   private final Optional<Integer> statusCode;
   private final Optional<Long> durationMillis;
   private final Optional<String> responseBody;

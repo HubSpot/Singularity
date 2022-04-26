@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings for launching a container in mesos")
 public class SingularityContainerInfo {
+
   private final SingularityContainerType type;
   private final Optional<List<SingularityVolume>> volumes;
   private final Optional<SingularityDockerInfo> docker;

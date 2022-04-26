@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class IndexView extends View {
+
   private final String appRoot;
   private final String apiDocs;
   private final String staticRoot;

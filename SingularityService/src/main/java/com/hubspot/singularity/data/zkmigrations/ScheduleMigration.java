@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ScheduleMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(ScheduleMigration.class);
 
   private final RequestManager requestManager;

@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ZkCache<T> {
+
   private final Cache<String, T> cache;
   private final Meter hitMeter;
   private final Meter missMeter;
@@ -36,7 +37,6 @@ public class ZkCache<T> {
     registry.register(
       String.format("zk.caches.%s.size", name),
       new Gauge<Long>() {
-
         @Override
         public Long getValue() {
           return cache.size();

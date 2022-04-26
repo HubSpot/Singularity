@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ValidatorTest extends SingularitySchedulerTestBase {
+
   @Inject
   private SingularityConfiguration singularityConfiguration;
 
@@ -109,7 +110,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       badDeployId,
       RequestType.SERVICE
     )
-    .build();
+      .build();
 
     Assertions.assertThrows(
       WebApplicationException.class,
@@ -128,7 +129,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       badDeployId,
       RequestType.SERVICE
     )
-    .build();
+      .build();
 
     boolean thrown = false;
     try {
@@ -149,7 +150,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       requestId,
       RequestType.SCHEDULED
     )
-    .build();
+      .build();
 
     SingularityDeploy deploy = SingularityDeploy
       .newBuilder(requestId, tooLongId())
@@ -259,7 +260,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "request2",
       RequestType.SERVICE
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.empty();
 
     Assertions.assertThrows(
@@ -277,7 +278,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "request2",
       RequestType.SERVICE
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(
       runNowRequest(tooLongId())
     );
@@ -297,7 +298,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "request2",
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(
       runNowRequest("runId")
     );
@@ -322,7 +323,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "request2",
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
 
     SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
@@ -345,7 +346,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       requestId,
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
 
     SingularityDeploy deploy = SingularityDeploy
@@ -367,7 +368,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       requestId,
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(
       runNowRequest(tooLongId())
     );
@@ -392,7 +393,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       requestId,
       RequestType.WORKER
     )
-    .build();
+      .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
 
     SingularityDeploy deploy = SingularityDeploy
@@ -445,7 +446,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "1234567",
       RequestType.SERVICE
     )
-    .build();
+      .build();
 
     boolean thrown = false;
     try {
@@ -484,7 +485,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "1234567",
       RequestType.SERVICE
     )
-    .build();
+      .build();
 
     boolean thrown = false;
     try {
@@ -502,12 +503,12 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   @Test
   public void itAllowsWorkerToServiceTransitionIfNotLoadBalanced() {
     SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
-    .build();
+      .build();
     SingularityRequest newRequest = new SingularityRequestBuilder(
       "test",
       RequestType.SERVICE
     )
-    .build();
+      .build();
     SingularityRequest result = validator.checkSingularityRequest(
       newRequest,
       Optional.of(request),
@@ -520,7 +521,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
   @Test
   public void itDoesNotWorkerToServiceTransitionIfLoadBalanced() {
     SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
-    .build();
+      .build();
     SingularityRequest newRequest = new SingularityRequestBuilder(
       "test",
       RequestType.SERVICE
@@ -545,12 +546,12 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "test",
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     SingularityRequest newRequest = new SingularityRequestBuilder(
       "test",
       RequestType.SCHEDULED
     )
-    .build();
+      .build();
     Assertions.assertThrows(
       WebApplicationException.class,
       () ->
@@ -573,7 +574,7 @@ public class ValidatorTest extends SingularitySchedulerTestBase {
       "test",
       RequestType.WORKER
     )
-    .build();
+      .build();
 
     SingularityRequest returnedRequest = validator.checkSingularityRequest(
       newRequest,

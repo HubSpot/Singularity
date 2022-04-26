@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class SingularitySchedulerMetrics {
+
   private final Histogram offerLoopTime;
   private final Counter tasksScheduled;
   private final Histogram offerLoopTasksRemaining;

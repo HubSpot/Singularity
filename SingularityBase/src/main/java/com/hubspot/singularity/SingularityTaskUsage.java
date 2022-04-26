@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Current usage for a task")
 public class SingularityTaskUsage {
+
   private final long memoryTotalBytes;
   private final long timestamp; // epoch millis
   private final double cpuSeconds;

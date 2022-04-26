@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SingularityHistoryPersister<T extends SingularityHistoryItem>
   extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityHistoryPersister.class
   );

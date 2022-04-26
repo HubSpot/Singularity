@@ -9,6 +9,7 @@ import java.util.Optional;
   description = "Represents an action requiring tasks for a request to possibly be cleaned or replaced"
 )
 public class SingularityRequestCleanup {
+
   private final Optional<String> user;
   private final RequestCleanupType cleanupType;
   private final Optional<Boolean> killTasks;

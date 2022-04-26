@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public class AbstractRequestResource extends AbstractLeaderAwareResource {
+
   protected final RequestManager requestManager;
   protected final DeployManager deployManager;
   protected final RequestHelper requestHelper;

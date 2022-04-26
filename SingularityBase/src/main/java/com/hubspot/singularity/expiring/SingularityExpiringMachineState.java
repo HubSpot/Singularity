@@ -13,6 +13,7 @@ import java.util.Optional;
 )
 public class SingularityExpiringMachineState
   extends SingularityExpiringParent<SingularityMachineChangeRequest> {
+
   private final String machineId;
   private final MachineState revertToState;
   private final boolean killTasksOnDecommissionTimeout;

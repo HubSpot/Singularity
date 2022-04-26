@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityPendingTaskIdMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityPendingTaskIdMigration.class
   );
@@ -26,7 +27,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
   private final CuratorFramework curator;
   private final TaskManager taskManager;
 
-  private final String PENDING_TASKS_ROOT = "/tasks/scheduled";
+  private static final String PENDING_TASKS_ROOT = "/tasks/scheduled";
 
   @Inject
   public SingularityPendingTaskIdMigration(

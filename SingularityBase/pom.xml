@@ -10,6 +10,10 @@
 
   <artifactId>SingularityBase</artifactId>
 
+  <properties>
+    <hubspot.module.type>CORE</hubspot.module.type>
+  </properties>
+
   <dependencies>
 
     <dependency>

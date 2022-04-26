@@ -10,6 +10,7 @@ import java.util.Optional;
   subTypes = { ExternalArtifact.class, S3Artifact.class }
 )
 public abstract class RemoteArtifact extends Artifact {
+
   private final Optional<Long> filesize;
   private final Optional<Boolean> isArtifactList;
 

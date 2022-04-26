@@ -19,6 +19,7 @@ import java.util.Optional;
  */
 @Schema(description = "The mesos protos representation of a task")
 public class MesosTaskObject {
+
   private final MesosStringValue taskId;
   private final Optional<MesosExecutorInfo> executor;
   private final MesosLabels labels;

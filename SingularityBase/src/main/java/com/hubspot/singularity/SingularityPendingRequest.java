@@ -34,7 +34,7 @@ public class SingularityPendingRequest {
     DEPLOY_CANCELLED,
     DEPLOY_FAILED,
     DEPLOY_FINISHED,
-    TASK_RECOVERED
+    TASK_RECOVERED,
   }
 
   private final String requestId;

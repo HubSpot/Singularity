@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class SingularityTaskMetadataConfiguration {
+
   private long waitToSendTaskCompletedMailBufferMillis = 0;
 
   private Optional<List<String>> allowedMetadataTypes = Optional.empty();

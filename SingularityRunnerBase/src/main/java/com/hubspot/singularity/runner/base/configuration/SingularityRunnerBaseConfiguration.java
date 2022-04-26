@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
+
   @DirectoryExists
   @JsonProperty
   private String s3UploaderMetadataDirectory;

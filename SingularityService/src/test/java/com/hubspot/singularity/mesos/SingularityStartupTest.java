@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
+
   private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   public SingularityStartupTest() {

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 
 public class CleanOldNodesMigration extends ZkDataMigration {
+
   private final CuratorFramework curatorFramework;
   private final RequestGroupManager requestGroupManager;
   private final RequestManager requestManager;

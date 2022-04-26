@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +39,9 @@ import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class LoggingCuratorFramework implements CuratorFramework {
+
   private static final Long FLUSH_INTERVAL = 3L;
   private static final Logger LOG = LoggerFactory.getLogger(
     LoggingCuratorFramework.class
@@ -106,13 +109,11 @@ public class LoggingCuratorFramework implements CuratorFramework {
 
   public void logAndClear() {
     try {
-      counters.forEach(
-        (caller, count) -> {
-          LOG.info("{} called ZK {} times in {} minutes", caller, count, FLUSH_INTERVAL);
+      counters.forEach((caller, count) -> {
+        LOG.info("{} called ZK {} times in {} minutes", caller, count, FLUSH_INTERVAL);
 
-          counters.put(caller, 0);
-        }
-      );
+        counters.put(caller, 0);
+      });
     } catch (Exception e) {
       LOG.error("Failed to log and clear ZooKeeper call counts", e);
     }

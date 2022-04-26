@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
   consolidatedField = "s3uploader"
 )
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
+
   @Min(0)
   @JsonProperty
   private long pollForShutDownMillis = 1000;

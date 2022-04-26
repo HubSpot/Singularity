@@ -12,6 +12,7 @@ import javax.validation.constraints.Min;
   consolidatedField = "s3downloader"
 )
 public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguration {
+
   @Min(1)
   @JsonProperty
   private long httpServerTimeout = TimeUnit.MINUTES.toMillis(30);

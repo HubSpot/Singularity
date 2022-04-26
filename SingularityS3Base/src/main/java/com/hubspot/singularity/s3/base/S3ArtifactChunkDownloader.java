@@ -23,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 
 public class S3ArtifactChunkDownloader implements Callable<Path> {
+
   private final SingularityS3Configuration configuration;
   private final AmazonS3 s3;
   private final S3Artifact s3Artifact;
@@ -164,7 +165,6 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
 
   private Callable<Path> createDownloader(final int retryNum) {
     return new Callable<Path>() {
-
       public Path call() throws Exception {
         final Path chunkPath = (chunk == 0)
           ? downloadTo
@@ -190,7 +190,7 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
           s3Artifact.getS3Bucket(),
           s3Artifact.getS3ObjectKey()
         )
-        .withRange(byteRangeStart, byteRangeEnd);
+          .withRange(byteRangeStart, byteRangeEnd);
 
         S3Object fetchedObject = s3.getObject(getObjectRequest);
 

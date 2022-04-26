@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JDBITaskUsageManager implements TaskUsageManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(JDBITaskUsageManager.class);
 
   private final TaskUsageJDBI taskUsageJDBI;

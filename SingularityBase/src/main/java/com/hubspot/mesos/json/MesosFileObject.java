@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class MesosFileObject {
+
   private final String gid;
   private final String mode;
   private final long mtime;

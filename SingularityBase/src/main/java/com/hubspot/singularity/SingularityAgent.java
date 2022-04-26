@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Schema(description = "Singularity's view of a Mesos agent")
 public class SingularityAgent extends SingularityMachineAbstraction<SingularityAgent> {
+
   private final String host;
   private final String rackId;
   private final Map<String, String> attributes;

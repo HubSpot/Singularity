@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityRequestTypeMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityRequestTypeMigration.class
   );
@@ -89,6 +90,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
   }
 
   static class OldSingularityRequest {
+
     private final String id;
     private final Optional<RequestType> originalRequestType;
     private final RequestType requestType;
@@ -160,6 +162,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
   }
 
   static class OldSingularityRequestWithState {
+
     private final OldSingularityRequest request;
     private final RequestState state;
     private final long timestamp;

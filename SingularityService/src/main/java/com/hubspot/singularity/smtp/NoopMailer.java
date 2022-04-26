@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NoopMailer implements SingularityMailer {
+
   private static final Logger LOG = LoggerFactory.getLogger(NoopMailer.class);
 
   private static final NoopMailer INSTANCE = new NoopMailer();
@@ -95,7 +96,7 @@ public class NoopMailer implements SingularityMailer {
   }
 
   private void logNotSendingEmail(String type) {
-    LOG.debug("Not sending " + type + " mail - no SMTP configuration is present");
+    LOG.debug("Not sending {}} mail - no SMTP configuration is present", type);
   }
 
   @Override

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class ShuffleConfigurationManagerTest extends SingularitySchedulerTestBase {
+
   protected String r1 = "1";
   protected String r2 = "2";
 

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityDeployHistoryPersister
   extends SingularityHistoryPersister<SingularityDeployHistory> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityDeployHistoryPersister.class
   );
@@ -100,13 +101,12 @@ public class SingularityDeployHistoryPersister
                   List<SingularityDeployHistory> deployHistories = allDeployIdsByRequest
                     .getOrDefault(requestId, Collections.emptyList())
                     .stream()
-                    .map(
-                      deployKey ->
-                        deployManager.getDeployHistory(
-                          deployKey.getRequestId(),
-                          deployKey.getDeployId(),
-                          true
-                        )
+                    .map(deployKey ->
+                      deployManager.getDeployHistory(
+                        deployKey.getRequestId(),
+                        deployKey.getDeployId(),
+                        true
+                      )
                     )
                     .filter(Optional::isPresent)
                     .map(Optional::get)

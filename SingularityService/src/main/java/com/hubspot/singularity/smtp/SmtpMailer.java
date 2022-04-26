@@ -58,7 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SmtpMailer implements SingularityMailer, Managed {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
+
+  private static final Logger LOG = LoggerFactory.getLogger(SmtpMailer.class);
 
   private final SingularitySmtpSender smtpSender;
   private final SingularityConfiguration configuration;
@@ -479,9 +480,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
     final String user = task
-      .map(
-        singularityTask ->
-          singularityTask.getTaskRequest().getPendingTask().getUser().orElse("unknown")
+      .map(singularityTask ->
+        singularityTask.getTaskRequest().getPendingTask().getUser().orElse("unknown")
       )
       .orElse("unknown");
 
@@ -577,7 +577,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
   ) {
     mailPreparerExecutorService.submit(
       new Runnable() {
-
         @Override
         public void run() {
           try {
@@ -762,7 +761,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
   public void sendRequestInCooldownMail(final SingularityRequest request) {
     mailPreparerExecutorService.submit(
       new Runnable() {
-
         @Override
         public void run() {
           try {
@@ -826,7 +824,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
   public void sendDisasterMail(final SingularityDisastersData disastersData) {
     mailPreparerExecutorService.submit(
       new Runnable() {
-
         @Override
         public void run() {
           try {
@@ -886,13 +883,13 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private enum RateLimitStatus {
     RATE_LIMITING_DISABLED,
     RATE_LIMITED,
-    NOT_RATE_LIMITED
+    NOT_RATE_LIMITED,
   }
 
   private enum RateLimitResult {
     SEND_MAIL,
     DONT_SEND_MAIL_IN_COOLDOWN,
-    SEND_COOLDOWN_STARTED_MAIL
+    SEND_COOLDOWN_STARTED_MAIL,
   }
 
   private RateLimitStatus getCurrentRateLimitForMail(

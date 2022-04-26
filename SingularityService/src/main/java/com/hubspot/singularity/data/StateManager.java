@@ -42,6 +42,7 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 
 @Singleton
 public class StateManager extends CuratorManager {
+
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "/STATE";
   private static final String TASK_RECONCILIATION_STATISTICS_PATH =
@@ -343,11 +344,10 @@ public class StateManager extends CuratorManager {
     List<SingularityPendingTaskId> allPendingTaskIds = taskManager.getPendingTaskIds();
     List<SingularityPendingTaskId> lateTasks = allPendingTaskIds
       .stream()
-      .filter(
-        p ->
-          now -
-          p.getNextRunAt() >
-          singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis()
+      .filter(p ->
+        now -
+        p.getNextRunAt() >
+        singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis()
       )
       .collect(Collectors.toList());
 
@@ -517,7 +517,9 @@ public class StateManager extends CuratorManager {
         byte[] bytes = curator.getData().forPath(ZKPaths.makePath(ROOT_PATH, child));
 
         states.add(hostStateTranscoder.fromBytes(bytes));
-      } catch (NoNodeException nne) {} catch (Exception e) {
+      } catch (NoNodeException nne) {
+        // didn't see that
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }

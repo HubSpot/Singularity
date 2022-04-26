@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 public class SMTPConfiguration {
+
   @JsonProperty
   private String username;
 

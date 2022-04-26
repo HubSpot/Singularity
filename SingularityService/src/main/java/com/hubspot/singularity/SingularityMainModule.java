@@ -92,6 +92,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 
 public class SingularityMainModule implements Module {
+
   public static final String TASK_TEMPLATE = "task.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE =
     "request.in.cooldown.template";
@@ -247,6 +248,7 @@ public class SingularityMainModule implements Module {
   }
 
   public static class SingularityHostAndPortProvider implements Provider<HostAndPort> {
+
     private final String hostname;
     private final int httpPort;
 

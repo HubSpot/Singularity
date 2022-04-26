@@ -12,6 +12,7 @@ import org.apache.curator.retry.RetryOneTime;
 
 @Singleton
 public class ExecutorIdGenerator {
+
   private volatile DistributedAtomicInteger distributedGenerator = null;
   private final char[] alphabet;
 

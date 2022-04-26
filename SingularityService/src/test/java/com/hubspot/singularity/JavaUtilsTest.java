@@ -36,7 +36,6 @@ public class JavaUtilsTest {
     for (int i = 0; i < numMaxThreads; i++) {
       es.submit(
         new Runnable() {
-
           @Override
           public void run() {
             try {

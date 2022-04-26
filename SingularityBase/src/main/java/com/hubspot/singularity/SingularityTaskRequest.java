@@ -7,6 +7,7 @@ import java.util.Objects;
 
 @Schema(description = "Describes a task that is waiting to be launched")
 public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
+
   private final SingularityRequest request;
   private final SingularityDeploy deploy;
   private final SingularityPendingTask pendingTask;

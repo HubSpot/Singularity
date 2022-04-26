@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class WebhookQueueConfiguration {
+
   @JsonProperty
   private WebhookQueueType queueType = WebhookQueueType.ZOOKEEPER;
 

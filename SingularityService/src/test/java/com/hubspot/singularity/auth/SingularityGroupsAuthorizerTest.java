@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityGroupsAuthorizerTest {
-
   static {
     JerseyGuiceUtils.install((s, serviceLocator) -> null);
   }
@@ -72,7 +71,7 @@ public class SingularityGroupsAuthorizerTest {
     "test",
     RequestType.SERVICE
   )
-  .build();
+    .build();
   public static final SingularityRequest REQUEST_WITH_GROUP_A = new SingularityRequestBuilder(
     "test_a",
     RequestType.SERVICE

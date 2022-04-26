@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings related to how an exit cooldown should behave")
 public class SingularityExitCooldownRequest {
+
   private final Optional<String> message;
   private final Optional<String> actionId;
   private final Optional<Boolean> skipHealthchecks;

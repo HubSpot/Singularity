@@ -16,6 +16,7 @@ import javax.validation.Validator;
 
 public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration>
   implements Provider<T> {
+
   private final Class<T> clazz;
   private final Optional<String> filename;
 

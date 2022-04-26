@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityDeployHealthHelper {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityDeployHealthHelper.class
   );
@@ -58,7 +59,7 @@ public class SingularityDeployHealthHelper {
   public enum DeployHealth {
     WAITING,
     UNHEALTHY,
-    HEALTHY
+    HEALTHY,
   }
 
   private boolean shouldCheckHealthchecks(

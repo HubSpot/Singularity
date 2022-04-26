@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the new priority (0 to 1) for a request")
 public class SingularityPriorityRequest extends SingularityExpiringRequestParent {
+
   /** see {@link SingularityRequest#getTaskPriorityLevel()} */
   private final Optional<Double> priority;
 

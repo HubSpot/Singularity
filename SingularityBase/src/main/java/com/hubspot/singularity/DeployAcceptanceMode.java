@@ -12,5 +12,5 @@ public enum DeployAcceptanceMode {
   /**
    * Immediately advance to the next instance group/succeed the deploy once healthy
    */
-  NONE
+  NONE,
 }

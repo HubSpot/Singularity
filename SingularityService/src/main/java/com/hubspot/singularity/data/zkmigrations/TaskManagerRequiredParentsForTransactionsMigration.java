@@ -6,6 +6,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TaskManagerRequiredParentsForTransactionsMigration extends ZkDataMigration {
+
   private final TaskManager taskManager;
 
   @Inject

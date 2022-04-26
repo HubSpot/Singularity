@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityDeployAcceptanceTest extends SingularitySchedulerTestBase {
+
   @Inject
   Set<DeployAcceptanceHook> acceptanceHooks;
 

@@ -10,6 +10,7 @@ import java.util.Optional;
   subTypes = { SingularityAgent.class, SingularityRack.class }
 )
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
+
   private final String id;
   private final long firstSeenAt;
   private final SingularityMachineStateHistoryUpdate currentState;

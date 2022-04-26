@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings related to skipping healthchecks for a request")
 public class SingularitySkipHealthchecksRequest extends SingularityExpiringRequestParent {
+
   private final Optional<Boolean> skipHealthchecks;
 
   @JsonCreator

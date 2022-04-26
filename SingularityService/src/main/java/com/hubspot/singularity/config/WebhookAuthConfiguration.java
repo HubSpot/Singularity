@@ -5,6 +5,7 @@ import javax.annotation.Nonnegative;
 import javax.validation.constraints.NotNull;
 
 public class WebhookAuthConfiguration {
+
   @JsonProperty
   @NotNull
   private String authVerificationUrl = "";

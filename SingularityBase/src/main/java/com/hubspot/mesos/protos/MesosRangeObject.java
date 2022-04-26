@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MesosRangeObject {
+
   private final Optional<Long> begin;
   private final Optional<Long> end;
 

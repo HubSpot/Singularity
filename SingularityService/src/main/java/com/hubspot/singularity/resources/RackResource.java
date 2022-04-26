@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -39,6 +40,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.RACK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manage Singularity racks")
 @Tags({ @Tag(name = "Racks") })
 public class RackResource extends AbstractMachineResource<SingularityRack> {

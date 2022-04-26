@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Request to add custom metadata to a task")
 public class SingularityTaskMetadataRequest {
+
   private final String type;
   private final String title;
   private final Optional<String> message;

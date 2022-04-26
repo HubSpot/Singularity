@@ -8,6 +8,7 @@ import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityRequestLbCleanup {
+
   private String requestId;
   private Set<String> loadBalancerGroups;
   private String serviceBasePath;

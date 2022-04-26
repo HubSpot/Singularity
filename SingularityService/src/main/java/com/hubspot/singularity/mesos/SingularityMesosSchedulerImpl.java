@@ -73,8 +73,9 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
-    SingularityMesosScheduler.class
+    SingularityMesosSchedulerImpl.class
   );
 
   private final SingularityExceptionNotifier exceptionNotifier;
@@ -536,47 +537,45 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           )
         )
         .build();
-      startRetryer.call(
-        () -> {
+      startRetryer.call(() -> {
+        reconnectException.set(null);
+        AtomicBoolean connected = new AtomicBoolean();
+        callWithStateLock(
+          () ->
+            connected.set(
+              state.getMesosSchedulerState() == MesosSchedulerState.SUBSCRIBED
+            ),
+          "reconnectMesosSync",
+          false
+        );
+        if (connected.get()) {
+          restartInProgress.set(false);
           reconnectException.set(null);
-          AtomicBoolean connected = new AtomicBoolean();
-          callWithStateLock(
-            () ->
-              connected.set(
-                state.getMesosSchedulerState() == MesosSchedulerState.SUBSCRIBED
-              ),
-            "reconnectMesosSync",
-            false
-          );
-          if (connected.get()) {
-            restartInProgress.set(false);
-            reconnectException.set(null);
-            LOG.info("Already connected, cancelling reconnect attempt");
-            return true;
-          }
-          mesosSchedulerClient.close();
-          LOG.info("Closed existing mesos connection");
-          start();
-          long start = System.currentTimeMillis();
-          while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
-            Thread.sleep(10);
-            Throwable t = reconnectException.getAndSet(null);
-            if (t != null) {
-              if (t instanceof IllegalStateException) {
-                // Mesos master's redirect endpoint will return a 301 with empty location if a leader is not elected
-                // This results in an IllegalStateException from MesosClient
-                LOG.warn(
-                  "IllegalStateException from MesosClient, mesos is likely in process of leader election, will retry"
-                );
-              } else {
-                LOG.warn("Exception during reconnect", t);
-              }
-              return false;
-            }
-          }
-          return state.isRunning();
+          LOG.info("Already connected, cancelling reconnect attempt");
+          return true;
         }
-      );
+        mesosSchedulerClient.close();
+        LOG.info("Closed existing mesos connection");
+        start();
+        long start = System.currentTimeMillis();
+        while (!state.isRunning() && System.currentTimeMillis() - start < 30000) {
+          Thread.sleep(10);
+          Throwable t = reconnectException.getAndSet(null);
+          if (t != null) {
+            if (t instanceof IllegalStateException) {
+              // Mesos master's redirect endpoint will return a 301 with empty location if a leader is not elected
+              // This results in an IllegalStateException from MesosClient
+              LOG.warn(
+                "IllegalStateException from MesosClient, mesos is likely in process of leader election, will retry"
+              );
+            } else {
+              LOG.warn("Exception during reconnect", t);
+            }
+            return false;
+          }
+        }
+        return state.isRunning();
+      });
     } catch (RetryException re) {
       if (re.getLastFailedAttempt().getExceptionCause() != null) {
         LOG.error(
@@ -758,60 +757,58 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     long start = System.currentTimeMillis();
     return statusUpdateHandler
       .processStatusUpdateAsync(status)
-      .whenCompleteAsync(
-        (result, throwable) -> {
-          if (throwable != null) {
-            LOG.error(
-              "Scheduler threw an uncaught exception processing status updates",
-              throwable
+      .whenCompleteAsync((result, throwable) -> {
+        if (throwable != null) {
+          LOG.error(
+            "Scheduler threw an uncaught exception processing status updates",
+            throwable
+          );
+          boolean isZkException = Throwables
+            .getCausalChain(throwable)
+            .stream()
+            .anyMatch(t -> t instanceof KeeperException);
+          if (isZkException) {
+            LOG.info(
+              "Not aborting for KeeperException. Leaving status update unacked for {}",
+              status.getTaskId()
             );
-            boolean isZkException = Throwables
-              .getCausalChain(throwable)
-              .stream()
-              .anyMatch(t -> t instanceof KeeperException);
-            if (isZkException) {
-              LOG.info(
-                "Not aborting for KeeperException. Leaving status update unacked for {}",
-                status.getTaskId()
-              );
-              return;
-            }
-            notifyStopping();
-            abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(throwable));
+            return;
           }
-          if (status.hasUuid()) {
-            mesosSchedulerClient.acknowledge(
-              status.getAgentId(),
-              status.getTaskId(),
-              status.getUuid()
-            );
-          }
-          if (result == StatusUpdateResult.KILL_TASK) {
-            LOG.warn(
-              "Killing a task {} which Singularity has no remaining active state for. It will be given 1 minute to shut down gracefully",
-              status.getTaskId().getValue()
-            );
-            mesosSchedulerClient.kill(
-              status.getTaskId(),
-              status.getAgentId(),
-              KillPolicy
-                .newBuilder()
-                .setGracePeriod(
-                  DurationInfo
-                    .newBuilder()
-                    .setNanoseconds(TimeUnit.MINUTES.toNanos(1))
-                    .build()
-                )
-                .build()
-            );
-          }
-          LOG.debug(
-            "Handled status update for {} in {}",
-            status.getTaskId().getValue(),
-            JavaUtils.duration(start)
+          notifyStopping();
+          abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(throwable));
+        }
+        if (status.hasUuid()) {
+          mesosSchedulerClient.acknowledge(
+            status.getAgentId(),
+            status.getTaskId(),
+            status.getUuid()
           );
         }
-      );
+        if (result == StatusUpdateResult.KILL_TASK) {
+          LOG.warn(
+            "Killing a task {} which Singularity has no remaining active state for. It will be given 1 minute to shut down gracefully",
+            status.getTaskId().getValue()
+          );
+          mesosSchedulerClient.kill(
+            status.getTaskId(),
+            status.getAgentId(),
+            KillPolicy
+              .newBuilder()
+              .setGracePeriod(
+                DurationInfo
+                  .newBuilder()
+                  .setNanoseconds(TimeUnit.MINUTES.toNanos(1))
+                  .build()
+              )
+              .build()
+          );
+        }
+        LOG.debug(
+          "Handled status update for {} in {}",
+          status.getTaskId().getValue(),
+          JavaUtils.duration(start)
+        );
+      });
   }
 
   private void handleQueuedStatusUpdates() {

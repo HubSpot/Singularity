@@ -14,7 +14,6 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityMainModule;
@@ -38,7 +37,6 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
@@ -61,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosStatusUpdateHandler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosStatusUpdateHandler.class
   );

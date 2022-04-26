@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 public class IdTranscoder<T extends SingularityId> implements Transcoder<T> {
+
   private static final byte[] EMPTY_BYTES = new byte[0];
 
   private final Method valueOfMethod;

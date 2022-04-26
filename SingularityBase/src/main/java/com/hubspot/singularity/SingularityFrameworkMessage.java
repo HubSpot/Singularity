@@ -18,12 +18,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @JsonSubTypes(
   {
     @Type(value = SingularityTaskShellCommandRequest.class, name = "SHELL_COMMAND"),
-    @Type(value = SingularityTaskDestroyFrameworkMessage.class, name = "TASK_KILL")
+    @Type(value = SingularityTaskDestroyFrameworkMessage.class, name = "TASK_KILL"),
   }
 )
 @Schema(
   subTypes = {
-    SingularityTaskShellCommandRequest.class, SingularityTaskDestroyFrameworkMessage.class
+    SingularityTaskShellCommandRequest.class,
+    SingularityTaskDestroyFrameworkMessage.class,
   }
 )
 public abstract class SingularityFrameworkMessage {

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ArtifactManagerProvider implements Provider<ArtifactManager> {
+
   private final Logger log;
   private final SingularityRunnerBaseConfiguration runnerBaseConfiguration;
   private final SingularityS3Configuration s3Configuration;

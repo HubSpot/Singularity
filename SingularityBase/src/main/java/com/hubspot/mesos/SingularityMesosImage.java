@@ -11,6 +11,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Describes a container image to be launched in mesos")
 public class SingularityMesosImage {
+
   private final SingularityMesosImageType type;
   private final Optional<SingularityAppcImage> appc;
   private final Optional<SingularityDockerImage> docker;

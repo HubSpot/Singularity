@@ -16,6 +16,7 @@ import org.apache.curator.framework.CuratorFramework;
 
 @Singleton
 public class PriorityManager extends CuratorAsyncManager {
+
   private static final String PRIORITY_ROOT = "/priority";
   private static final String PRIORITY_KILL = PRIORITY_ROOT + "/kill";
   private static final String PRIORITY_FREEZE = PRIORITY_ROOT + "/freeze";

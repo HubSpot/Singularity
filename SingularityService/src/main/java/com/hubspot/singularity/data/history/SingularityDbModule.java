@@ -29,6 +29,7 @@ import org.jdbi.v3.jackson2.Jackson2Config;
 import org.jdbi.v3.jackson2.Jackson2Plugin;
 
 public class SingularityDbModule extends AbstractModule {
+
   private final Optional<DataSourceFactory> configuration;
   private final boolean sqlReadOnly;
 
@@ -80,6 +81,7 @@ public class SingularityDbModule extends AbstractModule {
   }
 
   static class DBIProvider implements Provider<Jdbi> {
+
     private final JdbiFactory factory = new JdbiFactory();
     private final Environment environment;
     private final DataSourceFactory dataSourceFactory;
@@ -92,8 +94,7 @@ public class SingularityDbModule extends AbstractModule {
     DBIProvider(
       final Environment environment,
       final SingularityConfiguration singularityConfiguration
-    )
-      throws ClassNotFoundException {
+    ) throws ClassNotFoundException {
       this.environment = environment;
       this.dataSourceFactory =
         checkNotNull(singularityConfiguration, "singularityConfiguration is null")
@@ -134,6 +135,7 @@ public class SingularityDbModule extends AbstractModule {
   }
 
   static class MySQLHistoryJDBIProvider implements Provider<HistoryJDBI> {
+
     private final Jdbi dbi;
 
     @Inject
@@ -148,6 +150,7 @@ public class SingularityDbModule extends AbstractModule {
   }
 
   static class PostgresHistoryJDBIProvider implements Provider<HistoryJDBI> {
+
     private final Jdbi dbi;
 
     @Inject
@@ -162,6 +165,7 @@ public class SingularityDbModule extends AbstractModule {
   }
 
   static class MySQLTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+
     private final Jdbi dbi;
 
     @Inject
@@ -176,6 +180,7 @@ public class SingularityDbModule extends AbstractModule {
   }
 
   static class PostgresTaskUsageJDBIProvider implements Provider<TaskUsageJDBI> {
+
     private final Jdbi dbi;
 
     @Inject

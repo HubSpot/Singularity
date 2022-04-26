@@ -10,6 +10,10 @@
 
   <artifactId>SingularityMesosClient</artifactId>
 
+  <properties>
+    <hubspot.module.type>CLIENT</hubspot.module.type>
+  </properties>
+
   <dependencies>
 
     <dependency>

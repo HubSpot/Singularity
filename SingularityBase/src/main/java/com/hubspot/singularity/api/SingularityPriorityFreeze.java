@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a freeze on task launches based on task priority")
 public class SingularityPriorityFreeze {
+
   private final double minimumPriorityLevel;
   private final boolean killTasks;
   private final Optional<String> message;

@@ -11,6 +11,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 
 @Singleton
 public class SingularityQueryParamAuthenticator implements SingularityAuthenticator {
+
   private final SingularityAuthDatastore authDatastore;
 
   @Inject

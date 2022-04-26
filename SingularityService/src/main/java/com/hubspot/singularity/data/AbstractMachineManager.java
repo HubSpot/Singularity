@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>>
   extends CuratorAsyncManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
 
   private static final String HISTORY_PATH = "history";
@@ -164,7 +165,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     FAILURE_NOT_FOUND,
     FAILURE_ALREADY_AT_STATE,
     FAILURE_ILLEGAL_TRANSITION,
-    SUCCESS
+    SUCCESS,
   }
 
   public StateChangeResult changeState(
@@ -313,11 +314,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     histories
       .stream()
       .skip(maxHistoryEntries)
-      .forEach(
-        history -> {
-          delete(getHistoryUpdatePath(history));
-        }
-      );
+      .forEach(history -> {
+        delete(getHistoryUpdatePath(history));
+      });
   }
 
   private SingularityCreateResult saveHistoryUpdate(

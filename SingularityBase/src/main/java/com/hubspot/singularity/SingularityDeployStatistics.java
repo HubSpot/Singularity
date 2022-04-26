@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Schema(description = "Task statistics related to a particular deploy")
 public class SingularityDeployStatistics {
+
   private final String requestId;
   private final String deployId;
   private final int numTasks;

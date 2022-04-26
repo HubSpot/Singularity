@@ -14,7 +14,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
-import com.jayway.awaitility.Awaitility;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +27,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
+
   @Inject
   SingularityDeployHealthHelper deployHealthHelper;
 
@@ -235,7 +235,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .build();
 
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
     db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.DAYS.toMillis(1)));
 
     SingularityDeploy deploy = initDeploy(db, hourAgo);
@@ -291,7 +291,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .setMaxRetries(Optional.of(2))
       .build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
@@ -374,7 +374,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .setMaxRetries(Optional.of(1))
       .build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initAndFinishDeploy(request, db, Optional.empty());
 
@@ -450,7 +450,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .build();
 
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
     deployChecker.checkDeploys();
@@ -524,7 +524,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .setFailureStatusCodes(Optional.of(failureCodes))
       .build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
@@ -599,7 +599,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .setStartupTimeoutSeconds(Optional.of((int) TimeUnit.MINUTES.toSeconds(30)))
       .build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
     db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.DAYS.toMillis(1)));
     SingularityDeploy deploy = initDeploy(db, hourAgo);
 
@@ -649,7 +649,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       .setMaxRetries(Optional.of(1))
       .build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId)
-    .setHealthcheck(Optional.of(options));
+      .setHealthcheck(Optional.of(options));
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
     deployChecker.checkDeploys();
     Assertions.assertTrue(
@@ -731,7 +731,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testPortIndices() {
+  public void testPortIndices() throws InterruptedException {
     try {
       setConfigurationForNoDelay();
       initRequest();
@@ -781,10 +781,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       healthchecker.asyncHealthcheck(firstTask);
 
-      Awaitility
-        .await("healthcheck present")
-        .atMost(6, TimeUnit.SECONDS)
-        .until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+      // TODO - better loop for check here, removed awaitility
+      Thread.sleep(6000);
 
       Assertions.assertTrue(
         taskManager
@@ -799,7 +797,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testPortNumber() {
+  public void testPortNumber() throws InterruptedException {
     try {
       setConfigurationForNoDelay();
       initRequest();
@@ -850,10 +848,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       healthchecker.asyncHealthcheck(firstTask);
 
-      Awaitility
-        .await("healthcheck present")
-        .atMost(5, TimeUnit.SECONDS)
-        .until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+      // TODO - better wait
+      Thread.sleep(5000);
 
       Assertions.assertTrue(
         taskManager

@@ -10,6 +10,7 @@ import java.util.Optional;
 @Schema(description = "Describes a completed deploy")
 public class SingularityDeployHistory
   implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
+
   private final Optional<SingularityDeployResult> deployResult;
   private final SingularityDeployMarker deployMarker;
   private final Optional<SingularityDeploy> deploy;

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class MesosExecutorObject {
+
   private final String directory;
   private final String id;
   private final String container;

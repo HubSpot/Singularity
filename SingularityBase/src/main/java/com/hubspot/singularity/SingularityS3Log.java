@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(title = "Represents a task sandbox file that was uploaded to S3")
 public class SingularityS3Log extends SingularityS3LogMetadata {
+
   private final String getUrl;
   private final String downloadUrl;
 

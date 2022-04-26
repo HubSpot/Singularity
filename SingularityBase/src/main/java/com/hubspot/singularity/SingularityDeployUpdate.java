@@ -11,7 +11,7 @@ public class SingularityDeployUpdate {
   @Schema
   public enum DeployEventType {
     STARTING,
-    FINISHED
+    FINISHED,
   }
 
   private final SingularityDeployMarker deployMarker;

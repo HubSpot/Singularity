@@ -15,6 +15,7 @@ import java.util.Set;
 public class SingularityTaskHistoryUpdate
   extends SingularityTaskIdHolder
   implements Comparable<SingularityTaskHistoryUpdate> {
+
   private final long timestamp;
   private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
@@ -26,7 +27,7 @@ public class SingularityTaskHistoryUpdate
     UNKNOWN,
     WAITING,
     RUNNING,
-    DONE
+    DONE,
   }
 
   public static Optional<SingularityTaskHistoryUpdate> getUpdate(

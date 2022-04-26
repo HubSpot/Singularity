@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosOfferScheduler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosOfferScheduler.class
   );
@@ -192,23 +193,21 @@ public class SingularityMesosOfferScheduler {
 
     Map<String, Offer> offersToCheck = uncached
       .stream()
-      .filter(
-        o -> {
-          if (!isValidOffer(o)) {
-            if (o.getId() != null && o.getId().getValue() != null) {
-              LOG.warn("Got invalid offer {}", o);
-              mesosSchedulerClient.decline(Collections.singletonList(o.getId()));
-            } else {
-              LOG.warn(
-                "Offer {} was not valid, but we can't decline it because we have no offer ID!",
-                o
-              );
-            }
-            return false;
+      .filter(o -> {
+        if (!isValidOffer(o)) {
+          if (o.getId() != null && o.getId().getValue() != null) {
+            LOG.warn("Got invalid offer {}", o);
+            mesosSchedulerClient.decline(Collections.singletonList(o.getId()));
+          } else {
+            LOG.warn(
+              "Offer {} was not valid, but we can't decline it because we have no offer ID!",
+              o
+            );
           }
-          return true;
+          return false;
         }
-      )
+        return true;
+      })
       .collect(
         Collectors.toConcurrentMap(o -> o.getId().getValue(), Function.identity())
       );
@@ -236,8 +235,8 @@ public class SingularityMesosOfferScheduler {
     }
 
     List<CompletableFuture<Void>> checkFutures = new ArrayList<>();
-    uncached.forEach(
-      offer -> checkFutures.add(runAsync(() -> checkOfferAndAgent(offer, offersToCheck)))
+    uncached.forEach(offer ->
+      checkFutures.add(runAsync(() -> checkOfferAndAgent(offer, offersToCheck)))
     );
     CompletableFutures.allOf(checkFutures).join();
 
@@ -254,15 +253,13 @@ public class SingularityMesosOfferScheduler {
             mesosSchedulerClient
           );
 
-          leftoverOffers.forEach(
-            o -> {
-              if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
-              } else {
-                offerCache.cacheOffer(start, o);
-              }
+          leftoverOffers.forEach(o -> {
+            if (cachedOffers.containsKey(o.getId().getValue())) {
+              offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
+            } else {
+              offerCache.cacheOffer(start, o);
             }
-          );
+          });
 
           List<Offer> offersAcceptedFrom = offerHolder.getOffers();
           offersAcceptedFrom.removeAll(leftoverOffers);
@@ -277,15 +274,13 @@ public class SingularityMesosOfferScheduler {
         } else {
           offerHolder
             .getOffers()
-            .forEach(
-              o -> {
-                if (cachedOffers.containsKey(o.getId().getValue())) {
-                  offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
-                } else {
-                  offerCache.cacheOffer(start, o);
-                }
+            .forEach(o -> {
+              if (cachedOffers.containsKey(o.getId().getValue())) {
+                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
+              } else {
+                offerCache.cacheOffer(start, o);
               }
-            );
+            });
         }
       }
 
@@ -304,32 +299,27 @@ public class SingularityMesosOfferScheduler {
         offersToCheck
           .values()
           .stream()
-          .filter(
-            o -> {
-              if (o == null || o.getId() == null || o.getId().getValue() == null) {
-                LOG.warn("Got bad offer {} while trying to decline offers!", o);
-                return false;
-              }
-
-              return true;
+          .filter(o -> {
+            if (o == null || o.getId() == null || o.getId().getValue() == null) {
+              LOG.warn("Got bad offer {} while trying to decline offers!", o);
+              return false;
             }
-          )
-          .filter(
-            o ->
-              !acceptedOffers.contains(o.getId()) &&
-              !cachedOffers.containsKey(o.getId().getValue())
+
+            return true;
+          })
+          .filter(o ->
+            !acceptedOffers.contains(o.getId()) &&
+            !cachedOffers.containsKey(o.getId().getValue())
           )
           .map(Offer::getId)
           .collect(Collectors.toList())
       );
 
-      offersToCheck.forEach(
-        (id, o) -> {
-          if (cachedOffers.containsKey(id)) {
-            offerCache.returnOffer(cachedOffers.get(id));
-          }
+      offersToCheck.forEach((id, o) -> {
+        if (cachedOffers.containsKey(id)) {
+          offerCache.returnOffer(cachedOffers.get(id));
         }
-      );
+      });
 
       throw t;
     }
@@ -403,21 +393,19 @@ public class SingularityMesosOfferScheduler {
       .entrySet()
       .stream()
       .filter(e -> e.getValue().size() > 0)
-      .map(
-        e -> {
-          List<Offer> offersList = e.getValue();
-          String agentId = e.getKey();
-          return new SingularityOfferHolder(
-            offersList,
-            numDueTasks,
-            agentAndRackHelper.getRackIdOrDefault(offersList.get(0)),
-            agentId,
-            offersList.get(0).getHostname(),
-            agentAndRackHelper.getTextAttributes(offersList.get(0)),
-            agentAndRackHelper.getReservedAgentAttributes(offersList.get(0))
-          );
-        }
-      )
+      .map(e -> {
+        List<Offer> offersList = e.getValue();
+        String agentId = e.getKey();
+        return new SingularityOfferHolder(
+          offersList,
+          numDueTasks,
+          agentAndRackHelper.getRackIdOrDefault(offersList.get(0)),
+          agentId,
+          offersList.get(0).getHostname(),
+          agentAndRackHelper.getTextAttributes(offersList.get(0)),
+          agentAndRackHelper.getReservedAgentAttributes(offersList.get(0))
+        );
+      })
       .collect(Collectors.toMap(SingularityOfferHolder::getAgentId, Function.identity()));
 
     if (sortedTaskRequestHolders.isEmpty()) {
@@ -435,60 +423,56 @@ public class SingularityMesosOfferScheduler {
     List<CompletableFuture<Void>> currentUsagesFutures = new ArrayList<>();
     for (SingularityOfferHolder offerHolder : offerHolders.values()) {
       currentUsagesFutures.add(
-        runAsync(
-          () -> {
-            String agentId = offerHolder.getAgentId();
-            Optional<SingularityAgentUsageWithId> maybeUsage = Optional.ofNullable(
-              currentUsages.get(agentId)
-            );
+        runAsync(() -> {
+          String agentId = offerHolder.getAgentId();
+          Optional<SingularityAgentUsageWithId> maybeUsage = Optional.ofNullable(
+            currentUsages.get(agentId)
+          );
 
-            if (
-              configuration.isReCheckMetricsForLargeNewTaskCount() &&
-              maybeUsage.isPresent()
-            ) {
-              long newTaskCount = taskManager
-                .getActiveTaskIds()
-                .stream()
-                .filter(
-                  t ->
-                    t.getStartedAt() > maybeUsage.get().getTimestamp() &&
-                    t.getSanitizedHost().equals(offerHolder.getSanitizedHost())
-                )
-                .count();
-              if (newTaskCount >= maybeUsage.get().getNumTasks() / 2) {
-                try {
-                  MesosAgentMetricsSnapshotObject metricsSnapshot = usageHelper.getMetricsSnapshot(
-                    offerHolder.getHostname()
-                  );
+          if (
+            configuration.isReCheckMetricsForLargeNewTaskCount() && maybeUsage.isPresent()
+          ) {
+            long newTaskCount = taskManager
+              .getActiveTaskIds()
+              .stream()
+              .filter(t ->
+                t.getStartedAt() > maybeUsage.get().getTimestamp() &&
+                t.getSanitizedHost().equals(offerHolder.getSanitizedHost())
+              )
+              .count();
+            if (newTaskCount >= maybeUsage.get().getNumTasks() / 2) {
+              try {
+                MesosAgentMetricsSnapshotObject metricsSnapshot = usageHelper.getMetricsSnapshot(
+                  offerHolder.getHostname()
+                );
 
-                  if (
-                    metricsSnapshot.getSystemLoad5Min() /
-                    metricsSnapshot.getSystemCpusTotal() >
-                    mesosConfiguration.getRecheckMetricsLoad1Threshold() ||
-                    metricsSnapshot.getSystemLoad1Min() /
-                    metricsSnapshot.getSystemCpusTotal() >
-                    mesosConfiguration.getRecheckMetricsLoad5Threshold()
-                  ) {
-                    // Come back to this agent after we have collected more metrics
-                    LOG.info(
-                      "Skipping evaluation of {} until new metrics are collected. Current load is load1: {}, load5: {}",
-                      offerHolder.getHostname(),
-                      metricsSnapshot.getSystemLoad1Min(),
-                      metricsSnapshot.getSystemLoad5Min()
-                    );
-                    currentUsages.remove(agentId);
-                  }
-                } catch (Throwable t) {
-                  LOG.warn(
-                    "Could not check metrics for host {}, skipping",
-                    offerHolder.getHostname()
+                if (
+                  metricsSnapshot.getSystemLoad5Min() /
+                  metricsSnapshot.getSystemCpusTotal() >
+                  mesosConfiguration.getRecheckMetricsLoad1Threshold() ||
+                  metricsSnapshot.getSystemLoad1Min() /
+                  metricsSnapshot.getSystemCpusTotal() >
+                  mesosConfiguration.getRecheckMetricsLoad5Threshold()
+                ) {
+                  // Come back to this agent after we have collected more metrics
+                  LOG.info(
+                    "Skipping evaluation of {} until new metrics are collected. Current load is load1: {}, load5: {}",
+                    offerHolder.getHostname(),
+                    metricsSnapshot.getSystemLoad1Min(),
+                    metricsSnapshot.getSystemLoad5Min()
                   );
                   currentUsages.remove(agentId);
                 }
+              } catch (Throwable t) {
+                LOG.warn(
+                  "Could not check metrics for host {}, skipping",
+                  offerHolder.getHostname()
+                );
+                currentUsages.remove(agentId);
               }
             }
           }
-        )
+        })
       );
     }
     CompletableFutures.allOf(currentUsagesFutures).join();
@@ -498,23 +482,22 @@ public class SingularityMesosOfferScheduler {
     for (SingularityAgentUsageWithId usage : currentUsages.values()) {
       if (offerHolders.containsKey(usage.getAgentId())) {
         usagesWithScoresFutures.add(
-          runAsync(
-            () ->
-              currentUsagesById.put(
-                usage.getAgentId(),
-                new SingularityAgentUsageWithCalculatedScores(
-                  usage,
-                  mesosConfiguration.getScoreUsingSystemLoad(),
-                  getMaxProbableUsageForAgent(
-                    activeTaskIds,
-                    requestUtilizations,
-                    offerHolders.get(usage.getAgentId()).getSanitizedHost()
-                  ),
-                  mesosConfiguration.getLoad5OverloadedThreshold(),
-                  mesosConfiguration.getLoad1OverloadedThreshold(),
-                  usage.getTimestamp()
-                )
+          runAsync(() ->
+            currentUsagesById.put(
+              usage.getAgentId(),
+              new SingularityAgentUsageWithCalculatedScores(
+                usage,
+                mesosConfiguration.getScoreUsingSystemLoad(),
+                getMaxProbableUsageForAgent(
+                  activeTaskIds,
+                  requestUtilizations,
+                  offerHolders.get(usage.getAgentId()).getSanitizedHost()
+                ),
+                mesosConfiguration.getLoad5OverloadedThreshold(),
+                mesosConfiguration.getLoad1OverloadedThreshold(),
+                usage.getTimestamp()
               )
+            )
           )
         );
       }
@@ -539,119 +522,109 @@ public class SingularityMesosOfferScheduler {
           .collect(Collectors.groupingBy(t -> t.getTaskRequest().getRequest().getId()))
           .entrySet()
           .stream()
-          .map(
-            entry ->
-              runAsync(
+          .map(entry ->
+            runAsync(() -> {
+              lock.tryRunWithRequestLock(
                 () -> {
-                  lock.tryRunWithRequestLock(
-                    () -> {
-                      offerCheckTempLock.lock();
-                      try {
-                        long startRequest = System.currentTimeMillis();
-                        int evaluated = 0;
-                        for (SingularityTaskRequestHolder taskRequestHolder : entry.getValue()) {
-                          long now = System.currentTimeMillis();
-                          boolean isOfferLoopTakingTooLong =
-                            now -
-                            startCheck >
-                            mesosConfiguration.getOfferLoopTimeoutMillis();
-                          boolean isRequestInOfferLoopTakingTooLong =
-                            (
-                              now -
-                              startRequest >
-                              mesosConfiguration.getOfferLoopRequestTimeoutMillis() &&
-                              evaluated > 1
-                            );
+                  offerCheckTempLock.lock();
+                  try {
+                    long startRequest = System.currentTimeMillis();
+                    int evaluated = 0;
+                    for (SingularityTaskRequestHolder taskRequestHolder : entry.getValue()) {
+                      long now = System.currentTimeMillis();
+                      boolean isOfferLoopTakingTooLong =
+                        now - startCheck > mesosConfiguration.getOfferLoopTimeoutMillis();
+                      boolean isRequestInOfferLoopTakingTooLong =
+                        (
+                          now -
+                          startRequest >
+                          mesosConfiguration.getOfferLoopRequestTimeoutMillis() &&
+                          evaluated > 1
+                        );
+                      if (isOfferLoopTakingTooLong || isRequestInOfferLoopTakingTooLong) {
+                        LOG.warn(
+                          "{} is holding the offer lock for too long, skipping remaining {} tasks for scheduling",
+                          taskRequestHolder.getTaskRequest().getRequest().getId(),
+                          entry.getValue().size() - evaluated
+                        );
+                        break;
+                      }
+                      evaluated++;
+                      List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(
+                        taskRequestHolder.getTaskRequest().getRequest().getId()
+                      );
+                      if (
+                        isTooManyInstancesForRequest(
+                          taskRequestHolder.getTaskRequest(),
+                          activeTaskIdsForRequest
+                        )
+                      ) {
+                        LOG.debug(
+                          "Skipping pending task {}, too many instances already running",
+                          taskRequestHolder
+                            .getTaskRequest()
+                            .getPendingTask()
+                            .getPendingTaskId()
+                        );
+                        continue;
+                      }
+
+                      Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
+
+                      for (SingularityOfferHolder offerHolder : offerHolders.values()) {
+                        if (!isOfferFull(offerHolder)) {
                           if (
-                            isOfferLoopTakingTooLong || isRequestInOfferLoopTakingTooLong
+                            calculateScore(
+                              requestUtilizations,
+                              currentUsagesById,
+                              taskRequestHolder,
+                              scorePerOffer,
+                              activeTaskIdsForRequest,
+                              offerHolder,
+                              deployStatsCache,
+                              overloadedHosts
+                            ) >
+                            mesosConfiguration.getGoodEnoughScoreThreshold()
                           ) {
-                            LOG.warn(
-                              "{} is holding the offer lock for too long, skipping remaining {} tasks for scheduling",
-                              taskRequestHolder.getTaskRequest().getRequest().getId(),
-                              entry.getValue().size() - evaluated
-                            );
                             break;
                           }
-                          evaluated++;
-                          List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(
-                            taskRequestHolder.getTaskRequest().getRequest().getId()
-                          );
-                          if (
-                            isTooManyInstancesForRequest(
-                              taskRequestHolder.getTaskRequest(),
-                              activeTaskIdsForRequest
-                            )
-                          ) {
-                            LOG.debug(
-                              "Skipping pending task {}, too many instances already running",
-                              taskRequestHolder
-                                .getTaskRequest()
-                                .getPendingTask()
-                                .getPendingTaskId()
-                            );
-                            continue;
-                          }
-
-                          Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
-
-                          for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-                            if (!isOfferFull(offerHolder)) {
-                              if (
-                                calculateScore(
-                                  requestUtilizations,
-                                  currentUsagesById,
-                                  taskRequestHolder,
-                                  scorePerOffer,
-                                  activeTaskIdsForRequest,
-                                  offerHolder,
-                                  deployStatsCache,
-                                  overloadedHosts
-                                ) >
-                                mesosConfiguration.getGoodEnoughScoreThreshold()
-                              ) {
-                                break;
-                              }
-                            }
-                          }
-
-                          if (!scorePerOffer.isEmpty()) {
-                            SingularityOfferHolder bestOffer = offerHolders.get(
-                              Collections
-                                .max(
-                                  scorePerOffer.entrySet(),
-                                  Map.Entry.comparingByValue()
-                                )
-                                .getKey()
-                            );
-                            LOG.info(
-                              "Best offer {}/1 is on {}",
-                              scorePerOffer.get(bestOffer.getAgentId()),
-                              bestOffer.getSanitizedHost()
-                            );
-                            acceptTask(bestOffer, taskRequestHolder);
-                            metrics.getTasksScheduled().inc();
-                            tasksScheduled.getAndIncrement();
-                            updateAgentUsageScores(
-                              taskRequestHolder,
-                              currentUsagesById,
-                              bestOffer.getAgentId(),
-                              requestUtilizations
-                            );
-                          } else {
-                            noMatches.getAndIncrement();
-                          }
                         }
-                      } finally {
-                        offerCheckTempLock.unlock();
                       }
-                    },
-                    entry.getKey(),
-                    String.format("%s#%s", getClass().getSimpleName(), "checkOffers"),
-                    mesosConfiguration.getOfferLoopRequestTimeoutMillis(),
-                    TimeUnit.MILLISECONDS
-                  );
-                }
-              )
+
+                      if (!scorePerOffer.isEmpty()) {
+                        SingularityOfferHolder bestOffer = offerHolders.get(
+                          Collections
+                            .max(scorePerOffer.entrySet(), Map.Entry.comparingByValue())
+                            .getKey()
+                        );
+                        LOG.info(
+                          "Best offer {}/1 is on {}",
+                          scorePerOffer.get(bestOffer.getAgentId()),
+                          bestOffer.getSanitizedHost()
+                        );
+                        acceptTask(bestOffer, taskRequestHolder);
+                        metrics.getTasksScheduled().inc();
+                        tasksScheduled.getAndIncrement();
+                        updateAgentUsageScores(
+                          taskRequestHolder,
+                          currentUsagesById,
+                          bestOffer.getAgentId(),
+                          requestUtilizations
+                        );
+                      } else {
+                        noMatches.getAndIncrement();
+                      }
+                    }
+                  } finally {
+                    offerCheckTempLock.unlock();
+                  }
+                },
+                entry.getKey(),
+                String.format("%s#%s", getClass().getSimpleName(), "checkOffers"),
+                mesosConfiguration.getOfferLoopRequestTimeoutMillis(),
+                TimeUnit.MILLISECONDS
+              );
+            })
           )
           .collect(Collectors.toList())
       )
@@ -830,22 +803,20 @@ public class SingularityMesosOfferScheduler {
       scheduler.getDueTasks()
     );
 
-    taskRequests.forEach(
-      taskRequest ->
-        LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId())
+    taskRequests.forEach(taskRequest ->
+      LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId())
     );
 
     taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
 
     return taskRequests
       .stream()
-      .map(
-        taskRequest ->
-          new SingularityTaskRequestHolder(
-            taskRequest,
-            defaultResources,
-            defaultCustomExecutorResources
-          )
+      .map(taskRequest ->
+        new SingularityTaskRequestHolder(
+          taskRequest,
+          defaultResources,
+          defaultCustomExecutorResources
+        )
       )
       .collect(Collectors.toList());
   }

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityLeaderController
   implements LeaderLatchListener, ConnectionStateListener {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityLeaderController.class
   );
@@ -110,7 +111,6 @@ public class SingularityLeaderController
         }
         lostConnectionStateChecker =
           new TimerTask() {
-
             @Override
             public void run() {
               stateHandlerLock.lock();
@@ -208,7 +208,6 @@ public class SingularityLeaderController
         // will call notLeader/isLeader is quick succession.
         TIMER.schedule(
           new TimerTask() {
-
             @Override
             public void run() {
               stateHandlerLock.lock();
@@ -278,6 +277,7 @@ public class SingularityLeaderController
 
   // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.
   public class StatePoller extends Thread {
+
     private final AtomicBoolean finished = new AtomicBoolean();
     private Lock lock = new ReentrantLock();
     private volatile boolean interrupted = false;
@@ -308,12 +308,12 @@ public class SingularityLeaderController
     @Override
     public void run() {
       while (!finished.get()) {
+        lock.lock();
         try {
-          lock.lock();
           // save current interrupt state and clear it.
           interrupted |= Thread.interrupted();
           final SingularityHostState state = getHostState();
-          LOG.trace("Saving state in ZK: " + state);
+          LOG.trace("Saving state in ZK: {}", state);
           stateManager.save(state);
           if (master) {
             stateManager.saveNewState();

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityManagedScheduledExecutorServiceFactory {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityManagedScheduledExecutorServiceFactory.class
   );

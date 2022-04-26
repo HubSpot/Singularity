@@ -8,6 +8,7 @@ import java.util.Map;
 
 @Schema(title = "A container for metrics")
 public class SingularityMetricsContainer {
+
   private final Map<String, Metric> metrics;
 
   @JsonCreator

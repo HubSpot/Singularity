@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a new deploy")
 public class SingularityDeployRequest {
+
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
   private final SingularityDeploy deploy;
   private final Optional<String> message;

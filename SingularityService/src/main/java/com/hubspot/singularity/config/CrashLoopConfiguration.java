@@ -1,6 +1,7 @@
 package com.hubspot.singularity.config;
 
 public class CrashLoopConfiguration {
+
   private int evaluateCooldownOverMinutes = 1;
   private int cooldownFailureThreshold = 5;
 

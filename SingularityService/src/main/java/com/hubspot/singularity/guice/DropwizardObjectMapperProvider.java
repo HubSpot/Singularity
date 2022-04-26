@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class DropwizardObjectMapperProvider implements Provider<ObjectMapper> {
+
   private final Environment environment;
 
   @Inject

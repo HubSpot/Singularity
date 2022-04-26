@@ -10,6 +10,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import java.util.Optional;
 
 public class SingularityPendingRequestParent extends SingularityRequestParent {
+
   private final SingularityPendingRequest pendingRequest;
 
   public static SingularityPendingRequestParent fromSingularityRequestParent(

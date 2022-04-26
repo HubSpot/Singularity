@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.net.SocketFactory;
 
 public class GraphiteWithTags extends Graphite {
+
   private final Map<String, String> tags;
 
   public GraphiteWithTags(

@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 class SingularityStartup {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
   private final MesosClient mesosClient;
@@ -104,7 +105,7 @@ class SingularityStartup {
       MesosUtils.getMasterHostAndPort(masterInfo)
     );
 
-    LOG.info("Starting up... fetching state data from: " + uri);
+    LOG.info("Starting up... fetching state data from: {}", uri);
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 

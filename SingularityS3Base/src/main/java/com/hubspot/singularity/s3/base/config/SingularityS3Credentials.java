@@ -10,6 +10,7 @@ import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 import java.util.Objects;
 
 public class SingularityS3Credentials {
+
   private final String accessKey;
   private final String secretKey;
 

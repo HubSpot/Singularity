@@ -30,6 +30,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 public class ArtifactManager extends SimpleProcessManager {
+
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
@@ -326,8 +327,8 @@ public class ArtifactManager extends SimpleProcessManager {
 
   private String calculateMd5sum(Path path) {
     try {
-      HashCode hc = com
-        .google.common.io.Files.asByteSource(path.toFile())
+      HashCode hc = com.google.common.io.Files
+        .asByteSource(path.toFile())
         .hash(Hashing.md5());
       return hc.toString();
     } catch (IOException e) {

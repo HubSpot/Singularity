@@ -10,6 +10,7 @@ import java.util.Objects;
 
 @Schema(description = "Describes a request grouping")
 public class SingularityRequestGroup {
+
   private final String id;
   private final List<String> requestIds;
   private final Map<String, String> metadata;

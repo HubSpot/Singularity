@@ -12,6 +12,7 @@ import java.util.Optional;
 public class SingularityTaskMetadata
   extends SingularityTaskIdHolder
   implements Comparable<SingularityTaskMetadata> {
+
   private static final MetadataLevel DEFAULT_METADATA_LEVEL = MetadataLevel.INFO;
   private final long timestamp;
   private final String type;

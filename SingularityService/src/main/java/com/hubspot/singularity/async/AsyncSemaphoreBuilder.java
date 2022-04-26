@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public class AsyncSemaphoreBuilder {
+
   private final PermitSource permitSource;
   private final ScheduledExecutorService flushingExecutor;
 

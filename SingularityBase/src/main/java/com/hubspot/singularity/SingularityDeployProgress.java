@@ -16,6 +16,7 @@ import java.util.Set;
 
 @Schema(description = "Describes the progress a deploy has made")
 public class SingularityDeployProgress {
+
   private final int targetActiveInstances;
   private final int currentActiveInstances;
   private final boolean stepLaunchComplete;
@@ -293,14 +294,12 @@ public class SingularityDeployProgress {
       stepAcceptanceResults
     );
     List<String> resultHistory = new ArrayList<>(acceptanceResultMessageHistory);
-    results.forEach(
-      (name, result) -> {
-        resultHistory.add(
-          String.format("(%s - %s) %s", name, result.getState(), result.getMessage())
-        );
-        updatedResults.put(name, result.getState());
-      }
-    );
+    results.forEach((name, result) -> {
+      resultHistory.add(
+        String.format("(%s - %s) %s", name, result.getState(), result.getMessage())
+      );
+      updatedResults.put(name, result.getState());
+    });
     return new SingularityDeployProgress(
       targetActiveInstances,
       currentActiveInstances,

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Holds the Singularity settings")
 public class SingularityLimits {
+
   private final int maxDecommissioningAgents;
 
   @JsonCreator

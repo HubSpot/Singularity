@@ -19,7 +19,7 @@ public class SingularityS3DownloaderRunner {
 
   public void run(String[] args) {
     new SingularityRunner()
-    .run(
+      .run(
         Arrays.asList(
           new SingularityRunnerBaseModule(
             SingularityS3DownloaderConfiguration.class,

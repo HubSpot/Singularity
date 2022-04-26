@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMailRecordCleaner extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMailRecordCleaner.class
   );

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityLeaderOnlyPoller.class
   );
@@ -81,7 +82,6 @@ public abstract class SingularityLeaderOnlyPoller {
 
     executorService.scheduleWithFixedDelay(
       new Runnable() {
-
         @Override
         public void run() {
           runActionIfLeaderAndMesosIsRunning();

@@ -21,6 +21,7 @@ import java.util.Set;
 
 @Singleton
 public class SingularityGroupsAuthorizer extends SingularityAuthorizer {
+
   private final ImmutableSet<String> adminGroups;
   private final ImmutableSet<String> requiredGroups;
   private final ImmutableSet<String> jitaGroups;

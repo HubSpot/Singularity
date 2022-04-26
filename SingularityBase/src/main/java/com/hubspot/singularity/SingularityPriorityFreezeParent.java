@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class SingularityPriorityFreezeParent {
+
   private final SingularityPriorityFreeze priorityFreeze;
   private final long timestamp;
   private final Optional<String> user;

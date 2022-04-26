@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,9 +30,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.PRIORITY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages whether or not to schedule tasks based on their priority levels")
 @Tags({ @Tag(name = "Task Priorities") })
 public class PriorityResource {
+
   private final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator singularityValidator;
   private final PriorityManager priorityManager;
@@ -56,7 +59,7 @@ public class PriorityResource {
       @ApiResponse(
         responseCode = "404",
         description = "There was no active priority freeze"
-      )
+      ),
     }
   )
   public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze(
@@ -78,7 +81,7 @@ public class PriorityResource {
       @ApiResponse(
         responseCode = "400",
         description = "There was no active priority freeze to delete"
-      )
+      ),
     }
   )
   public void deleteActivePriorityFreeze(
@@ -108,7 +111,7 @@ public class PriorityResource {
       @ApiResponse(
         responseCode = "400",
         description = "There was a validation error with the priority freeze request"
-      )
+      ),
     }
   )
   public SingularityPriorityFreezeParent createPriorityFreeze(

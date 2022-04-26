@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityCrashLoops {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCrashLoops.class);
 
   private final CrashLoopConfiguration configuration;
@@ -156,10 +157,9 @@ public class SingularityCrashLoops {
     Map<Integer, Long> taskCleanStartTimes = taskManager
       .getCleanupTasks()
       .stream()
-      .filter(
-        t ->
-          t.getTaskId().getRequestId().equals(deployStatistics.getRequestId()) &&
-          t.getTaskId().getDeployId().equals(deployStatistics.getDeployId())
+      .filter(t ->
+        t.getTaskId().getRequestId().equals(deployStatistics.getRequestId()) &&
+        t.getTaskId().getDeployId().equals(deployStatistics.getDeployId())
       )
       .collect(
         Collectors.toMap(
@@ -171,10 +171,9 @@ public class SingularityCrashLoops {
     Map<Integer, List<Long>> recentStartupFailures = deployStatistics
       .getTaskFailureEvents()
       .stream()
-      .filter(
-        e ->
-          e.getType() == TaskFailureType.STARTUP_FAILURE &&
-          taskCleanStartTimes.containsKey(e.getInstance())
+      .filter(e ->
+        e.getType() == TaskFailureType.STARTUP_FAILURE &&
+        taskCleanStartTimes.containsKey(e.getInstance())
       )
       .collect(
         Collectors.groupingBy(
@@ -253,8 +252,8 @@ public class SingularityCrashLoops {
     List<Long> oomFailures = deployStatistics
       .getTaskFailureEvents()
       .stream()
-      .filter(
-        e -> e.getType() == TaskFailureType.OOM && e.getTimestamp() > thresholdOomTime
+      .filter(e ->
+        e.getType() == TaskFailureType.OOM && e.getTimestamp() > thresholdOomTime
       )
       .map(TaskFailureEvent::getTimestamp)
       .collect(Collectors.toList());
@@ -278,11 +277,10 @@ public class SingularityCrashLoops {
     Map<Integer, List<Long>> recentFailuresByInstance = deployStatistics
       .getTaskFailureEvents()
       .stream()
-      .filter(
-        e ->
-          e.getType() == TaskFailureType.OOM ||
-          e.getType() == TaskFailureType.BAD_EXIT_CODE ||
-          e.getType() == TaskFailureType.OUT_OF_DISK_SPACE
+      .filter(e ->
+        e.getType() == TaskFailureType.OOM ||
+        e.getType() == TaskFailureType.BAD_EXIT_CODE ||
+        e.getType() == TaskFailureType.OUT_OF_DISK_SPACE
       )
       .collect(
         Collectors.groupingBy(
@@ -346,24 +344,23 @@ public class SingularityCrashLoops {
        * Slow failures. Occasional failures, count on order of hours, looking for consistency in non-zero count each hour
        */
       getStartForFailuresInBuckets(
-          now,
-          recentFailuresByInstance,
-          TimeUnit.MINUTES.toMillis(configuration.getSlowFailureBucketSizeMinutes()),
-          configuration.getSlowFailureBuckets(),
-          configuration.getSlowFailureThreshold(),
-          configuration.getSlowFailureMinBucketIndexPercent()
-        )
-        .ifPresent(
-          start ->
-            active.add(
-              new CrashLoopInfo(
-                deployStatistics.getRequestId(),
-                deployStatistics.getDeployId(),
-                start,
-                Optional.empty(),
-                CrashLoopType.SLOW_FAILURES
-              )
+        now,
+        recentFailuresByInstance,
+        TimeUnit.MINUTES.toMillis(configuration.getSlowFailureBucketSizeMinutes()),
+        configuration.getSlowFailureBuckets(),
+        configuration.getSlowFailureThreshold(),
+        configuration.getSlowFailureMinBucketIndexPercent()
+      )
+        .ifPresent(start ->
+          active.add(
+            new CrashLoopInfo(
+              deployStatistics.getRequestId(),
+              deployStatistics.getDeployId(),
+              start,
+              Optional.empty(),
+              CrashLoopType.SLOW_FAILURES
             )
+          )
         );
 
       getUnexpectedExitLoop(now, deployStatistics).ifPresent(active::add);
@@ -383,10 +380,9 @@ public class SingularityCrashLoops {
     List<Long> recentUnexpectedExits = deployStatistics
       .getTaskFailureEvents()
       .stream()
-      .filter(
-        e ->
-          e.getType() == TaskFailureType.UNEXPECTED_EXIT &&
-          e.getTimestamp() > thresholdUnexpectedExitTime
+      .filter(e ->
+        e.getType() == TaskFailureType.UNEXPECTED_EXIT &&
+        e.getTimestamp() > thresholdUnexpectedExitTime
       )
       .map(TaskFailureEvent::getTimestamp)
       .collect(Collectors.toList());

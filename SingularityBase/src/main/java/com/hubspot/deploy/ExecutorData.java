@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @Schema(description = "Custom executor settings")
 public class ExecutorData {
+
   private final String cmd;
   private final List<EmbeddedArtifact> embeddedArtifacts;
   private final List<ExternalArtifact> externalArtifacts;

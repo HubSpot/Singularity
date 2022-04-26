@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SingularityClientTest {
+
   @Mock
   private HttpClient httpClient;
 
@@ -70,8 +71,8 @@ public class SingularityClientTest {
     when(response.isError()).thenReturn(true);
 
     assertThatExceptionOfType(SingularityClientException.class)
-      .isThrownBy(
-        () -> singularityClient.pauseSingularityRequest("requestId", Optional.empty())
+      .isThrownBy(() ->
+        singularityClient.pauseSingularityRequest("requestId", Optional.empty())
       );
   }
 
@@ -88,10 +89,8 @@ public class SingularityClientTest {
     when(response.getStatusCode()).thenReturn(200);
     when(response.isError()).thenReturn(false);
     when(
-        response.getAs(
-          ArgumentMatchers.<TypeReference<Collection<SingularityAgent>>>any()
-        )
-      )
+      response.getAs(ArgumentMatchers.<TypeReference<Collection<SingularityAgent>>>any())
+    )
       .thenReturn(ImmutableList.of(agent));
 
     Collection<SingularitySlave> agents = singularityClient.getSlaves(Optional.empty());

@@ -6,6 +6,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class SingularityCrashLoopPoller extends SingularityLeaderOnlyPoller {
+
   private final SingularityCrashLoopChecker checker;
 
   @Inject

@@ -9,6 +9,7 @@ import java.util.Objects;
   description = "The number of tasks in each state for a particular request. Cleaning tasks are also included in active (i.e. total task count = active + pending)"
 )
 public class SingularityTaskCounts {
+
   private final String requestId;
   private final int active;
   private final int pending;

@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 public class SingularityGCSUploader extends SingularityUploader {
+
   private final Storage storage;
 
   public SingularityGCSUploader(
@@ -95,116 +96,112 @@ public class SingularityGCSUploader extends SingularityUploader {
       .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
       .build();
 
-    retryer.call(
-      () -> {
-        final long start = System.currentTimeMillis();
+    retryer.call(() -> {
+      final long start = System.currentTimeMillis();
 
-        final String key = SingularityS3FormatHelper.getKey(
-          uploadMetadata.getS3KeyFormat(),
-          sequence,
-          Files.getLastModifiedTime(file).toMillis(),
-          Objects.toString(file.getFileName()),
-          hostname
+      final String key = SingularityS3FormatHelper.getKey(
+        uploadMetadata.getS3KeyFormat(),
+        sequence,
+        Files.getLastModifiedTime(file).toMillis(),
+        Objects.toString(file.getFileName()),
+        hostname
+      );
+
+      long fileSizeBytes = Files.size(file);
+      LOG.info(
+        "{} Uploading {} to {}/{} (size {})",
+        logIdentifier,
+        file,
+        bucketName,
+        key,
+        fileSizeBytes
+      );
+
+      BlobInfo.Builder blobInfoBuilder = BlobInfo.newBuilder(bucketName, key);
+
+      UploaderFileAttributes fileAttributes = getFileAttributes(file);
+
+      Map<String, String> metadata = new HashMap<>();
+      if (fileAttributes.getStartTime().isPresent()) {
+        metadata.put(
+          SingularityS3Log.LOG_START_S3_ATTR,
+          fileAttributes.getStartTime().get().toString()
         );
-
-        long fileSizeBytes = Files.size(file);
-        LOG.info(
-          "{} Uploading {} to {}/{} (size {})",
-          logIdentifier,
-          file,
-          bucketName,
-          key,
-          fileSizeBytes
+        LOG.debug(
+          "Added extra metadata for object ({}:{})",
+          SingularityS3Log.LOG_START_S3_ATTR,
+          fileAttributes.getStartTime().get()
         );
+      }
+      if (fileAttributes.getEndTime().isPresent()) {
+        metadata.put(
+          SingularityS3Log.LOG_START_S3_ATTR,
+          fileAttributes.getEndTime().get().toString()
+        );
+        LOG.debug(
+          "Added extra metadata for object ({}:{})",
+          SingularityS3Log.LOG_END_S3_ATTR,
+          fileAttributes.getEndTime().get()
+        );
+      }
 
-        BlobInfo.Builder blobInfoBuilder = BlobInfo.newBuilder(bucketName, key);
+      blobInfoBuilder.setMetadata(metadata);
 
-        UploaderFileAttributes fileAttributes = getFileAttributes(file);
-
-        Map<String, String> metadata = new HashMap<>();
-        if (fileAttributes.getStartTime().isPresent()) {
-          metadata.put(
-            SingularityS3Log.LOG_START_S3_ATTR,
-            fileAttributes.getStartTime().get().toString()
-          );
+      for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
+        if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
           LOG.debug(
-            "Added extra metadata for object ({}:{})",
-            SingularityS3Log.LOG_START_S3_ATTR,
-            fileAttributes.getStartTime().get()
-          );
-        }
-        if (fileAttributes.getEndTime().isPresent()) {
-          metadata.put(
-            SingularityS3Log.LOG_START_S3_ATTR,
-            fileAttributes.getEndTime().get().toString()
-          );
-          LOG.debug(
-            "Added extra metadata for object ({}:{})",
-            SingularityS3Log.LOG_END_S3_ATTR,
-            fileAttributes.getEndTime().get()
-          );
-        }
-
-        blobInfoBuilder.setMetadata(metadata);
-
-        for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
-          if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
-            LOG.debug(
-              "{} Using content headers {} for file {}",
-              logIdentifier,
-              contentHeaders,
-              file
-            );
-            if (contentHeaders.getContentType().isPresent()) {
-              blobInfoBuilder.setContentType(contentHeaders.getContentType().get());
-            }
-            if (contentHeaders.getContentEncoding().isPresent()) {
-              blobInfoBuilder.setContentEncoding(
-                contentHeaders.getContentEncoding().get()
-              );
-            }
-            break;
-          }
-        }
-
-        if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getGcsStorageClass())) {
-          LOG.debug(
-            "{} adding storage class {} to {}",
+            "{} Using content headers {} for file {}",
             logIdentifier,
-            uploadMetadata.getGcsStorageClass().get(),
+            contentHeaders,
             file
           );
-          blobInfoBuilder.setStorageClass(
-            StorageClass.valueOf(uploadMetadata.getGcsStorageClass().get())
-          );
-        }
-
-        try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
-          if (uploadMetadata.getEncryptionKey().isPresent()) {
-            storage.create(
-              blobInfoBuilder.build(),
-              fileInputStream,
-              BlobWriteOption.encryptionKey(uploadMetadata.getEncryptionKey().get())
-            );
-          } else {
-            storage.create(blobInfoBuilder.build(), fileInputStream);
+          if (contentHeaders.getContentType().isPresent()) {
+            blobInfoBuilder.setContentType(contentHeaders.getContentType().get());
           }
-          LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
-          return true;
-        } catch (StorageException se) {
-          LOG.warn(
-            "{} Couldn't upload {} due to  {}",
-            logIdentifier,
-            file,
-            se.getMessage(),
-            se
-          );
-          throw se;
-        } catch (Exception e) {
-          LOG.warn("Exception uploading {}", file, e);
-          throw e;
+          if (contentHeaders.getContentEncoding().isPresent()) {
+            blobInfoBuilder.setContentEncoding(contentHeaders.getContentEncoding().get());
+          }
+          break;
         }
       }
-    );
+
+      if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getGcsStorageClass())) {
+        LOG.debug(
+          "{} adding storage class {} to {}",
+          logIdentifier,
+          uploadMetadata.getGcsStorageClass().get(),
+          file
+        );
+        blobInfoBuilder.setStorageClass(
+          StorageClass.valueOf(uploadMetadata.getGcsStorageClass().get())
+        );
+      }
+
+      try (FileInputStream fileInputStream = new FileInputStream(file.toFile())) {
+        if (uploadMetadata.getEncryptionKey().isPresent()) {
+          storage.create(
+            blobInfoBuilder.build(),
+            fileInputStream,
+            BlobWriteOption.encryptionKey(uploadMetadata.getEncryptionKey().get())
+          );
+        } else {
+          storage.create(blobInfoBuilder.build(), fileInputStream);
+        }
+        LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+        return true;
+      } catch (StorageException se) {
+        LOG.warn(
+          "{} Couldn't upload {} due to  {}",
+          logIdentifier,
+          file,
+          se.getMessage(),
+          se
+        );
+        throw se;
+      } catch (Exception e) {
+        LOG.warn("Exception uploading {}", file, e);
+        throw e;
+      }
+    });
   }
 }

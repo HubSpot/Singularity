@@ -12,6 +12,7 @@ import java.util.Set;
 
 @Schema(description = "Represents updates to the groups for a request")
 public class SingularityUpdateGroupsRequest {
+
   private final Optional<String> group;
   private final Set<String> readWriteGroups;
   private final Set<String> readOnlyGroups;

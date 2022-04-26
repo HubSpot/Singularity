@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityAgentAndRackManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityAgentAndRackManager.class
   );
@@ -577,15 +578,12 @@ public class SingularityAgentAndRackManager {
   ) {
     return taskIds
       .stream()
-      .map(
-        id ->
-          leaderCache
-            .getAgent(
-              taskManager.getTask(id).get().getMesosTask().getAgentId().getValue()
-            )
-            .get()
-            .getAttributes()
-            .get(attrKey)
+      .map(id ->
+        leaderCache
+          .getAgent(taskManager.getTask(id).get().getMesosTask().getAgentId().getValue())
+          .get()
+          .getAttributes()
+          .get(attrKey)
       )
       .filter(Objects::nonNull)
       .filter(x -> x.equals(attrValue))
@@ -821,7 +819,7 @@ public class SingularityAgentAndRackManager {
   public enum CheckResult {
     NEW,
     NOT_ACCEPTING_TASKS,
-    ALREADY_ACTIVE
+    ALREADY_ACTIVE,
   }
 
   private <T extends SingularityMachineAbstraction<T>> CheckResult check(

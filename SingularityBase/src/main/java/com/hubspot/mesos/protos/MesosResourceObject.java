@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MesosResourceObject {
+
   private final Optional<String> name;
   private final Optional<MesosRangesObject> ranges;
   private final Map<String, Object> allOtherFields;

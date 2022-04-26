@@ -7,6 +7,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
 
 public class SingularityClusterManager {
+
   private final CuratorFramework curator;
   private final String contextPath;
 

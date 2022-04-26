@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTestBase {
+
   @Inject
   protected SingularityMesosOfferScheduler scheduler;
 

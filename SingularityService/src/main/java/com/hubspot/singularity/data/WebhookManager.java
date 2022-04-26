@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class WebhookManager extends CuratorAsyncManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(WebhookManager.class);
 
   private static final String ROOT_PATH = "/hooks";

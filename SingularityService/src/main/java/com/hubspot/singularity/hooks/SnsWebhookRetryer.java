@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @Singleton
 public class SnsWebhookRetryer extends AbstractWebhookChecker {
+
   private final SnsWebhookManager snsWebhookManager;
   private final WebhookManager webhookManager;
   private final TaskHistoryHelper taskHistoryHelper;

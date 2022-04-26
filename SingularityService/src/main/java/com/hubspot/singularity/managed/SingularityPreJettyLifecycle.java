@@ -18,6 +18,7 @@ import org.eclipse.jetty.util.thread.ShutdownThread;
  */
 @Singleton
 public class SingularityPreJettyLifecycle extends AbstractLifeCycle implements Managed {
+
   private final List<Runnable> hooks;
   private final AtomicBoolean hasRun;
 

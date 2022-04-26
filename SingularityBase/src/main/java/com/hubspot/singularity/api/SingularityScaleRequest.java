@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the new scale for a request")
 public class SingularityScaleRequest extends SingularityExpiringRequestParent {
+
   private final Optional<Integer> instances;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Boolean> bounce;

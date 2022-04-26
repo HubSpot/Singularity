@@ -24,6 +24,7 @@ import java.util.Set;
 
 public class SingularityAuthModule
   extends DropwizardAwareModule<SingularityConfiguration> {
+
   public static final String WEBHOOK_AUTH_HTTP_CLIENT =
     "singularity.webhook.auth.http.client";
   private Optional<Class<? extends SingularityAuthorizer>> authorizerClass = Optional.empty();

@@ -4,5 +4,5 @@ public enum CacheCheckResult {
   FOUND,
   DOES_NOT_EXIST,
   FILE_SIZE_MISMATCH,
-  MD5_MISMATCH
+  MD5_MISMATCH,
 }

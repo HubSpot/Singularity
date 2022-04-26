@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MesosConfiguration {
+
   @NotNull
   private String master;
 

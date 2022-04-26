@@ -72,6 +72,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 class SingularityMesosTaskBuilder {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosTaskBuilder.class
   );
@@ -380,8 +381,8 @@ class SingularityMesosTaskBuilder {
     }
 
     return Optional.of(
-      DockerInfo
-        .PortMapping.newBuilder()
+      DockerInfo.PortMapping
+        .newBuilder()
         .setContainerPort(containerPort)
         .setHostPort(hostPort)
         .setProtocol(singularityDockerPortMapping.getProtocol())
@@ -463,8 +464,8 @@ class SingularityMesosTaskBuilder {
         for (long longPort : ports.get()) {
           int port = Ints.checkedCast(longPort);
           dockerInfoBuilder.addPortMappings(
-            DockerInfo
-              .PortMapping.newBuilder()
+            DockerInfo.PortMapping
+              .newBuilder()
               .setHostPort(port)
               .setContainerPort(port)
               .build()
@@ -638,7 +639,6 @@ class SingularityMesosTaskBuilder {
     Optional<long[]> ports
   ) {
     return new Supplier<List<SingularityPortMapping>>() {
-
       @Override
       public List<SingularityPortMapping> get() {
         final long[] portArray = ports.orElse(new long[0]);

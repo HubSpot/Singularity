@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityPendingRequestWithRunIdMigration.class
   );
@@ -70,7 +71,7 @@ public class SingularityPendingRequestWithRunIdMigration extends ZkDataMigration
             pendingRequest.getRequestId(),
             pendingRequest.getDeployId()
           )
-          .getId();
+            .getId();
           String rewrittenBasename = String.format(
             "%s%s%s",
             deployKey,

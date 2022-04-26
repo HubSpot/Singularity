@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
   subTypes = { SingularityTaskCurrentUsage.class }
 )
 public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsage {
+
   private final SingularityTaskId taskId;
 
   public SingularityTaskCurrentUsageWithId(

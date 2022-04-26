@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tags;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -35,9 +36,11 @@ import javax.ws.rs.core.Response;
 
 @Path(ApiPaths.AUTH_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Verify authentication for a user")
 @Tags({ @Tag(name = "Auth") })
 public class AuthResource {
+
   private final UserManager userManager;
   private final SingularityConfiguration configuration;
   private final SingularityAuthorizer authorizationHelper;
@@ -81,7 +84,7 @@ public class AuthResource {
       @ApiResponse(
         responseCode = "200",
         description = "The user is authorized for the request and scope provided"
-      )
+      ),
     }
   )
   public Response checkReadOnlyAuth(
@@ -111,7 +114,7 @@ public class AuthResource {
       @ApiResponse(
         responseCode = "200",
         description = "The user is authorized for the request and scope provided"
-      )
+      ),
     }
   )
   public Response checkReadOnlyAuth(
@@ -139,14 +142,13 @@ public class AuthResource {
       @ApiResponse(
         responseCode = "200",
         description = "the user data and generated token"
-      )
+      ),
     }
   )
   public SingularityTokenResponse generateToken(
     @Parameter(hidden = true) @Auth SingularityUser user,
     SingularityTokenRequest tokenRequest
-  )
-    throws NoSuchAlgorithmException, InvalidKeySpecException {
+  ) throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (tokenRequest.getUser().isPresent()) {
       // only admins can create a token for another user
       authorizationHelper.checkAdminAuthorization(user);
@@ -165,14 +167,13 @@ public class AuthResource {
   @Operation(
     summary = "Clear tokens for a user",
     responses = {
-      @ApiResponse(responseCode = "200", description = "tokens cleared successfully")
+      @ApiResponse(responseCode = "200", description = "tokens cleared successfully"),
     }
   )
   public Response generateToken(
     @Parameter(hidden = true) @Auth SingularityUser user,
     @PathParam("user") String userName
-  )
-    throws NoSuchAlgorithmException, InvalidKeySpecException {
+  ) throws NoSuchAlgorithmException, InvalidKeySpecException {
     authorizationHelper.checkAdminAuthorization(user);
     authTokenManager.clearTokensForUser(userName);
     return Response.ok().build();

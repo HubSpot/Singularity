@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(RequestManager.class);
 
   private final Transcoder<SingularityRequestWithState> requestTranscoder;
@@ -600,7 +601,6 @@ public class RequestManager extends CuratorAsyncManager {
     return Iterables.filter(
       requests,
       new Predicate<SingularityRequestWithState>() {
-
         @Override
         public boolean apply(SingularityRequestWithState input) {
           for (RequestState state : states) {

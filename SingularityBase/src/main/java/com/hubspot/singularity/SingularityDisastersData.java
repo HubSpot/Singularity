@@ -8,6 +8,7 @@ import java.util.Objects;
 
 @Schema(description = "Information about currently active disasters")
 public class SingularityDisastersData {
+
   private final List<SingularityDisasterDataPoint> stats;
   private final List<SingularityDisaster> disasters;
   private final boolean automatedActionDisabled;

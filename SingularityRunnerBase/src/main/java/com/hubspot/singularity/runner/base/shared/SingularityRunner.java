@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityRunner {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
 
   @SuppressFBWarnings("DM_EXIT")
@@ -28,7 +29,6 @@ public class SingularityRunner {
       .getRuntime()
       .addShutdownHook(
         new Thread("SingularityRunnerGracefulShutdown") {
-
           @Override
           public void run() {
             driver.shutdown();

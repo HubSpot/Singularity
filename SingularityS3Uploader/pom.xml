@@ -12,6 +12,7 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.s3uploader.SingularityS3UploaderRunner</basepom.shaded.main-class>
+    <hubspot.module.type>EXECUTABLE</hubspot.module.type>
   </properties>
 
   <dependencies>
@@ -90,10 +91,6 @@
       <artifactId>metrics-jmx</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.hibernate</groupId>
@@ -109,6 +106,10 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
     <!-- for jade -->

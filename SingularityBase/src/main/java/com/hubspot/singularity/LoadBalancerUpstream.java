@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class LoadBalancerUpstream {
+
   private final String upstream;
   private final String group;
   private final Optional<String> rackId;

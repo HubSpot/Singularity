@@ -79,6 +79,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.slf4j.LoggerFactory;
 
 public class SingularityTestModule implements Module {
+
   private final TestingServer ts;
   private final DropwizardModule dropwizardModule;
   private final ObjectMapper om = JavaUtils.newObjectMapper();
@@ -96,8 +97,7 @@ public class SingularityTestModule implements Module {
   public SingularityTestModule(
     boolean useDbTests,
     Function<SingularityConfiguration, Void> customConfigSetup
-  )
-    throws Exception {
+  ) throws Exception {
     this.useDBTests = useDbTests;
     this.customConfigSetup = customConfigSetup;
 
@@ -175,7 +175,6 @@ public class SingularityTestModule implements Module {
         )
         .with(
           new Module() {
-
             @Override
             public void configure(Binder binder) {
               binder
@@ -222,7 +221,6 @@ public class SingularityTestModule implements Module {
                 .bind(HttpServletRequest.class)
                 .toProvider(
                   new Provider<HttpServletRequest>() {
-
                     @Override
                     public HttpServletRequest get() {
                       throw new OutOfScopeException("testing");
@@ -242,25 +240,23 @@ public class SingularityTestModule implements Module {
     mainBinder.install(
       Modules
         .override(new SingularityMesosModule())
-        .with(
-          binder -> {
-            SingularityMesosExecutorInfoSupport logSupport = mock(
-              SingularityMesosExecutorInfoSupport.class
-            );
-            binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
+        .with(binder -> {
+          SingularityMesosExecutorInfoSupport logSupport = mock(
+            SingularityMesosExecutorInfoSupport.class
+          );
+          binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            SingularityMesosSchedulerClient mockClient = mock(
-              SingularityMesosSchedulerClient.class
-            );
-            when(mockClient.isRunning()).thenReturn(true);
-            binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
-            Multibinder
-              .newSetBinder(binder, DeployAcceptanceHook.class)
-              .addBinding()
-              .to(NoopDeployAcceptanceHook.class)
-              .in(Scopes.SINGLETON);
-          }
-        )
+          SingularityMesosSchedulerClient mockClient = mock(
+            SingularityMesosSchedulerClient.class
+          );
+          when(mockClient.isRunning()).thenReturn(true);
+          binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
+          Multibinder
+            .newSetBinder(binder, DeployAcceptanceHook.class)
+            .addBinding()
+            .to(NoopDeployAcceptanceHook.class)
+            .in(Scopes.SINGLETON);
+        })
     );
 
     mainBinder.install(new SingularityDataModule(configuration));

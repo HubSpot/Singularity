@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Schema(description = "Tasks in all states for a particular request")
 public class SingularityTaskIdsByStatus {
+
   private List<SingularityTaskId> healthy;
   private List<SingularityTaskId> notYetHealthy;
   private List<SingularityPendingTaskId> pending;

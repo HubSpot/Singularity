@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityS3DownloaderServer implements SingularityDriver {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3DownloaderServer.class
   );

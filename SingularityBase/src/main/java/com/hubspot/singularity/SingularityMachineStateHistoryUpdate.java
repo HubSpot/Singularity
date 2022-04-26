@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes an update to the state of a rack or agent")
 public class SingularityMachineStateHistoryUpdate {
+
   private final String objectId;
   private final MachineState state;
   private final Optional<String> user;

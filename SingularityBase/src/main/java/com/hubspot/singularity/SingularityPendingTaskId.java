@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 public class SingularityPendingTaskId
   extends SingularityId
   implements Comparable<SingularityPendingTaskId> {
+
   private final String requestId;
   private final String deployId;
   private final long nextRunAt;
@@ -24,7 +25,6 @@ public class SingularityPendingTaskId
     final String requestId
   ) {
     return new Predicate<SingularityPendingTaskId>() {
-
       @Override
       public boolean apply(@Nonnull SingularityPendingTaskId input) {
         return input.getRequestId().equals(requestId);
@@ -36,7 +36,6 @@ public class SingularityPendingTaskId
     final String deployId
   ) {
     return new Predicate<SingularityPendingTaskId>() {
-
       @Override
       public boolean apply(@Nonnull SingularityPendingTaskId input) {
         return input.getDeployId().equals(deployId);

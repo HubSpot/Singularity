@@ -15,6 +15,7 @@ import java.util.Optional;
 @Singleton
 public class DeployHistoryHelper
   extends BlendedHistoryHelper<SingularityDeployHistory, String> {
+
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
 

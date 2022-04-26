@@ -4,6 +4,7 @@ package com.hubspot.singularity.smtp;
  * POJO for Jade to generate task history tables in emails.
  */
 public class SingularityMailTaskHistoryUpdate {
+
   private final String date;
   private final String update;
   private final String message;

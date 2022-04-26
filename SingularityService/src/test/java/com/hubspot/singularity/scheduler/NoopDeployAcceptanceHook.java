@@ -13,6 +13,7 @@ import java.util.Collection;
 
 @Singleton
 public class NoopDeployAcceptanceHook implements DeployAcceptanceHook {
+
   private DeployAcceptanceResult nextResult = new DeployAcceptanceResult(
     DeployAcceptanceState.SUCCEEDED,
     "no-op"

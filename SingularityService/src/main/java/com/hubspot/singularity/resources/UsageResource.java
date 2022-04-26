@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,9 +32,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.USAGE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Retrieve usage data about slaves and tasks")
 @Tags({ @Tag(name = "Resource Usage") })
 public class UsageResource {
+
   private final UsageManager usageManager;
   private final SingularityAuthorizer authorizationHelper;
 

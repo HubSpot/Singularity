@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ExecutorDataBuilder {
+
   private String cmd;
   private List<EmbeddedArtifact> embeddedArtifacts;
   private List<ExternalArtifact> externalArtifacts;

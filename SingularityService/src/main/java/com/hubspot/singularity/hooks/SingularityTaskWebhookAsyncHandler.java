@@ -6,6 +6,7 @@ import com.hubspot.singularity.data.WebhookManager;
 
 public class SingularityTaskWebhookAsyncHandler
   extends AbstractSingularityWebhookAsyncHandler<SingularityTaskHistoryUpdate> {
+
   private final WebhookManager webhookManager;
 
   public SingularityTaskWebhookAsyncHandler(

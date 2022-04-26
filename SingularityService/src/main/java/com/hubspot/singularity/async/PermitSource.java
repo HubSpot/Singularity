@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 class PermitSource {
+
   private final com.google.common.base.Supplier<Integer> concurrentRequestLimit;
   private final AtomicInteger concurrentRequests;
 

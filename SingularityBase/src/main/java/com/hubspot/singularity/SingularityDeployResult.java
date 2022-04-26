@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "The result of a deploy for a particular request")
 public class SingularityDeployResult {
+
   private final DeployState deployState;
   private final Optional<String> message;
   private final List<SingularityDeployFailure> deployFailures;

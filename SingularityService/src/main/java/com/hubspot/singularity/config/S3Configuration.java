@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 public class S3Configuration {
+
   @NotNull
   private int maxS3Threads = 3;
 

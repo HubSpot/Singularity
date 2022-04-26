@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityUsageHelper {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUsageHelper.class);
   private static final long DAY_IN_SECONDS = TimeUnit.DAYS.toSeconds(1);
 

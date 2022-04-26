@@ -14,6 +14,7 @@ import java.util.Optional;
   description = "Describes health check behavior for tasks associated with a deploy"
 )
 public class HealthcheckOptions {
+
   private final Optional<String> uri;
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;

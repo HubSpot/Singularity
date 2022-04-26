@@ -20,7 +20,6 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.resources.ui.UiResource;
 import io.netty.handler.codec.PrematureChannelClosureException;
-import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -64,6 +63,7 @@ import rx.subjects.SerializedSubject;
  */
 @Singleton
 public class SingularityMesosSchedulerClient {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosSchedulerClient.class
   );
@@ -124,7 +124,6 @@ public class SingularityMesosSchedulerClient {
 
       subscriberThread =
         new Thread() {
-
           public void run() {
             try {
               connect(mesosMasterURI, frameworkInfo, scheduler);
@@ -198,8 +197,7 @@ public class SingularityMesosSchedulerClient {
     URI mesosMasterURI,
     FrameworkInfo frameworkInfo,
     SingularityMesosScheduler scheduler
-  )
-    throws URISyntaxException {
+  ) throws URISyntaxException {
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder
       .schedulerUsingProtos()
       .mesosUri(mesosMasterURI)
@@ -233,83 +231,79 @@ public class SingularityMesosSchedulerClient {
     MesosClientBuilder<Call, Event> subscribe = clientBuilder.subscribe(subscribeCall);
     this.scheduler = scheduler;
 
-    subscribe.processStream(
-      unicastEvents -> {
-        final Observable<Event> events = unicastEvents.share();
+    subscribe.processStream(unicastEvents -> {
+      final Observable<Event> events = unicastEvents.share();
 
-        events
-          .filter(event -> event.getType() == Event.Type.ERROR)
-          .map(event -> event.getError().getMessage())
-          .subscribe(scheduler::error, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.ERROR)
+        .map(event -> event.getError().getMessage())
+        .subscribe(scheduler::error, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.FAILURE)
-          .map(Event::getFailure)
-          .subscribe(scheduler::failure, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.FAILURE)
+        .map(Event::getFailure)
+        .subscribe(scheduler::failure, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.HEARTBEAT)
-          .subscribe(scheduler::heartbeat, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.HEARTBEAT)
+        .subscribe(scheduler::heartbeat, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.INVERSE_OFFERS)
-          .map(event -> event.getInverseOffers().getInverseOffersList())
-          .subscribe(scheduler::inverseOffers, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.INVERSE_OFFERS)
+        .map(event -> event.getInverseOffers().getInverseOffersList())
+        .subscribe(scheduler::inverseOffers, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.MESSAGE)
-          .map(Event::getMessage)
-          .subscribe(scheduler::message, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.MESSAGE)
+        .map(Event::getMessage)
+        .subscribe(scheduler::message, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.OFFERS)
-          .map(event -> event.getOffers().getOffersList())
-          .subscribe(scheduler::resourceOffers, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.OFFERS)
+        .map(event -> event.getOffers().getOffersList())
+        .subscribe(scheduler::resourceOffers, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.RESCIND)
-          .map(event -> event.getRescind().getOfferId())
-          .subscribe(scheduler::rescind, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.RESCIND)
+        .map(event -> event.getRescind().getOfferId())
+        .subscribe(scheduler::rescind, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.RESCIND_INVERSE_OFFER)
-          .map(event -> event.getRescindInverseOffer().getInverseOfferId())
-          .subscribe(scheduler::rescindInverseOffer, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.RESCIND_INVERSE_OFFER)
+        .map(event -> event.getRescindInverseOffer().getInverseOfferId())
+        .subscribe(scheduler::rescindInverseOffer, scheduler::onUncaughtException);
 
-        events
-          .filter(event -> event.getType() == Event.Type.SUBSCRIBED)
-          .map(Event::getSubscribed)
-          .subscribe(
-            subscribed -> {
-              this.frameworkId = subscribed.getFrameworkId();
-              scheduler.subscribed(subscribed);
-            },
-            scheduler::onSubscribeException
-          );
+      events
+        .filter(event -> event.getType() == Event.Type.SUBSCRIBED)
+        .map(Event::getSubscribed)
+        .subscribe(
+          subscribed -> {
+            this.frameworkId = subscribed.getFrameworkId();
+            scheduler.subscribed(subscribed);
+          },
+          scheduler::onSubscribeException
+        );
 
-        events
-          .filter(event -> event.getType() == Event.Type.UPDATE)
-          .map(event -> event.getUpdate().getStatus())
-          .filter(
-            status -> {
-              if (!status.hasAgentId() || !status.getAgentId().hasValue()) {
-                LOG.warn("Filtering out status update without agentId {}", status);
-                return false;
-              } else {
-                return true;
-              }
-            }
-          )
-          .subscribe(scheduler::statusUpdate, scheduler::onUncaughtException);
+      events
+        .filter(event -> event.getType() == Event.Type.UPDATE)
+        .map(event -> event.getUpdate().getStatus())
+        .filter(status -> {
+          if (!status.hasAgentId() || !status.getAgentId().hasValue()) {
+            LOG.warn("Filtering out status update without agentId {}", status);
+            return false;
+          } else {
+            return true;
+          }
+        })
+        .subscribe(scheduler::statusUpdate, scheduler::onUncaughtException);
 
-        // This is the observable that is responsible for sending calls to mesos master.
-        PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
+      // This is the observable that is responsible for sending calls to mesos master.
+      PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
 
-        // toSerialised handles the fact that we can add calls on different threads.
-        publisher = p.toSerialized();
-        return publisher.onBackpressureBuffer();
-      }
-    );
+      // toSerialised handles the fact that we can add calls on different threads.
+      publisher = p.toSerialized();
+      return publisher.onBackpressureBuffer();
+    });
 
     MesosClient<Call, Event> client = clientBuilder.build();
     openStream = client.openStream();

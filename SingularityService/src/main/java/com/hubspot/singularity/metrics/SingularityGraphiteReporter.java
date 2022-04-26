@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityGraphiteReporter {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityGraphiteReporter.class
   );
@@ -111,7 +112,6 @@ public class SingularityGraphiteReporter {
     if (!graphiteConfiguration.getPredicates().isEmpty()) {
       reporterBuilder.filter(
         new MetricFilter() {
-
           @Override
           public boolean matches(String name, Metric metric) {
             for (String predicate : graphiteConfiguration.getPredicates()) {

@@ -27,6 +27,7 @@ import java.util.Optional;
 
 @Singleton
 public class SandboxManager {
+
   private static final String REPLACEMENT_CHARACTER = "\ufffd";
   private static final String TWO_REPLACEMENT_CHARACTERS =
     REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER;
@@ -85,8 +86,8 @@ public class SandboxManager {
         Throwables
           .getCausalChain(e)
           .stream()
-          .anyMatch(
-            t -> t instanceof UnknownHostException || t instanceof ConnectException
+          .anyMatch(t ->
+            t instanceof UnknownHostException || t instanceof ConnectException
           )
       ) {
         throw new AgentNotFoundException(e);
@@ -102,8 +103,7 @@ public class SandboxManager {
     String fullPath,
     Optional<Long> offset,
     Optional<Long> length
-  )
-    throws AgentNotFoundException {
+  ) throws AgentNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient
         .prepareGet(String.format("http://%s:5051/files/read", hostname))
@@ -137,8 +137,8 @@ public class SandboxManager {
         Throwables
           .getCausalChain(e)
           .stream()
-          .anyMatch(
-            t -> t instanceof UnknownHostException || t instanceof ConnectException
+          .anyMatch(t ->
+            t instanceof UnknownHostException || t instanceof ConnectException
           )
       ) {
         throw new AgentNotFoundException(e);
@@ -156,8 +156,8 @@ public class SandboxManager {
   @VisibleForTesting
   MesosFileChunkObject parseResponseBody(Response response) throws IOException {
     // not thread-safe, need to make a new one each time;
-    CharsetDecoder decoder = StandardCharsets
-      .UTF_8.newDecoder()
+    CharsetDecoder decoder = StandardCharsets.UTF_8
+      .newDecoder()
       .onMalformedInput(CodingErrorAction.REPLACE)
       .replaceWith(REPLACEMENT_CHARACTER);
 

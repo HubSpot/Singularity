@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
   description = "Response containing the generated long lived auth token and associated user data"
 )
 public class SingularityTokenResponse {
+
   private final String token;
   private final SingularityUser user;
 

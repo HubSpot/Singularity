@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -33,9 +34,11 @@ import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.CONFIGURATION_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Exposes some live Singularity configuration")
 @Tags({ @Tag(name = "Singularity configuration") })
 public class SingularityConfigurationResource extends AbstractLeaderAwareResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityConfigurationResource.class
   );

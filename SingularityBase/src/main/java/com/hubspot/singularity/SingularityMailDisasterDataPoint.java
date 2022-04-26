@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class SingularityMailDisasterDataPoint {
+
   private final String time;
   private final int numActiveTasks;
   private final int numPendingTasks;

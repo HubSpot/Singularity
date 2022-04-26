@@ -7,10 +7,11 @@ import java.util.Optional;
 @Schema(
   title = "Represents a future action on an object",
   subTypes = {
-    SingularityExpiringMachineState.class, SingularityExpiringRequestActionParent.class
+    SingularityExpiringMachineState.class, SingularityExpiringRequestActionParent.class,
   }
 )
 public abstract class SingularityExpiringParent<T extends SingularityExpiringRequestParent> {
+
   private final Optional<String> user;
   private final long startMillis;
   private final String actionId;

@@ -1,14 +1,12 @@
 package com.hubspot.singularity;
 
-import static com.google.common.collect.ImmutableSet.copyOf;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 public class WebhookAuthUser {
+
   private final String uid;
   private final Set<String> groups;
   private final Set<String> scopes;

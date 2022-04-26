@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "A portion of a file from a task sandbox")
 public class MesosFileChunkObject {
+
   private final String data;
   private final long offset;
   private final Optional<Long> nextOffset;

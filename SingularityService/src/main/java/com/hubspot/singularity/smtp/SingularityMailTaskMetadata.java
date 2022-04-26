@@ -4,6 +4,7 @@ package com.hubspot.singularity.smtp;
  * POJO for Jade to generate task metadata tables in emails.
  */
 public class SingularityMailTaskMetadata {
+
   private final String date;
   private final String type;
   private final String title;

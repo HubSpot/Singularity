@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 
 public class DisasterDetectionConfiguration {
+
   private boolean enabled = true;
 
   private int statsHistorySize = 10;

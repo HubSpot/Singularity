@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TestingMesosClient implements MesosClient {
+
   private Map<String, List<MesosTaskMonitorObject>> agentResourceUsage;
   private Map<String, MesosAgentMetricsSnapshotObject> agentMetrics;
 

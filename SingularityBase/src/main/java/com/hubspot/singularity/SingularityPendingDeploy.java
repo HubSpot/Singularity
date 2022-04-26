@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes an in-progress deploy")
 public class SingularityPendingDeploy {
+
   private final SingularityDeployMarker deployMarker;
   private final DeployState currentDeployState;
   private final SingularityDeployProgress deployProgress;

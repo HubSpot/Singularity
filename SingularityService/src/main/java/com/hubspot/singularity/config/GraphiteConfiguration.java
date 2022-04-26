@@ -9,6 +9,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class GraphiteConfiguration {
+
   @JsonProperty
   private boolean enabled = false;
 

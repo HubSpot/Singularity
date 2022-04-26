@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
+
   @Inject
   private SingularitySchedulerPoller schedulerPoller;
 
@@ -123,7 +124,7 @@ public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {
       initAndFinishDeploy(
         request,
         new SingularityDeployBuilder(request.getId(), firstDeployId)
-        .setCommand(Optional.of("sleep 100")),
+          .setCommand(Optional.of("sleep 100")),
         Optional.of(new Resources(1, 128, 2, 0))
       );
 

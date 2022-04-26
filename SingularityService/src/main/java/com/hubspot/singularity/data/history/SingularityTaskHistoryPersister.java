@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityTaskHistoryPersister
   extends SingularityHistoryPersister<SingularityTaskId> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityTaskHistoryPersister.class
   );
@@ -103,10 +104,9 @@ public class SingularityTaskHistoryPersister
                     ids =
                       ids
                         .stream()
-                        .filter(
-                          taskId ->
-                            !isPartOfPendingDeploy(pendingDeploys, taskId) &&
-                            !couldReturnWithRecoveredAgent(taskId)
+                        .filter(taskId ->
+                          !isPartOfPendingDeploy(pendingDeploys, taskId) &&
+                          !couldReturnWithRecoveredAgent(taskId)
                         )
                         .sorted(SingularityTaskId.STARTED_AT_COMPARATOR_DESC)
                         .collect(Collectors.toList());

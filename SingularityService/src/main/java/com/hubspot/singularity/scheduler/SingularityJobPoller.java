@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityJobPoller.class);
 
   private final TaskManager taskManager;
@@ -224,7 +225,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         }
       } catch (ParseException | InvalidRecurrenceRuleException e) {
         LOG.warn(
-          "Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})",
+          "Unable to parse schedule of type {} for expression {} (taskId: {})",
           request.getScheduleTypeSafe(),
           scheduleExpression,
           taskId,

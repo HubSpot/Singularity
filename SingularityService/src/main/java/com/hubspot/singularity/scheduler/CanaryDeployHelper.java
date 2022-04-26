@@ -40,30 +40,27 @@ public class CanaryDeployHelper {
     CanaryDeploySettings canaryDeploySettings
   ) {
     return updateRequest
-      .map(
-        singularityUpdatePendingDeployRequest ->
-          Math.min(
-            singularityUpdatePendingDeployRequest.getTargetActiveInstances(),
-            request.getInstancesSafe()
-          )
+      .map(singularityUpdatePendingDeployRequest ->
+        Math.min(
+          singularityUpdatePendingDeployRequest.getTargetActiveInstances(),
+          request.getInstancesSafe()
+        )
       )
-      .orElseGet(
-        () -> {
-          int cycleCount =
-            deployProgress.getTargetActiveInstances() /
-            canaryDeploySettings.getInstanceGroupSize();
-          if (cycleCount >= canaryDeploySettings.getCanaryCycleCount()) {
-            // We have run enough canary cycles, launch everything remaining
-            return request.getInstancesSafe();
-          } else {
-            return Math.min(
-              deployProgress.getTargetActiveInstances() +
-              canaryDeploySettings.getInstanceGroupSize(),
-              request.getInstancesSafe()
-            );
-          }
+      .orElseGet(() -> {
+        int cycleCount =
+          deployProgress.getTargetActiveInstances() /
+          canaryDeploySettings.getInstanceGroupSize();
+        if (cycleCount >= canaryDeploySettings.getCanaryCycleCount()) {
+          // We have run enough canary cycles, launch everything remaining
+          return request.getInstancesSafe();
+        } else {
+          return Math.min(
+            deployProgress.getTargetActiveInstances() +
+            canaryDeploySettings.getInstanceGroupSize(),
+            request.getInstancesSafe()
+          );
         }
-      );
+      });
   }
 
   public static boolean canRetryTasks(

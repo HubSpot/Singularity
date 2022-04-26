@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class MesosTaskStatusObject {
+
   private final Optional<MesosStringValue> agentId;
   private final Optional<MesosStringValue> slaveId;
   private final Optional<Boolean> healthy;

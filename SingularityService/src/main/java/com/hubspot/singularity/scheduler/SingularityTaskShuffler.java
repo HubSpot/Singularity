@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityTaskShuffler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityTaskShuffler.class
   );
@@ -45,7 +46,7 @@ public class SingularityTaskShuffler {
 
     enum Type {
       MEMORY,
-      CPU
+      CPU,
     }
 
     double usage;
@@ -98,6 +99,7 @@ public class SingularityTaskShuffler {
   }
 
   static class OverusedAgent {
+
     SingularityAgentUsage usage;
     List<TaskIdWithUsage> tasks;
     OverusedResource resource;
@@ -123,13 +125,12 @@ public class SingularityTaskShuffler {
     List<OverusedAgent> slavesToShuffle = overloadedHosts
       .entrySet()
       .stream()
-      .map(
-        entry ->
-          new OverusedAgent(
-            entry.getKey(),
-            entry.getValue(),
-            getMostOverusedResource(entry.getKey())
-          )
+      .map(entry ->
+        new OverusedAgent(
+          entry.getKey(),
+          entry.getValue(),
+          getMostOverusedResource(entry.getKey())
+        )
       )
       .sorted((s1, s2) -> OverusedResource.prioritize(s1.resource, s2.resource))
       .collect(Collectors.toList());
@@ -234,20 +235,18 @@ public class SingularityTaskShuffler {
     List<TaskIdWithUsage> out = slave.tasks;
 
     if (slave.resource.resourceType == Type.CPU) {
-      out.sort(
-        (u1, u2) ->
-          Double.compare(
-            getUtilizationScoreForCPUShuffle(u2),
-            getUtilizationScoreForCPUShuffle(u1)
-          )
+      out.sort((u1, u2) ->
+        Double.compare(
+          getUtilizationScoreForCPUShuffle(u2),
+          getUtilizationScoreForCPUShuffle(u1)
+        )
       );
     } else {
-      out.sort(
-        (u1, u2) ->
-          Double.compare(
-            getUtilizationScoreForMemoryShuffle(u1),
-            getUtilizationScoreForMemoryShuffle(u2)
-          )
+      out.sort((u1, u2) ->
+        Double.compare(
+          getUtilizationScoreForMemoryShuffle(u1),
+          getUtilizationScoreForMemoryShuffle(u2)
+        )
       );
     }
 

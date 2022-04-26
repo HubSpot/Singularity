@@ -12,6 +12,7 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.s3downloader.SingularityS3DownloaderRunner</basepom.shaded.main-class>
+    <hubspot.module.type>EXECUTABLE</hubspot.module.type>
   </properties>
 
   <dependencies>
@@ -60,15 +61,7 @@
       <artifactId>metrics-jmx</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-    </dependency>
 
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -99,6 +92,14 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
   </dependencies>

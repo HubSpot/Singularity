@@ -14,6 +14,7 @@ import net.kencochrane.raven.event.interfaces.ExceptionInterface;
 
 @Singleton
 public class SingularityRunnerExceptionNotifier {
+
   private final Optional<Raven> raven;
   private final SingularityRunnerBaseConfiguration configuration;
 

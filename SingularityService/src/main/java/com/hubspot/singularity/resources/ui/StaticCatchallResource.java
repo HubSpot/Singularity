@@ -8,6 +8,7 @@ import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.views.IndexView;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -15,7 +16,10 @@ import javax.ws.rs.core.MediaType;
 
 @Singleton
 @Path("/{uiPath:.*}")
+@Produces(MediaType.TEXT_HTML)
+@Consumes(MediaType.WILDCARD)
 public class StaticCatchallResource {
+
   private final IndexViewConfiguration configuration;
   private final String singularityUriBase;
   private final ObjectMapper mapper;

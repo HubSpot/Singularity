@@ -8,8 +8,9 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityExceptionNotifierManaged implements Managed {
+
   private static final Logger LOG = LoggerFactory.getLogger(
-    NotifyingExceptionMapper.class
+    SingularityExceptionNotifierManaged.class
   );
 
   private final SingularityExceptionNotifier exceptionNotifier;

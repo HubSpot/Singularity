@@ -9,10 +9,11 @@ import javax.annotation.Nonnull;
   subTypes = {
     SingularityTaskMetadata.class,
     SingularityTaskHealthcheckResult.class,
-    SingularityTaskHistoryUpdate.class
+    SingularityTaskHistoryUpdate.class,
   }
 )
 public class SingularityTaskIdHolder {
+
   private final SingularityTaskId taskId;
 
   public SingularityTaskIdHolder(SingularityTaskId taskId) {
@@ -26,7 +27,6 @@ public class SingularityTaskIdHolder {
 
   public static <T extends SingularityTaskIdHolder> Function<T, SingularityTaskId> getTaskIdFunction() {
     return new Function<T, SingularityTaskId>() {
-
       @Override
       public SingularityTaskId apply(@Nonnull T value) {
         return value.getTaskId();

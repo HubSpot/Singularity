@@ -21,6 +21,7 @@ import java.util.Optional;
 
 @Singleton
 public class SingularityWebCache {
+
   private volatile Map<SingularityPendingTaskId, SingularityPendingTask> cachedPendingTasks;
   private volatile long lastPendingTaskCache;
 

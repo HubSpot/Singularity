@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a docker port mapping")
 public class SingularityDockerPortMapping {
+
   public static final String DEFAULT_PROTOCOL = "tcp";
   public static final SingularityPortMappingType DEFAULT_PORT_MAPPING_TYPE =
     SingularityPortMappingType.LITERAL;

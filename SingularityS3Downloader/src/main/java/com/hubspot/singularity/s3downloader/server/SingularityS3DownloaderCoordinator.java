@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityS3DownloaderCoordinator implements DownloadListener {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3DownloaderCoordinator.class
   );
@@ -90,6 +91,7 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
   }
 
   private class DownloadJoiner implements Runnable {
+
     private final long start;
     private final Continuation continuation;
     private final ArtifactDownloadRequest artifactDownloadRequest;
@@ -163,7 +165,6 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
 
       future.addListener(
         new Runnable() {
-
           @Override
           public void run() {
             notifyDownloadFinished(newHandler);

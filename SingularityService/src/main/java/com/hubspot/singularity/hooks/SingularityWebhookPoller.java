@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class SingularityWebhookPoller extends SingularityLeaderOnlyPoller {
+
   private final AbstractWebhookChecker webhookSender;
 
   @Inject

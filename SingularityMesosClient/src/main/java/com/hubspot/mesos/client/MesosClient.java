@@ -19,6 +19,7 @@ public interface MesosClient {
   String getMasterMetricsSnapshotUri(String hostnameAndPort);
 
   class MesosClientException extends RuntimeException {
+
     private static final long serialVersionUID = 1L;
 
     public MesosClientException(String message) {

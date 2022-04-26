@@ -4,6 +4,7 @@ import javax.validation.constraints.Min;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class CustomExecutorConfiguration {
+
   @Min(0)
   private double numCpus = 0;
 

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityTokenAuthenticator implements SingularityAuthenticator {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityTokenAuthenticator.class
   );
@@ -33,7 +34,6 @@ public class SingularityTokenAuthenticator implements SingularityAuthenticator {
         .expireAfterWrite(15, TimeUnit.SECONDS)
         .build(
           new CacheLoader<String, SingularityUser>() {
-
             @Override
             public SingularityUser load(String token) {
               return verifyUncached(token);

@@ -10,6 +10,7 @@ import java.util.Optional;
   description = "A file with name `filename` containing the signature (e.g. gpg signature) for an artifact with the specified `artifactFilename`. Used to verify the validity of the artifact being downloaded"
 )
 public class S3ArtifactSignature extends S3Artifact {
+
   private final String artifactFilename;
 
   @JsonCreator

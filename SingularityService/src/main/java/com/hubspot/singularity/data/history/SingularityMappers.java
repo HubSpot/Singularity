@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityMappers {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMappers.class);
 
   static class SingularityBytesMapper implements ColumnMapper<byte[]> {
@@ -92,6 +93,7 @@ public class SingularityMappers {
 
   static class SingularityRequestHistoryMapper
     implements RowMapper<SingularityRequestHistory> {
+
     private final String userColumn;
     private final ObjectMapper objectMapper;
 
@@ -131,6 +133,7 @@ public class SingularityMappers {
 
   static class SingularityRequestWithTimeMapper
     implements RowMapper<SingularityRequestAndTime> {
+
     private final ObjectMapper objectMapper;
 
     @Inject
@@ -154,6 +157,7 @@ public class SingularityMappers {
 
   static class SingularityTaskIdHistoryMapper
     implements RowMapper<SingularityTaskIdHistory> {
+
     private final IdTranscoder<SingularityTaskId> singularityTaskIdTranscoder;
 
     @Inject
@@ -202,6 +206,7 @@ public class SingularityMappers {
 
   static class SingularityDeployHistoryLiteMapper
     implements RowMapper<SingularityDeployHistory> {
+
     private final String userColumn;
 
     @Inject
@@ -271,6 +276,7 @@ public class SingularityMappers {
   }
 
   public static class SingularityRequestIdCount {
+
     private final int count;
     private final String requestId;
 

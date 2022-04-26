@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosClient implements MesosClient {
+
   public static final String DEFAULT_HTTP_CLIENT_NAME = "mesos.http.client";
   public static final String SHORT_TIMEOUT_HTTP_CLIENT_NAME =
     "mesos.http.client.short.timeout";

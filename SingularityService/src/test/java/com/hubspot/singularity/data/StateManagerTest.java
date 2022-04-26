@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class StateManagerTest extends SingularitySchedulerTestBase {
+
   protected SingularityRequest request;
 
   @Inject

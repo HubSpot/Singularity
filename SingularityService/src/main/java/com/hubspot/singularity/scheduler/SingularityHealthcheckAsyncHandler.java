@@ -13,8 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityHealthcheckAsyncHandler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
-    SingularityHealthchecker.class
+    SingularityHealthcheckAsyncHandler.class
   );
 
   private final long startTime;

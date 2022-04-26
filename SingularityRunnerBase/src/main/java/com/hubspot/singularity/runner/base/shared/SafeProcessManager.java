@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 
 public abstract class SafeProcessManager {
+
   private final Logger log;
   private final Lock processLock;
 

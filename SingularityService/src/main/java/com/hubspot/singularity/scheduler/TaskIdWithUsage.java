@@ -5,6 +5,7 @@ import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskId;
 
 class TaskIdWithUsage {
+
   private final SingularityTaskId taskId;
   private final Resources requestedResources;
   private final SingularityTaskCurrentUsage usage;

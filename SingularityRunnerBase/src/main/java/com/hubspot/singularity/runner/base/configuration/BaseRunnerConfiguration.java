@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public abstract class BaseRunnerConfiguration {
+
   public static final String DEFAULT_ROOT_LOG_LEVEL = "INFO";
   public static final String DEFAULT_HUBSPOT_LOG_LEVEL = "INFO";
   public static final String DEFAULT_DIRECTORY = "/var/log/singularity/";

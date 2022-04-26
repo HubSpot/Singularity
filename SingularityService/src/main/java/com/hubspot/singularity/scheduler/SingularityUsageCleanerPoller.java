@@ -7,6 +7,7 @@ import com.hubspot.singularity.data.usage.UsageManager;
 import java.util.concurrent.TimeUnit;
 
 public class SingularityUsageCleanerPoller extends SingularityLeaderOnlyPoller {
+
   private final UsageManager usageManager;
   private final TaskManager taskManager;
 

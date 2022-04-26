@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  */
 @Singleton
 public class SingularityNewTaskChecker {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityNewTaskChecker.class
   );
@@ -233,7 +234,7 @@ public class SingularityNewTaskChecker {
   public enum CancelState {
     NOT_PRESENT,
     CANCELED,
-    NOT_CANCELED
+    NOT_CANCELED,
   }
 
   public CancelState cancelNewTaskCheck(String taskId) {
@@ -364,7 +365,7 @@ public class SingularityNewTaskChecker {
     CHECK_IF_TASK_OVERDUE,
     CHECK_IF_HEALTHCHECK_OVERDUE,
     LB_IN_PROGRESS_CHECK_AGAIN,
-    HEALTHY
+    HEALTHY,
   }
 
   @VisibleForTesting

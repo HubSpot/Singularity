@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
+
   private final Map<String, List<String>> requestsAndDeploys;
   private final List<String> fileNamePrefixAllowlist;
   private final List<String> taskIds;

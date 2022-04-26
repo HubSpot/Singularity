@@ -9,6 +9,7 @@ import com.hubspot.singularity.resources.ui.StaticCatchallResource;
 import com.hubspot.singularity.resources.ui.UiResource;
 
 public class SingularityServiceUIModule extends AbstractModule {
+
   public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
 
   private final UIConfiguration uiConfiguration;

@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosFrameworkMessageHandler {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosFrameworkMessageHandler.class
   );

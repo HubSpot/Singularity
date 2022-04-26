@@ -13,7 +13,9 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Describes a volume to be mounted in a docker container")
 public class SingularityDockerVolume {
-  private final Optional<String> driver, name;
+
+  private final Optional<String> driver;
+  private final Optional<String> name;
   private final Map<String, String> driverOptions;
 
   @JsonCreator

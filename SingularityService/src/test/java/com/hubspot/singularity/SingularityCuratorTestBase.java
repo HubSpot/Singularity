@@ -36,6 +36,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @TestInstance(Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 public class SingularityCuratorTestBase {
+
   @Inject
   protected Provider<Jdbi> dbiProvider;
 
@@ -152,10 +153,8 @@ public class SingularityCuratorTestBase {
       );
       liquibase.update((String) null);
 
-      try {
-        database.close();
-        handle.close();
-      } catch (Throwable t) {}
+      database.close();
+      handle.close();
     }
   }
 

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the current state of a task")
 public class SingularityTaskState {
+
   private final Optional<SingularityTaskId> taskId;
   private final Optional<SingularityPendingTaskId> pendingTaskId;
   private final Optional<String> runId;

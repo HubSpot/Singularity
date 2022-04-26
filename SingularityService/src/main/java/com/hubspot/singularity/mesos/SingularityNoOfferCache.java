@@ -10,6 +10,7 @@ import org.apache.mesos.v1.Protos.OfferID;
 
 @Singleton
 public class SingularityNoOfferCache implements OfferCache {
+
   private final SingularityMesosSchedulerClient schedulerClient;
 
   @Inject

@@ -32,6 +32,7 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 
 public class SingularityReadOnlyCuratorFramework implements CuratorFramework {
+
   private final ZkClientsLoadDistributor distributor;
 
   public SingularityReadOnlyCuratorFramework(ZkClientsLoadDistributor distributor) {

@@ -10,6 +10,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Settings for an appc image")
 public class SingularityAppcImage {
+
   private final String name;
   private final Optional<String> id;
 

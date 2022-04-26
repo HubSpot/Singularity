@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityAutoScaleSpreadAllPoller.class
   );

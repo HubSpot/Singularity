@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings for how a pause should behave")
 public class SingularityPauseRequest extends SingularityExpiringRequestParent {
+
   private final Optional<Boolean> killTasks;
   private final Optional<SingularityShellCommand> runShellCommandBeforeKill;
 

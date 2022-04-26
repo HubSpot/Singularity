@@ -7,7 +7,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
-import com.hubspot.singularity.AgentPlacement;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -58,7 +57,6 @@ import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.AgentResource;
-import com.hubspot.singularity.resources.AgentResourceDeprecated;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
@@ -102,6 +100,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
+
   @Inject
   protected SingularityLeaderCache leaderCache;
 
@@ -851,7 +850,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       requestId + "2",
       RequestType.SERVICE
     )
-    .build();
+      .build();
     saveRequest(request);
 
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1")
@@ -907,7 +906,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     firstDeploy =
       initDeploy(
         new SingularityDeployBuilder(request.getId(), firstDeployId)
-        .setCommand(Optional.of("sleep 100")),
+          .setCommand(Optional.of("sleep 100")),
         System.currentTimeMillis()
       );
     return firstDeploy;
@@ -954,7 +953,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return initAndFinishDeploy(
       request,
       new SingularityDeployBuilder(request.getId(), deployId)
-      .setCommand(Optional.of("sleep 100")),
+        .setCommand(Optional.of("sleep 100")),
       Optional.empty()
     );
   }
@@ -970,7 +969,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return initAndFinishDeploy(
       request,
       new SingularityDeployBuilder(request.getId(), deployId)
-      .setCommand(Optional.of("sleep 100")),
+        .setCommand(Optional.of("sleep 100")),
       Optional.of(r)
     );
   }
@@ -1276,7 +1275,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       requestId,
       RequestType.WORKER
     )
-    .build();
+      .build();
 
     saveRequest(request);
 

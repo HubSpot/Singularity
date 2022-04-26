@@ -9,6 +9,7 @@ import org.eclipse.jetty.server.Server;
 
 public class ServerProvider
   implements Provider<Optional<Server>>, ServerLifecycleListener {
+
   private final AtomicReference<Server> serverHolder = new AtomicReference<>();
 
   @Inject

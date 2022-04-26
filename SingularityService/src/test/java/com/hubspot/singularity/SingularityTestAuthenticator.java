@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public class SingularityTestAuthenticator implements SingularityAuthenticator {
+
   private Optional<SingularityUser> user = Optional.empty();
 
   @Inject

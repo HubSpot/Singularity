@@ -17,6 +17,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a singularity task")
 public class SingularityTask extends SingularityTaskIdHolder {
+
   private final SingularityTaskRequest taskRequest;
   private final List<MesosOfferObject> offers;
   private final MesosTaskObject mesosTask;

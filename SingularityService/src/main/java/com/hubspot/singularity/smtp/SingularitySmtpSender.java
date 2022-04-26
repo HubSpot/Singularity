@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularitySmtpSender implements Managed {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySmtpSender.class);
 
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;

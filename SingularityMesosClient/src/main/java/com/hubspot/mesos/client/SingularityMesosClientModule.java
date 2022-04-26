@@ -11,6 +11,7 @@ import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityMesosClientModule extends AbstractModule {
+
   public static final String MESOS_CLIENT_OBJECT_MAPPER =
     "singularity.mesos.client.object.mapper";
   private static final int MESOS_CLIENT_HTTP_SHORT_TIMEOUT_SECONDS = 5;

@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
 
 public class SingularityClientModule extends AbstractModule {
+
   public static final String HTTP_CLIENT_NAME = "singularity.http.client";
 
   // bind this name to not use the curator discovery, eg: http://localhost:5060,http://localhost:7000

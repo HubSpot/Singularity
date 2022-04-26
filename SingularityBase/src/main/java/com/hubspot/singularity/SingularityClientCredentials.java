@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class SingularityClientCredentials {
+
   private final String headerName;
   private final String token;
 

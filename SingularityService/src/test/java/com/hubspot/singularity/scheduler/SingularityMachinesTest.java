@@ -42,6 +42,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class SingularityMachinesTest extends SingularitySchedulerTestBase {
+
   @Inject
   protected SingularityAgentReconciliationPoller agentReconciliationPoller;
 

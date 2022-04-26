@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SingularityTaskRequestHolder {
+
   private final SingularityTaskRequest taskRequest;
   private final Resources executorResources;
   private final Resources taskResources;

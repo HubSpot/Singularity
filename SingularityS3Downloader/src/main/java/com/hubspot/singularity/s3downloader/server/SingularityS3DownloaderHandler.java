@@ -19,6 +19,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class SingularityS3DownloaderHandler extends AbstractHandler {
+
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;
   private final SingularityS3DownloaderCoordinator downloaderCoordinator;
@@ -44,8 +45,7 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
     Request baseRequest,
     HttpServletRequest request,
     HttpServletResponse response
-  )
-    throws IOException, ServletException {
+  ) throws IOException, ServletException {
     metrics.getRequestsMeter().mark();
 
     if (!target.equals(s3Configuration.getLocalDownloadPath())) {

@@ -19,6 +19,7 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 
 @Singleton
 public class LastTaskStatusMigration extends ZkDataMigration {
+
   private final TaskManager taskManager;
   private final String serverId;
   private final MesosProtosUtils mesosProtosUtils;

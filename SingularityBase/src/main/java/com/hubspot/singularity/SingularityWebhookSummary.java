@@ -7,6 +7,7 @@ import java.util.Objects;
 
 @Schema
 public class SingularityWebhookSummary {
+
   private final SingularityWebhook webhook;
   private final int queueSize;
 

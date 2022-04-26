@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Schema(description = "A label for a mesos task")
 public class SingularityMesosTaskLabel {
+
   private final String key;
   private final Optional<String> value;
 

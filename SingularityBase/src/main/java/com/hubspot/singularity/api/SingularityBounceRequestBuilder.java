@@ -4,6 +4,7 @@ import com.hubspot.singularity.SingularityShellCommand;
 import java.util.Optional;
 
 public class SingularityBounceRequestBuilder {
+
   private Optional<Boolean> incremental;
   private Optional<Boolean> skipHealthchecks;
   private Optional<SingularityShellCommand> runShellCommandBeforeKill;

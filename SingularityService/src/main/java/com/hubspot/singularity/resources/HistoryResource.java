@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -56,9 +57,11 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.HISTORY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages historical data for tasks, requests, and deploys")
 @Tags({ @Tag(name = "History") })
 public class HistoryResource extends AbstractHistoryResource {
+
   public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
   private final DeployHistoryHelper deployHistoryHelper;
@@ -103,7 +106,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Task with specified id was not found"
-      )
+      ),
     }
   )
   public SingularityTaskHistory getHistoryForTask(
@@ -177,7 +180,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Deploy with specified id was not found"
-      )
+      ),
     }
   )
   public SingularityDeployHistory getDeploy(
@@ -655,7 +658,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Task with specified run id was not found for request"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskIdHistory> getTaskHistoryForRequestAndRunId(

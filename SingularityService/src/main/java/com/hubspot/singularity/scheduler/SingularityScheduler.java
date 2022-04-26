@@ -92,6 +92,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityScheduler {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduler.class);
 
   private final SingularityConfiguration configuration;
@@ -212,6 +213,7 @@ public class SingularityScheduler {
       agentManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION)
     );
 
+    Map<SingularityAgent, MachineState> toModify = new HashMap<>();
     for (SingularityAgent agent : agents.keySet()) {
       boolean foundTask = false;
       List<SingularityMachineStateHistoryUpdate> history = agentManager.getHistory(
@@ -239,14 +241,16 @@ public class SingularityScheduler {
       }
 
       if (!foundTask) {
-        agents.put(agent, MachineState.DECOMMISSIONED);
+        toModify.put(agent, MachineState.DECOMMISSIONED);
       }
     }
+    agents.putAll(toModify);
 
     final Map<SingularityRack, MachineState> racks = getDefaultMap(
       rackManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION)
     );
 
+    Map<SingularityRack, MachineState> racksToModify = new HashMap<>();
     for (SingularityRack rack : racks.keySet()) {
       final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(
         rack.getId()
@@ -276,9 +280,10 @@ public class SingularityScheduler {
       }
 
       if (!foundTask) {
-        racks.put(rack, MachineState.DECOMMISSIONED);
+        racksToModify.put(rack, MachineState.DECOMMISSIONED);
       }
     }
+    racks.putAll(racksToModify);
 
     for (Entry<String, Optional<String>> requestIdAndUser : requestIdsToUserToReschedule.entrySet()) {
       final String requestId = requestIdAndUser.getKey();
@@ -360,9 +365,8 @@ public class SingularityScheduler {
     Map<SingularityDeployKey, List<SingularityPendingRequest>> deployKeyToPendingRequests = pendingRequests
       .stream()
       .collect(
-        Collectors.groupingBy(
-          request ->
-            new SingularityDeployKey(request.getRequestId(), request.getDeployId())
+        Collectors.groupingBy(request ->
+          new SingularityDeployKey(request.getRequestId(), request.getDeployId())
         )
       );
 
@@ -373,24 +377,23 @@ public class SingularityScheduler {
     List<CompletableFuture<Void>> checkFutures = deployKeyToPendingRequests
       .entrySet()
       .stream()
-      .map(
-        e ->
-          CompletableFuture.runAsync(
-            () ->
-              lock.runWithRequestLock(
-                () ->
-                  handlePendingRequestsForDeployKeySafe(
-                    obsoleteRequests,
-                    heldForScheduledActiveTask,
-                    totalNewScheduledTasks,
-                    e.getKey(),
-                    e.getValue()
-                  ),
-                e.getKey().getRequestId(),
-                String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue")
-              ),
-            schedulerExecutorService
-          )
+      .map(e ->
+        CompletableFuture.runAsync(
+          () ->
+            lock.runWithRequestLock(
+              () ->
+                handlePendingRequestsForDeployKeySafe(
+                  obsoleteRequests,
+                  heldForScheduledActiveTask,
+                  totalNewScheduledTasks,
+                  e.getKey(),
+                  e.getValue()
+                ),
+              e.getKey().getRequestId(),
+              String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue")
+            ),
+          schedulerExecutorService
+        )
       )
       .collect(Collectors.toList());
     CompletableFutures.allOf(checkFutures).join();
@@ -749,12 +752,11 @@ public class SingularityScheduler {
   ) {
     List<SingularityPendingTask> tasksForDeploy = scheduledTasks
       .stream()
-      .filter(
-        task ->
-          pendingRequest.getRequestId().equals(task.getPendingTaskId().getRequestId())
+      .filter(task ->
+        pendingRequest.getRequestId().equals(task.getPendingTaskId().getRequestId())
       )
-      .filter(
-        task -> pendingRequest.getDeployId().equals(task.getPendingTaskId().getDeployId())
+      .filter(task ->
+        pendingRequest.getDeployId().equals(task.getPendingTaskId().getDeployId())
       )
       .collect(Collectors.toList());
 
@@ -1159,8 +1161,8 @@ public class SingularityScheduler {
       deployId
     );
 
-    return maybeDeployStatistics.orElseGet(
-      () -> new SingularityDeployStatisticsBuilder(requestId, deployId).build()
+    return maybeDeployStatistics.orElseGet(() ->
+      new SingularityDeployStatisticsBuilder(requestId, deployId).build()
     );
   }
 
@@ -1533,13 +1535,8 @@ public class SingularityScheduler {
         request.getRequestType() == RequestType.ON_DEMAND &&
         Stream
           .of("USER_REQUESTED", "PAUSE")
-          .anyMatch(
-            cleaningReason ->
-              taskHistoryUpdate
-                .get()
-                .getStatusMessage()
-                .orElse("")
-                .contains(cleaningReason)
+          .anyMatch(cleaningReason ->
+            taskHistoryUpdate.get().getStatusMessage().orElse("").contains(cleaningReason)
           )
       ) {
         return false; // don't retry one-off launches of on-demand jobs if they were killed by the user
@@ -1825,41 +1822,37 @@ public class SingularityScheduler {
     taskManager
       .getLaunchingTasks()
       .stream()
-      .filter(
-        t -> {
-          if (t.getStartedAt() < now - configuration.getReconcileLaunchAfterMillis()) {
-            Long maybeLastReconcileTime = requestedReconciles.get(t);
-            // Don't overwhelm ourselves with status updates, only reconcile each task every 15s
-            return maybeLastReconcileTime == null || now - maybeLastReconcileTime > 15000;
-          } else {
-            return false;
-          }
+      .filter(t -> {
+        if (t.getStartedAt() < now - configuration.getReconcileLaunchAfterMillis()) {
+          Long maybeLastReconcileTime = requestedReconciles.get(t);
+          // Don't overwhelm ourselves with status updates, only reconcile each task every 15s
+          return maybeLastReconcileTime == null || now - maybeLastReconcileTime > 15000;
+        } else {
+          return false;
         }
-      )
-      .forEach(
-        taskId -> {
-          Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
-          if (maybeTask.isPresent()) {
-            mesosSchedulerClient.reconcile(
-              Collections.singletonList(
-                Task
-                  .newBuilder()
-                  .setTaskId(TaskID.newBuilder().setValue(taskId.toString()).build())
-                  .setAgentId(
-                    AgentID
-                      .newBuilder()
-                      .setValue(maybeTask.get().getAgentId().getValue())
-                      .build()
-                  )
-                  .build()
-              )
-            );
-            LOG.info("Requested explicit reconcile of task {}", taskId);
-          } else {
-            LOG.warn("Could not find full content for task {}", taskId);
-          }
+      })
+      .forEach(taskId -> {
+        Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+        if (maybeTask.isPresent()) {
+          mesosSchedulerClient.reconcile(
+            Collections.singletonList(
+              Task
+                .newBuilder()
+                .setTaskId(TaskID.newBuilder().setValue(taskId.toString()).build())
+                .setAgentId(
+                  AgentID
+                    .newBuilder()
+                    .setValue(maybeTask.get().getAgentId().getValue())
+                    .build()
+                )
+                .build()
+            )
+          );
+          LOG.info("Requested explicit reconcile of task {}", taskId);
+        } else {
+          LOG.warn("Could not find full content for task {}", taskId);
         }
-      );
+      });
     Set<SingularityTaskId> toRemove = requestedReconciles
       .keySet()
       .stream()

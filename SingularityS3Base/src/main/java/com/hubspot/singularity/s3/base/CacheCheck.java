@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3.base;
 
 public class CacheCheck {
+
   private final CacheCheckResult cacheCheckResult;
   private final String message;
 

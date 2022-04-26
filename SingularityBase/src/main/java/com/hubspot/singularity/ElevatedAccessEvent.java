@@ -10,6 +10,7 @@ import java.util.Objects;
   description = "A webhook event representing an action done with elevated security access"
 )
 public class ElevatedAccessEvent implements Comparable<ElevatedAccessEvent> {
+
   private final String user;
   private final String requestId;
   private final SingularityAuthorizationScope scope;

@@ -10,11 +10,12 @@ import java.util.Optional;
     SingularityExpiringBounce.class,
     SingularityExpiringPause.class,
     SingularityExpiringScale.class,
-    SingularityExpiringSkipHealthchecks.class
+    SingularityExpiringSkipHealthchecks.class,
   }
 )
 public abstract class SingularityExpiringRequestActionParent<T extends SingularityExpiringRequestParent>
   extends SingularityExpiringParent<T> {
+
   private final String requestId;
 
   public SingularityExpiringRequestActionParent(

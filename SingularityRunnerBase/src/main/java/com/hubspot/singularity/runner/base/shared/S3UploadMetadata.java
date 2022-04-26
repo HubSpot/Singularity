@@ -40,6 +40,7 @@ import java.util.Optional;
  *
  */
 public class S3UploadMetadata {
+
   private final String directory;
   private final String fileGlob;
   private final String s3Bucket;

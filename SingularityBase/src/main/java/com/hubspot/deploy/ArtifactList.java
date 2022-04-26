@@ -8,6 +8,7 @@ import java.util.List;
 
 @Schema(description = "A list of other artifacts to download for a task")
 public class ArtifactList {
+
   private final List<EmbeddedArtifact> embeddedArtifacts;
   private final List<ExternalArtifact> externalArtifacts;
   private final List<S3Artifact> s3Artifacts;

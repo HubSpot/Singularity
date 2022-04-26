@@ -10,6 +10,10 @@
 
   <artifactId>SingularityRunnerBase</artifactId>
 
+  <properties>
+    <hubspot.module.type>EXECUTABLE_LIBRARY</hubspot.module.type>
+  </properties>
+
   <dependencies>
 
     <dependency>
@@ -86,11 +90,11 @@
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
+
 
     <dependency>
       <groupId>net.kencochrane.raven</groupId>

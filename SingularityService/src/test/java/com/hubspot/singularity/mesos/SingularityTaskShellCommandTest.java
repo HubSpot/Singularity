@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBase {
+
   @Inject
   private TaskResource taskResource;
 
@@ -56,7 +57,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
   }
 
   @Test
-  public void testTaskShellCommandPersistence() {
+  public void testTaskShellCommandPersistence() throws InterruptedException {
     initRequest();
     initFirstDeploy();
 
@@ -108,9 +109,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
       )
     );
 
-    try {
-      Thread.sleep(3);
-    } catch (Exception e) {}
+    Thread.sleep(3);
 
     SingularityTaskShellCommandRequest secondShellRequest = taskResource.runShellCommand(
       singularityUser,
@@ -135,8 +134,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     );
 
     mesosScheduler.message(
-      Event
-        .Message.newBuilder()
+      Event.Message
+        .newBuilder()
         .setExecutorId(
           MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId())
         )
@@ -158,8 +157,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     );
 
     mesosScheduler.message(
-      Event
-        .Message.newBuilder()
+      Event.Message
+        .newBuilder()
         .setExecutorId(
           MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId())
         )
@@ -185,8 +184,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     );
 
     mesosScheduler.message(
-      Event
-        .Message.newBuilder()
+      Event.Message
+        .newBuilder()
         .setExecutorId(
           MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId())
         )

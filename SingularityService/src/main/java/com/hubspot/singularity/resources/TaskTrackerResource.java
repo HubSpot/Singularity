@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Collections;
 import java.util.Optional;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,9 +31,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Retrieve a task by taskId or runId")
 @Tags({ @Tag(name = "Task Tracking") })
 public class TaskTrackerResource {
+
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
@@ -56,7 +59,10 @@ public class TaskTrackerResource {
   @Operation(
     summary = "Get the current state of a task by taskId whether it is active, or inactive",
     responses = {
-      @ApiResponse(responseCode = "404", description = "Task with this id does not exist")
+      @ApiResponse(
+        responseCode = "404",
+        description = "Task with this id does not exist"
+      ),
     }
   )
   public Optional<SingularityTaskState> getTaskState(
@@ -81,7 +87,7 @@ public class TaskTrackerResource {
       @ApiResponse(
         responseCode = "404",
         description = "Task with this runId does not exist"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskState> getTaskStateByRunId(

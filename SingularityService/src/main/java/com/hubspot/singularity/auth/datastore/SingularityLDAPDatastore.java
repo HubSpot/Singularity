@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityLDAPDatastore implements SingularityAuthDatastore {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityLDAPDatastore.class
   );
@@ -84,8 +85,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
   public SingularityLDAPDatastore(
     SingularityConfiguration configuration,
     SingularityExceptionNotifier exceptionNotifier
-  )
-    throws IOException {
+  ) throws IOException {
     checkArgument(
       configuration.getLdapConfigurationOptional().isPresent(),
       "LDAP configuration not present"

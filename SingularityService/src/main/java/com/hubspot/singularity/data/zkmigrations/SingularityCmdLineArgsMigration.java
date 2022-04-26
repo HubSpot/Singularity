@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityCmdLineArgsMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityCmdLineArgsMigration.class
   );
@@ -48,6 +49,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
   }
 
   static class SingularityPendingRequestPrevious {
+
     private final String requestId;
     private final String deployId;
     private final long timestamp;

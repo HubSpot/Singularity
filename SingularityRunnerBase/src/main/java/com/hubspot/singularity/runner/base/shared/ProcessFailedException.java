@@ -1,6 +1,7 @@
 package com.hubspot.singularity.runner.base.shared;
 
 public class ProcessFailedException extends Exception {
+
   private static final long serialVersionUID = 1L;
 
   public ProcessFailedException(String message) {

@@ -5,6 +5,7 @@ import java.util.Set;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class ScopesConfiguration {
+
   @NotEmpty
   private Set<String> admin = Collections.singleton("SINGULARITY_ADMIN");
 

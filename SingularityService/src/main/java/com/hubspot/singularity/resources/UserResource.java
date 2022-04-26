@@ -22,9 +22,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.USER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Retrieve or update settings for a particular user")
 @Tags({ @Tag(name = "Users") })
 public class UserResource {
+
   private final UserManager userManager;
 
   @Inject

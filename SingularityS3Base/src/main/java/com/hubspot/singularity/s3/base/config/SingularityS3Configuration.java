@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Configuration(filename = "/etc/singularity.s3base.yaml", consolidatedField = "s3")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
+
   @NotEmpty
   @DirectoryExists
   @JsonProperty

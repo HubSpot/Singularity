@@ -25,13 +25,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityRequestHistoryPersister
   extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityRequestHistoryPersister.class
   );
@@ -60,6 +60,7 @@ public class SingularityRequestHistoryPersister
 
   public static class SingularityRequestHistoryParent
     implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
+
     private final List<SingularityRequestHistory> history;
     private final String requestId;
     private final long createTime;

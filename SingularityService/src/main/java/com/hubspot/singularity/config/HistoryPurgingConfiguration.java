@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class HistoryPurgingConfiguration {
+
   private int deleteTaskHistoryAfterDays = 0;
 
   private int deleteTaskHistoryAfterTasksPerRequest = 0;

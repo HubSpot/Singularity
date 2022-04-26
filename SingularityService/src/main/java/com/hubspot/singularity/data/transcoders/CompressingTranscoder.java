@@ -8,6 +8,7 @@ import org.iq80.snappy.CorruptionException;
 import org.iq80.snappy.Snappy;
 
 public abstract class CompressingTranscoder<T> implements Transcoder<T> {
+
   private final boolean compressLargeDataObjects;
 
   protected CompressingTranscoder(SingularityConfiguration configuration) {

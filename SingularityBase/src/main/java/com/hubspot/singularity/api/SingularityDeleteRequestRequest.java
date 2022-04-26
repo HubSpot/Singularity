@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings related to deleting a request")
 public class SingularityDeleteRequestRequest {
+
   private final Optional<String> message;
   private final Optional<String> actionId;
   private final Optional<Boolean> deleteFromLoadBalancer;

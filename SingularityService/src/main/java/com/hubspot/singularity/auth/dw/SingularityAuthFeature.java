@@ -23,7 +23,6 @@ public class SingularityAuthFeature implements Feature {
   public boolean configure(FeatureContext context) {
     context.register(
       new AbstractBinder() {
-
         @Override
         public void configure() {
           bind(SingularityMultiMethodAuthenticator.class)

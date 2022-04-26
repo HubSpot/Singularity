@@ -13,6 +13,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 public class UserManager extends CuratorManager {
+
   private final Transcoder<SingularityUserSettings> settingsTranscoder;
   private final SingularityValidator validator;
 

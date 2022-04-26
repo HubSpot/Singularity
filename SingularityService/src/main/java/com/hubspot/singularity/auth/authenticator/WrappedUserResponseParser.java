@@ -10,6 +10,7 @@ import java.io.IOException;
 
 @Singleton
 public class WrappedUserResponseParser extends WebhookResponseParser {
+
   private final ObjectMapper objectMapper;
 
   @Inject

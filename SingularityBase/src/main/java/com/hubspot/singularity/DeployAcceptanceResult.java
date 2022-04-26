@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 public class DeployAcceptanceResult {
+
   private final DeployAcceptanceState state;
   private final String message;
 

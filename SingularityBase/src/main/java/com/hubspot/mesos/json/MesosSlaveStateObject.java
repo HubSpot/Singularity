@@ -10,6 +10,7 @@ import java.util.Objects;
  */
 @Deprecated
 public class MesosSlaveStateObject {
+
   private final String id;
   private final String pid;
   private final String hostname;

@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class HealthcheckOptionsBuilder {
+
   private Optional<String> uri;
   private Optional<Integer> portIndex;
   private Optional<Long> portNumber;

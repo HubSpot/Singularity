@@ -32,6 +32,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 public final class JavaUtils {
+
   public static final String LOGBACK_LOGGING_PATTERN =
     "%-5level [%d] [%.15thread] %logger{35} - %msg%n";
 
@@ -140,12 +141,13 @@ public final class JavaUtils {
     final long millis
   ) {
     Thread t = new Thread("ExecutorServiceTerminationWaiter-" + threadNameSuffix) {
-
       @Override
       public void run() {
         try {
           service.awaitTermination(millis, TimeUnit.MILLISECONDS);
-        } catch (Throwable t) {} finally {
+        } catch (Throwable t) {
+          // Didn't see that
+        } finally {
           latch.countDown();
         }
       }

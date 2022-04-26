@@ -10,7 +10,9 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Represents a docker port mapping")
 public class SingularityPortMapping {
-  private final int hostPort, containerPort;
+
+  private final int hostPort;
+  private final int containerPort;
   private final Optional<String> protocol;
 
   @JsonCreator

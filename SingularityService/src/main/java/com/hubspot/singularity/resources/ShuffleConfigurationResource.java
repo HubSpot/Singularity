@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -28,9 +29,11 @@ import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.SHUFFLE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages shuffle configuration of Singularity.")
 @Tags({ @Tag(name = "Shuffle") })
 public class ShuffleConfigurationResource extends AbstractLeaderAwareResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     ShuffleConfigurationResource.class
   );

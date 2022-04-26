@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MesosRangesObject {
+
   private final Optional<List<MesosRangeObject>> range;
 
   @JsonCreator

@@ -9,6 +9,7 @@ import java.util.Comparator;
 
 @Schema(description = "The unique id for a singularity task")
 public class SingularityTaskId extends SingularityId implements SingularityHistoryItem {
+
   private final String requestId;
   private final String deployId;
   private final long startedAt;
@@ -16,21 +17,15 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   private final String sanitizedHost;
   private final String sanitizedRackId;
 
-  public static Comparator<SingularityTaskId> INSTANCE_NO_COMPARATOR = new Comparator<SingularityTaskId>() {
+  public static final Comparator<SingularityTaskId> INSTANCE_NO_COMPARATOR = Comparator.comparingInt(o ->
+    o.instanceNo
+  );
 
-    @Override
-    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
-      return Integer.compare(o1.instanceNo, o2.instanceNo);
-    }
-  };
-
-  public static Comparator<SingularityTaskId> STARTED_AT_COMPARATOR_DESC = new Comparator<SingularityTaskId>() {
-
-    @Override
-    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
-      return Long.compare(o2.startedAt, o1.startedAt);
-    }
-  };
+  public static final Comparator<SingularityTaskId> STARTED_AT_COMPARATOR_DESC = (
+      o1,
+      o2
+    ) ->
+    Long.compare(o2.startedAt, o1.startedAt);
 
   public SingularityTaskId(
     String requestId,
