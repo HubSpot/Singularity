@@ -69,7 +69,9 @@ public class SingularityClientModule extends AbstractModule {
     objectMapper.registerModule(new Jdk8Module());
 
     HttpClient httpClient = new NingHttpClient(
-      httpConfig.orElse(HttpConfig.newBuilder().setObjectMapper(objectMapper).build())
+      httpConfig.orElseGet(() ->
+        HttpConfig.newBuilder().setObjectMapper(objectMapper).build()
+      )
     );
     bind(HttpClient.class)
       .annotatedWith(Names.named(HTTP_CLIENT_NAME))

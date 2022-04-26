@@ -678,7 +678,7 @@ public class SingularityClient {
     checkResponse(type, response);
 
     LOG.info(
-      "Deleted {} ({}) from Singularity in %sms",
+      "Deleted {} ({}) from Singularity in {}ms",
       type,
       id,
       System.currentTimeMillis() - start
@@ -1650,7 +1650,7 @@ public class SingularityClient {
   //
   // RACKS
   //
-  private Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
+  public Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
     final Function<String, String> requestUri = host ->
       String.format(RACKS_FORMAT, getApiBase(host));
     Optional<Map<String, Object>> maybeQueryParams = Optional.empty();

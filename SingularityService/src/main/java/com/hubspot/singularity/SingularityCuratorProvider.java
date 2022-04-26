@@ -75,6 +75,7 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
     }
   }
 
+  @SuppressWarnings("BanCuratorFrameworkFactory")
   private CuratorFramework buildCuratorFrameworkInstance(
     ZooKeeperConfiguration zookeeperConfig
   ) {

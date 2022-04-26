@@ -208,18 +208,23 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   }
 
   private Response runFailover(SingularityUser user) {
-    CompletableFuture.runAsync(
-      () -> {
-        LOG.warn("Failover triggered by {}", user.getId());
-        abort.abort(
-          AbortReason.MANUAL,
-          Optional.of(
-            new RuntimeException(String.format("Forced failover by %s", user.getId()))
-          )
-        );
-      },
-      Executors.newSingleThreadExecutor()
-    );
+    CompletableFuture
+      .runAsync(
+        () -> {
+          LOG.warn("Failover triggered by {}", user.getId());
+          abort.abort(
+            AbortReason.MANUAL,
+            Optional.of(
+              new RuntimeException(String.format("Forced failover by %s", user.getId()))
+            )
+          );
+        },
+        Executors.newSingleThreadExecutor()
+      )
+      .exceptionally(t -> {
+        LOG.error("Could not run failover", t);
+        return null;
+      });
     return Response.ok().build();
   }
 

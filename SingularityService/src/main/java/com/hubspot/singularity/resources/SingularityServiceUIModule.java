@@ -19,6 +19,7 @@ public class SingularityServiceUIModule extends AbstractModule {
   }
 
   @Override
+  @SuppressWarnings("BanSingletonJaxRsResources") // not sure why this goes off here?
   public void configure() {
     switch (uiConfiguration.getRootUrlMode()) {
       case UI_REDIRECT:

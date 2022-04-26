@@ -347,6 +347,7 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
+  @SuppressWarnings("BannedS3ClientMethods")
   public SingularityS3Services provideS3Services(Optional<S3Configuration> config) {
     if (!config.isPresent()) {
       return new SingularityS3Services();

@@ -491,6 +491,7 @@ public class SingularityHealthchecker {
   }
 
   @VisibleForTesting
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   void asyncHealthcheck(final SingularityTask task) {
     final Optional<String> uri = getHealthcheckUri(task);
     final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(

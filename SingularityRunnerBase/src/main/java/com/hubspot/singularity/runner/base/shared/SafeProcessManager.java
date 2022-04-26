@@ -71,11 +71,8 @@ public abstract class SafeProcessManager {
     final String cmd = builder.command().get(0);
 
     log.debug("Starting process {}", Joiner.on(" ").join(builder.command()));
-
-    processLock.lock();
-
     Process process = null;
-
+    processLock.lock();
     try {
       Preconditions.checkState(!killed.get(), "Can not start new process, killed is set");
       Preconditions.checkState(

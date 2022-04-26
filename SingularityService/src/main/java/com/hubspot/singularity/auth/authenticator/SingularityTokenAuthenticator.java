@@ -30,10 +30,10 @@ public class SingularityTokenAuthenticator implements SingularityAuthenticator {
     this.authTokenManager = authTokenManager;
     this.tokenCache =
       CacheBuilder
-        .<String, SingularityUserPermissionsResponse>newBuilder()
+        .newBuilder()
         .expireAfterWrite(15, TimeUnit.SECONDS)
         .build(
-          new CacheLoader<String, SingularityUser>() {
+          new CacheLoader<>() {
             @Override
             public SingularityUser load(String token) {
               return verifyUncached(token);

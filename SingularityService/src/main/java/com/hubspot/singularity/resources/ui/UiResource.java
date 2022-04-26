@@ -2,7 +2,6 @@ package com.hubspot.singularity.resources.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.Singularity;
 import com.hubspot.singularity.config.IndexViewConfiguration;
@@ -17,7 +16,6 @@ import javax.ws.rs.core.MediaType;
 /**
  * Serves as the base for the UI, returns the mustache view for the actual GUI.
  */
-@Singleton
 @Path(UiResource.UI_RESOURCE_LOCATION + "{uiPath:.*}")
 @Produces(MediaType.TEXT_HTML)
 @Consumes(MediaType.WILDCARD)

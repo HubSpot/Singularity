@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -505,17 +507,23 @@ public class JDBIHistoryManager implements HistoryManager {
       LOG.warn("History backfill already running, will not restart");
       return CompletableFuture.completedFuture(null);
     }
-    return CompletableFuture.runAsync(() -> {
-      try {
-        backfillTaskJson(batchSize);
-        backfillRequestJson(batchSize);
-        backfillDeployJson(batchSize);
-      } catch (Throwable t) {
-        LOG.error("While running history backfill", t);
-      } finally {
-        historyBackfillRunning.set(false);
-      }
-    });
+    ExecutorService backfillExecutor = Executors.newSingleThreadExecutor();
+    return CompletableFuture
+      .runAsync(
+        () -> {
+          try {
+            backfillTaskJson(batchSize);
+            backfillRequestJson(batchSize);
+            backfillDeployJson(batchSize);
+          } catch (Throwable t) {
+            LOG.error("While running history backfill", t);
+          } finally {
+            historyBackfillRunning.set(false);
+          }
+        },
+        backfillExecutor
+      )
+      .whenComplete((r, t) -> backfillExecutor.shutdown());
   }
 
   private void backfillTaskJson(int batchSize) {

@@ -193,6 +193,7 @@ public class SingularityMesosSchedulerClient {
    * Sets up the connection and is blocking in wait for calls from mesos
    * master.
    */
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   private void connect(
     URI mesosMasterURI,
     FrameworkInfo frameworkInfo,
@@ -354,6 +355,7 @@ public class SingularityMesosSchedulerClient {
     }
   }
 
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   public void sendCall(Call call) {
     if (publisher == null) {
       throw new RuntimeException(

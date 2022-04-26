@@ -54,6 +54,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.HISTORY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -61,6 +63,8 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 @Schema(title = "Manages historical data for tasks, requests, and deploys")
 @Tags({ @Tag(name = "History") })
 public class HistoryResource extends AbstractHistoryResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HistoryResource.class);
 
   public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
@@ -978,7 +982,12 @@ public class HistoryResource extends AbstractHistoryResource {
       Response.class,
       null,
       () -> {
-        historyManager.startHistoryBackfill(batchSize);
+        historyManager
+          .startHistoryBackfill(batchSize)
+          .exceptionally(t -> {
+            LOG.error("Could not complete history backfill", t);
+            return null;
+          });
         return Response.ok().build();
       }
     );

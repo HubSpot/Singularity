@@ -519,7 +519,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     if (!restartInProgress.compareAndSet(false, true)) {
       return;
     }
-    CompletableFuture.runAsync(this::reconnectMesosSync, reconnectExecutor);
+    CompletableFuture
+      .runAsync(this::reconnectMesosSync, reconnectExecutor)
+      .exceptionally(t -> {
+        LOG.error("Could not reconnect to mesos", t);
+        return null;
+      });
   }
 
   public void reconnectMesosSync() {
@@ -757,7 +762,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     long start = System.currentTimeMillis();
     return statusUpdateHandler
       .processStatusUpdateAsync(status)
-      .whenCompleteAsync((result, throwable) -> {
+      .whenComplete((result, throwable) -> {
         if (throwable != null) {
           LOG.error(
             "Scheduler threw an uncaught exception processing status updates",
@@ -822,7 +827,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           Thread.sleep(2000);
         }
         TaskStatus status = diskQueueIterator.next();
-        handleStatusUpdateAsync(status);
+        handleStatusUpdateAsync(status)
+          .exceptionally(t -> {
+            LOG.error("Uncaught exception processing status update", t);
+            return null;
+          });
         diskQueueIterator.remove();
       }
 
@@ -834,7 +843,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           );
           Thread.sleep(2000);
         }
-        handleStatusUpdateAsync(nextInMemory);
+        handleStatusUpdateAsync(nextInMemory)
+          .exceptionally(t -> {
+            LOG.error("Uncaught exception processing status update", t);
+            return null;
+          });
         nextInMemory = queuedUpdates.nextInMemory();
       }
     } catch (Throwable t) {

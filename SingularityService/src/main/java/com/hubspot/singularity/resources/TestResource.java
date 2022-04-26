@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -342,7 +341,7 @@ public class TestResource {
       configuration.isAllowTestResourceCalls(),
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
-    CompletableFuture.runAsync(taskHistoryPersister::runActionOnPoll);
+    taskHistoryPersister.runActionOnPoll();
   }
 
   @POST
@@ -361,7 +360,7 @@ public class TestResource {
       configuration.isAllowTestResourceCalls(),
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
-    CompletableFuture.runAsync(deployHistoryPersister::runActionOnPoll);
+    deployHistoryPersister.runActionOnPoll();
   }
 
   @POST
@@ -380,6 +379,6 @@ public class TestResource {
       configuration.isAllowTestResourceCalls(),
       "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)"
     );
-    CompletableFuture.runAsync(requestHistoryPersister::runActionOnPoll);
+    requestHistoryPersister.runActionOnPoll();
   }
 }

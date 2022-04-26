@@ -101,7 +101,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
       processToString = getCurrentProcessToString();
 
-      if (redirectOutput == Redirect.PIPE) {
+      if (redirectOutput.equals(Redirect.PIPE)) {
         reader = Optional.of(new OutputReader(process.getInputStream()));
         reader.get().start();
       }

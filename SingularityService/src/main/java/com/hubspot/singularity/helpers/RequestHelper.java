@@ -1,5 +1,6 @@
 package com.hubspot.singularity.helpers;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -44,6 +45,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -56,6 +59,7 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final ExecutorService requestExecutor;
 
   @Inject
   public RequestHelper(
@@ -74,6 +78,10 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
+    this.requestExecutor =
+      Executors.newCachedThreadPool(
+        new ThreadFactoryBuilder().setNameFormat("request-data-%d").build()
+      );
   }
 
   public long unpause(
@@ -429,38 +437,51 @@ public class RequestHelper {
         );
       })
       .sorted() // Sorted by last action time descending, with starred requests coming first
-      .limit(limit.orElse(requests.size()))
+      .limit(limit.orElseGet(requests::size))
       .map(parentWithActionTime -> {
         SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
         if (includeFullRequestData) {
           CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture
-            .supplyAsync(() -> getTaskIdsByStatusForRequest(requestWithState))
+            .supplyAsync(
+              () -> getTaskIdsByStatusForRequest(requestWithState),
+              requestExecutor
+            )
             .exceptionally(throwable -> Optional.empty());
           CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture
-            .supplyAsync(() ->
-              requestManager.getExpiringBounce(requestWithState.getRequest().getId())
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringBounce(requestWithState.getRequest().getId()),
+              requestExecutor
             )
             .exceptionally(throwable -> Optional.empty());
           CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture
-            .supplyAsync(() ->
-              requestManager.getExpiringPause(requestWithState.getRequest().getId())
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringPause(requestWithState.getRequest().getId()),
+              requestExecutor
             )
             .exceptionally(throwable -> Optional.empty());
           CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture
-            .supplyAsync(() ->
-              requestManager.getExpiringScale(requestWithState.getRequest().getId())
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringScale(requestWithState.getRequest().getId()),
+              requestExecutor
             )
             .exceptionally(throwable -> Optional.empty());
           CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture
-            .supplyAsync(() ->
-              requestManager.getExpiringSkipHealthchecks(
-                requestWithState.getRequest().getId()
-              )
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringSkipHealthchecks(
+                  requestWithState.getRequest().getId()
+                ),
+              requestExecutor
             )
             .exceptionally(throwable -> Optional.empty());
           CompletableFuture<Optional<SingularityExpiringPriority>> maybeExpiringPriority = CompletableFuture
-            .supplyAsync(() ->
-              requestManager.getExpiringPriority(requestWithState.getRequest().getId())
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringPriority(requestWithState.getRequest().getId()),
+              requestExecutor
             )
             .exceptionally(throwable -> Optional.empty());
           return new SingularityRequestParent(

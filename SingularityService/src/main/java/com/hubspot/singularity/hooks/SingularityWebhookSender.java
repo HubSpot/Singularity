@@ -341,6 +341,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   }
 
   // TODO handle retries, errors.
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   private <T> CompletableFuture<Response> executeWebhookAsync(
     String uri,
     Object payload,

@@ -19,6 +19,7 @@ import javax.ws.rs.core.UriInfo;
 @Path(ApiPaths.OPEN_API_RESOURCE_PATH)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces({ MediaType.APPLICATION_JSON })
+@SuppressWarnings("Jax2FieldInjection")
 public class SingularityOpenApiResource extends BaseOpenApiResource {
 
   @Context
