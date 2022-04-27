@@ -115,7 +115,7 @@ public class SingularityExecutorTaskProcessCallable
       .orElse(configuration.getDefaultHealthcheckInternvalSeconds());
     long maxDelay =
       configuration.getDefaultHealthcheckBaseTimeoutSeconds() +
-      (retryInterval * healthcheckMaxRetries);
+      ((long) retryInterval * healthcheckMaxRetries);
 
     try {
       Retryer<HealthCheckResult> retryer = RetryerBuilder

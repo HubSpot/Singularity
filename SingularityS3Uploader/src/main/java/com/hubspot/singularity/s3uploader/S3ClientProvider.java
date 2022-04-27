@@ -31,6 +31,7 @@ public class S3ClientProvider implements Closeable {
     this.clientHolds = new HashMap<>();
   }
 
+  @SuppressWarnings("BannedS3ClientMethods")
   public synchronized AmazonS3 getClient(BasicAWSCredentials credentials) {
     String key = credsToKey(credentials);
     AmazonS3 s3 = clientByKey.computeIfAbsent(key, k -> new AmazonS3Client(credentials));

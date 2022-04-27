@@ -52,7 +52,7 @@ public class SingularityExecutorLogging {
           executorId
         );
     } catch (InvalidSingularityTaskIdException e) {
-      LOG.info("Handling non-SingularityTaskId %s", taskId);
+      LOG.info("Handling non-SingularityTaskId {}", taskId);
     }
 
     Logger taskLogger = context.getLogger(loggerId);

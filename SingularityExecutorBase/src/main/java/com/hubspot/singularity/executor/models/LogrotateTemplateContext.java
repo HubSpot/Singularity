@@ -201,18 +201,6 @@ public class LogrotateTemplateContext {
     return transformed;
   }
 
-  private Optional<String> parseFilenameExtension(String filename) {
-    final int lastPeriodIndex = filename.lastIndexOf('.');
-
-    if (
-      (lastPeriodIndex > -1) && !filename.substring(lastPeriodIndex + 1).contains("*")
-    ) {
-      return Optional.of(filename.substring(lastPeriodIndex + 1));
-    } else {
-      return Optional.empty();
-    }
-  }
-
   public String getExtrasDateformat() {
     return configuration.getLogrotateExtrasDateformat();
   }

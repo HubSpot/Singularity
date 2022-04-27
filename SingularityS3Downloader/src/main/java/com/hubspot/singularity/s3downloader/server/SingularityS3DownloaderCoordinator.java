@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
@@ -28,6 +29,7 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class SingularityS3DownloaderCoordinator implements DownloadListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(

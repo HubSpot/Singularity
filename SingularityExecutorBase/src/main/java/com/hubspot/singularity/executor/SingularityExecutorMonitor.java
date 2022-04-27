@@ -626,10 +626,8 @@ public class SingularityExecutorMonitor {
     SingularityExecutorTaskProcessCallable runningProcess = null;
 
     task.getLock().lock();
-
-    boolean wasKilled = task.wasKilled();
-
     try {
+      boolean wasKilled = task.wasKilled();
       if (!wasKilled) {
         task.markKilled(user);
       }

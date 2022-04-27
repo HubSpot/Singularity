@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
@@ -125,7 +126,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       updater.sendUpdate(
         UpdateType.INVALID,
         Optional.of("No task process found"),
-        Optional.<String>empty()
+        Optional.empty()
       );
       return;
     }
@@ -139,6 +140,11 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       updater
     );
 
-    shellRunner.start();
+    shellRunner
+      .start()
+      .addListener(
+        () -> LOG.info("Finished shell command {}", shellRequest),
+        MoreExecutors.directExecutor()
+      );
   }
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.config.MissingConfigException;
@@ -54,6 +55,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class SingularityS3UploaderDriver
   extends WatchServiceHelper
   implements SingularityDriver {
@@ -216,8 +218,6 @@ public class SingularityS3UploaderDriver
         () -> {
           final long start = System.currentTimeMillis();
 
-          runLock.lock();
-
           if (isStopped()) {
             LOG.warn("Driver is stopped, not checking uploads");
             return;
@@ -225,9 +225,9 @@ public class SingularityS3UploaderDriver
 
           int uploads = 0;
           final int uploaders = metadataToUploader.size();
-          metrics.startUploads();
-
+          runLock.lock();
           try {
+            metrics.startUploads();
             uploads = checkUploads();
           } catch (Throwable t) {
             LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
