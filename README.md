@@ -1,3 +1,10 @@
+***IMPORTANT DEPRECATION NOTICE***
+
+This project is no longer actively maintained
+
+As of April 2022, the HubSpot team has stopped new contributions to the open source version of Singularity. The slack channel will remain open for the time being for additional questions or support but no further releases will be published.
+
+------------------
 ![Singularity](Docs/images/singularity.png)
 
 **Latest Release Version:** [1.4.0](https://github.com/HubSpot/Singularity/releases/tag/Singularity-1.3.0)
