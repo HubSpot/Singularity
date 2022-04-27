@@ -22,8 +22,6 @@
       <artifactId>logback-classic</artifactId>
     </dependency>
 
-
-
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -33,7 +31,6 @@
       <groupId>com.github.jknack</groupId>
       <artifactId>handlebars</artifactId>
     </dependency>
-
 
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -57,27 +54,27 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityRunnerBase</artifactId>
+      <artifactId>SingularityExecutorBase</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityExecutorBase</artifactId>
+      <artifactId>SingularityRunnerBase</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityS3Base</artifactId>
     </dependency>
-
-
-
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.mesos</groupId>
       <artifactId>mesos</artifactId>
     </dependency>
-
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -85,22 +82,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-
-
-
-
-    <dependency>
       <groupId>com.sun.activation</groupId>
       <artifactId>jakarta.activation</artifactId>
       <scope>runtime</scope>
     </dependency>
+
     <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>

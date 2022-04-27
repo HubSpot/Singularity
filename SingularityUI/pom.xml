@@ -11,9 +11,9 @@
   <artifactId>SingularityUI</artifactId>
 
   <properties>
+    <hubspot.module.type>CORE</hubspot.module.type>
     <nodeVersion>v10.24.1</nodeVersion>
     <npmVersion>6.14.12</npmVersion>
-    <hubspot.module.type>CORE</hubspot.module.type>
   </properties>
 
   <profiles>

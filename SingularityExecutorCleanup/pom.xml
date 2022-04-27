@@ -65,7 +65,10 @@
       <groupId>com.spotify</groupId>
       <artifactId>docker-client</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.hibernate</groupId>
@@ -81,10 +84,6 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
   </dependencies>

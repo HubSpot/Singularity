@@ -275,14 +275,23 @@
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-jaxrs2</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>java.se.modules</groupId>
+      <artifactId>java.activation</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
     </dependency>
-
-
 
     <dependency>
       <groupId>javax.ws.rs</groupId>
@@ -429,18 +438,6 @@
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-views-mustache</artifactId>
       <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>java.se.modules</groupId>
-      <artifactId>java.activation</artifactId>
     </dependency>
 
     <dependency>

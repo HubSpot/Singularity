@@ -29,6 +29,7 @@
 
   <properties>
     <allow.hubspot-standard-stack.dependencies>false</allow.hubspot-standard-stack.dependencies>
+    <basepom.check.skip-prettier>false</basepom.check.skip-prettier>
     <dep.executable-deps.version>1.0-minimal-SNAPSHOT</dep.executable-deps.version>
     <dep.junit-jupiter.version>5.5.0</dep.junit-jupiter.version>
     <dep.junit.platform.version>1.5.0</dep.junit.platform.version>
@@ -42,7 +43,6 @@
     <ning.async.version>1.9.38</ning.async.version>
     <singularitybase.db.driver>mysql</singularitybase.db.driver>
     <singularitybase.image.revision>1</singularitybase.image.revision>
-    <basepom.check.skip-prettier>false</basepom.check.skip-prettier>
   </properties>
 
   <dependencyManagement>
@@ -94,6 +94,18 @@
         <groupId>com.google.apis</groupId>
         <artifactId>google-http-client-jackson2</artifactId>
         <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>1.15.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -211,6 +223,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.squareup.tape2</groupId>
+        <artifactId>tape</artifactId>
+        <version>2.0.0-beta1</version>
+      </dependency>
+
+      <dependency>
         <groupId>de.neuland-bfi</groupId>
         <artifactId>jade4j</artifactId>
         <version>1.2.7</version>
@@ -233,9 +251,15 @@
       </dependency>
 
       <dependency>
-        <groupId>com.squareup.tape2</groupId>
-        <artifactId>tape</artifactId>
-        <version>2.0.0-beta1</version>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-graphite</artifactId>
+        <version>${dep.dropwizard-metrics.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-jmx</artifactId>
+        <version>${dep.dropwizard-metrics.version}</version>
       </dependency>
 
       <dependency>
@@ -275,6 +299,39 @@
       </dependency>
 
       <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-unixsocket</artifactId>
+        <version>${dep.jetty94.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-unixsocket-http</artifactId>
+        <version>${dep.jetty94.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jdbi</groupId>
+        <artifactId>jdbi3-json</artifactId>
+        <version>3.8.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${dep.junit-jupiter.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>1.4.199</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
         <groupId>name.falgout.jeffrey.testing.junit5</groupId>
         <artifactId>guice-extension</artifactId>
         <version>1.1.1</version>
@@ -293,63 +350,6 @@
             <artifactId>junit-platform-commons</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>${dep.junit-jupiter.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-graphite</artifactId>
-        <version>${dep.dropwizard-metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jdbi</groupId>
-        <artifactId>jdbi3-json</artifactId>
-        <version>3.8.2</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-unixsocket-http</artifactId>
-        <version>${dep.jetty94.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-unixsocket</artifactId>
-        <version>${dep.jetty94.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-storage</artifactId>
-        <version>1.15.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-jmx</artifactId>
-        <version>${dep.dropwizard-metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <scope>test</scope>
-        <version>1.4.199</version>
       </dependency>
 
     </dependencies>
