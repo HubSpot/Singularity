@@ -142,6 +142,7 @@ public class SingularityTestModule implements Module {
     }
   }
 
+  @SuppressWarnings("BanModulesOverride")
   @Override
   public void configure(Binder mainBinder) {
     mainBinder.install(new GuiceBundle.GuiceEnforcerModule());

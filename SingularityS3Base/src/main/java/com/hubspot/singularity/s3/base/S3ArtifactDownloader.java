@@ -75,6 +75,7 @@ public class S3ArtifactDownloader {
     );
   }
 
+  @SuppressWarnings("BannedS3ClientMethods")
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo)
     throws Exception {
     log.info("Downloading {}", s3Artifact);

@@ -9,8 +9,6 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAgentUsage;
 import com.hubspot.singularity.SingularityAgentUsageWithId;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
@@ -561,12 +559,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       0,
       System.currentTimeMillis()
     );
-  }
-
-  private SingularityDeployStatistics getDeployStatistics(long avgRunTimeMillis) {
-    return new SingularityDeployStatisticsBuilder("requestId", "deployId")
-      .setAverageRuntimeMillis(Optional.of(avgRunTimeMillis))
-      .build();
   }
 
   private void setRequestType(RequestType type) {
