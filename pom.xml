@@ -152,12 +152,6 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>SingularityServiceIntegrationTests</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
         <artifactId>SingularityUI</artifactId>
         <version>${project.version}</version>
       </dependency>
