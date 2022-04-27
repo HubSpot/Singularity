@@ -24,7 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Configuration(
   filename = "/etc/singularity.executor.yaml",
-  consolidatedField = "com/hubspot/singularity/executor"
+  consolidatedField = "executor"
 )
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
