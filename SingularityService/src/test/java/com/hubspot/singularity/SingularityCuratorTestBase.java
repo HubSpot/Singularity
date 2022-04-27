@@ -154,7 +154,6 @@ public class SingularityCuratorTestBase {
       liquibase.update((String) null);
 
       database.close();
-      handle.close();
     }
   }
 
