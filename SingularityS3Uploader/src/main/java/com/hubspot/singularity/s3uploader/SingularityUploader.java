@@ -295,8 +295,8 @@ public abstract class SingularityUploader {
   }
 
   private boolean isFileOpen(Path path, boolean useFuser) {
+    checkFileOpenLock.lock();
     try {
-      checkFileOpenLock.lock();
       if (useFuser) {
         SimpleProcessManager fuser = new SimpleProcessManager(LOG);
         List<String> cmd = ImmutableList.of("fuser", path.toAbsolutePath().toString());
