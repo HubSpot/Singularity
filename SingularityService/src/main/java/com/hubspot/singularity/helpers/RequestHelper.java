@@ -1,5 +1,6 @@
 package com.hubspot.singularity.helpers;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -44,10 +45,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Singleton
 public class RequestHelper {
+
   private final RequestManager requestManager;
   private final SingularityMailer mailer;
   private final DeployManager deployManager;
@@ -55,6 +59,7 @@ public class RequestHelper {
   private final UserManager userManager;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final ExecutorService requestExecutor;
 
   @Inject
   public RequestHelper(
@@ -73,6 +78,10 @@ public class RequestHelper {
     this.userManager = userManager;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
+    this.requestExecutor =
+      Executors.newCachedThreadPool(
+        new ThreadFactoryBuilder().setNameFormat("request-data-%d").build()
+      );
   }
 
   public long unpause(
@@ -348,169 +357,164 @@ public class RequestHelper {
 
     return requests
       .parallelStream()
-      .filter(
-        request -> {
-          if (
-            !requestTypeFilters.isEmpty() &&
-            !requestTypeFilters.contains(request.getRequest().getRequestType())
-          ) {
-            return false;
-          }
-          if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
-            return true;
-          }
-          String requestId = request.getRequest().getId();
-          if (
-            maybeUserSettings.isPresent() &&
-            maybeUserSettings.get().getStarredRequestIds().contains(requestId)
-          ) {
-            // This is a starred request for the user
-            return true;
-          }
-          if (
-            request.getRequest().getGroup().isPresent() &&
-            user.getGroups().contains(request.getRequest().getGroup().get())
-          ) {
-            // The user is in the group for this request
-            return true;
-          }
-          if (includeFullRequestData) {
-            if (
-              userModifiedRequestLast(
-                requestIdToLastHistory.getOrDefault(requestId, Optional.empty()),
-                user
-              )
-            ) {
-              return true;
-            }
-          }
-          return userAssociatedWithDeploy(
-            Optional.ofNullable(deployStates.get(requestId)),
-            user
-          );
+      .filter(request -> {
+        if (
+          !requestTypeFilters.isEmpty() &&
+          !requestTypeFilters.contains(request.getRequest().getRequestType())
+        ) {
+          return false;
         }
-      )
-      .map(
-        request -> {
-          Long lastActionTime = null;
-          if (includeFullRequestData) {
-            lastActionTime =
-              getLastActionTimeForRequest(
-                requestIdToLastHistory.getOrDefault(
-                  request.getRequest().getId(),
-                  Optional.empty()
-                ),
-                Optional.ofNullable(deployStates.get(request.getRequest().getId()))
-              );
-          } else {
-            // To save on zk calls, if not returning all data, use the most recent deploy timestamps
-            Optional<SingularityRequestDeployState> deployState = Optional.ofNullable(
-              deployStates.get(request.getRequest().getId())
+        if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
+          return true;
+        }
+        String requestId = request.getRequest().getId();
+        if (
+          maybeUserSettings.isPresent() &&
+          maybeUserSettings.get().getStarredRequestIds().contains(requestId)
+        ) {
+          // This is a starred request for the user
+          return true;
+        }
+        if (
+          request.getRequest().getGroup().isPresent() &&
+          user.getGroups().contains(request.getRequest().getGroup().get())
+        ) {
+          // The user is in the group for this request
+          return true;
+        }
+        if (includeFullRequestData) {
+          if (
+            userModifiedRequestLast(
+              requestIdToLastHistory.getOrDefault(requestId, Optional.empty()),
+              user
+            )
+          ) {
+            return true;
+          }
+        }
+        return userAssociatedWithDeploy(
+          Optional.ofNullable(deployStates.get(requestId)),
+          user
+        );
+      })
+      .map(request -> {
+        Long lastActionTime = null;
+        if (includeFullRequestData) {
+          lastActionTime =
+            getLastActionTimeForRequest(
+              requestIdToLastHistory.getOrDefault(
+                request.getRequest().getId(),
+                Optional.empty()
+              ),
+              Optional.ofNullable(deployStates.get(request.getRequest().getId()))
             );
-            if (deployState.isPresent()) {
-              if (deployState.get().getPendingDeploy().isPresent()) {
-                lastActionTime =
-                  deployState.get().getPendingDeploy().get().getTimestamp();
-              }
-              if (deployState.get().getActiveDeploy().isPresent()) {
-                lastActionTime = deployState.get().getActiveDeploy().get().getTimestamp();
-              }
+        } else {
+          // To save on zk calls, if not returning all data, use the most recent deploy timestamps
+          Optional<SingularityRequestDeployState> deployState = Optional.ofNullable(
+            deployStates.get(request.getRequest().getId())
+          );
+          if (deployState.isPresent()) {
+            if (deployState.get().getPendingDeploy().isPresent()) {
+              lastActionTime = deployState.get().getPendingDeploy().get().getTimestamp();
             }
-            if (lastActionTime == null) {
-              lastActionTime = 0L;
+            if (deployState.get().getActiveDeploy().isPresent()) {
+              lastActionTime = deployState.get().getActiveDeploy().get().getTimestamp();
             }
           }
+          if (lastActionTime == null) {
+            lastActionTime = 0L;
+          }
+        }
 
-          return new RequestParentWithLastActionTime(
-            request,
-            lastActionTime,
-            maybeUserSettings.isPresent() &&
-            maybeUserSettings
-              .get()
-              .getStarredRequestIds()
-              .contains(request.getRequest().getId())
+        return new RequestParentWithLastActionTime(
+          request,
+          lastActionTime,
+          maybeUserSettings.isPresent() &&
+          maybeUserSettings
+            .get()
+            .getStarredRequestIds()
+            .contains(request.getRequest().getId())
+        );
+      })
+      .sorted() // Sorted by last action time descending, with starred requests coming first
+      .limit(limit.orElseGet(requests::size))
+      .map(parentWithActionTime -> {
+        SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
+        if (includeFullRequestData) {
+          CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture
+            .supplyAsync(
+              () -> getTaskIdsByStatusForRequest(requestWithState),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringBounce(requestWithState.getRequest().getId()),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringPause(requestWithState.getRequest().getId()),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringScale(requestWithState.getRequest().getId()),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringSkipHealthchecks(
+                  requestWithState.getRequest().getId()
+                ),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          CompletableFuture<Optional<SingularityExpiringPriority>> maybeExpiringPriority = CompletableFuture
+            .supplyAsync(
+              () ->
+                requestManager.getExpiringPriority(requestWithState.getRequest().getId()),
+              requestExecutor
+            )
+            .exceptionally(throwable -> Optional.empty());
+          return new SingularityRequestParent(
+            requestWithState.getRequest(),
+            requestWithState.getState(),
+            Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(), // full deploy data not provided
+            maybeExpiringBounce.join(),
+            maybeExpiringPause.join(),
+            maybeExpiringScale.join(),
+            maybeExpiringPriority.join(),
+            maybeExpiringSkipHealthchecks.join(),
+            maybeTaskIdsByStatus.join()
+          );
+        } else {
+          return new SingularityRequestParent(
+            requestWithState.getRequest(),
+            requestWithState.getState(),
+            Optional.ofNullable(deployStates.get(requestWithState.getRequest().getId())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
           );
         }
-      )
-      .sorted() // Sorted by last action time descending, with starred requests coming first
-      .limit(limit.orElse(requests.size()))
-      .map(
-        parentWithActionTime -> {
-          SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
-          if (includeFullRequestData) {
-            CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture
-              .supplyAsync(() -> getTaskIdsByStatusForRequest(requestWithState))
-              .exceptionally(throwable -> Optional.empty());
-            CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture
-              .supplyAsync(
-                () ->
-                  requestManager.getExpiringBounce(requestWithState.getRequest().getId())
-              )
-              .exceptionally(throwable -> Optional.empty());
-            CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture
-              .supplyAsync(
-                () ->
-                  requestManager.getExpiringPause(requestWithState.getRequest().getId())
-              )
-              .exceptionally(throwable -> Optional.empty());
-            CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture
-              .supplyAsync(
-                () ->
-                  requestManager.getExpiringScale(requestWithState.getRequest().getId())
-              )
-              .exceptionally(throwable -> Optional.empty());
-            CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture
-              .supplyAsync(
-                () ->
-                  requestManager.getExpiringSkipHealthchecks(
-                    requestWithState.getRequest().getId()
-                  )
-              )
-              .exceptionally(throwable -> Optional.empty());
-            CompletableFuture<Optional<SingularityExpiringPriority>> maybeExpiringPriority = CompletableFuture
-              .supplyAsync(
-                () ->
-                  requestManager.getExpiringPriority(
-                    requestWithState.getRequest().getId()
-                  )
-              )
-              .exceptionally(throwable -> Optional.empty());
-            return new SingularityRequestParent(
-              requestWithState.getRequest(),
-              requestWithState.getState(),
-              Optional.ofNullable(
-                deployStates.get(requestWithState.getRequest().getId())
-              ),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(), // full deploy data not provided
-              maybeExpiringBounce.join(),
-              maybeExpiringPause.join(),
-              maybeExpiringScale.join(),
-              maybeExpiringPriority.join(),
-              maybeExpiringSkipHealthchecks.join(),
-              maybeTaskIdsByStatus.join()
-            );
-          } else {
-            return new SingularityRequestParent(
-              requestWithState.getRequest(),
-              requestWithState.getState(),
-              Optional.ofNullable(
-                deployStates.get(requestWithState.getRequest().getId())
-              ),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty()
-            );
-          }
-        }
-      )
+      })
       .collect(Collectors.toList());
   }
 

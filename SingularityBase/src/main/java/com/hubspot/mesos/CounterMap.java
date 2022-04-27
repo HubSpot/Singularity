@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class CounterMap<K> {
+
   private final Map<K, Counter> map;
 
   public CounterMap() {
@@ -33,6 +34,7 @@ public class CounterMap<K> {
   }
 
   public static final class Counter {
+
     private long count;
 
     private Counter() {
@@ -93,7 +95,6 @@ public class CounterMap<K> {
     Collections.sort(
       entries,
       new Comparator<Entry<K, Counter>>() {
-
         @Override
         public int compare(Entry<K, Counter> o1, Entry<K, Counter> o2) {
           return Longs.compare(o2.getValue().getCount(), o1.getValue().getCount());

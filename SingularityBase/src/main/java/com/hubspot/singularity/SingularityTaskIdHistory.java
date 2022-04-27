@@ -3,15 +3,14 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 @Schema(description = "A task id and latest state for a task")
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
+
   private final SingularityTaskId taskId;
   private final long updatedAt;
   private final Optional<ExtendedTaskState> lastTaskState;

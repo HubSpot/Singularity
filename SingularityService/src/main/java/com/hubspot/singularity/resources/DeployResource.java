@@ -64,9 +64,11 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.DEPLOY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages Singularity Deploys for existing requests")
 @Tags({ @Tag(name = "Deploys") })
 public class DeployResource extends AbstractRequestResource {
+
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final SingularitySchedulerLock schedulerLock;
@@ -124,7 +126,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "409",
         description = "Deploys are disabled or a current deploy is in progress. It may be canceled by calling DELETE"
-      )
+      ),
     }
   )
   public SingularityRequestParent deploy(
@@ -347,7 +349,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "400",
         description = "Deploy is not in the pending state pending or is not not present"
-      )
+      ),
     }
   )
   public SingularityRequestParent cancelDeploy(
@@ -418,7 +420,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "400",
         description = "Deploy is not in the pending state pending or is not not present"
-      )
+      ),
     }
   )
   public SingularityRequestParent updatePendingDeploy(

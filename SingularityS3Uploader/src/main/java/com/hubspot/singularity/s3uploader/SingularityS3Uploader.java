@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 public class SingularityS3Uploader extends SingularityUploader {
+
   private final BasicAWSCredentials credentials;
   private final S3ClientProvider s3ClientProvider;
 
@@ -101,162 +102,155 @@ public class SingularityS3Uploader extends SingularityUploader {
         .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
         .build();
 
-      retryer.call(
-        () -> {
-          final long start = System.currentTimeMillis();
+      retryer.call(() -> {
+        final long start = System.currentTimeMillis();
 
-          try {
-            final String key = SingularityS3FormatHelper.getKey(
-              uploadMetadata.getS3KeyFormat(),
-              sequence,
-              Files.getLastModifiedTime(file).toMillis(),
-              Objects.toString(file.getFileName()),
-              hostname
+        try {
+          final String key = SingularityS3FormatHelper.getKey(
+            uploadMetadata.getS3KeyFormat(),
+            sequence,
+            Files.getLastModifiedTime(file).toMillis(),
+            Objects.toString(file.getFileName()),
+            hostname
+          );
+
+          long fileSizeBytes = Files.size(file);
+          LOG.info(
+            "{} Uploading {} to {}/{} (size {})",
+            logIdentifier,
+            file,
+            bucketName,
+            key,
+            fileSizeBytes
+          );
+
+          ObjectMetadata objectMetadata = new ObjectMetadata();
+
+          UploaderFileAttributes fileAttributes = getFileAttributes(file);
+
+          if (fileAttributes.getStartTime().isPresent()) {
+            objectMetadata.addUserMetadata(
+              SingularityS3Log.LOG_START_S3_ATTR,
+              fileAttributes.getStartTime().get().toString()
             );
-
-            long fileSizeBytes = Files.size(file);
-            LOG.info(
-              "{} Uploading {} to {}/{} (size {})",
-              logIdentifier,
-              file,
-              bucketName,
-              key,
-              fileSizeBytes
+            LOG.debug(
+              "Added extra metadata for object ({}:{})",
+              SingularityS3Log.LOG_START_S3_ATTR,
+              fileAttributes.getStartTime().get()
             );
-
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-
-            UploaderFileAttributes fileAttributes = getFileAttributes(file);
-
-            if (fileAttributes.getStartTime().isPresent()) {
-              objectMetadata.addUserMetadata(
-                SingularityS3Log.LOG_START_S3_ATTR,
-                fileAttributes.getStartTime().get().toString()
-              );
-              LOG.debug(
-                "Added extra metadata for object ({}:{})",
-                SingularityS3Log.LOG_START_S3_ATTR,
-                fileAttributes.getStartTime().get()
-              );
-            }
-            if (fileAttributes.getEndTime().isPresent()) {
-              objectMetadata.addUserMetadata(
-                SingularityS3Log.LOG_END_S3_ATTR,
-                fileAttributes.getEndTime().get().toString()
-              );
-              LOG.debug(
-                "Added extra metadata for object ({}:{})",
-                SingularityS3Log.LOG_END_S3_ATTR,
-                fileAttributes.getEndTime().get()
-              );
-            }
-
-            for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
-              if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
-                LOG.debug(
-                  "{} Using content headers {} for file {}",
-                  logIdentifier,
-                  contentHeaders,
-                  file
-                );
-                if (contentHeaders.getContentType().isPresent()) {
-                  objectMetadata.setContentType(contentHeaders.getContentType().get());
-                }
-                if (contentHeaders.getContentEncoding().isPresent()) {
-                  objectMetadata.setContentEncoding(
-                    contentHeaders.getContentEncoding().get()
-                  );
-                }
-                break;
-              }
-            }
-
-            Optional<StorageClass> maybeStorageClass = Optional.empty();
-
-            if (
-              shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getS3StorageClass())
-            ) {
-              LOG.debug(
-                "{} adding storage class {} to {}",
-                logIdentifier,
-                uploadMetadata.getS3StorageClass().get(),
-                file
-              );
-              maybeStorageClass =
-                Optional.of(
-                  StorageClass.fromValue(uploadMetadata.getS3StorageClass().get())
-                );
-            }
-
-            LOG.debug("Uploading object with metadata {}", objectMetadata);
-
-            if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
-              multipartUpload(
-                s3Client,
-                key,
-                file.toFile(),
-                objectMetadata,
-                maybeStorageClass
-              );
-            } else {
-              if (uploadMetadata.isUseS3ServerSideEncryption()) {
-                objectMetadata.setSSEAlgorithm(
-                  ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION
-                );
-              }
-              PutObjectRequest putObjectRequest = new PutObjectRequest(
-                bucketName,
-                key,
-                file.toFile()
-              )
-              .withMetadata(objectMetadata);
-              maybeStorageClass.ifPresent(putObjectRequest::setStorageClass);
-              if (uploadMetadata.getEncryptionKey().isPresent()) {
-                putObjectRequest.withSSEAwsKeyManagementParams(
-                  new SSEAwsKeyManagementParams(uploadMetadata.getEncryptionKey().get())
-                );
-              }
-              s3Client.putObject(putObjectRequest);
-            }
-
-            LOG.info(
-              "{} Uploaded {} in {}",
-              logIdentifier,
-              key,
-              JavaUtils.duration(start)
+          }
+          if (fileAttributes.getEndTime().isPresent()) {
+            objectMetadata.addUserMetadata(
+              SingularityS3Log.LOG_END_S3_ATTR,
+              fileAttributes.getEndTime().get().toString()
             );
-          } catch (AmazonS3Exception se) {
-            if (se.getMessage().contains("does not exist in our records")) {
-              LOG.warn(
-                "Upload cannot succeed with S3 key that does not exit in AWS, marking {} as complete",
-                uploadMetadata
-              );
-              return true;
-            }
-
-            LOG.warn(
-              "{} Couldn't upload {} due to {} - {}",
-              logIdentifier,
-              file,
-              se.getErrorCode(),
-              se.getErrorMessage(),
-              se
+            LOG.debug(
+              "Added extra metadata for object ({}:{})",
+              SingularityS3Log.LOG_END_S3_ATTR,
+              fileAttributes.getEndTime().get()
             );
-            throw se;
-          } catch (NoSuchFileException nsfe) {
-            LOG.warn(
-              "File {} no longer exists, marking upload as complete",
-              nsfe.getFile()
-            );
-            return true;
-          } catch (Exception e) {
-            LOG.warn("Exception uploading {}", file, e);
-            throw e;
           }
 
+          for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
+            if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
+              LOG.debug(
+                "{} Using content headers {} for file {}",
+                logIdentifier,
+                contentHeaders,
+                file
+              );
+              if (contentHeaders.getContentType().isPresent()) {
+                objectMetadata.setContentType(contentHeaders.getContentType().get());
+              }
+              if (contentHeaders.getContentEncoding().isPresent()) {
+                objectMetadata.setContentEncoding(
+                  contentHeaders.getContentEncoding().get()
+                );
+              }
+              break;
+            }
+          }
+
+          Optional<StorageClass> maybeStorageClass = Optional.empty();
+
+          if (
+            shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getS3StorageClass())
+          ) {
+            LOG.debug(
+              "{} adding storage class {} to {}",
+              logIdentifier,
+              uploadMetadata.getS3StorageClass().get(),
+              file
+            );
+            maybeStorageClass =
+              Optional.of(
+                StorageClass.fromValue(uploadMetadata.getS3StorageClass().get())
+              );
+          }
+
+          LOG.debug("Uploading object with metadata {}", objectMetadata);
+
+          if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
+            multipartUpload(
+              s3Client,
+              key,
+              file.toFile(),
+              objectMetadata,
+              maybeStorageClass
+            );
+          } else {
+            if (uploadMetadata.isUseS3ServerSideEncryption()) {
+              objectMetadata.setSSEAlgorithm(
+                ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION
+              );
+            }
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+              bucketName,
+              key,
+              file.toFile()
+            )
+              .withMetadata(objectMetadata);
+            maybeStorageClass.ifPresent(putObjectRequest::setStorageClass);
+            if (uploadMetadata.getEncryptionKey().isPresent()) {
+              putObjectRequest.withSSEAwsKeyManagementParams(
+                new SSEAwsKeyManagementParams(uploadMetadata.getEncryptionKey().get())
+              );
+            }
+            s3Client.putObject(putObjectRequest);
+          }
+
+          LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
+        } catch (AmazonS3Exception se) {
+          if (se.getMessage().contains("does not exist in our records")) {
+            LOG.warn(
+              "Upload cannot succeed with S3 key that does not exit in AWS, marking {} as complete",
+              uploadMetadata
+            );
+            return true;
+          }
+
+          LOG.warn(
+            "{} Couldn't upload {} due to {} - {}",
+            logIdentifier,
+            file,
+            se.getErrorCode(),
+            se.getErrorMessage(),
+            se
+          );
+          throw se;
+        } catch (NoSuchFileException nsfe) {
+          LOG.warn(
+            "File {} no longer exists, marking upload as complete",
+            nsfe.getFile()
+          );
           return true;
+        } catch (Exception e) {
+          LOG.warn("Exception uploading {}", file, e);
+          throw e;
         }
-      );
+
+        return true;
+      });
     } finally {
       s3ClientProvider.returnClient(credentials);
     }
@@ -268,8 +262,7 @@ public class SingularityS3Uploader extends SingularityUploader {
     File file,
     ObjectMetadata objectMetadata,
     Optional<StorageClass> maybeStorageClass
-  )
-    throws Exception {
+  ) throws Exception {
     List<PartETag> partETags = new ArrayList<>();
     InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(
       bucketName,

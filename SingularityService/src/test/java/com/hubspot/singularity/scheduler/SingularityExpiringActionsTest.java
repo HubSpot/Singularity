@@ -18,7 +18,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   }
 
   @Test
-  public void testExpiringPause() {
+  public void testExpiringPause() throws InterruptedException {
     initRequest();
     initFirstDeploy();
 
@@ -57,10 +57,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
       requestManager.getPausedRequests(false).iterator().next().getRequest().getId()
     );
 
-    try {
-      Thread.sleep(2);
-    } catch (InterruptedException ie) {}
-
+    Thread.sleep(2);
     expiringUserActionPoller.runActionOnPoll();
 
     scheduler.drainPendingQueue();
@@ -115,7 +112,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   }
 
   @Test
-  public void testExpiringNonIncrementalBounce() {
+  public void testExpiringNonIncrementalBounce() throws InterruptedException {
     initWithTasks(3);
 
     requestResource.bounce(
@@ -158,9 +155,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assertions.assertEquals(0, requestManager.getPendingRequests().size());
     Assertions.assertEquals(0, requestManager.getCleanupRequests().size());
 
-    try {
-      Thread.sleep(1);
-    } catch (InterruptedException ie) {}
+    Thread.sleep(1);
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -178,7 +173,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   }
 
   @Test
-  public void testExpiringIncrementalBounce() {
+  public void testExpiringIncrementalBounce() throws InterruptedException {
     initRequest();
 
     requestResource.scale(
@@ -250,9 +245,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assertions.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
     Assertions.assertEquals(4, taskManager.getActiveTaskIds().size());
 
-    try {
-      Thread.sleep(2);
-    } catch (InterruptedException ie) {}
+    Thread.sleep(2);
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -271,7 +264,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   }
 
   @Test
-  public void testExpiringScale() {
+  public void testExpiringScale() throws InterruptedException {
     initRequest();
     initFirstDeploy();
 
@@ -290,9 +283,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
       singularityUser
     );
 
-    try {
-      Thread.sleep(2);
-    } catch (InterruptedException e) {}
+    Thread.sleep(2);
 
     expiringUserActionPoller.runActionOnPoll();
 
@@ -346,7 +337,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   }
 
   @Test
-  public void testExpiringScaleWithBounce() {
+  public void testExpiringScaleWithBounce() throws InterruptedException {
     initRequest();
     initFirstDeploy();
 
@@ -384,9 +375,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     killKilledTasks();
     Assertions.assertEquals(5, taskManager.getNumActiveTasks());
 
-    try {
-      Thread.sleep(2);
-    } catch (InterruptedException e) {}
+    Thread.sleep(2);
 
     expiringUserActionPoller.runActionOnPoll();
     Assertions.assertEquals(1, requestManager.getCleanupRequests().size());

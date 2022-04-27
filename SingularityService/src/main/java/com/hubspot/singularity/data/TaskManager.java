@@ -53,19 +53,17 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.apache.curator.framework.api.transaction.CuratorTransactionResult;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
-import org.apache.zookeeper.OpResult.ErrorResult;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
-  private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
+
+  private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
 
   private static final String TASKS_ROOT = "/tasks";
 
@@ -785,11 +783,10 @@ public class TaskManager extends CuratorAsyncManager {
     boolean overwriteExisting
   ) {
     Optional<SingularityTask> task = getTask(taskHistoryUpdate.getTaskId());
-    task.ifPresent(
-      singularityTask ->
-        singularityEventListener.taskHistoryUpdateEvent(
-          new SingularityTaskWebhook(singularityTask, taskHistoryUpdate)
-        )
+    task.ifPresent(singularityTask ->
+      singularityEventListener.taskHistoryUpdateEvent(
+        new SingularityTaskWebhook(singularityTask, taskHistoryUpdate)
+      )
     );
 
     if (overwriteExisting) {
@@ -834,11 +831,10 @@ public class TaskManager extends CuratorAsyncManager {
   ) {
     if (previousStateUpdate.isPresent()) {
       Optional<SingularityTask> task = getTask(previousStateUpdate.get().getTaskId());
-      task.ifPresent(
-        singularityTask ->
-          singularityEventListener.taskHistoryUpdateEvent(
-            new SingularityTaskWebhook(singularityTask, previousStateUpdate.get())
-          )
+      task.ifPresent(singularityTask ->
+        singularityEventListener.taskHistoryUpdateEvent(
+          new SingularityTaskWebhook(singularityTask, previousStateUpdate.get())
+        )
       );
     }
     if (leaderCache.active()) {
@@ -929,7 +925,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private enum TaskFilter {
     ACTIVE,
-    INACTIVE
+    INACTIVE,
   }
 
   public List<SingularityTaskId> getInactiveTaskIdsForRequest(String requestId) {
@@ -971,26 +967,24 @@ public class TaskManager extends CuratorAsyncManager {
   public List<SingularityTaskId> getLaunchingTasks() {
     return getActiveTaskIds()
       .stream()
-      .filter(
-        t -> {
-          if (leaderCache.active()) {
-            List<SingularityTaskHistoryUpdate> historyUpdates = leaderCache.getTaskHistoryUpdates(
-              t
-            );
-            return (
-              historyUpdates.isEmpty() ||
-              historyUpdates.get(historyUpdates.size() - 1).getTaskState() ==
-              ExtendedTaskState.TASK_LAUNCHED
-            );
-          } else {
-            return (
-              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)) &&
-              !exists(getUpdatePath(t, ExtendedTaskState.TASK_STAGING)) &&
-              !exists(getUpdatePath(t, ExtendedTaskState.TASK_RUNNING))
-            );
-          }
+      .filter(t -> {
+        if (leaderCache.active()) {
+          List<SingularityTaskHistoryUpdate> historyUpdates = leaderCache.getTaskHistoryUpdates(
+            t
+          );
+          return (
+            historyUpdates.isEmpty() ||
+            historyUpdates.get(historyUpdates.size() - 1).getTaskState() ==
+            ExtendedTaskState.TASK_LAUNCHED
+          );
+        } else {
+          return (
+            !exists(getUpdatePath(t, ExtendedTaskState.TASK_STARTING)) &&
+            !exists(getUpdatePath(t, ExtendedTaskState.TASK_STAGING)) &&
+            !exists(getUpdatePath(t, ExtendedTaskState.TASK_RUNNING))
+          );
         }
-      )
+      })
       .collect(Collectors.toList());
   }
 
@@ -1438,8 +1432,7 @@ public class TaskManager extends CuratorAsyncManager {
     String taskPath,
     SingularityTask task,
     SingularityTaskStatusHolder taskStatusHolder
-  )
-    throws Exception {
+  ) throws Exception {
     byte[] taskBytes = taskTranscoder.toBytes(task);
     if (taskBytes == null || taskBytes.length == 0) {
       LOG.error("Encountered null or empty task bytes for {}", task.getTaskId());
@@ -1456,14 +1449,12 @@ public class TaskManager extends CuratorAsyncManager {
             taskStatusTranscoder.toBytes(taskStatusHolder)
           )
       )
-      .forEach(
-        r -> {
-          if (r.getError() > 0) {
-            LOG.error("Error committing new task {} to zk {}", task.getTaskId(), r);
-            hasErr.set(true);
-          }
+      .forEach(r -> {
+        if (r.getError() > 0) {
+          LOG.error("Error committing new task {} to zk {}", task.getTaskId(), r);
+          hasErr.set(true);
         }
-      );
+      });
   }
 
   public List<SingularityTaskId> getLBCleanupTasks() {

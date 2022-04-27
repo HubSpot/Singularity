@@ -8,6 +8,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 public class CompressingJsonTranscoder<T> extends CompressingTranscoder<T> {
+
   private static final byte[] EMPTY_BYTES = new byte[0];
 
   private final ObjectMapper objectMapper;

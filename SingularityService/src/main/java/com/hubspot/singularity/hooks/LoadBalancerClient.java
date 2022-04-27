@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class LoadBalancerClient {
+
   private static final Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
 
   private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
@@ -83,8 +84,7 @@ public abstract class LoadBalancerClient {
 
   public abstract List<LoadBalancerUpstream> getUpstreamsForRequest(
     String singularityRequestId
-  )
-    throws IOException, InterruptedException, ExecutionException, TimeoutException;
+  ) throws IOException, InterruptedException, ExecutionException, TimeoutException;
 
   public List<LoadBalancerUpstream> getUpstreamsForTasks(
     List<SingularityTask> tasks,

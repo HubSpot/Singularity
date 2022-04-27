@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractSingularityWebhookAsyncHandler<T>
   extends AsyncCompletionHandler<Response> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     AbstractSingularityWebhookAsyncHandler.class
   );

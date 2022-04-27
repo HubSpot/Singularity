@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsageManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(ZkTaskUsageManager.class);
 
   private static final String ROOT_PATH = "/usage";
@@ -107,11 +108,9 @@ public class ZkTaskUsageManager extends CuratorAsyncManager implements TaskUsage
               .map(Long::parseLong)
               .sorted((t1, t2) -> Long.compare(t2, t1))
               .skip(configuration.getNumUsageToKeep())
-              .forEach(
-                timestamp -> {
-                  delete(getSpecificTaskUsagePath(taskId, timestamp));
-                }
-              );
+              .forEach(timestamp -> {
+                delete(getSpecificTaskUsagePath(taskId, timestamp));
+              });
             continue;
           }
         } catch (InvalidSingularityTaskIdException e) {

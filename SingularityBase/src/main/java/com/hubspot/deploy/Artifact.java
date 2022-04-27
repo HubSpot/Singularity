@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Represents an artifact for a task")
 public abstract class Artifact {
+
   private final String name;
   private final String filename;
   private final Optional<String> md5sum;

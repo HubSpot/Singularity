@@ -1,6 +1,7 @@
 package com.hubspot.singularity.helpers;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -12,7 +13,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Singleton
 public class TaskLagGuardrail {
+
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;
   private final ScheduledExecutorService executor;
@@ -48,9 +51,8 @@ public class TaskLagGuardrail {
     this.lateTasksByRequestId =
       allPendingTaskIds
         .stream()
-        .filter(
-          p ->
-            now - p.getNextRunAt() > configuration.getDeltaAfterWhichTasksAreLateMillis()
+        .filter(p ->
+          now - p.getNextRunAt() > configuration.getDeltaAfterWhichTasksAreLateMillis()
         )
         .collect(
           Collectors.toConcurrentMap(

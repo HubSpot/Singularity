@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 public class TailMetadata {
+
   private final String filename;
   private final String tag;
   private final Map<String, String> extraFields;

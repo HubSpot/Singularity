@@ -4,6 +4,7 @@ import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 
 public class SMTPAuthenticator extends Authenticator {
+
   private final PasswordAuthentication passwordAuthentication;
 
   public SMTPAuthenticator(String username, String password) {

@@ -17,6 +17,7 @@ import org.apache.zookeeper.data.Stat;
 
 @Singleton
 public class MetadataManager extends CuratorManager {
+
   private static final String ROOT_PATH = "/metadata";
   private static final String ZK_DATA_VERSION_PATH = ZKPaths.makePath(
     ROOT_PATH,

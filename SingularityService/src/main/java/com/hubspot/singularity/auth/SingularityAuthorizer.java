@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class SingularityAuthorizer {
+
   protected final RequestManager requestManager;
   protected final boolean authEnabled;
 
@@ -147,14 +148,13 @@ public abstract class SingularityAuthorizer {
           taskIdObj.getRequestId()
         );
 
-        maybeRequest.ifPresent(
-          singularityRequestWithState ->
-            checkForAuthorization(
-              singularityRequestWithState.getRequest(),
-              user,
-              scope,
-              action
-            )
+        maybeRequest.ifPresent(singularityRequestWithState ->
+          checkForAuthorization(
+            singularityRequestWithState.getRequest(),
+            user,
+            scope,
+            action
+          )
         );
       } catch (InvalidSingularityTaskIdException e) {
         badRequest(e.getMessage());
@@ -190,14 +190,13 @@ public abstract class SingularityAuthorizer {
         requestId
       );
 
-      maybeRequest.ifPresent(
-        singularityRequestWithState ->
-          checkForAuthorization(
-            singularityRequestWithState.getRequest(),
-            user,
-            scope,
-            action
-          )
+      maybeRequest.ifPresent(singularityRequestWithState ->
+        checkForAuthorization(
+          singularityRequestWithState.getRequest(),
+          user,
+          scope,
+          action
+        )
       );
     }
   }
@@ -223,15 +222,13 @@ public abstract class SingularityAuthorizer {
 
     return objects
       .stream()
-      .filter(
-        input -> {
-          final String requestId = requestIdFunction.apply(input);
-          return (
-            requestMap.containsKey(requestId) &&
-            isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope)
-          );
-        }
-      )
+      .filter(input -> {
+        final String requestId = requestIdFunction.apply(input);
+        return (
+          requestMap.containsKey(requestId) &&
+          isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope)
+        );
+      })
       .collect(Collectors.toList());
   }
 
@@ -252,10 +249,9 @@ public abstract class SingularityAuthorizer {
 
     return requestIds
       .stream()
-      .filter(
-        input ->
-          requestMap.containsKey(input) &&
-          isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope)
+      .filter(input ->
+        requestMap.containsKey(input) &&
+        isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope)
       )
       .collect(Collectors.toList());
   }

@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -16,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class SingularityDeployBuilder {
+
   private String requestId;
 
   private String id;

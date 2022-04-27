@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 
 public class CorsConfiguration {
+
   @JsonProperty
   private boolean enabled = false;
 

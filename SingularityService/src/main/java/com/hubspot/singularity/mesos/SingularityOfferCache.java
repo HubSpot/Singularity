@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityOfferCache
   implements OfferCache, RemovalListener<String, CachedOffer> {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
 
   private final Cache<String, CachedOffer> offerCache;
@@ -179,10 +180,11 @@ public class SingularityOfferCache
   private enum OfferState {
     AVAILABLE,
     CHECKED_OUT,
-    EXPIRED
+    EXPIRED,
   }
 
   public static class CachedOffer {
+
     private final String offerId;
     private final Offer offer;
     private OfferState offerState;

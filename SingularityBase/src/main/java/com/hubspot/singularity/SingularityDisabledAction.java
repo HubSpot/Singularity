@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class SingularityDisabledAction {
+
   private final SingularityAction type;
   private final String message;
   private final Optional<String> user;

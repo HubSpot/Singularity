@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
  * Helper class for parsing docker repository/image names:
  */
 public class ImageName {
+
   private static final String NAME_COMPONENT_REGEXP =
     "[a-z0-9]+(?:(?:(?:[._]|__|[-]*)[a-z0-9]+)+)?";
 
@@ -21,13 +22,13 @@ public class ImageName {
     NAME_COMPONENT_REGEXP + "(?:(?:/" + NAME_COMPONENT_REGEXP + ")+)?"
   );
 
-  private final Pattern DOMAIN_REGEXP = Pattern.compile(
+  private static final Pattern DOMAIN_REGEXP = Pattern.compile(
     "^" + DOMAIN_COMPONENT_REGEXP + "(?:\\." + DOMAIN_COMPONENT_REGEXP + ")*(?::[0-9]+)?$"
   );
 
-  private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
+  private static final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
 
-  private final Pattern DIGEST_REGEXP = Pattern.compile("^sha256:[a-z0-9]{32,}$");
+  private static final Pattern DIGEST_REGEXP = Pattern.compile("^sha256:[a-z0-9]{32,}$");
 
   private String repository;
   private String registry;
@@ -227,7 +228,7 @@ public class ImageName {
       tag,
       "digest",
       DIGEST_REGEXP,
-      digest
+      digest,
     };
     for (int i = 0; i < checks.length; i += 3) {
       String value = (String) checks[i + 2];

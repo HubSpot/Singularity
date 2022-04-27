@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 @Schema(description = "Overrides and settings for a particular task being launched")
 public class SingularityPendingTask {
+
   private final SingularityPendingTaskId pendingTaskId;
   private final Optional<List<String>> cmdLineArgsList;
   private final Optional<String> user;

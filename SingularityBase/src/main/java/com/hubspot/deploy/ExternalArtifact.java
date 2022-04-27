@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "An artifact identified by url")
 public class ExternalArtifact extends RemoteArtifact {
+
   private final String url;
 
   @JsonCreator

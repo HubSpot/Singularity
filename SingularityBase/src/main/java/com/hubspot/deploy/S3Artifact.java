@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class S3Artifact extends RemoteArtifact {
+
   private final String s3Bucket;
   private final String s3ObjectKey;
 
@@ -53,7 +54,8 @@ public class S3Artifact extends RemoteArtifact {
     }
     S3Artifact that = (S3Artifact) other;
     return (
-      Objects.equals(s3Bucket, that.s3Bucket) && Objects.equals(s3ObjectKey, s3ObjectKey)
+      Objects.equals(s3Bucket, that.s3Bucket) &&
+      Objects.equals(s3ObjectKey, that.s3ObjectKey)
     );
   }
 

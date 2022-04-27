@@ -15,6 +15,7 @@ import org.apache.mesos.v1.Protos.Offer;
 
 @Singleton
 public class SingularityAgentAndRackHelper {
+
   private final String rackIdAttributeKey;
   private final String defaultRackId;
 
@@ -157,7 +158,7 @@ public class SingularityAgentAndRackHelper {
   public enum CpuMemoryPreference {
     AVERAGE,
     HIGH_MEMORY,
-    HIGH_CPU
+    HIGH_CPU,
   }
 
   public CpuMemoryPreference getCpuMemoryPreferenceForRequest(

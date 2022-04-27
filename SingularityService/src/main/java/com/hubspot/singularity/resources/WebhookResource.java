@@ -37,9 +37,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.WEBHOOK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manage Singularity webhooks")
 @Tags({ @Tag(name = "Webhooks") })
 public class WebhookResource {
+
   private final WebhookManager webhookManager;
   private final SingularityAuthorizer authorizationHelper;
   private final SingularityValidator validator;
@@ -82,7 +84,7 @@ public class WebhookResource {
       @ApiResponse(
         responseCode = "409",
         description = "Adding new webhooks is currently disabled"
-      )
+      ),
     }
   )
   public SingularityCreateResult addWebhook(
@@ -107,7 +109,7 @@ public class WebhookResource {
       @ApiResponse(
         responseCode = "409",
         description = "Deleting webhooks is currently disabled"
-      )
+      ),
     }
   )
   public SingularityDeleteResult deleteWebhookDeprecated(

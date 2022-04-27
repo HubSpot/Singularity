@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZkChildrenCache {
+
   private static final Logger LOG = LoggerFactory.getLogger(ZkChildrenCache.class);
 
   private List<String> cache;
@@ -40,7 +41,6 @@ public class ZkChildrenCache {
     registry.register(
       String.format("zk.children.caches.%s.size", name),
       new Gauge<Long>() {
-
         @Override
         public Long getValue() {
           return Long.valueOf(cache.size());

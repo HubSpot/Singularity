@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the state of a singularity scheduler instance")
 public class SingularityHostState {
+
   private final boolean master;
   private final long uptime;
 

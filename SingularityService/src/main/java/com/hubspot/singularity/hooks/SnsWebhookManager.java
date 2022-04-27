@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SnsWebhookManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(SnsWebhookManager.class);
 
   private final WebhookQueueConfiguration webhookConf;
@@ -89,89 +90,67 @@ public class SnsWebhookManager {
 
   public void requestHistoryEvent(SingularityRequestHistory requestUpdate) {
     publish(WebhookType.REQUEST, requestUpdate)
-      .exceptionally(
-        t -> {
-          LOG.warn("Could not publish event, will retry ({})", t.getMessage());
-          try {
-            webhookManager.saveRequestUpdateForRetry(requestUpdate);
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
-          }
-          return null;
+      .exceptionally(t -> {
+        LOG.warn("Could not publish event, will retry ({})", t.getMessage());
+        try {
+          webhookManager.saveRequestUpdateForRetry(requestUpdate);
+        } catch (Throwable t2) {
+          LOG.error("Could not save update to zk for retry, dropping", t2);
         }
-      );
+        return null;
+      });
   }
 
   public void taskWebhook(SingularityTaskWebhook taskWebhook) {
     publish(WebhookType.TASK, taskWebhook)
-      .exceptionally(
-        t -> {
-          LOG.warn(
-            "Could not publish event to sns, will retry later ({})",
-            t.getMessage()
-          );
-          try {
-            webhookManager.saveTaskUpdateForRetry(taskWebhook.getTaskUpdate());
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
-          }
-          return null;
+      .exceptionally(t -> {
+        LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+        try {
+          webhookManager.saveTaskUpdateForRetry(taskWebhook.getTaskUpdate());
+        } catch (Throwable t2) {
+          LOG.error("Could not save update to zk for retry, dropping", t2);
         }
-      );
+        return null;
+      });
   }
 
   public void deployHistoryEvent(SingularityDeployUpdate deployUpdate) {
     publish(WebhookType.DEPLOY, deployUpdate)
-      .exceptionally(
-        t -> {
-          LOG.warn(
-            "Could not publish event to sns, will retry later ({})",
-            t.getMessage()
-          );
-          try {
-            webhookManager.saveDeployUpdateForRetry(deployUpdate);
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
-          }
-          return null;
+      .exceptionally(t -> {
+        LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+        try {
+          webhookManager.saveDeployUpdateForRetry(deployUpdate);
+        } catch (Throwable t2) {
+          LOG.error("Could not save update to zk for retry, dropping", t2);
         }
-      );
+        return null;
+      });
   }
 
   public void crashLoopEvent(CrashLoopInfo crashLoopUpdate) {
     publish(WebhookType.CRASHLOOP, crashLoopUpdate)
-      .exceptionally(
-        t -> {
-          LOG.warn(
-            "Could not publish event to sns, will retry later ({})",
-            t.getMessage()
-          );
-          try {
-            webhookManager.saveCrashLoopUpdateForRetry(crashLoopUpdate);
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
-          }
-          return null;
+      .exceptionally(t -> {
+        LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+        try {
+          webhookManager.saveCrashLoopUpdateForRetry(crashLoopUpdate);
+        } catch (Throwable t2) {
+          LOG.error("Could not save update to zk for retry, dropping", t2);
         }
-      );
+        return null;
+      });
   }
 
   public void elevatedAccessEvent(ElevatedAccessEvent elevatedAccessEvent) {
     publish(WebhookType.ELEVATED_ACCESS, elevatedAccessEvent)
-      .exceptionally(
-        t -> {
-          LOG.warn(
-            "Could not publish event to sns, will retry later ({})",
-            t.getMessage()
-          );
-          try {
-            webhookManager.saveElevatedAccessEventForRetry(elevatedAccessEvent);
-          } catch (Throwable t2) {
-            LOG.error("Could not save update to zk for retry, dropping", t2);
-          }
-          return null;
+      .exceptionally(t -> {
+        LOG.warn("Could not publish event to sns, will retry later ({})", t.getMessage());
+        try {
+          webhookManager.saveElevatedAccessEventForRetry(elevatedAccessEvent);
+        } catch (Throwable t2) {
+          LOG.error("Could not save update to zk for retry, dropping", t2);
         }
-      );
+        return null;
+      });
   }
 
   private String getOrCreateSnsTopic(WebhookType type) {

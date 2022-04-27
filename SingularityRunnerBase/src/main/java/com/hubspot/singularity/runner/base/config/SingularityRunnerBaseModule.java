@@ -32,6 +32,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 public class SingularityRunnerBaseModule extends AbstractModule {
+
   public static final String PROCESS_NAME = "process.name";
   public static final String YAML = "yaml";
   public static final String OBFUSCATED_YAML = "obfuscated.yaml";

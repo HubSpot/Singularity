@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
+
   private boolean allowRequestsWithoutOwners = true;
 
   private boolean allowTestResourceCalls = false;

@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes an artifact to be downloaded")
 public class SingularityMesosArtifact {
+
   private final String uri;
   private final boolean cache;
   private final boolean executable;

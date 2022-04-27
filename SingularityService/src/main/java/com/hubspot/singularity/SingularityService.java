@@ -56,11 +56,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
     @Tag(name = "S3 Logs"),
     @Tag(name = "Resource Usage"),
     @Tag(name = "Webhooks"),
-    @Tag(name = "Test")
+    @Tag(name = "Test"),
   }
 )
 public class SingularityService<T extends SingularityConfiguration>
   extends Application<T> {
+
   private static final String SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY =
     "singularityDefaultConfiguration";
 
@@ -113,7 +114,6 @@ public class SingularityService<T extends SingularityConfiguration>
     bootstrap.addBundle(new AssetsBundle("/assets/static/", "/static/"));
     bootstrap.addBundle(
       new MigrationsBundle<SingularityConfiguration>() {
-
         @Override
         public DataSourceFactory getDataSourceFactory(
           final SingularityConfiguration configuration
@@ -200,7 +200,6 @@ public class SingularityService<T extends SingularityConfiguration>
     try {
       new SingularityService<SingularityConfiguration>().run(args);
     } catch (final Throwable t) {
-      t.printStackTrace();
       System.exit(1);
     }
   }

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Schema(description = "Represents the path to a specific task's Mesos sandbox")
 public class SingularitySandbox {
+
   private final List<SingularitySandboxFile> files;
   private final String fullPathToRoot;
   private final String currentDirectory;

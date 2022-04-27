@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularitySchedulerLockTest extends SingularitySchedulerTestBase {
+
   private final ExecutorService executor;
 
   @Inject
@@ -74,22 +75,20 @@ public class SingularitySchedulerLockTest extends SingularitySchedulerTestBase {
   }
 
   private void hold(CountDownLatch started, CountDownLatch finished) {
-    executor.submit(
-      () -> {
-        lock.runWithRequestLock(
-          () -> {
-            try {
-              started.countDown();
-              finished.await(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-          },
-          requestId,
-          name
-        );
-      }
-    );
+    executor.submit(() -> {
+      lock.runWithRequestLock(
+        () -> {
+          try {
+            started.countDown();
+            finished.await(5, TimeUnit.SECONDS);
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        },
+        requestId,
+        name
+      );
+    });
 
     try {
       started.await(5, TimeUnit.SECONDS);
@@ -117,6 +116,7 @@ public class SingularitySchedulerLockTest extends SingularitySchedulerTestBase {
   }
 
   private static class TestRunnable implements Runnable {
+
     boolean ran = false;
 
     @Override

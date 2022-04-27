@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class MailTemplateHelpers {
+
   private static final Logger LOG = LoggerFactory.getLogger(MailTemplateHelpers.class);
 
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
@@ -239,11 +240,7 @@ public class MailTemplateHelpers {
         );
       }
     } catch (PatternSyntaxException e) {
-      LOG.error(
-        "Invalid task log error regex supplied: \"{}\". Received exception: {}",
-        regex,
-        e
-      );
+      LOG.error("Invalid task log error regex supplied: \"{}\"", regex, e);
       return Optional.empty();
     }
   }

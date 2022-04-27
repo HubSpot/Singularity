@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NamespaceActiveTasksMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     NamespaceActiveTasksMigration.class
   );

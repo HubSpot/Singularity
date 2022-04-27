@@ -62,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityExecutorCleanup {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityExecutorCleanup.class
   );
@@ -121,7 +122,7 @@ public class SingularityExecutorCleanup {
       if (cleanupConfiguration.getSingularityClientCredentialsPath().isPresent()) {
         Optional<SingularityClientCredentials> maybeCredentials = jsonObjectFileHelper.read(
           new File(cleanupConfiguration.getSingularityClientCredentialsPath().get())
-          .toPath(),
+            .toPath(),
           LOG,
           SingularityClientCredentials.class
         );
@@ -201,7 +202,6 @@ public class SingularityExecutorCleanup {
         Collections.emptySet(),
         1,
         new FileVisitor<Path>() {
-
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
             throws IOException {
@@ -603,7 +603,7 @@ public class SingularityExecutorCleanup {
         LOG.info("Compressing abandoned file {}", path);
         try {
           new SimpleProcessManager(LOG)
-          .runCommand(
+            .runCommand(
               ImmutableList.<String>of(
                 cleanupConfiguration.getCompressionType().getCommand(),
                 path.toString()

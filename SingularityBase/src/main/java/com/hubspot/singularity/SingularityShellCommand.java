@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a command to run against an active task")
 public class SingularityShellCommand {
+
   private final String name;
   private final Optional<List<String>> options;
   private final Optional<String> user;

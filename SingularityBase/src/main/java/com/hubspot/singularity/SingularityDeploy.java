@@ -27,6 +27,7 @@ import java.util.Set;
   description = "A set of instructions for launching tasks associated with a request"
 )
 public class SingularityDeploy {
+
   private final String requestId;
   private final String id;
   private final Optional<String> version;
@@ -302,12 +303,10 @@ public class SingularityDeploy {
         CanaryDeploySettingsBuilder builder = CanaryDeploySettings.newbuilder();
         builder.setEnableCanaryDeploy(deployInstanceCountPerStep.isPresent());
         deployInstanceCountPerStep.ifPresent(builder::setInstanceGroupSize);
-        deployStepWaitTimeMs.ifPresent(
-          w -> {
-            builder.setAcceptanceMode(DeployAcceptanceMode.TIMED);
-            builder.setWaitMillisBetweenGroups(w);
-          }
-        );
+        deployStepWaitTimeMs.ifPresent(w -> {
+          builder.setAcceptanceMode(DeployAcceptanceMode.TIMED);
+          builder.setWaitMillisBetweenGroups(w);
+        });
         maxTaskRetries.ifPresent(builder::setAllowedTasksFailuresPerGroup);
         this.canaryDeploySettings = builder.build();
       } else {

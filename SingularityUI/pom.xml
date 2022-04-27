@@ -5,12 +5,13 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.6.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityUI</artifactId>
 
   <properties>
+    <hubspot.module.type>CORE</hubspot.module.type>
     <nodeVersion>v10.24.1</nodeVersion>
     <npmVersion>6.14.12</npmVersion>
   </properties>

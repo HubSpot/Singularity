@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 
 public class SingularityExecutorCleanupStatistics {
+
   private final int totalTaskFiles;
   private final int ioErrorTasks;
   private final int runningTasksIgnored;
@@ -100,6 +101,7 @@ public class SingularityExecutorCleanupStatistics {
   }
 
   public static class SingularityExecutorCleanupStatisticsBuilder {
+
     private int totalTaskFiles;
     private int runningTasksIgnored;
     private int mesosRunningTasks;

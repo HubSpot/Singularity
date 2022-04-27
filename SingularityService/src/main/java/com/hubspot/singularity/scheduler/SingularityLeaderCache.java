@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityLeaderCache {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderCache.class);
 
   private Map<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
@@ -168,16 +169,13 @@ public class SingularityLeaderCache {
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates
   ) {
     this.historyUpdates = new ConcurrentHashMap<>(historyUpdates.size());
-    historyUpdates.forEach(
-      (key, value) ->
-        this.historyUpdates.put(
-            key,
-            value
-              .stream()
-              .collect(
-                Collectors.toMap(SingularityTaskHistoryUpdate::getTaskState, u -> u)
-              )
-          )
+    historyUpdates.forEach((key, value) ->
+      this.historyUpdates.put(
+          key,
+          value
+            .stream()
+            .collect(Collectors.toMap(SingularityTaskHistoryUpdate::getTaskState, u -> u))
+        )
     );
   }
 

@@ -6,6 +6,7 @@ import com.hubspot.singularity.data.WebhookManager;
 
 public class SingularityElevatedAccessEventAsyncHandler
   extends AbstractSingularityWebhookAsyncHandler<ElevatedAccessEvent> {
+
   private final WebhookManager webhookManager;
 
   public SingularityElevatedAccessEventAsyncHandler(

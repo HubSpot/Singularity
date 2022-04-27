@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class AgentManager extends AbstractMachineManager<SingularityAgent> {
+
   private static final Logger LOG = LoggerFactory.getLogger(AgentManager.class);
 
   private static final String AGENT_ROOT = "/slaves";

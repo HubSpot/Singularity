@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularitySchedulerLock {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularitySchedulerLock.class
   );
@@ -250,6 +251,6 @@ public class SingularitySchedulerLock {
 
   public enum Priority {
     LOW,
-    HIGH
+    HIGH,
   }
 }

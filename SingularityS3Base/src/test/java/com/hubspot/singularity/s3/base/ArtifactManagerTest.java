@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 public class ArtifactManagerTest {
+
   private ArtifactManager artifactManager;
 
   private File cacheDir = com.google.common.io.Files.createTempDir();

@@ -12,5 +12,5 @@ public enum SlavePlacement {
   SEPARATE_BY_REQUEST,
   @Deprecated
   SPREAD_ALL_SLAVES,
-  SPREAD_ALL_AGENTS
+  SPREAD_ALL_AGENTS,
 }

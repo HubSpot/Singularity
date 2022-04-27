@@ -8,6 +8,7 @@ import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class LDAPConfiguration {
+
   //
   // LDAP CONNECTION
   //
@@ -273,6 +274,6 @@ public class LDAPConfiguration {
   public enum LdapPoolWhenExhaustedAction {
     BLOCK,
     FAIL,
-    GROW
+    GROW,
   }
 }

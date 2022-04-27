@@ -8,6 +8,7 @@ import java.util.Optional;
 @Schema(description = "Details about a bounce that will eventually expire/give up")
 public class SingularityExpiringBounce
   extends SingularityExpiringRequestActionParent<SingularityBounceRequest> {
+
   private final String deployId;
 
   public SingularityExpiringBounce(

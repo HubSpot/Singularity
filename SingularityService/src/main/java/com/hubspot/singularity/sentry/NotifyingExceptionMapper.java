@@ -6,6 +6,7 @@ import javax.ws.rs.core.Response;
 
 @javax.ws.rs.ext.Provider
 public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> {
+
   private final SingularityExceptionNotifier notifier;
 
   @Inject

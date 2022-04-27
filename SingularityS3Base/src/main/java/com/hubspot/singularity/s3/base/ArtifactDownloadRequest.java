@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class ArtifactDownloadRequest {
+
   private final String targetDirectory;
   private final S3Artifact s3Artifact;
   private final Optional<Long> timeoutMillis;

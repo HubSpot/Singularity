@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 
 public class MergingSourceProvider implements ConfigurationSourceProvider {
+
   private final ConfigurationSourceProvider delegate;
   private final String defaultConfigurationPath;
   private final ObjectMapper objectMapper;

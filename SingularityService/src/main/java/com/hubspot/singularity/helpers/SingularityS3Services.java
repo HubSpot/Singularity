@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class SingularityS3Services {
+
   private final boolean s3ConfigPresent;
   private final List<SingularityS3Service> s3Services;
   private final SingularityS3Service defaultS3Service;

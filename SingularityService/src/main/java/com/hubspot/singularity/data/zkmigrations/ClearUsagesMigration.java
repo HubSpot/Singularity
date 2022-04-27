@@ -7,6 +7,7 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 
 @Singleton
 public class ClearUsagesMigration extends ZkDataMigration {
+
   private final CuratorFramework curator;
 
   @Inject
@@ -22,7 +23,9 @@ public class ClearUsagesMigration extends ZkDataMigration {
         // Data format has changed and usage will repopulate when the poller runs
         curator.delete().deletingChildrenIfNeeded().forPath("/usage/slaves");
         curator.delete().deletingChildrenIfNeeded().forPath("/usage/tasks");
-      } catch (NoNodeException nee) {}
+      } catch (NoNodeException nee) {
+        // don't care
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

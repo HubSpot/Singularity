@@ -109,11 +109,13 @@ import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Consumes(MediaType.APPLICATION_JSON)
 @Path(ApiPaths.TASK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Schema(title = "Manage Singularity tasks")
 @Tags({ @Tag(name = "Tasks") })
 public class TaskResource extends AbstractLeaderAwareResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
   private final AsyncHttpClient httpClient;
@@ -290,7 +292,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "400",
         description = "The request is not of a type that allows pending task deletes (only ON_DEMAND requests allow deletes)"
-      )
+      ),
     }
   )
   public Optional<SingularityPendingTask> deleteScheduledTask(
@@ -377,7 +379,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "A request with the specified id was not found"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(
@@ -404,7 +406,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "A request with the specified id was not found"
-      )
+      ),
     }
   )
   public SingularityTaskCounts getTaskCountsByStatusForRequest(
@@ -430,7 +432,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "An agent with the specified id was not found"
-      )
+      ),
     }
   )
   @Deprecated
@@ -454,7 +456,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "An agent with the specified id was not found"
-      )
+      ),
     }
   )
   public List<SingularityTask> getTasksForAgent(
@@ -493,7 +495,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "An agent with the specified id was not found"
-      )
+      ),
     }
   )
   @Deprecated
@@ -517,7 +519,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "A agent with the specified id was not found"
-      )
+      ),
     }
   )
   public List<SingularityTaskId> getTaskIdsForAgent(
@@ -725,7 +727,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "A task with this id was not found"
-      )
+      ),
     }
   )
   public SingularityTask getActiveTask(
@@ -743,7 +745,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "A task with this id, or agent and executor with matching statistics was not found"
-      )
+      ),
     }
   )
   public MesosTaskStatisticsObject getTaskStatistics(
@@ -788,7 +790,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "No cleanup exists for this task, or no task with this id exists"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskCleanup> getTaskCleanup(
@@ -812,7 +814,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "200",
         description = "Returns the cleanup created to trigger a task kill"
-      )
+      ),
     }
   )
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
@@ -837,7 +839,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "409",
         description = "Task already has a cleanup request (can be overridden with override=true)"
-      )
+      ),
     }
   )
   public SingularityTaskCleanup killTask(
@@ -1009,7 +1011,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "409",
         description = "Metadata with this type/timestamp already existed"
-      )
+      ),
     }
   )
   @Consumes({ MediaType.APPLICATION_JSON })
@@ -1099,7 +1101,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "403",
         description = "Given shell command doesn't exist"
-      )
+      ),
     }
   )
   @Consumes({ MediaType.APPLICATION_JSON })
@@ -1338,6 +1340,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   private static class NingOutputToJaxRsStreamingOutputWrapper
     implements AsyncHandler<Void>, StreamingOutput {
+
     private OutputStream wrappedOutputStream;
     private BoundRequestBuilder requestBuilder;
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityTaskShellCommandRequestId {
+
   private final SingularityTaskId taskId;
   private final String name;
   private final String safeName;

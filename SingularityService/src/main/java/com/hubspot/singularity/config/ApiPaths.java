@@ -1,6 +1,7 @@
 package com.hubspot.singularity.config;
 
 public class ApiPaths {
+
   public static final String API_BASE_PATH = "/api";
 
   public static final String AUTH_RESOURCE_PATH = API_BASE_PATH + "/auth";

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularitySchedulerPoller.class
   );

@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public abstract class AbstractHistoryResource extends AbstractLeaderAwareResource {
+
   protected final HistoryManager historyManager;
   protected final TaskManager taskManager;
   protected final DeployManager deployManager;

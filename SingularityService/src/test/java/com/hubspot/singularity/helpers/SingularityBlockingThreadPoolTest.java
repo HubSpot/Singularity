@@ -22,44 +22,36 @@ public class SingularityBlockingThreadPoolTest {
         ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, false);
         IntStream
           .range(0, 10)
-          .forEach(
-            i ->
-              executorAndQueue
-                .getExecutorService()
-                .submit(
-                  () -> {
-                    try {
-                      Thread.sleep(2000);
-                    } catch (InterruptedException ie) {
-                      // didn't see that...
-                    }
-                  }
-                )
+          .forEach(i ->
+            executorAndQueue
+              .getExecutorService()
+              .submit(() -> {
+                try {
+                  Thread.sleep(2000);
+                } catch (InterruptedException ie) {
+                  // didn't see that...
+                }
+              })
           );
       }
     );
 
-    Assertions.assertDoesNotThrow(
-      () -> {
-        ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, true);
-        IntStream
-          .range(0, 10)
-          .forEach(
-            i ->
-              executorAndQueue
-                .getExecutorService()
-                .submit(
-                  () -> {
-                    try {
-                      Thread.sleep(2000);
-                    } catch (InterruptedException ie) {
-                      // didn't see that...
-                    }
-                  }
-                )
-          );
-      }
-    );
+    Assertions.assertDoesNotThrow(() -> {
+      ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, true);
+      IntStream
+        .range(0, 10)
+        .forEach(i ->
+          executorAndQueue
+            .getExecutorService()
+            .submit(() -> {
+              try {
+                Thread.sleep(2000);
+              } catch (InterruptedException ie) {
+                // didn't see that...
+              }
+            })
+        );
+    });
   }
 
   @Test
@@ -73,41 +65,37 @@ public class SingularityBlockingThreadPoolTest {
         ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, false);
         IntStream
           .range(0, 10)
-          .forEach(
-            i ->
-              CompletableFuture.runAsync(
-                () -> {
-                  try {
-                    Thread.sleep(2000);
-                  } catch (InterruptedException ie) {
-                    // didn't see that...
-                  }
-                },
-                executorAndQueue.getExecutorService()
-              )
+          .forEach(i ->
+            CompletableFuture.runAsync(
+              () -> {
+                try {
+                  Thread.sleep(2000);
+                } catch (InterruptedException ie) {
+                  // didn't see that...
+                }
+              },
+              executorAndQueue.getExecutorService()
+            )
           );
       }
     );
 
-    Assertions.assertDoesNotThrow(
-      () -> {
-        ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, true);
-        IntStream
-          .range(0, 10)
-          .forEach(
-            i ->
-              CompletableFuture.runAsync(
-                () -> {
-                  try {
-                    Thread.sleep(2000);
-                  } catch (InterruptedException ie) {
-                    // didn't see that...
-                  }
-                },
-                executorAndQueue.getExecutorService()
-              )
-          );
-      }
-    );
+    Assertions.assertDoesNotThrow(() -> {
+      ExecutorAndQueue executorAndQueue = threadPoolFactory.get("test", 2, 5, true);
+      IntStream
+        .range(0, 10)
+        .forEach(i ->
+          CompletableFuture.runAsync(
+            () -> {
+              try {
+                Thread.sleep(2000);
+              } catch (InterruptedException ie) {
+                // didn't see that...
+              }
+            },
+            executorAndQueue.getExecutorService()
+          )
+        );
+    });
   }
 }

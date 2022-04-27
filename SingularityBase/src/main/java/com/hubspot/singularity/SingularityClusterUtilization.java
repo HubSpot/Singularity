@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityClusterUtilization {
+
   private final int numRequestsWithUnderUtilizedCpu;
   private final int numRequestsWithOverUtilizedCpu;
   private final int numRequestsWithUnderUtilizedMemBytes;

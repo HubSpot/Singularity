@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Represents a file in a Mesos sandbox")
 public class SingularitySandboxFile {
+
   private final String name;
   private final long mtime;
   private final long size;

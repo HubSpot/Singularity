@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityPriorityKillPoller.class
   );

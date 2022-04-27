@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityAuthedUserFactory
   extends AbstractContainerRequestValueFactory<SingularityUser> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityAuthedUserFactory.class
   );

@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.history;
 import com.hubspot.singularity.SingularityRequest;
 
 public class SingularityRequestAndTime {
+
   private final SingularityRequest request;
   private final long createdAt;
 

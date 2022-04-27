@@ -9,6 +9,7 @@ import com.hubspot.singularity.resources.ui.StaticCatchallResource;
 import com.hubspot.singularity.resources.ui.UiResource;
 
 public class SingularityServiceUIModule extends AbstractModule {
+
   public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
 
   private final UIConfiguration uiConfiguration;
@@ -18,6 +19,7 @@ public class SingularityServiceUIModule extends AbstractModule {
   }
 
   @Override
+  @SuppressWarnings("BanSingletonJaxRsResources") // not sure why this goes off here?
   public void configure() {
     switch (uiConfiguration.getRootUrlMode()) {
       case UI_REDIRECT:

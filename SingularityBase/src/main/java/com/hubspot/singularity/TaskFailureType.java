@@ -7,5 +7,5 @@ public enum TaskFailureType {
   UNEXPECTED_EXIT,
   LOST_SLAVE,
   MESOS_ERROR,
-  STARTUP_FAILURE
+  STARTUP_FAILURE,
 }

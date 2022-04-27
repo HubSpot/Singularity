@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class SingularityUserPermissionsResponse {
+
   private final Optional<SingularityUser> user;
   private final Optional<String> error;
 

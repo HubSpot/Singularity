@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityExpiringUserActionPoller.class
   );
@@ -115,6 +116,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   }
 
   private abstract class SingularityExpiringUserActionHandler<T extends SingularityExpiringParent<?>, Q> {
+
     private final Class<T> clazz;
 
     private SingularityExpiringUserActionHandler(Class<T> clazz) {

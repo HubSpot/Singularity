@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MesosLabels {
+
   private final List<MesosParameter> labels;
 
   @JsonCreator

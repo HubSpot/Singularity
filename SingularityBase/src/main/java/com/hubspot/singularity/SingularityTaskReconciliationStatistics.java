@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
   description = "Describes the last run of task reconciliation with the mesos master"
 )
 public class SingularityTaskReconciliationStatistics {
+
   private final long taskReconciliationStartedAt;
   private final long taskReconciliationDurationMillis;
   private final int taskReconciliationIterations;

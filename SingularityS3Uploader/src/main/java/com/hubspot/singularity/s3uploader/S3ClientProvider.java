@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class S3ClientProvider implements Closeable {
+
   private static final Logger LOG = LoggerFactory.getLogger(S3ClientProvider.class);
 
   private final Timer timer;
@@ -30,6 +31,7 @@ public class S3ClientProvider implements Closeable {
     this.clientHolds = new HashMap<>();
   }
 
+  @SuppressWarnings("BannedS3ClientMethods")
   public synchronized AmazonS3 getClient(BasicAWSCredentials credentials) {
     String key = credsToKey(credentials);
     AmazonS3 s3 = clientByKey.computeIfAbsent(key, k -> new AmazonS3Client(credentials));
@@ -48,7 +50,6 @@ public class S3ClientProvider implements Closeable {
         // Wait a bit to clean up in case anything else is about to use this client
         timer.schedule(
           new TimerTask() {
-
             @Override
             public void run() {
               try {

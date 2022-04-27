@@ -13,10 +13,11 @@ import java.util.Optional;
     SingularityScaleRequest.class,
     SingularityPriorityRequest.class,
     SingularityBounceRequest.class,
-    SingularityExpiringSkipHealthchecks.class
+    SingularityExpiringSkipHealthchecks.class,
   }
 )
 public abstract class SingularityExpiringRequestParent {
+
   private final Optional<Long> durationMillis;
   private final Optional<String> actionId;
   private final Optional<String> message;

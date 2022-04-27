@@ -17,6 +17,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 public class JsonObjectFileHelper {
+
   private final ObjectMapper objectMapper;
 
   @Inject

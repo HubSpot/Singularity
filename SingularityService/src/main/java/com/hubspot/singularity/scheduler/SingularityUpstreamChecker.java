@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityUpstreamChecker {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityUpstreamChecker.class
   );
@@ -76,8 +77,7 @@ public class SingularityUpstreamChecker {
 
   private List<SingularityTask> getActiveHealthyAndCleaningTasksForService(
     String requestId
-  )
-    throws TaskIdNotFoundException {
+  ) throws TaskIdNotFoundException {
     final Optional<SingularityTaskIdsByStatus> taskIdsByStatusForRequest = requestHelper.getTaskIdsByStatusForRequest(
       requestId
     );
@@ -100,8 +100,7 @@ public class SingularityUpstreamChecker {
   private Collection<LoadBalancerUpstream> getUpstreamsFromActiveHealthyAndCleaningTasksForService(
     String singularityRequestId,
     Optional<String> loadBalancerUpstreamGroup
-  )
-    throws TaskIdNotFoundException {
+  ) throws TaskIdNotFoundException {
     final List<SingularityTask> activeHealthyAndCleaningTasksForService = getActiveHealthyAndCleaningTasksForService(
       singularityRequestId
     );
@@ -157,9 +156,8 @@ public class SingularityUpstreamChecker {
       return lbClient
         .getUpstreamsForRequest(loadBalancerServiceId)
         .stream()
-        .filter(
-          upstream ->
-            upstream.getGroup().equals(loadBalancerUpstreamGroup.orElse("default"))
+        .filter(upstream ->
+          upstream.getGroup().equals(loadBalancerUpstreamGroup.orElse("default"))
         )
         .collect(Collectors.toList());
     } catch (Exception e) {
@@ -324,8 +322,8 @@ public class SingularityUpstreamChecker {
         "Checking load balancer request to sync upstreams for service {} using a retryer until the request state is no longer waiting.",
         singularityRequestId
       );
-      SingularityLoadBalancerUpdate syncUpstreamsState = syncingRetryer.call(
-        () -> lbClient.getState(loadBalancerRequestId)
+      SingularityLoadBalancerUpdate syncUpstreamsState = syncingRetryer.call(() ->
+        lbClient.getState(loadBalancerRequestId)
       );
       if (syncUpstreamsState.getLoadBalancerState() == LoadBalancerRequestState.SUCCESS) {
         LOG.debug(

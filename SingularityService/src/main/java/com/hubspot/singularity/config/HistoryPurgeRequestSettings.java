@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.Optional;
 
 public class HistoryPurgeRequestSettings {
+
   private Optional<Integer> deleteTaskHistoryAfterDays = Optional.empty();
   private Optional<Integer> deleteTaskHistoryAfterTasksPerRequest = Optional.empty();
   private Optional<Integer> deleteTaskHistoryBytesAfterDays = Optional.empty();

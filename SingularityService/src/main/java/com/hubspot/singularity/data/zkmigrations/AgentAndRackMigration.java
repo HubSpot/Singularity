@@ -7,6 +7,7 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 
 @Singleton
 public class AgentAndRackMigration extends ZkDataMigration {
+
   private final CuratorFramework curator;
 
   @Inject
@@ -20,10 +21,14 @@ public class AgentAndRackMigration extends ZkDataMigration {
     try {
       try {
         curator.delete().deletingChildrenIfNeeded().forPath("/slaves");
-      } catch (NoNodeException nee) {}
+      } catch (NoNodeException nee) {
+        // don't care
+      }
       try {
         curator.delete().deletingChildrenIfNeeded().forPath("/racks");
-      } catch (NoNodeException nee) {}
+      } catch (NoNodeException nee) {
+        // don't care
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -5,13 +5,14 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.6.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityS3Uploader</artifactId>
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.s3uploader.SingularityS3UploaderRunner</basepom.shaded.main-class>
+    <hubspot.module.type>EXECUTABLE</hubspot.module.type>
   </properties>
 
   <dependencies>
@@ -89,10 +90,9 @@
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-jmx</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
     <dependency>

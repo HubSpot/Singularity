@@ -9,6 +9,7 @@ import java.util.Set;
 
 @Schema(description = "Describes the settings for a particular user")
 public class SingularityUserSettings {
+
   private final Set<String> starredRequestIds;
 
   @JsonCreator

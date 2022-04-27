@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public class SingularityDropwizardHealthcheck extends HealthCheck {
+
   private final SingularityMesosScheduler mesosScheduler;
   private final LeaderLatch leaderLatch;
 

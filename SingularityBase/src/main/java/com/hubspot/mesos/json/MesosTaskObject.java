@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class MesosTaskObject {
+
   private final MesosResourcesObject resources;
   private final String state;
   private final String id;

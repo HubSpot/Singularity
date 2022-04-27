@@ -17,6 +17,7 @@ import java.util.Set;
   description = "Settings that apply to all tasks and deploys associated with this request"
 )
 public class SingularityRequest {
+
   private final String id;
   private final RequestType requestType;
   private final Optional<List<String>> owners;

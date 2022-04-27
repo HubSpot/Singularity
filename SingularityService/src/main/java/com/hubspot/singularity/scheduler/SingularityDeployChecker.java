@@ -63,6 +63,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityDeployChecker {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityDeployChecker.class
   );
@@ -124,17 +125,16 @@ public class SingularityDeployChecker {
       .allOf(
         pendingDeploys
           .stream()
-          .map(
-            pendingDeploy ->
-              CompletableFuture.runAsync(
-                () ->
-                  lock.runWithRequestLock(
-                    () -> checkDeploy(pendingDeploy, cancelDeploys, updateRequests),
-                    pendingDeploy.getDeployMarker().getRequestId(),
-                    getClass().getSimpleName()
-                  ),
-                deployCheckExecutor
-              )
+          .map(pendingDeploy ->
+            CompletableFuture.runAsync(
+              () ->
+                lock.runWithRequestLock(
+                  () -> checkDeploy(pendingDeploy, cancelDeploys, updateRequests),
+                  pendingDeploy.getDeployMarker().getRequestId(),
+                  getClass().getSimpleName()
+                ),
+              deployCheckExecutor
+            )
           )
           .collect(Collectors.toList())
       )
@@ -312,30 +312,26 @@ public class SingularityDeployChecker {
 
     taskManager
       .getPendingTaskIdsForRequest(pendingDeploy.getDeployMarker().getRequestId())
-      .forEach(
-        taskId -> {
-          if (
-            !taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())
-          ) {
-            if (taskId.getPendingType() == PendingType.ONEOFF) {
-              Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(
-                taskId
+      .forEach(taskId -> {
+        if (!taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())) {
+          if (taskId.getPendingType() == PendingType.ONEOFF) {
+            Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(
+              taskId
+            );
+            if (maybePendingTask.isPresent()) {
+              // Reschedule any user-initiated pending tasks under the new deploy
+              SingularityPendingTask pendingTask = maybePendingTask.get();
+              requestManager.addToPendingQueue(
+                SingularityDeployCheckHelper.buildPendingRequest(
+                  pendingTask,
+                  pendingDeploy
+                )
               );
-              if (maybePendingTask.isPresent()) {
-                // Reschedule any user-initiated pending tasks under the new deploy
-                SingularityPendingTask pendingTask = maybePendingTask.get();
-                requestManager.addToPendingQueue(
-                  SingularityDeployCheckHelper.buildPendingRequest(
-                    pendingTask,
-                    pendingDeploy
-                  )
-                );
-              }
             }
-            obsoletePendingTasks.add(taskId);
           }
+          obsoletePendingTasks.add(taskId);
         }
-      );
+      });
 
     for (SingularityPendingTaskId pendingTaskId : obsoletePendingTasks) {
       LOG.debug("Deleting obsolete pending task {}", pendingTaskId.getId());
@@ -347,9 +343,8 @@ public class SingularityDeployChecker {
     List<SingularityPendingTaskId> obsoletePendingTasks = taskManager
       .getPendingTaskIdsForRequest(pendingDeploy.getDeployMarker().getRequestId())
       .stream()
-      .filter(
-        taskId ->
-          !taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())
+      .filter(taskId ->
+        !taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())
       )
       .collect(Collectors.toList());
 
@@ -519,12 +514,10 @@ public class SingularityDeployChecker {
           () -> usageManager.deleteRequestUtilization(request.getId()),
           deployCheckExecutor
         )
-        .exceptionally(
-          t -> {
-            LOG.error("Could not clear usage data after new deploy", t);
-            return null;
-          }
-        );
+        .exceptionally(t -> {
+          LOG.error("Could not clear usage data after new deploy", t);
+          return null;
+        });
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
@@ -569,8 +562,7 @@ public class SingularityDeployChecker {
       List<SingularityTaskId> newDeployCleaningTasks = taskManager
         .getCleanupTaskIds()
         .stream()
-        .filter(
-          t -> t.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())
+        .filter(t -> t.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId())
         )
         .collect(Collectors.toList());
       // Account for any bounce/decom that may have happened during the deploy

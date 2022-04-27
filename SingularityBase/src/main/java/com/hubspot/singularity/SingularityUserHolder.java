@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the attributes of a Singularity user")
 public class SingularityUserHolder {
+
   private final Optional<SingularityUser> user;
   private final Optional<SingularityUserSettings> settings;
   private final boolean authenticated;

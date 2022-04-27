@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "A request to update a pending deploy")
 public class SingularityUpdatePendingDeployRequest {
+
   private final String requestId;
   private final String deployId;
   private final int targetActiveInstances;

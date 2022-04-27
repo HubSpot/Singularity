@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityAbort {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityAbort.class);
 
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
@@ -63,7 +64,7 @@ public class SingularityAbort {
     TEST_ABORT,
     MESOS_ERROR,
     LOST_MESOS_CONNECTION,
-    MANUAL
+    MANUAL,
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
@@ -156,7 +157,6 @@ public class SingularityAbort {
     if (throwable.isPresent()) {
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
-      throwable.get().printStackTrace(pw);
       body = "<pre>\n" + throwable.get().getMessage() + "\n" + sw.toString() + "\n</pre>";
     } else {
       body = "(no stack trace)";

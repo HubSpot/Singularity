@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosTaskPrioritizer {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosTaskPrioritizer.class
   );

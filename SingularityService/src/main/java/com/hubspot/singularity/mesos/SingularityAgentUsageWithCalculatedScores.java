@@ -4,6 +4,7 @@ import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularityAgentUsage;
 
 class SingularityAgentUsageWithCalculatedScores {
+
   private final SingularityAgentUsage slaveUsage;
   private final MachineLoadMetric systemLoadMetric;
   private final MaxProbableUsage maxProbableTaskUsage;
@@ -215,6 +216,7 @@ class SingularityAgentUsageWithCalculatedScores {
   }
 
   static class MaxProbableUsage {
+
     private final double cpu;
     private final double memBytes;
     private final double diskBytes;

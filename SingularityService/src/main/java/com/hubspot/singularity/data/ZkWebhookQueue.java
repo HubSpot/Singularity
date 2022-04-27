@@ -9,6 +9,7 @@ import com.hubspot.singularity.SingularityTaskWebhook;
 import com.hubspot.singularity.event.SingularityEventSender;
 
 public class ZkWebhookQueue implements SingularityEventSender {
+
   private final WebhookManager webhookManager;
 
   @Inject

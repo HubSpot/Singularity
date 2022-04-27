@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class HistoryPersisterTest extends SingularitySchedulerTestBase {
+
   @Inject
   protected SingularityRequestHistoryPersister requestHistoryPersister;
 
@@ -86,17 +87,17 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
       "request1",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityRequest requestTwo = new SingularityRequestBuilder(
       "request2",
       RequestType.WORKER
     )
-    .build();
+      .build();
     final SingularityRequest requestThree = new SingularityRequestBuilder(
       "request3",
       RequestType.WORKER
     )
-    .build();
+      .build();
 
     saveRequest(requestOne);
     saveRequest(requestTwo);

@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import javax.validation.constraints.NotNull;
 
 public class ZooKeeperConfiguration {
+
   @NotNull
   private String quorum;
 

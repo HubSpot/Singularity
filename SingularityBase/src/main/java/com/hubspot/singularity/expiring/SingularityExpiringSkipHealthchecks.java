@@ -10,6 +10,7 @@ import java.util.Optional;
 )
 public class SingularityExpiringSkipHealthchecks
   extends SingularityExpiringRequestActionParent<SingularitySkipHealthchecksRequest> {
+
   private final Optional<Boolean> revertToSkipHealthchecks;
 
   public SingularityExpiringSkipHealthchecks(

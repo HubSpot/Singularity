@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityOkHttpClient extends OkHttpClient implements Managed {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityOkHttpClient.class
   );

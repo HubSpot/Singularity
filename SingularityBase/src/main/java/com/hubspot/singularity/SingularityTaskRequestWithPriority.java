@@ -6,6 +6,7 @@ import com.google.common.primitives.Doubles;
 import java.util.Comparator;
 
 public class SingularityTaskRequestWithPriority {
+
   private final SingularityTaskRequest taskRequest;
   private final double weightedPriority;
 

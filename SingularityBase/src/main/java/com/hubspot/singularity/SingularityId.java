@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 public abstract class SingularityId {
+
   private final String id;
 
   public SingularityId(String id) {

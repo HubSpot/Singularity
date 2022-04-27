@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosMasterMetricsSnapshotObject {
+
   private final int eventQueueMessages;
 
   @JsonCreator

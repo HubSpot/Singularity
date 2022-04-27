@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityDeployAcceptanceManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityDeployAcceptanceManager.class
   );

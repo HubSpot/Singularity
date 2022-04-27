@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,11 +33,13 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.REQUEST_GROUP_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(
   title = "Manages Singularity Request Groups, which are collections of one or more Singularity Requests"
 )
 @Tags({ @Tag(name = "Request Groups") })
 public class RequestGroupResource extends AbstractLeaderAwareResource {
+
   private final RequestGroupManager requestGroupManager;
   private final SingularityValidator validator;
 
@@ -71,7 +74,7 @@ public class RequestGroupResource extends AbstractLeaderAwareResource {
       @ApiResponse(
         responseCode = "404",
         description = "The specified request group was not found"
-      )
+      ),
     }
   )
   public Optional<SingularityRequestGroup> getRequestGroup(

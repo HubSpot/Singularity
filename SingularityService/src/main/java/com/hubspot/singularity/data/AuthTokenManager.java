@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AuthTokenManager extends CuratorManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(AuthTokenManager.class);
 
   private static final String TOKEN_ROOT = "/tokens";

@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
 
 public class SingularityClientModule extends AbstractModule {
+
   public static final String HTTP_CLIENT_NAME = "singularity.http.client";
 
   // bind this name to not use the curator discovery, eg: http://localhost:5060,http://localhost:7000
@@ -68,7 +69,9 @@ public class SingularityClientModule extends AbstractModule {
     objectMapper.registerModule(new Jdk8Module());
 
     HttpClient httpClient = new NingHttpClient(
-      httpConfig.orElse(HttpConfig.newBuilder().setObjectMapper(objectMapper).build())
+      httpConfig.orElseGet(() ->
+        HttpConfig.newBuilder().setObjectMapper(objectMapper).build()
+      )
     );
     bind(HttpClient.class)
       .annotatedWith(Names.named(HTTP_CLIENT_NAME))

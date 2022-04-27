@@ -108,6 +108,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityClient {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String BASE_API_FORMAT = "%s://%s/%s";
@@ -677,7 +678,7 @@ public class SingularityClient {
     checkResponse(type, response);
 
     LOG.info(
-      "Deleted {} ({}) from Singularity in %sms",
+      "Deleted {} ({}) from Singularity in {}ms",
       type,
       id,
       System.currentTimeMillis() - start
@@ -795,22 +796,20 @@ public class SingularityClient {
     request.setRetryStrategy(RetryStrategy.NEVER_RETRY).setMaxRetries(1);
 
     try {
-      return httpResponseRetryer.call(
-        () -> {
-          if (hosts.isEmpty()) {
-            // We've tried everything we started with. Look again.
-            hosts.addAll(hostsProvider.get());
-          }
-
-          int selection = random.nextInt(hosts.size());
-          String host = hosts.get(selection);
-          String url = hostToUri.apply(host);
-          hosts.remove(selection);
-          LOG.info("Making {} request to {}", method, url);
-          request.setUrl(url);
-          return httpClient.execute(request.build());
+      return httpResponseRetryer.call(() -> {
+        if (hosts.isEmpty()) {
+          // We've tried everything we started with. Look again.
+          hosts.addAll(hostsProvider.get());
         }
-      );
+
+        int selection = random.nextInt(hosts.size());
+        String host = hosts.get(selection);
+        String url = hostToUri.apply(host);
+        hosts.remove(selection);
+        LOG.info("Making {} request to {}", method, url);
+        request.setUrl(url);
+        return httpClient.execute(request.build());
+      });
     } catch (ExecutionException | RetryException exn) {
       if (exn instanceof RetryException) {
         RetryException retryExn = (RetryException) exn;
@@ -1248,12 +1247,12 @@ public class SingularityClient {
       String.format(DELETE_DEPLOY_FORMAT, getApiBase(host), deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(
-        requestUri,
-        "pending deploy",
-        new SingularityDeployKey(requestId, deployId).getId(),
-        Optional.empty(),
-        Optional.of(SingularityRequestParent.class)
-      )
+      requestUri,
+      "pending deploy",
+      new SingularityDeployKey(requestId, deployId).getId(),
+      Optional.empty(),
+      Optional.of(SingularityRequestParent.class)
+    )
       .get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
@@ -1501,12 +1500,12 @@ public class SingularityClient {
       String.format(TASKS_GET_ACTIVE_STATES_FORMAT, getApiBase(host));
 
     return getSingleWithParams(
-        requestUri,
-        "active tasks ids",
-        "all",
-        Optional.empty(),
-        new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
-      )
+      requestUri,
+      "active tasks ids",
+      "all",
+      Optional.empty(),
+      new TypeReference<Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>>>() {}
+    )
       .orElse(Collections.emptyMap());
   }
 
@@ -1612,11 +1611,11 @@ public class SingularityClient {
       String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
 
     return post(
-        requestUri,
-        "start shell command",
-        Optional.of(shellCommand),
-        Optional.of(SingularityTaskShellCommandRequest.class)
-      )
+      requestUri,
+      "start shell command",
+      Optional.of(shellCommand),
+      Optional.of(SingularityTaskShellCommandRequest.class)
+    )
       .orElse(null);
   }
 
@@ -1651,7 +1650,7 @@ public class SingularityClient {
   //
   // RACKS
   //
-  private Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
+  public Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
     final Function<String, String> requestUri = host ->
       String.format(RACKS_FORMAT, getApiBase(host));
     Optional<Map<String, Object>> maybeQueryParams = Optional.empty();

@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class TestingLoadBalancerClient extends LoadBalancerClient {
+
   private LoadBalancerRequestState requestState;
 
   public TestingLoadBalancerClient(

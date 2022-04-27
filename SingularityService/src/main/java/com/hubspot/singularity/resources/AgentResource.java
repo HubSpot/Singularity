@@ -40,6 +40,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.AGENT_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages Singularity agents")
 @Tags({ @Tag(name = "Agents") })
 public class AgentResource extends AbstractMachineResource<SingularityAgent> {

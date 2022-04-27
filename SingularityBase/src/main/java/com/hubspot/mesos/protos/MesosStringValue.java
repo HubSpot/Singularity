@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class MesosStringValue {
+
   private final String value;
 
   @JsonCreator

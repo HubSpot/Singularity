@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.WebApplicationException;
 import org.apache.mesos.v1.Protos.TaskState;
-import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;

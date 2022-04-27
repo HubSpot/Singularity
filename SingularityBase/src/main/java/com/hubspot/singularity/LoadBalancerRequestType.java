@@ -11,6 +11,7 @@ public enum LoadBalancerRequestType {
   DELETE;
 
   public static class LoadBalancerRequestId {
+
     private final String id;
     private final LoadBalancerRequestType requestType;
     private final int attemptNumber;

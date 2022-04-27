@@ -15,6 +15,7 @@ import java.util.Objects;
  */
 @Schema(description = "The mesos protos representation of an offer")
 public class MesosOfferObject {
+
   private final MesosStringValue agentId;
 
   @Deprecated

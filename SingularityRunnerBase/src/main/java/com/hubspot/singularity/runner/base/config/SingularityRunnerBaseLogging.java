@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityRunnerBaseLogging {
+
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(
     SingularityRunnerBaseLogging.class
   );
@@ -30,7 +31,7 @@ public class SingularityRunnerBaseLogging {
   private static final String[] CHATTY_LOGGERS = {
     "org.jboss.logging",
     "org.hibernate",
-    "com.github.jknack.handlebars"
+    "com.github.jknack.handlebars",
   };
 
   private final ObjectMapper yamlMapper;

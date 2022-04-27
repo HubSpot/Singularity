@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Schema(description = "Holds a SingularityRequest and its current state")
 public class SingularityRequestParent {
+
   private final SingularityRequest request;
   private final RequestState state;
   private final Optional<SingularityRequestDeployState> requestDeployState;

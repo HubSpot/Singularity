@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings related to changing the state of a rack or agent")
 public class SingularityMachineChangeRequest extends SingularityExpiringRequestParent {
+
   private final Optional<MachineState> revertToState;
   private final boolean killTasksOnDecommissionTimeout;
 

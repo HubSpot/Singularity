@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class SingularityUploader {
+
   static final Logger LOG = LoggerFactory.getLogger(SingularityUploader.class);
   private static final String LOG_START_TIME_ATTR = "logstart";
   private static final String LOG_END_TIME_ATTR = "logend";
@@ -182,18 +183,16 @@ public abstract class SingularityUploader {
     }
 
     try (Stream<Path> paths = Files.walk(directory, 1)) {
-      paths.forEach(
-        file -> {
-          if (file.equals(directory)) {
-            return;
-          }
-          try {
-            handleFile(file, isFinished, toUpload);
-          } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-          }
+      paths.forEach(file -> {
+        if (file.equals(directory)) {
+          return;
         }
-      );
+        try {
+          handleFile(file, isFinished, toUpload);
+        } catch (IOException ioe) {
+          throw new RuntimeException(ioe);
+        }
+      });
     } catch (UncheckedIOException | NoSuchFileException nsfe) {
       LOG.debug("Parent file {} did not exist, skipping", directory);
     }
@@ -211,18 +210,16 @@ public abstract class SingularityUploader {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.trace("{} was a directory, checking files in directory", path);
         try (Stream<Path> paths = Files.walk(path, 1)) {
-          paths.forEach(
-            file -> {
-              if (file.equals(path)) {
-                return; // Files.walk includes an element that is the starting path itself, skip this
-              }
-              try {
-                found.getAndAdd(handleFile(file, isFinished, toUpload).get());
-              } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
-              }
+          paths.forEach(file -> {
+            if (file.equals(path)) {
+              return; // Files.walk includes an element that is the starting path itself, skip this
             }
-          );
+            try {
+              found.getAndAdd(handleFile(file, isFinished, toUpload).get());
+            } catch (IOException ioe) {
+              throw new RuntimeException(ioe);
+            }
+          });
         }
       } else {
         LOG.trace("{} was a directory, skipping", path);
@@ -268,7 +265,9 @@ public abstract class SingularityUploader {
         }
 
         new SimpleProcessManager(LOG)
-        .runCommand(ImmutableList.of(CompressionType.GZIP.getCommand(), path.toString()));
+          .runCommand(
+            ImmutableList.of(CompressionType.GZIP.getCommand(), path.toString())
+          );
 
         if (LOG.isTraceEnabled()) {
           LOG.trace(
@@ -296,8 +295,8 @@ public abstract class SingularityUploader {
   }
 
   private boolean isFileOpen(Path path, boolean useFuser) {
+    checkFileOpenLock.lock();
     try {
-      checkFileOpenLock.lock();
       if (useFuser) {
         SimpleProcessManager fuser = new SimpleProcessManager(LOG);
         List<String> cmd = ImmutableList.of("fuser", path.toAbsolutePath().toString());

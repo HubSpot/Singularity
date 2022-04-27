@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.Optional;
 
 public class CanaryDeploySettingsBuilder {
+
   private Optional<Boolean> enableCanaryDeploy = Optional.empty();
   private Optional<DeployAcceptanceMode> acceptanceMode = Optional.empty();
   private Optional<Integer> instanceGroupSize = Optional.empty();

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SingularityTaskExecutorData extends ExecutorData {
+
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private final String defaultS3Bucket;
   private final String s3UploaderKeyPattern;

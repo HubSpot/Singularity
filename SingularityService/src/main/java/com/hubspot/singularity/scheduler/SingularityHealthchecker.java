@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityHealthchecker {
+
   private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME =
     HealthcheckProtocol.HTTP;
 
@@ -194,7 +195,7 @@ public class SingularityHealthchecker {
         .getStartupDelaySeconds()
         .orElseGet(() -> configuration.getStartupDelaySeconds().get());
       LOG.trace(
-        "Delaying first healthcheck %s seconds for task {}",
+        "Delaying first healthcheck {} seconds for task {}",
         delaySeconds,
         taskId
       );
@@ -276,7 +277,6 @@ public class SingularityHealthchecker {
 
     return executorService.schedule(
       new Runnable() {
-
         @Override
         public void run() {
           try {
@@ -438,7 +438,6 @@ public class SingularityHealthchecker {
 
   private Callback wrappedHttp2Handler(final SingularityHealthcheckAsyncHandler handler) {
     return new Callback() {
-
       @Override
       public void onFailure(Call call, IOException e) {
         handler.onFailed(e);
@@ -464,7 +463,6 @@ public class SingularityHealthchecker {
     final SingularityHealthcheckAsyncHandler handler
   ) {
     return new AsyncCompletionHandler<com.ning.http.client.Response>() {
-
       @Override
       public void onThrowable(Throwable t) {
         handler.onFailed(t);
@@ -473,8 +471,7 @@ public class SingularityHealthchecker {
       @Override
       public com.ning.http.client.Response onCompleted(
         com.ning.http.client.Response response
-      )
-        throws Exception {
+      ) throws Exception {
         Optional<String> maybeResponseExcerpt = Optional.empty();
 
         if (response.hasResponseBody()) {
@@ -494,6 +491,7 @@ public class SingularityHealthchecker {
   }
 
   @VisibleForTesting
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   void asyncHealthcheck(final SingularityTask task) {
     final Optional<String> uri = getHealthcheckUri(task);
     final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(

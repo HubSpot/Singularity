@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PendingRequestDataMigration extends ZkDataMigration {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     PendingRequestDataMigration.class
   );
@@ -61,7 +62,7 @@ public class PendingRequestDataMigration extends ZkDataMigration {
             pendingRequest.getRequestId(),
             pendingRequest.getDeployId()
           )
-          .getId();
+            .getId();
           LOG.warn(
             "Rewriting path {} to {}",
             childPath,

@@ -12,9 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityRunner {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityDriver.class);
+
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityRunner.class);
 
   @SuppressFBWarnings("DM_EXIT")
+  @SuppressWarnings("BanInjectorCreation")
   public void run(Iterable<? extends Module> modules) {
     final Injector injector = Guice.createInjector(Stage.PRODUCTION, modules);
 
@@ -28,7 +30,6 @@ public class SingularityRunner {
       .getRuntime()
       .addShutdownHook(
         new Thread("SingularityRunnerGracefulShutdown") {
-
           @Override
           public void run() {
             driver.shutdown();

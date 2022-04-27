@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the current state of singularity")
 public class SingularityState {
+
   private final int activeTasks;
   private final int launchingTasks;
   private final int pausedRequests;

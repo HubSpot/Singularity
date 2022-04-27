@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Request to create a new long lived auth token")
 public class SingularityTokenRequest {
+
   private final Optional<String> token;
   private final Optional<SingularityUser> user;
 

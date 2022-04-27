@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ZkDataMigrationRunner {
+
   private static final Logger LOG = LoggerFactory.getLogger(ZkDataMigrationRunner.class);
 
   private final MetadataManager metadataManager;

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DisasterManager extends CuratorAsyncManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(DisasterManager.class);
 
   private static final String DISASTERS_ROOT = "/disasters";
@@ -177,9 +178,9 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public SingularityDisasterDataPoints getDisasterStats() {
     SingularityDisasterDataPoints stats = getData(
-        DISASTER_STATS_PATH,
-        disasterStatsTranscoder
-      )
+      DISASTER_STATS_PATH,
+      disasterStatsTranscoder
+    )
       .orElse(SingularityDisasterDataPoints.empty());
     Collections.sort(stats.getDataPoints());
     return stats;

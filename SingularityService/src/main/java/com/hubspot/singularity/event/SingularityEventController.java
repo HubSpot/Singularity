@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityEventController implements SingularityEventListener {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityEventController.class
   );
@@ -60,12 +61,10 @@ public class SingularityEventController implements SingularityEventListener {
 
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
-        listenerExecutorService.submit(
-          () -> {
-            eventListener.requestHistoryEvent(singularityRequestHistory);
-            return null;
-          }
-        )
+        listenerExecutorService.submit(() -> {
+          eventListener.requestHistoryEvent(singularityRequestHistory);
+          return null;
+        })
       );
     }
 
@@ -80,12 +79,10 @@ public class SingularityEventController implements SingularityEventListener {
 
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
-        listenerExecutorService.submit(
-          () -> {
-            eventListener.taskWebhookEvent(singularityTaskWebhook);
-            return null;
-          }
-        )
+        listenerExecutorService.submit(() -> {
+          eventListener.taskWebhookEvent(singularityTaskWebhook);
+          return null;
+        })
       );
     }
 
@@ -98,12 +95,10 @@ public class SingularityEventController implements SingularityEventListener {
 
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
-        listenerExecutorService.submit(
-          () -> {
-            eventListener.deployHistoryEvent(singularityDeployUpdate);
-            return null;
-          }
-        )
+        listenerExecutorService.submit(() -> {
+          eventListener.deployHistoryEvent(singularityDeployUpdate);
+          return null;
+        })
       );
     }
 
@@ -116,12 +111,10 @@ public class SingularityEventController implements SingularityEventListener {
 
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
-        listenerExecutorService.submit(
-          () -> {
-            eventListener.crashLoopEvent(crashLoopUpdate);
-            return null;
-          }
-        )
+        listenerExecutorService.submit(() -> {
+          eventListener.crashLoopEvent(crashLoopUpdate);
+          return null;
+        })
       );
     }
 
@@ -134,12 +127,10 @@ public class SingularityEventController implements SingularityEventListener {
 
     for (final SingularityEventSender eventListener : eventListeners) {
       builder.add(
-        listenerExecutorService.submit(
-          () -> {
-            eventListener.elevatedAccessEvent(elevatedAccessEvent);
-            return null;
-          }
-        )
+        listenerExecutorService.submit(() -> {
+          eventListener.elevatedAccessEvent(elevatedAccessEvent);
+          return null;
+        })
       );
     }
 

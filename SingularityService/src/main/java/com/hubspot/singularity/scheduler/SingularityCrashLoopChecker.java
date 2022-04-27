@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityCrashLoopChecker {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityCrashLoopChecker.class
   );
@@ -72,22 +73,21 @@ public class SingularityCrashLoopChecker {
         .allOf(
           cooldownRequests
             .stream()
-            .map(
-              cooldownRequest ->
-                CompletableFuture.runAsync(
-                  () ->
-                    lock.runWithRequestLock(
-                      () -> {
-                        if (checkCooldown(cooldownRequest, deployStatsCache)) {
-                          exitedCooldown.getAndIncrement();
-                        }
-                      },
-                      cooldownRequest.getRequest().getId(),
-                      getClass().getSimpleName(),
-                      SingularitySchedulerLock.Priority.LOW
-                    ),
-                  cooldownExecutor
-                )
+            .map(cooldownRequest ->
+              CompletableFuture.runAsync(
+                () ->
+                  lock.runWithRequestLock(
+                    () -> {
+                      if (checkCooldown(cooldownRequest, deployStatsCache)) {
+                        exitedCooldown.getAndIncrement();
+                      }
+                    },
+                    cooldownRequest.getRequest().getId(),
+                    getClass().getSimpleName(),
+                    SingularitySchedulerLock.Priority.LOW
+                  ),
+                cooldownExecutor
+              )
             )
             .collect(Collectors.toList())
         )
@@ -111,19 +111,17 @@ public class SingularityCrashLoopChecker {
       List<CrashLoopInfo> crashLoopHistory = requestManager
         .getCrashLoopsForRequest(request.getRequest().getId())
         .stream()
-        .filter(
-          l -> {
-            if (
-              !l
-                .getDeployId()
-                .equals(maybeDeployState.get().getActiveDeploy().get().getDeployId())
-            ) {
-              requestManager.deleteCrashLoop(l);
-              return false;
-            }
-            return true;
+        .filter(l -> {
+          if (
+            !l
+              .getDeployId()
+              .equals(maybeDeployState.get().getActiveDeploy().get().getDeployId())
+          ) {
+            requestManager.deleteCrashLoop(l);
+            return false;
           }
-        )
+          return true;
+        })
         .collect(Collectors.toList());
 
       // Only keep the most recent 10 crash loop infos
@@ -159,33 +157,29 @@ public class SingularityCrashLoopChecker {
       );
 
       if (!active.isEmpty()) {
-        active.forEach(
-          l -> {
-            if (previouslyActive.stream().noneMatch(l::matches)) {
-              LOG.info("New crash loop for {}: {}", request.getRequest().getId(), l);
-              requestManager.saveCrashLoop(l);
-            }
+        active.forEach(l -> {
+          if (previouslyActive.stream().noneMatch(l::matches)) {
+            LOG.info("New crash loop for {}: {}", request.getRequest().getId(), l);
+            requestManager.saveCrashLoop(l);
           }
-        );
+        });
       }
 
       if (!previouslyActive.isEmpty()) {
-        previouslyActive.forEach(
-          l -> {
-            if (active.stream().noneMatch(l::matches)) {
-              LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
-              requestManager.saveCrashLoop(
-                new CrashLoopInfo(
-                  l.getRequestId(),
-                  l.getDeployId(),
-                  l.getStart(),
-                  Optional.of(System.currentTimeMillis()),
-                  l.getType()
-                )
-              );
-            }
+        previouslyActive.forEach(l -> {
+          if (active.stream().noneMatch(l::matches)) {
+            LOG.info("Crash loop resolved for {}: {}", request.getRequest().getId(), l);
+            requestManager.saveCrashLoop(
+              new CrashLoopInfo(
+                l.getRequestId(),
+                l.getDeployId(),
+                l.getStart(),
+                Optional.of(System.currentTimeMillis()),
+                l.getType()
+              )
+            );
           }
-        );
+        });
       }
     }
 

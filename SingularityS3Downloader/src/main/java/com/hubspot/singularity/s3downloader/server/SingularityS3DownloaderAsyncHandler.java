@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityS3DownloaderAsyncHandler implements Runnable {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3DownloaderAsyncHandler.class
   );

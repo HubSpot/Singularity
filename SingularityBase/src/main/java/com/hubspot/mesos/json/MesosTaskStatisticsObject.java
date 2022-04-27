@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes the current resource usage for a task")
 public class MesosTaskStatisticsObject {
+
   private final int cpusLimit;
   private final long cpusNrPeriods;
   private final long cpusNrThrottled;

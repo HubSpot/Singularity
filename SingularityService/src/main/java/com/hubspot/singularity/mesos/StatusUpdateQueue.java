@@ -19,6 +19,7 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 
 @Singleton
 public class StatusUpdateQueue {
+
   private final SingularityConfiguration configuration;
   private final File queueFile;
   private final Queue<TaskStatus> inMemoryQueue;
@@ -28,8 +29,7 @@ public class StatusUpdateQueue {
   public StatusUpdateQueue(
     SingularityConfiguration configuration,
     @Singularity ObjectMapper objectMapper
-  )
-    throws IOException {
+  ) throws IOException {
     this.configuration = configuration;
     this.inMemoryQueue =
       new ArrayBlockingQueue<>(
@@ -41,7 +41,6 @@ public class StatusUpdateQueue {
       ObjectQueue.create(
         new QueueFile.Builder(queueFile).build(),
         new Converter<TaskStatus>() {
-
           @Override
           public TaskStatus from(byte[] source) throws IOException {
             return objectMapper.readValue(source, TaskStatus.class);

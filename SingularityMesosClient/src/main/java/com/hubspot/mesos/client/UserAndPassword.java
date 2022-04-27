@@ -1,6 +1,7 @@
 package com.hubspot.mesos.client;
 
 public class UserAndPassword {
+
   private final String user;
   private final String password;
 

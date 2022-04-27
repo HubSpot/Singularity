@@ -8,6 +8,7 @@ import java.util.Optional;
  * because calling configuration setters directly doesn't work.
  */
 public class OverrideConfiguration {
+
   /** If false, ignore rack sensitive requests. If true, work normally. */
   private boolean allowRackSensitivity = true;
 

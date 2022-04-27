@@ -6,6 +6,7 @@ import java.util.Objects;
 
 public class RequestParentWithLastActionTime
   implements Comparable<RequestParentWithLastActionTime> {
+
   private final SingularityRequestWithState requestWithState;
   private final long lastActionTime;
   private final boolean starred;

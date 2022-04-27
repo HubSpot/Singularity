@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class SingularityS3FormatHelper {
+
   public static final String DEFAULT_GROUP_NAME = "default";
 
   private static final List<String> DISALLOWED_FOR_TASK = ImmutableList.of(

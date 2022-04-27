@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityWebhookAuthenticator implements SingularityAuthenticator {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityWebhookAuthenticator.class
   );
@@ -59,7 +60,6 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         )
         .build(
           new CacheLoader<String, SingularityUserPermissionsResponse>() {
-
             @Override
             public SingularityUserPermissionsResponse load(String authHeaderValue) {
               return verifyUncached(authHeaderValue);
@@ -70,8 +70,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
               String authHeaderVaule,
               SingularityUserPermissionsResponse oldVaule
             ) {
-              ListenableFutureTask<SingularityUserPermissionsResponse> task = ListenableFutureTask.create(
-                () -> {
+              ListenableFutureTask<SingularityUserPermissionsResponse> task = ListenableFutureTask.create(() -> {
                   try {
                     return verifyUncached(authHeaderVaule);
                   } catch (Throwable t) {

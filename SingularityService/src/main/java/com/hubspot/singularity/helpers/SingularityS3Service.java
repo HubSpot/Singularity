@@ -3,6 +3,7 @@ package com.hubspot.singularity.helpers;
 import com.amazonaws.services.s3.AmazonS3;
 
 public class SingularityS3Service {
+
   private final String group;
   private final String bucket;
   private final AmazonS3 s3Client;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosAgentMetricsSnapshotObject {
+
   private final double diskUsed;
   private final double validStatusUpdates;
   private final double tasksFinished;

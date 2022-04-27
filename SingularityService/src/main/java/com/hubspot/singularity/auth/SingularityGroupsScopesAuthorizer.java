@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityGroupsScopesAuthorizer extends SingularityAuthorizer {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityGroupsScopesAuthorizer.class
   );

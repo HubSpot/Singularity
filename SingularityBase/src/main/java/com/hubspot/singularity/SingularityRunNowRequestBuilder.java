@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SingularityRunNowRequestBuilder {
+
   private Optional<String> message;
   private Optional<String> runId;
   private Optional<List<String>> commandLineArgs;

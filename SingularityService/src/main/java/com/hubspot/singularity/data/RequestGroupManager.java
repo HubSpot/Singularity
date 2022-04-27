@@ -16,6 +16,7 @@ import org.apache.curator.utils.ZKPaths;
 
 @Singleton
 public class RequestGroupManager extends CuratorAsyncManager {
+
   private static final String REQUEST_GROUP_ROOT = "/groups";
 
   private final Transcoder<SingularityRequestGroup> requestGroupTranscoder;
@@ -72,19 +73,15 @@ public class RequestGroupManager extends CuratorAsyncManager {
     getRequestGroups(false)
       .stream()
       .filter(g -> g.getRequestIds().contains(requestId))
-      .forEach(
-        g -> {
-          List<String> ids = new ArrayList<>();
-          ids.addAll(g.getRequestIds());
-          ids.remove(requestId);
-          if (ids.isEmpty()) {
-            deleteRequestGroup(g.getId());
-          } else {
-            saveRequestGroup(
-              new SingularityRequestGroup(g.getId(), ids, g.getMetadata())
-            );
-          }
+      .forEach(g -> {
+        List<String> ids = new ArrayList<>();
+        ids.addAll(g.getRequestIds());
+        ids.remove(requestId);
+        if (ids.isEmpty()) {
+          deleteRequestGroup(g.getId());
+        } else {
+          saveRequestGroup(new SingularityRequestGroup(g.getId(), ids, g.getMetadata()));
         }
-      );
+      });
   }
 }

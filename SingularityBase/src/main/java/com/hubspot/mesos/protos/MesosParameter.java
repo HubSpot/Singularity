@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MesosParameter {
+
   private final Optional<String> key;
   private final Optional<String> value;
 

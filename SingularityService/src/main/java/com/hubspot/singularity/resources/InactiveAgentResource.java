@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import java.util.Set;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,9 +23,11 @@ import javax.ws.rs.core.MediaType;
 
 @Path(ApiPaths.INACTIVE_AGENTS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manage Singularity machines that should be marked as inactive")
 @Tags({ @Tag(name = "Inactive Machines") })
 public class InactiveAgentResource {
+
   private final InactiveAgentManager inactiveAgentManager;
   private final SingularityAuthorizer authorizationHelper;
 

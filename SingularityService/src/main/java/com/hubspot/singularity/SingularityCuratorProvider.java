@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityCuratorProvider implements Provider<CuratorFramework> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityCuratorProvider.class
   );
@@ -74,6 +75,7 @@ public class SingularityCuratorProvider implements Provider<CuratorFramework> {
     }
   }
 
+  @SuppressWarnings("BanCuratorFrameworkFactory")
   private CuratorFramework buildCuratorFrameworkInstance(
     ZooKeeperConfiguration zookeeperConfig
   ) {

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 @Singleton
 public class SingularityLifecycleManaged implements Managed {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityLifecycleManaged.class
   );

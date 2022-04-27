@@ -12,6 +12,7 @@ import java.util.Optional;
 public class SingularityTaskShellCommandRequest
   extends SingularityFrameworkMessage
   implements Comparable<SingularityTaskShellCommandRequest> {
+
   private final SingularityTaskId taskId;
   private final Optional<String> user;
   private final SingularityShellCommand shellCommand;

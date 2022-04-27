@@ -109,9 +109,11 @@ import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages Singularity Requests, the parent object for any deployed task")
 @Tags({ @Tag(name = "Requests") })
 public class RequestResource extends AbstractRequestResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
   private final SingularityMailer mailer;
@@ -266,25 +268,23 @@ public class RequestResource extends AbstractRequestResource {
             request.getId(),
             maybeDeployState.get().getActiveDeploy().get().getDeployId()
           )
-          .forEach(
-            taskId -> {
-              if (taskId.getInstanceNo() > newInstances) {
-                taskManager.createTaskCleanup(
-                  new SingularityTaskCleanup(
-                    Optional.of(user.getId()),
-                    TaskCleanupType.SCALING_DOWN,
-                    System.currentTimeMillis(),
-                    taskId,
-                    message,
-                    Optional.of(UUID.randomUUID().toString()),
-                    Optional.empty()
-                  )
-                );
-              } else {
-                remainingActiveTasks.add(taskId);
-              }
+          .forEach(taskId -> {
+            if (taskId.getInstanceNo() > newInstances) {
+              taskManager.createTaskCleanup(
+                new SingularityTaskCleanup(
+                  Optional.of(user.getId()),
+                  TaskCleanupType.SCALING_DOWN,
+                  System.currentTimeMillis(),
+                  taskId,
+                  message,
+                  Optional.of(UUID.randomUUID().toString()),
+                  Optional.empty()
+                )
+              );
+            } else {
+              remainingActiveTasks.add(taskId);
             }
-          );
+          });
 
         int activeRacksWithCapacityCount = agentAndRackManager.getActiveRacksWithCapacityCount();
         if (oldRequest.get().getInstancesSafe() > activeRacksWithCapacityCount) {
@@ -318,22 +318,20 @@ public class RequestResource extends AbstractRequestResource {
       );
       taskManager
         .getActiveTaskIdsForRequest(request.getId())
-        .forEach(
-          t -> {
-            // Will only be saved if async healthchecks have not already finished
-            taskManager.saveHealthcheckResult(
-              new SingularityTaskHealthcheckResult(
-                Optional.of(200),
-                Optional.empty(),
-                System.currentTimeMillis(),
-                Optional.of(String.format("Healthchecks skipped by %s", user.getId())),
-                Optional.empty(),
-                t,
-                Optional.empty()
-              )
-            );
-          }
-        );
+        .forEach(t -> {
+          // Will only be saved if async healthchecks have not already finished
+          taskManager.saveHealthcheckResult(
+            new SingularityTaskHealthcheckResult(
+              Optional.of(200),
+              Optional.empty(),
+              System.currentTimeMillis(),
+              Optional.of(String.format("Healthchecks skipped by %s", user.getId())),
+              Optional.empty(),
+              t,
+              Optional.empty()
+            )
+          );
+        });
     }
 
     requestHelper.updateRequest(
@@ -357,7 +355,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "409",
         description = "Request object is being cleaned. Try again shortly"
-      )
+      ),
     }
   )
   public SingularityRequestParent postRequest(
@@ -414,7 +412,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "401",
         description = "User is not authorized to make these updates"
-      )
+      ),
     }
   )
   public SingularityRequestParent updateAuthorizedGroups(
@@ -483,7 +481,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "401",
         description = "User is not authorized to make these updates"
-      )
+      ),
     }
   )
   public Response checkAuthForGroupsUpdate(
@@ -696,7 +694,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "400",
         description = "Singularity Request is not scheduled or one-off"
-      )
+      ),
     }
   )
   public SingularityPendingRequestParent scheduleImmediately(
@@ -713,14 +711,12 @@ public class RequestResource extends AbstractRequestResource {
     if (runNowRequest != null) {
       runNowRequest
         .getEnvOverrides()
-        .forEach(
-          (k, v) -> {
-            checkBadRequest(
-              !k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"),
-              "Cannot override STARTED_BY_USER in env"
-            );
-          }
-        );
+        .forEach((k, v) -> {
+          checkBadRequest(
+            !k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"),
+            "Cannot override STARTED_BY_USER in env"
+          );
+        });
       checkBadRequest(
         !runNowRequest.getCommandLineArgs().isPresent() ||
         runNowRequest
@@ -875,7 +871,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "A task with the specified runID was not found"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskId> getTaskByRunId(
@@ -904,7 +900,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "409",
         description = "Request is already paused or being cleaned"
-      )
+      ),
     }
   )
   @SuppressFBWarnings("NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS")
@@ -927,7 +923,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "409",
         description = "Request is already paused or being cleaned"
-      )
+      ),
     }
   )
   public SingularityRequestParent pause(
@@ -1063,7 +1059,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Unpause a Singularity Request, scheduling new tasks immediately",
     responses = {
-      @ApiResponse(responseCode = "409", description = "Request is not paused")
+      @ApiResponse(responseCode = "409", description = "Request is not paused"),
     }
   )
   public SingularityRequestParent unpause(
@@ -1154,7 +1150,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Immediately exits cooldown, scheduling new tasks immediately",
     responses = {
-      @ApiResponse(responseCode = "409", description = "Request is not in cooldown")
+      @ApiResponse(responseCode = "409", description = "Request is not in cooldown"),
     }
   )
   public SingularityRequestParent exitCooldown(
@@ -1247,10 +1243,10 @@ public class RequestResource extends AbstractRequestResource {
     ) List<String> ids
   ) {
     List<SingularityRequestParent> found = filterAutorized(
-        Lists.newArrayList(requestManager.getRequests(ids)),
-        SingularityAuthorizationScope.READ,
-        user
-      )
+      Lists.newArrayList(requestManager.getRequests(ids)),
+      SingularityAuthorizationScope.READ,
+      user
+    )
       .stream()
       .map(this::fillEntireRequest)
       .collect(Collectors.toList());
@@ -1311,10 +1307,10 @@ public class RequestResource extends AbstractRequestResource {
     ) Set<RequestState> states
   ) {
     List<String> allIds = filterAutorized(
-        Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))),
-        SingularityAuthorizationScope.READ,
-        user
-      )
+      Lists.newArrayList(requestManager.getRequests(useWebCache(useWebCache))),
+      SingularityAuthorizationScope.READ,
+      user
+    )
       .stream()
       .filter(r -> states == null || states.isEmpty() || states.contains(r.getState()))
       .map(r -> r.getRequest().getId())
@@ -1340,10 +1336,10 @@ public class RequestResource extends AbstractRequestResource {
     ) @QueryParam("useWebCache") Boolean useWebCache
   ) {
     return filterAutorized(
-        Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))),
-        SingularityAuthorizationScope.READ,
-        user
-      )
+      Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))),
+      SingularityAuthorizationScope.READ,
+      user
+    )
       .stream()
       .map(r -> r.getRequest().getId())
       .collect(Collectors.toList());
@@ -1502,9 +1498,8 @@ public class RequestResource extends AbstractRequestResource {
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       return requests
         .stream()
-        .filter(
-          parent ->
-            authorizationHelper.isAuthorizedForRequest(parent.getRequest(), user, scope)
+        .filter(parent ->
+          authorizationHelper.isAuthorizedForRequest(parent.getRequest(), user, scope)
         )
         .collect(Collectors.toList());
     }
@@ -1546,7 +1541,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Retrieve a specific Request by ID",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestParent getRequest(
@@ -1575,7 +1570,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Retrieve a specific Request by ID without additional deploy/task information",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestWithState getRequestSimple(
@@ -1596,7 +1591,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Delete a specific Request by ID and return the deleted Request",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequest deleteRequest(
@@ -1663,7 +1658,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Set the task scheduling priority for the request",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestParent setPriority(
@@ -1693,7 +1688,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring priority change for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringPriority(
@@ -1770,7 +1765,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Scale the number of instances up or down for a specific Request",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestParent scale(
@@ -1969,7 +1964,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring scale request for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringScale(
@@ -1990,7 +1985,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring skipHealthchecks request for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(
@@ -2010,7 +2005,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring skipHealthchecks request for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringSkipHealthchecks(
@@ -2034,7 +2029,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring pause request for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringPause(
@@ -2054,7 +2049,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(
         responseCode = "404",
         description = "No Request or expiring bounce request for that ID"
-      )
+      ),
     }
   )
   public SingularityRequestParent deleteExpiringBounce(
@@ -2073,7 +2068,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Update the skipHealthchecks field for the request, possibly temporarily",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestParent skipHealthchecksDeprecated(
@@ -2095,7 +2090,7 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
     summary = "Update the skipHealthchecks field for the request, possibly temporarily",
     responses = {
-      @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      @ApiResponse(responseCode = "404", description = "No Request with that ID"),
     }
   )
   public SingularityRequestParent skipHealthchecks(

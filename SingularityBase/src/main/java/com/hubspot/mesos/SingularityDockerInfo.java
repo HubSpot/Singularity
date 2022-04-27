@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes how a docker image should be launched")
 public class SingularityDockerInfo {
+
   private final String image;
   private final boolean privileged;
   private final Optional<SingularityDockerNetworkType> network;

@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UINavLinkConfiguration {
+
   private String title;
   private String linkFormat;
   private Boolean divider = false;

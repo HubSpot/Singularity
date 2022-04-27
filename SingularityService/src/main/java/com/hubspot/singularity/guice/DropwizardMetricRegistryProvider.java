@@ -8,6 +8,7 @@ import com.google.inject.Provider;
 import io.dropwizard.setup.Environment;
 
 public class DropwizardMetricRegistryProvider implements Provider<MetricRegistry> {
+
   private final Environment environment;
 
   @Inject

@@ -2,6 +2,7 @@ package com.hubspot.singularity.client;
 
 @SuppressWarnings("serial")
 public class SingularityClientException extends RuntimeException {
+
   private int statusCode;
 
   public SingularityClientException() {

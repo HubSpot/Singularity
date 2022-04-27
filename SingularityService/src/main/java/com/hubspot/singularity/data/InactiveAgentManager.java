@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class InactiveAgentManager extends CuratorManager {
+
   private static final String ROOT_PATH = "/inactiveSlaves";
   private static final Logger LOG = LoggerFactory.getLogger(InactiveAgentManager.class);
 

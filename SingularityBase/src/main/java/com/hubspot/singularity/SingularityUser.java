@@ -14,6 +14,7 @@ import java.util.Set;
 
 @Schema(description = "Information about a user")
 public class SingularityUser implements Principal {
+
   private final String id;
   private final Optional<String> name;
   private final Optional<String> email;
@@ -21,7 +22,7 @@ public class SingularityUser implements Principal {
   private final Set<String> scopes;
   private final boolean authenticated;
 
-  public static SingularityUser DEFAULT_USER = new SingularityUser(
+  public static final SingularityUser DEFAULT_USER = new SingularityUser(
     "singularity",
     Optional.empty(),
     Optional.empty(),

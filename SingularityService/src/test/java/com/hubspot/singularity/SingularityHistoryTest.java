@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityHistoryTest extends SingularitySchedulerTestBase {
+
   @Inject
   protected Provider<Jdbi> dbiProvider;
 
@@ -143,7 +144,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskTwo = launchTask(
       request,
       firstDeploy,
-      2l,
+      2L,
       10L,
       2,
       TaskState.TASK_RUNNING,
@@ -152,7 +153,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskThree = launchTask(
       request,
       firstDeploy,
-      3l,
+      3L,
       10L,
       3,
       TaskState.TASK_RUNNING,
@@ -396,7 +397,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskThree = launchTask(
       request,
       firstDeploy,
-      20000l,
+      20000L,
       10L,
       2,
       TaskState.TASK_RUNNING,
@@ -405,7 +406,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskFive = launchTask(
       request,
       firstDeploy,
-      30000l,
+      30000L,
       10L,
       3,
       TaskState.TASK_RUNNING,
@@ -429,7 +430,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskFour = launchTask(
       request,
       firstDeploy,
-      25000l,
+      25000L,
       10L,
       2,
       TaskState.TASK_RUNNING,
@@ -438,7 +439,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskSix = launchTask(
       request,
       firstDeploy,
-      35000l,
+      35000L,
       10L,
       3,
       TaskState.TASK_RUNNING,
@@ -447,7 +448,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     SingularityTask taskSeven = launchTask(
       request,
       firstDeploy,
-      70000l,
+      70000L,
       10L,
       7,
       TaskState.TASK_RUNNING,
@@ -1280,7 +1281,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       requestId,
       RequestType.ON_DEMAND
     )
-    .build();
+      .build();
     SingularityRequestHistory firstRequestHistory = new SingularityRequestHistory(
       0L,
       Optional.empty(),
@@ -1402,7 +1403,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
         "test",
         RequestType.ON_DEMAND
       )
-      .build();
+        .build();
       SingularityRequestHistory requestHistory = new SingularityRequestHistory(
         System.currentTimeMillis(),
         Optional.empty(),

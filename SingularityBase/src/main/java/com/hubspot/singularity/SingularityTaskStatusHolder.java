@@ -6,6 +6,7 @@ import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import java.util.Optional;
 
 public class SingularityTaskStatusHolder {
+
   private final Optional<MesosTaskStatusObject> taskStatus;
   private final SingularityTaskId taskId;
   private final long serverTimestamp;

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Schema(description = "Describes a shell command run against a task")
 public class SingularityTaskShellCommandHistory {
+
   private final SingularityTaskShellCommandRequest shellRequest;
   private final List<SingularityTaskShellCommandUpdate> shellUpdates;
 

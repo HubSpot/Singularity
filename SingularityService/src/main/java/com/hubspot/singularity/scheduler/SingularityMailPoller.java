@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMailPoller.class);
 
   private final SingularityConfiguration configuration;
@@ -57,7 +58,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   private enum ShouldSendMailState {
     SEND,
     WAIT,
-    ERROR
+    ERROR,
   }
 
   private void checkToSendTaskFinishedMail(SingularityTaskId taskId) {

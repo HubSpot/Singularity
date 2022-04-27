@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Overrides related to how a task kill is performed")
 public class SingularityKillTaskRequest {
+
   private final Optional<String> message;
   private final Optional<Boolean> override;
   private final Optional<String> actionId;

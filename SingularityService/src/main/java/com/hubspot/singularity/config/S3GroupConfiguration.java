@@ -4,6 +4,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 public class S3GroupConfiguration {
+
   @NotNull
   private String s3Bucket;
 

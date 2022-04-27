@@ -10,6 +10,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Holds the description of an image to be launched in mesos")
 public class SingularityMesosInfo {
+
   private final Optional<SingularityMesosImage> image;
 
   @JsonCreator

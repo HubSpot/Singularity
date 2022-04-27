@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MesosMasterStateObject {
+
   private final String version;
   private final String gitSha;
   private final String gitTag;

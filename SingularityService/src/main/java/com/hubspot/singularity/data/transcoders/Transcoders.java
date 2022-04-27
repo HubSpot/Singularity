@@ -18,7 +18,6 @@ public final class Transcoders {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<T, byte[]>() {
-
       @Override
       public byte[] apply(@Nullable T value) {
         try {
@@ -36,7 +35,6 @@ public final class Transcoders {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<byte[], T>() {
-
       @Override
       public T apply(@Nullable byte[] value) {
         try {
@@ -54,7 +52,6 @@ public final class Transcoders {
     checkNotNull(transcoder, "transcoder is null");
 
     return new Function<String, T>() {
-
       @Override
       public T apply(@Nullable String value) {
         if (value == null) {

@@ -3,6 +3,7 @@ package com.hubspot.singularity.s3uploader;
 import java.util.Optional;
 
 public class UploaderFileAttributes {
+
   Optional<Long> startTime;
   Optional<Long> endTime;
 

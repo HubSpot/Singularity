@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 import java.util.concurrent.TimeUnit;
 
 public class SingularityS3BaseModule extends AbstractModule {
+
   public static final String METRICS_OBJECT_MAPPER =
     "singularity.s3base.metrics.object.mapper";
 

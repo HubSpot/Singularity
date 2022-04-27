@@ -5,6 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.annotation.Nullable;
 
 public abstract class EnumTranscoder<T extends Enum<T>> implements Transcoder<T> {
+
   private static final byte[] EMPTY_BYTES = new byte[0];
 
   @Override

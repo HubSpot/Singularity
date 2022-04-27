@@ -16,6 +16,7 @@ import javax.validation.Validator;
 
 public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration>
   implements Provider<T> {
+
   private final Class<T> clazz;
   private final Optional<String> filename;
 
@@ -60,7 +61,7 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
       final File baseFile = new File(configuration.filename());
       final T baseConfig = baseFile.exists()
         ? objectMapper.readValue(baseFile, clazz)
-        : clazz.newInstance();
+        : clazz.getDeclaredConstructor().newInstance();
 
       final JsonNode overrideNode = filename.isPresent()
         ? loadYamlField(filename.get(), configuration.consolidatedField())

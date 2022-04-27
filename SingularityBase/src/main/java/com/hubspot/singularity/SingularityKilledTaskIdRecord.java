@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes a task that has been sent a kill signal")
 public class SingularityKilledTaskIdRecord {
+
   private final SingularityTaskId taskId;
   private final long originalTimestamp;
   private final long timestamp;

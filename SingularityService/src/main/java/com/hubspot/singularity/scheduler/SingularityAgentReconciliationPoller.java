@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityAgentReconciliationPoller extends SingularityLeaderOnlyPoller {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityAgentReconciliationPoller.class
   );

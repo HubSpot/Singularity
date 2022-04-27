@@ -20,6 +20,7 @@ import org.hibernate.validator.constraints.NotEmpty;
   consolidatedField = "executorCleanup"
 )
 public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfiguration {
+
   @JsonProperty
   private boolean safeModeWontRunWithNoTasks = true;
 

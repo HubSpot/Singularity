@@ -30,6 +30,7 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class AsyncSemaphore<T> {
+
   private final StampedLock stampedLock = new StampedLock();
   private final AtomicInteger concurrentRequests = new AtomicInteger();
   private final Queue<DelayedExecution<T>> requestQueue;
@@ -135,32 +136,30 @@ public class AsyncSemaphore<T> {
   }
 
   private <U> void pollQueueOnCompletion(CompletableFuture<U> future) {
-    future.whenComplete(
-      (ignored1, ignored2) -> {
-        // iterate through expired executions rather than using callbacks
-        // to avoid StackoverflowError if futures are completed or expired
-        while (true) {
-          DelayedExecution<T> nextExecutionDue = requestQueue.poll();
+    future.whenComplete((ignored1, ignored2) -> {
+      // iterate through expired executions rather than using callbacks
+      // to avoid StackoverflowError if futures are completed or expired
+      while (true) {
+        DelayedExecution<T> nextExecutionDue = requestQueue.poll();
 
-          if (nextExecutionDue == null) {
-            releasePermit();
+        if (nextExecutionDue == null) {
+          releasePermit();
+          return;
+        } else if (nextExecutionDue.isExpired()) {
+          nextExecutionDue
+            .getResponseFuture()
+            .completeExceptionally(timeoutExceptionSupplier.get());
+        } else {
+          // reuse the previous permit for the queued request
+          CompletableFuture<Void> nextExecution = nextExecutionDue.execute();
+
+          if (!nextExecution.isDone()) {
+            pollQueueOnCompletion(nextExecution);
             return;
-          } else if (nextExecutionDue.isExpired()) {
-            nextExecutionDue
-              .getResponseFuture()
-              .completeExceptionally(timeoutExceptionSupplier.get());
-          } else {
-            // reuse the previous permit for the queued request
-            CompletableFuture<Void> nextExecution = nextExecutionDue.execute();
-
-            if (!nextExecution.isDone()) {
-              pollQueueOnCompletion(nextExecution);
-              return;
-            }
           }
         }
       }
-    );
+    });
   }
 
   private boolean tryAcquirePermit() {
@@ -224,6 +223,7 @@ public class AsyncSemaphore<T> {
   }
 
   static class DelayedExecution<T> {
+
     private static final AtomicIntegerFieldUpdater<DelayedExecution> EXECUTED_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
       DelayedExecution.class,
       "executed"
@@ -259,15 +259,13 @@ public class AsyncSemaphore<T> {
       }
 
       return executeCall(execution)
-        .whenComplete(
-          (response, ex) -> {
-            if (ex == null) {
-              responseFuture.complete(response);
-            } else {
-              responseFuture.completeExceptionally(ex);
-            }
+        .whenComplete((response, ex) -> {
+          if (ex == null) {
+            responseFuture.complete(response);
+          } else {
+            responseFuture.completeExceptionally(ex);
           }
-        )
+        })
         .thenApply(ignored -> null);
     }
 

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityEventModule implements Module {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityEventModule.class);
 
   private final WebhookQueueConfiguration webhookQueueConfiguration;

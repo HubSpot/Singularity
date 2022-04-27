@@ -30,6 +30,7 @@ import java.util.Optional;
 
 public class SingularityServiceModule
   extends DropwizardAwareModule<SingularityConfiguration> {
+
   private final Function<SingularityConfiguration, Module> dbModuleProvider;
   private Optional<Class<? extends LoadBalancerClient>> lbClientClass = Optional.empty();
 
@@ -55,11 +56,10 @@ public class SingularityServiceModule
     binder.install(
       new SingularityMainModule(
         getConfiguration(),
-        lbClientClass.orElseGet(
-          () ->
-            configuration.getLoadBalancerUri() != null
-              ? BaragonLoadBalancerClientImpl.class
-              : NoOpLoadBalancerClient.class
+        lbClientClass.orElseGet(() ->
+          configuration.getLoadBalancerUri() != null
+            ? BaragonLoadBalancerClientImpl.class
+            : NoOpLoadBalancerClient.class
         )
       )
     );

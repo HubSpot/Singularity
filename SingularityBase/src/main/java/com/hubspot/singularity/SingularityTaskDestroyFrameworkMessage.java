@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class SingularityTaskDestroyFrameworkMessage extends SingularityFrameworkMessage {
+
   private final SingularityTaskId taskId;
   private final Optional<String> user;
 

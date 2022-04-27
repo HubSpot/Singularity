@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "An updated to load balancer configuration")
 public class SingularityLoadBalancerUpdate {
+
   private final LoadBalancerRequestState loadBalancerState;
   private final Optional<String> message;
   private final long timestamp;
@@ -21,7 +22,7 @@ public class SingularityLoadBalancerUpdate {
     ENQUEUE,
     CHECK_STATE,
     CANCEL,
-    DELETE
+    DELETE,
   }
 
   @JsonCreator

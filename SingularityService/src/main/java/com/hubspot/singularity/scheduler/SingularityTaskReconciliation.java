@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityTaskReconciliation {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityTaskReconciliation.class
   );
@@ -92,7 +93,7 @@ public class SingularityTaskReconciliation {
   enum ReconciliationState {
     ALREADY_RUNNING,
     STARTED,
-    NO_DRIVER
+    NO_DRIVER,
   }
 
   @VisibleForTesting
@@ -280,13 +281,12 @@ public class SingularityTaskReconciliation {
     schedulerClient.reconcile(
       taskStatuses
         .stream()
-        .map(
-          t ->
-            Task
-              .newBuilder()
-              .setTaskId(MesosProtosUtils.toTaskId(t.getTaskId()))
-              .setAgentId(MesosProtosUtils.toAgentId(t.getAgentId()))
-              .build()
+        .map(t ->
+          Task
+            .newBuilder()
+            .setTaskId(MesosProtosUtils.toTaskId(t.getTaskId()))
+            .setAgentId(MesosProtosUtils.toAgentId(t.getAgentId()))
+            .build()
         )
         .collect(Collectors.toList())
     );

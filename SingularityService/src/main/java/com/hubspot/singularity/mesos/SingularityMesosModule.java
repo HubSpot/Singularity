@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 
 public class SingularityMesosModule extends AbstractModule {
+
   public static final String TASK_LOST_REASONS_COUNTER = "task-lost-reasons";
   public static final String ACTIVE_AGENTS_LOST_COUNTER = "active-agents-lost";
   public static final String FAILED_MESOS_CALLS = "failed-mesos-calls";

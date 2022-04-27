@@ -25,8 +25,7 @@ public class SimpleProcessManager extends SafeProcessManager {
   public void runCommand(
     final List<String> command,
     final Set<Integer> acceptableExitCodes
-  )
-    throws InterruptedException, ProcessFailedException {
+  ) throws InterruptedException, ProcessFailedException {
     runCommand(command, Redirect.INHERIT, acceptableExitCodes);
   }
 
@@ -38,8 +37,7 @@ public class SimpleProcessManager extends SafeProcessManager {
   public List<String> runCommandWithOutput(
     final List<String> command,
     final Set<Integer> acceptableExitCodes
-  )
-    throws InterruptedException, ProcessFailedException {
+  ) throws InterruptedException, ProcessFailedException {
     return runCommand(command, Redirect.PIPE, acceptableExitCodes);
   }
 
@@ -51,8 +49,7 @@ public class SimpleProcessManager extends SafeProcessManager {
   public List<String> runCommand(
     final List<String> command,
     final Redirect redirectOutput
-  )
-    throws InterruptedException, ProcessFailedException {
+  ) throws InterruptedException, ProcessFailedException {
     return runCommand(command, redirectOutput, Sets.newHashSet(0));
   }
 
@@ -87,8 +84,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     final List<String> command,
     final Redirect redirectOutput,
     final Set<Integer> acceptableExitCodes
-  )
-    throws InterruptedException, ProcessFailedException {
+  ) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
     Optional<Integer> exitCode = Optional.empty();
@@ -105,7 +101,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
       processToString = getCurrentProcessToString();
 
-      if (redirectOutput == Redirect.PIPE) {
+      if (redirectOutput.equals(Redirect.PIPE)) {
         reader = Optional.of(new OutputReader(process.getInputStream()));
         reader.get().start();
       }
@@ -152,6 +148,7 @@ public class SimpleProcessManager extends SafeProcessManager {
   }
 
   private static class OutputReader extends Thread {
+
     private final List<String> output;
     private final InputStream inputStream;
     private Optional<Throwable> error;

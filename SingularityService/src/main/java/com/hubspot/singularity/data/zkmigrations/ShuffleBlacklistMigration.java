@@ -7,6 +7,7 @@ import com.hubspot.singularity.data.ShuffleConfigurationManager;
 
 @Singleton
 public class ShuffleBlacklistMigration extends ZkDataMigration {
+
   private final SingularityConfiguration configuration;
   private final ShuffleConfigurationManager manager;
 

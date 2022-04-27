@@ -11,6 +11,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "The source of a docker volume")
 public class SingularityVolumeSource {
+
   private final SingularityVolumeSourceType type;
   private final Optional<SingularityDockerVolume> dockerVolume;
 

@@ -10,6 +10,7 @@ import java.util.Map;
 
 @Schema(description = "Results from searching for task logs in S3")
 public class SingularityS3SearchResult {
+
   private final Map<String, ContinuationToken> continuationTokens;
   private final boolean lastPage;
   private final List<SingularityS3LogMetadata> results;

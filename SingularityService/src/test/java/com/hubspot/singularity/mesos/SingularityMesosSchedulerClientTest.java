@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 
 public class SingularityMesosSchedulerClientTest {
+
   private SingularityMesosSchedulerClient client;
   private ExecutorService executorService;
   private SingularityMesosScheduler scheduler;
@@ -58,12 +59,10 @@ public class SingularityMesosSchedulerClientTest {
       new MesosClientErrorContext(403, "Framework not subscribed", new ArrayList<>())
     );
 
-    doAnswer(
-        (InvocationOnMock invocation) -> {
-          ((Runnable) invocation.getArguments()[0]).run();
-          return null;
-        }
-      )
+    doAnswer((InvocationOnMock invocation) -> {
+        ((Runnable) invocation.getArguments()[0]).run();
+        return null;
+      })
       .when(executorService)
       .execute(any(Runnable.class));
     client.checkAndReconnect(exception).join();

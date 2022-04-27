@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAgentUsage;
@@ -23,7 +24,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Singleton
 public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
+
   private final SingularityConfiguration configuration;
   private final UsageManager usageManager;
   private final SingularityUsageHelper usageHelper;
@@ -78,31 +81,29 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     usageHelper
       .getAgentsToTrackUsageFor()
-      .forEach(
-        agent -> {
-          usageFutures.add(
-            CompletableFuture.runAsync(
-              () -> {
-                usageHelper.collectAgentUsage(
-                  agent,
-                  now,
-                  utilizationPerRequestId,
-                  previousUtilizations,
-                  overLoadedHosts,
-                  totalMemBytesUsed,
-                  totalMemBytesAvailable,
-                  totalCpuUsed,
-                  totalCpuAvailable,
-                  totalDiskBytesUsed,
-                  totalDiskBytesAvailable,
-                  false
-                );
-              },
-              usageExecutor
-            )
-          );
-        }
-      );
+      .forEach(agent -> {
+        usageFutures.add(
+          CompletableFuture.runAsync(
+            () -> {
+              usageHelper.collectAgentUsage(
+                agent,
+                now,
+                utilizationPerRequestId,
+                previousUtilizations,
+                overLoadedHosts,
+                totalMemBytesUsed,
+                totalMemBytesAvailable,
+                totalCpuUsed,
+                totalCpuAvailable,
+                totalDiskBytesUsed,
+                totalDiskBytesAvailable,
+                false
+              );
+            },
+            usageExecutor
+          )
+        );
+      });
 
     CompletableFutures.allOf(usageFutures).join();
 

@@ -3,6 +3,7 @@ package com.hubspot.singularity.helpers;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class S3ObjectSummaryHolder {
+
   private final String group;
   private final S3ObjectSummary objectSummary;
 

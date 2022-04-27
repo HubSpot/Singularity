@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "A description of resources used on a mesos agent")
 public class SingularityAgentUsageWithId extends SingularityAgentUsage {
+
   private final String agentId;
 
   public SingularityAgentUsageWithId(SingularityAgentUsage usage, String agentId) {

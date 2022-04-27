@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class MergingSourceProviderTest extends SingularitySchedulerTestBase {
+
   private static final String DEFAULT_PATH = "/configs/default.yaml";
   private static final String OVERRIDE_PATH = "/configs/override.yaml";
   private static final String JUST_A_STRING_PATH = "/configs/just_a_string.yaml";
@@ -35,7 +36,6 @@ public class MergingSourceProviderTest extends SingularitySchedulerTestBase {
 
     return new MergingSourceProvider(
       new ConfigurationSourceProvider() {
-
         @Override
         public InputStream open(String path) throws IOException {
           final InputStream stream = klass.getResourceAsStream(path);

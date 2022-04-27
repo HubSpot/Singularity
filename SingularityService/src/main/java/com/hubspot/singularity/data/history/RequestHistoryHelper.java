@@ -8,8 +8,6 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistoryQuery;
-import com.hubspot.singularity.SingularityTaskHistoryQuery;
-import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import java.util.Collections;
@@ -19,6 +17,7 @@ import java.util.Optional;
 @Singleton
 public class RequestHistoryHelper
   extends BlendedHistoryHelper<SingularityRequestHistory, SingularityRequestHistoryQuery> {
+
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
 

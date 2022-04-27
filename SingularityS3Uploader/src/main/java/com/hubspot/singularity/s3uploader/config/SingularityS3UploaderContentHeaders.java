@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public class SingularityS3UploaderContentHeaders {
+
   @NotEmpty
   private final String filenameEndsWith;
 

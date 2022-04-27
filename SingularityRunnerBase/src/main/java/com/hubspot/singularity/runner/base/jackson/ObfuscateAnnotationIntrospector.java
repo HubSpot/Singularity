@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
+
   private static final long serialVersionUID = 1L;
   private static final ObfuscateSerializer OBFUSCATE_SERIALIZER = new ObfuscateSerializer();
 

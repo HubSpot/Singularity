@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class SingularityDeployKey extends SingularityId {
+
   private final String requestId;
   private final String deployId;
 

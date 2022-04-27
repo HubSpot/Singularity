@@ -22,6 +22,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
 public class MesosProtosUtils {
+
   private final ObjectMapper objectMapper;
 
   @Inject

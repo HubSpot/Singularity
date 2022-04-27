@@ -11,6 +11,7 @@ import java.util.Optional;
   description = "A set of instructions for how to roll out groups of instances for a new deploy"
 )
 public class CanaryDeploySettings {
+
   /**
    * For Load Balanced deploys, if false:
    * - Once all instances are healthy, a single LB update adding all new instances + removing all old instances will execute

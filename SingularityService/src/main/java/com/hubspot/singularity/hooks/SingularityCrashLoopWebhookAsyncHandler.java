@@ -6,6 +6,7 @@ import com.hubspot.singularity.data.WebhookManager;
 
 public class SingularityCrashLoopWebhookAsyncHandler
   extends AbstractSingularityWebhookAsyncHandler<CrashLoopInfo> {
+
   private final WebhookManager webhookManager;
 
   public SingularityCrashLoopWebhookAsyncHandler(

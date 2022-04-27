@@ -20,6 +20,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
  * Adds a CORS filter.
  */
 public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
+
   private static final String FILTER_NAME = "Cross Origin Request Filter";
 
   @Override
@@ -34,7 +35,6 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
 
     final Filter corsFilter = new CrossOriginFilter();
     final FilterConfig corsFilterConfig = new FilterConfig() {
-
       @Override
       public String getFilterName() {
         return FILTER_NAME;

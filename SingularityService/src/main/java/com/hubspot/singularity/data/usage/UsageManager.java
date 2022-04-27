@@ -25,6 +25,7 @@ import org.apache.curator.utils.ZKPaths;
 
 @Singleton
 public class UsageManager extends CuratorAsyncManager implements TaskUsageManager {
+
   private static final String ROOT_PATH = "/usage";
 
   private static final String AGENTS_PATH = ROOT_PATH + "/slaves";

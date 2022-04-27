@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SingularityDisasterDataPoints {
+
   private final List<SingularityDisasterDataPoint> dataPoints;
 
   @JsonCreator

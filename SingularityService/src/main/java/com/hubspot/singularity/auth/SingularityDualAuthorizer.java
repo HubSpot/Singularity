@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 @Singleton
 public class SingularityDualAuthorizer extends SingularityAuthorizer {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityDualAuthorizer.class
   );
@@ -67,8 +68,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
 
   @Override
   public void checkAdminAuthorization(SingularityUser user) {
-    boolean grantedByScopes = checkGrantedByScopes(
-      () -> groupsScopesAuthorizer.checkAdminAuthorization(user)
+    boolean grantedByScopes = checkGrantedByScopes(() ->
+      groupsScopesAuthorizer.checkAdminAuthorization(user)
     );
     try {
       groupsAuthorizer.checkAdminAuthorization(user.withOnlyGroups());
@@ -95,8 +96,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
 
   @Override
   public void checkGlobalReadAuthorization(SingularityUser user) {
-    boolean grantedByScopes = checkGrantedByScopes(
-      () -> groupsScopesAuthorizer.checkGlobalReadAuthorization(user)
+    boolean grantedByScopes = checkGrantedByScopes(() ->
+      groupsScopesAuthorizer.checkGlobalReadAuthorization(user)
     );
     try {
       groupsAuthorizer.checkGlobalReadAuthorization(user.withOnlyGroups());
@@ -123,8 +124,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
 
   @Override
   public void checkReadAuthorization(SingularityUser user) {
-    boolean grantedByScopes = checkGrantedByScopes(
-      () -> groupsScopesAuthorizer.checkReadAuthorization(user)
+    boolean grantedByScopes = checkGrantedByScopes(() ->
+      groupsScopesAuthorizer.checkReadAuthorization(user)
     );
     try {
       groupsAuthorizer.checkReadAuthorization(user.withOnlyGroups());
@@ -156,8 +157,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
     SingularityAuthorizationScope scope,
     Optional<SingularityUserFacingAction> action
   ) {
-    boolean grantedByScopes = checkGrantedByScopes(
-      () -> groupsScopesAuthorizer.checkForAuthorization(request, user, scope)
+    boolean grantedByScopes = checkGrantedByScopes(() ->
+      groupsScopesAuthorizer.checkForAuthorization(request, user, scope)
     );
     try {
       groupsAuthorizer.checkForAuthorization(request, user.withOnlyGroups(), scope);
@@ -213,8 +214,8 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
     SingularityRequest oldRequest,
     SingularityUser user
   ) {
-    boolean grantedByScopes = checkGrantedByScopes(
-      () -> groupsScopesAuthorizer.checkForAuthorizedChanges(request, oldRequest, user)
+    boolean grantedByScopes = checkGrantedByScopes(() ->
+      groupsScopesAuthorizer.checkForAuthorizedChanges(request, oldRequest, user)
     );
     try {
       groupsAuthorizer.checkForAuthorizedChanges(
@@ -264,19 +265,17 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
 
     return objects
       .stream()
-      .filter(
-        input -> {
-          final String requestId = requestIdFunction.apply(input);
-          return (
-            requestMap.containsKey(requestId) &&
-            groupsAuthorizer.isAuthorizedForRequest(
-              requestMap.get(requestId).getRequest(),
-              user,
-              scope
-            )
-          );
-        }
-      )
+      .filter(input -> {
+        final String requestId = requestIdFunction.apply(input);
+        return (
+          requestMap.containsKey(requestId) &&
+          groupsAuthorizer.isAuthorizedForRequest(
+            requestMap.get(requestId).getRequest(),
+            user,
+            scope
+          )
+        );
+      })
       .collect(Collectors.toList());
   }
 
@@ -298,14 +297,13 @@ public class SingularityDualAuthorizer extends SingularityAuthorizer {
 
     return requestIds
       .stream()
-      .filter(
-        input ->
-          requestMap.containsKey(input) &&
-          groupsAuthorizer.isAuthorizedForRequest(
-            requestMap.get(input).getRequest(),
-            user,
-            scope
-          )
+      .filter(input ->
+        requestMap.containsKey(input) &&
+        groupsAuthorizer.isAuthorizedForRequest(
+          requestMap.get(input).getRequest(),
+          user,
+          scope
+        )
       )
       .collect(Collectors.toList());
   }

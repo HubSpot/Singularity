@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AbstractLeaderAwareResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     AbstractLeaderAwareResource.class
   );
@@ -105,14 +106,14 @@ public class AbstractLeaderAwareResource {
       LOG.trace("Sending request to leader: {}", httpRequest);
       response = httpClient.executeRequest(httpRequest).get();
     } catch (ExecutionException | InterruptedException e) {
-      LOG.error("Could not proxy request {} to leader", e);
+      LOG.error("Could not proxy request {} to leader", request, e);
       throw new WebApplicationException(e, 500);
     }
 
     try {
       if (clazz.isAssignableFrom(javax.ws.rs.core.Response.class)) {
-        return (T) javax
-          .ws.rs.core.Response.status(response.getStatusCode())
+        return (T) javax.ws.rs.core.Response
+          .status(response.getStatusCode())
           .entity(response.getResponseBody())
           .build();
       }

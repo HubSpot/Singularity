@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityS3DownloaderMetrics extends AbstractFileMetricsReporter {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3DownloaderMetrics.class
   );
@@ -53,7 +54,6 @@ public class SingularityS3DownloaderMetrics extends AbstractFileMetricsReporter 
     registry.register(
       name("downloads", "active"),
       new Gauge<Integer>() {
-
         @Override
         public Integer getValue() {
           return asyncDownloadService.getActiveCount();

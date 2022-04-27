@@ -6,6 +6,7 @@ import java.util.Optional;
 
 @Schema(description = "Holds a page of responses and metadata")
 public class SingularityPaginatedResponse<Q> {
+
   private final Optional<Integer> dataCount;
   private final Optional<Integer> pageCount;
   private final int page;

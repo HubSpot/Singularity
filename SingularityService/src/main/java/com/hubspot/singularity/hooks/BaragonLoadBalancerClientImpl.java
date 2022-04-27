@@ -39,7 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
-  private static final Logger LOG = LoggerFactory.getLogger(LoadBalancerClient.class);
+
+  private static final Logger LOG = LoggerFactory.getLogger(
+    BaragonLoadBalancerClientImpl.class
+  );
 
   private static final String CONTENT_TYPE_JSON = "application/json";
   private static final String HEADER_CONTENT_TYPE = "Content-Type";
@@ -144,8 +147,8 @@ public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
 
     final BoundRequestBuilder requestBuilder = httpClient.prepareGet(uri);
 
-    loadBalancerQueryParams.ifPresent(
-      stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+    loadBalancerQueryParams.ifPresent(stringStringMap ->
+      addAllQueryParams(requestBuilder, stringStringMap)
     );
 
     return sendRequestWrapper(
@@ -218,6 +221,7 @@ public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
   }
 
   private static class LoadBalancerUpdateHolder {
+
     private final Optional<String> message;
     private final BaragonRequestState state;
 
@@ -245,8 +249,8 @@ public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
         .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
         .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest));
 
-      loadBalancerQueryParams.ifPresent(
-        stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+      loadBalancerQueryParams.ifPresent(stringStringMap ->
+        addAllQueryParams(requestBuilder, stringStringMap)
       );
 
       return sendRequestWrapper(
@@ -440,8 +444,8 @@ public class BaragonLoadBalancerClientImpl extends LoadBalancerClient {
 
     final BoundRequestBuilder requestBuilder = httpClient.prepareDelete(uri);
 
-    loadBalancerQueryParams.ifPresent(
-      stringStringMap -> addAllQueryParams(requestBuilder, stringStringMap)
+    loadBalancerQueryParams.ifPresent(stringStringMap ->
+      addAllQueryParams(requestBuilder, stringStringMap)
     );
 
     return sendRequestWrapper(

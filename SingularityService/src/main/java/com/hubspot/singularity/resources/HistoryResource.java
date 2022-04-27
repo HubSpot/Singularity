@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -53,12 +54,18 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.HISTORY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages historical data for tasks, requests, and deploys")
 @Tags({ @Tag(name = "History") })
 public class HistoryResource extends AbstractHistoryResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HistoryResource.class);
+
   public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
   private final DeployHistoryHelper deployHistoryHelper;
@@ -103,7 +110,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Task with specified id was not found"
-      )
+      ),
     }
   )
   public SingularityTaskHistory getHistoryForTask(
@@ -177,7 +184,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Deploy with specified id was not found"
-      )
+      ),
     }
   )
   public SingularityDeployHistory getDeploy(
@@ -655,7 +662,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "Task with specified run id was not found for request"
-      )
+      ),
     }
   )
   public Optional<SingularityTaskIdHistory> getTaskHistoryForRequestAndRunId(
@@ -975,7 +982,12 @@ public class HistoryResource extends AbstractHistoryResource {
       Response.class,
       null,
       () -> {
-        historyManager.startHistoryBackfill(batchSize);
+        historyManager
+          .startHistoryBackfill(batchSize)
+          .exceptionally(t -> {
+            LOG.error("Could not complete history backfill", t);
+            return null;
+          });
         return Response.ok().build();
       }
     );

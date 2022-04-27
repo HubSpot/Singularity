@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityManagedThreadPoolFactory {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityManagedThreadPoolFactory.class
   );
@@ -115,6 +116,8 @@ public class SingularityManagedThreadPoolFactory {
   }
 
   public static final class ThreadPoolQueue extends LinkedBlockingQueue<Runnable> {
+
+    private static final long serialVersionUID = 5035350936882456391L;
 
     public ThreadPoolQueue(int capacity) {
       super(capacity);

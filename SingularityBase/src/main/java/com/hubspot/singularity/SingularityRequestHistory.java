@@ -11,6 +11,7 @@ import java.util.Optional;
 @Schema(description = "Describes an update or action on a Singularity request")
 public class SingularityRequestHistory
   implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
+
   private final long createdAt;
   private final Optional<String> user;
   private final RequestHistoryType eventType;
@@ -31,7 +32,7 @@ public class SingularityRequestHistory
     DEPLOYED_TO_UNPAUSE,
     BOUNCED,
     SCALED,
-    SCALE_REVERTED
+    SCALE_REVERTED,
   }
 
   @JsonCreator

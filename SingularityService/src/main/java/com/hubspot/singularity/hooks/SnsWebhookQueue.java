@@ -11,6 +11,7 @@ import com.hubspot.singularity.event.SingularityEventSender;
 
 @Singleton
 public class SnsWebhookQueue implements SingularityEventSender {
+
   private final SnsWebhookManager snsWebhookManager;
 
   @Inject

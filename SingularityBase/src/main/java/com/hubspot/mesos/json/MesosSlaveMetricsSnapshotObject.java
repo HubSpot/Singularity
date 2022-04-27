@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @Deprecated
 public class MesosSlaveMetricsSnapshotObject {
+
   private final double slaveDiskUsed;
   private final double slaveValidStatusUpdates;
   private final double slaveTasksFinished;

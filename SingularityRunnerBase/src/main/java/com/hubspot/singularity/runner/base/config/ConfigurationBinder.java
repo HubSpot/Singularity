@@ -11,6 +11,7 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 import java.util.Optional;
 
 public class ConfigurationBinder {
+
   private final Binder binder;
   private final Multibinder<BaseRunnerConfiguration> multibinder;
 

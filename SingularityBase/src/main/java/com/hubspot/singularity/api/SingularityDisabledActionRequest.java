@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Notes related to a particular disabled action")
 public class SingularityDisabledActionRequest {
+
   private final SingularityAction type;
   private final Optional<String> message;
 

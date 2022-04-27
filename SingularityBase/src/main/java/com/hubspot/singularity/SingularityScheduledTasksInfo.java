@@ -7,6 +7,7 @@ import java.util.List;
 
 @Schema(description = "Describes the current scheduled tasks in Singularity")
 public class SingularityScheduledTasksInfo {
+
   private final int numFutureTasks;
   private final long maxTaskLag;
   private final long timestamp;

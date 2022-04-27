@@ -10,6 +10,7 @@ import java.util.Objects;
  */
 @Deprecated
 public class MesosSlaveFrameworkObject {
+
   private final List<MesosExecutorObject> executors;
   private final List<MesosExecutorObject> completedExecutors;
   private final String id;

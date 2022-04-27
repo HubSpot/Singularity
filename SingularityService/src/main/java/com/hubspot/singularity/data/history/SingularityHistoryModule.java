@@ -15,6 +15,7 @@ import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 
 public class SingularityHistoryModule extends AbstractModule {
+
   public static final String PERSISTER_LOCK = "history.persister.lock";
 
   public static final String LAST_TASK_PERSISTER_SUCCESS =

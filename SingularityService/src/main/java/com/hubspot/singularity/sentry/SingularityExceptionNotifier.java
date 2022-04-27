@@ -20,6 +20,7 @@ import net.kencochrane.raven.event.interfaces.HttpInterface;
 
 @Singleton
 public class SingularityExceptionNotifier {
+
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
   private final Provider<Optional<HttpServletRequest>> requestProvider;

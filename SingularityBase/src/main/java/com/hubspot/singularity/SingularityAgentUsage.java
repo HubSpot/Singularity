@@ -12,6 +12,7 @@ import java.util.Optional;
   subTypes = { SingularityAgentUsageWithId.class }
 )
 public class SingularityAgentUsage {
+
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final double cpusUsed;

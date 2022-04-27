@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityMesosExecutorInfoSupport {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMesosExecutorInfoSupport.class
   );
@@ -175,7 +176,6 @@ public class SingularityMesosExecutorInfoSupport {
 
   private Runnable generateLookupCommand(final SingularityTask task) {
     return new Runnable() {
-
       @Override
       public void run() {
         try {

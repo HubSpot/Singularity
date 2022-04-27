@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SingularityHeaderPassthroughAuthenticator
   implements SingularityAuthenticator {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityHeaderPassthroughAuthenticator.class
   );

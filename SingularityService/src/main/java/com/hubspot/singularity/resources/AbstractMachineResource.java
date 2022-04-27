@@ -26,6 +26,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>>
   extends AbstractLeaderAwareResource {
+
   protected final AbstractMachineManager<T> manager;
 
   protected final SingularityAuthorizer authorizationHelper;

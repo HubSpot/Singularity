@@ -11,6 +11,7 @@ import java.util.Objects;
 @Schema(description = "Data collected to identify disasters")
 public class SingularityDisasterDataPoint
   implements Comparable<SingularityDisasterDataPoint> {
+
   private final long timestamp;
   private final int numActiveTasks;
   private final int numPendingTasks;

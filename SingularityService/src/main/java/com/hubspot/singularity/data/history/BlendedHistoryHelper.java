@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BlendedHistoryHelper<T, Q> {
+
   private static final Logger LOG = LoggerFactory.getLogger(BlendedHistoryHelper.class);
 
   protected final boolean sqlEnabled;

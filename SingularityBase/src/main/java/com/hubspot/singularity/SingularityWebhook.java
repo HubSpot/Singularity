@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Schema(description = "Representation of a destination for a specific type of webhook")
 public class SingularityWebhook {
+
   private final String uri;
   private final WebhookType type;
   private final Optional<String> user;

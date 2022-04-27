@@ -8,6 +8,7 @@ import java.util.Set;
 
 @Schema(description = "Batch response for multiple requests")
 public class SingularityRequestBatch {
+
   private final List<SingularityRequestParent> requests;
   private final Set<String> notFound;
 

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SandboxManagerTest extends SingularitySchedulerTestBase {
+
   private static final int DEFAULT_OFFSET = 123;
 
   private static final String JSON_START = "{\"data\":\"";

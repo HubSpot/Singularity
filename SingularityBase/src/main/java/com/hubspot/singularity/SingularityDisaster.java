@@ -7,6 +7,7 @@ import java.util.Objects;
 
 @Schema(description = "Representation of an active disaster")
 public class SingularityDisaster {
+
   private final SingularityDisasterType type;
   private final boolean active;
 

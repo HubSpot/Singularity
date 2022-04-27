@@ -29,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 
 public class S3ArtifactDownloader {
+
   private final Logger log;
   private final SingularityS3Configuration configuration;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
@@ -74,12 +75,13 @@ public class S3ArtifactDownloader {
     );
   }
 
+  @SuppressWarnings("BannedS3ClientMethods")
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo)
     throws Exception {
     log.info("Downloading {}", s3Artifact);
 
     ClientConfiguration clientConfiguration = new ClientConfiguration()
-    .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
+      .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
     if (configuration.isS3UseV2Signing()) {
       clientConfiguration.setSignerOverride("S3SignerType");
     }

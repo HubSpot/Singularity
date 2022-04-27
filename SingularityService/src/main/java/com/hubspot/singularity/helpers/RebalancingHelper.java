@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class RebalancingHelper {
+
   private static final Logger LOG = LoggerFactory.getLogger(RebalancingHelper.class);
 
   private final TaskManager taskManager;

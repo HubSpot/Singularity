@@ -4,5 +4,5 @@ public enum StatusUpdateResult {
   DONE,
   IGNORED,
   INVALID_TASK_ID,
-  KILL_TASK
+  KILL_TASK,
 }

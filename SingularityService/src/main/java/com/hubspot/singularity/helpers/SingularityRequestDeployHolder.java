@@ -4,6 +4,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import java.util.Optional;
 
 public class SingularityRequestDeployHolder {
+
   private final Optional<SingularityDeploy> activeDeploy;
   private final Optional<SingularityDeploy> pendingDeploy;
 

@@ -32,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class SingularityGroupsScopesAuthorizerTest {
-
   static {
     JerseyGuiceUtils.install((s, serviceLocator) -> null);
   }
@@ -132,7 +131,6 @@ public class SingularityGroupsScopesAuthorizerTest {
   protected SingularityGroupsScopesAuthorizer authorizer;
 
   private final SingularityEventListener singularityEventListener = new SingularityEventListener() {
-
     @Override
     public void requestHistoryEvent(
       SingularityRequestHistory singularityRequestHistory
@@ -187,13 +185,12 @@ public class SingularityGroupsScopesAuthorizerTest {
   @Test
   public void itAllowsJita() {
     assertDoesNotThrow(() -> authorizer.checkReadAuthorization(JITA_USER_READ));
-    assertDoesNotThrow(
-      () ->
-        authorizer.checkForAuthorization(
-          GROUP_A_REQUEST,
-          JITA_USER_READ,
-          SingularityAuthorizationScope.READ
-        )
+    assertDoesNotThrow(() ->
+      authorizer.checkForAuthorization(
+        GROUP_A_REQUEST,
+        JITA_USER_READ,
+        SingularityAuthorizationScope.READ
+      )
     );
     assertEquals(1, elevatedAccessEvents.size());
     assertThrows(
@@ -211,13 +208,12 @@ public class SingularityGroupsScopesAuthorizerTest {
   @Test
   public void itAllowsDefaultReadOnlyUserToReadWithNoOverride() {
     assertDoesNotThrow(() -> authorizer.checkReadAuthorization(DEFAULT_READ_GROUP));
-    assertDoesNotThrow(
-      () ->
-        authorizer.checkForAuthorization(
-          GROUP_A_REQUEST,
-          DEFAULT_READ_GROUP,
-          SingularityAuthorizationScope.READ
-        )
+    assertDoesNotThrow(() ->
+      authorizer.checkForAuthorization(
+        GROUP_A_REQUEST,
+        DEFAULT_READ_GROUP,
+        SingularityAuthorizationScope.READ
+      )
     );
   }
 
@@ -232,13 +228,12 @@ public class SingularityGroupsScopesAuthorizerTest {
           SingularityAuthorizationScope.READ
         )
     );
-    assertDoesNotThrow(
-      () ->
-        authorizer.checkForAuthorization(
-          GROUP_A_REQUEST_W_READ_WRITE_B,
-          DEFAULT_READ_GROUP,
-          SingularityAuthorizationScope.READ
-        )
+    assertDoesNotThrow(() ->
+      authorizer.checkForAuthorization(
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        DEFAULT_READ_GROUP,
+        SingularityAuthorizationScope.READ
+      )
     );
   }
 
@@ -454,13 +449,12 @@ public class SingularityGroupsScopesAuthorizerTest {
 
   @Test
   public void itAllowsChangeOfGroupWhenInOriginal() {
-    assertDoesNotThrow(
-      () ->
-        authorizer.checkForAuthorizedChanges(
-          GROUP_A_REQUEST,
-          GROUP_A_REQUEST_W_READ_WRITE_B,
-          GROUP_AB_READ_WRITE
-        )
+    assertDoesNotThrow(() ->
+      authorizer.checkForAuthorizedChanges(
+        GROUP_A_REQUEST,
+        GROUP_A_REQUEST_W_READ_WRITE_B,
+        GROUP_AB_READ_WRITE
+      )
     );
     assertThrows(
       WebApplicationException.class,
@@ -518,8 +512,8 @@ public class SingularityGroupsScopesAuthorizerTest {
     SingularityAuthorizationScope scope,
     SingularityUserFacingAction action
   ) {
-    assertDoesNotThrow(
-      () -> authorizer.checkForAuthorization(request, user, scope, action)
+    assertDoesNotThrow(() ->
+      authorizer.checkForAuthorization(request, user, scope, action)
     );
     assertTrue(authorizer.isAuthorizedForRequest(request, user, scope, action));
   }

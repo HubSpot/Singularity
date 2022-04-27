@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SingularityPendingTaskBuilder {
+
   private SingularityPendingTaskId pendingTaskId;
   private Optional<List<String>> cmdLineArgsList;
   private Optional<String> user;

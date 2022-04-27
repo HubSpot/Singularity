@@ -8,6 +8,7 @@ import java.util.Optional;
 @Schema(description = "Details about a scale action that will eventually revert")
 public class SingularityExpiringScale
   extends SingularityExpiringRequestActionParent<SingularityScaleRequest> {
+
   private final Optional<Integer> revertToInstances;
   private final Optional<Boolean> bounce;
 

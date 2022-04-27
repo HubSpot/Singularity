@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProcessUtils {
+
   private static final Logger LOG = LoggerFactory.getLogger(ProcessUtils.class);
 
   private final Optional<Logger> log;
@@ -29,6 +30,7 @@ public class ProcessUtils {
   }
 
   public static class ProcessResult {
+
     private final int exitCode;
     private final String output;
 

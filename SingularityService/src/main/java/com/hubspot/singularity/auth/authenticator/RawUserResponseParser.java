@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @Singleton
 public class RawUserResponseParser extends WebhookResponseParser {
+
   private final ObjectMapper objectMapper;
   private final AuthConfiguration authConfiguration;
 

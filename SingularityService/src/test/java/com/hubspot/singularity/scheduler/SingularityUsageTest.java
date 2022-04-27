@@ -40,6 +40,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
+
   @Inject
   protected SingularityUsageHelper usageHelper;
 

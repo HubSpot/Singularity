@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
 public class BlendedHistoryTest extends SingularitySchedulerTestBase {
+
   @Inject
   private RequestManager requestManager;
 
@@ -35,15 +36,15 @@ public class BlendedHistoryTest extends SingularitySchedulerTestBase {
     List<SingularityRequestHistory> returnValue
   ) {
     when(
-        hm.getRequestHistory(
-          ArgumentMatchers.anyString(),
-          ArgumentMatchers.<Optional<Long>>any(),
-          ArgumentMatchers.<Optional<Long>>any(),
-          ArgumentMatchers.<Optional<OrderDirection>>any(),
-          ArgumentMatchers.anyInt(),
-          ArgumentMatchers.anyInt()
-        )
+      hm.getRequestHistory(
+        ArgumentMatchers.anyString(),
+        ArgumentMatchers.<Optional<Long>>any(),
+        ArgumentMatchers.<Optional<Long>>any(),
+        ArgumentMatchers.<Optional<OrderDirection>>any(),
+        ArgumentMatchers.anyInt(),
+        ArgumentMatchers.anyInt()
       )
+    )
       .thenReturn(returnValue);
   }
 

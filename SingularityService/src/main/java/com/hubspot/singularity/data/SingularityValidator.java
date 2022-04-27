@@ -73,6 +73,7 @@ import org.quartz.CronExpression;
 
 @Singleton
 public class SingularityValidator {
+
   private static final Joiner JOINER = Joiner.on(" ");
   private static final Pattern DEPLOY_ID_ILLEGAL_PATTERN = Pattern.compile(
     "[^a-zA-Z0-9_.]"
@@ -461,14 +462,12 @@ public class SingularityValidator {
       deploy
         .getEnv()
         .get()
-        .forEach(
-          (k, v) -> {
-            checkBadRequest(
-              !k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"),
-              "Cannot override STARTED_BY_USER in env"
-            );
-          }
-        );
+        .forEach((k, v) -> {
+          checkBadRequest(
+            !k.equals("STARTED_BY_USER") && !v.contains("STARTED_BY_USER"),
+            "Cannot override STARTED_BY_USER in env"
+          );
+        });
     }
     checkBadRequest(
       !deploy.getCommand().orElse("").contains("STARTED_BY_USER"),
@@ -685,19 +684,17 @@ public class SingularityValidator {
         Set<String> unsignedArtifacts = executorData
           .getS3Artifacts()
           .stream()
-          .filter(
-            a -> {
-              if (!executorData.getS3ArtifactSignatures().isPresent()) {
-                return true;
-              } else {
-                return executorData
-                  .getS3ArtifactSignatures()
-                  .get()
-                  .stream()
-                  .noneMatch(s -> s.getArtifactFilename().equals(a.getFilename()));
-              }
+          .filter(a -> {
+            if (!executorData.getS3ArtifactSignatures().isPresent()) {
+              return true;
+            } else {
+              return executorData
+                .getS3ArtifactSignatures()
+                .get()
+                .stream()
+                .noneMatch(s -> s.getArtifactFilename().equals(a.getFilename()));
             }
-          )
+          })
           .map(S3Artifact::getName)
           .collect(Collectors.toSet());
         checkBadRequest(

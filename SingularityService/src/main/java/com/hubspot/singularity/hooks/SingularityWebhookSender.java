@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityWebhookSender extends AbstractWebhookChecker {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityWebhookSender.class
   );
@@ -108,12 +109,10 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
 
     CompletableFutures
       .allOf(webhookFutures)
-      .exceptionally(
-        t -> {
-          LOG.error("Exception in webhook", t);
-          return null;
-        }
-      );
+      .exceptionally(t -> {
+        LOG.error("Exception in webhook", t);
+        return null;
+      });
 
     LOG.info(
       "Sent {} task, {} request, {} crashloop, {} elevatedAccess and {} deploy updates in {}",
@@ -154,21 +153,17 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     for (SingularityRequestHistory requestUpdate : requestUpdates) {
       String concreteUri = applyPlaceholders(webhook.getUri(), requestUpdate);
       webhookFutures.add(
-        webhookSemaphore.call(
-          () ->
-            executeWebhookAsync(
-              concreteUri,
+        webhookSemaphore.call(() ->
+          executeWebhookAsync(
+            concreteUri,
+            requestUpdate,
+            new SingularityRequestWebhookAsyncHandler(
+              webhookManager,
+              webhook,
               requestUpdate,
-              new SingularityRequestWebhookAsyncHandler(
-                webhookManager,
-                webhook,
-                requestUpdate,
-                shouldDeleteUpdateOnFailure(
-                  numRequestUpdates,
-                  requestUpdate.getCreatedAt()
-                )
-              )
+              shouldDeleteUpdateOnFailure(numRequestUpdates, requestUpdate.getCreatedAt())
             )
+          )
         )
       );
     }
@@ -189,21 +184,20 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     for (SingularityDeployUpdate deployUpdate : deployUpdates) {
       String concreteUri = applyPlaceholders(webhook.getUri(), deployUpdate);
       webhookFutures.add(
-        webhookSemaphore.call(
-          () ->
-            executeWebhookAsync(
-              concreteUri,
+        webhookSemaphore.call(() ->
+          executeWebhookAsync(
+            concreteUri,
+            deployUpdate,
+            new SingularityDeployWebhookAsyncHandler(
+              webhookManager,
+              webhook,
               deployUpdate,
-              new SingularityDeployWebhookAsyncHandler(
-                webhookManager,
-                webhook,
-                deployUpdate,
-                shouldDeleteUpdateOnFailure(
-                  numDeployUpdates,
-                  deployUpdate.getDeployMarker().getTimestamp()
-                )
+              shouldDeleteUpdateOnFailure(
+                numDeployUpdates,
+                deployUpdate.getDeployMarker().getTimestamp()
               )
             )
+          )
         )
       );
     }
@@ -224,21 +218,20 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     for (CrashLoopInfo crashLoopUpdate : crashLoopUpdates) {
       String concreteUri = applyPlaceholders(webhook.getUri(), crashLoopUpdate);
       webhookFutures.add(
-        webhookSemaphore.call(
-          () ->
-            executeWebhookAsync(
-              concreteUri,
+        webhookSemaphore.call(() ->
+          executeWebhookAsync(
+            concreteUri,
+            crashLoopUpdate,
+            new SingularityCrashLoopWebhookAsyncHandler(
+              webhookManager,
+              webhook,
               crashLoopUpdate,
-              new SingularityCrashLoopWebhookAsyncHandler(
-                webhookManager,
-                webhook,
-                crashLoopUpdate,
-                shouldDeleteUpdateOnFailure(
-                  numDeployUpdates,
-                  crashLoopUpdate.getEnd().orElse(crashLoopUpdate.getStart())
-                )
+              shouldDeleteUpdateOnFailure(
+                numDeployUpdates,
+                crashLoopUpdate.getEnd().orElse(crashLoopUpdate.getStart())
               )
             )
+          )
         )
       );
     }
@@ -259,18 +252,17 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
     for (ElevatedAccessEvent accessEvent : elevatedAccessEvents) {
       String concreteUri = applyPlaceholders(webhook.getUri(), accessEvent);
       webhookFutures.add(
-        webhookSemaphore.call(
-          () ->
-            executeWebhookAsync(
-              concreteUri,
+        webhookSemaphore.call(() ->
+          executeWebhookAsync(
+            concreteUri,
+            accessEvent,
+            new SingularityElevatedAccessEventAsyncHandler(
+              webhookManager,
+              webhook,
               accessEvent,
-              new SingularityElevatedAccessEventAsyncHandler(
-                webhookManager,
-                webhook,
-                accessEvent,
-                shouldDeleteUpdateOnFailure(accessEventsCount, accessEvent.getCreatedAt())
-              )
+              shouldDeleteUpdateOnFailure(accessEventsCount, accessEvent.getCreatedAt())
             )
+          )
         )
       );
     }
@@ -300,18 +292,17 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
 
       String concreteUri = applyPlaceholders(webhook.getUri(), taskUpdate);
       webhookFutures.add(
-        webhookSemaphore.call(
-          () ->
-            executeWebhookAsync(
-              concreteUri,
-              new SingularityTaskWebhook(task.get(), taskUpdate),
-              new SingularityTaskWebhookAsyncHandler(
-                webhookManager,
-                webhook,
-                taskUpdate,
-                shouldDeleteUpdateOnFailure(numTaskUpdates, taskUpdate.getTimestamp())
-              )
+        webhookSemaphore.call(() ->
+          executeWebhookAsync(
+            concreteUri,
+            new SingularityTaskWebhook(task.get(), taskUpdate),
+            new SingularityTaskWebhookAsyncHandler(
+              webhookManager,
+              webhook,
+              taskUpdate,
+              shouldDeleteUpdateOnFailure(numTaskUpdates, taskUpdate.getTimestamp())
             )
+          )
         )
       );
     }
@@ -350,6 +341,7 @@ public class SingularityWebhookSender extends AbstractWebhookChecker {
   }
 
   // TODO handle retries, errors.
+  @SuppressWarnings("HsFutureReturnValueIgnored")
   private <T> CompletableFuture<Response> executeWebhookAsync(
     String uri,
     Object payload,

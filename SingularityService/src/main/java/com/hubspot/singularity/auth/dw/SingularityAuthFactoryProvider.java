@@ -10,6 +10,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 
 public class SingularityAuthFactoryProvider extends AbstractValueFactoryProvider {
+
   private SingularityAuthedUserFactory authFactory;
 
   @javax.inject.Inject

@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -53,9 +54,11 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 @Path(ApiPaths.SANDBOX_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Provides a proxy to Mesos sandboxes")
 @Tags({ @Tag(name = "Sandbox") })
 public class SandboxResource extends AbstractHistoryResource {
+
   private final SandboxManager sandboxManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityConfiguration configuration;
@@ -121,7 +124,7 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "An agent or task with the specified id was not found"
-      )
+      ),
     }
   )
   public SingularitySandbox browse(
@@ -161,7 +164,6 @@ public class SandboxResource extends AbstractHistoryResource {
         Iterables.transform(
           mesosFiles,
           new Function<MesosFileObject, SingularitySandboxFile>() {
-
             @Override
             public SingularitySandboxFile apply(MesosFileObject input) {
               return new SingularitySandboxFile(
@@ -189,7 +191,7 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiResponse(
         responseCode = "404",
         description = "An agent, task, or file with the specified id was not found"
-      )
+      ),
     }
   )
   public MesosFileChunkObject read(

@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SingularityDeployStatisticsBuilder {
+
   private final String requestId;
   private final String deployId;
 

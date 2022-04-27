@@ -187,17 +187,15 @@ public class CompletableFutures {
   ) {
     CompletableFuture<T> future = new CompletableFuture<>();
     AtomicReference<Timeout> timeoutRef = new AtomicReference<>();
-    Future<Void> underlying = executorService.submit(
-      () -> {
-        if (future.complete(callable.call())) {
-          Timeout timeout1 = timeoutRef.get();
-          if (timeout1 != null) {
-            timeout1.cancel();
-          }
+    Future<Void> underlying = executorService.submit(() -> {
+      if (future.complete(callable.call())) {
+        Timeout timeout1 = timeoutRef.get();
+        if (timeout1 != null) {
+          timeout1.cancel();
         }
-        return null;
       }
-    );
+      return null;
+    });
 
     timeoutRef.set(
       timer.newTimeout(
@@ -228,6 +226,7 @@ public class CompletableFutures {
   }
 
   private static class SuccessOrThrowable<T> {
+
     private final T item;
     private final Throwable ex;
 

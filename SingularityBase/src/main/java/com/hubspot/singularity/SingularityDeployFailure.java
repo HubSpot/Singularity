@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Details about a failed deploy")
 public class SingularityDeployFailure {
+
   private final SingularityDeployFailureReason reason;
   private final Optional<SingularityTaskId> taskId;
   private final Optional<String> message;

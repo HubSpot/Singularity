@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 
 public class CrashLoopInfo {
+
   private final String requestId;
   private final String deployId;
   private final long start; // Not included in equals/hashCode

@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
+
   private static final Logger LOG = LoggerFactory.getLogger(DeployManager.class);
 
   private final SingularityEventListener singularityEventListener;
@@ -181,7 +182,6 @@ public class DeployManager extends CuratorAsyncManager {
     return Maps.uniqueIndex(
       getAsync("getRequestDeployStatesByRequestIds", paths, requestDeployStateTranscoder),
       new Function<SingularityRequestDeployState, String>() {
-
         @Override
         public String apply(SingularityRequestDeployState input) {
           return input.getRequestId();
@@ -265,7 +265,6 @@ public class DeployManager extends CuratorAsyncManager {
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(
       deploys,
       new Function<SingularityDeploy, SingularityDeployKey>() {
-
         @Override
         public SingularityDeployKey apply(SingularityDeploy input) {
           return SingularityDeployKey.fromDeploy(input);

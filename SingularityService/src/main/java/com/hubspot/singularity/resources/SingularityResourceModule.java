@@ -9,6 +9,7 @@ import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 import com.hubspot.singularity.helpers.RebalancingHelper;
 
 public class SingularityResourceModule extends AbstractModule {
+
   private final UIConfiguration uiConfiguration;
 
   public SingularityResourceModule(UIConfiguration uiConfiguration) {

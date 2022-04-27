@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
 public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyProvider {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     GuicePropertyFilteringMessageBodyWriter.class
   );
@@ -85,8 +86,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
     final MediaType mediaType,
     final MultivaluedMap<String, Object> httpHeaders,
     final OutputStream os
-  )
-    throws IOException {
+  ) throws IOException {
     final PropertyFiltering annotation = findPropertyFiltering(annotations);
 
     final PropertyFilter propertyFilter = new PropertyFilter(

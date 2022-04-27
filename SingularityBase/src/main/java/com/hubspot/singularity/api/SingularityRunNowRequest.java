@@ -16,6 +16,7 @@ import java.util.Optional;
 
 @Schema(description = "Settings for a specific run of a request")
 public class SingularityRunNowRequest {
+
   private final Optional<String> message;
   private final Optional<String> runId;
   private final Optional<List<String>> commandLineArgs;

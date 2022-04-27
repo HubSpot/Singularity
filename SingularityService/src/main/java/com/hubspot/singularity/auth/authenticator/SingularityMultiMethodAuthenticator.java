@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class SingularityMultiMethodAuthenticator
   implements Authenticator<ContainerRequestContext, SingularityUser> {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityMultiMethodAuthenticator.class
   );

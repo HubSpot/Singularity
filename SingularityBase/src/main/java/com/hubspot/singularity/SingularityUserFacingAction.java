@@ -8,5 +8,5 @@ public enum SingularityUserFacingAction {
   PRIORITIZE,
   KILL_TASK,
   DELETE_SCHEDULED_TASK,
-  RUN_SHELL_COMMAND
+  RUN_SHELL_COMMAND,
 }

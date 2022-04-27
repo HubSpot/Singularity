@@ -12,6 +12,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 public class RFC5545Schedule {
+
   public static final int MAX_ITERATIONS = 1000000;
   private final RecurrenceRule recurrenceRule;
   private final org.joda.time.DateTime dtStart;

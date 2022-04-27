@@ -2,13 +2,13 @@ package com.hubspot.singularity.expiring;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.SingularityPriorityRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Optional;
 
 @Schema(description = "Details about a scale action that will eventually revert")
 public class SingularityExpiringPriority
   extends SingularityExpiringRequestActionParent<SingularityPriorityRequest> {
+
   private final Optional<Double> revertToPriority;
 
   public SingularityExpiringPriority(

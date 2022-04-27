@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MesosExecutorInfo {
+
   private final Optional<MesosStringValue> executorId;
   private final Map<String, Object> allOtherFields;
 

@@ -23,9 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SingularityOfferHolder {
-  private static final Logger LOG = LoggerFactory.getLogger(
-    SingularityMesosScheduler.class
-  );
+
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferHolder.class);
 
   private final List<Protos.Offer> offers;
   private final List<SingularityMesosTaskHolder> acceptedTasks;
@@ -157,59 +156,52 @@ public class SingularityOfferHolder {
     Map<Boolean, List<Offer>> partitionedOffers = offers
       .stream()
       .collect(
-        Collectors.partitioningBy(
-          offer -> {
-            List<Long> ports = MesosUtils.getAllPorts(offer.getResourcesList());
-            boolean offerCanBeReclaimedFromUnusedResources = offer
-              .getResourcesList()
-              .stream()
-              // When matching resource requirements with resource offers, we need to take roles into account.
-              // Therefore, before we can check if this offer can be reclaimed from the pool of Resources in this SingularityOfferHolder,
-              // we have to group the offer's Resources by role first.
-              .collect(Collectors.groupingBy(Resource::getRole))
-              .entrySet()
-              .stream()
-              .map(
-                entry -> {
-                  // Now, for each set of offer Resources grouped by role...
-                  String role = entry.getKey();
-                  List<Resource> offerResources = entry.getValue();
-                  Optional<String> maybeRole = (!role.equals("") && !role.equals("*"))
-                    ? Optional.of(role)
-                    : Optional.empty();
-                  // ...Check if we can pull the Resources belonging to this offer out of the pool of `currentResources`.
-                  return MesosUtils.doesOfferMatchResources(
-                    maybeRole,
-                    MesosUtils.buildResourcesFromMesosResourceList(
-                      offerResources,
-                      maybeRole
-                    ),
-                    currentResources,
-                    ports
-                  );
-                }
-              )
-              .reduce(true, (x, y) -> x && y);
-            //      ^ the `reduce()` call determines whether we can pull *every* role-group of Resources belonging to this offer
-            //        out of the combined `currentResources` pool.
-
-            if (offerCanBeReclaimedFromUnusedResources) {
-              // We can reclaim this offer in its entirety! Pull all of its resources out of the combined pool for this SingularityOfferHolder instance.
-              LOG.trace(
-                "Able to reclaim offer {} from unused resources in OfferHolder from host {}. cpu: {}, mem: {}, disk: {}",
-                offer.getId().getValue(),
-                offer.getHostname(),
-                MesosUtils.getNumCpus(offer),
-                MesosUtils.getMemory(offer),
-                MesosUtils.getDisk(offer)
+        Collectors.partitioningBy(offer -> {
+          List<Long> ports = MesosUtils.getAllPorts(offer.getResourcesList());
+          boolean offerCanBeReclaimedFromUnusedResources = offer
+            .getResourcesList()
+            .stream()
+            // When matching resource requirements with resource offers, we need to take roles into account.
+            // Therefore, before we can check if this offer can be reclaimed from the pool of Resources in this SingularityOfferHolder,
+            // we have to group the offer's Resources by role first.
+            .collect(Collectors.groupingBy(Resource::getRole))
+            .entrySet()
+            .stream()
+            .map(entry -> {
+              // Now, for each set of offer Resources grouped by role...
+              String role = entry.getKey();
+              List<Resource> offerResources = entry.getValue();
+              Optional<String> maybeRole = (!role.equals("") && !role.equals("*"))
+                ? Optional.of(role)
+                : Optional.empty();
+              // ...Check if we can pull the Resources belonging to this offer out of the pool of `currentResources`.
+              return MesosUtils.doesOfferMatchResources(
+                maybeRole,
+                MesosUtils.buildResourcesFromMesosResourceList(offerResources, maybeRole),
+                currentResources,
+                ports
               );
-              currentResources =
-                MesosUtils.subtractResources(currentResources, offer.getResourcesList());
-            }
+            })
+            .reduce(true, (x, y) -> x && y);
+          //      ^ the `reduce()` call determines whether we can pull *every* role-group of Resources belonging to this offer
+          //        out of the combined `currentResources` pool.
 
-            return offerCanBeReclaimedFromUnusedResources;
+          if (offerCanBeReclaimedFromUnusedResources) {
+            // We can reclaim this offer in its entirety! Pull all of its resources out of the combined pool for this SingularityOfferHolder instance.
+            LOG.trace(
+              "Able to reclaim offer {} from unused resources in OfferHolder from host {}. cpu: {}, mem: {}, disk: {}",
+              offer.getId().getValue(),
+              offer.getHostname(),
+              MesosUtils.getNumCpus(offer),
+              MesosUtils.getMemory(offer),
+              MesosUtils.getDisk(offer)
+            );
+            currentResources =
+              MesosUtils.subtractResources(currentResources, offer.getResourcesList());
           }
-        )
+
+          return offerCanBeReclaimedFromUnusedResources;
+        })
       );
 
     List<Offer> leftoverOffers = partitionedOffers.get(true);

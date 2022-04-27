@@ -29,6 +29,7 @@ import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Type;
 
 public final class MesosUtils {
+
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
@@ -396,7 +397,6 @@ public final class MesosUtils {
   }
 
   private static final Comparator<Range> RANGE_COMPARATOR = new Comparator<Range>() {
-
     @Override
     public int compare(Range o1, Range o2) {
       return Longs.compare(o1.getBegin(), o2.getBegin());
@@ -595,13 +595,13 @@ public final class MesosUtils {
     );
   }
 
-  private static final Map<TaskState, ExtendedTaskState> map;
+  private static final Map<TaskState, ExtendedTaskState> MAP;
 
   static {
-    map = Maps.newHashMapWithExpectedSize(ExtendedTaskState.values().length);
+    MAP = Maps.newHashMapWithExpectedSize(ExtendedTaskState.values().length);
     for (ExtendedTaskState extendedTaskState : ExtendedTaskState.values()) {
       if (extendedTaskState.toTaskState().isPresent()) {
-        map.put(
+        MAP.put(
           TaskState.valueOf(extendedTaskState.toTaskState().get().name()),
           extendedTaskState
         );
@@ -609,7 +609,7 @@ public final class MesosUtils {
     }
 
     for (TaskState t : TaskState.values()) {
-      if (map.get(t) == null) {
+      if (MAP.get(t) == null) {
         throw new IllegalStateException(
           "No ExtendedTaskState provided for TaskState " +
           t +
@@ -620,7 +620,7 @@ public final class MesosUtils {
   }
 
   public static ExtendedTaskState fromTaskState(TaskState taskState) {
-    ExtendedTaskState extendedTaskState = map.get(taskState);
+    ExtendedTaskState extendedTaskState = MAP.get(taskState);
     Preconditions.checkArgument(
       extendedTaskState != null,
       "No ExtendedTaskState for TaskState %s",

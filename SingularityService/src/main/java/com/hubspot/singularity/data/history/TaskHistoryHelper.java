@@ -22,6 +22,7 @@ import java.util.Optional;
 @Singleton
 public class TaskHistoryHelper
   extends BlendedHistoryHelper<SingularityTaskIdHistory, SingularityTaskHistoryQuery> {
+
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Schema(description = "Describes the full history of a Singularity task")
 public class SingularityTaskHistory {
+
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
   private final Optional<String> directory;
   private final Optional<String> containerId;

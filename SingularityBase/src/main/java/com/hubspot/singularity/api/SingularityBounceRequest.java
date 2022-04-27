@@ -9,6 +9,7 @@ import java.util.UUID;
 
 @Schema(description = "Settings for how a bounce will behave")
 public class SingularityBounceRequest extends SingularityExpiringRequestParent {
+
   private final Optional<Boolean> incremental;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<SingularityShellCommand> runShellCommandBeforeKill;

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Schema(description = "Raw content used to create an artifact in the task sandbox")
 public class EmbeddedArtifact extends Artifact {
+
   private final byte[] content;
 
   @JsonCreator
@@ -50,7 +51,7 @@ public class EmbeddedArtifact extends Artifact {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), content);
+    return Objects.hash(super.hashCode(), Arrays.hashCode(content));
   }
 
   @Override

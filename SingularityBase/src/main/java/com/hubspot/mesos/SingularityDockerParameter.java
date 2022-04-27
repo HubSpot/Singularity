@@ -10,6 +10,7 @@ import java.util.Objects;
 
 @Schema(defaultValue = "Describes an argument to docker run")
 public class SingularityDockerParameter {
+
   private final String key;
   private final String value;
 

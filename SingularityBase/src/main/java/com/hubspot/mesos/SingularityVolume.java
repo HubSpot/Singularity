@@ -10,6 +10,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Represents a volume to be mounted into a docker container")
 public class SingularityVolume {
+
   private final String containerPath;
   private final Optional<String> hostPath;
   private final Optional<SingularityDockerVolumeMode> mode;

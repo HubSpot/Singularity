@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosTaskMonitorObject {
+
   private final String executorId;
   private final String executorName;
   private final String frameworkId;

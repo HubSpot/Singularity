@@ -12,6 +12,7 @@ import com.hubspot.singularity.data.usage.UsageManager;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
+
   private final SingularityConfiguration configuration;
 
   public SingularityDataModule(final SingularityConfiguration configuration) {

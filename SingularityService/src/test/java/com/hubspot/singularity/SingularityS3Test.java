@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 public class SingularityS3Test {
 
+  private static final long NOV2014TUES11 = 1415724215000L;
+
   @Test
   public void testS3FormatHelper() throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -73,8 +75,6 @@ public class SingularityS3Test {
       );
 
     Assertions.assertEquals("rid/groupName/2014/11", prefixes.iterator().next());
-
-    final long NOV2014TUES11 = 1415724215000L;
 
     Assertions.assertEquals(
       "wat-hostname",

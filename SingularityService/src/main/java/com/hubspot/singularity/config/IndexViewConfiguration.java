@@ -3,6 +3,7 @@ package com.hubspot.singularity.config;
 import java.util.Optional;
 
 public class IndexViewConfiguration {
+
   private final UIConfiguration uiConfiguration;
   private final Integer defaultMemory;
   private final Integer defaultCpus;

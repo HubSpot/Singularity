@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NetworkConfiguration {
+
   private boolean defaultPortMapping;
 
   public void setDefaultPortMapping(boolean defaultPortMapping) {

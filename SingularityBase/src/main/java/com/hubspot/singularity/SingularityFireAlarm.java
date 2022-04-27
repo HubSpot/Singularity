@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Schema(description = "Warning to users users about potential destructive actions")
 public class SingularityFireAlarm {
+
   private final String title;
   private final String message;
   private final Optional<String> url;

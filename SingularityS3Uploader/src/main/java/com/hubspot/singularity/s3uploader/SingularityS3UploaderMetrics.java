@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityS3UploaderMetrics.class
   );
@@ -60,7 +61,6 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
     registry.register(
       name("uploads", "millissincelast"),
       new Gauge<Integer>() {
-
         @Override
         public Integer getValue() {
           if (timeOfLastSuccessUpload == -1) {
@@ -77,7 +77,6 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
     registry.register(
       name("uploads", "lastdurationmillis"),
       new Gauge<Integer>() {
-
         @Override
         public Integer getValue() {
           return lastUploadDuration;
@@ -88,7 +87,6 @@ public class SingularityS3UploaderMetrics extends AbstractFileMetricsReporter {
     registry.register(
       name("uploaders", "expiring"),
       new Gauge<Integer>() {
-
         @Override
         public Integer getValue() {
           if (!expiring.isPresent()) {

@@ -13,6 +13,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public class AuthConfiguration {
+
   @JsonProperty
   private boolean enabled = false;
 

@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -44,9 +45,11 @@ import org.slf4j.LoggerFactory;
 
 @Path(ApiPaths.DISASTERS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @Schema(title = "Manages active disasters and disabled actions")
 @Tags({ @Tag(name = "Disasters") })
 public class DisastersResource extends AbstractLeaderAwareResource {
+
   private static final Logger LOG = LoggerFactory.getLogger(DisastersResource.class);
 
   private final DisasterManager disasterManager;
@@ -205,18 +208,23 @@ public class DisastersResource extends AbstractLeaderAwareResource {
   }
 
   private Response runFailover(SingularityUser user) {
-    CompletableFuture.runAsync(
-      () -> {
-        LOG.warn("Failover triggered by {}", user.getId());
-        abort.abort(
-          AbortReason.MANUAL,
-          Optional.of(
-            new RuntimeException(String.format("Forced failover by %s", user.getId()))
-          )
-        );
-      },
-      Executors.newSingleThreadExecutor()
-    );
+    CompletableFuture
+      .runAsync(
+        () -> {
+          LOG.warn("Failover triggered by {}", user.getId());
+          abort.abort(
+            AbortReason.MANUAL,
+            Optional.of(
+              new RuntimeException(String.format("Forced failover by %s", user.getId()))
+            )
+          );
+        },
+        Executors.newSingleThreadExecutor()
+      )
+      .exceptionally(t -> {
+        LOG.error("Could not run failover", t);
+        return null;
+      });
     return Response.ok().build();
   }
 

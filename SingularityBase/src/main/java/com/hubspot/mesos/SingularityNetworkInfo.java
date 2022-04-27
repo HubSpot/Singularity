@@ -11,6 +11,7 @@ import java.util.Optional;
 @Beta
 @Schema(description = "Optional network settings for a container being launched in mesos")
 public class SingularityNetworkInfo {
+
   private final Optional<String> name;
   private final Optional<List<String>> groups;
   private final Optional<List<SingularityPortMapping>> portMappings;

@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class DeployProgressLbUpdateHolder {
+
   private final SingularityLoadBalancerUpdate loadBalancerUpdate;
   private final Set<SingularityTaskId> added;
   private final Set<SingularityTaskId> removed;

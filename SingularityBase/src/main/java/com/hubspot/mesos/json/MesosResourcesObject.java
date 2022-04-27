@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Schema
 public class MesosResourcesObject {
+
   private final ImmutableMap<String, Object> properties;
 
   @JsonCreator

@@ -7,6 +7,7 @@ import java.util.Objects;
 
 @Schema(description = "Describes parameters to fetch the next page of results from s3")
 public class ContinuationToken {
+
   private final String value;
   private final boolean lastPage;
 

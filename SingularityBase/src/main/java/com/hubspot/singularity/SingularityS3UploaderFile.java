@@ -9,6 +9,7 @@ import java.util.Optional;
   description = "Describes a file that shouldbe uploaded by the SingularityS3Uploader"
 )
 public class SingularityS3UploaderFile {
+
   private final String filename;
   private final Optional<String> s3UploaderBucket;
   private final Optional<String> s3UploaderKeyPattern;

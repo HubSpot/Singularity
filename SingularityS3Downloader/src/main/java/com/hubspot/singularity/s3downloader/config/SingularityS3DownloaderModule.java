@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class SingularityS3DownloaderModule extends AbstractModule {
+
   public static final String DOWNLOAD_EXECUTOR_SERVICE =
     "singularity.s3downloader.download.executor.service";
   public static final String ENQUEUE_EXECUTOR_SERVICE =

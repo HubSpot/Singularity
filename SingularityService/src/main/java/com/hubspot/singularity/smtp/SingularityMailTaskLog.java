@@ -5,6 +5,7 @@ package com.hubspot.singularity.smtp;
  * to generate the log entries.
  */
 public class SingularityMailTaskLog {
+
   private final String path;
   private final String file;
   private final String link;

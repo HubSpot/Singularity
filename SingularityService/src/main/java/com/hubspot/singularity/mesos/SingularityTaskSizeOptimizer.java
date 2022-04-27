@@ -16,6 +16,7 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 
 @Singleton
 public class SingularityTaskSizeOptimizer {
+
   private final SingularityConfiguration configuration;
   private final MesosProtosUtils mesosProtosUtils;
 

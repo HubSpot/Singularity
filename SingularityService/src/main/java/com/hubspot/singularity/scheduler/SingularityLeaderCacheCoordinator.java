@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SingularityLeaderCacheCoordinator {
+
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityLeaderCacheCoordinator.class
   );
