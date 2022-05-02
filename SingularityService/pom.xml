@@ -12,7 +12,7 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
-    <hubspot.module.type>EXECUTABLE</hubspot.module.type>
+    <hubspot.module.type>EXECUTABLE_LIBRARY</hubspot.module.type>
   </properties>
 
   <dependencies>
