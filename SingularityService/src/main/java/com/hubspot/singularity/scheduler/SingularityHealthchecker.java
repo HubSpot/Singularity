@@ -48,6 +48,8 @@ public class SingularityHealthchecker {
 
   private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME =
     HealthcheckProtocol.HTTP;
+  public static final String HEALTHCHECK_HEADER = "X-HubSpot-Healthcheck";
+  public static final String HEALTHCHECK_HEADER_VALUE = "true";
 
   private static final Logger LOG = LoggerFactory.getLogger(
     SingularityHealthchecker.class
@@ -558,7 +560,11 @@ public class SingularityHealthchecker {
           .cache(null)
           .build()
           .newCall(
-            new okhttp3.Request.Builder().method(method, null).url(uri.get()).build()
+            new okhttp3.Request.Builder()
+              .method(method, null)
+              .url(uri.get())
+              .addHeader(HEALTHCHECK_HEADER, HEALTHCHECK_HEADER_VALUE)
+              .build()
           )
           .enqueue(wrappedHttp2Handler(handler));
       } else {
@@ -566,6 +572,7 @@ public class SingularityHealthchecker {
         builder.setFollowRedirects(true);
         builder.setUrl(uri.get());
         builder.setRequestTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
+        builder.addHeader(HEALTHCHECK_HEADER, HEALTHCHECK_HEADER_VALUE);
 
         http.prepareRequest(builder.build()).execute(wrappedHttp1Handler(handler));
       }
