@@ -48,7 +48,7 @@ var templateData = {
   authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
   authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
   quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}',
-  navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '{}',
+  navTitleLinks: process.env.SINGULARITY_NAV_TITLE_LINKS || '[]',
   lessTerminalPath: process.env.SINGULARITY_LESS_TERMINAL_PATH || '',
   showRequestButtonsForGroup: process.env.SINGULARITY_SHOW_REQUEST_BUTTONS_FOR_GROUP || '',
   costsApiUrlFormat: process.env.SINGUALRITY_COSTS_API_URL_FORMAT || ''
