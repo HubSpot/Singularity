@@ -476,7 +476,10 @@ export default class FormModal extends React.Component {
         </Modal.Body>
         <Modal.Footer>
           {cancel}
-          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm} disabled={this.props.disableSubmit}>{this.props.action}</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm} disabled={this.props.disableSubmit}>
+            {this.props.action}
+            <span> {Utils.getDatacenterTitle()}</span>
+          </Button>
         </Modal.Footer>
       </Modal>
     );

@@ -585,6 +585,10 @@ const Utils = {
     return `Bearer ${ this.getAuthToken() }`;
   },
 
+  getDatacenterTitle() {
+    return window.config.title.replace('Singularity ', '');
+  },
+
   template(template, data) {
     const start = "{{";
     const end = "}}";
