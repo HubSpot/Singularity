@@ -20,8 +20,8 @@ Check out the [{0} milestone](https://github.com/HubSpot/Singularity/issues?q=mi
 """.format(release)
 
 def main(args):
-    pulls = [p for p in requests.get('https://api.github.com/repos/HubSpot/Singularity/pulls?state=closed&per_page=200&sort=updated&direction=desc').json() if 'milestone' in p and p['milestone'] and args.release.encode('utf-8') == p['milestone']['title']]
-    print 'Found {0} pull requests'.format(len(pulls))
+    pulls = [p for p in requests.get('https://api.github.com/repos/HubSpot/Singularity/pulls?state=closed&per_page=2000&sort=updated&direction=desc').json() if 'milestone' in p and p['milestone'] and args.release == p['milestone']['title']]
+    print('Found {0} pull requests'.format(len(pulls)))
     message = base_text(args.release)
     for p in pulls:
         message = message + '- [{0}]({1}) - {2}'.format(p['number'], p['html_url'], p['title']) + '\n'
