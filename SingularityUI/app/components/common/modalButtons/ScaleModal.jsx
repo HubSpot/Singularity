@@ -100,7 +100,7 @@ class ScaleModal extends Component {
           {
             name: 'largeScaleDownAcknowledged',
             type: FormModal.INPUT_TYPES.BOOLEAN,
-            label: 'Explciit acknowledgement of large scale down (less than -10 or 1/2 of previous)',
+            label: 'Explicit acknowledgement of large scale down (less than -10 or 1/2 of previous)',
             defaultValue: false,
             dependsOnFormState: data => {
               const scaleDownExceedsAbsoluteMax = (this.props.currentInstances - data.instances) > 10;
