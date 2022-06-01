@@ -53,7 +53,7 @@ const GroupDetail = (props) => {
             onSelect={handleRequestSelect}
             stacked={true}
           >
-            {group.requestIds.map(requestId =>
+            {group.requestIds.sort().map(requestId =>
               <NavItem
                 className="request-group-navitem"
                 eventKey={requestId}
