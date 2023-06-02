@@ -2,6 +2,7 @@
 
 These organizations proudly use Singularity:
 
+- [PITS Global Data Recovery Services](https://www.pitsdatarecovery.net/)
 - [HubSpot](http://www.hubspot.com/)
 - [Groupon](http://www.groupon.com/)
 - [OpenTable](http://www.opentable.com/)
