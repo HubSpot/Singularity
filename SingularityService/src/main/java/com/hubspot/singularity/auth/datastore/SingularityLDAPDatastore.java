@@ -22,6 +22,7 @@ import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.message.SearchScope;
+import static org.apache.directory.ldap.client.api.search.FilterBuilder.equal;
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapConnectionConfig;
@@ -158,7 +159,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
         try {
           final EntryCursor userCursor = connection.search(
             configuration.getUserBaseDN(),
-            String.format(configuration.getUserFilter(), user),
+            FilterBuilder.equal(configuration.getUserFilter(), user).toString(),
             SearchScope.ONELEVEL,
             configuration.getUserNameAttribute(),
             configuration.getUserEmailAttribute()
@@ -177,7 +178,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
           // get group info
           final EntryCursor cursor = connection.search(
             configuration.getGroupBaseDN(),
-            String.format(configuration.getGroupFilter(), user),
+            FilterBuilder.equal(configuration.getGroupFilter(), user).toString(),
             configuration.getGroupSearchScope(),
             configuration.getGroupNameAttribute()
           );
